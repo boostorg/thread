@@ -34,7 +34,7 @@
 
 namespace boost {
 
-class thread::data
+class thread_data
 {
 public:
 	enum
@@ -45,14 +45,16 @@ public:
 		joined
 	};
 
-    data(const boost::function0<void>& threadfunc);
-	data();
-	~data();
+    thread_data(const boost::function0<void>& threadfunc);
+	thread_data();
+	~thread_data();
 
 	void addref();
 	bool release();
 	void join();
 	void cancel();
+	void enable_cancellation();
+	void disable_cancellation();
 	void test_cancel();
 	void run();
 #if defined(BOOST_HAS_WINTHREADS)
@@ -63,6 +65,8 @@ public:
 
 	void set_scheduling_parameter(int policy, const sched_param& param);
 	void get_scheduling_parameter(int& policy, sched_param& param) const;
+
+	static thread_data* get_current();
 
 private:
     mutable boost::mutex m_mutex;
@@ -80,6 +84,7 @@ private:
     MPTaskID m_pTaskID;
 #endif
 	bool m_canceled;
+	int m_cancellation_disabled_level;
 	bool m_native;
 };
 
@@ -105,14 +110,14 @@ struct as_pointer : private boost::mpl::if_<boost::is_pointer<T>, pointer_based,
 	static const void* from(const T& obj) { return do_from(obj); }
 };
 
-void release_tss_data(boost::thread::data* data)
+void release_tss_data(boost::thread_data* data)
 {
 	assert(data);
 	if (data->release())
 		delete data;
 }
 
-boost::thread_specific_ptr<boost::thread::data> tss_thread_data(&release_tss_data);
+boost::thread_specific_ptr<boost::thread_data> tss_thread_data(&release_tss_data);
 
 struct thread_equals
 {
@@ -135,7 +140,7 @@ static OSStatus thread_proxy(void* param)
 {
     try
     {
-		boost::thread::data* tdata = static_cast<boost::thread::data*>(param);
+		boost::thread_data* tdata = static_cast<boost::thread_data*>(param);
 		tss_thread_data.reset(tdata);
 		tdata->run();
     }
@@ -156,13 +161,15 @@ static OSStatus thread_proxy(void* param)
 
 namespace boost {
 
-thread::data::data(const boost::function0<void>& threadfunc)
-	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_canceled(false), m_native(false)
+thread_data::thread_data(const boost::function0<void>& threadfunc)
+	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_canceled(false), m_native(false),
+	  m_cancellation_disabled_level(0)
 {
 }
 
-thread::data::data()
-	: m_refcount(2), m_state(running), m_canceled(false), m_native(true)
+thread_data::thread_data()
+	: m_refcount(1), m_state(running), m_canceled(false), m_native(true),
+	  m_cancellation_disabled_level(0)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
@@ -173,7 +180,7 @@ thread::data::data()
 #endif
 }
 
-thread::data::~data()
+thread_data::~thread_data()
 {
 	if (m_state != joined)
 	{
@@ -194,7 +201,7 @@ thread::data::~data()
 	}
 }
 
-void thread::data::addref()
+void thread_data::addref()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -202,7 +209,7 @@ void thread::data::addref()
 	++m_refcount;
 }
 
-bool thread::data::release()
+bool thread_data::release()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -210,7 +217,7 @@ bool thread::data::release()
 	return (--m_refcount == 0);
 }
 
-void thread::data::join()
+void thread_data::join()
 {
 	{
 		boost::mutex::scoped_lock lock(m_mutex);
@@ -251,7 +258,7 @@ void thread::data::join()
 	m_cond.notify_all();
 }
 
-void thread::data::cancel()
+void thread_data::cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -259,16 +266,28 @@ void thread::data::cancel()
 	m_canceled = true;
 }
 
-void thread::data::test_cancel()
+void thread_data::test_cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
 		m_cond.wait(lock);
-	if (m_canceled)
+	if (m_cancellation_disabled_level == 0 && m_canceled)
 		throw boost::thread_cancel();
 }
 
-void thread::data::run()
+void thread_data::disable_cancellation()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	m_cancellation_disabled_level++;
+}
+
+void thread_data::enable_cancellation()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	m_cancellation_disabled_level--;
+}
+
+void thread_data::run()
 {
 	{
 		boost::mutex::scoped_lock lock(m_mutex);
@@ -279,14 +298,14 @@ void thread::data::run()
 #elif defined(BOOST_HAS_PTHREADS)
 		m_thread = pthread_self();
 #endif
-		m_state = thread::data::running;
+		m_state = thread_data::running;
 		m_cond.notify_all();
 	}
     m_threadfunc();
 }
 
 #if defined(BOOST_HAS_WINTHREADS)
-long thread::data::id() const
+long thread_data::id() const
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -298,7 +317,7 @@ long thread::data::id() const
 	return 0; // throw instead?
 }
 #else
-const void* thread::data::id() const
+const void* thread_data::id() const
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -316,7 +335,7 @@ const void* thread::data::id() const
 }
 #endif
 
-void thread::data::set_scheduling_parameter(int policy, const sched_param& param)
+void thread_data::set_scheduling_parameter(int policy, const sched_param& param)
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -349,7 +368,7 @@ void thread::data::set_scheduling_parameter(int policy, const sched_param& param
 #endif
 }
 
-void thread::data::get_scheduling_parameter(int& policy, sched_param& param) const
+void thread_data::get_scheduling_parameter(int& policy, sched_param& param) const
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	while (m_state == creating)
@@ -369,12 +388,37 @@ void thread::data::get_scheduling_parameter(int& policy, sched_param& param) con
 #endif
 }
 
+thread_data* thread_data::get_current()
+{
+	thread_data* data = tss_thread_data.get();
+	if (data == 0)
+	{
+		data = new(std::nothrow) thread_data;
+		if (!data)
+			throw thread_resource_error();
+		tss_thread_data.reset(data);
+	}
+	return data;
+}
+
 thread_cancel::thread_cancel()
 {
 }
 
 thread_cancel::~thread_cancel()
 {
+}
+
+cancellation_guard::cancellation_guard()
+{
+	thread_data* data = thread_data::get_current();
+	m_handle = data;
+	data->disable_cancellation();
+}
+
+cancellation_guard::~cancellation_guard()
+{
+	static_cast<thread_data*>(m_handle)->enable_cancellation();
 }
 
 thread::attributes::attributes()
@@ -602,23 +646,15 @@ thread::thread()
     m_pTaskID = MPCurrentTaskID();
     m_pJoinQueueID = kInvalidID;
 #endif
-	thread::data* tdata = tss_thread_data.get();
-	if (tdata == 0)
-	{
-		tdata = new(std::nothrow) thread::data;
-		if (!tdata)
-			throw thread_resource_error();
-		tss_thread_data.reset(tdata);
-	}
-	else
-		tdata->addref();
+	thread_data* tdata = thread_data::get_current();
+	tdata->addref();
 	m_handle = tdata;
 }
 
 thread::thread(const function0<void>& threadfunc, attributes attr)
     : m_handle(0)
 {
-	std::auto_ptr<thread::data> param(new(std::nothrow) thread::data(threadfunc));
+	std::auto_ptr<thread_data> param(new(std::nothrow) thread_data(threadfunc));
 	if (param.get() == 0)
 		throw thread_resource_error();
 #if defined(BOOST_HAS_WINTHREADS)
@@ -662,21 +698,22 @@ thread::thread(const function0<void>& threadfunc, attributes attr)
 thread::thread(const thread& other)
 	: m_handle(other.m_handle)
 {
-	m_handle->addref();
+	static_cast<thread_data*>(m_handle)->addref();
 }
 
 thread::~thread()
 {
-	if (m_handle && m_handle->release())
+	if (m_handle && static_cast<thread_data*>(m_handle)->release())
 		delete m_handle;
 }
 
 thread& thread::operator=(const thread& other)
 {
-	if (m_handle->release())
-		delete m_handle;
+	thread_data* data = static_cast<thread_data*>(m_handle);
+	if (data->release())
+		delete data;
 	m_handle = other.m_handle;
-	m_handle->addref();
+	static_cast<thread_data*>(m_handle)->addref();
 	return *this;
 }
 
@@ -687,38 +724,38 @@ bool thread::operator==(const thread& other) const
 
 bool thread::operator!=(const thread& other) const
 {
-    return !operator==(other);
+	return m_handle != other.m_handle;
 }
 
 bool thread::operator<(const thread& other) const
 {
-	return std::less<thread::data*>()(m_handle, m_handle);
+	return std::less<void*>()(m_handle, other.m_handle);
 }
 
 void thread::join()
 {
-	m_handle->join();
+	static_cast<thread_data*>(m_handle)->join();
 }
 
 void thread::cancel()
 {
-	m_handle->cancel();
+	static_cast<thread_data*>(m_handle)->cancel();
 }
 
 void thread::test_cancel()
 {
 	thread self;
-	self.m_handle->test_cancel();
+	static_cast<thread_data*>(self.m_handle)->test_cancel();
 }
 
 void thread::set_scheduling_parameter(int policy, const sched_param& param)
 {
-	m_handle->set_scheduling_parameter(policy, param);
+	static_cast<thread_data*>(m_handle)->set_scheduling_parameter(policy, param);
 }
 
 void thread::get_scheduling_parameter(int& policy, sched_param& param) const
 {
-	m_handle->get_scheduling_parameter(policy, param);
+	static_cast<thread_data*>(m_handle)->get_scheduling_parameter(policy, param);
 }
 
 int thread::max_priority(int policy)
@@ -822,7 +859,7 @@ const void* thread::id() const
 #endif
 {
 	std::cout << *this;
-	return m_handle->id();
+	return static_cast<thread_data*>(m_handle)->id();
 }
 
 #if defined(BOOST_HAS_WINTHREADS)

@@ -38,6 +38,16 @@ public:
 	~thread_cancel();
 };
 
+class BOOST_THREAD_DECL cancellation_guard
+{
+public:
+	cancellation_guard();
+	~cancellation_guard();
+
+private:
+	void* m_handle;
+};
+
 #if defined(BOOST_HAS_WINTHREADS)
 
 struct sched_param
@@ -127,11 +137,6 @@ public:
 
 	static const int stack_min;
 
-	// This is an implementation detail and should be private,
-	// but we need it to be public to access the type in some
-	// unnamed namespace free functions in the implementation.
-	class data;
-
 private:
 	template <typename charT, typename Traits>
 		friend std::basic_ostream<charT, Traits>& operator<<(std::basic_ostream<charT, Traits>&, const thread&);
@@ -142,7 +147,7 @@ private:
 	const void* id() const;
 #endif
 
-	data* m_handle;
+	void* m_handle;
 };
 
 template <typename charT, typename Traits>

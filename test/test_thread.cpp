@@ -29,6 +29,38 @@ namespace
         test_value = 999;
     }
 
+    void cancel_thread()
+    {
+		// Sleep long enough to let the main thread cancel us
+		boost::xtime xt;
+		BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC),
+			static_cast<int>(boost::TIME_UTC));
+		xt.sec += 3;
+		boost::thread::sleep(xt);
+
+		// This block will test the cancellation guard. If it
+		// doesn't work, we'll be cancelled with out setting
+		// the test_value to 999.
+		{
+			boost::cancellation_guard guard;
+			boost::thread::test_cancel();
+		}
+
+		// This block tests the cancellation itself.  If it
+		// works a thread_cancel exception will be thrown,
+		// and in the catch handler for it we'll set our
+		// exptected test_value of 999.
+		try
+		{
+			boost::thread::test_cancel();
+		}
+		catch (boost::thread_cancel& cancel)
+		{
+			test_value = 999;
+			throw; // Make sure to re-throw!
+		}
+    }
+
     struct thread_adapter
     {
         thread_adapter(void (*func)(boost::thread& parent),
@@ -78,8 +110,23 @@ void test_creation()
 void test_comparison()
 {
     boost::thread self;
+	BOOST_CHECK_EQUAL(self, boost::thread());
+
     boost::thread thrd(thread_adapter(comparison_thread, self));
+	boost::thread thrd2 = thrd;
+
+	BOOST_CHECK(thrd != self);
+	BOOST_CHECK(thrd == thrd2);
+
     thrd.join();
+}
+
+void test_cancel()
+{
+	test_value = 0;
+	boost::thread thrd(&cancel_thread);
+	thrd.cancel();
+	BOOST_CHECK_EQUAL(test_value, 999); // only true if thread was cancelled
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
