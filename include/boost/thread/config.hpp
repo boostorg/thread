@@ -52,7 +52,7 @@
 #   if defined(_MT)
 #       define BOOST_HAS_THREADS
 #   endif
-//#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
+#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
 #   if !defined(BOOST_HAS_WINTHREADS)
 #       define BOOST_HAS_PTHREADS
 #       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
