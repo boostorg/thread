@@ -18,17 +18,35 @@
 
 extern "C" BOOST_THREAD_DECL int at_thread_exit(void (__cdecl * func)(void));
     //Add a function to the list of thread-exit functions
+        //that are called by on_thread_exit() and friends.
 
 extern "C" BOOST_THREAD_DECL void on_process_enter(void);
-    //To be called when the process starts, when the dll is loaded, etc.
-    //Called automatically by Boost.Thread when possible
-extern "C" BOOST_THREAD_DECL void on_thread_exit(void);
-    //To be called for each thread when it exits
-    //Must be called in the context of the thread that is exiting
-    //Called automatically by Boost.Thread when possible
+    //To be called once when the process starts (or, if a dll
+        //once when the dll is loaded into the process).
+    //Called automatically by Boost.Thread when possible.
+    //Can be omitted; however the process may be more efficient
+        //if it is not. If called should be called only
+        //once and must be balanced by a call to on_process_exit().
+
 extern "C" BOOST_THREAD_DECL void on_process_exit(void);
-    //To be called when the process exits, when the dll is unloaded, etc.
-    //Called automatically by Boost.Thread when possible
+    //To be called once when the process ends (or, if a dll
+        //once when the dll is unloaded from the process).
+    //Called automatically by Boost.Thread when possible.
+    //Can be omitted; however the process may be more efficient
+        //if it is not. If called should be called only
+        //once and must be balanced by a call to on_process_enter().
+
+extern "C" BOOST_THREAD_DECL void on_thread_enter(void);
+    //To be called for each thread when it starts.
+    //Called automatically by Boost.Thread when possible.
+    //Must be called in the context of the thread that is entering.
+    //Can be called multiple times per thread.
+
+extern "C" BOOST_THREAD_DECL void on_thread_exit(void);
+    //To be called for each thread when it exits.
+    //Called automatically by Boost.Thread when possible.
+    //Must be called in the context of the thread that is exiting.
+    //Can be called multiple times per thread.
 
 #endif // BOOST_HAS_WINTHREADS
 

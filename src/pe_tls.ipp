@@ -28,10 +28,31 @@ int dummy(void)
 
 void NTAPI tls_callback(PVOID, DWORD Reason, PVOID) 
 {
-    if (Reason == DLL_THREAD_DETACH)
-        on_thread_exit();
-    else if (Reason == DLL_PROCESS_DETACH) 
-        on_thread_exit();
+    switch (Reason)
+    {
+        case DLL_PROCESS_ATTACH:
+        {
+            on_process_enter();
+            on_thread_enter();
+            break;
+        }
+        case DLL_THREAD_ATTACH:
+        {
+            on_thread_enter();
+            break;
+        }
+        case DLL_THREAD_DETACH:
+        {
+            on_thread_exit();
+            break;
+        }
+        case DLL_PROCESS_DETACH:
+        {
+            on_thread_exit();
+            on_process_exit();
+            break;
+        }
+    }
 }
 
 // Add callback to the TLS callback list in TLS directory.
