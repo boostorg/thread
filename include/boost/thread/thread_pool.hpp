@@ -15,11 +15,6 @@
 #ifndef BOOST_THREAD_POOL_JDM031802_HPP
 #define BOOST_THREAD_POOL_JDM031802_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
-
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/function.hpp>

@@ -12,22 +12,24 @@
 #ifndef BOOST_NAMED_WEK031703_HPP
 #define BOOST_NAMED_WEK031703_HPP
 
+#include <boost/thread/detail/config.hpp>
+
 namespace boost {
 namespace detail {
 
 class named_object
 {
 protected:
-	named_object(const char* name=0);
-	~named_object();
+    named_object(const char* name=0);
+    ~named_object();
 
 public:
-	const char* name() const;
-	const char* effective_name() const;
+    const char* name() const;
+    const char* effective_name() const;
 
 protected:
-	char* m_name;
-	char* m_ename;
+    char* m_name;
+    char* m_ename;
 };
 
 } // namespace detail

@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp>
@@ -38,7 +40,7 @@ recursive_mutex::recursive_mutex(const char* name)
     : boost::detail::named_object(name)
     , m_mutex(0)
     , m_count(0)
-	, m_critical_section(false)
+    , m_critical_section(false)
 {
     m_critical_section = !name;
     if (m_critical_section)

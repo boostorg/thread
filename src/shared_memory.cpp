@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/shared_memory.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/mutex.hpp>
@@ -33,14 +35,14 @@
 namespace boost {
 
 shared_memory::shared_memory(const char *name, size_t len, int flags)
-	: boost::detail::named_object(name)
+    : boost::detail::named_object(name)
 {
     init(len, flags, 0);
 }
 
 shared_memory::shared_memory(const char *name, size_t len, int flags,
     const boost::function1<void, void *>& initfunc)
-	: boost::detail::named_object(name)
+    : boost::detail::named_object(name)
 {
     init(len, flags & create, &initfunc);
 }
@@ -121,51 +123,51 @@ void shared_memory::init(size_t len, int flags,
 #elif defined(BOOST_HAS_PTHREADS)
     m_len = len;
 
-	sem_t* sem = sem_open(mxname.c_str(), O_CREAT);
-	if (sem == SEM_FAILED)
-		throw thread_resource_error();
-	res = sem_wait(sem);
-	assert(res == 0);
+    sem_t* sem = sem_open(mxname.c_str(), O_CREAT);
+    if (sem == SEM_FAILED)
+        throw thread_resource_error();
+    res = sem_wait(sem);
+    assert(res == 0);
 
-	int oflag = (flags & write) ? O_RDWR : O_RDONLY;
-	int cflag = (flags & create) ? O_CREAT|O_TRUNC|O_EXCL : 0;
-	for (;;)
-	{
-		m_hmap = shm_open(m_name.c_str(), oflag|cflag, 0);
-		if (m_hmap == -1)
-		{
-			if (errno != EEXIST || (flags & exclusive))
-			{
-				res = sem_post(sem);
-				assert(res == 0);
-				res = sem_close(sem);
-				assert(res == 0);
-				res = sem_unlink(mxname.c_str());
-				assert(res);
-				throw thread_resource_error();
-			}
-			m_hmap = shm_open(m_name.c_str(), oflag, 0);
-			if (m_hmap == -1)
-			{
-				if (errno == ENOENT)
-					continue;
-				res = sem_post(sem);
-				assert(res == 0);
-				res = sem_close(sem);
-				assert(res);
-				res = sem_unlink(mxname.c_str());
-				assert(res);
-				throw thread_resource_error();
-			}
-		}
-		else
-			should_init = true;
-		break;
-	}
-		
-	ftruncate(m_hmap, len);
-	int prot = (flags & write) ? PROT_READ|PROT_WRITE : PROT_READ;
-	m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
+    int oflag = (flags & write) ? O_RDWR : O_RDONLY;
+    int cflag = (flags & create) ? O_CREAT|O_TRUNC|O_EXCL : 0;
+    for (;;)
+    {
+        m_hmap = shm_open(m_name.c_str(), oflag|cflag, 0);
+        if (m_hmap == -1)
+        {
+            if (errno != EEXIST || (flags & exclusive))
+            {
+                res = sem_post(sem);
+                assert(res == 0);
+                res = sem_close(sem);
+                assert(res == 0);
+                res = sem_unlink(mxname.c_str());
+                assert(res);
+                throw thread_resource_error();
+            }
+            m_hmap = shm_open(m_name.c_str(), oflag, 0);
+            if (m_hmap == -1)
+            {
+                if (errno == ENOENT)
+                    continue;
+                res = sem_post(sem);
+                assert(res == 0);
+                res = sem_close(sem);
+                assert(res);
+                res = sem_unlink(mxname.c_str());
+                assert(res);
+                throw thread_resource_error();
+            }
+        }
+        else
+            should_init = true;
+        break;
+    }
+        
+    ftruncate(m_hmap, len);
+    int prot = (flags & write) ? PROT_READ|PROT_WRITE : PROT_READ;
+    m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
 #endif
 
     if (should_init && initfunc)

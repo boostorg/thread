@@ -12,7 +12,6 @@
 #ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
 #define BOOST_THREAD_EXCEPTIONS_PDM070801_H
 
-#include <boost/config.hpp>
 #include <boost/thread/detail/config.hpp>
 
 //  pdm: Sorry, but this class is used all over the place & I end up

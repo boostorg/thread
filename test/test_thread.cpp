@@ -22,7 +22,7 @@ int test_value;
 
 void simple_thread()
 {
-	std::cout << "simple_thread()";
+    std::cout << "simple_thread()";
     test_value = 999;
 }
 

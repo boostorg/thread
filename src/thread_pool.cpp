@@ -12,6 +12,8 @@
 // Derived loosely from work queue manager in "Programming POSIX Threads"
 //   by David Butenhof.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/thread_pool.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition.hpp>

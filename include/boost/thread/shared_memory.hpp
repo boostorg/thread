@@ -12,10 +12,7 @@
 #ifndef BOOST_MUTEX_JDM062402_HPP
 #define BOOST_MUTEX_JDM062402_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
 #include <boost/function.hpp>

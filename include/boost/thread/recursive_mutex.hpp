@@ -12,13 +12,9 @@
 #ifndef BOOST_RECURSIVE_MUTEX_WEK070601_HPP
 #define BOOST_RECURSIVE_MUTEX_WEK070601_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
-#include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/lock.hpp>
 #include <boost/thread/detail/named.hpp>
 
