@@ -191,37 +191,44 @@ void thread::join()
 
 void thread::sleep(const xtime& xt)
 {
+	for (;;)
+	{
 #if defined(BOOST_HAS_WINTHREADS)
-    int milliseconds;
-    to_duration(xt, milliseconds);
-    Sleep(milliseconds);
+		int milliseconds;
+		to_duration(xt, milliseconds);
+		Sleep(milliseconds);
+		xtime xt2;
+		xtime_get(&xt2, TIME_UTC);
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-    timespec ts;
-    to_timespec_duration(xt, ts);
-    int res = 0;
-    res = pthread_delay_np(&ts);
-    assert(res == 0);
+		timespec ts;
+		to_timespec_duration(xt, ts);
+		int res = 0;
+		res = pthread_delay_np(&ts);
+		assert(res == 0);
 #   elif defined(BOOST_HAS_NANOSLEEP)
-    timespec ts;
-    to_timespec_duration(xt, ts);
+		timespec ts;
+		to_timespec_duration(xt, ts);
 
-    //  nanosleep takes a timespec that is an offset, not
-    //  an absolute time.
-    nanosleep(&ts, 0);
+		//  nanosleep takes a timespec that is an offset, not
+		//  an absolute time.
+		nanosleep(&ts, 0);
 #   else
-    mutex mx;
-    mutex::scoped_lock lock(mx);
-    condition cond;
-    cond.timed_wait(lock, xt);
+		mutex mx;
+		mutex::scoped_lock lock(mx);
+		condition cond;
+		cond.timed_wait(lock, xt);
 #   endif
 #elif defined(BOOST_HAS_MPTASKS)
-    int microseconds;
-    to_microduration(xt, microseconds);
-    Duration lMicroseconds(kDurationMicrosecond * microseconds);
-    AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
-    threads::mac::detail::safe_delay_until(&sWakeTime);
+		int microseconds;
+		to_microduration(xt, microseconds);
+		Duration lMicroseconds(kDurationMicrosecond * microseconds);
+		AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
+		threads::mac::detail::safe_delay_until(&sWakeTime);
 #endif
+		if (xtime_cmp(xt, xt2) >= 0)
+			return;
+	}
 }
 
 void thread::yield()
