@@ -13,12 +13,14 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
 	  <othername>E.</othername>
       <surname>Kempf</surname>
     </author>
+
     <copyright>
       <year>2001</year>
       <year>2002</year>
       <year>2003</year>
       <holder>William E. Kempf</holder>
     </copyright>
+
     <legalnotice>
       <para>Permission to use, copy, modify, distribute and sell this
       software and its documentation for any purpose is hereby granted
@@ -28,8 +30,12 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
       representations about the suitability of this software for any purpose.
       It is provided "as is" without express or implied warranty.</para>
     </legalnotice>
+
     <librarypurpose>Portable C++ multi-threading</librarypurpose>
+
     <librarycategory name="category:concurrent" />
+
+    <title>Boost.Threads</title>
   </libraryinfo>
   <title>&Boost.Threads;</title>
   <xi:include href="overview.xml"/>
