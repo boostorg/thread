@@ -62,14 +62,14 @@ import testing ;
 
      test-suite "threads"
          : 
-           [ run test_thread.cpp <template>boost_thread_test_dll ]
-           [ run test_mutex.cpp <template>boost_thread_test_dll ]
-           [ run test_condition.cpp <template>boost_thread_test_dll ]
-           [ run test_tss.cpp <template>boost_thread_test_dll ]
-           [ run test_once.cpp <template>boost_thread_test_dll ]
-           [ run test_xtime.cpp <template>boost_thread_test_dll ]
-           [ run test_barrier.cpp <template>boost_thread_test_dll ]
-           [ run test_read_write_mutex.cpp <template>boost_thread_test_dll ]
+           [ run test_thread.cpp <template>boost_thread_test_dll           : : : : test_thread_dll ]
+           [ run test_mutex.cpp <template>boost_thread_test_dll            : : : : test_mutex_dll ]
+           [ run test_condition.cpp <template>boost_thread_test_dll        : : : : test_condition_dll ]
+           [ run test_tss.cpp <template>boost_thread_test_dll              : : : : test_tss_dll ]
+           [ run test_once.cpp <template>boost_thread_test_dll             : : : : test_once_dll ]
+           [ run test_xtime.cpp <template>boost_thread_test_dll            : : : : test_xtime_dll ]
+           [ run test_barrier.cpp <template>boost_thread_test_dll          : : : : test_barrier_dll ]
+           [ run test_read_write_mutex.cpp <template>boost_thread_test_dll : : : : test_read_write_mutex_dll ]
            
            [ run test_thread.cpp <template>boost_thread_test_lib           : : : : test_thread_lib ]
            [ run test_mutex.cpp <template>boost_thread_test_lib            : : : : test_mutex_lib  ]
