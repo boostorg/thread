@@ -21,12 +21,10 @@ subproject libs/thread/test ;
 # Include threads.jam for Boost.Threads global build information.
 # This greatly simplifies the Jam code needed to configure the build
 # for the various Win32 build types.
-SEARCH on threads.jam = $(BOOST_ROOT)/libs/thread/build ;
-include threads.jam ;
+import ../build/threads ;
 
 # bring in rules for testing
-SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
-include testing.jam ;
+import testing ;
 
 {
     template test
