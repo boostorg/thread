@@ -1,14 +1,15 @@
 #include <boost/thread/thread.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
-void helloworld(const char* who)
+struct helloworld
 {
-    std::cout << who << "says, \"Hello World.\"" << std::endl;
-}
+    helloworld(const char* who) : m_who(who) { }
+    void operator()() { std::cout << m_who << "says, \"Hello World.\"" << std::endl; }
+    const char* m_who;
+};
 
 int main()
 {
-    boost::thread thrd(boost::bind(&helloworld, "Bob"));
+    boost::thread thrd(helloworld("Bob"));
     thrd.join();
 }
