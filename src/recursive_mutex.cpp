@@ -15,6 +15,7 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/limits.hpp>
+#include <string>
 #include <stdexcept>
 #include <cassert>
 #include "timeconv.inl"
