@@ -6,15 +6,37 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
 
+#ifndef DEFAULT_EXECUTION_MONITOR_TYPE
+#   define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_condition
+#endif
+
 namespace
 {
-	inline boost::xtime delay(int secs)
+	inline boost::xtime delay(int secs, int msecs=0, int nsecs=0)
 	{
+		const int MILLISECONDS_PER_SECOND = 1000;
+		const int NANOSECONDS_PER_SECOND = 1000000000;
+		const int NANOSECONDS_PER_MILLISECOND = 1000000;
+
 		boost::xtime xt;
         BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC),
             static_cast<int>(boost::TIME_UTC));
-		xt.sec += secs;
+
+		nsecs += xt.nsec;
+		msecs += nsecs / NANOSECONDS_PER_MILLISECOND;
+		secs += msecs / MILLISECONDS_PER_SECOND;
+		nsecs += (msecs % MILLISECONDS_PER_SECOND) * NANOSECONDS_PER_MILLISECOND;
+		xt.nsec = nsecs % NANOSECONDS_PER_SECOND;
+		xt.sec += secs + (nsecs / NANOSECONDS_PER_SECOND);
+
 		return xt;
+	}
+
+	inline bool in_range(const boost::xtime& xt, int secs=1)
+	{
+		boost::xtime min = delay(-secs);
+		boost::xtime max = delay(0);
+		return (boost::xtime_cmp(xt, min) >= 0) && (boost::xtime_cmp(xt, max) <= 0);
 	}
 
     class execution_monitor
@@ -24,14 +46,16 @@ namespace
 
         execution_monitor(wait_type type, int secs)
 			: done(false), type(type), secs(secs) { }
-		void start() {
+		void start()
+		{
 			if (type != use_sleep_only) {
 				boost::mutex::scoped_lock lock(mutex); done = false;
 			} else {
 				done = false;
 			}
 		}
-        void finish() {
+        void finish()
+		{
 			if (type != use_sleep_only) {
 				boost::mutex::scoped_lock lock(mutex);
 				done = true;
@@ -41,7 +65,8 @@ namespace
 				done = true;
 			}
 		}
-		bool wait() {
+		bool wait()
+		{
 			boost::xtime xt = delay(secs);
 			if (type != use_condition)
 				boost::thread::sleep(xt);
@@ -92,7 +117,7 @@ namespace
 
 	template <typename F>
 	void timed_test(F func, int secs,
-		execution_monitor::wait_type type=execution_monitor::use_condition)
+		execution_monitor::wait_type type=DEFAULT_EXECUTION_MONITOR_TYPE)
 	{
 		execution_monitor monitor(type, secs);
 		indirect_adapter<F> ifunc(func, monitor);

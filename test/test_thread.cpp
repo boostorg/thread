@@ -3,66 +3,33 @@
 
 #include <boost/test/unit_test.hpp>
 
-namespace
+#define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
+#include "util.inl"
+
+int test_value;
+
+void simple_thread()
 {
-    inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
-    {
-        boost::xtime cur;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
+    test_value = 999;
+}
 
-        boost::xtime less = cur;
-        less.sec += less_seconds;
-
-        boost::xtime greater = cur;
-        greater.sec += greater_seconds;
-
-        return (boost::xtime_cmp(xt, less) >= 0) && (boost::xtime_cmp(xt, greater) <= 0);
-    }
-
-    int test_value;
-
-    void simple_thread()
-    {
-        test_value = 999;
-    }
-
-    struct thread_adapter
-    {
-        thread_adapter(void (*func)(boost::thread& parent), boost::thread& parent)
-            : func(func), parent(parent)
-        {
-        }
-
-        void operator()()
-        {
-            (*func)(parent);
-        }
-
-        void (*func)(boost::thread& parent);
-        boost::thread& parent;
-    };
-
-    void comparison_thread(boost::thread& parent)
-    {
-        boost::thread thrd;
-        BOOST_TEST(thrd != parent);
-        BOOST_TEST(thrd == boost::thread());
-    }
+void comparison_thread(boost::thread* parent)
+{
+    boost::thread thrd;
+    BOOST_TEST(thrd != *parent);
+    BOOST_TEST(thrd == boost::thread());
 }
 
 void test_sleep()
 {
-    boost::xtime xt;
-    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-    xt.sec += 3;
-
+    boost::xtime xt = delay(3);
     boost::thread::sleep(xt);
 
     // Insure it's in a range instead of checking actual equality due to time lapse
-    BOOST_CHECK(xtime_in_range(xt, -1, 0));
+    BOOST_CHECK(in_range(xt));
 }
 
-void test_creation()
+void do_test_creation()
 {
     test_value = 0;
     boost::thread thrd(&simple_thread);
@@ -70,11 +37,21 @@ void test_creation()
     BOOST_CHECK_EQUAL(test_value, 999);
 }
 
-void test_comparison()
+void test_creation()
+{
+	timed_test(&do_test_creation, 1);
+}
+
+void do_test_comparison()
 {
     boost::thread self;
-    boost::thread thrd(thread_adapter(comparison_thread, self));
+    boost::thread thrd(bind(&comparison_thread, &self));
     thrd.join();
+}
+
+void test_comparison()
+{
+	timed_test(&do_test_comparison, 1);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
