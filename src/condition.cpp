@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -39,8 +39,8 @@ condition_impl::condition_impl()
     : m_gone(0), m_blocked(0), m_waiting(0)
 {
     m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
-    m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0,
-        std::numeric_limits<long>::max(), 0));
+    m_queue = reinterpret_cast<void*>(
+        CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
     m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
 
     if (!m_gate || !m_queue || !m_mutex)
@@ -174,7 +174,8 @@ void condition_impl::notify_all()
 
         if (signals)
         {
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue),
+                signals, 0);
             assert(res);
         }
     }
@@ -427,7 +428,8 @@ void condition_impl::notify_one()
     unsigned signals = 0;
 
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (m_waiting != 0) // the m_gate is already closed

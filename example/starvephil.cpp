@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
@@ -7,7 +18,7 @@
 
 namespace
 {
-    boost::mutex iomx;
+boost::mutex iomx;
 }
 
 class canteen
@@ -39,8 +50,9 @@ public:
         boost::mutex::scoped_lock lock(m_mutex);
         {
             boost::mutex::scoped_lock lock(iomx);
-            std::cout << "(" << clock() <<
-                ") Chef: ouch ... make room ... this dish is very hot ..." << std::endl;
+            std::cout << "(" << clock()
+                      << ") Chef: ouch ... make room ... this dish is very "
+                      << "hot ..." << std::endl;
         }
         boost::xtime xt;
         boost::xtime_get(&xt, boost::TIME_UTC);
@@ -84,7 +96,7 @@ void chef()
         {
             boost::mutex::scoped_lock lock(iomx);
             std::cout << "(" << clock() << ") Chef: " << chickens
-                << " chickens, ready-to-go ..." << std::endl;
+                      << " chickens, ready-to-go ..." << std::endl;
         }
         g_canteen.put(chickens);
     }
@@ -96,7 +108,8 @@ struct phil
     void run() {
         {
             boost::mutex::scoped_lock lock(iomx);
-            std::cout << "(" << clock() << ") Phil" << m_id << ": starting ..." << std::endl;
+            std::cout << "(" << clock() << ") Phil" << m_id << ": starting ..."
+                      << std::endl;
         }
         for (;;)
         {
@@ -110,13 +123,13 @@ struct phil
             {
                 boost::mutex::scoped_lock lock(iomx);
                 std::cout << "(" << clock() << ") Phil" << m_id
-                    << ": gotta eat ..." << std::endl;
+                          << ": gotta eat ..." << std::endl;
             }
             g_canteen.get(m_id);
             {
                 boost::mutex::scoped_lock lock(iomx);
                 std::cout << "(" << clock() << ") Phil" << m_id
-                    << ": mmm ... that's good ..." << std::endl;
+                          << ": mmm ... that's good ..." << std::endl;
             }
         }
     }
@@ -129,7 +142,10 @@ struct phil
 
 struct thread_adapt
 {
-    thread_adapt(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    thread_adapt(void (*func)(void*), void* param)
+        : _func(func), _param(param)
+    {
+    }
     int operator()() const
     {
         _func(_param);
@@ -143,7 +159,10 @@ struct thread_adapt
 class thread_adapter
 {
 public:
-    thread_adapter(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    thread_adapter(void (*func)(void*), void* param)
+        : _func(func), _param(param)
+    {
+    }
     void operator()() const { _func(_param); }
 private:
     void (*_func)(void*);

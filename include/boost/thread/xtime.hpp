@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -51,8 +51,7 @@ inline int xtime_cmp(const xtime& xt1, const xtime& xt2)
 
 } // namespace boost
 
-// Change Log:
-//   8 Feb 01  WEKEMPF Initial version.
-
 #endif // BOOST_XTIME_WEK070601_HPP
 
+// Change Log:
+//   8 Feb 01  WEKEMPF Initial version.

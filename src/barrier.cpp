@@ -1,4 +1,4 @@
-// Copyright (C) 2002
+// Copyright (C) 2002-2003
 // David Moore, William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -21,25 +21,25 @@ barrier::barrier(unsigned int count)
 }
 
 barrier::~barrier()
-{   
+{
 }
 
 bool barrier::wait()
 {
     boost::mutex::scoped_lock lock(m_mutex);
-	unsigned int gen = m_generation;
+    unsigned int gen = m_generation;
 
-	if (--m_count == 0)
-	{
-		m_generation++;
-		m_count = m_threshold;
-		m_cond.notify_all();
-		return true;
-	}
+    if (--m_count == 0)
+    {
+        m_generation++;
+        m_count = m_threshold;
+        m_cond.notify_all();
+        return true;
+    }
 
-	while (gen == m_generation)
-		m_cond.wait(lock);
-	return false;
+    while (gen == m_generation)
+        m_cond.wait(lock);
+    return false;
 }
 
 } // namespace boost

@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -143,9 +143,9 @@ private:
         typedef detail::thread::lock_ops<M>
 #if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
 # define lock_ops lock_ops_  // HP confuses lock_ops witht the template
-#endif 
+#endif
             lock_ops;
-        
+
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -169,9 +169,9 @@ private:
         typedef detail::thread::lock_ops<M>
 #if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
 # define lock_ops lock_ops_  // HP confuses lock_ops witht the template
-#endif 
+#endif
             lock_ops;
-        
+
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -192,11 +192,11 @@ private:
 
 } // namespace boost
 
+#endif // BOOST_CONDITION_WEK070601_HPP
+
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
 //   23 May 01  WEKEMPF Removed "duration" timed_waits, as they are too
 //                      difficult to use with spurious wakeups.
 //    3 Jan 03  WEKEMPF Modified for DLL implementation.
-
-#endif // BOOST_CONDITION_WEK070601_HPP

@@ -1,4 +1,4 @@
-// Copyright (C) 2002
+// Copyright (C) 2002-2003
 // William E. Kempf, David Moore
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -27,30 +27,29 @@
 
 namespace boost {
 
-    class shared_memory
-    {
-    public:
-        // Obtain a shared memory block len bytes long, zero initialized
-        shared_memory(const char *name,size_t len);
-        // Obtain a shared memory block and initialize it with initfunc
-        shared_memory(const char *name,size_t len,const boost::function2<void,void *,size_t> &initfunc);
-        ~shared_memory();
+class shared_memory
+{
+public:
+    // Obtain a shared memory block len bytes long, zero initialized
+    shared_memory(const char *name, size_t len);
+    // Obtain a shared memory block and initialize it with initfunc
+    shared_memory(const char *name, size_t len,
+        const boost::function2<void,void *,size_t> &initfunc);
+    ~shared_memory();
 
-        void *get(){return m_ptr;}
-    private:
+    void *get() { return m_ptr; }
+    
+private:
+    void create(const char *name, size_t len);
 
-        void create(const char *name,
-                    size_t len);
+    void *m_ptr;        // Pointer to shared memory block
+    int   m_mem_obj;    // Platform specific handle to shared memory block
+    void *m_h_event;    // Platform specific event saying initialized.
+    size_t  m_len;
 
+    boost::function2<void,void *,size_t> m_initfunc;
+};
 
-        void *m_ptr;        // Pointer to shared memory block
-        int   m_mem_obj;    // Platform specific handle to shared memory block
-        void *m_h_event;    // Platform specific handle to event saying block initialized.
-        size_t  m_len;
-
-        boost::function2<void,void *,size_t> m_initfunc;
-
-    };
-};  // namespace boost
+}  // namespace boost
 
 #endif

@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
@@ -49,7 +60,10 @@ void player(void* param)
         {
             cond.wait(lock);
             if (state == other)
-                std::cout << "---" << player_name(active) << ": Spurious wakeup!" << std::endl;
+            {
+                std::cout << "---" << player_name(active)
+                          << ": Spurious wakeup!" << std::endl;
+            }
         } while (state == other);
     }
 
@@ -60,7 +74,10 @@ void player(void* param)
 
 struct thread_adapt
 {
-    thread_adapt(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    thread_adapt(void (*func)(void*), void* param)
+        : _func(func), _param(param)
+    {
+    }
     int operator()() const
     {
         _func(_param);
@@ -74,7 +91,10 @@ struct thread_adapt
 class thread_adapter
 {
 public:
-    thread_adapter(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    thread_adapter(void (*func)(void*), void* param)
+        : _func(func), _param(param)
+    {
+    }
     void operator()() const { _func(_param); }
 private:
     void (*_func)(void*);

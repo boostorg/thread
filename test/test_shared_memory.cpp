@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/shared_memory.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
@@ -6,21 +17,21 @@
 #include <boost/bind.hpp>
 
 
-namespace
-{
-    struct test_struct
-    {
-        char buf[128];
-        double val;
+namespace {
 
-        test_struct(const char *msg="",double v=0.0)
-        {
-            strcpy(buf,msg);
-            val = v;
-        }
-    };
+struct test_struct
+{
+    char buf[128];
+    double val;
+
+    test_struct(const char *msg="",double v=0.0)
+    {
+        strcpy(buf,msg);
+        val = v;
+    }
 };
 
+}
 
 struct CreateDefault
 {
@@ -37,10 +48,10 @@ struct CreateSlow
     {
         boost::xtime xt;
         boost::xtime_get(&xt,boost::TIME_UTC);
-    
+
         xt.sec++;
 
-        boost::thread::sleep(xt);       
+        boost::thread::sleep(xt);
         return new(place) test_struct;
     }
 };
@@ -68,7 +79,7 @@ struct CreateSlowWithParams
     {
         boost::xtime xt;
         boost::xtime_get(&xt,boost::TIME_UTC);
-    
+
         xt.sec++;
 
         boost::thread::sleep(xt);
@@ -77,10 +88,6 @@ struct CreateSlowWithParams
     const char *m_p_msg;
     double      m_v;
 };
-
-
-
-
 
 void test_default_ctor()
 {
@@ -102,16 +109,14 @@ void test_default_ctor()
     test_struct *pts2 = (test_struct *)user.get();
     BOOST_TEST(strcmp(pts->buf,shared_name)==0);
     BOOST_TEST(pts->val == 7.0);
-
 }
-
 
 void test_slow_create_thread()
 {
     const char *shared_name = "SlowStruct";
 
-
-    boost::shared_memory creator(shared_name,sizeof(test_struct),CreateSlowWithParams(shared_name,8.0));
+    boost::shared_memory creator(shared_name, sizeof(test_struct),
+        CreateSlowWithParams(shared_name,8.0));
 
     test_struct *pts = (test_struct *)creator.get();
     BOOST_TEST(strcmp(pts->buf,shared_name)==0);
@@ -121,7 +126,6 @@ void test_slow_create_thread()
 void test_slow_user_thread()
 {
     const char *shared_name = "SlowStruct";
-
 
     boost::shared_memory user(shared_name,sizeof(test_struct));
 
@@ -145,7 +149,6 @@ void test_slow_ctor()
     t2.join();
     t1.join();
 }
-
 
 void test_shared_memory()
 {

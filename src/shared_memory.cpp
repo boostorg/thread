@@ -27,8 +27,7 @@
 #endif
 
 
-namespace
-{
+namespace {
 
 const int HEADER_ALIGN=16;
 
@@ -38,8 +37,6 @@ struct hdr
     unsigned int count;
 };
 
-
-
 void fillzero(void *ptr, size_t len)
 {
     memset(ptr,0,len);
@@ -47,74 +44,62 @@ void fillzero(void *ptr, size_t len)
 
 void noinit(void *,size_t)
 {
+}
 
 }
 
-};
+namespace boost {
 
-
-namespace boost
+shared_memory::shared_memory(const char *name, size_t len)
+    : m_ptr(NULL), m_mem_obj(0), m_h_event(NULL), m_len(len),
+      m_initfunc(&noinit)
 {
-
-shared_memory::
-shared_memory(const char *name,size_t len) : m_ptr(NULL),m_mem_obj(0),m_h_event(NULL),
-    m_len(len),m_initfunc(&noinit)
-{
-    create(name,len);       
+    create(name,len);
 }
 
 // Obtain a shared memory block and initialize it with initfunc
-shared_memory::
-shared_memory(const char *name,size_t len,const boost::function2<void,void *,size_t> &initfunc) : 
- m_ptr(NULL),m_mem_obj(0),m_h_event(NULL),m_len(len),m_initfunc(initfunc)
+shared_memory::shared_memory(const char *name, size_t len,
+    const boost::function2<void,void *,size_t> &initfunc)
+    : m_ptr(NULL), m_mem_obj(0), m_h_event(NULL), m_len(len),
+      m_initfunc(initfunc)
 {
-    create(name,len);     
-} 
- 
+    create(name,len);
+}
 
-
-shared_memory::
-~shared_memory()
+shared_memory::~shared_memory()
 {
-
-    if(m_ptr)
+    if (m_ptr)
     {
         m_ptr = ((char *) m_ptr - HEADER_ALIGN);
         hdr *p_hdr = (hdr *)m_ptr;
 
-        if(p_hdr)
+        if (p_hdr)
         {
             p_hdr->count--;
         }
+
 #if defined(BOOST_HAS_WINTHREADS)
-        
         UnmapViewOfFile(m_ptr);
-        
-        if(m_mem_obj)
+
+        if (m_mem_obj)
         {
             CloseHandle(reinterpret_cast<HANDLE>(m_mem_obj));
         }
-        if(m_h_event)
+        if (m_h_event)
         {
             CloseHandle(reinterpret_cast<HANDLE>(m_h_event));
         }
 #elif defined (BOOST_HAS_PTHREADS)
-        if(p_hdr->count == 0)
+        if (p_hdr->count == 0)
         {
             shm_unlink(m_name);
         }
         munmap(m_ptr,m_len);
 #endif
- 
     }
 }
 
-
-
-
-void 
-shared_memory::
-create(const char *name,size_t len)
+void shared_memory::create(const char *name, size_t len)
 {
 #if defined(BOOST_HAS_WINTHREADS)
     HANDLE h_map = NULL;
@@ -127,24 +112,26 @@ create(const char *name,size_t len)
     obj_name += name;
     h_event = CreateEvent(NULL,TRUE,FALSE,obj_name.c_str());
 
-    if(h_event == NULL)
+    if (h_event == NULL)
     {
         throw boost::thread_resource_error();
     }
     b_creator = (GetLastError() != ERROR_ALREADY_EXISTS);
 
-    h_map = CreateFileMapping(INVALID_HANDLE_VALUE,NULL,PAGE_READWRITE,0,len+HEADER_ALIGN,name);
-    
-    if(h_map)
+    h_map = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
+        0, len + HEADER_ALIGN, name);
+
+    if (h_map)
     {
-        m_ptr = (char *)MapViewOfFile(h_map,FILE_MAP_WRITE,0,0,0);
-        if(m_ptr)
+        m_ptr = static_cast<char*>(
+            MapViewOfFile(h_map, FILE_MAP_WRITE, 0, 0, 0));
+        if (m_ptr)
         {
             // Get a pointer to our header, and move our real ptr past this.
             hdr *p_hdr = (hdr *)m_ptr;
             m_ptr = ((char *)m_ptr + HEADER_ALIGN);
 
-            if(b_creator)
+            if (b_creator)
             {
                 // Call the initialization function for the user area.
                 m_initfunc(m_ptr,len);
@@ -155,7 +142,7 @@ create(const char *name,size_t len)
             else
             {
                 ret = WaitForSingleObject(h_event,INFINITE);
-                if(ret != WAIT_OBJECT_0)
+                if (ret != WAIT_OBJECT_0)
                 {
                     CloseHandle(h_event);
                     CloseHandle(h_map);
@@ -177,19 +164,19 @@ create(const char *name,size_t len)
     m_h_event = reinterpret_cast<void *>(h_event);
 
 #elif defined (BOOST_HAS_PTHREADS)
-    int     fd_smo;      // descriptor to shared memory object
-    bool    b_creator = true;
+    int fd_smo;      // descriptor to shared memory object
+    bool b_creator = true;
 
-    fd_smo = shm_open(name,O_RDWR|O_CREAT|O_EXCL,SHM_MODE);
+    fd_smo = shm_open(name, O_RDWR|O_CREAT|O_EXCL, SHM_MODE);
 
-    if(fd_smo == -1)
+    if (fd_smo == -1)
     {
-        if(errno == EEXIST)
+        if (errno == EEXIST)
         {
             // We lost the race.  We should just re-open with shared access
             //  below.
             fd_smo = shm_open(name,O_RDWR,SHM_MODE);
-            
+
             b_creator = false
         }
         else
@@ -201,19 +188,15 @@ create(const char *name,size_t len)
     {
         // We're the creator.  Use ftrunctate to set the size.
         b_creator = true;
-        // 
+        //
         // Add error check on ftruncate.
         ftruncate(fd_smo,len+HEADER_ALIGN);
     }
 
-    m_ptr = (char *)mmap(NULL,len + HEADER_ALIGN,
-                        PROT_READ|PROT_WRITE,
-                        MAP_SHARED,
-                        fd_smo,
-                        0);
-       
-    
-    if(m_ptr)
+    m_ptr = (char *)mmap(NULL, len + HEADER_ALIGN, PROT_READ|PROT_WRITE,
+        MAP_SHARED, fd_smo, 0);
+
+    if (m_ptr)
     {
         // Get a pointer to our header, and move our real ptr past this.
         hdr *p_hdr = (hdr *)ptr;
@@ -223,11 +206,10 @@ create(const char *name,size_t len)
         {
             // Call the initialization function for the user area.
             //flock(fd_smo);
-            
             initfunc(ptr,len);
             p_hdr->len = len;
             p_hdr->count = 1;
-            
+
             //funlock(fd_sm0);
         }
         else
@@ -237,10 +219,9 @@ create(const char *name,size_t len)
             {
                 //flock(fd_smo);
                 //funlock(fd_smo);
-
                 boost::xtime xt;
                 boost::xtime_get(&xt,boost::TIME_UTC);
-                xt.sec++;   
+                xt.sec++;
 
                 boost::thread::sleep(xt);
             }
@@ -253,10 +234,6 @@ create(const char *name,size_t len)
     mem_obj = NULL;         //reinterpret_cast<int>(h_map);
     event_obj = NULL;       //reinterpret_cast<void *>(h_event);
 #endif
-
-
 }
-
-
 
 }   // namespace boost

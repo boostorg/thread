@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -35,18 +35,18 @@ namespace detail {
 class BOOST_THREAD_DECL tss : private noncopyable
 {
 public:
-	tss(boost::function1<void, void*>* pcleanup) {
-		if (pcleanup == 0) throw boost::thread_resource_error();
-		try
-		{
-			init(pcleanup);
-		}
-		catch (...)
-		{
-			delete pcleanup;
-			throw boost::thread_resource_error();
-		}
-	}
+    tss(boost::function1<void, void*>* pcleanup) {
+        if (pcleanup == 0) throw boost::thread_resource_error();
+        try
+        {
+            init(pcleanup);
+        }
+        catch (...)
+        {
+            delete pcleanup;
+            throw boost::thread_resource_error();
+        }
+    }
 
     void* get() const;
     void set(void* value);
@@ -55,18 +55,18 @@ public:
 private:
     unsigned int m_slot;
 
-	void init(boost::function1<void, void*>* pcleanup);
+    void init(boost::function1<void, void*>* pcleanup);
 };
 
 #if defined(BOOST_HAS_MPTASKS)
-    void thread_cleanup();
+void thread_cleanup();
 #endif
 
 template <typename T>
 struct tss_adapter
 {
-	template <typename F>
-		tss_adapter(const F& cleanup) : m_cleanup(cleanup) { }
+    template <typename F>
+    tss_adapter(const F& cleanup) : m_cleanup(cleanup) { }
     void operator()(void* p) { m_cleanup(static_cast<T*>(p)); }
     boost::function1<void, T*> m_cleanup;
 };
@@ -78,16 +78,16 @@ class thread_specific_ptr : private noncopyable
 {
 public:
     thread_specific_ptr()
-		: m_tss(new boost::function1<void, void*>(
-					boost::detail::tss_adapter<T>(
-						&thread_specific_ptr<T>::cleanup)))
-	{
-	}
+        : m_tss(new boost::function1<void, void*>(
+                    boost::detail::tss_adapter<T>(
+                        &thread_specific_ptr<T>::cleanup)))
+    {
+    }
     thread_specific_ptr(void (*clean)(T*))
-		: m_tss(new boost::function1<void, void*>(
-					boost::detail::tss_adapter<T>(clean)))
-	{
-	}
+        : m_tss(new boost::function1<void, void*>(
+                    boost::detail::tss_adapter<T>(clean)))
+    {
+    }
     ~thread_specific_ptr() { reset(); }
 
     T* get() const { return static_cast<T*>(m_tss.get()); }
@@ -109,9 +109,9 @@ private:
 
 } // namespace boost
 
+#endif // BOOST_TSS_WEK070601_HPP
+
 // Change Log:
 //   6 Jun 01  WEKEMPF Initial version.
 //  30 May 02  WEKEMPF Added interface to set specific cleanup handlers.
 //                     Removed TLS slot limits from most implementations.
-
-#endif // BOOST_TSS_WEK070601_HPP

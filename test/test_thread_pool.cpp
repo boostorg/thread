@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
@@ -26,7 +37,7 @@ enum
     FAST_WORKER,
     SLOW_WORKER,
     CPUBOUND_WORKER,
-    
+
     WORKER_TYPE_COUNT
 };
 
@@ -35,12 +46,12 @@ int work_counts[WORKER_TYPE_COUNT];
 class job_adapter
 {
 public:
-    job_adapter(void (*func)(void*), void* param) 
+    job_adapter(void (*func)(void*), void* param)
         : _func(func), _param(param){ }
     void operator()() const { _func(_param); }
 private:
-        void (*_func)(void*);
-        void* _param;
+    void (*_func)(void*);
+    void* _param;
 };
 
 void chatty_worker()
@@ -57,7 +68,7 @@ void slow_worker()
 {
     boost::xtime xt;
     boost::xtime_get(&xt,boost::TIME_UTC);
-    
+
     xt.sec++;
 
     boost::thread::sleep(xt);
@@ -86,7 +97,7 @@ struct recursive_args
 void recursive_worker(void *arg)
 {
     recursive_args *pargs = static_cast<recursive_args *>(arg);
-    
+
     if(--pargs->count > 0)
         pargs->ptp->add(job_adapter(recursive_worker,pargs));
 }
@@ -95,7 +106,7 @@ void detach_worker(void *arg)
 {
     int detach_threads = reinterpret_cast<int>(arg);
     boost::mutex::scoped_lock l(detach_prot);
-    
+
     // If we are the Nth thread to reach this, notify
     //   our caller that everyone is ready to detach!
     if(++at_detach==detach_threads)
@@ -111,7 +122,7 @@ void detach_worker(void *arg)
 // Test a thread_pool with all different sorts of workers
 void test_heterogeneous()
 {
-	memset(work_counts,0,sizeof(work_counts));
+    memset(work_counts,0,sizeof(work_counts));
 
     boost::thread_pool tp(MAX_POOL_THREADS,MIN_POOL_THREADS,POOL_TIMEOUT);
 
@@ -133,7 +144,7 @@ void test_heterogeneous()
 
 void test_recursive()
 {
-	recursive_args ra;
+    recursive_args ra;
 
     boost::thread_pool tp;
     ra.ptp = &tp;
@@ -145,7 +156,7 @@ void test_recursive()
     // busy wait for bottom to be reached.
     while(ra.count > 0)
         boost::thread::yield();
-    
+
     tp.join();
 
     BOOST_TEST(ra.count == 0);
@@ -155,8 +166,8 @@ void test_recursive()
 
 void test_cancel()
 {
-	int wc_after_cancel[WORKER_TYPE_COUNT];
-    
+    int wc_after_cancel[WORKER_TYPE_COUNT];
+
     memset(work_counts,0,sizeof(work_counts));
 
     boost::thread_pool tp(MAX_POOL_THREADS,MIN_POOL_THREADS,POOL_TIMEOUT);
@@ -197,14 +208,15 @@ void test_cancel()
 
     // Check to see that more work was accomplished after the cancel.
     BOOST_TEST(wc_after_cancel[SLOW_WORKER] < work_counts[SLOW_WORKER]);
-    BOOST_TEST(wc_after_cancel[CPUBOUND_WORKER] < work_counts[CPUBOUND_WORKER]);
+    BOOST_TEST(wc_after_cancel[CPUBOUND_WORKER] <
+        work_counts[CPUBOUND_WORKER]);
     BOOST_TEST(wc_after_cancel[CHATTY_WORKER] < work_counts[CHATTY_WORKER]);
     BOOST_TEST(wc_after_cancel[FAST_WORKER] < work_counts[FAST_WORKER]);
 }
 
 void test_detach()
 {
-	int wc_after_detach;
+    int wc_after_detach;
 
     memset(work_counts,0,sizeof(work_counts));
 
@@ -218,7 +230,9 @@ void test_detach()
 
         for(int i = 0; i < DETACH_THREADS; i++)
         {
-            tp.add(job_adapter(detach_worker,reinterpret_cast<void *>(DETACH_THREADS)));
+            tp.add(
+                job_adapter(detach_worker,
+                    reinterpret_cast<void *>(DETACH_THREADS)));
         }
 
         // Wait for all of the threads to reach a known point
@@ -236,7 +250,8 @@ void test_detach()
     // Our detached threads should finish approx 1 sec after this.
     //   We could reliably sync. with the exit of detach_worker, but we
     //   can't reliably sync. with the cleanup of the thread_pool harness,
-    //   so for the purposes of this test, we'll sleep 3 secs, and check some values.
+    //   so for the purposes of this test, we'll sleep 3 secs, and check some
+    //   values.
 
     boost::xtime xt;
     boost::xtime_get(&xt,boost::TIME_UTC);
@@ -251,12 +266,13 @@ void test_detach()
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread_pool test suite");
+    boost::unit_test_framework::test_suite* test =
+        BOOST_TEST_SUITE("Boost.Threads: thread_pool test suite");
 
     test->add(BOOST_TEST_CASE(&test_heterogeneous));
     test->add(BOOST_TEST_CASE(&test_recursive));
     test->add(BOOST_TEST_CASE(&test_cancel));
-	test->add(BOOST_TEST_CASE(&test_detach));
+    test->add(BOOST_TEST_CASE(&test_detach));
 
     return test;
 }

@@ -1,4 +1,4 @@
-// Copyright (C)  2002
+// Copyright (C)  2002-2003
 // David Moore, William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -9,7 +9,7 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-// A Boost::threads implementation of a synchronization 
+// A Boost::threads implementation of a synchronization
 //   primitive which can allow multiple readers or a single
 //   writer to have access to a shared resource.
 
@@ -29,7 +29,7 @@
 #include <boost/thread/detail/rw_lock.hpp>
 #include <boost/thread/condition.hpp>
 
-namespace boost { 
+namespace boost {
 
 typedef enum
 {
@@ -53,7 +53,7 @@ struct rw_mutex_impl
     typedef detail::thread::scoped_timed_lock<Mutex> scoped_timed_lock;
 
     rw_mutex_impl(rw_scheduling_policy sp)
-		: m_num_waiting_writers(0),
+        : m_num_waiting_writers(0),
           m_num_waiting_readers(0),
           m_num_waiting_promotion(0),
           m_state(0),
@@ -61,11 +61,11 @@ struct rw_mutex_impl
           m_readers_next(1) { }
 
     Mutex m_prot;
-	boost::condition m_waiting_writers;
-	boost::condition m_waiting_readers;
+    boost::condition m_waiting_writers;
+    boost::condition m_waiting_readers;
     int m_num_waiting_writers;
     int m_num_waiting_readers;
-	boost::condition m_waiting_promotion;
+    boost::condition m_waiting_promotion;
     int m_num_waiting_promotion;
     int m_state;    // -1 = excl locked
                     // 0 = unlocked
@@ -94,7 +94,7 @@ class BOOST_THREAD_DECL rw_mutex : private noncopyable
 public:
     rw_mutex(rw_scheduling_policy sp) : m_impl(sp) { }
     ~rw_mutex() { }
-    
+
     rw_scheduling_policy policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::rw_lock_ops<rw_mutex>;
@@ -109,7 +109,7 @@ private:
     void do_wrunlock();
     void do_rdunlock();
 
-    detail::thread::rw_mutex_impl<mutex> m_impl; 
+    detail::thread::rw_mutex_impl<mutex> m_impl;
 };
 
 class BOOST_THREAD_DECL try_rw_mutex : private noncopyable
@@ -122,7 +122,8 @@ public:
 
     friend class detail::thread::rw_lock_ops<try_rw_mutex>;
     typedef detail::thread::scoped_rw_lock<try_rw_mutex> scoped_rw_lock;
-    typedef detail::thread::scoped_try_rw_lock<try_rw_mutex> scoped_try_rw_lock;
+    typedef detail::thread::scoped_try_rw_lock<
+        try_rw_mutex> scoped_try_rw_lock;
 
 private:
     // Operations that will eventually be done only
@@ -134,7 +135,7 @@ private:
     bool do_try_wrlock();
     bool do_try_rdlock();
 
-    detail::thread::rw_mutex_impl<try_mutex> m_impl; 
+    detail::thread::rw_mutex_impl<try_mutex> m_impl;
 };
 
 class BOOST_THREAD_DECL timed_rw_mutex : private noncopyable
@@ -142,13 +143,15 @@ class BOOST_THREAD_DECL timed_rw_mutex : private noncopyable
 public:
     timed_rw_mutex(rw_scheduling_policy sp) : m_impl(sp) { }
     ~timed_rw_mutex() { }
-    
+
     rw_scheduling_policy policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::rw_lock_ops<timed_rw_mutex>;
     typedef detail::thread::scoped_rw_lock<timed_rw_mutex> scoped_rw_lock;
-    typedef detail::thread::scoped_try_rw_lock<timed_rw_mutex> scoped_try_rw_lock;
-    typedef detail::thread::scoped_timed_rw_lock<timed_rw_mutex> scoped_timed_rw_lock;
+    typedef detail::thread::scoped_try_rw_lock<
+        timed_rw_mutex> scoped_try_rw_lock;
+    typedef detail::thread::scoped_timed_rw_lock<
+        timed_rw_mutex> scoped_timed_rw_lock;
 
 private:
     // Operations that will eventually be done only
@@ -162,9 +165,9 @@ private:
     bool do_timed_wrlock(const xtime &xt);
     bool do_timed_rdlock(const xtime &xt);
 
-    detail::thread::rw_mutex_impl<timed_mutex> m_impl; 
+    detail::thread::rw_mutex_impl<timed_mutex> m_impl;
 };
 
-}	// namespace boost
+}   // namespace boost
 
 #endif

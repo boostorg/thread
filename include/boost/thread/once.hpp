@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -41,7 +41,8 @@ void BOOST_THREAD_DECL call_once(void (*func)(), once_flag& flag);
 
 } // namespace boost
 
+#endif // BOOST_ONCE_WEK080101_HPP
+
 // Change Log:
 //   1 Aug 01  WEKEMPF Initial version.
 
-#endif // BOOST_ONCE_WEK080101_HPP

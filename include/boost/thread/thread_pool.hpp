@@ -1,4 +1,4 @@
-// Copyright (C)  2002
+// Copyright (C)  2002-2003
 // David Moore, William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -30,7 +30,7 @@ class BOOST_THREAD_DECL thread_pool
 {
 public:
     thread_pool(int max_threads=std::numeric_limits<int>::max(),
-        int min_threads=0, int timeout_secs=5, int timeout_nsecs=0); 
+        int min_threads=0, int timeout_secs=5, int timeout_nsecs=0);
     ~thread_pool();
 
     void add(const boost::function0<void> &job);
@@ -39,10 +39,10 @@ public:
     void detach();
 
 private:
-	class impl;
+    class impl;
     impl* m_pimpl;
 };
 
-}	// namespace boost
+}   // namespace boost
 
 #endif

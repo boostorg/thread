@@ -1,4 +1,4 @@
-// Copyright (C) 2002
+// Copyright (C) 2002-2003
 // David Moore, William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -21,7 +21,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
-namespace boost { 
+namespace boost {
 
 class BOOST_THREAD_DECL barrier
 {
@@ -33,10 +33,10 @@ public:
 
 private:
     mutex m_mutex;
-	condition m_cond;
+    condition m_cond;
     unsigned int m_threshold;
     unsigned int m_count;
-	unsigned int m_generation;
+    unsigned int m_generation;
 };
 
 }   // namespace boost

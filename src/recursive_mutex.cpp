@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -201,7 +201,8 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
         to_duration(xt, milliseconds);
 
         unsigned int res = 0;
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex),
+            milliseconds);
         assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
         if (res == WAIT_TIMEOUT)
@@ -798,7 +799,8 @@ recursive_mutex::~recursive_mutex()
 void recursive_mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (++m_count > 1)
@@ -821,7 +823,8 @@ void recursive_mutex::do_unlock()
 void recursive_mutex::do_lock(cv_state& state)
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     m_count = state;
@@ -849,7 +852,8 @@ recursive_try_mutex::~recursive_try_mutex()
 void recursive_try_mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (++m_count > 1)
@@ -890,7 +894,8 @@ void recursive_try_mutex::do_unlock()
 void recursive_try_mutex::do_lock(cv_state& state)
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     m_count = state;
@@ -918,7 +923,8 @@ recursive_timed_mutex::~recursive_timed_mutex()
 void recursive_timed_mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (++m_count > 1)
@@ -981,7 +987,8 @@ void recursive_timed_mutex::do_unlock()
 void recursive_timed_mutex::do_lock(cv_state& state)
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     m_count = state;

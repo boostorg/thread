@@ -1,105 +1,27 @@
-// rw_mutex.cpp
+// Copyright (C) 2002-2003
+// David Moore, William E. Kempf
 //
-// Implementaion for Reader/Writer lock
-//
-// Notes:
-//
-// This implementation is based on ACE's rw_lock_t implementation, with the
-//   added functionality of supporting different Scheduling Policies.
-//
-// The underlying implementation is shared by rw_mutex, try_rw_mutex, and 
-//    timed_rw_mutex.
-//
-// The basic implementation strategy involves a mutex, m_prot which is locked
-//   during ANY rw_mutex operation, locking or unlocking.  m_prot protects the
-//   invariants of the implementation.
-//
-// The variable m_state takes the following values:
-//   -1 - Exclusive locked
-//    0 - Unlocked
-//    1 -> INT_MAX - shared locked, m_state == # of shared locks.
-//
-// Should a thread need to block for a shared or exclusive lock, two 
-//   member condition variables, m_waiting_readers and m_waiting_writers
-//   are available for waiting.  m_prot is used as the controlling mutex
-//   when waiting in these cases.
-//
-// The number of waiting readers and writers are tracked via member variables
-//   m_num_waiting_readers and m_num_waiting_writers.
-//
-//
-// This particular implementation cannot prevent self-deadlock w/o adding some
-//  means of identifying the thread(s) holding locks.  
-
-//  A recursive_try_mutex used "under the hood" could be used to detect and
-//  prevent exclusive->exclusive self-deadlock since only the same thread
-//  would be able to obtain a second lock on this recursive mutex....
-//
-//  for example, if rw_mutex_impl has an additional member:
-/*
-//  struct rw_mutex_impl {
-//      // ...
-//      recursive_try_mutex m_self_detect;
-//  }
-
-
-template<typename Mutex>
-void
-rw_mutex_impl<Mutex>::
-do_wrlock()
-{
-// Lock our exclusive access.  This protects internal state
-Mutex::scoped_lock l(m_prot);
-
-if(m_state == -1)
-{
-	recursive_try_mutex sl(m_self_detect);
-	if(sl.locked())
-	{ 
-		// It is us that already held the lock!
-            
-		// Do something to hold the m_self_detect lock
-		// and bail out 
-	}
-	else
-	{
-		// It is someone else.  fall back to normal waiting.
-	}
-}
-
-// Wait until no exclusive lock is held.
-//
-// Note:  Scheduling priorities are enforced in the unlock()
-//   call.  unlock will wake the proper thread.
-while(m_state != 0)
-{
-	m_num_waiting_writers++;
-	m_waiting_writers.wait(l);
-	m_num_waiting_writers--;
-}
-m_state = -1;
-}
-
-
-// Unfortunately, the above doesn't work to detect shared->exclusive deadlock where
-//   a shared lock holder tries for an exclusive lock.
-
-
-*/
-
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/rw_mutex.hpp>
 #include <cassert>
 
 namespace boost {
-namespace detail { namespace thread {
+namespace detail {
+namespace thread {
 
 template<typename Mutex>
 void rw_mutex_impl<Mutex>::do_rdlock()
 {
     // Lock our exclusive access.  This protects internal state
     typename Mutex::scoped_lock l(m_prot);
-    
+
     // Wait until no exclusive lock is held.
     //
     // Note:  Scheduling priorities are enforced in the unlock()
@@ -110,7 +32,7 @@ void rw_mutex_impl<Mutex>::do_rdlock()
         m_waiting_readers.wait(l);
         m_num_waiting_readers--;
     }
-    
+
     // Increase the reader count
     m_state++;
 }
@@ -160,13 +82,13 @@ bool rw_mutex_impl<Mutex>::do_try_rdlock()
         }
         else if(m_sp == sp_writer_priority)
         {
-            // A writer is waiting - don't grant this try lock, and 
+            // A writer is waiting - don't grant this try lock, and
             //   return immediately (don't increase waiting_readers count)
             ret = false;
         }
-        else 
+        else
         {
-            // For alternating scheduling priority, 
+            // For alternating scheduling priority,
             // I don't think that try_ locks should step in front of others
             //   who have already indicated that they are waiting.
             // It seems that this could "game" the system and defeat
@@ -184,42 +106,6 @@ bool rw_mutex_impl<Mutex>::do_try_rdlock()
 
     return ret;
 }
-
-/*
- * try_promote_rdlock - not yet in production....
- *
-
- template<typename Mutex>
- bool rw_mutex_impl<Mutex>::do_try_promote_rdlock()
- {
- RWMutexImpl::scoped_lock l(m_prot);
-
- if(m_state == -1)
- {
- // promoting a write-locked to a read lock is a serious error.
- throw lock_error();
- }
- else if(m_num_waiting_promotion > 0)
- {
- // Someone else is already trying to upgrade.  Avoid deadlock by
- //   returning false.
- return false;
- }
- else
- {
- while(m_state > 1)     // While there are other readers
- {
- m_num_waiting_writers++;
- m_num_waiting_promotion = 1;
- m_waiting_promotion.wait(l);
- m_num_waiting_promotion = 0;
- m_num_waiting_writers--;
- }
- // We got the exclusive lock!
- m_state == -1;
- }
- }
-*/
 
 template<typename Mutex>
 bool rw_mutex_impl<Mutex>::do_try_wrlock()
@@ -248,12 +134,12 @@ bool rw_mutex_impl<Mutex>::do_try_wrlock()
 template<typename Mutex>
 bool rw_mutex_impl<Mutex>::do_timed_rdlock(const boost::xtime &xt)
 {
-	// Lock our exclusive access.  This protects internal state
+    // Lock our exclusive access.  This protects internal state
     typename Mutex::scoped_timed_lock l(m_prot,xt);
     if(!l.locked())
         return false;
 
-    
+
     // Wait until no exclusive lock is held.
     //
     // Note:  Scheduling priorities are enforced in the unlock()
@@ -268,7 +154,7 @@ bool rw_mutex_impl<Mutex>::do_timed_rdlock(const boost::xtime &xt)
         }
         m_num_waiting_readers--;
     }
-    
+
     // Increase the reader count
     m_state++;
     return true;
@@ -299,7 +185,7 @@ bool rw_mutex_impl<Mutex>::do_timed_wrlock(const boost::xtime &xt)
     m_state = -1;
     return true;
 }
- 
+
 template<typename Mutex>
 void rw_mutex_impl<Mutex>::do_rdunlock()
 {
@@ -323,8 +209,8 @@ void rw_mutex_impl<Mutex>::do_rdunlock()
 
 template<typename Mutex>
 void rw_mutex_impl<Mutex>::do_wakeups()
-{       
-    if( m_num_waiting_writers > 0 && 
+{
+    if( m_num_waiting_writers > 0 &&
         m_num_waiting_readers > 0)
     {
         // We have both types waiting, and -either- could proceed.
@@ -369,14 +255,14 @@ void rw_mutex_impl<Mutex>::do_wakeups()
         // Only readers - scheduling doesn't matter
         m_waiting_readers.notify_all();
     }
-} 
+}
 
 template<typename Mutex>
 void rw_mutex_impl<Mutex>::do_wrunlock()
 {
     // Protect internal state.
     typename Mutex::scoped_lock l(m_prot);
-  
+
     if(m_state == -1)
         m_state = 0;
     else
@@ -389,7 +275,7 @@ void rw_mutex_impl<Mutex>::do_wrunlock()
 
 }   // namespace thread
 }   // namespace detail
-    
+
 void rw_mutex::do_rdlock()
 {
     m_impl.do_rdlock();

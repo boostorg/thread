@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -80,7 +80,8 @@ public:
     friend class detail::thread::lock_ops<recursive_try_mutex>;
 
     typedef detail::thread::scoped_lock<recursive_try_mutex> scoped_lock;
-    typedef detail::thread::scoped_try_lock<recursive_try_mutex> scoped_try_lock;
+    typedef detail::thread::scoped_try_lock<
+        recursive_try_mutex> scoped_try_lock;
 
     recursive_try_mutex();
     ~recursive_try_mutex();
@@ -125,8 +126,10 @@ public:
     friend class detail::thread::lock_ops<recursive_timed_mutex>;
 
     typedef detail::thread::scoped_lock<recursive_timed_mutex> scoped_lock;
-    typedef detail::thread::scoped_try_lock<recursive_timed_mutex> scoped_try_lock;
-    typedef detail::thread::scoped_timed_lock<recursive_timed_mutex> scoped_timed_lock;
+    typedef detail::thread::scoped_try_lock<
+        recursive_timed_mutex> scoped_try_lock;
+    typedef detail::thread::scoped_timed_lock<
+        recursive_timed_mutex> scoped_timed_lock;
 
     recursive_timed_mutex();
     ~recursive_timed_mutex();
@@ -166,12 +169,11 @@ private:
 
 } // namespace boost
 
+#endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
+
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //    1 Jun 01  WEKEMPF Modified to use xtime for time outs.  Factored out
 //                      to three classes, mutex, try_mutex and timed_mutex.
 //   11 Jun 01  WEKEMPF Modified to use PTHREAD_MUTEX_RECURSIVE if available.
 //    3 Jan 03  WEKEMPF Modified for DLL implementation.
-
-
-#endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
