@@ -1,4 +1,4 @@
-Copyright (C) 2001-2003
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software

@@ -310,7 +310,7 @@ public:
         bool initially_locked = true)
         : m_mutex(mx), m_state(read_write_lock_state::unlocked)
     {
-        if (initial_state)
+        if (initially_locked)
             lock();
     }
 
