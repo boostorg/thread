@@ -32,7 +32,6 @@ lib boost_thread : ../src/$(CPP_SOURCES).cpp
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
-    <runtime-link>static/dynamic
     : debug release ;
 
 stage bin-stage : <lib>boost_thread $(BOOST_THREADMON_DLL)
