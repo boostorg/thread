@@ -16,11 +16,10 @@
 #include <iostream>
 #include <time.h>
 
-namespace {
-
+namespace
+{
 boost::mutex iomx;
-
-}
+} // namespace
 
 class canteen
 {

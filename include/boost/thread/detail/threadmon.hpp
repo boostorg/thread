@@ -10,6 +10,7 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/config.hpp>
+
 // insist on threading support being available:
 #include <boost/config/requires_threads.hpp>
 
