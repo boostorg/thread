@@ -61,8 +61,7 @@ public:
     {
         creating,
         running,
-		finished,
-		//        joining,
+        finished,
         joined
     };
 
@@ -177,62 +176,71 @@ bool thread_data::release()
 
 void thread_data::join()
 {
-	boost::mutex::scoped_lock lock(m_mutex);
-	while (m_state != joined && m_state != finished)
-		m_cond.wait(lock);
-	if (m_state == finished)
-	{
-		int res = 0;
+    bool do_join=false;
+    {
+        boost::mutex::scoped_lock lock(m_mutex);
+        while (m_state != joined && m_state != finished)
+            m_cond.wait(lock);
+        do_join = (m_state == finished);
+    }
+    if (do_join)
+    {
+        int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-		res = WaitForSingleObject(m_thread, INFINITE);
-		assert(res == WAIT_OBJECT_0);
-		res = CloseHandle(m_thread);
-		assert(res);
+        res = WaitForSingleObject(m_thread, INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        res = CloseHandle(m_thread);
+        assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-		res = pthread_join(m_thread, 0);
-		assert(res == 0);
+        res = pthread_join(m_thread, 0);
+        assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-		OSStatus lStatus =
-			threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
-													 NULL, NULL,
-													 kDurationForever);
-		assert(lStatus == noErr);
+        OSStatus lStatus =
+            threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
+                NULL, NULL,
+                kDurationForever);
+        assert(lStatus == noErr);
 #endif
-		m_state = joined;
-		m_cond.notify_all();
-	}
+        boost::mutex::scoped_lock lock(m_mutex);
+        m_state = joined;
+        m_cond.notify_all();
+    }
 }
 
 bool thread_data::timed_join(const boost::xtime& xt)
 {
-	boost::mutex::scoped_lock lock(m_mutex);
-	while (m_state != joined && m_state != finished)
-	{
-		if (!m_cond.timed_wait(lock, xt))
-			return false;
-	}
-	if (m_state == finished)
-	{
-		int res = 0;
+    bool do_join=false;
+    {
+        boost::mutex::scoped_lock lock(m_mutex);
+        while (m_state != joined && m_state != finished)
+        {
+            if (!m_cond.timed_wait(lock, xt))
+                return false;
+        }
+    }
+    if (do_join)
+    {
+        int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-		res = WaitForSingleObject(m_thread, INFINITE);
-		assert(res == WAIT_OBJECT_0);
-		res = CloseHandle(m_thread);
-		assert(res);
+        res = WaitForSingleObject(m_thread, INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        res = CloseHandle(m_thread);
+        assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-		res = pthread_join(m_thread, 0);
-		assert(res == 0);
+        res = pthread_join(m_thread, 0);
+        assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-		OSStatus lStatus =
-			threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
-													 NULL, NULL,
-													 kDurationForever);
-		assert(lStatus == noErr);
+        OSStatus lStatus =
+            threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
+                NULL, NULL,
+                kDurationForever);
+        assert(lStatus == noErr);
 #endif
-		m_state = joined;
-		m_cond.notify_all();
-	}
-	return true;
+        boost::mutex::scoped_lock lock(m_mutex);
+        m_state = joined;
+        m_cond.notify_all();
+    }
+    return true;
 }
 
 void thread_data::cancel()
@@ -282,7 +290,16 @@ void thread_data::run()
         m_state = running;
         m_cond.notify_all();
     }
-    m_threadfunc();
+    try
+    {
+        m_threadfunc();
+    }
+    catch (boost::thread_cancel)
+    {
+    }
+    boost::mutex::scoped_lock lock(m_mutex);
+    m_state = finished;
+    m_cond.notify_all();
 }
 
 boost::thread::id_type thread_data::id() const
@@ -394,9 +411,6 @@ extern "C" {
             thread_data* data = static_cast<thread_data*>(param);
             tss_thread_data.reset(data);
             data->run();
-        }
-        catch (boost::thread_cancel)
-        {
         }
         catch (...)
         {
@@ -842,7 +856,7 @@ void thread::sleep(const xtime& xt)
         AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
         threads::mac::detail::safe_delay_until(&sWakeTime);
 #endif
-		thread::test_cancel();
+        thread::test_cancel();
         xtime cur;
         xtime_get(&cur, TIME_UTC);
         if (xtime_cmp(xt, cur) <= 0)

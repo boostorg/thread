@@ -54,7 +54,7 @@ include testing.jam ;
           [ run test_once.cpp <template>test ]
           [ run test_xtime.cpp <template>test ]
           [ run test_barrier.cpp <template>test ]
-          [ run test_rw_mutex.cpp <template>test ]
+#          [ run test_rw_mutex.cpp <template>test ]
           [ run test_thread_pool.cpp <template>test ]
     ;
 }

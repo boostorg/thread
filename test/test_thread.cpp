@@ -13,6 +13,8 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include <iostream>
+
 #define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
 #include "util.inl"
 
@@ -20,6 +22,7 @@ int test_value;
 
 void simple_thread()
 {
+	std::cout << "simple_thread()";
     test_value = 999;
 }
 
@@ -232,8 +235,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
-    test->add(BOOST_TEST_CASE(test_comparison));
     test->add(BOOST_TEST_CASE(test_join));
+    test->add(BOOST_TEST_CASE(test_comparison));
     test->add(BOOST_TEST_CASE(test_cancel));
     test->add(BOOST_TEST_CASE(test_thread_attributes));
     test->add(BOOST_TEST_CASE(test_thread_priority));
