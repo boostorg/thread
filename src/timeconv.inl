@@ -27,7 +27,7 @@ inline void to_time(int milliseconds, boost::xtime& xt)
     xt.nsec += ((milliseconds % MILLISECONDS_PER_SECOND) *
         NANOSECONDS_PER_MILLISECOND);
 
-    if (xt.nsec > NANOSECONDS_PER_SECOND)
+    if (xt.nsec >= NANOSECONDS_PER_SECOND)
     {
         ++xt.sec;
         xt.nsec -= NANOSECONDS_PER_SECOND;
@@ -39,7 +39,7 @@ inline void to_timespec(const boost::xtime& xt, timespec& ts)
 {
     ts.tv_sec = static_cast<int>(xt.sec);
     ts.tv_nsec = static_cast<int>(xt.nsec);
-    if(ts.tv_nsec > NANOSECONDS_PER_SECOND)
+    if(ts.tv_nsec >= NANOSECONDS_PER_SECOND)
     {
         ts.tv_sec += ts.tv_nsec / NANOSECONDS_PER_SECOND;
         ts.tv_nsec %= NANOSECONDS_PER_SECOND;
@@ -75,7 +75,7 @@ inline void to_timespec_duration(const boost::xtime& xt, timespec& ts)
             ts.tv_sec -= 1;
             ts.tv_nsec += NANOSECONDS_PER_SECOND;
         }
-        if(ts.tv_nsec > NANOSECONDS_PER_SECOND)
+        if(ts.tv_nsec >= NANOSECONDS_PER_SECOND)
         {
             ts.tv_sec += ts.tv_nsec / NANOSECONDS_PER_SECOND;
             ts.tv_nsec %= NANOSECONDS_PER_SECOND;
