@@ -31,13 +31,17 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
     <librarypurpose>Portable C++ multi-threading</librarypurpose>
     <librarycategory name="category:concurrent" />
   </libraryinfo>
-  <title>Boost.Threads</title>
+  <title>&Boost.Threads;</title>
   <xi:include href="overview.xml"/>
   <xi:include href="design.xml"/>
   <xi:include href="concepts.xml"/>
-  <xi:include href="reference.xml"/>
   <xi:include href="rationale.xml"/>
+  <xi:include href="reference.xml"/>
   <xi:include href="faq.xml"/>
+  <xi:include href="configuration.xml"/>
+  <xi:include href="build.xml"/>
+  <xi:include href="implementation_notes.xml"/>
+  <xi:include href="release_notes.xml"/>
   <xi:include href="glossary.xml"/>
   <xi:include href="acknowledgements.xml"/>
   <xi:include href="bibliography.xml"/>
