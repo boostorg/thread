@@ -34,7 +34,7 @@ protected:
 public:
     ~thread_exception() throw();
 
-    int native_error() const { return m_sys_err; }
+    int native_error() const;
 
     const char* message() const;
 
