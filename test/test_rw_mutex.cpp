@@ -1,5 +1,3 @@
-// rw_mutex_test.cpp
-
 #include <iostream>
 
 #include <boost/thread/thread.hpp>
@@ -7,33 +5,36 @@
 #include <boost/thread/rw_mutex.hpp>
 #include <boost/test/test_tools.hpp>
 
-static int shared_val=0; 
+namespace {
+
+int shared_val = 0;
 
 boost::xtime xsecs(int secs)
 {
     boost::xtime ret;
-    boost::xtime_get(&ret, boost::TIME_UTC);
+	BOOST_TEST(boost::TIME_UTC == boost::xtime_get(&ret, boost::TIME_UTC));
     ret.sec += secs;
     return ret;
 }
 
-template<typename RW>
+template <typename RW>
 class thread_adapter
 {
 public:
     thread_adapter(void (*func)(void*,RW &), void* param1,RW &param2) 
         : _func(func), _param1(param1) ,_param2(param2){ }
-    void operator()() const { _func(_param1,_param2); }
+    void operator()() const { _func(_param1, _param2); }
+
 private:
-    void (*_func)(void*,RW &);
+    void (*_func)(void*, RW &);
     void* _param1;
-    RW &_param2;
+    RW& _param2;
 };
 
-template<typename RW>
+template <typename RW>
 struct data
 {
-    data(int id,RW &m,int secs=0) :m_id(id), m_value(-1), m_secs(secs), m_rw_mutex(m){}
+    data(int id, RW &m, int secs=0) : m_id(id), m_value(-1), m_secs(secs), m_rw_mutex(m) { }
     int m_value;
     int m_id;
     int m_secs;
@@ -282,6 +283,8 @@ void test_timed_rw_mutex(RW &rw_mutex)
     //  This is important to verify that timed locks are proper try locks as well
     test_try_rw_mutex(rw_mutex);
 }
+
+} // namespace
 
 void test_rw_mutex()
 {

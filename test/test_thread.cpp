@@ -784,6 +784,8 @@ void test_thread_pool()
     test_detach();
 }
 
+extern void test_rw_mutex();
+
 int test_main(int, char*[])
 {
     test_mutex();
@@ -797,5 +799,6 @@ int test_main(int, char*[])
     test_once();
 	test_barrier();
 	test_thread_pool();
+	test_rw_mutex();
     return 0;
 }
