@@ -432,6 +432,7 @@ void recursive_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
     state.count = m_count;
+    m_count = 0;
 }
 
 recursive_try_mutex::recursive_try_mutex()
@@ -631,6 +632,7 @@ void recursive_try_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
     state.count = m_count;
+    m_count = 0;
 }
 
 recursive_timed_mutex::recursive_timed_mutex()
@@ -810,6 +812,7 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
     state.count = m_count;
+    m_count = 0;
 }
 #elif defined(BOOST_HAS_MPTASKS)
 
