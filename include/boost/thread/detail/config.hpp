@@ -18,14 +18,25 @@
 #include <boost/config/requires_threads.hpp>
 
 #if defined(BOOST_HAS_WINTHREADS)
-#   if defined(BOOST_THREAD_BUILD_DLL)
+#   if defined(BOOST_THREAD_BUILD_DLL) //Build dll
 #       define BOOST_THREAD_DECL __declspec(dllexport)
-#   else
+#   elif defined(BOOST_THREAD_BUILD_LIB) //Build lib
+#       define BOOST_THREAD_DECL
+#       define BOOST_THREAD_NO_TSS_CLEANUP
+#   elif defined(BOOST_THREAD_USE_LIB) //Use lib
+#       define BOOST_THREAD_DECL
+#       define BOOST_THREAD_NO_TSS_CLEANUP
+#   else //Use dll
 #       define BOOST_THREAD_DECL __declspec(dllimport)
+#       define BOOST_DYN_LINK
 #   endif
 #else
 #   define BOOST_THREAD_DECL
-#endif // BOOST_THREAD_SHARED_LIB
+#   if defined(BOOST_THREAD_USE_LIB) //Use lib
+#   else //Use dll
+#       define BOOST_DYN_LINK
+#   endif
+#endif // BOOST_HAS_WINTHREADS
 
 //
 // Automatically link to the correct build variant where possible. 
@@ -35,11 +46,13 @@
 // Set the name of our library, this will get undef'ed by auto_link.hpp
 // once it's done with it:
 //
-#define BOOST_LIB_NAME boost_thread
+#if defined(BOOST_THREAD_LIB_NAME)
+#    define BOOST_LIB_NAME BOOST_THREAD_LIB_NAME
+#else
+#    define BOOST_LIB_NAME boost_thread
+#endif
 //
 // If we're importing code from a dll, then tell auto_link.hpp about it:
-//
-#  define BOOST_DYN_LINK
 //
 // And include the header that does the work:
 //
