@@ -215,22 +215,23 @@
 	  type M and an object m of that type, the following expressions must be
 	  well-formed and have the indicated effects.</para>
 	  <informaltable>
-	    <tgroup cols="2"/>
-        <thead>
-          <row>
-            <entry>Expression</entry>
-			<entry>Effects</entry>
-		  </row>
-		</thead>
-		<tbody>
-		  <row>
-		    <entry>M::scoped_timed_lock</entry>
-			<entry>A model of
-			<link
-			linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
-			</entry>
-		  </row>
-		</tbody>
+	    <tgroup cols="2">
+          <thead>
+            <row>
+              <entry>Expression</entry>
+			  <entry>Effects</entry>
+		    </row>
+		  </thead>
+		  <tbody>
+		    <row>
+		      <entry>M::scoped_timed_lock</entry>
+			  <entry>A model of
+			  <link
+			  linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
+			  </entry>
+		    </row>
+		  </tbody>
+        </tgroup>
 	  </informaltable>
 	</section>
   </section>
