@@ -32,7 +32,9 @@ import ./threads ;
         recursive_mutex 
         read_write_mutex
         thread 
-        threadmon 
+        tss_hooks
+        tss_dll
+        tss_pe
         tss 
         xtime 
         ;
@@ -48,11 +50,11 @@ import ./threads ;
           # the common names rule ensures that the library will
           # be named according to the rules used by the install
           # and auto-link features:
-          common-variant-tag 
+          common-variant-tag
         : ## default build ##
     ;
 
-    template thread_dll_base
+    template boost_thread_dll_base
         : ## sources ##
           <template>thread_base 
           ../src/$(CPP_SOURCES).cpp
@@ -63,7 +65,7 @@ import ./threads ;
           # the common names rule ensures that the library will
           # be named according to the rules used by the install
           # and auto-link features:
-          common-variant-tag 
+          common-variant-tag
         : ## default build ##
     ;
 
@@ -77,7 +79,7 @@ import ./threads ;
 
     dll $(boost_thread_lib_name)
         : ## sources ##
-          <template>thread_dll_base 
+          <template>boost_thread_dll_base 
         : ## requirements ##
           <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name)
         : ## default build ##
@@ -105,7 +107,7 @@ import ./threads ;
 
         dll $(boost_thread_lib_name_ptw32)
             : ## sources ##
-              <template>thread_dll_base
+              <template>boost_thread_dll_base
             : ## requirements ##
               <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name_ptw32)
               $(pthreads-win32)

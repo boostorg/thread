@@ -27,9 +27,26 @@
 #       define BOOST_DYN_LINK
 #   elif defined(BOOST_THREAD_USE_LIB) //Use lib
 #       define BOOST_THREAD_DECL
-#   else //Use default (currently dll)
-#       define BOOST_THREAD_DECL __declspec(dllimport)
-#       define BOOST_DYN_LINK
+#   else //Use default
+#       if defined(BOOST_MSVC)
+            //For VC++, choose according to threading library setting
+#           #if defined(_DLL)
+                //Threading library is dll: use Boost.Threads dll
+#               define BOOST_THREAD_USE_DLL
+#               define BOOST_THREAD_DECL __declspec(dllimport)
+#               define BOOST_DYN_LINK
+#           #else
+                //Threading library is lib: used Boost.Threads lib
+#               define BOOST_THREAD_USE_LIB
+#               define BOOST_THREAD_DECL
+#           #endif
+#       else
+            //For compilers not yet supporting auto-tss cleanup
+            //with Boost.Threads lib, use Boost.Threads dll
+#           define BOOST_THREAD_USE_DLL
+#           define BOOST_THREAD_DECL __declspec(dllimport)
+#           define BOOST_DYN_LINK
+#       endif
 #   endif
 #else
 #   define BOOST_THREAD_DECL
@@ -40,8 +57,8 @@
 #endif // BOOST_HAS_WINTHREADS
 
 //
-// Automatically link to the correct build variant where possible. 
-// 
+// Automatically link to the correct build variant where possible.
+//
 #if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL) && !defined(BOOST_THREAD_BUILD_LIB)
 //
 // Set the name of our library, this will get undef'ed by auto_link.hpp

@@ -24,7 +24,7 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
-#   include <boost/thread/detail/threadmon.hpp>
+#   include <boost/thread/detail/tss_hooks.hpp>
 #endif
 
 namespace {
@@ -63,6 +63,10 @@ void init_tss_data()
     std::auto_ptr<tss_data_t> temp(new tss_data_t);
 
 #if defined(BOOST_HAS_WINTHREADS)
+    //Force the cleanup implementation library to be linked in
+    tss_cleanup_implemented();
+
+    //Allocate tls slot
     temp->native_key = TlsAlloc();
     if (temp->native_key == 0xFFFFFFFF)
         return;
@@ -200,16 +204,3 @@ void tss::cleanup(void* value)
 } // namespace boost
 
 #endif //BOOST_THREAD_NO_TSS_CLEANUP
-
-// Change Log:
-//   6 Jun 01  
-//      WEKEMPF Initial version.
-//  30 May 02  WEKEMPF 
-//      Added interface to set specific cleanup handlers.
-//      Removed TLS slot limits from most implementations.
-//  22 Mar 04 GlassfordM for WEKEMPF
-//      Fixed: thread_specific_ptr::reset() doesn't check error returned
-//          by tss::set(); tss::set() now throws if it fails.
-//      Fixed: calling thread_specific_ptr::reset() or 
-//          thread_specific_ptr::release() causes double-delete: once on
-//          reset()/release() and once on ~thread_specific_ptr().
