@@ -84,7 +84,7 @@ inline bool valid_write_lockable(int state)
 template<typename Mutex>
 void read_write_mutex_impl<Mutex>::do_read_lock()
 {
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     // Wait until no exclusive lock is held.
@@ -158,7 +158,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 {
-    Mutex::scoped_try_lock l(m_prot);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -882,7 +882,7 @@ template class boost::detail::thread::scoped_try_write_lock<timed_read_write_mut
 
 //template class boost::detail::thread::scoped_timed_write_lock<read_write_mutex>;
 //template class boost::detail::thread::scoped_timed_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
+template class boost::detail::thread::scoped_timed_write_lock<timed_read_write_mutex>;
 } // namespace boost
 
 // Change Log:
