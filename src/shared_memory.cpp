@@ -17,223 +17,116 @@
 // Next line should really be BOOST_HAS_POSIX_xxx
 #elif defined(BOOST_HAS_PTHREADS)
 
-#include <sys/shm.h>
+//#include <sys/shm.h>
+#include <unistd.h>
+#include <sys/types.h>
 #include <sys/mman.h>
-
-// Need to busy-wait on POSIX
-#include <boost/thread/thread.hpp>
-#include <boost/thread/xtime.hpp>
+#include <fcntl.h>
+#include <semaphore.h>
 
 #endif
 
-
-namespace {
-
-const int HEADER_ALIGN=16;
-
-struct hdr
-{
-    size_t len;
-    unsigned int count;
-};
-
-void fillzero(void *ptr, size_t len)
-{
-    memset(ptr,0,len);
-}
-
-void noinit(void *,size_t)
-{
-}
-
-}
-
 namespace boost {
 
-shared_memory::shared_memory(const char *name, size_t len)
-    : m_ptr(NULL), m_mem_obj(0), m_h_event(NULL), m_len(len),
-      m_initfunc(&noinit)
+shared_memory::shared_memory(const char *name, size_t len, int flags)
+    : m_ptr(NULL)
+#if defined(BOOST_HAS_WINTHREADS)
+	, m_hmap(INVALID_HANDLE_VALUE)
+#elif defined(BOOST_HAS_PTHREADS)
+    , m_hmap(0), m_len(len), m_flags(flags), m_name(name)
+#endif 
 {
-    create(name,len);
+    init(name, len, flags, 0);
 }
 
-// Obtain a shared memory block and initialize it with initfunc
-shared_memory::shared_memory(const char *name, size_t len,
-    const boost::function2<void,void *,size_t> &initfunc)
-    : m_ptr(NULL), m_mem_obj(0), m_h_event(NULL), m_len(len),
-      m_initfunc(initfunc)
+shared_memory::shared_memory(const char *name, size_t len, int flags,
+    const boost::function1<void, void *>& initfunc)
+    : m_ptr(NULL)
+#if defined(BOOST_HAS_WINTHREADS)
+	, m_hmap(INVALID_HANDLE_VALUE)
+#elif defined(BOOST_HAS_PTHREADS) 
+    , m_hmap(0), m_len(len), m_flags(flags), m_name(name)
+#endif 
 {
-    create(name,len);
+	init(name, len, flags & create, &initfunc);
 }
 
 shared_memory::~shared_memory()
 {
-    if (m_ptr)
-    {
-        m_ptr = ((char *) m_ptr - HEADER_ALIGN);
-        hdr *p_hdr = (hdr *)m_ptr;
-
-        if (p_hdr)
-        {
-            p_hdr->count--;
-        }
+	unmap();
 
 #if defined(BOOST_HAS_WINTHREADS)
-        UnmapViewOfFile(m_ptr);
-
-        if (m_mem_obj)
-        {
-            CloseHandle(reinterpret_cast<HANDLE>(m_mem_obj));
-        }
-        if (m_h_event)
-        {
-            CloseHandle(reinterpret_cast<HANDLE>(m_h_event));
-        }
-#elif defined (BOOST_HAS_PTHREADS)
-        if (p_hdr->count == 0)
-        {
-            shm_unlink(m_name);
-        }
-        munmap(m_ptr,m_len);
+	CloseHandle(reinterpret_cast<HANDLE>(m_hmap));
+#elif defined(BOOST_HAS_PTHREADS)
+	close(m_hmap);
+	shm_unlink(m_name);
 #endif
-    }
 }
 
-void shared_memory::create(const char *name, size_t len)
+void shared_memory::init(const char *name, size_t len, int flags,
+	const boost::function1<void,void *>* initfunc)
 {
+	std::string mxname = std::string(name) +
+		"mx94543CBD1523443dB128451E51B5103E";
 #if defined(BOOST_HAS_WINTHREADS)
-    HANDLE h_map = NULL;
-    HANDLE h_event = NULL;
+	HANDLE mutex = CreateMutexA(0, FALSE, mxname.c_str());
+	WaitForSingleObject(mutex, INFINITE);
 
-    DWORD  ret;
-    bool b_creator = false;
+	DWORD protect = (flags & read_write) ? PAGE_READWRITE : PAGE_READONLY;
+    m_hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, protect,
+		0, len, name);
+#elif defined(BOOST_HAS_PTHREADS)
+	sem_t sem = sem_open(mxname.c_str(), O_CREAT);
+	sem_wait(&sem);
 
-    std::string obj_name = "_EVT_";
-    obj_name += name;
-    h_event = CreateEvent(NULL,TRUE,FALSE,obj_name.c_str());
-
-    if (h_event == NULL)
-    {
-        throw boost::thread_resource_error();
-    }
-    b_creator = (GetLastError() != ERROR_ALREADY_EXISTS);
-
-    h_map = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, PAGE_READWRITE,
-        0, len + HEADER_ALIGN, name);
-
-    if (h_map)
-    {
-        m_ptr = static_cast<char*>(
-            MapViewOfFile(h_map, FILE_MAP_WRITE, 0, 0, 0));
-        if (m_ptr)
-        {
-            // Get a pointer to our header, and move our real ptr past this.
-            hdr *p_hdr = (hdr *)m_ptr;
-            m_ptr = ((char *)m_ptr + HEADER_ALIGN);
-
-            if (b_creator)
-            {
-                // Call the initialization function for the user area.
-                m_initfunc(m_ptr,len);
-                p_hdr->len = len;
-                p_hdr->count = 1;
-                SetEvent(h_event);
-            }
-            else
-            {
-                ret = WaitForSingleObject(h_event,INFINITE);
-                if (ret != WAIT_OBJECT_0)
-                {
-                    CloseHandle(h_event);
-                    CloseHandle(h_map);
-                    throw boost::thread_resource_error();
-                }
-
-                // We've got a previously constructed object.
-                (p_hdr->count)++;
-            }
-        }
-        else
-        {
-            CloseHandle(h_event);
-            throw boost::thread_resource_error();
-        }
-    }
-
-    m_mem_obj = reinterpret_cast<int>(h_map);
-    m_h_event = reinterpret_cast<void *>(h_event);
-
-#elif defined (BOOST_HAS_PTHREADS)
-    int fd_smo;      // descriptor to shared memory object
-    bool b_creator = true;
-
-    fd_smo = shm_open(name, O_RDWR|O_CREAT|O_EXCL, SHM_MODE);
-
-    if (fd_smo == -1)
-    {
-        if (errno == EEXIST)
-        {
-            // We lost the race.  We should just re-open with shared access
-            //  below.
-            fd_smo = shm_open(name,O_RDWR,SHM_MODE);
-
-            b_creator = false
-        }
-        else
-        {
-            throw boost::thread_resource_error();
-        }
-    }
-    else
-    {
-        // We're the creator.  Use ftrunctate to set the size.
-        b_creator = true;
-        //
-        // Add error check on ftruncate.
-        ftruncate(fd_smo,len+HEADER_ALIGN);
-    }
-
-    m_ptr = (char *)mmap(NULL, len + HEADER_ALIGN, PROT_READ|PROT_WRITE,
-        MAP_SHARED, fd_smo, 0);
-
-    if (m_ptr)
-    {
-        // Get a pointer to our header, and move our real ptr past this.
-        hdr *p_hdr = (hdr *)ptr;
-        m_ptr = ((char *)m_ptr + HEADER_ALIGN);
-
-        if(b_creator)
-        {
-            // Call the initialization function for the user area.
-            //flock(fd_smo);
-            initfunc(ptr,len);
-            p_hdr->len = len;
-            p_hdr->count = 1;
-
-            //funlock(fd_sm0);
-        }
-        else
-        {
-            // Need an event here.  For now, busy wait.
-            while(p_hdr->len == 0)
-            {
-                //flock(fd_smo);
-                //funlock(fd_smo);
-                boost::xtime xt;
-                boost::xtime_get(&xt,boost::TIME_UTC);
-                xt.sec++;
-
-                boost::thread::sleep(xt);
-            }
-
-            // We've got a previously constructed object.
-            (p_hdr->count)++;
-        }
-    }
-    close(fd_smo);
-    mem_obj = NULL;         //reinterpret_cast<int>(h_map);
-    event_obj = NULL;       //reinterpret_cast<void *>(h_event);
+	int oflag = (flags & read_write) ? O_RDWR : O_RDONLY;
+	if (flags & create)
+		oflag |= O_CREAT|O_TRUNC;
+	m_hmap = shm_open(name, oflag, 0);
+	ftruncate(m_hmap, len);
 #endif
+
+	if (initfunc)
+	{
+		(*initfunc)(map());
+		unmap();
+	}
+
+#if defined(BOOST_HAS_WINTHREADS)
+	ReleaseMutex(mutex);
+	CloseHandle(mutex);
+#elif defined(BOOST_HAS_PTHREADS)
+	sem_post(&sem);
+	sem_close(&sem);
+	sem_unlink(&sem);
+#endif 
+}
+
+void* shared_memory::map()
+{
+	if (!m_ptr)
+	{
+#if defined(BOOST_HAS_WINTHREADS)
+        m_ptr = static_cast<char*>(
+            MapViewOfFile(m_hmap, FILE_MAP_WRITE, 0, 0, 0));
+#elif defined(BOOST_HAS_PTHREADS)
+		int prot = (m_flags & read_write) ? PROT_READ|PROT_WRITE : PROT_READ;
+		m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
+#endif 
+	}
+	return m_ptr;
+}
+
+void shared_memory::unmap()
+{
+	if (m_ptr)
+	{
+#if defined(BOOST_HAS_WINTHREADS)
+        UnmapViewOfFile(m_ptr);
+#elif defined(BOOST_HAS_PTHREADS)
+		munmap(reinterpret_cast<char*>(m_ptr), m_len);
+#endif 
+	}
 }
 
 }   // namespace boost

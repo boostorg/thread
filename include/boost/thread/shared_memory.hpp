@@ -24,30 +24,36 @@
 
 #include <string>
 
-
 namespace boost {
 
 class shared_memory
 {
 public:
+	enum { read=1, read_write=2, create=4 };
+	
     // Obtain a shared memory block len bytes long, zero initialized
-    shared_memory(const char *name, size_t len);
+    shared_memory(const char *name, size_t len, int flags);
     // Obtain a shared memory block and initialize it with initfunc
-    shared_memory(const char *name, size_t len,
-        const boost::function2<void,void *,size_t> &initfunc);
+    shared_memory(const char *name, size_t len, int flags,
+        const boost::function1<void,void *> &initfunc);
     ~shared_memory();
 
-    void *get() { return m_ptr; }
+	void* map();
+	void unmap();
     
 private:
-    void create(const char *name, size_t len);
+    void init(const char *name, size_t len, int flags,
+			  const boost::function1<void, void*>* initfunc);
 
     void *m_ptr;        // Pointer to shared memory block
-    int   m_mem_obj;    // Platform specific handle to shared memory block
-    void *m_h_event;    // Platform specific event saying initialized.
-    size_t  m_len;
-
-    boost::function2<void,void *,size_t> m_initfunc;
+#if defined(BOOST_HAS_WINTHREADS)
+	void* m_hmap;
+#elif defined(BOOST_HAS_PTHREADS)
+	int m_hmap;
+	int m_len;
+	int m_flags;
+	std::string m_name;
+#endif
 };
 
 }  // namespace boost

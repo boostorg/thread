@@ -281,7 +281,7 @@ bool thread_data::timed_join(const boost::xtime& xt)
     timespec ts;
     to_timespec(xt, ts);
 
-    res = pthread_timedjoin(m_thread, 0, ts);
+//    res = pthread_timedjoin(m_thread, 0, ts);
 
     if (res == ETIMEDOUT)
     {
