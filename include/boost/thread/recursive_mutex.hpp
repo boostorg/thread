@@ -22,6 +22,8 @@
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#   include "scoped_critical_region.hpp"
 #endif
 
 namespace boost {
@@ -39,7 +41,7 @@ public:
     ~recursive_mutex();
 
 private:
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -64,6 +66,10 @@ private:
     pthread_t m_thread_id;
     bool m_valid_id;
 #   endif
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
+    std::size_t m_count;
 #endif
 };
 
@@ -79,7 +85,7 @@ public:
     ~recursive_try_mutex();
 
 private:
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -105,6 +111,10 @@ private:
     pthread_t m_thread_id;
     bool m_valid_id;
 #   endif
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
+    std::size_t m_count;
 #endif
 };
 
@@ -121,7 +131,7 @@ public:
     ~recursive_timed_mutex();
 
 private:
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -146,6 +156,10 @@ private:
     pthread_t m_thread_id;
     bool m_valid_id;
     unsigned m_count;
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
+    std::size_t m_count;
 #endif
 };
 

@@ -72,6 +72,72 @@ namespace {
         return handlers;
     }
 }
+#elif defined(BOOST_HAS_MPTASKS)
+#include <map>
+namespace {
+    typedef std::pair<void(*)(void*), void*> cleanup_info;
+    typedef std::map<int, cleanup_info> cleanup_handlers;
+
+    TaskStorageIndex key;
+    boost::once_flag once = BOOST_ONCE_INIT;
+
+    void init_cleanup_key()
+    {
+        OSStatus lStatus = MPAllocateTaskStorageIndex(&key);
+        assert(lStatus == noErr);
+    }
+
+    cleanup_handlers* get_handlers()
+    {
+        boost::call_once(&init_cleanup_key, once);
+
+        cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(MPGetTaskStorageValue(key));
+        if (!handlers)
+        {
+            try
+            {
+                handlers = new cleanup_handlers;
+            }
+            catch (...)
+            {
+                return 0;
+            }
+            OSStatus lStatus = noErr;
+            lStatus = MPSetTaskStorageValue(key, reinterpret_cast<TaskStorageValue>(handlers));
+            assert(lStatus == noErr);
+        // TODO - create a generalized mechanism for registering thread exit functions
+        //            and use it here.
+        }
+
+        return handlers;
+    }
+}
+
+namespace boost {
+
+namespace detail {
+
+
+void thread_cleanup()
+{
+    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(MPGetTaskStorageValue(key));
+    if(handlers != NULL)
+    {
+        for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+        {
+            cleanup_info info = it->second;
+            if (info.second)
+                info.first(info.second);
+        }
+        delete handlers;
+    }
+}
+
+
+} // namespace detail
+
+} // namespace boost
+
 #endif
 
 namespace boost { namespace detail {
@@ -135,6 +201,42 @@ void* tss::get() const
 bool tss::set(void* value)
 {
     return pthread_setspecific(m_key, value) == 0;
+}
+#elif defined(BOOST_HAS_MPTASKS)
+tss::tss(void (*cleanup)(void*))
+{
+    OSStatus lStatus = MPAllocateTaskStorageIndex(&m_key);
+    if(lStatus != noErr)
+        throw thread_resource_error();
+
+    m_cleanup = cleanup;
+}
+
+tss::~tss()
+{
+    OSStatus lStatus = MPDeallocateTaskStorageIndex(m_key);
+    assert(lStatus == noErr);
+}
+
+void* tss::get() const
+{
+    TaskStorageValue ulValue = MPGetTaskStorageValue(m_key);
+    return(reinterpret_cast<void *>(ulValue));
+}
+
+bool tss::set(void* value)
+{
+    if (value && m_cleanup)
+    {
+        cleanup_handlers* handlers = get_handlers();
+        assert(handlers);
+        if (!handlers)
+            return false;
+        cleanup_info info(m_cleanup, value);
+        (*handlers)[m_key] = info;
+    }
+    OSStatus lStatus = MPSetTaskStorageValue(m_key, reinterpret_cast<TaskStorageValue>(value));
+    return(lStatus == noErr);
 }
 #endif
 

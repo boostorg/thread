@@ -23,6 +23,8 @@
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#   include "scoped_critical_region.hpp"
 #endif
 
 namespace boost {
@@ -85,7 +87,7 @@ private:
     template <typename M>
     void do_wait(M& mutex)
     {
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         enter_wait();
 #endif
 
@@ -95,7 +97,7 @@ private:
 
 #if defined(BOOST_HAS_PTHREADS)
         do_wait(state.pmutex);
-#elif defined(BOOST_HAS_WINTHREADS)
+#elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         do_wait();
 #endif
 
@@ -105,7 +107,7 @@ private:
     template <typename M>
     bool do_timed_wait(M& mutex, const xtime& xt)
     {
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         enter_wait();
 #endif
 
@@ -117,7 +119,7 @@ private:
 
 #if defined(BOOST_HAS_PTHREADS)
         ret = do_timed_wait(xt, state.pmutex);
-#elif defined(BOOST_HAS_WINTHREADS)
+#elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         ret = do_timed_wait(xt);
 #endif
 
@@ -126,7 +128,7 @@ private:
         return ret;
     }
 
-#if defined(BOOST_HAS_WINTHREADS)
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
     void enter_wait();
     void do_wait();
     bool do_timed_wait(const xtime& xt);
@@ -145,6 +147,15 @@ private:
                       //   m_waiting to be removed from the m_queue
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_cond_t m_condition;
+#elif defined(BOOST_HAS_MPTASKS)
+    MPSemaphoreID m_gate;
+    MPSemaphoreID m_queue;
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
+    unsigned m_gone; // # threads that timed out and never made it to the m_queue
+    unsigned long m_blocked; // # threads m_blocked m_waiting for the condition
+    unsigned m_waiting; // # threads m_waiting no longer m_waiting for the condition but still
+                      //   m_waiting to be removed from the m_queue
 #endif
 };
 

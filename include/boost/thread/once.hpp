@@ -28,7 +28,7 @@ namespace boost {
 typedef pthread_once_t once_flag;
 #define BOOST_ONCE_INIT PTHREAD_ONCE_INIT
 
-#elif defined(BOOST_HAS_WINTHREADS)
+#elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
 
 typedef bool once_flag;
 #define BOOST_ONCE_INIT false

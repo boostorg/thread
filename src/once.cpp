@@ -28,6 +28,8 @@
 #   else
 #       include <sstream>
 #   endif
+#elif defined(BOOST_HAS_MPTASKS)
+#   include <Multiprocessing.h>
 #endif
 
 #ifdef BOOST_NO_STDC_NAMESPACE
@@ -54,7 +56,18 @@ static void do_once()
     once_callback* cb = reinterpret_cast<once_callback*>(pthread_getspecific(key));
     (**cb)();
 }
+#elif defined(BOOST_HAS_MPTASKS)
+void *remote_call_proxy(void *pData)
+{
+    std::pair<void (*)(), boost::once_flag *> &rData(*reinterpret_cast<std::pair<void (*)(), boost::once_flag *> *>(pData));
 
+    if(*rData.second == false)
+    {
+        rData.first();
+        *rData.second = true;
+    }
+
+    return(NULL);
 }
 #endif
 
@@ -107,6 +120,14 @@ void call_once(void (*func)(), once_flag& flag)
     pthread_once(&once, &key_init);
     pthread_setspecific(key, &func);
     pthread_once(&flag, do_once);
+#elif defined(BOOST_HAS_MPTASKS)
+    if(flag == false)
+    {
+    // all we do here is make a remote call to blue, as blue is not reentrant.
+        std::pair<void (*)(), once_flag *> sData(func, &flag);
+        MPRemoteCall(remote_call_proxy, &sData, kMPOwningProcessRemoteContext);
+        assert(flag == true);
+    }
 #endif
 }
 

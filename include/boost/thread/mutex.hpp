@@ -24,6 +24,10 @@
 #   include <pthread.h>
 #endif
 
+#if defined(BOOST_HAS_MPTASKS)
+#   include "scoped_critical_region.hpp"
+#endif
+
 namespace boost {
 
 struct xtime;
@@ -46,6 +50,10 @@ private:
     {
         pthread_mutex_t* pmutex;
     };
+#elif defined(BOOST_HAS_MPTASKS)
+    struct cv_state
+    {
+    };
 #endif
     void do_lock();
     void do_unlock();
@@ -56,6 +64,9 @@ private:
     void* m_mutex;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
 #endif
 };
 
@@ -78,6 +89,10 @@ private:
     {
         pthread_mutex_t* pmutex;
     };
+#elif defined(BOOST_HAS_MPTASKS)
+    struct cv_state
+    {
+    };
 #endif
     void do_lock();
     bool do_trylock();
@@ -89,6 +104,9 @@ private:
     void* m_mutex;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
 #endif
 };
 
@@ -112,6 +130,10 @@ private:
     {
         pthread_mutex_t* pmutex;
     };
+#elif defined(BOOST_HAS_MPTASKS)
+    struct cv_state
+    {
+    };
 #endif
     void do_lock();
     bool do_trylock();
@@ -126,6 +148,9 @@ private:
     pthread_mutex_t m_mutex;
     pthread_cond_t m_condition;
     bool m_locked;
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
 #endif
 };
 

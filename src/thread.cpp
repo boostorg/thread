@@ -17,6 +17,12 @@
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
 #   include <process.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#    include <DriverServices.h>
+
+#    include "init.hpp"
+#    include "safe.hpp"
+#    include <boost/thread/tss.hpp>
 #endif
 
 #include "timeconv.inl"
@@ -53,6 +59,8 @@ extern "C" {
 unsigned __stdcall thread_proxy(void* param)
 #elif defined(BOOST_HAS_PTHREADS)
 static void* thread_proxy(void* param)
+#elif defined(BOOST_HAS_MPTASKS)
+static OSStatus thread_proxy(void* param)
 #endif
 {
     try
@@ -65,6 +73,9 @@ static void* thread_proxy(void* param)
     catch (...)
     {
     }
+#if defined(BOOST_HAS_MPTASKS)
+    ::boost::detail::thread_cleanup();
+#endif
     return 0;
 }
 
@@ -80,6 +91,11 @@ thread::thread()
     m_id = GetCurrentThreadId();
 #elif defined(BOOST_HAS_PTHREADS)
     m_thread = pthread_self();
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::thread_init();
+    threads::mac::detail::create_singletons();
+    m_pTaskID = MPCurrentTaskID();
+    m_pJoinQueueID = kInvalidID;
 #endif
 }
 
@@ -96,6 +112,25 @@ thread::thread(const function0<void>& threadfunc)
     res = pthread_create(&m_thread, 0, &thread_proxy, &param);
     if (res != 0)
         throw thread_resource_error();
+#elif defined(BOOST_HAS_MPTASKS)
+    threads::mac::detail::thread_init();
+    threads::mac::detail::create_singletons();
+    OSStatus lStatus = noErr;
+
+    m_pJoinQueueID = kInvalidID;
+    m_pTaskID = kInvalidID;
+
+    lStatus = MPCreateQueue(&m_pJoinQueueID);
+    if(lStatus != noErr) throw thread_resource_error();
+
+    lStatus = MPCreateTask(&thread_proxy, &param, 0UL, m_pJoinQueueID, NULL, NULL,
+                            0UL, &m_pTaskID);
+    if(lStatus != noErr)
+    {
+        lStatus = MPDeleteQueue(m_pJoinQueueID);
+        assert(lStatus == noErr);
+        throw thread_resource_error();
+    }
 #endif
     param.wait();
 }
@@ -110,6 +145,10 @@ thread::~thread()
         assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
         pthread_detach(m_thread);
+#elif defined(BOOST_HAS_MPTASKS)
+        assert(m_pJoinQueueID != kInvalidID);
+        OSStatus lStatus = MPDeleteQueue(m_pJoinQueueID);
+        assert(lStatus == noErr);
 #endif
     }
 }
@@ -120,6 +159,8 @@ bool thread::operator==(const thread& other) const
     return other.m_id == m_id;
 #elif defined(BOOST_HAS_PTHREADS)
     return pthread_equal(m_thread, other.m_thread) != 0;
+#elif defined(BOOST_HAS_MPTASKS)
+    return other.m_pTaskID == m_pTaskID;
 #endif
 }
 
@@ -139,6 +180,9 @@ void thread::join()
 #elif defined(BOOST_HAS_PTHREADS)
     res = pthread_join(m_thread, 0);
     assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+    OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+    assert(lStatus == noErr);
 #endif
     // This isn't a race condition since any race that could occur would
     // have us in undefined behavior territory any way.
@@ -171,6 +215,12 @@ void thread::sleep(const xtime& xt)
     condition cond;
     cond.timed_wait(lock, xt);
 #   endif
+#elif defined(BOOST_HAS_MPTASKS)
+    unsigned microseconds;
+    to_microduration(xt, microseconds);
+    Duration lMicroseconds(kDurationMicrosecond * microseconds);
+    AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
+    threads::mac::detail::safe_delay_until(&sWakeTime);
 #endif
 }
 
@@ -192,6 +242,8 @@ void thread::yield()
     xtime_get(&xt, TIME_UTC);
     sleep(xt);
 #   endif
+#elif defined(BOOST_HAS_MPTASKS)
+    MPYield();
 #endif
 }
 

@@ -21,6 +21,8 @@
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#   include <Multiprocessing.h>
 #endif
 
 namespace boost {
@@ -41,8 +43,15 @@ namespace boost {
             void (*m_cleanup)(void*);
         #elif defined(BOOST_HAS_PTHREADS)
             pthread_key_t m_key;
+        #elif defined(BOOST_HAS_MPTASKS)
+            TaskStorageIndex m_key;
+            void (*m_cleanup)(void*);
         #endif
         };
+
+    #if defined(BOOST_HAS_MPTASKS)
+        void thread_cleanup();
+    #endif
     }
 
 template <typename T>

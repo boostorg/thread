@@ -22,6 +22,9 @@
 #   include <time.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#    include <MacErrors.h>
+#    include "safe.hpp"
 #endif
 
 namespace boost {
@@ -765,6 +768,221 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
     state.count = m_count;
+}
+#elif defined(BOOST_HAS_MPTASKS)
+
+using threads::mac::detail::safe_enter_critical_region;
+
+
+recursive_mutex::recursive_mutex()
+    : m_count(0)
+{
+}
+
+recursive_mutex::~recursive_mutex()
+{
+}
+
+void recursive_mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    if (++m_count > 1)
+    {
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+void recursive_mutex::do_unlock()
+{
+    if (--m_count == 0)
+    {
+        OSStatus lStatus = noErr;
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+void recursive_mutex::do_lock(cv_state& state)
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    m_count = state;
+}
+
+void recursive_mutex::do_unlock(cv_state& state)
+{
+    state = m_count;
+    m_count = 0;
+
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
+}
+
+recursive_try_mutex::recursive_try_mutex()
+    : m_count(0)
+{
+}
+
+recursive_try_mutex::~recursive_try_mutex()
+{
+}
+
+void recursive_try_mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    if (++m_count > 1)
+    {
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+bool recursive_try_mutex::do_trylock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPEnterCriticalRegion(m_mutex, kDurationImmediate);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+
+    if (lStatus == noErr)
+    {
+        if (++m_count > 1)
+        {
+            lStatus = MPExitCriticalRegion(m_mutex);
+            assert(lStatus == noErr);
+        }
+        return true;
+    }
+    return false;
+}
+
+void recursive_try_mutex::do_unlock()
+{
+    if (--m_count == 0)
+    {
+        OSStatus lStatus = noErr;
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+void recursive_try_mutex::do_lock(cv_state& state)
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    m_count = state;
+}
+
+void recursive_try_mutex::do_unlock(cv_state& state)
+{
+    state = m_count;
+    m_count = 0;
+
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
+}
+
+recursive_timed_mutex::recursive_timed_mutex()
+    : m_count(0)
+{
+}
+
+recursive_timed_mutex::~recursive_timed_mutex()
+{
+}
+
+void recursive_timed_mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    if (++m_count > 1)
+    {
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+bool recursive_timed_mutex::do_trylock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPEnterCriticalRegion(m_mutex, kDurationImmediate);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+
+    if (lStatus == noErr)
+    {
+        if (++m_count > 1)
+        {
+            lStatus = MPExitCriticalRegion(m_mutex);
+            assert(lStatus == noErr);
+        }
+        return true;
+    }
+    return false;
+}
+
+bool recursive_timed_mutex::do_timedlock(const xtime& xt)
+{
+    unsigned microseconds;
+    to_microduration(xt, microseconds);
+    Duration lDuration = kDurationMicrosecond * microseconds;
+
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, lDuration, m_mutex_mutex);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+
+    if (lStatus == noErr)
+    {
+        if (++m_count > 1)
+        {
+            lStatus = MPExitCriticalRegion(m_mutex);
+            assert(lStatus == noErr);
+        }
+        return true;
+    }
+    return false;
+}
+
+void recursive_timed_mutex::do_unlock()
+{
+    if (--m_count == 0)
+    {
+        OSStatus lStatus = noErr;
+        lStatus = MPExitCriticalRegion(m_mutex);
+        assert(lStatus == noErr);
+    }
+}
+
+void recursive_timed_mutex::do_lock(cv_state& state)
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+
+    m_count = state;
+}
+
+void recursive_timed_mutex::do_unlock(cv_state& state)
+{
+    state = m_count;
+    m_count = 0;
+
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
 }
 #endif
 

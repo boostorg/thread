@@ -8,7 +8,7 @@
 namespace
 {
 	boost::mutex iomx;
-};
+}
 
 class canteen
 {
