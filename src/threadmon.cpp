@@ -4,6 +4,8 @@
 #define BOOST_THREADMON_EXPORTS
 #include "threadmon.hpp"
 
+#ifdef BOOST_HAS_WINTHREADS
+
 #define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 
@@ -139,3 +141,5 @@ int on_thread_exit(void (__cdecl * func)(void))
 
     return 0;
 }
+
+#endif // BOOST_HAS_WINTHREADS

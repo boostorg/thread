@@ -7,6 +7,11 @@
 #
 # Declares the following targets:
 #   1. test_thread, a unit test executable.
+#
+# Invoke with:
+#   Jam [-sPTW32=lib]
+#     Where: lib == name of pthreads-win32 link library
+#     Note: Not currently working completely
 
 # declare the location of this subproject relative to the root
 subproject libs/thread/test ;
@@ -20,7 +25,15 @@ subproject libs/thread/test ;
 # Do some OS-specific setup
 if $(NT)
 {
-    BOOST_THREADMON_LIB = <lib>../build/libboost_threadmon ;
+    if $(PTW32)
+    {
+        PTW32_REQUIREMENTS = <define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn ;
+        BOOST_THREADMON_LIB = ;
+    }
+    else
+    {
+        BOOST_THREADMON_LIB = <lib>../build/libboost_threadmon ;
+    }
 }
 else
 {
@@ -29,8 +42,9 @@ else
 
 unit-test test_thread : test_thread.cpp
     <lib>../build/libboost_thread
-	$(BOOST_THREADMON_LIB)
+    $(BOOST_THREADMON_LIB)
     # requirements
     : <include>$(BOOST_ROOT)
+    $(PTW32_REQUIREMENTS)
     <threading>multi
     : debug release ;
