@@ -8,7 +8,7 @@ class counter
 {
 public:
     counter() : count(0) { }
-   
+
     int increment() {
         boost::mutex::scoped_lock scoped_lock(mutex);
         return ++count;
@@ -34,8 +34,8 @@ int main(int, char*[])
     boost::thread_group thrds;
     for (int i=0; i < num_threads; ++i)
         thrds.create_thread(&change_count);
-      
+
     thrds.join_all();
-   
+
     return 0;
 }

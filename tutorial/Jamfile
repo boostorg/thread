@@ -2,9 +2,11 @@
 #  distribute this software is granted provided this copyright notice appears
 #  in all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
+#
 
 # Declare the location of this subproject relative to the root.
-subproject libs/thread/example ;
+
+subproject libs/thread/tutorial ;
 
 # Include threads.jam for Boost.Threads global build information.
 # This greatly simplifies the Jam code needed to configure the build
@@ -12,7 +14,7 @@ subproject libs/thread/example ;
 SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include <module@>threads.jam ;
 
-template example
+template tutorial
     ## sources ##
     : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
     ## requirements ##
@@ -21,14 +23,8 @@ template example
     : release <runtime-link>static
 ;
 
-exe monitor : <template>example monitor.cpp ;
-exe starvephil : <template>example starvephil.cpp ;
-exe tennis : <template>example tennis.cpp ;
-exe condition : <template>example condition.cpp ;
-exe mutex : <template>example mutex.cpp ;
-exe once : <template>example once.cpp ;
-exe recursive_mutex : <template>example recursive_mutex.cpp ;
-exe thread : <template>example thread.cpp ;
-exe thread_group : <template>example thread_group.cpp ;
-exe tss : <template>example tss.cpp ;
-exe xtime : <template>example xtime.cpp ;
+exe helloworld : <template>tutorial helloworld.cpp ;
+exe helloworld2 : <template>tutorial helloworld2.cpp ;
+exe helloworld3 : <template>tutorial helloworld3.cpp ;
+exe factorial : <template>tutorial factorial.cpp ;
+exe factorial2 : <template>tutorial factorial2.cpp ;

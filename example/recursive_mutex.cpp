@@ -11,7 +11,7 @@ public:
         boost::recursive_mutex::scoped_lock scoped_lock(mutex);
         count += val;
         return count;
-    }   
+    }
     int increment() {
         boost::recursive_mutex::scoped_lock scoped_lock(mutex);
         return add(1);
@@ -33,11 +33,11 @@ int main(int, char*[])
 {
     const int num_threads=4;
 
-    boost::thread_group threads;   
+    boost::thread_group threads;
     for (int i=0; i < num_threads; ++i)
         threads.create_thread(&change_count);
-      
+
     threads.join_all();
-   
+
     return 0;
 }
