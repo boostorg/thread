@@ -32,13 +32,13 @@ namespace boost {
 class lock_error : public std::runtime_error
 {
 public:
-    lock_error();
+    lock_error() : std::runtime_error("thread lock error") { }
 };
 
 class thread_resource_error : public std::runtime_error
 {
 public:
-    thread_resource_error();
+    thread_resource_error() : std::runtime_error("thread resource error") { }
 };
 
 } // namespace boost
