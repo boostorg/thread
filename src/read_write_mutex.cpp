@@ -344,7 +344,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     if (!l.locked())
         return false;
 
-    bool fail;
+    bool fail = false;
 
     if (m_sp == read_write_scheduling_policy::reader_priority)
     {
@@ -460,7 +460,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     if (!l.locked())
         return false;
 
-    bool fail;
+    bool fail = false;
 
     if (m_sp == read_write_scheduling_policy::reader_priority)
     {
