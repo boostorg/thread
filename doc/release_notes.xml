@@ -21,77 +21,57 @@
 		</section>
 
 		<section id="threads.release_notes.boost_1_32_0.change_log.static_link">
-			<title>Static-link build option added</title>
+			<title>Statically-link build option added</title>
 
 			<para>The option to link &Boost.Threads; as a static
-			library has been added back (with some limitations
-			on Win32 platforms).
-			This feature was originally removed because
-			<classname>boost::thread_specific_ptr</classname> required
-			that &Boost.Threads; be dynamically linked in order for its
-			cleanup functionality to work on Win32 platforms.
-			Several options are currently being explored to resolve
-			this issue. In the meantime, the ability to link 
-			&Boost.Threads; statically has been added back
-			and (on Win32 platforms only) functions on_thread_exit() and 
-			on_process_exit() have been added which, called at the
-			appropriate times, cause tss cleanup to occur.
-			Currently, &Boost.Threads; calls these functions
-			automatically under the following circumstances:
-			1) When &Boost.Threads; is linked dynamically;
-			2) When &Boost.Threads; is statically linked and 
-			VC++ 7.1 is used to build the &Boost.Threads;
-			static library.
-			Also note that, regardless of whether &Boost.Threads;
-			is linked statically or dynamically, it 
-			always calls on_thread_exit() immediately after the
-			thread function of a joinable  thread 
-			(i.e. when that was created by &Boost.Threads;)
-			finishes.
-			Also note that tss cleanup happens automatically
-			on all non-Win32 platforms without the need for these
-			functions to be called.
-			The plan is for &Boost.Threads; to call	the on_thread_exit()
-			and on_process_exit() functions automatically in
-			more and more cases as methods
-			for doing so are worked out. In the meantime, in
-			cases where &Boost.Threads; does not yet call them, 
-			the user is required to call them. If these functions are
-			not properly called cleanup will not work and memory leaks
-			and possibly other program errors will result. In addition, 
-			in cases where &Boost.Threads; doesn't call the cleanup functions 
-			itself, the user is required to implement the (probably empty)
-			function tss_cleanup_implemented() in order to eliminate linker 
-			errors. This function's only purpose is to serve as a flag: the
-			linker error stating that the function is missing warns the
-			the user of the necessity of calling the cleanup functions.
-			In addition, if &Boost.Threads; later implements automatic
-			tss cleanup where it currently not implemented, the linker's
-			duplicate symbol error should warn the user that their custom
-			implementation is no longer needed.</para>
+			library has been added (with some limitations on Win32 platforms).
+			This feature was originally removed from an earlier version
+			of Boost because <classname>boost::thread_specific_ptr</classname>
+			required that &Boost.Threads; be dynamically linked in order
+			for its cleanup functionality to work on Win32 platforms.
+			Because this limitation never applied to non-Win32 platforms,
+			because significant progress has been made in removing
+			the limitation on Win32 platforms (many thanks to
+			Aaron LaFramboise and Roland Scwarz!), and because the lack
+			of static linking is one of the most common complaints of
+			&Boost.Threads; users, this decision was reversed.</para>
 			
-			<para>The decision to add back static-linking support
-			was made because its lack is one of the most frequent complaints 
-			about &Boost.Threads; and because the other approaches that are 
-			being investigated to deal with 
-			<classname>boost::thread_specific_ptr</classname>
-			cleanup look fairly promising.
+			<para>On non-Win32 platforms: 
+			To choose the dynamically linked version of &Boost.Threads; 
+			using Boost's auto-linking feature, #define BOOST_THREAD_USE_DLL;
+			to choose the statically linked version, 
+			#define BOOST_THREAD_USE_LIB. 
+			If neither symbols is #defined, the default will be chosen.
+			Currently the default is the statically linked version.</para>
 			
-			<note>&Boost.Threads; is still dynamically linked by default.
-			In order to force it to be statically linked, it is necessary to
-			#define BOOST_THREAD_USE_LIB before any of the &Boost.Threads;
-			header files are #included.</note>
+			<para>On Win32 platforms using VC++: 
+			Use the same #defines as for non-Win32 platforms 
+			(BOOST_THREAD_USE_DLL and BOOST_THREAD_USE_LIB).
+			If neither is #defined, the default will be chosen. 
+			Currently the default is the statically linked version
+			if the VC++ run-time library is set to
+			"Multi-threaded" or "Multi-threaded Debug", and
+			the dynamically linked version
+			if the VC++ run-time library is set to 
+			"Multi-threaded DLL" or "Multi-threaded Debug DLL".</para>
 			
-			<note>If the <classname>boost::thread_specific_ptr</classname> cleanup
-			issue cannot be resolved by some other means, it is quite
-			possible that the option to statically link &Boost.Threads;
-			will be removed again in a future version of Boost, at least
-			for Win32 platforms. This is because the 
-			<classname>boost::thread_specific_ptr</classname> functionality
-			will be increasingly used by &Boost.Threads; itself,
-			so that proper cleanup will become essential
-			in future versions of &Boost.Threads;.</note>
-			</para>
+			<para>On Win32 platforms using compilers other than VC++:
+			Use the same #defines as for non-Win32 platforms 
+			(BOOST_THREAD_USE_DLL and BOOST_THREAD_USE_LIB).
+			If neither is #defined, the default will be chosen. 
+			Currently the default is the dynamically linked version
+			because it has not yet been possible to implement automatic
+			tss cleanup in the statically linked version for compilers
+			other than VC++, although it is hoped that this will be
+			possible in a future version of &Boost.Threads;.
+			
+			Note for advanced users: &Boost.Threads; provides several "hook"
+			functions to allow users to experiment with the statically
+			linked version on Win32 with compilers other than VC++.
+			These functions are on_process_enter(), on_process_exit(),
+			on_thread_enter(), and on_thread_exit(), and are defined
+			in tls_hooks.cpp. See the comments in that file for more
+			information.</para>
 		</section>
 		
 		<section id="threads.release_notes.boost_1_32_0.change_log.barrier">
