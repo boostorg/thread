@@ -32,7 +32,7 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
-#   include "boost/thread/detail/threadmon.hpp"
+#   include "boost/thread/detail/tss_hooks.hpp"
 #endif
 
 namespace {
@@ -56,7 +56,7 @@ DWORD WINAPI ThreadProxy(LPVOID args)
     return ret;
 }
 
-inline unsigned _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*), 
+inline unsigned _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
 void* arglist, unsigned initflag,unsigned* thrdaddr)
 {
     DWORD threadID;
@@ -368,8 +368,3 @@ void thread_group::join_all()
 }
 
 } // namespace boost
-
-// Change Log:
-//    8 Feb 01  WEKEMPF Initial version.
-//    1 Jun 01  WEKEMPF Added boost::thread initial implementation.
-//    3 Jul 01  WEKEMPF Redesigned boost::thread to be noncopyable.
