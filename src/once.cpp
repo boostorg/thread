@@ -78,7 +78,12 @@ namespace boost {
 void call_once(void (*func)(), once_flag& flag)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-    if (InterlockedCompareExchange(&flag, 1, 1) == 0)
+// Not 100% sure this is the right WINVER :(
+#if (WINVER >= 0x0501)
+	if (InterlockedCompareExchange(&flag, 1, 1) == 0)
+#else
+	if (InterlockedCompareExchange((LPVOID*)&flag, (LPVOID)1, (LPVOID)1) == 0)
+#endif
     {
 #if defined(BOOST_NO_STRINGSTREAM)
         std::ostrstream strm;
@@ -96,7 +101,12 @@ void call_once(void (*func)(), once_flag& flag)
         res = WaitForSingleObject(mutex, INFINITE);
         assert(res == WAIT_OBJECT_0);
 
+// Not 100% sure this is the right WINVER :(
+#if (WINVER >= 0x0501)
 	    if (InterlockedCompareExchange(&flag, 1, 1) == 0)
+#else
+		if (InterlockedCompareExchange((LPVOID*)&flag, (LPVOID)1, (LPVOID)1) == 0)
+#endif
         {
             func();
 			InterlockedExchange(&flag, 1);
