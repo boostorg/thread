@@ -91,7 +91,12 @@ private:
         enter_wait();
 #endif
 
-        typedef detail::thread::lock_ops<M> lock_ops;
+        typedef detail::thread::lock_ops<M>
+#if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
+# define lock_ops lock_ops_  // HP confuses lock_ops witht the template
+#endif 
+            lock_ops;
+        
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -102,6 +107,7 @@ private:
 #endif
 
         lock_ops::lock(mutex, state);
+#undef lock_ops
     }
 
     template <typename M>
@@ -111,7 +117,12 @@ private:
         enter_wait();
 #endif
 
-        typedef detail::thread::lock_ops<M> lock_ops;
+        typedef detail::thread::lock_ops<M>
+#if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
+# define lock_ops lock_ops_  // HP confuses lock_ops witht the template
+#endif 
+            lock_ops;
+        
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -124,6 +135,7 @@ private:
 #endif
 
         lock_ops::lock(mutex, state);
+#undef lock_ops
 
         return ret;
     }
