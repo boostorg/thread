@@ -89,12 +89,23 @@ int xtime_get(struct xtime* xtp, int clock_type)
         GetSystemTimeAsFileTime(&ft);
 #   endif
         const boost::uint64_t TIMESPEC_TO_FILETIME_OFFSET =
-            ((boost::uint64_t)27111902UL << 32) +
-            (boost::uint64_t)3577643008UL;
-        xtp->sec = (int)((*(__int64*)&ft - TIMESPEC_TO_FILETIME_OFFSET) /
-            10000000);
-        xtp->nsec = (int)((*(__int64*)&ft - TIMESPEC_TO_FILETIME_OFFSET -
-                              ((__int64)xtp->sec * (__int64)10000000)) * 100);
+            (static_cast<boost::uint64_t>(27111902UL) << 32)
+            + 3577643008UL;
+
+        const boost::uint64_t ft64 = 
+            (static_cast<boost::uint64_t>(ft.dwHighDateTime) << 32) 
+            + ft.dwLowDateTime;
+
+        xtp->sec = static_cast<int>(
+            (ft64 - TIMESPEC_TO_FILETIME_OFFSET) / 10000000
+        );
+
+        xtp->nsec = static_cast<int>((
+                ft64 - TIMESPEC_TO_FILETIME_OFFSET 
+                - (static_cast<boost::uint64_t>(xtp->sec) * 10000000)
+            ) * 100
+        );
+
         return clock_type;
 #elif defined(BOOST_HAS_GETTIMEOFDAY)
         struct timeval tv;
