@@ -17,6 +17,7 @@
 
 #include "util.inl"
 
+boost::mutex check_mutex;
 boost::mutex tss_mutex;
 int tss_instances = 0;
 
@@ -44,7 +45,13 @@ void test_tss_thread()
     for (int i=0; i<1000; ++i)
     {
         int& n = tss_value->value;
-        BOOST_CHECK_EQUAL(n, i);
+        // Don't call BOOST_CHECK_EQUAL directly, as it doesn't appear to
+        // be thread safe. Must evaluate further.
+        if (n != i)
+        {
+            boost::mutex::scoped_lock lock(check_mutex);
+            BOOST_CHECK_EQUAL(n, i);
+        }
         ++n;
     }
 }
