@@ -72,14 +72,14 @@ namespace boost
 
         void notify_one();
         void notify_all();
-        template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
-            void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock);
-        template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
-            void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
-        template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
-            bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt);
-        template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
-            bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; XT, <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
+        template &lt;typename <a href="lock_concept.html#Lock-concept">Lock</a>&gt;
+            void wait(<a href="lock_concept.html#Lock-concept">Lock</a>&amp; lock);
+        template &lt;typename <a href="lock_concept.html#Lock-concept">Lock</a>, typename <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
+            void wait(<a href="lock_concept.html#Lock-concept">Lock</a>&amp; lock, <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
+        template &lt;typename <a href="lock_concept.html#Lock-concept">Lock</a>&gt;
+            bool timed_wait(<a href="lock_concept.html#Lock-concept">Lock</a>&amp; lock, const xtime&amp; xt);
+        template &lt;typename <a href="lock_concept.html#Lock-concept">Lock</a>, typename <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
+            bool timed_wait(<a href="lock_concept.html#Lock-concept">Lock</a>&amp; lock, const xtime&amp; XT, <a href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
     };
 };
 </pre>
