@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -25,9 +25,9 @@
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#    include <MacErrors.h>
-#    include "mac/init.hpp"
-#    include "mac/safe.hpp"
+#   include <MacErrors.h>
+#   include "mac/init.hpp"
+#   include "mac/safe.hpp"
 #endif
 
 namespace boost {
@@ -40,7 +40,8 @@ condition_impl::condition_impl()
 {
     m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
     m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0,
-        std::numeric_limits<long>::max(), 0));
+                                          std::numeric_limits<long>::max(),
+                                          0));
     m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
 
     if (!m_gate || !m_queue || !m_mutex)
@@ -174,7 +175,8 @@ void condition_impl::notify_all()
 
         if (signals)
         {
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals,
+                0);
             assert(res);
         }
     }
@@ -427,7 +429,8 @@ void condition_impl::notify_one()
     unsigned signals = 0;
 
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (m_waiting != 0) // the m_gate is already closed
@@ -479,7 +482,8 @@ void condition_impl::notify_all()
     unsigned signals = 0;
 
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (m_waiting != 0) // the m_gate is already closed
@@ -545,7 +549,8 @@ void condition_impl::do_wait()
     unsigned was_waiting=0;
     unsigned was_gone=0;
 
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
     was_waiting = m_waiting;
     was_gone = m_gone;
@@ -605,7 +610,8 @@ bool condition_impl::do_timed_wait(const xtime& xt)
     unsigned was_waiting=0;
     unsigned was_gone=0;
 
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
     was_waiting = m_waiting;
     was_gone = m_gone;

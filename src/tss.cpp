@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -23,94 +23,100 @@
 #include <boost/thread/detail/threadmon.hpp>
 #include <map>
 namespace {
-    typedef std::pair<void(*)(void*), void*> cleanup_info;
-    typedef std::map<int, cleanup_info> cleanup_handlers;
+typedef std::pair<void(*)(void*), void*> cleanup_info;
+typedef std::map<int, cleanup_info> cleanup_handlers;
 
-    DWORD key;
-    boost::once_flag once = BOOST_ONCE_INIT;
+DWORD key;
+boost::once_flag once = BOOST_ONCE_INIT;
 
-    void init_cleanup_key()
+void init_cleanup_key()
+{
+    key = TlsAlloc();
+    assert(key != 0xFFFFFFFF);
+}
+
+void __cdecl cleanup()
+{
+    cleanup_handlers* handlers = static_cast<cleanup_handlers*>(
+        TlsGetValue(key));
+    for (cleanup_handlers::iterator it = handlers->begin();
+         it != handlers->end(); ++it)
     {
-        key = TlsAlloc();
-        assert(key != 0xFFFFFFFF);
+        cleanup_info info = it->second;
+        if (info.second)
+            info.first(info.second);
     }
+    delete handlers;
+}
 
-    void __cdecl cleanup()
+cleanup_handlers* get_handlers()
+{
+    boost::call_once(&init_cleanup_key, once);
+
+    cleanup_handlers* handlers = static_cast<cleanup_handlers*>(
+        TlsGetValue(key));
+    if (!handlers)
     {
-        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
-        for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+        try
         {
-            cleanup_info info = it->second;
-            if (info.second)
-                info.first(info.second);
+            handlers = new cleanup_handlers;
         }
-        delete handlers;
-    }
-
-    cleanup_handlers* get_handlers()
-    {
-        boost::call_once(&init_cleanup_key, once);
-
-        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
-        if (!handlers)
+        catch (...)
         {
-            try
-            {
-                handlers = new cleanup_handlers;
-            }
-            catch (...)
-            {
-                return 0;
-            }
-            int res = 0;
-            res = TlsSetValue(key, handlers);
-            assert(res);
-            res = on_thread_exit(&cleanup);
-            assert(res == 0);
+            return 0;
         }
-
-        return handlers;
+        int res = 0;
+        res = TlsSetValue(key, handlers);
+        assert(res);
+        res = on_thread_exit(&cleanup);
+        assert(res == 0);
     }
+
+    return handlers;
+}
 }
 #elif defined(BOOST_HAS_MPTASKS)
 #include <map>
 namespace {
-    typedef std::pair<void(*)(void*), void*> cleanup_info;
-    typedef std::map<int, cleanup_info> cleanup_handlers;
+typedef std::pair<void(*)(void*), void*> cleanup_info;
+typedef std::map<int, cleanup_info> cleanup_handlers;
 
-    TaskStorageIndex key;
-    boost::once_flag once = BOOST_ONCE_INIT;
+TaskStorageIndex key;
+boost::once_flag once = BOOST_ONCE_INIT;
 
-    void init_cleanup_key()
+void init_cleanup_key()
+{
+    OSStatus lStatus = MPAllocateTaskStorageIndex(&key);
+    assert(lStatus == noErr);
+}
+
+cleanup_handlers* get_handlers()
+{
+    boost::call_once(&init_cleanup_key, once);
+
+    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(
+        MPGetTaskStorageValue(key));
+    if (!handlers)
     {
-        OSStatus lStatus = MPAllocateTaskStorageIndex(&key);
-        assert(lStatus == noErr);
-    }
-
-    cleanup_handlers* get_handlers()
-    {
-        boost::call_once(&init_cleanup_key, once);
-
-        cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(MPGetTaskStorageValue(key));
-        if (!handlers)
+        try
         {
-            try
-            {
-                handlers = new cleanup_handlers;
-            }
-            catch (...)
-            {
-                return 0;
-            }
-            OSStatus lStatus = noErr;
-            lStatus = MPSetTaskStorageValue(key, reinterpret_cast<TaskStorageValue>(handlers));
-            assert(lStatus == noErr);
-        // TODO - create a generalized mechanism for registering thread exit functions
-        //            and use it here.
+            handlers = new cleanup_handlers;
         }
-
-        return handlers;
+        catch (...)
+        {
+            return 0;
+        }
+        OSStatus lStatus = noErr;
+        lStatus = MPSetTaskStorageValue(key,
+            reinterpret_cast<TaskStorageValue>(handlers));
+        assert(lStatus == noErr);
+        // TODO - create a generalized mechanism for registering thread exit
+        // functions and use it here.
     }
+
+    return handlers;
+}
+
 }
 
 namespace boost {
@@ -120,10 +126,12 @@ namespace detail {
 
 void thread_cleanup()
 {
-    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(MPGetTaskStorageValue(key));
+    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(
+        MPGetTaskStorageValue(key));
     if(handlers != NULL)
     {
-        for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+        for (cleanup_handlers::iterator it = handlers->begin();
+             it != handlers->end(); ++it)
         {
             cleanup_info info = it->second;
             if (info.second)
@@ -235,7 +243,8 @@ bool tss::set(void* value)
         cleanup_info info(m_cleanup, value);
         (*handlers)[m_key] = info;
     }
-    OSStatus lStatus = MPSetTaskStorageValue(m_key, reinterpret_cast<TaskStorageValue>(value));
+    OSStatus lStatus = MPSetTaskStorageValue(m_key,
+        reinterpret_cast<TaskStorageValue>(value));
     return(lStatus == noErr);
 }
 #endif

@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -25,10 +25,9 @@
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#    include <MacErrors.h>
-
-#    include "mac/init.hpp"
-#    include "mac/safe.hpp"
+#   include <MacErrors.h>
+#   include "mac/init.hpp"
+#   include "mac/safe.hpp"
 #endif
 
 namespace boost {
@@ -151,7 +150,8 @@ bool timed_mutex::do_timedlock(const xtime& xt)
         int milliseconds;
         to_duration(xt, milliseconds);
 
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex),
+            milliseconds);
         assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
         if (res == WAIT_TIMEOUT)
@@ -427,7 +427,8 @@ mutex::~mutex()
 void mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 }
 
@@ -459,7 +460,8 @@ try_mutex::~try_mutex()
 void try_mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 }
 
@@ -499,7 +501,8 @@ timed_mutex::~timed_mutex()
 void timed_mutex::do_lock()
 {
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 }
 

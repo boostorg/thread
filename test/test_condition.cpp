@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
@@ -66,7 +77,7 @@ void condition_test_waits(condition_test_data* data)
     data->condition.notify_one();
 
     // Test predicate timed_wait.
-	xt = delay(10);
+    xt = delay(10);
     cond_predicate pred(data->notified, 4);
     BOOST_CHECK(data->condition.timed_wait(lock, xt, pred));
     BOOST_CHECK(lock ? true : false);
@@ -95,7 +106,7 @@ void do_test_condition_notify_one()
 
 void test_condition_notify_one()
 {
-	timed_test(&do_test_condition_notify_one, 2, execution_monitor::use_mutex);
+    timed_test(&do_test_condition_notify_one, 2, execution_monitor::use_mutex);
 }
 
 void do_test_condition_notify_all()
@@ -120,10 +131,10 @@ void do_test_condition_notify_all()
 
 void test_condition_notify_all()
 {
-	// We should have already tested notify_one here, so
-	// a timed test with the default execution_monitor::use_condition
-	// should be OK, and gives the fastest performance
-	timed_test(&do_test_condition_notify_all, 3);
+    // We should have already tested notify_one here, so
+    // a timed test with the default execution_monitor::use_condition
+    // should be OK, and gives the fastest performance
+    timed_test(&do_test_condition_notify_all, 3);
 }
 
 void do_test_condition_waits()
@@ -175,16 +186,16 @@ void do_test_condition_waits()
 
 void test_condition_waits()
 {
-	// We should have already tested notify_one here, so
-	// a timed test with the default execution_monitor::use_condition
-	// should be OK, and gives the fastest performance
-	timed_test(&do_test_condition_waits, 12);
+    // We should have already tested notify_one here, so
+    // a timed test with the default execution_monitor::use_condition
+    // should be OK, and gives the fastest performance
+    timed_test(&do_test_condition_waits, 12);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
-       BOOST_TEST_SUITE("Boost.Threads: condition test suite");
+        BOOST_TEST_SUITE("Boost.Threads: condition test suite");
 
     test->add(BOOST_TEST_CASE(&test_condition_notify_one));
     test->add(BOOST_TEST_CASE(&test_condition_notify_all));
