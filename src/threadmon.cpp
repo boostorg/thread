@@ -41,7 +41,7 @@ namespace
 #endif
 
 extern "C"
-BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
+BOOL WINAPI DllMain(HANDLE /*module*/, DWORD reason, LPVOID)
 {
     switch (reason)
     {
@@ -63,8 +63,7 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
                         (*it)();
                     }
 
-                    // Remove the exit handler list from the registered lists
-                    // and then destroy it.
+                    // Destroy the exit handler.
                     delete handlers;
                 }
             }
@@ -140,3 +139,9 @@ extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void))
 #endif // BOOST_THREAD_BUILD_DLL
 
 #endif // BOOST_HAS_WINTHREADS
+
+// Change Log:
+//  20 Mar 04  GLASSFORM for WEKEMPF 
+//      Removed uneccessary critical section:
+//          Windows already serializes calls to DllMain.
+//      Removed registered_handlers.
