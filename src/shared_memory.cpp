@@ -23,6 +23,7 @@
 #include <sys/mman.h>
 #include <fcntl.h>
 #include <semaphore.h>
+#include <errno.h>
 
 #endif
 
@@ -116,7 +117,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
 	m_len = len;
 
 	sem_t* sem = sem_open(mxname.c_str(), O_CREAT);
-	if (sem = SEM_FAILED)
+	if (sem == SEM_FAILED)
 		throw thread_resource_error();
 	res = sem_wait(sem);
 	assert(res == 0);
@@ -158,7 +159,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
 	}
 		
 	ftruncate(m_hmap, len);
-	int prot = (m_flags & read_write) ? PROT_READ|PROT_WRITE : PROT_READ;
+	int prot = (flags & write) ? PROT_READ|PROT_WRITE : PROT_READ;
 	m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
 #endif
 
