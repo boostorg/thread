@@ -78,6 +78,22 @@ namespace
         BOOST_TEST(thrd != parent);
         BOOST_TEST(thrd == boost::thread());
     }
+
+	void priority_thread()
+	{
+		int policy;
+		boost::sched_param param;
+		boost::thread self;
+		self.get_scheduling_parameter(policy, param);
+		test_value = param.priority;
+		int new_prio = boost::thread::min_priority(policy);
+		BOOST_CHECK(new_prio != param.priority);
+		param.priority = new_prio;
+		self.set_scheduling_parameter(policy, param);
+		param.priority++;
+		self.get_scheduling_parameter(policy, param);
+		BOOST_CHECK_EQUAL(new_prio, param.priority);
+	}
 }
 
 void test_sleep()
@@ -129,6 +145,84 @@ void test_cancel()
 	BOOST_CHECK_EQUAL(test_value, 999); // only true if thread was cancelled
 }
 
+void test_thread_attributes()
+{
+	boost::thread::attributes attr;
+	try
+	{
+		size_t size = attr.get_stack_size();
+		attr.set_stack_size(size + 1);
+		BOOST_CHECK_EQUAL(attr.get_stack_size(), size + 1);
+	}
+	catch (boost::unsupported_thread_option& err)
+	{
+	}
+	try
+	{
+		void* stack = attr.get_stack_address();
+		attr.set_stack_address((char*)stack + 1);
+		BOOST_CHECK_EQUAL(attr.get_stack_address(), (char*)stack + 1);
+	}
+	catch (boost::unsupported_thread_option& err)
+	{
+	}
+	try
+	{
+		BOOST_CHECK(attr.inherit_scheduling());
+		attr.inherit_scheduling(false);
+		BOOST_CHECK(!attr.inherit_scheduling());
+		int policy;
+		boost::sched_param param;
+		attr.get_schedule(policy, param);
+		int min = boost::thread::min_priority(policy);
+		int max = boost::thread::max_priority(policy);
+		int new_prio = min + 1;
+		if (new_prio > max) new_prio = max;
+		param.priority = new_prio;
+		attr.set_schedule(policy, param);
+		param.priority++;
+		attr.get_schedule(policy, param);
+		BOOST_CHECK_EQUAL(new_prio, param.priority);
+		int scope = attr.scope();
+		if (scope == boost::scope_process)
+			scope = boost::scope_system;
+		else
+			scope = boost::scope_process;
+		attr.scope(scope);
+		BOOST_CHECK_EQUAL(attr.scope(), scope);
+	}
+	catch (boost::unsupported_thread_option& err)
+	{
+	}
+}
+
+void test_thread_priority()
+{
+	boost::thread::attributes attr;
+	try
+	{
+		attr.inherit_scheduling(false);
+		BOOST_CHECK(!attr.inherit_scheduling());
+		int policy;
+		boost::sched_param param;
+		attr.get_schedule(policy, param);
+		int min = boost::thread::min_priority(policy);
+		int max = boost::thread::max_priority(policy);
+		int new_prio = min + 1;
+		if (new_prio > max) new_prio = max;
+		BOOST_CHECK(new_prio != param.priority);
+		param.priority = new_prio;
+		attr.set_schedule(policy, param);
+		test_value = 0;
+		boost::thread thrd(&priority_thread, attr);
+		thrd.join();
+		BOOST_CHECK_EQUAL(test_value, new_prio);
+	}
+	catch (boost::unsupported_thread_option& err)
+	{
+	}
+}
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -139,6 +233,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_comparison));
 	test->add(BOOST_TEST_CASE(test_join));
 	test->add(BOOST_TEST_CASE(test_cancel));
+	test->add(BOOST_TEST_CASE(test_thread_attributes));
+	test->add(BOOST_TEST_CASE(test_thread_priority));
 
     return test;
 }
