@@ -127,7 +127,7 @@ void call_once(void (*func)(), once_flag& flag)
         strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex
              << GetCurrentProcessId() << &flag << std::ends;
         unfreezer unfreeze(strm);
-        HANDLE mutex = CreateMutex(NULL, FALSE, strm.str());
+        HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str());
 #else
         std::ostringstream strm;
         strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex
@@ -142,7 +142,18 @@ void call_once(void (*func)(), once_flag& flag)
 
         if (compare_exchange(&flag, 1, 1) == 0)
         {
-            func();
+            try
+            {
+                func();
+            }
+            catch (...)
+            {
+                res = ReleaseMutex(mutex);
+                assert(res);
+                res = CloseHandle(mutex);
+                assert(res);
+                throw;
+            }
             InterlockedExchange(&flag, 1);
         }
 
