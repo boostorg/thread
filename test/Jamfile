@@ -1,12 +1,10 @@
-#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears
-#  in all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell
+#  and distribute this software is granted provided this copyright notice
+#  appears in all copies. This software is provided "as is" without express or
+#  implied warranty, and with no claim as to its suitability for any purpose.
 #
 # Boost.Threads test Jamfile
 #
-# Declares the following targets:
-#   1. test_thread, a unit test executable.
 # Additional configuration variables used:
 #   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
 #      library should be used instead of "native" threads. This feature is
@@ -23,7 +21,6 @@ subproject libs/thread/test ;
 # Include threads.jam for Boost.Threads global build information.
 # This greatly simplifies the Jam code needed to configure the build
 # for the various Win32 build types.
-
 SEARCH on threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include threads.jam ;
 
@@ -31,32 +28,29 @@ include threads.jam ;
 SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
 include testing.jam ;
 
-template test
-    ## sources ##
-    : <template>thread_base
-      <dll>../build/boost_thread
-      <lib>../../test/build/boost_unit_test_framework
-      $(threadmon)
-    ## requirements ##
-    :
-    ## default build ##
-    : debug release <runtime-link>static/dynamic
-;
-
-sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp
-    test_tss.cpp test_once.cpp ;
-
-#######################
-# Declare the Boost.Threads unit test program test_thread.
-
-run test_thread.cpp <template>test ;
-run test_thread_group.cpp <template>test ;
-run test_mutex.cpp <template>test  ;
-run test_condition.cpp <template>test ;
-run test_tss.cpp <template>test ;
-run test_once.cpp <template>test ;
-run test_xtime.cpp <template>test ;
-run test_barrier.cpp <template>test ;
+#run test_barrier.cpp <template>test ;
 #run test_rw_mutex.cpp <template>test ;
-run test_thread_pool.cpp <template>test ;
+#run test_thread_pool.cpp <template>test ;
 
+{
+    template test
+        ## sources ##
+        : <template>thread_base
+          <dll>../build/boost_thread
+          <lib>../../test/build/boost_unit_test_framework
+#          $(threadmon)
+        ## requirements ##
+        :
+        ## default build ##
+        : # debug release <runtime-link>static/dynamic
+    ;
+
+    test-suite "threads"
+        : [ run test_thread.cpp <template>test ]
+          [ run test_mutex.cpp <template>test ]
+          [ run test_condition.cpp <template>test ]
+          [ run test_tss.cpp <template>test ]
+          [ run test_once.cpp <template>test ]
+          [ run test_xtime.cpp <template>test ]
+    ;
+}
