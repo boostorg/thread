@@ -51,18 +51,11 @@ class thread_specific_ptr : private noncopyable
 public:
     thread_specific_ptr() : m_tss(&thread_specific_ptr<T>::cleanup) { }
 
-    T* get() const
-    {
-        T* ptr = static_cast<T*>(m_tss.get());
-        if (!ptr)
-        {
-            ptr = new T;
-            m_tss.set(ptr);
-        }
-        return ptr;
-    }
+    T* get() const { return static_cast<T*>(m_tss.get()); }
     T* operator->() const { return get(); }
     T& operator*() const { return *get(); }
+    T* release() { T* temp = get(); m_tss.set(0); return temp; }
+    void reset(T* p=0) { T* cur = get(); if (cur == p) return; delete cur; m_tss.set(p); }
 
 private:
     static void cleanup(void* p) { delete static_cast<T*>(p); }

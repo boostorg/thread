@@ -11,6 +11,7 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/thread/exceptions.hpp>
 #include "threadmon.hpp"
 #include <stdexcept>
 #include <cassert>
@@ -90,7 +91,7 @@ tss::tss(void (*cleanup)(void*))
     assert(m_key != 0xFFFFFFFF);
 
     if (m_key == 0xFFFFFFFF)
-        throw std::runtime_error("boost::tss : failure to construct");
+        throw thread_resource_error();
 
     m_cleanup = cleanup;
 }
@@ -134,7 +135,7 @@ tss::tss(void (*cleanup)(void*))
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::tss : failure to construct");
+        throw thread_resource_error();
 }
 
 tss::~tss()

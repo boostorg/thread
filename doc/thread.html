@@ -2,7 +2,7 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, BTL, thread library, C++">
+<meta name="keywords" content="threads, Boost.Threads, thread library, C++">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, thread</title>
 </head>
@@ -33,36 +33,35 @@
 
 <p>The <code>thread</code> class represents threads of execution, and provides
 the functionality to create and manage threads within the <b>Boost.Threads</b>
-library. See <A href="definitions.html"> Definitions</A>
-for a precise description of "thread of execution", and for definitions of threading
-related terms and of thread states
-such as "blocked".</p>
+library. See <A href="definitions.html">Definitions</A> for a precise description of
+"thread of execution", and for definitions of threading related terms and of thread
+states such as "blocked".</p>
 
 <p>A thread of execution has an initial function. For the program's
 initial thread, the initial function is <code>main()</code>. For other
 threads, the initial function is <code>operator()</code> of the function object
 passed to the class <code>thread</code> constructor.</p>
 
-<p>A thread of execution is said to be "finished" or "finished
-execution" when its initial function returns or is terminated.&nbsp; This
-includes completion of all thread cleanup handlers, and completion of the normal
-C++ function return behaviors, such as destruction of automatic storage (stack)
-objects and releasing any
-associated implementation resources.</p>
+<p>A thread of execution is said to be "finished" or "finished execution" when its
+initial function returns or is terminated. This includes completion of all thread
+cleanup handlers, and completion of the normal C++ function return behaviors, such
+as destruction of automatic storage (stack) objects and releasing any associated
+implementation resources.</p>
 
-<p>Except as described below, the policy used by an implementation of
-<b>Boost.Threads</b> to schedule transitions between thread states is
-unspecified.</p>
+<p>A thread object has an associated state which is either "joinable" or "non-joinable".</p>
+
+<p>Except as described below, the policy used by an implementation of <b>Boost.Threads</b>
+to schedule transitions between thread states is unspecified.</p>
 
 <p><b>Note: </b>Just as the lifetime of a file may be different from the
 lifetime of an iostream object which represents the file, the lifetime of a
 thread of execution may be different from the <code>thread</code> object which
-represents the thread of execution.&nbsp; In particular, after a call to <code>join()</code>,
+represents the thread of execution. In particular, after a call to <code>join()</code>,
 the thread of execution will no longer exist even though the <code>thread</code>
-object continues to exist until the end of its normal lifetime.&nbsp; The
+object continues to exist until the end of its normal lifetime. The
 converse is also possible; if a <code>thread</code> object is destroyed without <code>join()</code>
-having been first been called, the thread of execution continues until its
-initial function completes.</p>
+having first been called, the thread of execution continues until its initial function
+completes.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -82,12 +81,10 @@ public:
     thread(const boost::function0&lt;void&gt;&amp; threadfunc);
     ~thread();
 
-    bool operator==(const thread&amp; other) const;
-    bool operator!=(const thread&amp; other) const;
+    bool operator==(const thread&amp; rhs) const;
+    bool operator!=(const thread&amp; rhs) const;
 
     void join();
-    bool try_join();
-    bool timed_join(const xtime&amp; xt);
 
     static void sleep(const xtime&amp; xt);
     static void yield();
@@ -108,6 +105,10 @@ public:
 <p><b>Effects:</b> Constructs a <code>thread</code> object for the current thread
 of execution.</p>
 
+<p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
+
+<p><b>Danger:</b> <code>*this</code> is valid only within the current thread.</p>
+
 <pre>
     thread(const <A href="../../function/index.html">boost::function0</A>&lt;void&gt;&amp; threadfunc);
 </pre>
@@ -118,7 +119,10 @@ location which persists for the lifetime of the new thread of execution.  Calls
 <code>operator()</code> on the copy of the <code>threadfunc</code> function object in the
 new thread of execution.</p>
 
-<p><b>Throws:</b> <code>std::bad_alloc</code> if a new thread of execution cannot be started.</p>
+<p><b>Postcondition:</b> <code>*this</code> is joinable.</p>
+
+<p><b>Throws:</b> <code>boost::thread_resource_error</code> if a new thread of execution
+cannot be started.</p>
 
 <hr>
 <h3>Destructor</h3>
@@ -127,22 +131,26 @@ new thread of execution.</p>
     ~thread();
 </pre>
 
-<p><b>Effects:</b>  Destroys <code>*this</code>. The actual thread of execution may
+<p><b>Effects:</b> Destroys <code>*this</code>. The actual thread of execution may
 continue to execute after the <code>thread</code> object has been destroyed.</p>
 
-<p><b>Notes:</b> To ensure a thread of execution runs to completion before the <code>thread</code>
-object is destroyed, call <code>join()</code>.</p>
+<p><b>Notes:</b> If <code>*this</code> is joinable the actual thread of execution
+becomes "detached".  Any resources used by the thread will be reclaimed when the
+thread of execution completes. To ensure such a thread of execution runs to completion
+before the <code>thread</code> object is destroyed, call <code>join()</code>.</p>
 
 <hr>
 <h3>Comparison Operators</h3>
 
 <pre>
-    bool operator==(const thread&amp; other);
-    bool operator!=(const thread&amp; other);
+    bool operator==(const thread&amp; rhs);
+    bool operator!=(const thread&amp; rhs);
 </pre>
 
-<p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>other</code>
-represent the same the same thread of execution.</p>
+<p><b>Requires:</b> The thread is non-terminated or <code>*this</code> is joinable.</p>
+
+<p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>rhs</code>
+represent the same thread of execution.</p>
 
 <hr>
 <h3>join</h3>
@@ -151,47 +159,12 @@ represent the same the same thread of execution.</p>
     void join();
 </pre>
 
-<p><b>Requires:</b> <code>*this != thread()</code></p>
+<p><b>Requires:</b> <code>*this != thread()</code> and <code>*this</code> is joinable.</p>
 
-<p><b>Effects:</b> The current thread of execution blocks until the initial
-function of the thread of execution
-represented by <code>*this</code>  finishes.</p>
+<p><b>Effects:</b> The current thread of execution blocks until the initial function of the thread
+of execution represented by <code>*this</code> finishes and all resources are reclaimed.</p>
 
-<p><b>Notes:</b> <code>join()</code> has no effect if called for a thread object
-whose initial function has already finished.</p>
-
-<hr>
-<h3>try_join</h3>
-
-<pre>
-    bool try_join();
-</pre>
-
-<p><b>Requires:</b> <code>*this != thread()</code></p>
-
-<p><b>Returns:</b> <code>true</code> if the thread of execution represented by <code>*this</code>
-has finished execution.</p>
-
-<p><b>Notes:</b> <code>try_join()</code> is in effect a non-blocking attempt to "join".</p>
-
-<hr>
-<h3>timed_join</h3>
-
-<pre>
-    bool timed_join(const xtime&amp; xt);
-</pre>
-
-<p><b>Requires:</b> <code>*this != thread()</code></p>
-
-<p><b>Effects:</b> The current thread of execution blocks until either the thread of execution
-represented by <code>*this</code> finishes or the time specified by <code>xt</code>
- is reached.</p>
-
-<p><b>Returns:</b> <code>true</code> if the thread of execution represented by <code>*this</code>
-finished execution.</p>
-
-<p><b>Notes:</b> <code>timed_join()</code> is in effect an attempt to "join" which
-only blocks for a specified time.</p>
+<p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
 
 <hr>
 <h3>sleep</h3>

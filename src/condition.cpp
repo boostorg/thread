@@ -12,6 +12,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp> 
+#include <boost/thread/exceptions.hpp>
 #include <boost/limits.hpp>
 #include <cassert>
 #include "timeconv.inl"
@@ -41,7 +42,7 @@ condition::condition()
         res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
         assert(res);
 
-        throw std::runtime_error("boost::condition : failure to construct");
+        throw thread_resource_error();
     }
 }
 
@@ -292,7 +293,7 @@ condition::condition()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::condition : failure to construct");
+        throw thread_resource_error();
 }
 
 condition::~condition()

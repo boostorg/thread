@@ -35,6 +35,12 @@ public:
     lock_error();
 };
 
+class thread_resource_error : public std::runtime_error
+{
+public:
+    thread_resource_error();
+};
+
 } // namespace boost
 
 #endif // BOOST_THREAD_CONFIG_PDM070801_H

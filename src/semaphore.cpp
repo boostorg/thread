@@ -12,6 +12,7 @@
 #include <boost/thread/semaphore.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/limits.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <stdexcept>
 #include <cassert>
 #include "timeconv.inl"
@@ -37,7 +38,7 @@ semaphore::semaphore(unsigned count, unsigned max)
     assert(m_sema != 0);
 
     if (!m_sema)
-        throw std::runtime_error("boost::semaphore : failure to construct");
+        throw thread_resource_error();
 }
 
 semaphore::~semaphore()
@@ -80,13 +81,16 @@ semaphore::semaphore(unsigned count, unsigned max)
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::semaphore : failure to construct");
+        throw thread_resource_error();
 
     res = pthread_cond_init(&m_condition, 0);
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::semaphore : failure to construct");
+    {
+        pthread_mutex_destroy(&m_mutex);
+        throw thread_resource_error();
+    }
 }
 
 semaphore::~semaphore()

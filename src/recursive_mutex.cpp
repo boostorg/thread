@@ -34,7 +34,7 @@ recursive_mutex::recursive_mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::recursive_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 recursive_mutex::~recursive_mutex()
@@ -88,7 +88,7 @@ recursive_try_mutex::recursive_try_mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::recursive_try_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 recursive_try_mutex::~recursive_try_mutex()
@@ -159,7 +159,7 @@ recursive_timed_mutex::recursive_timed_mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::recursive_timed_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 recursive_timed_mutex::~recursive_timed_mutex()
@@ -262,14 +262,17 @@ recursive_mutex::recursive_mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_mutex : failure to construct");
+        throw thread_resource_error();
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     res = pthread_cond_init(&m_unlocked, 0);
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_mutex : failure to construct");
+    {
+        pthread_mutex_destroy(&m_mutex);
+        throw thread_resource_error();
+    }
 #   endif
 }
 
@@ -409,14 +412,17 @@ recursive_try_mutex::recursive_try_mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_try_mutex : failure to construct");
+        throw thread_resource_error();
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     res = pthread_cond_init(&m_unlocked, 0);
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_try_mutex : failure to construct");
+    {
+        pthread_mutex_destroy(&m_mutex);
+        throw thread_resource_error();
+    }
 #   endif
 }
 
@@ -586,13 +592,16 @@ recursive_timed_mutex::recursive_timed_mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_timed_mutex : failure to construct");
+        throw thread_resource_error();
     
     res = pthread_cond_init(&m_unlocked, 0);
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::recursive_timed_mutex : failure to construct");
+    {
+        pthread_mutex_destroy(&m_mutex);
+        throw thread_resource_error();
+    }
 }
 
 recursive_timed_mutex::~recursive_timed_mutex()

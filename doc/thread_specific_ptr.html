@@ -2,7 +2,7 @@
 
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, BTL, thread library, C++">
+<meta name="keywords" content="threads, Boost.Threads, thread library, C++">
 <link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, thread_specific_ptr</title>
 </head>
@@ -35,6 +35,20 @@
 Thread specific storage is data associated with individual threads and is often used to make
 operations <a href="definitions.html#Thread-safe">thread-safe</a> that rely on global data.</p>
 
+<p>Template <code>thread_specific_ptr</code> stores a pointer to an object obtained via
+<code>new</code> on a thread-by-thread basis and deletes the object when a thread terminates.
+Each thread initially stores the null pointer in each <code>thread_specific_ptr</code> instance.</p>
+
+<p>The template <code>thread_specific_ptr</code> is useful in the following cases:</p>
+
+<ul>
+   <li>An interface was original written assuming a single thread of control and is being ported
+to a multi-threaded environment.</li>
+   <li>Each thread of control invokes sequences of methods that share data that must be logically
+accessed through a globally visible access point, but are physically unique for each thread,
+instead of being explicitly passed.</li>
+</ul>
+
 <h2><a name="Header">Header</a></h2>
 
 <pre>
@@ -56,6 +70,8 @@ public:
     T* get() const;
     T* operator->() const;
     T& operator*() const;
+    T* release();
+    void reset(T* p=0);
 };
 
 } // namespace boost
@@ -70,14 +86,16 @@ public:
 thread_specific_ptr();
 </pre>
 
-<p><b>Postconditions:</b> A thread specific storage slot has been reserved for use by *this
-in all threads.</p>
+<p><b>Postconditions:</b> A thread specific storage  has been reserved for use by *this
+in all threads, with each thread initially storing a null pointer.</p>
 
 <p><b>Requires:</b> The expression <code>delete get()</code> is well formed.</p>
 
-<p><b>Notes:</b> There may be an implementation specific limit to the number of thread specific
-storage slots that can be created, and this limit may be small.  No object is actually created
-for storage in any running thread.</p>
+<p><b>Throws:</b> <code>boost::thread_resource_error</code> if the necessary resources
+can not be obtained.</p>
+
+<p><b>Notes:</b> There is an implementation specific limit to the number of thread specific
+storage objects that can be created, and this limit may be small.</p>
 
 <hr>
 <h3>Destructor</h3>
@@ -99,10 +117,7 @@ T* get() const;
 
 <p><b>Returns:</b> The object stored in thread specific storage for the current thread for *this.</p>
 
-<p><b>Requires:</b> The experession <code>new T()</code> is well formed.</p>
-
-<p><b>Notes:</b> If the current thread has not previously accessed it's thread specific storage
-for *this then an object of type T shall be default constructed and stored.</p>
+<p><b>Notes:</b> Each thread initially returns 0.</p>
 
 <hr>
 <h3>Smart Pointer Operations</h3>
@@ -120,6 +135,28 @@ T& operator*() const;
 <p><b>Returns:</b> <code>get()</code></p>
 
 <p><b>Requires:</b> <code>get() != 0</code></p>
+
+<hr>
+<h3>Release</h3>
+
+<pre>
+T* release();
+</pre>
+
+<p><b>Returns:</b> <code>get()</code></p>
+
+<p><b>Postcondition:</b> *this holds the null pointer for the current thread.</p>
+
+<hr>
+<h3>Reset</h3>
+
+<pre>
+void reset(T* p=0);
+</pre>
+
+<p><b>Effects:</b> If <code>get() != p</code> then <code>delete get()</code>.
+
+<p><b>Postconditions:</b> <code>*this</code> holds the pointer <code>p</code> for the current thread.</p>
 
 <hr>
 <h2><a name="Example">Example Usage</a></h2>

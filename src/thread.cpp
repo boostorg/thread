@@ -22,84 +22,7 @@
 
 #include "timeconv.inl"
 
-#if defined(BOOST_HAS_PTHREADS)
-namespace boost {
-
-// This class is used to signal thread objects when the thread dies.
-class thread::thread_list
-{
-public:
-    thread_list() { }
-    ~thread_list()
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
-        for (std::list<thread*>::iterator it = m_thread_objects.begin(); it != m_thread_objects.end(); ++it)
-        {
-            mutex::scoped_lock scoped_lock((*it)->m_mutex);
-            (*it)->m_state_manager = 0;
-            (*it)->m_condition.notify_all();
-        }
-    }
-
-    void add(thread* thrd)
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
-        m_thread_objects.push_back(thrd);
-    }
-
-    void remove(thread* thrd)
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
-        std::list<thread*>::iterator it = std::find(m_thread_objects.begin(), m_thread_objects.end(), thrd);
-        if (it != m_thread_objects.end())
-            m_thread_objects.erase(it);
-    }
-
-private:
-    std::list<thread*> m_thread_objects;
-    mutex m_mutex;
-};
-
-} // namespace boost
-#endif
-
 namespace {
-
-#if defined(BOOST_HAS_PTHREADS)
-pthread_key_t key;
-pthread_once_t once = PTHREAD_ONCE_INIT;
-
-void destroy_list(void* p)
-{
-    boost::thread::thread_list* list = static_cast<boost::thread::thread_list*>(p);
-    delete list;
-}
-
-void init_key()
-{
-    int res = pthread_key_create(&key, &destroy_list);
-    assert(res == 0);
-}
-
-pthread_key_t get_key()
-{
-    int res = pthread_once(&once, &init_key);
-    assert(res == 0);
-    return key;
-}
-
-boost::thread::thread_list* get_list()
-{
-    pthread_key_t key = get_key();
-    boost::thread::thread_list* list = static_cast<boost::thread::thread_list*>(pthread_getspecific(key));
-    if (!list)
-    {
-        list = new boost::thread::thread_list;
-        pthread_setspecific(key, list);
-    }
-    return list;
-}
-#endif
 
 class thread_param
 {
@@ -122,9 +45,6 @@ public:
     boost::condition m_condition;
     const boost::function0<void>& m_threadfunc;
     bool m_started;
-#if defined(BOOST_HAS_PTHREADS)
-    boost::thread::thread_list* m_state_manager;
-#endif
 };
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -133,13 +53,16 @@ unsigned __stdcall thread_proxy(void* param)
 void* thread_proxy(void* param)
 #endif
 {
-    thread_param* p = static_cast<thread_param*>(param);
-    boost::function0<void> threadfunc = p->m_threadfunc;
-#if defined(BOOST_HAS_PTHREADS)
-    p->m_state_manager = get_list(); // create the list
-#endif
-    p->started();
-    threadfunc();
+    try
+    {
+        thread_param* p = static_cast<thread_param*>(param);
+        boost::function0<void> threadfunc = p->m_threadfunc;
+        p->started();
+        threadfunc();
+    }
+    catch (...)
+    {
+    }
     return 0;
 }
 
@@ -147,59 +70,56 @@ void* thread_proxy(void* param)
 
 namespace boost {
 
-lock_error::lock_error() : std::runtime_error("thread scoped_lock error")
+lock_error::lock_error() : std::runtime_error("thread lock error")
+{
+}
+
+thread_resource_error::thread_resource_error() : std::runtime_error("thread resource error")
 {
 }
 
 thread::thread()
+    : m_joinable(false)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-    HANDLE cur = GetCurrentThread();
-    HANDLE real;
-    DuplicateHandle(GetCurrentProcess(), cur, GetCurrentProcess(), &real, 0, FALSE, DUPLICATE_SAME_ACCESS);
-    m_thread = reinterpret_cast<unsigned long>(real);
+    m_thread = reinterpret_cast<unsigned long>(GetCurrentThread());
     m_id = GetCurrentThreadId();
 #elif defined(BOOST_HAS_PTHREADS)
     m_thread = pthread_self();
-    m_state_manager = get_list();
-    m_state_manager->add(this);
 #endif
 }
 
 thread::thread(const function0<void>& threadfunc)
+    : m_joinable(true)
 {
     thread_param param(threadfunc);
 #if defined(BOOST_HAS_WINTHREADS)
     m_thread = _beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id);
     assert(m_thread);
+
+    if (!m_thread)
+        throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)
     int res = pthread_create(&m_thread, 0, &thread_proxy, &param);
     assert(res == 0);
+
+    if (res != 0)
+        throw thread_resource_error();
 #endif
     param.wait();
-#if defined(BOOST_HAS_PTHREADS)
-    m_state_manager = param.m_state_manager;
-    assert(m_state_manager);
-    m_state_manager->add(this);
-#endif
 }
 
 thread::~thread()
 {
-    int res = 0;
-#if defined(BOOST_HAS_WINTHREADS)
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
-    assert(res);
-#elif defined(BOOST_HAS_PTHREADS)
+    if (m_joinable)
     {
-        mutex::scoped_lock scoped_lock(m_mutex);
-        if (m_state_manager)
-            m_state_manager->remove(this);
-    }
-
-    res = pthread_detach(m_thread);
-    assert(res == 0);
+#if defined(BOOST_HAS_WINTHREADS)
+        int res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
+        assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+        pthread_detach(m_thread);
 #endif
+    }
 }
 
 bool thread::operator==(const thread& other) const
@@ -213,7 +133,7 @@ bool thread::operator==(const thread& other) const
 
 bool thread::operator!=(const thread& other) const
 {
-    return operator!=(other);
+    return !operator==(other);
 }
 
 void thread::join()
@@ -222,40 +142,15 @@ void thread::join()
 #if defined(BOOST_HAS_WINTHREADS)
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), INFINITE);
     assert(res == WAIT_OBJECT_0);
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
+    assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-    mutex::scoped_lock scoped_lock(m_mutex);
-    while (m_state_manager)
-        m_condition.wait(scoped_lock);
+    res = pthread_join(m_thread, 0);
+    assert(res == 0);
 #endif
-}
-
-bool thread::try_join()
-{
-#if defined(BOOST_HAS_WINTHREADS)
-    return WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), 0) == WAIT_OBJECT_0;
-#elif defined(BOOST_HAS_PTHREADS)
-    mutex::scoped_lock scoped_lock(m_mutex);
-    bool ret = (m_state_manager == 0);
-    return ret;
-#endif
-}
-
-bool thread::timed_join(const xtime& xt)
-{
-#if defined(BOOST_HAS_WINTHREADS)
-    unsigned milliseconds;
-    to_duration(xt, milliseconds);
-    return WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), 0) == WAIT_OBJECT_0;
-#elif defined(BOOST_HAS_PTHREADS)
-    mutex::scoped_lock scoped_lock(m_mutex);
-    while (m_state_manager)
-    {
-        if (!m_condition.timed_wait(scoped_lock, xt))
-            break;
-    }
-    bool ret = (m_state_manager == 0);
-    return ret;
-#endif
+    // This isn't a race condition since any race that could occur would
+    // have us in undefined behavior territory any way.
+    m_joinable = false;
 }
 
 void thread::sleep(const xtime& xt)
@@ -274,8 +169,8 @@ void thread::sleep(const xtime& xt)
     timespec ts;
     to_timespec_duration(xt, ts);
 
-		//  nanosleep takes a timespec that is an offset, not
-		//  an absolute time.
+	//  nanosleep takes a timespec that is an offset, not
+	//  an absolute time.
     nanosleep(&ts, 0);
 #   else
     semaphore sema;

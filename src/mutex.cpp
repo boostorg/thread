@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
@@ -33,7 +34,7 @@ mutex::mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 mutex::~mutex()
@@ -70,7 +71,7 @@ try_mutex::try_mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::try_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 try_mutex::~try_mutex()
@@ -114,7 +115,7 @@ timed_mutex::timed_mutex()
     assert(m_mutex);
 
     if (!m_mutex)
-        throw std::runtime_error("boost::timed_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 timed_mutex::~timed_mutex()
@@ -168,7 +169,7 @@ mutex::mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 mutex::~mutex()
@@ -206,7 +207,7 @@ try_mutex::try_mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::try_mutex : failure to construct");
+        throw thread_resource_error();
 }
 
 try_mutex::~try_mutex()
@@ -253,13 +254,16 @@ timed_mutex::timed_mutex()
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::timed_mutex : failure to construct");
+        throw thread_resource_error();
 
     res = pthread_cond_init(&m_condition, 0);
     assert(res == 0);
 
     if (res != 0)
-        throw std::runtime_error("boost::timed_mutex : failure to construct");
+    {
+        pthread_mutex_destroy(&m_mutex);
+        throw thread_resource_error();
+    }
 }
 
 timed_mutex::~timed_mutex()

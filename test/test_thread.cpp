@@ -429,6 +429,7 @@ boost::thread_specific_ptr<tss_value_t> tss_value;
 
 void test_tss_thread()
 {
+    tss_value.reset(new tss_value_t());
     for (int i=0; i<1000; ++i)
     {
         int& n = tss_value->value;

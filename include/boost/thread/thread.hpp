@@ -42,8 +42,6 @@ public:
     bool operator!=(const thread& other) const;
 
     void join();
-    bool try_join();
-    bool timed_join(const xtime& xt);
 
     static void sleep(const xtime& xt);
     static void yield();
@@ -53,17 +51,10 @@ private:
     unsigned long m_thread;
     unsigned int m_id;
 #elif defined(BOOST_HAS_PTHREADS)
-public: // pdm: sorry about this, I'm getting an error in libs/boost/src/thread.cpp - you can work out how to best fix it ;)
-    class thread_list;
 private:
-    friend class thread_list;
-
     pthread_t m_thread;
-    mutex m_mutex;
-    condition m_condition;
-    bool m_alive;
-    thread_list* m_state_manager;
 #endif
+    bool m_joinable;
 };
 
 class thread_group : private noncopyable
