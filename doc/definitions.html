@@ -1,0 +1,238 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Language" content="en-us">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="GENERATOR" content="Microsoft FrontPage 4.0">
+<meta name="ProgId" content="FrontPage.Editor.Document">
+<title>Boost.Threads Definitions</title>
+</head>
+
+<body bgcolor="#FFFFFF">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+  <tr>
+    <td valign="top" width="300">
+      <h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+    </td>
+    <td valign="top">
+      <h1 align="center">Boost.Threads</h1>
+      <h2 align="center"> Definitions</h2>
+    </td>
+  </tr>
+</table>
+<h2>Introduction</h2>
+<p>The definitions are given in terms of the <a href="bibliography.html#ISO-98"> C++ Standard</a>.&nbsp; References to the standard
+are in the form [1.2.3/4], which
+represents the section number and following the &quot;/&quot;, the paragraph
+number.</p>
+<p>Because the definitions are written in something akin to
+&quot;standardese&quot;, they can be difficult to understand.&nbsp; The intent
+isn't to confuse, but rather to clarify the additional requirements
+Boost.Threads places on a C++ implementation as defined by the C++ Standard.</p>
+<h2>Definitions</h2>
+<h3>Thread</h3>
+<p>Thread is short for &quot;thread of execution&quot;. A thread of execution is an execution environment [1.9/7] within the execution environment
+of a C++ program [1.9]. The main() function [3.6.1] of the program is the
+initial function of the initial thread; a program in a multi-threading
+environment always has at least one initial thread even if the program makes no thread
+library calls.</p>
+<p>Each thread shares certain aspects of its execution environment with all
+other threads in the program:</p>
+<ul>
+  <li>Static storage duration (static, extern) objects [3.7.1].</li>
+</ul>
+<ul>
+  <li>Dynamic storage duration (heap) objects [3.7.3].</li>
+</ul>
+<ul>
+  <li>Unless otherwise specified, resources provided by the operating
+    system.&nbsp; For example, files.</li>
+</ul>
+<ul>
+  <li>The program itself.&nbsp; In other words, each thread is executing some
+    function of the same program, not a totally different program.</li>
+</ul>
+<p>Each thread has its own:</p>
+<ul>
+  <li>Priority and other specified thread attributes.&nbsp;</li>
+</ul>
+<ul>
+  <li>Registers and current execution sequence (program counter) [1.9/5].</li>
+</ul>
+<ul>
+  <li>Automatic storage duration (stack) objects [3.7.2].</li>
+</ul>
+<h3><a name="Thread-safe">Thread-safe</a></h3>
+<p>A program is thread-safe if it has no <a href="#Race condition">race
+conditions</a> and does not <a href="#Deadlock">deadlock</a>.</p>
+<p>Note that thread-safety does not necessarily imply
+efficiency.</p>
+<h3>Thread <a name="State">State</a></h3>
+<p>During the lifetime of a thread, it shall be in one of the following
+states:</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>State</b></td>
+    <td><b>Description</b></td>
+  </tr>
+  <tr>
+    <td>Ready</td>
+    <td>Ready to run, but waiting for a processor.</td>
+  </tr>
+  <tr>
+    <td>Running</td>
+    <td>Currently executing on a processor. Zero or more threads may be running
+      at any time, with a maximum of the number of processors.&nbsp;</td>
+  </tr>
+  <tr>
+    <td>Blocked</td>
+    <td>Waiting for some resource other than a processor that is not currently
+      available, or for the completion of calls to library functions [1.9/6].
+      The term &quot;waiting&quot; is synonymous for &quot;blocked&quot;</td>
+  </tr>
+  <tr>
+    <td>Terminated</td>
+    <td>Finished execution but not yet detached or joined.</td>
+  </tr>
+</table>
+<p>Thread state transitions shall occur only as specified:</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>From</b></td>
+    <td><b>To</b></td>
+    <td><b>Cause</b></td>
+  </tr>
+  <tr>
+    <td>
+      <p align="left">[none]</td>
+    <td>Ready</td>
+    <td>Thread is created by a call to a library function.&nbsp; In the case of
+      the initial thread, creation is implicit and occurs during the startup of
+      the main() function [3.6.1].</td>
+  </tr>
+  <tr>
+    <td>Ready</td>
+    <td>Running</td>
+    <td>Processor becomes available.</td>
+  </tr>
+  <tr>
+    <td>Running</td>
+    <td>Ready</td>
+    <td>Thread preempted.</td>
+  </tr>
+  <tr>
+    <td>Running</td>
+    <td>Blocked</td>
+    <td>Thread calls a library function which waits for a resource or for the
+      completion of I/O.</td>
+  </tr>
+  <tr>
+    <td>Running</td>
+    <td>Terminated</td>
+    <td>Thread returns from its initial function, calls a thread termination
+      library function, or is cancelled by some other thread calling a thread
+      termination library function.</td>
+  </tr>
+  <tr>
+    <td>Blocked</td>
+    <td>Ready</td>
+    <td>The resource being waited for becomes available, or the blocking library
+      function completes.</td>
+  </tr>
+  <tr>
+    <td>Terminated</td>
+    <td>[none]</td>
+    <td>Thread is detached or joined by some other thread calling the
+      appropriate library function, or by program termination [3.6.3].</td>
+  </tr>
+</table>
+<p>[Note: if a suspend() function is added to the threading library, additional
+transitions to the blocked state will have to be added to the above table.]</p>
+<h3><a name="Race condition">Race condition</a></h3>
+<p>A race condition is what occurs when multiple threads read and
+write to the same memory without proper synchronization, resulting in an
+incorrect value being read or written.&nbsp; The result of a race condition may
+be a bit pattern which isn't even a valid value for the data type. A race
+condition results in undefined behavior [1.3.12].</p>
+<p>Race conditions can be prevented by serializing memory access
+using the tools provided by Boost.Threads.&nbsp;</p>
+<h3><a name="Deadlock">Deadlock</a></h3>
+<p>Deadlock is an execution state where for some set of threads, each thread in
+the set is blocked waiting for some action by one of the other threads in the
+set. Since each is waiting on the others, none will ever become ready again.</p>
+<h2>Additions to the C++ Standard</h2>
+<p>An address [1.7] shall always point to the same memory byte, regardless of the
+thread or processor dereferencing the address.</p>
+<p>An object [1.8, 1.9] can be accessed from two or more threads if it is of
+static storage duration (static, extern) [3.7.1], or if a pointer or reference to the
+object is explicitly or
+implicitly dereferenced.</p>
+<p>For an object accessible from multiple threads, the value of the object
+accessed from one thread may be indeterminate or different than the value
+accessed from another thread, except as specified in the following
+table.&nbsp;&nbsp; For the same row of the table, the value of an object as if
+accessed by thread A at the indicated sequence point will be determinate and the
+same if accessed at or after the indicated thread B sequence point, unless
+modified by any thread between the time the thread A sequence point is reached
+and thread B sequence point of access. In the table, the
+&quot;sequence point at a call&quot; is the sequence point after the evaluation
+of all function arguments [1.9/17], while the &quot;sequence point after a
+call&quot; is the sequence point after the copying of the returned
+value...&quot; [1.9/17].</p>
+<p>(That isn't right yet.&nbsp; What if some other thread modifies the object
+after the first thread B access, then thread B accesses it again?)</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td align="center"><b>Thread A</b></td>
+    <td align="center"><b>Thread B</b></td>
+  </tr>
+  <tr>
+    <td>The sequence point at a call to a library thread-creation
+      function.&nbsp;</td>
+    <td>The first sequence point of the initial function in the new thread
+      created by the Thread A call.</td>
+  </tr>
+  <tr>
+    <td>The sequence point at a call to a library function which locks a mutex,
+      directly or by waiting for a condition variable.</td>
+    <td>The sequence point after a call to a library function which unlocks the
+      same mutex.</td>
+  </tr>
+  <tr>
+    <td>The last sequence point before thread termination.</td>
+    <td>The sequence point after a call to a library function which joins the
+      terminated thread.</td>
+  </tr>
+  <tr>
+    <td>The sequence point at a call to a library function which signals or
+      broadcasts a condition variable.</td>
+    <td>The sequence point after the call to the library function which was
+      waiting on that same condition variable or signal.</td>
+  </tr>
+</table>
+<p>The architecture of the execution environment and the observable behavior of
+the abstract machine [1.9] shall be the same on all processors.</p>
+<p>The latitude granted by the C++ standard for an implementation to alter the
+definition of observable behavior of the abstract machine to include additional library I/O
+functions [1.9/6] is extended to include threading library functions.</p>
+<p>When an exception is thrown and there is no matching exception handler in the
+same thread, behavior is the same as when there is no matching exception handler
+in the program [15.3/9].&nbsp; That is, terminate() is called, and it is implementation defined
+whether or not the stack is unwound.</p>
+<h2><a name="Acknowledgements">Acknowledgements</a></h2>
+<p>This document has been much improved by the incorporation of comments from
+William Kempf.</p>
+<p>The visibility rules are based on <a href="bibliography.html#Butenhof-97">[Butenhof
+97]</a>.&nbsp;</p>
+<hr>
+<p>© Copyright Beman Dawes, 2001</p>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->19 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14999" -->
+</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+<p>&nbsp;</p>
+
+</body>
+
+</html>
