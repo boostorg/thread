@@ -28,7 +28,8 @@ void comparison_thread(boost::thread* parent)
 {
     boost::thread thrd;
     BOOST_TEST(thrd != *parent);
-    BOOST_TEST(thrd == boost::thread());
+    boost::thread thrd2;
+    BOOST_TEST(thrd == thrd2);
 }
 
 void test_sleep()
