@@ -21,12 +21,13 @@
 #include <boost/function.hpp>
 
 #include <boost/thread/exceptions.hpp>
+#include <boost/thread/detail/named.hpp>
 
 #include <string>
 
 namespace boost {
 
-class shared_memory
+class shared_memory : public boost::detail::named_object
 {
 public:
     enum {
@@ -42,15 +43,11 @@ public:
 
     void* get() const { return m_ptr; }
 
-	std::string name() const;
-	std::string effective_name() const;
-
 private:
-    void init(const char *name, std::size_t len, int flags,
+    void init(std::size_t len, int flags,
         const boost::function1<void, void*>* initfunc);
 
     void *m_ptr;        // Pointer to shared memory block
-    std::string m_name;
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_hmap;
 #elif defined(BOOST_HAS_PTHREADS)

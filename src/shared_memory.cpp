@@ -30,84 +30,19 @@
 
 #endif
 
-namespace {
-
-std::string encode(const char* str)
-{
-	const char* digits="0123456789abcdef";
-	std::string result;
-	static char buf[100];
-	char* ebuf = buf + 100;
-	char* p = buf;
-	while (*str)
-	{
-		if (((*str >= '0') && (*str <= '9')) ||
-			((*str >= 'a') && (*str <= 'z')) ||
-			((*str >= 'A') && (*str <= 'Z')) ||
-			(*str == '/') || (*str == '.') || (*str == '_'))
-		{
-			*p = *str;
-		}
-		else if (*str == ' ')
-		{
-			*p = '+';
-		}
-		else
-		{
-			if (p + 3 >= ebuf)
-			{
-				*p = 0;
-				result += buf;
-				p = buf;
-			}
-			*p = '%';
-			char* e = p + 2;
-			int v = *str;
-			while (e > p)
-			{
-				*e-- = digits[v % 16];
-				v /= 16;
-			}
-			p += 2;
-		}
-		if (++p == ebuf)
-		{
-			*p = 0;
-			result += buf;
-			p = buf;
-		}
-		++str;
-	}
-	*p = 0;
-	result += buf;
-	return result;
-}
-
-std::string get_root()
-{
-
-#if defined(BOOST_HAS_WINTHREADS)
-	return "";
-#elif defined(BOOST_HAS_PTHREADS)
-    return "/";
-#else
-	return "";
-#endif
-}
-
-} // namespace
-
 namespace boost {
 
 shared_memory::shared_memory(const char *name, size_t len, int flags)
+	: boost::detail::named_object(name)
 {
-    init(name, len, flags, 0);
+    init(len, flags, 0);
 }
 
 shared_memory::shared_memory(const char *name, size_t len, int flags,
     const boost::function1<void, void *>& initfunc)
+	: boost::detail::named_object(name)
 {
-    init(name, len, flags & create, &initfunc);
+    init(len, flags & create, &initfunc);
 }
 
 shared_memory::~shared_memory()
@@ -131,25 +66,12 @@ shared_memory::~shared_memory()
     }
 }
 
-std::string shared_memory::name() const
-{
-	return m_name;
-}
-
-std::string shared_memory::effective_name() const
-{
-	if (m_name[0] == '%')
-		return m_name.substr(1);
-	return get_root() + encode(m_name.c_str());
-}
-
-void shared_memory::init(const char *name, size_t len, int flags,
+void shared_memory::init(size_t len, int flags,
     const boost::function1<void,void *>* initfunc)
 {
     int res = 0;
     bool should_init = false;
 
-	m_name = name;
     std::string ename = effective_name();
     std::string mxname = ename + "mx94543CBD1523443dB128451E51B5103E";
 
@@ -209,7 +131,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
 	int cflag = (flags & create) ? O_CREAT|O_TRUNC|O_EXCL : 0;
 	for (;;)
 	{
-		m_hmap = shm_open(name, oflag|cflag, 0);
+		m_hmap = shm_open(m_name.c_str(), oflag|cflag, 0);
 		if (m_hmap == -1)
 		{
 			if (errno != EEXIST || (flags & exclusive))
@@ -222,7 +144,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
 				assert(res);
 				throw thread_resource_error();
 			}
-			m_hmap = shm_open(name, oflag, 0);
+			m_hmap = shm_open(m_name.c_str(), oflag, 0);
 			if (m_hmap == -1)
 			{
 				if (errno == ENOENT)

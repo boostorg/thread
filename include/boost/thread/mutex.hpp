@@ -18,8 +18,9 @@
 #endif
 
 #include <boost/utility.hpp>
-#include <boost/thread/detail/lock.hpp>
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/lock.hpp>
+#include <boost/thread/detail/named.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -33,7 +34,8 @@ namespace boost {
 
 struct xtime;
 
-class BOOST_THREAD_DECL mutex : private noncopyable
+class BOOST_THREAD_DECL mutex : private noncopyable,
+								public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<mutex>;
@@ -41,6 +43,7 @@ public:
     typedef detail::thread::scoped_lock<mutex> scoped_lock;
 
     mutex();
+	mutex(const char* name);
     ~mutex();
 
 private:
@@ -63,6 +66,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
+	bool m_critsect;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -71,7 +75,8 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL try_mutex : private noncopyable
+class BOOST_THREAD_DECL try_mutex : private noncopyable,
+									public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<try_mutex>;
@@ -80,6 +85,7 @@ public:
     typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
 
     try_mutex();
+	try_mutex(const char* name);
     ~try_mutex();
 
 private:
@@ -103,6 +109,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
+//	bool m_critsect;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -111,7 +118,8 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL timed_mutex : private noncopyable
+class BOOST_THREAD_DECL timed_mutex : private noncopyable,
+									  public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<timed_mutex>;
@@ -121,6 +129,7 @@ public:
     typedef detail::thread::scoped_timed_lock<timed_mutex> scoped_timed_lock;
 
     timed_mutex();
+	timed_mutex(const char* name);
     ~timed_mutex();
 
 private:

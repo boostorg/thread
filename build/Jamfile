@@ -43,7 +43,7 @@ include <module@>threads.jam ;
     # Base names of the source files for libboost_thread.
     CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
                   exceptions thread_pool barrier rw_mutex threadmon
-				  shared_memory ;
+				  shared_memory named ;
 
     dll boost_thread
         : <template>thread_libs ../src/$(CPP_SOURCES).cpp
