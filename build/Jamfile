@@ -36,5 +36,7 @@ CPP_SOURCES =
 lib libboost_thread : ../src/$(CPP_SOURCES).cpp
     # requirements
     : <include>$(BOOST_ROOT)
+    #<include>c:/pthreads/dll/
+    #<define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn
     <threading>multi
     : debug release ;
