@@ -42,6 +42,10 @@ import ./threads ;
         : <template>thread_libs ../src/$(CPP_SOURCES).cpp
         : <define>BOOST_THREAD_BUILD_DLL=1
           <runtime-link>dynamic
+         # the common names rule ensures that the library will
+         # be named according to the rules used by the install
+         # and auto-link features:
+         common-variant-tag 
     ;
 
     stage bin-stage
