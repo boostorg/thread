@@ -16,8 +16,8 @@
 	    <para><emphasis role="bold">No!</emphasis> Lock objects are not meant to
 		be shared between threads. They are meant to be short-lived objects
 		created on automatic storage within a code block. Any other usage is
-		just likely to lead to errors and won't really be of actual benefit any
-		way. Share <link linkend="threads.concepts.mutexes">Mutexes</link>, not
+		just likely to lead to errors and won't really be of actual benefit anyway.
+		Share <link linkend="threads.concepts.mutexes">Mutexes</link>, not
 		Locks. For more information see the <link
 		linkend="threads.rationale.locks">rationale</link> behind the
 		design for lock objects.</para>
@@ -161,14 +161,14 @@ private:
 	<qandaentry>
 	  <question>
 	    <para>Why supply <classname>boost::condition</classname> variables rather than
-		<link linkend="threads.rationale.events">event variables</link>?</para>
+		event variables?</para>
 	  </question>
 	  <answer>
 	    <para>Condition variables result in user code much less prone to <link
 		linkend="threads.glossary.race-condition">race conditions</link> than
-		event variables. See <link
-		linkend="threads.rationale.events">Rationale</link> for analysis. Also
-		see &cite.Hoare74; and &cite.SchmidtStalRohnertBuschmann;.</para>
+		event variables. See <xref linkend="threads.rationale.events" /> 
+		for analysis. Also see &cite.Hoare74; and &cite.SchmidtStalRohnertBuschmann;.
+		</para>
 	  </answer>
 	</qandaentry>
 	<qandaentry>

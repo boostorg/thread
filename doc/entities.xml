@@ -1,4 +1,5 @@
 <!ENTITY Boost.Threads "<emphasis role='bold'>Boost.Threads</emphasis>">
+<!ENTITY Boost.Build "<emphasis role='bold'>Boost.Build</emphasis>">
 <!ENTITY cite.AndrewsSchneider83  "<citation><xref
 linkend='threads.bib.AndrewsSchneider83'
 endterm='threads.bib.AndrewsSchneider83.abbrev'/></citation>">
