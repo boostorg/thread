@@ -45,3 +45,4 @@ unit-test test_mutex : <template>test_base test_mutex.cpp ;
 unit-test test_condition : <template>test_base test_condition.cpp ;
 unit-test test_tss : <template>test_base test_tss.cpp ;
 unit-test test_once : <template>test_base test_once.cpp ;
+unit-test test_xtime : <template>test_base test_xtime.cpp ;
