@@ -15,6 +15,19 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
+#   if defined(BOOST_NO_STRINGSTREAM)
+#       include <strstream>
+        class unfreezer
+        {
+        public:
+            unfreezer(std::ostrstream& s) : m_stream(s) {}
+            ~unfreezer() { m_stream.freeze(false); }
+        private:
+            std::ostrstream& m_stream;
+        };
+#   else
+#       include <sstream>
+#   endif
 #endif
 
 #ifdef BOOST_NO_STDC_NAMESPACE
@@ -57,9 +70,16 @@ void call_once(void (*func)(), once_flag& flag)
 
 	if (!tmp)
 	{
-        char name[41];
-        std::sprintf(name, "2AC1A572DB6944B0A65C38C4140AF2F4%X%X", GetCurrentProcessId(), &flag);
-		HANDLE mutex = CreateMutex(NULL, FALSE, name);
+#if defined(BOOST_NO_STRINGSTREAM)
+        std::ostrstream strm;
+        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex << GetCurrentProcessId() << &flag << std::ends;
+        unfreezer unfreeze(strm);
+        HANDLE mutex = CreateMutex(NULL, FALSE, strm.str());
+#else
+        std::ostringstream strm;
+        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex << GetCurrentProcessId() << &flag << std::ends;
+		HANDLE mutex = CreateMutex(NULL, FALSE, strm.str().c_str());
+#endif
         assert(mutex != NULL);
 
         int res = 0;
