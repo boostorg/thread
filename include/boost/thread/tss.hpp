@@ -13,9 +13,10 @@
 #define BOOST_TSS_WEK070601_HPP
 
 #include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
+
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
@@ -93,7 +94,7 @@ public:
     T* get() const { return static_cast<T*>(m_tss.get()); }
     T* operator->() const { return get(); }
     T& operator*() const { return *get(); }
-    T* release() { T* temp = get(); if (tmp) m_tss.set(0); return temp; }
+    T* release() { T* temp = get(); if (temp) m_tss.set(0); return temp; }
     void reset(T* p=0)
     {
         T* cur = get();

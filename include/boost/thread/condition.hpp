@@ -13,9 +13,9 @@
 #define BOOST_CONDITION_WEK070601_HPP
 
 #include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
+
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
 
 #include <boost/thread/exceptions.hpp>
 #include <boost/utility.hpp>
@@ -192,11 +192,11 @@ private:
 
 } // namespace boost
 
-#endif // BOOST_CONDITION_WEK070601_HPP
-
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
 //   23 May 01  WEKEMPF Removed "duration" timed_waits, as they are too
 //                      difficult to use with spurious wakeups.
 //    3 Jan 03  WEKEMPF Modified for DLL implementation.
+
+#endif // BOOST_CONDITION_WEK070601_HPP

@@ -51,7 +51,8 @@ inline int xtime_cmp(const xtime& xt1, const xtime& xt2)
 
 } // namespace boost
 
-#endif // BOOST_XTIME_WEK070601_HPP
-
 // Change Log:
 //   8 Feb 01  WEKEMPF Initial version.
+
+#endif // BOOST_XTIME_WEK070601_HPP
+

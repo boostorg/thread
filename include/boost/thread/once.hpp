@@ -13,9 +13,8 @@
 #define BOOST_ONCE_WEK080101_HPP
 
 #include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
 
 #include <boost/thread/detail/config.hpp>
 
@@ -41,8 +40,7 @@ void BOOST_THREAD_DECL call_once(void (*func)(), once_flag& flag);
 
 } // namespace boost
 
-#endif // BOOST_ONCE_WEK080101_HPP
-
 // Change Log:
 //   1 Aug 01  WEKEMPF Initial version.
 
+#endif // BOOST_ONCE_WEK080101_HPP

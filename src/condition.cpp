@@ -168,16 +168,16 @@ void condition_impl::notify_all()
             res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
             assert(res);
         }
-
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-        assert(res);
-
-        if (signals)
-        {
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue),
-                signals, 0);
-            assert(res);
         }
+
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    assert(res);
+
+    if (signals)
+    {
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue),
+            signals, 0);
+        assert(res);
     }
 }
 

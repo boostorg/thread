@@ -13,9 +13,9 @@
 #define BOOST_MUTEX_JDM062402_HPP
 
 #include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
+
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
 
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
