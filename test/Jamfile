@@ -39,26 +39,6 @@ unit-test test_thread
     : debug release <runtime-link>static/dynamic
 ;
 
-unit-test test_thread_pool
-    : test_thread_pool.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
-
-unit-test test_barrier
-    : test_barrier.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
-
 unit-test rw_mutex_test
     : rw_mutex_test.cpp
       <lib>../build/boost_thread

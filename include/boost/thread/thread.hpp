@@ -72,6 +72,7 @@ public:
     thread* create_thread(const function0<void>& threadfunc);
     void add_thread(thread* thrd);
     void remove_thread(thread* thrd);
+	thread* thread_group::find(thread& thrd);
     void join_all();
 
 private:

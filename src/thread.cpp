@@ -52,6 +52,13 @@ public:
     bool m_started;
 };
 
+struct thread_equals
+{
+	thread_equals(boost::thread& thrd) : thrd(thrd) { }
+	bool operator()(boost::thread* p) { return *p == thrd; }
+	boost::thread& thrd;
+};
+
 } // unnamed namespace
 
 extern "C" {
@@ -288,9 +295,23 @@ void thread_group::remove_thread(thread* thrd)
     // For now we'll simply ignore requests to remove a thread object that's not in the group.
     // Should we consider this an error and either throw or return an error value?
     std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+
     assert(it != m_threads.end());
     if (it != m_threads.end())
         m_threads.erase(it);
+}
+
+thread* thread_group::find(thread& thrd)
+{
+    mutex::scoped_lock scoped_lock(m_mutex);
+
+    // For now we'll simply ignore requests to remove a thread object that's not in the group.
+    // Should we consider this an error and either throw or return an error value?
+	std::list<thread*>::iterator it = std::find_if(m_threads.begin(), m_threads.end(), thread_equals(thrd));
+    if (it != m_threads.end())
+		return *it;
+
+	return 0;
 }
 
 void thread_group::join_all()

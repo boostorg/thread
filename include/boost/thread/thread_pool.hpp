@@ -28,31 +28,25 @@
 
 namespace boost {
 
-    namespace detail { namespace thread {
-        
-        class thread_pool_impl;
-
-    } // namespace thread
-    } // namespace detail
-
-
-
     class thread_pool
     {
     public:
         thread_pool(int max_threads=std::numeric_limits<int>::max(), 
                     int min_threads=0,
-                    int timeout_secs=5); 
+                    int timeout_secs=5,
+					int timeout_nsecs=0); 
         ~thread_pool();
 
         void add(const boost::function0<void> &job);
         void join();
         void cancel();
         void detach();
-    private:
-        detail::thread::thread_pool_impl *m_pimpl;
-    };
-}	// namespace boost
 
+    private:
+		class impl;
+        impl* m_pimpl;
+    };
+
+}	// namespace boost
 
 #endif

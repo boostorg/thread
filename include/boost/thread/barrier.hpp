@@ -9,15 +9,13 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-#ifndef BOOST_RW_MUTEX_JDM030602_HPP
-#define BOOST_RW_MUTEX_JDM030602_HPP
+#ifndef BOOST_BARRIER_JDM030602_HPP
+#define BOOST_BARRIER_JDM030602_HPP
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
 namespace boost { 
-
-class barrier;
 
 class barrier
 {
