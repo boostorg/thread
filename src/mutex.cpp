@@ -16,6 +16,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/limits.hpp>
+#include <string>
 #include <stdexcept>
 #include <cassert>
 #include "timeconv.inl"

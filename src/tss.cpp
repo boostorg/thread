@@ -18,6 +18,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <vector>
+#include <string>
 #include <stdexcept>
 #include <cassert>
 

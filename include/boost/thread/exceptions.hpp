@@ -20,6 +20,7 @@
 //       given the include guards, but regardless it makes sense to
 //       seperate this out any way.
 
+#include <string>
 #include <stdexcept>
 
 namespace boost {
