@@ -41,7 +41,7 @@ import ./threads ;
 
     # Base names of the source files for libboost_thread.
     CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
-                  exceptions threadmon ;
+                  exceptions barrier threadmon ;
 
     dll boost_thread
         : <template>thread_libs ../src/$(CPP_SOURCES).cpp
