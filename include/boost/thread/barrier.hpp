@@ -12,11 +12,6 @@
 #ifndef BOOST_BARRIER_JDM030602_HPP
 #define BOOST_BARRIER_JDM030602_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
-
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/mutex.hpp>

@@ -12,13 +12,13 @@
 #ifndef BOOST_XTIME_WEK070601_HPP
 #define BOOST_XTIME_WEK070601_HPP
 
-#include <boost/config.hpp>
-#include <boost/cstdint.hpp>
 #include <boost/thread/detail/config.hpp>
+
+#include <boost/cstdint.hpp>
 
 namespace boost {
 
-enum xtime_clock_types
+typedef enum
 {
     TIME_UTC=1
 //    TIME_TAI,
@@ -28,7 +28,7 @@ enum xtime_clock_types
 //    TIME_LOCAL,
 //    TIME_SYNC,
 //    TIME_RESOLUTION
-};
+} xtime_clock_types;
 
 struct xtime
 {
