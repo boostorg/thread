@@ -28,14 +28,16 @@
 #endif
 
 #if defined(BOOST_ASSERT)
-    #define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), true)
+#   define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), false) {} else
 #else
-    #define BOOST_ASSERT_ELSE(expr) if (true)
+#   define BOOST_ASSERT_ELSE(expr) if (false) {} else
 #endif
 
 bool boost_error(char const* expr, char const* func, char const* file, long line)
 {
     #if WINVER
+        using namespace std;
+
         #ifndef ELEMENTS
         #define ELEMENTS(a) (sizeof(a)/sizeof(*(a)))
         #endif
@@ -61,6 +63,11 @@ inline bool valid_lock(int state)
     return (state >= 0) || (state == -1);
 }
 
+inline bool valid_read_write_lock(int state)
+{
+    return state != 0;
+}
+
 inline bool valid_read_lock(int state)
 {
     return state > 0;
@@ -84,34 +91,54 @@ inline bool valid_write_lockable(int state)
 template<typename Mutex>
 void read_write_mutex_impl<Mutex>::do_read_lock()
 {
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
-    // Wait until no exclusive lock is held.
     if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        //If readers have priority, only wait if a 
-        //writer actually has the lock
+        //Reader priority: wait while write-locked
+
+        int loop_count = 0;
         while (m_state == -1)
         {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
             ++m_num_waiting_readers;
             m_waiting_readers.wait(l);
             --m_num_waiting_readers;
         }
     }
-    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::writer_priority || m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        //Otherwise, wait if a) a writer has the lock, or 
-        //b) a reader has the lock and there are waiting writers
-        while ((m_state == -1) || (m_state > 0 && m_num_waiting_writers > 0))
+        //Writer priority: wait while write-locked or while writers are waiting
+
+        int loop_count = 0;
+        while (m_state == -1 || m_num_waiting_writers > 0)
         {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
             ++m_num_waiting_readers;
             m_waiting_readers.wait(l);
             --m_num_waiting_readers;
         }
+    }
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
+    {
+        //Alternating priority: wait while write-locked or while not readers' turn
+
+        int loop_count = 0;
+        while (m_state == -1 || m_num_readers_to_wake == 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_readers;
+            m_waiting_readers.wait(l);
+            --m_num_waiting_readers;
+        }
+
+        BOOST_ASSERT(m_num_readers_to_wake > 0);
+        --m_num_readers_to_wake;
     }
 
-    // Increase the reader count
+    //Obtain a read lock
+
     BOOST_ASSERT(valid_read_lockable(m_state));
     ++m_state;
 
@@ -136,13 +163,54 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
     typename Mutex::scoped_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
-    // Wait until no exclusive lock is held.
-    while (m_state != 0)
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        ++m_num_waiting_writers;
-        m_waiting_writers.wait(l);
-        --m_num_waiting_writers;
+        //Reader priority: wait while locked or while readers are waiting
+
+        int loop_count = 0;
+        while (m_state != 0 || m_num_waiting_readers > 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            m_waiting_writers.wait(l);
+            --m_num_waiting_writers;
+        }
     }
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
+    {
+        //Writer priority: wait while locked
+
+        m_num_readers_to_wake = 0;
+
+        int loop_count = 0;
+        while (m_state != 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            m_waiting_writers.wait(l);
+            --m_num_waiting_writers;
+        }
+    }
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
+    {
+        //Shut down extra readers that were scheduled only because of no waiting writers
+
+        if (m_sp == read_write_scheduling_policy::alternating_single_read && m_num_waiting_writers == 0)
+            m_num_readers_to_wake = (m_readers_next && m_num_readers_to_wake > 0) ? 1 : 0;
+
+        //Alternating priority: wait while locked or while not writers' turn
+
+        int loop_count = 0;
+        while (m_state != 0 || m_num_readers_to_wake > 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            m_waiting_writers.wait(l);
+            --m_num_waiting_writers;
+        }
+    }
+
+    //Obtain a write lock
 
     BOOST_ASSERT(valid_write_lockable(m_state));
     m_state = -1;
@@ -158,63 +226,59 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 {
-    Mutex::scoped_try_lock l(m_prot);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
         return false;
 
-    bool ret;
-    if (m_state == -1)
+    bool fail;
+
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        // We are already locked exclusively.  A try_read_lock always returns
-        //   immediately in this case
-        ret =  false;
+        //Reader priority: fail if write-locked
+        fail = (m_state == -1);
     }
-    else if (m_num_waiting_writers > 0)
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        // There are also waiting writers.  Use scheduling policy.
-        if (m_sp == read_write_scheduling_policy::reader_priority)
-        {
-            BOOST_ASSERT(valid_read_lockable(m_state));
-            ++m_state;
-            ret = true;
-        }
-        else if (m_sp == read_write_scheduling_policy::writer_priority)
-        {
-            // A writer is waiting - don't grant this try lock, and 
-            //   return immediately (don't increase waiting_readers count)
-            ret = false;
-        }
-        else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
-        {
-            // For alternating scheduling priority, 
-            // I don't think that try_ locks should step in front of others
-            //   who have already indicated that they are waiting.
-            // It seems that this could "game" the system and defeat
-            //   the alternating mechanism.
-            ret = false;
-        }
+        //Writer priority: fail if write-locked or if writers are waiting
+        fail = (m_state == -1 || m_num_waiting_writers > 0);
     }
-    else BOOST_ASSERT_ELSE(m_state >= 0 && m_num_waiting_writers == 0)
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
     {
-        // No waiting writers.  Grant (additonal) read lock regardless of
-        //   scheduling policy.
-        BOOST_ASSERT(valid_read_lockable(m_state));
-        ++m_state;
-        ret = true;
+        //Alternating priority: fail if write-locked or if not readers' turn
+        fail = (m_state == -1 || m_num_readers_to_wake == 0);
+
+        if (!fail)
+        {
+            BOOST_ASSERT(m_num_readers_to_wake > 0);
+            --m_num_readers_to_wake;
+        }
     }
 
-    if (ret)
+    if (!fail)
     {
+        //Obtain a read lock
+
+        BOOST_ASSERT(valid_read_lockable(m_state));
+        ++m_state;
+
         //See note in read_write_mutex_impl<>::do_read_lock() as to why 
         //m_readers_next should be set here
 
         m_readers_next = false;
+
+        BOOST_ASSERT(valid_read_lock(m_state));
+            //Should be read-locked
+    }
+    else
+    {
+        BOOST_ASSERT(valid_write_lock(m_state) || m_num_waiting_writers > 0);
+            //Should be write-locked or
+            //writer should be waiting
     }
 
-    BOOST_ASSERT(valid_read_lock(m_state));
-    return ret;
+    return !fail;
 }
 
 template<typename Mutex>
@@ -226,117 +290,246 @@ bool read_write_mutex_impl<Mutex>::do_try_write_lock()
     if (!l.locked())
         return false;
 
-    bool ret;
-    if (m_state != 0)
+    bool fail;
+
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        // We are already busy and locked.
-        // Scheduling priority doesn't matter here.
-        ret = false;
+        //Reader priority: fail if locked or if readers are waiting
+        fail = (m_state != 0 || m_num_waiting_readers > 0);
     }
-    else //(m_state == 0)
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        BOOST_ASSERT(valid_write_lockable(m_state));
-        m_state = -1;
-        ret = true;
+        //Writer priority: fail if locked
+        fail = (m_state != 0);
+    }
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
+    {
+        //Alternating priority: fail if locked or if not writers' turn
+        fail = (m_state != 0 || m_num_readers_to_wake > 0);
     }
 
-    if (ret)
+    if (!fail)
     {
+        //Obtain a write lock
+
+        BOOST_ASSERT(valid_write_lockable(m_state));
+        m_state = -1;
+
         //See note in read_write_mutex_impl<>::do_read_lock() as to why 
         //m_readers_next should be set here
 
         m_readers_next = true;
+
+        BOOST_ASSERT(valid_write_lock(m_state));
+            //Should be write-locked
+    }
+    else
+    {
+        BOOST_ASSERT(valid_read_write_lock(m_state) || m_num_readers_to_wake > 0);
+            //Should be read-locked or write-locked, or
+            //reader should be waking
     }
 
-    BOOST_ASSERT(valid_write_lock(m_state));
-    return ret;
+    return !fail;
 }
 
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
 {
-    typename Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot, xt);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
         return false;
 
-    // Wait until no exclusive lock is held.
+    bool fail;
+
     if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        //If readers have priority, only wait if a 
-        //writer actually has the lock
+        //Reader priority: wait while write-locked
+
+        int loop_count = 0;
         while (m_state == -1)
         {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
             ++m_num_waiting_readers;
-            if (!m_waiting_readers.timed_wait(l,xt))
+            if (!m_waiting_readers.timed_wait(l, xt))
             {
                 --m_num_waiting_readers;
-                return false;
+                fail = true; 
+                break;
             }
             --m_num_waiting_readers;
         }
     }
-    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::writer_priority || m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        //Otherwise, wait if a) a writer has the lock, or 
-        //b) a reader has the lock and there are waiting writers
-        while ((m_state == -1) || (m_state > 0 && m_num_waiting_writers > 0))
+        //Writer priority: wait while write-locked or while writers are waiting
+
+        int loop_count = 0;
+        while (m_state == -1 || m_num_waiting_writers > 0)
         {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
             ++m_num_waiting_readers;
-            if (!m_waiting_readers.timed_wait(l,xt))
+            if (!m_waiting_readers.timed_wait(l, xt))
             {
                 --m_num_waiting_readers;
-                return false;
+                fail = true; 
+                break;
             }
             --m_num_waiting_readers;
         }
     }
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
+    {
+        //Alternating priority: wait while write-locked or while not readers' turn
 
-    // Increase the reader count
-    BOOST_ASSERT(valid_read_lockable(m_state));
-    ++m_state;
+        int loop_count = 0;
+        while (m_state == -1 || m_num_readers_to_wake == 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_readers;
+            if (!m_waiting_readers.timed_wait(l, xt))
+            {
+                --m_num_waiting_readers;
+                fail = true; 
+                break;
+            }
+            --m_num_waiting_readers;
+        }
 
-    //See note in read_write_mutex_impl<>::do_read_lock() as to why 
-    //m_readers_next should be set here
+        if (!fail)
+        {
+            BOOST_ASSERT(m_num_readers_to_wake > 0);
+            --m_num_readers_to_wake;
+        }
+    }
 
-    m_readers_next = false;
+    if (!fail)
+    {
+        //Obtain a read lock
 
-    BOOST_ASSERT(valid_read_lock(m_state));
-    return true;
+        BOOST_ASSERT(valid_read_lockable(m_state));
+        ++m_state;
+
+        //See note in read_write_mutex_impl<>::do_read_lock() as to why 
+        //m_readers_next should be set here
+
+        m_readers_next = false;
+
+        BOOST_ASSERT(valid_read_lock(m_state));
+            //Should be read-locked
+    }
+    else
+    {
+        BOOST_ASSERT(valid_write_lock(m_state) || m_num_waiting_writers > 0);
+            //Should be write-locked or
+            //writer should be waiting
+
+        //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
+    }
+
+    return !fail;
 }
 
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
 {
-    typename Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot, xt);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
         return false;
 
-    // Wait until no exclusive lock is held.
-    while (m_state != 0)
+    bool fail;
+
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
-        ++m_num_waiting_writers;
-        if (!m_waiting_writers.timed_wait(l,xt))
+        //Reader priority: wait while locked or while readers are waiting
+
+        int loop_count = 0;
+        while (m_state != 0 || m_num_waiting_readers > 0)
         {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            if (!m_waiting_writers.timed_wait(l, xt))
+            {
+                --m_num_waiting_writers;
+                fail = true;
+                break;
+            }
             --m_num_waiting_writers;
-            return false;
         }
-        --m_num_waiting_writers;
+    }
+    else if (m_sp == read_write_scheduling_policy::writer_priority)
+    {
+        //Writer priority: wait while locked
+
+        m_num_readers_to_wake = 0;
+
+        int loop_count = 0;
+        while (m_state != 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            if (!m_waiting_writers.timed_wait(l, xt))
+            {
+                --m_num_waiting_writers;
+                fail = true;
+                break;
+            }
+            --m_num_waiting_writers;
+        }
+    }
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
+    {
+        //Shut down extra readers that were scheduled only because of no waiting writers
+
+        if (m_sp == read_write_scheduling_policy::alternating_single_read && m_num_waiting_writers == 0)
+            m_num_readers_to_wake = (m_readers_next && m_num_readers_to_wake > 0) ? 1 : 0;
+
+        //Alternating priority: wait while locked or while not writers' turn
+
+        int loop_count = 0;
+        while (m_state != 0 || m_num_readers_to_wake > 0)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
+            ++m_num_waiting_writers;
+            if (!m_waiting_writers.timed_wait(l, xt))
+            {
+                --m_num_waiting_writers;
+                fail = true;
+                break;
+            }
+            --m_num_waiting_writers;
+        }
     }
 
-    BOOST_ASSERT(valid_write_lockable(m_state));
-    m_state = -1;
+    if (!fail)
+    {
+        //Obtain a write lock
 
-    //See note in read_write_mutex_impl<>::do_read_lock() as to why 
-    //m_readers_next should be set here
+        BOOST_ASSERT(valid_write_lockable(m_state));
+        m_state = -1;
 
-    m_readers_next = true;
+        //See note in read_write_mutex_impl<>::do_read_lock() as to why 
+        //m_readers_next should be set here
 
-    BOOST_ASSERT(valid_write_lock(m_state));
-    return true;
+        m_readers_next = true;
+
+        BOOST_ASSERT(valid_write_lock(m_state));
+            //Should be write-locked
+    }
+    else
+    {
+        BOOST_ASSERT(valid_read_write_lock(m_state) || m_num_readers_to_wake > 0);
+            //Should be read-locked or write-locked, or
+            //reader should be waking
+
+        //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
+    }
+
+    return !fail;
 }
 
 template<typename Mutex>
@@ -350,9 +543,7 @@ void read_write_mutex_impl<Mutex>::do_read_unlock()
     else //not read-locked
         throw lock_error();
 
-    if (m_state_waiting_promotion && m_state == 1)
-        m_waiting_promotion.notify_one();
-    else if (m_state == 0)
+    if (m_state == 0)
         do_unlock_scheduling_impl();
 
     BOOST_ASSERT(valid_lock(m_state));
@@ -369,10 +560,7 @@ void read_write_mutex_impl<Mutex>::do_write_unlock()
     else BOOST_ASSERT_ELSE(m_state >= 0)
         throw lock_error();      // Trying to release a reader-locked or unlocked mutex???
 
-    if (m_state_waiting_promotion)
-        m_waiting_promotion.notify_one();
-    else
-        do_unlock_scheduling_impl();
+    do_unlock_scheduling_impl();
 
     BOOST_ASSERT(valid_lock(m_state));
 }
@@ -382,20 +570,14 @@ bool read_write_mutex_impl<Mutex>::do_demote_to_read_lock_impl()
 {
     BOOST_ASSERT(valid_write_lock(m_state));
 
-    //:if (!m_prot.locked())
-    //:    throw lock_error();
-
     if (m_state == -1) 
     {
         //Convert from write lock to read lock
         m_state = 1;
 
         //If the conditions are right, release other readers
-        if (m_num_waiting_readers > 0)
-        {
-            if (m_num_waiting_writers == 0 || m_sp == read_write_scheduling_policy::reader_priority || (m_sp == read_write_scheduling_policy::alternating_many_reads && m_readers_next))
-                m_waiting_readers.notify_all();
-        }
+
+        do_demote_scheduling_impl();
 
         //Lock demoted
         BOOST_ASSERT(valid_read_lock(m_state));
@@ -433,7 +615,7 @@ bool read_write_mutex_impl<Mutex>::do_try_demote_to_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_timed_demote_to_read_lock(const boost::xtime &xt)
 {
-    typename Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot, xt);
     BOOST_ASSERT(valid_write_lock(m_state));
 
     if (!l.locked())
@@ -470,8 +652,14 @@ void read_write_mutex_impl<Mutex>::do_promote_to_write_lock()
     {
         ++m_num_waiting_writers;
         m_state_waiting_promotion = true;
+
+        int loop_count = 0;
         while (m_state > 1)
+        {
+            BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
             m_waiting_promotion.wait(l);
+        }
+
         m_state_waiting_promotion = false;
         --m_num_waiting_writers;
         
@@ -526,7 +714,7 @@ bool read_write_mutex_impl<Mutex>::do_try_promote_to_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_timed_promote_to_write_lock(const boost::xtime &xt)
 {
-    typename Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot, xt);
     BOOST_ASSERT(valid_read_lock(m_state));
 
     if (!l.locked())
@@ -556,8 +744,11 @@ bool read_write_mutex_impl<Mutex>::do_timed_promote_to_write_lock(const boost::x
         {   
             ++m_num_waiting_writers;
             m_state_waiting_promotion = true;
+
+            int loop_count = 0;
             while (m_state > 1)
             {
+                BOOST_ASSERT(++loop_count == 1); //Check for invalid loop conditions (but will also detect spurious wakeups)
                 if (!m_waiting_promotion.timed_wait(l, xt))
                 {
                     m_state_waiting_promotion = false;
@@ -565,6 +756,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_promote_to_write_lock(const boost::x
                     return false;
                 }
             }
+
             m_state_waiting_promotion = false;
             --m_num_waiting_writers;
             
@@ -591,7 +783,7 @@ bool read_write_mutex_impl<Mutex>::locked()
 }
 
 template<typename Mutex>
-read_write_lock_state::read_write_lock_state read_write_mutex_impl<Mutex>::state()
+read_write_lock_state::read_write_lock_state_enum read_write_mutex_impl<Mutex>::state()
 {
     int state = m_state;
     BOOST_ASSERT(valid_lock(state));
@@ -613,45 +805,102 @@ read_write_lock_state::read_write_lock_state read_write_mutex_impl<Mutex>::state
 template<typename Mutex>
 void read_write_mutex_impl<Mutex>::do_unlock_scheduling_impl()
 {
-    //:if (!m_prot.locked())
-    //:    throw lock_error();
+    BOOST_ASSERT(m_state == 0);
+    do_scheduling_impl();
+}
+
+template<typename Mutex>
+void read_write_mutex_impl<Mutex>::do_demote_scheduling_impl()
+{
+    BOOST_ASSERT(m_state == 1);
+    do_scheduling_impl();
+}
+
+template<typename Mutex>
+void read_write_mutex_impl<Mutex>::do_scheduling_impl()
+{
+    bool demotion = m_state > 0; //Releasing readers after lock demotion?
     
-    if (m_state != 0)
-        throw lock_error();
+    BOOST_ASSERT(valid_read_lockable(m_state));
 
     if (m_num_waiting_writers > 0 && m_num_waiting_readers > 0)
     {
-        // We have both types waiting, and -either- could proceed.
-        //    Choose which to release based on scheduling policy.
+        //Both readers and writers waiting: use scheduling policy
         if (m_sp == read_write_scheduling_policy::reader_priority)
         {
+            m_num_readers_to_wake = m_num_waiting_readers;
             m_waiting_readers.notify_all();
         }
         else if (m_sp == read_write_scheduling_policy::writer_priority)
         {
-            m_waiting_writers.notify_one();
-        }
-        else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
-        {
-            if (m_readers_next)
+            if (!demotion)
             {
-                if (m_sp == read_write_scheduling_policy::alternating_many_reads)
-                    m_waiting_readers.notify_all();
-                else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read)
-                    m_waiting_readers.notify_one();
+                if (m_state_waiting_promotion)
+                    m_waiting_promotion.notify_one();
+                else
+                    m_waiting_writers.notify_one();
             }
-            else //(!m_readers_next)
-                m_waiting_writers.notify_one();
+        }
+        else if (m_sp == read_write_scheduling_policy::alternating_single_read)
+        {
+            if (m_num_readers_to_wake > 0)
+            {
+                //Let the already woken threads work
+            }
+            else  if (m_readers_next)
+            {
+                m_num_readers_to_wake = 1;
+                m_waiting_readers.notify_one();
+            }
+            else
+            {
+                if (!demotion)
+                {
+                    if (m_state_waiting_promotion)
+                        m_waiting_promotion.notify_one();
+                    else
+                        m_waiting_writers.notify_one();
+                }
+            }
+        }
+        else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_many_reads)
+        {
+            if (m_num_readers_to_wake > 0)
+            {
+                //Let the already woken threads work
+            }
+            else if (m_readers_next)
+            {
+                m_num_readers_to_wake = m_num_waiting_readers;
+                m_waiting_readers.notify_all();
+            }
+            else
+            {
+                if (!demotion)
+                {
+                    if (m_state_waiting_promotion)
+                        m_waiting_promotion.notify_one();
+                    else
+                        m_waiting_writers.notify_one();
+                }
+            }
         }
     }
     else if (m_num_waiting_writers > 0)
     {
-        // Only writers - scheduling doesn't matter
-        m_waiting_writers.notify_one();
+        if (!demotion)
+        {
+            //Only writers waiting--scheduling policy doesn't matter
+            if (m_state_waiting_promotion)
+                m_waiting_promotion.notify_one();
+            else
+                m_waiting_writers.notify_one();
+        }
     }
     else if (m_num_waiting_readers > 0)
     {
-        // Only readers - scheduling doesn't matter
+        //Only readers waiting--scheduling policy doesn't matter
+        m_num_readers_to_wake = m_num_waiting_readers;
         m_waiting_readers.notify_all();
     }
 }
@@ -695,7 +944,7 @@ bool read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -756,7 +1005,7 @@ bool try_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state try_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum try_read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -837,7 +1086,7 @@ bool timed_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state timed_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum timed_read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -882,7 +1131,7 @@ template class boost::detail::thread::scoped_try_write_lock<timed_read_write_mut
 
 //template class boost::detail::thread::scoped_timed_write_lock<read_write_mutex>;
 //template class boost::detail::thread::scoped_timed_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
+template class boost::detail::thread::scoped_timed_write_lock<timed_read_write_mutex>;
 } // namespace boost
 
 // Change Log:

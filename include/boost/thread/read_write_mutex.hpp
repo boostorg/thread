@@ -28,7 +28,7 @@
 namespace boost {
 
 namespace read_write_scheduling_policy {
-    enum read_write_scheduling_policy
+    enum read_write_scheduling_policy_enum
     {
         writer_priority,               //Prefer writers; can starve readers
         reader_priority,               //Prefer readers; can starve writers
@@ -51,9 +51,10 @@ struct read_write_mutex_impl
     typedef detail::thread::scoped_try_lock<Mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<Mutex> scoped_timed_lock;
 
-    read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy sp)
+    read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy_enum sp)
         : m_num_waiting_writers(0),
           m_num_waiting_readers(0),
+          m_num_readers_to_wake(0),
           m_state_waiting_promotion(false),
           m_state(0),
           m_sp(sp),
@@ -64,12 +65,13 @@ struct read_write_mutex_impl
     boost::condition m_waiting_readers;
     int m_num_waiting_writers;
     int m_num_waiting_readers;
+    int m_num_readers_to_wake;
     boost::condition m_waiting_promotion;
     bool m_state_waiting_promotion;
     int m_state;    // -1 = excl locked
                     // 0 = unlocked
                     // 1-> INT_MAX - shared locked
-    const read_write_scheduling_policy::read_write_scheduling_policy m_sp;
+    const read_write_scheduling_policy::read_write_scheduling_policy_enum m_sp;
     bool m_readers_next;
 
     void do_read_lock();
@@ -90,11 +92,13 @@ struct read_write_mutex_impl
     bool do_timed_promote_to_write_lock(const xtime &xt);
 
     bool locked();
-    read_write_lock_state::read_write_lock_state state();
+    read_write_lock_state::read_write_lock_state_enum state();
 
 private:
 
     void do_unlock_scheduling_impl();
+    void do_demote_scheduling_impl();
+    void do_scheduling_impl();
     bool do_demote_to_read_lock_impl();
 };
 
@@ -106,10 +110,10 @@ class BOOST_THREAD_DECL read_write_mutex : private noncopyable
 {
 public:
 
-    read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
+    read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy_enum sp) : m_impl(sp) { }
     ~read_write_mutex() { }
 
-    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy_enum policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<read_write_mutex>;
 
@@ -136,7 +140,7 @@ private:
     void do_promote_to_write_lock();
 
     bool locked();
-    read_write_lock_state::read_write_lock_state state();
+    read_write_lock_state::read_write_lock_state_enum state();
 
     detail::thread::read_write_mutex_impl<mutex> m_impl; 
 };
@@ -145,10 +149,10 @@ class BOOST_THREAD_DECL try_read_write_mutex : private noncopyable
 {
 public:
 
-    try_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
+    try_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy_enum sp) : m_impl(sp) { }
     ~try_read_write_mutex() { }
 
-    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy_enum policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<try_read_write_mutex>;
 
@@ -186,7 +190,7 @@ private:
     bool do_try_promote_to_write_lock();
 
     bool locked();
-    read_write_lock_state::read_write_lock_state state();
+    read_write_lock_state::read_write_lock_state_enum state();
 
     detail::thread::read_write_mutex_impl<try_mutex> m_impl; 
 };
@@ -195,10 +199,10 @@ class BOOST_THREAD_DECL timed_read_write_mutex : private noncopyable
 {
 public:
 
-    timed_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
+    timed_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy_enum sp) : m_impl(sp) { }
     ~timed_read_write_mutex() { }
 
-    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy_enum policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<timed_read_write_mutex>;
 
@@ -245,7 +249,7 @@ private:
     bool do_timed_promote_to_write_lock(const xtime &xt);
 
     bool locked();
-    read_write_lock_state::read_write_lock_state state();
+    read_write_lock_state::read_write_lock_state_enum state();
 
     detail::thread::read_write_mutex_impl<timed_mutex> m_impl; 
 };
