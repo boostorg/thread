@@ -27,8 +27,13 @@
 #endif
 
 namespace boost {
-
     namespace detail {
+		class tss_ref
+		{
+		public:
+			tss_ref();
+		};
+
         class tss : private noncopyable
         {
         public:
@@ -37,18 +42,10 @@ namespace boost {
 
             void* get() const;
             void set(void* value);
-			void cleanup(void* value);
+			void cleanup(void* p);
 
         private:
-        #if defined(BOOST_HAS_WINTHREADS)
-            unsigned long m_key;
-        #elif defined(BOOST_HAS_PTHREADS)
-            pthread_key_t m_key;
-        #elif defined(BOOST_HAS_MPTASKS)
-            TaskStorageIndex m_key;
-            void (*m_cleanup)(void*);
-        #endif
-			boost::function1<void, void*> m_clean;
+			int m_slot;
         };
 
     #if defined(BOOST_HAS_MPTASKS)
@@ -61,7 +58,7 @@ namespace boost {
 			void operator()(void* p) { m_cleanup(p); }
 			boost::function1<void, void*> m_cleanup;
 		};
-    }
+    } // namespace detail
 
 template <typename T>
 class thread_specific_ptr : private noncopyable
@@ -69,6 +66,7 @@ class thread_specific_ptr : private noncopyable
 public:
 	thread_specific_ptr() : m_tss(detail::tss_adapter(&thread_specific_ptr<T>::cleanup)) { }
 	thread_specific_ptr(void (*clean)(void*)) : m_tss(detail::tss_adapter(clean)) { }
+	~thread_specific_ptr() { reset(); }
 
     T* get() const { return static_cast<T*>(m_tss.get()); }
     T* operator->() const { return get(); }
@@ -82,6 +80,12 @@ private:
 };
 
 } // namespace boost
+
+namespace {
+	// This injects a tss_ref into every namespace and helps to insure we get a proper
+	// value for the "main" thread
+	boost::detail::tss_ref _tss_ref__7BAFF4714CFC42ae9C425F60CE3714D8;
+}
 
 // Change Log:
 //   6 Jun 01  WEKEMPF Initial version.
