@@ -1,0 +1,40 @@
+#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears
+#  in all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+#
+# Boost.Threads build and test Jamfile
+#
+# Declares the following targets:
+#   1. libboost_thread, a static link library.
+#       1a. On Win32, a dynamic link library libboost_threadmon,
+#           which must be used in conjunction with libboost_thread.
+
+# declare the location of this subproject relative to the root
+subproject libs/thread/build ;
+
+#######################
+
+#
+# Declare the Boost.Threads static link library.
+#
+
+# For Win32 we need to build a special DLL, libboost_threadmon, to handle
+# TSS destruction.
+if $(NT)
+{
+    dll libboost_threadmon : ../src/threadmon.cpp
+        # requirements
+        : <threading>multi
+        : debug release ;
+}
+
+# Base names of the source files for libboost_thread
+CPP_SOURCES =
+    condition mutex recursive_mutex semaphore thread tss xtime once ;
+
+lib libboost_thread : ../src/$(CPP_SOURCES).cpp
+    # requirements
+    : <include>$(BOOST_ROOT)
+    <threading>multi
+    : debug release ;

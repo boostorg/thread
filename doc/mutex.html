@@ -1,0 +1,319 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
+<title>Boost.Threads, mutex</title>
+</head>
+
+<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><IMG alt="C++ Boost" src="../../../c++boost.gif" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">mutex<br>
+            try_mutex<br>
+            timed_mutex</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#mutex Synopsis">Class mutex Synopsis</a><br>
+<a href="#mutex Members">Class mutex Members</a><br>
+<a href="#try_mutex Synopsis">Class try_mutex Synopsis</a><br>
+<a href="#try_mutex Members">Class try_mutex Members</a><br>
+<a href="#timed_mutex Synopsis">Class timed_mutex Synopsis</a><br>
+<a href="#timed_mutex Members">Class timed_mutex Members</a><br>
+<a href="#Example">Example</a></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>The <tt><a href="#mutex Synopsis">mutex</a></tt>, <tt><a href="#try_mutex Synopsis">try_mutex</a></tt> and <tt><a href="#timed_mutex Synopsis">timed_mutex</a></tt> classes define full featured
+models of the <a href="mutex_concept.html#Mutex">Mutex</a>, <a href="mutex_concept.html#TryMutex">TryMutex</a>,
+and <a href="mutex_concept.html#TimedMutex">TimedMutex</a> concepts. These types should be used to
+non-recursively synchronize access to
+shared resources. For recursive locking mechanics, see <a href="recursive_mutex.html">recursive
+mutexes</a>.</p>
+
+<p>Each class supplies one or more typedefs for lock types which model matching
+lock concepts. For the best possible performance you should use the mutex class that supports
+the minimum set of lock
+types that you need.</p>
+
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Mutex Class</b></td>
+    <td><b>Lock name</b></td>
+    <td><b>Implementation defined Lock Type</b></td>
+    <td><b>&nbsp;Lock Concept</b></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="#mutex Synopsis"><code>mutex</code></a></td>
+    <td valign="middle"><code>scoped_lock</code></td>
+    <td valign="middle"><code><a href="scoped_lock.html">boost::</a></code><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;mutex&gt;</code></a></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a></td>
+  </tr>
+  <tr>
+    <td valign="top"><tt><a href="#try_mutex Synopsis">try_mutex</a></tt> </td>
+    <td valign="middle"><code>scoped_lock<br>
+      scoped_try_lock</code></td>
+    <td valign="middle"><code><a href="scoped_lock.html">boost::</a></code><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;try_mutex&gt;<br>
+      </code></a><code><a href="scoped_try_lock.html">boost::detail::thread::scoped_try_lock&lt;try_mutex&gt;</a></code></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
+      <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a></td>
+  </tr>
+  <tr>
+    <td valign="top"><code><a href="#timed_mutex Synopsis">timed_mutex</a></code> </td>
+    <td valign="middle"><code>scoped_lock<br>
+      scoped_try_lock<br>
+      scoped_timed_lock</code></td>
+    <td valign="middle"><code><a href="scoped_lock.html">boost::</a></code><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;timed_mutex&gt;</code></a><br>
+      <code><a href="scoped_try_lock.html">boost::</a></code><a href="scoped_try_lock.html"><code>detail::thread::scoped_try_lock&lt;timed_mutex&gt;</code></a><br>
+      <code><a href="scoped_timed_lock.html">boost::</a></code><a href="scoped_timed_lock.html"><code>detail::thread::scoped_timed_lock&lt;timed_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
+      <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a><br>
+      <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a></td>
+  </tr>
+</table>
+
+<p>The <tt>mutex</tt>, <tt>try_mutex</tt> and <tt>timed_mutex</tt>  classes use an <tt>Unspecified</tt>
+<A href="mutex_concept.html#LockingStrategies">locking strategy</a>, so attempts to recursively lock
+them or attempts to unlock them by threads that don't own a lock on them result in <b>undefined behavior</b>.
+This strategy allows implementations to be as efficient as possible on any given platform. It is, however,
+recommended that implementations include debugging support to detect misuse when <tt>NDEBUG</tt> is
+not defined.</p>
+
+<p>Like all the <b>Boost.Threads</b> <A href="mutex_concept.html">mutex models</a>, the <tt>mutex</tt>,
+<tt>try_mutex</tt> and <tt>timed_mutex</tt> leave the
+<A href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <tt>Unspecified</tt>.
+Programmers should assume that threads waiting for a lock on objects of these types
+acquire
+the lock in a random order, even though the specific behavior for a given platform may be different.</p>
+
+<h2><a name="Header">Header</a></h2>
+
+<pre>
+#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
+</pre>
+
+<h2>Class <a name="mutex Synopsis"> mutex Synopsis</a></h2>
+
+<pre>
+namespace boost
+{
+    class mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a> // Exposition only.
+        // Class mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+    {
+    public:
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+        
+        mutex();
+        ~mutex();
+    };
+}
+</pre>
+
+<h2>
+    Class <a name="mutex Members">mutex Members</a>
+</h2>
+
+<hr>
+
+<h3>Constructor</h3>
+
+<pre>
+    mutex();
+</pre>
+
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~mutex();
+</pre>
+
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
+
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash.</p>
+
+<hr>
+
+<h2>
+    Class <a name="try_mutex Synopsis">try_mutex Synopsis</a>
+</h2>
+
+<pre>
+namespace boost
+{
+    class try_mutex : private boost::noncopyable // Exposition only.
+        // Class try_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+    {
+    public:
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_try_lock;
+        
+        try_mutex();
+        ~try_mutex();
+    };
+}
+</pre>
+
+<h2>Class <a name="try_mutex Members">try_mutex Members</a></h2>
+
+<hr>
+
+<h3>Constructor</h3>
+
+<pre>
+    try_mutex();
+</pre>
+
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~try_mutex();
+</pre>
+
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
+
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash.</p>
+
+<hr>
+
+<h2>
+    Class <a name="timed_mutex Synopsis">timed_mutex Synopsis</a>
+</h2>
+
+<pre>
+namespace boost
+{
+    class timed_mutex : private boost::noncopyable // Exposition only.
+        // Class timed_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+    {
+    public:
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_try_lock;
+        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_timed_lock;
+        
+        timed_mutex();
+        ~timed_mutex();
+    };
+}
+</pre>
+
+<h2>Class <a name="timed_mutex Members">timed_mutex Members</a></h2>
+
+<hr>
+
+<h3>Constructor</h3>
+
+<pre>
+    timed_mutex();
+</pre>
+
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~timed_mutex();
+</pre>
+
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
+
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash.</p>
+
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
+
+<pre>
+#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include &lt;iostream&gt;
+
+boost::mutex io_mutex; // The iostreams are not guaranteed to be <a href="file:///c:/boost/site/libs/thread/doc/definitions.html#Thread-safe">thread-safe</a>!
+
+class counter
+{
+public:
+    counter() : count(0) { }
+   
+    int increment() {
+        boost::mutex::scoped_lock scoped_lock(mutex);
+        return ++count;
+    }
+
+private:
+    boost::mutex mutex;
+    int count;
+};
+
+counter c;
+
+void change_count(void*)
+{
+    int i = c.increment();
+    boost::mutex::scoped_lock scoped_lock(io_mutex);
+    std::cout &lt;&lt; &quot;count == &quot; &lt;&lt; i &lt;&lt; std::endl;
+}
+
+int main(int, char*[])
+{
+    const int num_threads = 4;
+    boost::thread_group thrds;
+    for (int i=0; i &lt; num_threads; ++i)
+        thrds.create_thread(&amp;change_count, 0);
+      
+    thrds.join_all();
+   
+    return 0;
+}
+</pre>
+
+<p>The output is:</p>
+
+<pre>
+count == 1
+count == 2
+count == 3
+count == 4
+</pre>
+
+<hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->13 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39334" -->
+</p>
+
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>
