@@ -54,13 +54,6 @@ struct as_pointer : private boost::mpl::if_<boost::is_pointer<T>,
     static const void* from(const T& obj) { return do_from(obj); }
 };
 
-struct thread_equals
-{
-    thread_equals(boost::thread& thrd) : m_thrd(thrd) { }
-    bool operator()(boost::thread* thrd) { return *thrd == m_thrd; }
-    boost::thread& m_thrd;
-};
-
 class thread_data
 {
 public:
@@ -68,7 +61,8 @@ public:
     {
         creating,
         running,
-        joining,
+		finished,
+		//        joining,
         joined
     };
 
@@ -183,127 +177,61 @@ bool thread_data::release()
 
 void thread_data::join()
 {
-    {
-        boost::mutex::scoped_lock lock(m_mutex);
-        while (m_state == creating)
-            m_cond.wait(lock);
-
-        if (m_state == joined)
-            return;
-
-        if (m_state == joining)
-        {
-            while (m_state == joining)
-                m_cond.wait(lock);
-            if (m_state == joined)
-                return;
-        }
-
-        m_state = joining;
-    }
-
-    int res = 0;
+	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state != joined && m_state != finished)
+		m_cond.wait(lock);
+	if (m_state == finished)
+	{
+		int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-    res = WaitForSingleObject(m_thread, INFINITE);
-    assert(res == WAIT_OBJECT_0);
-    res = CloseHandle(m_thread);
-    assert(res);
+		res = WaitForSingleObject(m_thread, INFINITE);
+		assert(res == WAIT_OBJECT_0);
+		res = CloseHandle(m_thread);
+		assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-    res = pthread_join(m_thread, 0);
-    assert(res == 0);
+		res = pthread_join(m_thread, 0);
+		assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-    OSStatus lStatus =
-        threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL,
-            NULL, kDurationForever);
-    assert(lStatus == noErr);
+		OSStatus lStatus =
+			threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
+													 NULL, NULL,
+													 kDurationForever);
+		assert(lStatus == noErr);
 #endif
-
-    boost::mutex::scoped_lock lock(m_mutex);
-    assert(m_state == joining);
-    m_state = joined;
-    m_cond.notify_all();
+		m_state = joined;
+		m_cond.notify_all();
+	}
 }
 
 bool thread_data::timed_join(const boost::xtime& xt)
 {
-    {
-        boost::mutex::scoped_lock lock(m_mutex);
-        while (m_state == creating)
-            m_cond.wait(lock);
-
-        if (m_state == joined)
-            return true;
-
-        if (m_state == joining)
-        {
-            while (m_state == joining)
-            {
-                if (!m_cond.timed_wait(lock, xt))
-                    return m_state == joined;
-            }
-            if (m_state == joined)
-                return true;
-            assert(m_state == running);
-        }
-
-        m_state = joining;
-    }
-
-    unsigned int res = 0;
+	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state != joined && m_state != finished)
+	{
+		if (!m_cond.timed_wait(lock, xt))
+			return false;
+	}
+	if (m_state == finished)
+	{
+		int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-    for (;;)
-    {
-        int milliseconds;
-        to_duration(xt, milliseconds);
-
-        res = WaitForSingleObject(m_thread, milliseconds);
-        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-
-        if (res == WAIT_TIMEOUT)
-        {
-            boost::xtime cur;
-            boost::xtime_get(&cur, boost::TIME_UTC);
-            if (boost::xtime_cmp(xt, cur) > 0)
-                continue;
-            boost::mutex::scoped_lock lock(m_mutex);
-            assert(m_state == joining);
-            m_state = running;
-            m_cond.notify_all();
-            return false;
-        }
-        break;
-    }
-
-    assert(res == WAIT_OBJECT_0);
-    res = CloseHandle(m_thread);
-    assert(res);
+		res = WaitForSingleObject(m_thread, INFINITE);
+		assert(res == WAIT_OBJECT_0);
+		res = CloseHandle(m_thread);
+		assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-    timespec ts;
-    to_timespec(xt, ts);
-
-//    res = pthread_timedjoin(m_thread, 0, ts);
-
-    if (res == ETIMEDOUT)
-    {
-        boost::mutex::scoped_lock lock(m_mutex);
-        assert(m_state == joining);
-        m_state = running;
-        m_cond.notify_all();
-        return false;
-    }
-
-    assert(res == 0);
+		res = pthread_join(m_thread, 0);
+		assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-    OSStatus lStatus =
-        threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL,
-            NULL, kDurationForever);
-    assert(lStatus == noErr);
+		OSStatus lStatus =
+			threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL,
+													 NULL, NULL,
+													 kDurationForever);
+		assert(lStatus == noErr);
 #endif
-
-    boost::mutex::scoped_lock lock(m_mutex);
-    assert(m_state == joining);
-    m_state = joined;
-    m_cond.notify_all();
+		m_state = joined;
+		m_cond.notify_all();
+	}
 	return true;
 }
 
@@ -351,7 +279,7 @@ void thread_data::run()
 #elif defined(BOOST_HAS_PTHREADS)
         m_thread = pthread_self();
 #endif
-        m_state = thread_data::running;
+        m_state = running;
         m_cond.notify_all();
     }
     m_threadfunc();
@@ -366,7 +294,7 @@ boost::thread::id_type thread_data::id() const
     if (m_state != joined)
 #if defined(BOOST_HAS_WINTHREADS)
         return m_id;
-#else
+#elif defined(BOOST_HAS_PTHREADS)
     {
         const void* res = as_pointer<pthread_t>::from(m_thread);
         if (res == 0)
