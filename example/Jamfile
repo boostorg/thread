@@ -38,8 +38,7 @@ exe monitor
     : <include>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
-      <runtime-link>static/dynamic
-    : debug release
+    : debug release <runtime-link>static/dynamic
 ;
 
 #######################
@@ -52,8 +51,7 @@ exe starvephil
     : <include>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
-      <runtime-link>static/dynamic
-    : debug release
+    : debug release <runtime-link>static/dynamic
 ;
 
 #######################
@@ -66,6 +64,5 @@ exe tennis
     : <include>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
-      <runtime-link>static/dynamic
-    : debug release
+    : debug release <runtime-link>static/dynamic
 ;

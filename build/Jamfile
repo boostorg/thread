@@ -40,8 +40,7 @@ if $(NT) && ! $(PTW32)
         : ../src/threadmon.cpp
         : <include>$(BOOST_ROOT)
           <threading>multi
-          <runtime-link>static/dynamic
-        : debug release
+        : debug release <runtime-link>static/dynamic
     ;
 }
 
@@ -57,7 +56,7 @@ lib boost_thread
     : <include>$(BOOST_ROOT)
       <threading>multi
       $(pthreads-win32)
-    : debug release $(ptw32-debug) $(ptw32-release)
+    : debug release <runtime-link>static/dynamic
 ;
 
 #######################
