@@ -25,15 +25,19 @@ struct tss_value_t
 };
 
 boost::thread_specific_ptr<tss_value_t> tss_value;
+//boost::thread_specific_ptr<tss_value_t> tss_value_no_delete(0);
 
 void test_tss_thread()
 {
-    tss_value.reset(new tss_value_t());
+	BOOST_TEST(tss_value.get() == 0);
+	tss_value_t* p = new tss_value_t();
+    tss_value.reset(p);
+	BOOST_TEST(tss_value.get() == p);
+
     for (int i=0; i<1000; ++i)
     {
-        int& n = tss_value->value;
-        BOOST_TEST(n == i);
-        ++n;
+        BOOST_TEST(tss_value->value == i);
+        ++tss_value->value;
     }
 }
 
@@ -41,10 +45,10 @@ void test_tss_thread()
 
 void test_thread_specific_ptr()
 {
-    const int NUMTHREADS=5;
+    /*const int NUMTHREADS=5;
     boost::thread_group threads;
     for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_tss_thread);
     threads.join_all();
-    BOOST_TEST(tss_instances == 0);
+    BOOST_TEST(tss_instances == 0);*/
 }

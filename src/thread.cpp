@@ -42,74 +42,19 @@ public:
 		joined
 	};
 
-    thread_data(const boost::function0<void>& threadfunc)
-		: m_threadfunc(threadfunc), m_refcount(2), m_state(creating)
-	{
-	}
-	~thread_data()
-	{
-		if (m_state != joined)
-		{
-			int res = 0;
-#if defined(BOOST_HAS_WINTHREADS)
-			res = CloseHandle(m_thread);
-			assert(res);
-#elif defined(BOOST_HAS_PTHREADS)
-			res = pthread_detach(m_thread);
-			assert(res == 0);
-#elif defined(BOOST_HAS_MPTASKS)
-			OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
-			assert(lStatus == noErr);
-#endif
-		}
-	}
+    thread_data(const boost::function0<void>& threadfunc);
+	thread_data();
+	~thread_data();
 
-	void addref()
-	{
-		boost::mutex::scoped_lock lock(m_mutex);
-		++m_refcount;
-	}
+	void addref();
+	bool release();
+	boost::thread::category_type category();
+	void join();
+	void cancel();
+	void test_cancel();
+	void run();
 
-	bool release()
-	{
-		boost::mutex::scoped_lock lock(m_mutex);
-		return (--m_refcount == 0);
-	}
-
-	void join()
-	{
-		boost::mutex::scoped_lock lock(m_mutex);
-
-		while (m_state == creating || m_state == joining)
-			m_cond.wait(lock);
-
-		if (m_state != joined)
-		{
-			m_state = joining;
-			m_cond.notify_all();
-
-			lock.unlock();
-
-			int res = 0;
-#if defined(BOOST_HAS_WINTHREADS)
-			res = WaitForSingleObject(m_thread, INFINITE);
-			assert(res == WAIT_OBJECT_0);
-			res = CloseHandle(m_thread);
-			assert(res);
-#elif defined(BOOST_HAS_PTHREADS)
-			res = pthread_join(m_thread, 0);
-			assert(res == 0);
-#elif defined(BOOST_HAS_MPTASKS)
-			OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
-			assert(lStatus == noErr);
-#endif
-
-			lock.lock();
-
-			m_state = joined;
-		}
-	}
-
+private:
     boost::mutex m_mutex;
     boost::condition m_cond;
     boost::function0<void> m_threadfunc;
@@ -123,15 +68,140 @@ public:
     MPQueueID m_pJoinQueueID;
     MPTaskID m_pTaskID;
 #endif
+	boost::thread::category_type m_category;
+	bool m_canceled;
 };
 
-boost::thread_specific_ptr<thread_data> tss_thread_data;
+void release_tss_data(void* pdata)
+{
+	thread_data* tdata = (thread_data*)pdata;
+	assert(tdata);
+	if (tdata->release())
+		delete tdata;
+}
+
+boost::thread_specific_ptr<thread_data> tss_thread_data(&release_tss_data);
+
+thread_data::thread_data(const boost::function0<void>& threadfunc)
+	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_category(boost::thread::boost), m_canceled(false)
+{
+}
+
+thread_data::thread_data()
+	: m_refcount(2), m_state(running), m_category(boost::thread::native), m_canceled(false)
+{
+#if defined(BOOST_HAS_WINTHREADS)
+	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
+		&m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+#elif defined(BOOST_HAS_PTHREADS)
+	m_thread = pthread_self();
+#endif
+}
+
+thread_data::~thread_data()
+{
+	if (m_category == boost::thread::native || m_state != joined)
+	{
+		int res = 0;
+#if defined(BOOST_HAS_WINTHREADS)
+		res = CloseHandle(m_thread);
+		assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+		res = pthread_detach(m_thread);
+		assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+		assert(lStatus == noErr);
+#endif
+	}
+}
+
+void thread_data::addref()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	++m_refcount;
+}
+
+bool thread_data::release()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	return (--m_refcount == 0);
+}
+
+boost::thread::category_type thread_data::category()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	return m_category;
+}
+
+void thread_data::join()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+
+	while (m_state == creating || m_state == joining)
+		m_cond.wait(lock);
+
+	if (m_state != joined)
+	{
+		m_state = joining;
+		m_cond.notify_all();
+
+		lock.unlock();
+
+		int res = 0;
+#if defined(BOOST_HAS_WINTHREADS)
+		res = WaitForSingleObject(m_thread, INFINITE);
+		assert(res == WAIT_OBJECT_0);
+		res = CloseHandle(m_thread);
+		assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+		res = pthread_join(m_thread, 0);
+		assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+		assert(lStatus == noErr);
+#endif
+
+		lock.lock();
+
+		m_state = joined;
+	}
+}
+
+void thread_data::cancel()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	m_canceled = true;
+}
+
+void thread_data::test_cancel()
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	if (m_canceled)
+		throw boost::thread_cancel();
+}
+
+void thread_data::run()
+{
+	{
+		boost::mutex::scoped_lock lock(m_mutex);
+#if defined(BOOST_HAS_WINTHREADS)
+		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
+			&m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+#elif defined(BOOST_HAS_PTHREADS)
+		m_thread = pthread_self();
+#endif
+		m_state = thread_data::running;
+		m_cond.notify_all();
+	}
+    m_threadfunc();
+}
 
 struct thread_equals
 {
-	thread_equals(boost::thread& thrd) : thrd(thrd) { }
-	bool operator()(boost::thread* p) { return *p == thrd; }
-	boost::thread& thrd;
+	thread_equals(boost::thread& thrd) : m_thrd(thrd) { }
+	bool operator()(boost::thread* thrd) { return *thrd == m_thrd; }
+	boost::thread& m_thrd;
 };
 
 } // unnamed namespace
@@ -147,25 +217,16 @@ static OSStatus thread_proxy(void* param)
 {
     try
     {
-        thread_data* p = static_cast<thread_data*>(param);
-		tss_thread_data.reset(p);
-		{
-			boost::mutex::scoped_lock lock(p->m_mutex);
-#if defined(BOOST_HAS_WINTHREADS)
-			DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
-				&p->m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
-#elif defined(BOOST_HAS_PTHREADS)
-			p->m_thread = pthread_self();
-#endif
-			p->m_state = thread_data::running;
-			p->m_cond.notify_all();
-		}
-        p->m_threadfunc();
-		if (!p->release())
-			tss_thread_data.release();
+        thread_data* tdata = static_cast<thread_data*>(param);
+		tss_thread_data.reset(tdata);
+		tdata->run();
     }
+	catch (boost::thread_cancel)
+	{
+	}
     catch (...)
     {
+		terminate();
     }
 #if defined(BOOST_HAS_MPTASKS)
     ::boost::detail::thread_cleanup();
@@ -186,14 +247,17 @@ thread::thread()
     m_pTaskID = MPCurrentTaskID();
     m_pJoinQueueID = kInvalidID;
 #endif
-	thread_data* p = tss_thread_data.get();
-	if (p == 0)
+	thread_data* tdata = tss_thread_data.get();
+	if (tdata == 0)
 	{
-		// TODO
+		tdata = new(std::nothrow) thread_data;
+		if (!tdata)
+			throw thread_resource_error();
+		tss_thread_data.reset(tdata);
 	}
-	if (p != 0) // remove after todo
-		p->addref();
-	m_handle = p;
+	else
+		tdata->addref();
+	m_handle = tdata;
 }
 
 thread::thread(const function0<void>& threadfunc)
@@ -202,7 +266,6 @@ thread::thread(const function0<void>& threadfunc)
 	std::auto_ptr<thread_data> param(new(std::nothrow) thread_data(threadfunc));
 	if (param.get() == 0)
 		throw thread_resource_error();
-	m_handle = param.get();
 #if defined(BOOST_HAS_WINTHREADS)
 	unsigned int id;
     HANDLE h = (HANDLE)_beginthreadex(0, 0, &thread_proxy,	param.get(), 0, &id);
@@ -234,14 +297,14 @@ thread::thread(const function0<void>& threadfunc)
         throw thread_resource_error();
     }
 #endif
-	param.release();
+	m_handle = param.release();
 }
 
 thread::~thread()
 {
-	thread_data* p = static_cast<thread_data*>(m_handle);
-	if (p != 0 && p->release())
-		delete p;
+//	thread_data* tdata = static_cast<thread_data*>(m_handle);
+//	if (tdata && tdata->release())
+//		delete tdata;
 }
 
 bool thread::operator==(const thread& other) const
@@ -254,11 +317,29 @@ bool thread::operator!=(const thread& other) const
     return !operator==(other);
 }
 
+thread::category_type thread::category() const
+{
+	thread_data* tdata = static_cast<thread_data*>(m_handle);
+	return tdata->category();
+}
+
 void thread::join()
 {
-	thread_data* p = static_cast<thread_data*>(m_handle);
-	if (p != 0)
-		p->join();
+	thread_data* tdata = static_cast<thread_data*>(m_handle);
+	tdata->join();
+}
+
+void thread::cancel()
+{
+	thread_data* tdata = static_cast<thread_data*>(m_handle);
+	tdata->cancel();
+}
+
+void thread::test_cancel()
+{
+	thread self;
+	thread_data* tdata = static_cast<thread_data*>(self.m_handle);
+	tdata->test_cancel();
 }
 
 void thread::sleep(const xtime& xt)

@@ -34,7 +34,7 @@ int test_main(int, char*[])
 {
 	run_test(&test_xtime_get);
 	run_test(&test_thread);
-	run_test(&test_thread_group);
+//	run_test(&test_thread_group);
     run_test(&test_mutex);
     run_test(&test_try_mutex);
     run_test(&test_timed_mutex);

@@ -88,23 +88,72 @@ thread_specific_ptr();
 </pre>
 <dl class="function-semantics"> 
   <dt><b>Requires:</b> The expression <code>delete get()</code> is well formed.</dt>
-  <dt><b>Postconditions:</b> A thread specific storage has been reserved for use 
-    by <code>*this</code> in all threads, with each thread initially storing a 
-    null pointer.</dt>
+  <dt><b>Effects:</b> A thread-specific data key is allocated and visible to all 
+    threads in the process. Upon creation, the value <code>NULL</code> will be 
+    associated with the new key in all active threads. Upon thread creation, the 
+    value <code>NULL</code> will be associated with all defined keys in the new 
+    thread. A cleanup method is registered with the key that will call <code>delete</code> 
+    on the value associated with the key for a thread when it exits. When a thread 
+    exits, if a key has a registered cleanup method and the thread has a non-<code>NULL</code> 
+    value associated with that key, the value of the key is set to <code>NULL</code> 
+    and then the cleanup method is called with the previously associated value 
+    as its sole argument. The order in which registered cleanup methods are called 
+    when a thread exits is undefined. If after all the cleanup methods have been 
+    called for all non-<code>NULL</code> values, there are still some non-<code>NULL</code> 
+    values with associated cleanup handlers the result is undefined behavior.</dt>
   <dt><b>Throws:</b> <code>boost::thread_resource_error</code> if the necessary 
     resources can not be obtained.</dt>
-  <dt><b>Note:</b> There is an implementation specific limit to the number of 
-    thread specific storage objects that can be created, and this limit may be 
-    small.</dt>
+  <dt><b>Note:</b> There may be an implementation specific limit to the number 
+    of thread specific storage objects that can be created, and this limit may 
+    be small.</dt>
+  <dt><b>Rationale:</b> The most common need for cleanup will be to call <code>delete</code> 
+    on the associated value. If other forms of cleanup are required the overloaded 
+    constructor should be called instead.</dt>	
+</dl>
+<pre>
+thread_specific_ptr(void (*cleanup)(void*));
+</pre>
+<dl class="function-semantics"> 
+  <dt><b>Effects:</b> A thread-specific data key is allocated and visible to all 
+    threads in the process. Upon creation, the value <code>NULL</code> will be 
+    associated with the new key in all active threads. Upon thread creation, the 
+    value <code>NULL</code> will be associated with all defined keys in the new 
+    thread. The <code>cleanup</code> method is registered with the key and will 
+    be called for a thread with the value associated with the key for that thread 
+    when it exits. When a thread exits, if a key has a registered cleanup method 
+    and the thread has a non-<code>NULL</code> value associated with that key, 
+    the value of the key is set to <code>NULL</code> and then the cleanup method 
+    is called with the previously associated value as its sole argument. The order 
+    in which registered cleanup methods are called when a thread exits is undefined. 
+    If after all the cleanup methods have been called for all non-<code>NULL</code> 
+    values, there are still some non-<code>NULL</code> values with associated 
+    cleanup handlers the result is undefined behavior.</dt>
+  <dt><b>Throws:</b> <code>boost::thread_resource_error</code> if the necessary 
+    resources can not be obtained.</dt>
+  <dt><b>Note:</b> There may be an implementation specific limit to the number 
+    of thread specific storage objects that can be created, and this limit may 
+    be small.</dt>
+  <dt><b>Rationale:</b> There is the occasional need to register specialized cleanup 
+    methods, or to register no cleanup method at all (done by passing <code>NULL</code> 
+    to this constructor.</dt>
 </dl>
 <pre>
 ~thread_specific_ptr();
 </pre>
 <dl class="function-semantics"> 
+  <dt><b>Effects:</b> Deletes the thread-specific data key allocated by the constructor. 
+    The thread-specific data values associated with the key need not be <code>NULL</code>. 
+    It is the responsibility of the application to perform any cleanup actions 
+    for data associated with the key.</dt>
   <dt><b>Note:</b> Does not destroy any data that may be stored in any thread&#39;s 
     thread specific storage. For this reason you should not destroy a <code>thread_specific_ptr</code> 
     object until you are certain there are no threads running that have made use 
     of its thread specific storage.</dt>
+  <dt><b>Rationale:</b> Associated data is not cleaned up because registered cleanup 
+    methods need to be run in the thread that allocated the associated data to 
+    be gauranteed to work correctly. There's no safe way to inject the call into 
+    another thread's execution path, making it impossible to call the cleanup 
+    methods safely.</dt>
 </dl>
 <h4><a name="class-thread_specific_ptr-modifiers"></a>Class <code>thread_specific_ptr</code> 
   modifier functions</h4>
@@ -115,16 +164,17 @@ T* release();
   <dt><b>Postconditions:</b> <code>*this</code> holds the null pointer for the 
     current thread.</dt>
   <dt><b>Returns:</b> <code>this-&gt;get()</code> prior to the call.</dt>
+  <dt><b>Rationale:</b> This method provides a mechanism for the user to relinquish 
+    control of the data associated with the thread-specific key.</dt>
 </dl>
 <pre>
 void reset(T* p=0);
 </pre>
 <dl class="function-semantics"> 
-  <dt><b>Effects:</b> If <code>this-&gt;get()!= p</code> then <code>delete this-&gt;get()</code>. 
-  </dt>
+  <dt><b>Effects:</b> If <code>this-&gt;get()!= p &amp;&amp; p != NULL</code> 
+    then call the associated cleanup function. </dt>
   <dt><b>Postconditions:</b> <code>*this</code> holds the pointer <code> p</code> 
     for the current thread.</dt>
-  <dt><b>Note:</b> The pointer will be deleted when the thread terminates.</dt>
 </dl>
 <h4><a name="class-thread_specific_ptr-observers"></a>Class <code>thread_specific_ptr</code> 
   observer functions</h4>
@@ -140,14 +190,14 @@ T* get() const;
 T* operator-&gt;() const;
 </pre>
 <dl class="function-semantics"> 
-  <dt><b>Returns:</b> <code>this-&lt;get()</code>.</dt>
+  <dt><b>Returns:</b> <code>this-&gt;get()</code>.</dt>
 </dl>
 <pre>
 T& operator*() const;
 </pre>
 <dl class="function-semantics"> 
-  <dt><b>Requires:</b> <code>this-&lt;get() != 0</code></dt>
-  <dt><b>Returns:</b> <code>this-&lt;get()</code>.</dt>
+  <dt><b>Requires:</b> <code>this-&gt;get() != 0</code></dt>
+  <dt><b>Returns:</b> <code>this-&gt;get()</code>.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
 <pre>

@@ -48,7 +48,7 @@ void test_creation()
 		// If creation fails there's little point in continuing...
 		BOOST_CRITICAL_TEST(test_value == 999);
 	}
-	catch (boost::thread_resource_error& err)
+	catch (boost::thread_resource_error&)
 	{
 		BOOST_CRITICAL_ERROR("Caught thread_resource_error");
 	}
@@ -61,10 +61,28 @@ void comparison_thread(boost::thread& parent)
 	BOOST_TEST(thrd == boost::thread());
 }
 
+void cancelation_thread()
+{
+	for (;;)
+	{
+		boost::thread::test_cancel();
+		boost::xtime xt;
+		xtime_get(xt, 1);
+		boost::thread::sleep(xt);
+	}
+}
+
 void test_comparison()
 {
 	boost::thread self;
 	boost::thread thrd(thread_comparison_adapter(&comparison_thread, self));
+	thrd.join();
+}
+
+void test_cancel()
+{
+	boost::thread thrd(&cancelation_thread);
+	thrd.cancel();
 	thrd.join();
 }
 
@@ -75,4 +93,5 @@ void test_thread()
 	test_sleep();
 	test_creation();
 	test_comparison();
+	test_cancel();
 }

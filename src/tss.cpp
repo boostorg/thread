@@ -11,7 +11,9 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <vector>
 #include <stdexcept>
 #include <cassert>
 
@@ -21,56 +23,88 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 #include "threadmon.hpp"
-#include <map>
 namespace {
-    typedef std::pair<void(*)(void*), void*> cleanup_info;
-    typedef std::map<int, cleanup_info> cleanup_handlers;
+	typedef std::vector<std::pair<boost::detail::tss*, int> > key_type;
+	typedef std::vector<void*> slots_type;
 
-    DWORD key;
-    boost::once_flag once = BOOST_ONCE_INIT;
+	DWORD key;
+	boost::once_flag once = BOOST_ONCE_INIT;
+	boost::mutex* pmutex;
+	key_type* pkeys;
+	int next_key;
 
-    void init_cleanup_key()
-    {
-        key = TlsAlloc();
-        assert(key != 0xFFFFFFFF);
-    }
+	void __cdecl cleanup_tss_data();
 
-    void __cdecl cleanup()
-    {
-        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
-        for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
-        {
-            cleanup_info info = it->second;
-            if (info.second)
-                info.first(info.second);
-        }
-        delete handlers;
-    }
+	void init_tss()
+	{
+		static boost::mutex mutex;
+		static key_type keys;
+		pmutex = &mutex;
+		pkeys = &keys;
+		key = TlsAlloc();
+		assert(key != 0xFFFFFFFF);
+		next_key = 0;
+	}
 
-    cleanup_handlers* get_handlers()
-    {
-        boost::call_once(&init_cleanup_key, once);
+	int alloc_key(boost::detail::tss* ptss)
+	{
+		boost::call_once(&init_tss, once);
+		boost::mutex::scoped_lock lock(*pmutex);
+		int key = next_key;
+		if (key >= pkeys->size())
+		{
+			pkeys->resize(key+1);
+			(*pkeys)[key].second = pkeys->size();
+		}
+		next_key = (*pkeys)[key].second;
+		(*pkeys)[key].first = ptss;
+		return key;
+	}
 
-        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
-        if (!handlers)
-        {
-            try
-            {
-                handlers = new cleanup_handlers;
-            }
-            catch (...)
-            {
-                return 0;
-            }
-            int res = 0;
-            res = TlsSetValue(key, handlers);
-            assert(res);
-            res = on_thread_exit(&cleanup);
-            assert(res == 0);
-        }
+	void free_key(int key)
+	{
+		boost::call_once(&init_tss, once);
+		boost::mutex::scoped_lock lock(*pmutex);
+		assert(key >= 0 && key < pkeys->size());
+		(*pkeys)[key].first = 0;
+		(*pkeys)[key].second = next_key;
+		next_key = key;
+	}
 
-        return handlers;
-    }
+	slots_type* get_tss_data()
+	{
+		boost::call_once(&init_tss, once);
+		if (key == 0xFFFFFFFF)
+			return 0;
+		slots_type* pdata = (slots_type*)TlsGetValue(key);
+		if (pdata == 0)
+		{
+			std::auto_ptr<slots_type> slots(new(std::nothrow) slots_type);
+			if (!TlsSetValue(key, slots.get()))
+				return 0;
+			on_thread_exit(&cleanup_tss_data);
+			pdata = slots.release();
+		}
+		return pdata;
+	}
+
+	void __cdecl cleanup_tss_data()
+	{
+		slots_type* pdata = get_tss_data();
+		if (pdata)
+		{
+			boost::mutex::scoped_lock lock(*pmutex);
+			for (int key = 0; key < pdata->size(); ++key)
+			{
+				void* pvalue = (*pdata)[key];
+				boost::detail::tss* ptss = pkeys && key < pkeys->size() ? (*pkeys)[key].first : 0;
+
+				if (ptss && pvalue)
+					ptss->cleanup(pvalue);
+			}
+			delete pdata;
+		}
+	}
 }
 #elif defined(BOOST_HAS_MPTASKS)
 #include <map>
@@ -117,7 +151,6 @@ namespace boost {
 
 namespace detail {
 
-
 void thread_cleanup()
 {
     cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(MPGetTaskStorageValue(key));
@@ -143,39 +176,51 @@ void thread_cleanup()
 namespace boost { namespace detail {
 
 #if defined(BOOST_HAS_WINTHREADS)
-tss::tss(void (*cleanup)(void*))
+tss::tss(boost::function1<void, void*> cleanup)
 {
-    m_key = TlsAlloc();
-    if (m_key == 0xFFFFFFFF)
-        throw thread_resource_error();
-
-    m_cleanup = cleanup;
+	m_key = alloc_key(this);
+	m_clean = cleanup;
 }
 
 tss::~tss()
 {
-    int res = 0;
-    res = TlsFree(m_key);
-    assert(res);
+	free_key(m_key);
 }
 
 void* tss::get() const
 {
-    return TlsGetValue(m_key);
+	slots_type* pdata = get_tss_data();
+	if (pdata)
+	{
+		if (m_key >= pdata->size())
+			return 0;
+		return (*pdata)[m_key];
+	}
+	return 0;
 }
 
-bool tss::set(void* value)
+void tss::set(void* value)
 {
-    if (m_cleanup)
-    {
-        cleanup_handlers* handlers = get_handlers();
-        assert(handlers);
-        if (!handlers)
-            return false;
-        cleanup_info info(m_cleanup, value);
-        (*handlers)[m_key] = info;
-    }
-    return !!TlsSetValue(m_key, value);
+	slots_type* pdata = get_tss_data();
+	if (!pdata)
+		throw thread_resource_error();
+	if (m_key >= pdata->size())
+	{
+		try
+		{
+			pdata->resize(m_key+1);
+		}
+		catch (...)
+		{
+			throw thread_resource_error();
+		}
+	}
+	(*pdata)[m_key] = value;
+}
+
+void tss::cleanup(void* value)
+{
+	m_clean(value);
 }
 #elif defined(BOOST_HAS_PTHREADS)
 tss::tss(void (*cleanup)(void*))
@@ -198,9 +243,12 @@ void* tss::get() const
     return pthread_getspecific(m_key);
 }
 
-bool tss::set(void* value)
+void tss::set(void* value)
 {
-    return pthread_setspecific(m_key, value) == 0;
+	int res = pthread_setspecific(m_key, value) == 0;
+	assert(res == 0 || res = ENOMEM);
+	if (res == ENOMEM)
+		throw thread_resource_error();
 }
 #elif defined(BOOST_HAS_MPTASKS)
 tss::tss(void (*cleanup)(void*))
@@ -224,7 +272,7 @@ void* tss::get() const
     return(reinterpret_cast<void *>(ulValue));
 }
 
-bool tss::set(void* value)
+void tss::set(void* value)
 {
     if (m_cleanup)
     {
@@ -236,7 +284,7 @@ bool tss::set(void* value)
         (*handlers)[m_key] = info;
     }
     OSStatus lStatus = MPSetTaskStorageValue(m_key, reinterpret_cast<TaskStorageValue>(value));
-    return(lStatus == noErr);
+//    return(lStatus == noErr);
 }
 #endif
 
@@ -245,3 +293,5 @@ bool tss::set(void* value)
 
 // Change Log:
 //   6 Jun 01  WEKEMPF Initial version.
+//  30 May 02  WEKEMPF Added interface to set specific cleanup handlers. Removed TLS slot limits
+//                     from most implementations.

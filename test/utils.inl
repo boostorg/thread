@@ -9,14 +9,14 @@ typedef boost::int_fast64_t sec_type;
 #endif
 typedef boost::int_fast32_t nsec_type;
 
-void xtime_get(boost::xtime& xt, sec_type secs, nsec_type nsecs=0)
+static void xtime_get(boost::xtime& xt, sec_type secs, nsec_type nsecs=0)
 {
 	boost::xtime_get(&xt, boost::TIME_UTC);
 	xt.sec += secs;
 	xt.nsec += nsecs;
 }
 
-int xtime_cmp(const boost::xtime& xt1, const boost::xtime& xt2)
+static int xtime_cmp(const boost::xtime& xt1, const boost::xtime& xt2)
 {
 	int cmp = (int)(xt1.sec - xt2.sec);
 	if (cmp == 0)
@@ -24,7 +24,7 @@ int xtime_cmp(const boost::xtime& xt1, const boost::xtime& xt2)
 	return cmp;
 }
 
-bool xtime_in_range(const boost::xtime& xt, sec_type min, sec_type max)
+static bool xtime_in_range(const boost::xtime& xt, sec_type min, sec_type max)
 {
 	boost::xtime xt_min, xt_max;
 	boost::xtime_get(&xt_min, boost::TIME_UTC);

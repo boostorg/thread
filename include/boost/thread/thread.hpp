@@ -34,9 +34,17 @@ namespace boost {
 
 struct xtime;
 
+class thread_cancel
+{
+public:
+	thread_cancel() { }
+};
+
 class thread : private noncopyable
 {
 public:
+	enum category_type { boost, native, adopted };
+
     thread();
     explicit thread(const function0<void>& threadfunc);
     ~thread();
@@ -44,17 +52,15 @@ public:
     bool operator==(const thread& other) const;
     bool operator!=(const thread& other) const;
 
+	category_type category() const;
     void join();
+	void cancel();
 
+	static void test_cancel();
     static void sleep(const xtime& xt);
     static void yield();
 
 private:
-#if defined(BOOST_HAS_MPTASKS)
-    MPQueueID m_pJoinQueueID;
-    MPTaskID m_pTaskID;
-#endif
-    bool m_joinable;
 	void* m_handle;
 };
 
