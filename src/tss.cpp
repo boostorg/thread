@@ -111,7 +111,7 @@ namespace {
 				return 0;
 			on_thread_exit(&tss_thread_exit);
 #elif defined(BOOST_HAS_PTHREADS)
-			if (pthread_setspecific(tss_data->native_key, temp.get()) != 0);
+			if (pthread_setspecific(tss_data->native_key, temp.get()) != 0)
 				return 0;
 #endif
 
