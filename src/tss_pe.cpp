@@ -5,7 +5,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && defined(BOOST_MSVC)
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && defined(_MSC_VER)
 
     #include <boost/thread/detail/tss_hooks.hpp>
 
@@ -16,7 +16,7 @@
 
     //Definitions required by implementation
 
-    #if (BOOST_MSVC < 1310) // 1310 == VC++ 7.1
+    #if (_MSC_VER < 1310) // 1310 == VC++ 7.1
         typedef void (__cdecl *_PVFV)(void);
         #define INIRETSUCCESS
         #define PVAPI void
@@ -48,7 +48,7 @@
         //The .CRT$Xxx information is taken from Codeguru:
         //http://www.codeguru.com/Cpp/misc/misc/threadsprocesses/article.php/c6945__2/
 
-        #if (BOOST_MSVC >= 1310) // 1310 == VC++ 7.1
+        #if (_MSC_VER >= 1310) // 1310 == VC++ 7.1
         #   pragma data_seg(push, old_seg)
         #endif
             //Callback to run tls glue code first.
@@ -78,7 +78,7 @@
             #pragma data_seg(".CRT$XTU")
             static _PVFV p_process_term = on_process_term;
             #pragma data_seg()
-        #if (BOOST_MSVC >= 1310) // 1310 == VC++ 7.1
+        #if (_MSC_VER >= 1310) // 1310 == VC++ 7.1
         #   pragma data_seg(pop, old_seg)
         #endif
 
@@ -94,7 +94,7 @@
 
             DWORD volatile dw = _tls_used;
 
-            #if (BOOST_MSVC < 1310) // 1310 == VC++ 7.1
+            #if (_MSC_VER < 1310) // 1310 == VC++ 7.1
                 _TLSCB* pfbegin = __xl_a;
                 _TLSCB* pfend = __xl_z;
                 _TLSCB* pfdst = pfbegin;
