@@ -41,7 +41,7 @@ void do_test_once()
 
 void test_once()
 {
-	timed_test(&do_test_once, 2);
+    timed_test(&do_test_once, 2);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
