@@ -1,0 +1,35 @@
+#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears
+#  in all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+#
+
+# Declare the location of this subproject relative to the root.
+
+subproject libs/thread/tutorial ;
+
+# Include threads.jam for Boost.Threads global build information.
+# This greatly simplifies the Jam code needed to configure the build
+# for the various Win32 build types.
+SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
+include <module@>threads.jam ;
+
+template tutorial
+    ## sources ##
+    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    ## requirements ##
+    :
+    ## default build ##
+    : release <runtime-link>static
+;
+
+exe helloworld : <template>tutorial helloworld.cpp ;
+exe helloworld2 : <template>tutorial helloworld2.cpp ;
+exe helloworld3 : <template>tutorial helloworld3.cpp ;
+exe helloworld4 : <template>tutorial helloworld4.cpp ;
+exe factorial : <template>tutorial factorial.cpp ;
+exe factorial2 : <template>tutorial factorial2.cpp ;
+exe factorial3 : <template>tutorial factorial3.cpp ;
+exe counter : <template>tutorial counter.cpp ;
+exe bounded_buffer : <template>tutorial bounded_buffer.cpp ;
+exe once : <template>tutorial once.cpp ;
