@@ -56,6 +56,8 @@ static void do_once()
     once_callback* cb = reinterpret_cast<once_callback*>(pthread_getspecific(key));
     (**cb)();
 }
+
+}
 #elif defined(BOOST_HAS_MPTASKS)
 void *remote_call_proxy(void *pData)
 {
