@@ -29,6 +29,7 @@ import testing ;
      template test_lib
          : ## sources ##
              <template>thread_base
+             ../src/tss_null.cpp
              <lib>../build/boost_thread
              <lib>../../test/build/boost_unit_test_framework
              #<lib>../../test/build/boost_test_exec_monitor
@@ -43,6 +44,7 @@ import testing ;
      template test_dll
          : ## sources ##
              <template>thread_base
+             ../src/tss_null.cpp
              <dll>../build/boost_thread
              <lib>../../test/build/boost_unit_test_framework
              #<lib>../../test/build/boost_test_exec_monitor
