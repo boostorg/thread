@@ -120,7 +120,7 @@ bool recursive_try_mutex::do_trylock()
 
     if (res == WAIT_OBJECT_0)
     {
-        if (+++m_count > 1)
+        if (++m_count > 1)
         {
             res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
             assert(res);
@@ -195,7 +195,7 @@ bool recursive_timed_mutex::do_trylock()
 
     if (res == WAIT_OBJECT_0)
     {
-        if (+++m_count > 1)
+        if (++m_count > 1)
         {
             res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
             assert(res);
@@ -216,7 +216,7 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
 
     if (res == WAIT_OBJECT_0)
     {
-        if (+++m_count > 1)
+        if (++m_count > 1)
         {
             res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
             assert(res);
