@@ -55,7 +55,7 @@ public:
 			res = CloseHandle(m_thread);
 			assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-			res = pthread_detach(m_thread, 0);
+			res = pthread_detach(m_thread);
 			assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
 			OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
