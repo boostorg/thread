@@ -146,19 +146,24 @@ states:</p>
 transitions to the blocked state will have to be added to the above table.]</p>
 <p>An address [1.7] shall always point to the same memory byte, regardless of the
 thread or processor dereferencing the address.</p>
-<p>For an object [1.8, 1.9] accessible from two or more threads, the value of the object
-as accessed by threads A and B in the
-following table is only guaranteed to be identical after the thread B sequence
-point [1.9/7] specified in the same row of the following table, and then only if
-the object has not modified by any thread between the execution of the thread A
-and thread B sequence points indicated. If a object is modified by any thread
-between the execution of the indicated sequence points, the value may be
-indeterminate when accessed after the thread B sequence point, even if B's access occurs long
-after object modification. The
+<p>An object [1.8, 1.9] can be accessed from two or more threads if it is of
+static storage duration (static, extern) [3.7.1], or if a pointer or reference to the
+object is explicitly or
+implicitly dereferenced.</p>
+<p>For an object accessible from multiple threads, the value of the object
+accessed from one thread may be indeterminate or different than the value
+accessed from another thread, except as specified in the following
+table.&nbsp;&nbsp; For the same row of the table, the value of an object as if
+accessed by thread A at the indicated sequence point will be determinate and the
+same if accessed at or after the indicated thread B sequence point, unless
+modified by any thread between the time the thread A sequence point is reached
+and thread B sequence point of access. In the table, the
 &quot;sequence point at a call&quot; is the sequence point after the evaluation
 of all function arguments [1.9/17], while the &quot;sequence point after a
 call&quot; is the sequence point after the copying of the returned
-value...&quot; [1.9/17].&nbsp;</p>
+value...&quot; [1.9/17].</p>
+<p>(That isn't right yet.&nbsp; What if some other thread modifies the object
+after the first thread B access, then thread B accesses it again?)</p>
 <table border="1" cellpadding="5">
   <tr>
     <td align="center"><b>Thread A</b></td>
@@ -167,7 +172,8 @@ value...&quot; [1.9/17].&nbsp;</p>
   <tr>
     <td>The sequence point at a call to a library thread-creation
       function.&nbsp;</td>
-    <td>The first sequence point of the initial function in the new thread.</td>
+    <td>The first sequence point of the initial function in the new thread
+      created by the Thread A call.</td>
   </tr>
   <tr>
     <td>The sequence point at a call to a library function which locks a mutex,
@@ -196,6 +202,9 @@ functions [1.9/6] is extended to include threading library functions.</p>
 same thread, behavior is the same as when there is no matching exception handler
 in the program [15.3/9].&nbsp; That is, terminate() is called, and it is implementation defined
 whether or not the stack is unwound.</p>
+<h2><a name="Acknowledgements">Acknowledgements</a></h2>
+<p>This document has been much improved by the incorporation of comments from
+William Kempf.</p>
 <h2><a name="Bibliography">Bibliography</a></h2>
 <p>ISO/IEC 14882:1998(E) Programming Language <a name="C++"> C++</a></p>
 <blockquote>
@@ -208,11 +217,25 @@ POSIX Threads</a>, David R. Butenhof, Addison-Wesley 1997, ISBN 0-201-63392-2</p
 <blockquote>
   <p>This is a superior explanation of threads and how to use them.&nbsp; Many
   of the insights apply to all multi-threaded programming, not just POSIX
-  Threads.&nbsp;</p>
+  Threads.</p>
+</blockquote>
+<p><a href="http://www.acm.org/classics/feb96/&nbsp;">Monitors: An Operating System Structuring Concept</a>,
+C.A.R Hoare, <cite>Communications of the ACM</cite>, Vol. 17, No. 10. October
+1974, pp. 549-557</p>
+<blockquote>
+  <p>Hoare and Brinch Hansen's work on Monitors is the basis for reliable
+  multi-threading patterns.</p>
+</blockquote>
+<p><a href="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html">Strategies for
+Implementing POSIX Condition Variables on Win32</a>, Douglas C. Schmidt and Irfan Pyarali,
+Department of Computer Science, Washington University, St. Louis, Missouri.</p>
+<blockquote>
+  <p>Rationale for understanding Boost.Threads condition variables. Note that Alexander Terekhov found some bugs in
+  the implementation used in this article, so what pthreads-win32 and Boost.Threads use is more complicated yet.</p>
 </blockquote>
 <hr>
 <p>© Copyright Beman Dawes, 2001</p>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->20 Jun 2001<!--webbot bot="Timestamp" endspan i-checksum="15046" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->06 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14992" -->
 </p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
