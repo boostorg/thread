@@ -12,6 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/exceptions.hpp>
+#include <cstring>
 #include <string>
 
 # ifdef BOOST_NO_STDC_NAMESPACE
