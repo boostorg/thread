@@ -12,8 +12,9 @@
 #ifndef BOOST_XTIME_WEK070601_HPP
 #define BOOST_XTIME_WEK070601_HPP
 
-#include <boost/cstdint.hpp>
 #include <boost/config.hpp>
+#include <boost/cstdint.hpp>
+#include <boost/thread/detail/config.hpp>
 
 namespace boost {
 
@@ -39,7 +40,7 @@ struct xtime
     int_fast32_t nsec;
 };
 
-int xtime_get(struct xtime* xtp, int clock_type);
+int BOOST_THREAD_DECL xtime_get(struct xtime* xtp, int clock_type);
 inline int xtime_cmp(const xtime& xt1, const xtime& xt2)
 {
     int res = (int)(xt1.sec - xt2.sec);

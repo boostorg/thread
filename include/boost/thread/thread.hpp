@@ -20,6 +20,7 @@
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/detail/config.hpp>
 #include <list>
 #include <memory>
 
@@ -34,7 +35,7 @@ namespace boost {
 
 struct xtime;
 
-class thread : private noncopyable
+class BOOST_THREAD_DECL thread : private noncopyable
 {
 public:
     thread();
@@ -63,7 +64,7 @@ private:
     bool m_joinable;
 };
 
-class thread_group : private noncopyable
+class BOOST_THREAD_DECL thread_group : private noncopyable
 {
 public:
     thread_group();

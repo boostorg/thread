@@ -1,7 +1,8 @@
-#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell and
-#  distribute this software is granted provided this copyright notice appears
-#  in all copies. This software is provided "as is" without express or implied
-#  warranty, and with no claim as to its suitability for any purpose.
+#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify,
+#  sell and distribute this software is granted provided this copyright
+#  notice appears in all copies. This software is provided "as is" without
+#  express or implied warranty, and with no claim as to its suitability for
+#  any purpose.
 #
 # Boost.Threads build Jamfile
 #
@@ -40,21 +41,27 @@ template thread_libs
     : debug release <runtime-link>static/dynamic
 ;
 
-#######################
-# Conditionally declare the Boost.Threads dynamic link library boost_threadmon.
-
-if $(NT) && ! $(PTW32)
-{
-    dll boost_threadmon : <template>thread_libs ../src/threadmon.cpp ;
-}
 
 #######################
 # Declare the Boost.Threads static link library libboost_thread.
 
 # Base names of the source files for libboost_thread.
-CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once exceptions ;
+CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
+              exceptions threadmon ;
 
-lib boost_thread : <template>thread_libs ../src/$(CPP_SOURCES).cpp ;
+#if $(NT) && ! $(PTW32)
+#{
+    dll boost_thread
+        : <template>thread_libs ../src/$(CPP_SOURCES).cpp
+        : <define>BOOST_THREAD_BUILD_DLL=1
+    ;
+#}
+#else
+#{
+#    lib boost_thread
+#        : <template>thread_libs ../src/$(CPP_SOURCES).cpp
+#    ;
+#}
 
 #######################
 # Stage the generated targets.

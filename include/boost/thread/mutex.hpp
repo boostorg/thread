@@ -19,6 +19,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -32,7 +33,7 @@ namespace boost {
 
 struct xtime;
 
-class mutex : private noncopyable
+class BOOST_THREAD_DECL mutex : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<mutex>;
@@ -70,7 +71,7 @@ private:
 #endif
 };
 
-class try_mutex : private noncopyable
+class BOOST_THREAD_DECL try_mutex : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<try_mutex>;
@@ -110,7 +111,7 @@ private:
 #endif
 };
 
-class timed_mutex : private noncopyable
+class BOOST_THREAD_DECL timed_mutex : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<timed_mutex>;
@@ -160,5 +161,6 @@ private:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.  Factored out
 //                      to three classes, mutex, try_mutex and timed_mutex.
+//    3 Jan 03  WEKEMPF Modified for DLL implementation.
 
 #endif // BOOST_MUTEX_WEK070601_HPP

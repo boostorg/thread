@@ -18,6 +18,7 @@
 #endif
 
 #include <boost/utility.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -28,7 +29,7 @@
 namespace boost {
 
     namespace detail {
-        class tss : private noncopyable
+        class BOOST_THREAD_DECL tss : private noncopyable
         {
         public:
             tss(void (*cleanup)(void*)=0);

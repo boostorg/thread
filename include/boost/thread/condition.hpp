@@ -20,6 +20,7 @@
 #include <boost/thread/exceptions.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -31,14 +32,60 @@ namespace boost {
 
 struct xtime;
 
-class condition : private noncopyable
+namespace detail {
+
+class BOOST_THREAD_DECL condition_impl : private noncopyable
 {
+    friend class condition;
+
 public:
-    condition();
-    ~condition();
+    condition_impl();
+    ~condition_impl();
 
     void notify_one();
     void notify_all();
+
+#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
+    void enter_wait();
+    void do_wait();
+    bool do_timed_wait(const xtime& xt);
+#elif defined(BOOST_HAS_PTHREADS)
+    void do_wait(pthread_mutex_t* pmutex);
+    bool do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex);
+#endif
+
+#if defined(BOOST_HAS_WINTHREADS)
+    void* m_gate;
+    void* m_queue;
+    void* m_mutex;
+    unsigned m_gone;  // # threads that timed out and never made it to m_queue
+    unsigned long m_blocked; // # threads blocked on the condition
+    unsigned m_waiting; // # threads no longer waiting for the condition but
+                        // still waiting to be removed from m_queue
+#elif defined(BOOST_HAS_PTHREADS)
+    pthread_cond_t m_condition;
+#elif defined(BOOST_HAS_MPTASKS)
+    MPSemaphoreID m_gate;
+    MPSemaphoreID m_queue;
+    threads::mac::detail::scoped_critical_region m_mutex;
+    threads::mac::detail::scoped_critical_region m_mutex_mutex;
+    unsigned m_gone; // # threads that timed out and never made it to m_queue
+    unsigned long m_blocked; // # threads blocked on the condition
+    unsigned m_waiting; // # threads no longer waiting for the condition but
+                        // still waiting to be removed from m_queue
+#endif
+};
+
+} // namespace detail
+
+class condition : private noncopyable
+{
+public:
+    condition() { }
+    ~condition() { }
+
+    void notify_one() { m_impl.notify_one(); }
+    void notify_all() { m_impl.notify_all(); }
 
     template <typename L>
     void wait(L& lock)
@@ -84,11 +131,13 @@ public:
     }
 
 private:
+    detail::condition_impl m_impl;
+
     template <typename M>
     void do_wait(M& mutex)
     {
 #if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
-        enter_wait();
+        m_impl.enter_wait();
 #endif
 
         typedef detail::thread::lock_ops<M>
@@ -101,9 +150,9 @@ private:
         lock_ops::unlock(mutex, state);
 
 #if defined(BOOST_HAS_PTHREADS)
-        do_wait(state.pmutex);
+        m_impl.do_wait(state.pmutex);
 #elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
-        do_wait();
+        m_impl.do_wait();
 #endif
 
         lock_ops::lock(mutex, state);
@@ -114,7 +163,7 @@ private:
     bool do_timed_wait(M& mutex, const xtime& xt)
     {
 #if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
-        enter_wait();
+        m_impl.enter_wait();
 #endif
 
         typedef detail::thread::lock_ops<M>
@@ -129,9 +178,9 @@ private:
         bool ret = false;
 
 #if defined(BOOST_HAS_PTHREADS)
-        ret = do_timed_wait(xt, state.pmutex);
+        ret = m_impl.do_timed_wait(xt, state.pmutex);
 #elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
-        ret = do_timed_wait(xt);
+        ret = m_impl.do_timed_wait(xt);
 #endif
 
         lock_ops::lock(mutex, state);
@@ -139,36 +188,6 @@ private:
 
         return ret;
     }
-
-#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
-    void enter_wait();
-    void do_wait();
-    bool do_timed_wait(const xtime& xt);
-#elif defined(BOOST_HAS_PTHREADS)
-    void do_wait(pthread_mutex_t* pmutex);
-    bool do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex);
-#endif
-
-#if defined(BOOST_HAS_WINTHREADS)
-    void* m_gate;
-    void* m_queue;
-    void* m_mutex;
-    unsigned m_gone; // # threads that timed out and never made it to the m_queue
-    unsigned long m_blocked; // # threads m_blocked m_waiting for the condition
-    unsigned m_waiting; // # threads m_waiting no longer m_waiting for the condition but still
-                      //   m_waiting to be removed from the m_queue
-#elif defined(BOOST_HAS_PTHREADS)
-    pthread_cond_t m_condition;
-#elif defined(BOOST_HAS_MPTASKS)
-    MPSemaphoreID m_gate;
-    MPSemaphoreID m_queue;
-    threads::mac::detail::scoped_critical_region m_mutex;
-    threads::mac::detail::scoped_critical_region m_mutex_mutex;
-    unsigned m_gone; // # threads that timed out and never made it to the m_queue
-    unsigned long m_blocked; // # threads m_blocked m_waiting for the condition
-    unsigned m_waiting; // # threads m_waiting no longer m_waiting for the condition but still
-                      //   m_waiting to be removed from the m_queue
-#endif
 };
 
 } // namespace boost
@@ -176,7 +195,8 @@ private:
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
-//   23 May 01  WEKEMPF Removed "duration" timed_waits, as they are too difficult
-//                      to use with spurious wakeups.
+//   23 May 01  WEKEMPF Removed "duration" timed_waits, as they are too
+//                      difficult to use with spurious wakeups.
+//    3 Jan 03  WEKEMPF Modified for DLL implementation.
 
 #endif // BOOST_CONDITION_WEK070601_HPP

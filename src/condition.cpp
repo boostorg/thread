@@ -32,12 +32,15 @@
 
 namespace boost {
 
+namespace detail {
+
 #if defined(BOOST_HAS_WINTHREADS)
-condition::condition()
+condition_impl::condition_impl()
     : m_gone(0), m_blocked(0), m_waiting(0)
 {
     m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
-    m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
+    m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0,
+        std::numeric_limits<long>::max(), 0));
     m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
 
     if (!m_gate || !m_queue || !m_mutex)
@@ -63,7 +66,7 @@ condition::condition()
     }
 }
 
-condition::~condition()
+condition_impl::~condition_impl()
 {
     int res = 0;
     res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
@@ -74,7 +77,7 @@ condition::~condition()
     assert(res);
 }
 
-void condition::notify_one()
+void condition_impl::notify_one()
 {
     unsigned signals = 0;
 
@@ -126,7 +129,7 @@ void condition::notify_one()
     }
 }
 
-void condition::notify_all()
+void condition_impl::notify_all()
 {
     unsigned signals = 0;
 
@@ -177,7 +180,7 @@ void condition::notify_all()
     }
 }
 
-void condition::enter_wait()
+void condition_impl::enter_wait()
 {
     int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
@@ -187,7 +190,7 @@ void condition::enter_wait()
     assert(res);
 }
 
-void condition::do_wait()
+void condition_impl::do_wait()
 {
     int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
@@ -206,7 +209,8 @@ void condition::do_wait()
         {
             if (m_blocked != 0)
             {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
+                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1,
+                    0); // open m_gate
                 assert(res);
                 was_waiting = 0;
             }
@@ -234,7 +238,8 @@ void condition::do_wait()
         for (/**/ ; was_gone; --was_gone)
         {
             // better now than spurious later
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
+                INFINITE);
             assert(res == WAIT_OBJECT_0);
         }
         res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
@@ -242,7 +247,7 @@ void condition::do_wait()
     }
 }
 
-bool condition::do_timed_wait(const xtime& xt)
+bool condition_impl::do_timed_wait(const xtime& xt)
 {
     bool ret = false;
     unsigned int res = 0;
@@ -252,7 +257,8 @@ bool condition::do_timed_wait(const xtime& xt)
         int milliseconds;
         to_duration(xt, milliseconds);
 
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
+            milliseconds);
         assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
         ret = (res == WAIT_OBJECT_0);
 
@@ -287,7 +293,8 @@ bool condition::do_timed_wait(const xtime& xt)
         {
             if (m_blocked != 0)
             {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
+                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1,
+                    0); // open m_gate
                 assert(res);
                 was_waiting = 0;
             }
@@ -315,7 +322,8 @@ bool condition::do_timed_wait(const xtime& xt)
         for (/**/ ; was_gone; --was_gone)
         {
             // better now than spurious later
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue),
+                INFINITE);
             assert(res ==  WAIT_OBJECT_0);
         }
         res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
@@ -325,7 +333,7 @@ bool condition::do_timed_wait(const xtime& xt)
     return ret;
 }
 #elif defined(BOOST_HAS_PTHREADS)
-condition::condition()
+condition_impl::condition_impl()
 {
     int res = 0;
     res = pthread_cond_init(&m_condition, 0);
@@ -333,35 +341,35 @@ condition::condition()
         throw thread_resource_error();
 }
 
-condition::~condition()
+condition_impl::~condition_impl()
 {
     int res = 0;
     res = pthread_cond_destroy(&m_condition);
     assert(res == 0);
 }
 
-void condition::notify_one()
+void condition_impl::notify_one()
 {
     int res = 0;
     res = pthread_cond_signal(&m_condition);
     assert(res == 0);
 }
 
-void condition::notify_all()
+void condition_impl::notify_all()
 {
     int res = 0;
     res = pthread_cond_broadcast(&m_condition);
     assert(res == 0);
 }
 
-void condition::do_wait(pthread_mutex_t* pmutex)
+void condition_impl::do_wait(pthread_mutex_t* pmutex)
 {
     int res = 0;
     res = pthread_cond_wait(&m_condition, pmutex);
     assert(res == 0);
 }
 
-bool condition::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
+bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 {
     timespec ts;
     to_timespec(xt, ts);
@@ -377,7 +385,7 @@ bool condition::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 using threads::mac::detail::safe_enter_critical_region;
 using threads::mac::detail::safe_wait_on_semaphore;
 
-condition::condition()
+condition_impl::condition_impl()
     : m_gone(0), m_blocked(0), m_waiting(0)
 {
     threads::mac::detail::thread_init();
@@ -405,7 +413,7 @@ condition::condition()
     }
 }
 
-condition::~condition()
+condition_impl::~condition_impl()
 {
     OSStatus lStatus = noErr;
     lStatus = MPDeleteSemaphore(m_gate);
@@ -414,7 +422,7 @@ condition::~condition()
     assert(lStatus == noErr);
 }
 
-void condition::notify_one()
+void condition_impl::notify_one()
 {
     unsigned signals = 0;
 
@@ -466,7 +474,7 @@ void condition::notify_one()
     }
 }
 
-void condition::notify_all()
+void condition_impl::notify_all()
 {
     unsigned signals = 0;
 
@@ -518,7 +526,7 @@ void condition::notify_all()
     }
 }
 
-void condition::enter_wait()
+void condition_impl::enter_wait()
 {
     OSStatus lStatus = noErr;
     lStatus = safe_wait_on_semaphore(m_gate, kDurationForever);
@@ -528,7 +536,7 @@ void condition::enter_wait()
     assert(lStatus == noErr);
 }
 
-void condition::do_wait()
+void condition_impl::do_wait()
 {
     OSStatus lStatus = noErr;
     lStatus = safe_wait_on_semaphore(m_queue, kDurationForever);
@@ -583,7 +591,7 @@ void condition::do_wait()
     }
 }
 
-bool condition::do_timed_wait(const xtime& xt)
+bool condition_impl::do_timed_wait(const xtime& xt)
 {
     int milliseconds;
     to_duration(xt, milliseconds);
@@ -653,8 +661,11 @@ bool condition::do_timed_wait(const xtime& xt)
 }
 #endif
 
+} // namespace detail
+
 } // namespace boost
 
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
+//    3 Jan 03  WEKEMPF Modified for DLL implementation.
