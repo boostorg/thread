@@ -5,7 +5,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS)
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && !defined(BOOST_MSVC)
 
     /*
     This file is a "null" implementation of tss cleanup; it's
@@ -30,4 +30,4 @@
         */
     }
 
-#endif //defined(BOOST_HAS_WINTHREADS)
+#endif //defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && !defined(BOOST_MSVC)
