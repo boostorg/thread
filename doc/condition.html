@@ -1,72 +1,80 @@
 <html>
+    <head>
+        <meta http-equiv="Content-Type" content=
+        "text/html; charset=iso-8859-1">
+        <meta name="keywords" content="threads, BTL, thread library, C++">
+        <link rel="stylesheet" type="text/css" href="styles.css">
 
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, BTL, thread library, C++">
-<link rel="stylesheet" type="text/css" href="styles.css">
-<title>Boost.Threads, condition</title>
-</head>
+        <title>Boost.Threads, condition</title>
+    </head>
 
-<body bgcolor="#ffffff" link="#0000ff" vlink="#800080" text="#000000">
+    <body bgcolor="#ffffff" link="#0000ff" vlink="#800080" text="#000000">
+        <table summary="header" border="0" cellpadding="7" cellspacing="0"
+        width="100%">
+            <tr>
+                <td valign="top" width="300">
+                    <h3><img height="86" alt="C++ Boost" src=
+                    "../../../c++boost.gif" width="277"></h3>
+                </td>
 
-<table border="0" cellpadding="7" cellspacing="0" width="100%">
-    <tr>
-        <td valign="top" width="300">
-			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
-        </td>
-        <td valign="top">
-			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">condition</h2>
-        </td>
-    </tr>
-</table>
+                <td valign="top">
+                    <h1 align="center">Boost.Threads</h1>
 
-<hr>
+                    <h2 align="center">condition</h2>
+                </td>
+            </tr>
+        </table>
+        <hr>
 
-<p><A href="#Introduction">Introduction</a><br>
-<A href="#Header">Header</a><br>
-<A href="#Synopsis">Synopsis</a><br>
-<A href="#Members">Members</a><br>
-<A href="#Example">Example</a></p>
+        <p><a href="#Introduction">Introduction</a><br>
+         <a href="#Header">Header</a><br>
+         <a href="#Synopsis">Synopsis</a><br>
+         <a href="#Members">Members</a><br>
+         <a href="#Example">Example</a></p>
 
-<h2><a name="Introduction">Introduction</a></h2>
+        <h2><a name="Introduction">Introduction</a></h2>
 
-<p>An object of class <code>condition</code> is a synchronization primitive used to
-cause a thread to wait until a particular shared-data condition (or time) is met.
-A <code>condition</code>  object is always used in conjunction with a mutex
-object modeling a <a href="mutex_concept.html">Mutex Concept</a>. The mutex must be locked prior to waiting on the
-<code>condition</code>, which is ensured by passing a lock object modeling a <a href="lock_concept.html">Lock
-Concept</a> to the <code>condition</code> object's <code>wait</code> functions. While the thread is waiting on the <code>condition</code>
-object,
-the mutex associated with the lock is unlocked.  When the thread returns
-from a call to one of the <code>condition</code> object's <code>wait</code> functions,
-the mutex is again locked. The tricky lock/unlock/lock sequence is performed
-automatically by the <code>condition</code> object's <code>wait</code> 
-functions.</p>
+        <p>An object of class <code>condition</code> is a synchronization
+        primitive used to cause a thread to wait until a particular shared-data
+        condition (or time) is met. A <code>condition</code> object is always
+        used in conjunction with a mutex object modeling a <a href=
+        "mutex_concept.html">Mutex Concept</a>. The mutex must be locked prior
+        to waiting on the <code>condition</code>, which is ensured by passing a
+        lock object modeling a <a href="lock_concept.html">Lock Concept</a> to
+        the <code>condition</code> object&#39;s <code>wait</code> functions.
+        While the thread is waiting on the <code>condition</code> object, the
+        mutex associated with the lock is unlocked. When the thread returns
+        from a call to one of the <code>condition</code> object&#39;s <code>
+        wait</code> functions, the mutex is again locked. The tricky
+        lock/unlock/lock sequence is performed automatically by the <code>
+        condition</code> object&#39;s <code>wait</code> functions.</p>
 
-<p>The <code>condition</code> type is often used to implement the <i>Monitor Object</i>
-and other important patterns. See <A href="bibliography.html#Schmidt-00">[Schmidt-00]</a>
-and <A href="bibliography.html#Hoare-74">[Hoare 74]</a>. Monitors are one of the most
-important patterns for creating reliable multithreaded programs.</p>
+        <p>The <code>condition</code> type is often used to implement the <i>
+        Monitor Object</i> and other important patterns. See <a href=
+        "bibliography.html#Schmidt-00">[Schmidt-00]</a> and <a href=
+        "bibliography.html#Hoare-74">[Hoare 74]</a>. Monitors are one of the
+        most important patterns for creating reliable multithreaded
+        programs.</p>
 
-<p>See <A href="definitions.html">Formal Definitions</a> for definitions of thread
-states <A href="definitions.html#state">blocked</a> and
-<A href="definitions.html#state">ready</a>. Note that "waiting" is a synonym
-for blocked.</p>
+        <p>See <a href="definitions.html">Formal Definitions</a> for
+        definitions of thread states <a href="definitions.html#state">
+        blocked</a> and <a href="definitions.html#state">ready</a>. Note that
+        &quot;waiting&quot; is a synonym for blocked.</p>
 
-<h2><a name="Header">Header</a></h2>
-
+        <h2><a name="Header">Header</a></h2>
 <pre>
-#include <A href="../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
 </pre>
 
-<h2><a name="Synopsis">Synopsis</a></h2>
-
+        <h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
 namespace boost { 
 
-class condition : private <A href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
-   // Class condition meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+class condition : private <a href=
+"../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+   // Class condition meets the <a href=
+"overview.html#NonCopyable">NonCopyable</a> requirement.
 {
 public:
    condition();
@@ -76,171 +84,170 @@ public:
    void notify_all();
    template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
       void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock);
-   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
-      void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <a
+href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
+      void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, <a href=
+"http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
    template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
-      bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt);
-   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
-      bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
+      bool timed_wait(<a href=
+"scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <a
+href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</a>&gt;
+      bool timed_wait(<a href=
+"scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt, <a href=
+"http://www.sgi.com/tech/stl/Predicate.html">Predicate</a> pred);
 };
 
 } // namespace boost
 </pre>
 
-<h2><a name="Members">Members</a></h2>
+        <h2><a name="Members">Members</a></h2>
+        <hr>
 
-<hr>
-
-<h3>Constructor</h3>
-
+        <h3>Constructor</h3>
 <pre>
 condition();
 </pre>
 
-<p><b>Effects:</b> Constructs a <code>condition</code>.</p>
+        <p><b>Effects:</b> Constructs a <code>condition</code>.</p>
+        <hr>
 
-<hr>
-
-<h3>Destructor</h3>
-
+        <h3>Destructor</h3>
 <pre>
 ~condition();
 </pre>
 
-<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+        <p><b>Effects:</b> Destroys <code>*this</code>.</p>
+        <hr>
 
-<hr>
-
-<h3>notify_one</h3>
-
+        <h3>notify_one</h3>
 <pre>
 void notify_one();
 </pre>
 
-<p><b>Effects:</b> If there is a thread waiting on <code>*this</code>, change
-that thread's state to ready. Otherwise there is no effect.</p>
+        <p><b>Effects:</b> If there is a thread waiting on <code>*this</code>,
+        change that thread&#39;s state to ready. Otherwise there is no
+        effect.</p>
 
-<p><b>Notes:</b> If more that one thread is waiting on the condition, it is
-unspecified which is made ready.</p>
+        <p><b>Notes:</b> If more that one thread is waiting on the condition,
+        it is unspecified which is made ready.</p>
+        <hr>
 
-<hr>
-
-<h3>notify_all</h3>
-
+        <h3>notify_all</h3>
 <pre>
 void notify_all();
 </pre>
 
-<p><b>Effects:</b> Change the state of all threads waiting on <code>*this</code>
-to ready. If there are no waiting threads, <code>notify_all()</code> has no effect.</p>
+        <p><b>Effects:</b> Change the state of all threads waiting on <code>
+        *this</code> to ready. If there are no waiting threads, <code>
+        notify_all()</code> has no effect.</p>
+        <hr>
 
-<hr>
-
-<h3>wait</h3>
-
+        <h3>wait</h3>
 <pre>
 template &lt;typename ScopedLock&gt;
    void wait(ScopedLock&amp; lock);
 </pre>
 
-<p><b>Requires:</b> ScopedLock meets the
-<A href="lock_concept.html#ScopedLock">ScopedLock</a> requirements.</p>
+        <p><b>Requires:</b> ScopedLock meets the <a href=
+        "lock_concept.html#ScopedLock">ScopedLock</a> requirements.</p>
 
-<p><b>Effects:</b> Releases the lock on the <A href="mutex_concept.html">mutex model</a>
-associated with <code>lock</code>, blocks the current thread of execution until readied
-by a call to <code>this-&gt;notify_one()</code> or <code>this-&gt;notify_all()</code>,
-and then reacquires the lock. All effects occur in an atomic fashion.</p>
+        <p><b>Effects:</b> Releases the lock on the <a href=
+        "mutex_concept.html">mutex model</a> associated with <code>lock</code>,
+        blocks the current thread of execution until readied by a call to
+        <code>this-&gt;notify_one()</code> or <code>
+        this-&gt;notify_all()</code>, and then reacquires the lock. All effects
+        occur in an atomic fashion.</p>
 
-<p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code>
-if <code>!lock.locked()</code></p>
+        <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code>
+        if <code>!lock.locked()</code></p>
 
-<p><b>Danger:</b> This version should always be used within a loop checking that the
-state logically associated with the <code>condition</code> has become true.  Without
-the loop, race conditions can ensue due to possible "spurious wake ups".  The second
-version encapsulates this loop idiom internally and is generally the preferred method.</p>
-
+        <p><b>Danger:</b> This version should always be used within a loop
+        checking that the state logically associated with the <code>
+        condition</code> has become true. Without the loop, race conditions can
+        ensue due to possible &quot;spurious wake ups&quot;. The second version
+        encapsulates this loop idiom internally and is generally the preferred
+        method.</p>
 <pre>
 template &lt;typename ScopedLock, typename Pr&gt;
    void wait(ScopedLock&amp; lock, Pr pred);
 </pre>
 
-<p><b>Requires:</b>  ScopedLock meets the
-<A href="lock_concept.html#ScopedLock">ScopedLock</a> requirements, return from
-<code>pred()</code> convertible to bool.</p>
+        <p><b>Requires:</b> ScopedLock meets the <a href=
+        "lock_concept.html#ScopedLock">ScopedLock</a> requirements, return from
+        <code>pred()</code> convertible to bool.</p>
 
-<p><b>Effects:</b> As if:</p>
+        <p><b>Effects:</b> As if:</p>
+        <code>&nbsp;&nbsp;&nbsp;while (!pred()) wait(lock)</code> 
 
-<code>
-&nbsp;&nbsp;&nbsp;while (!pred()) wait(lock)
-</code>
+        <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code>
+        if <code>!lock.locked()</code></p>
+        <hr>
 
-<p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code> if
-<code>!lock.locked()</code></p>
-
-<hr>
-
-<h3>timed_wait</h3>
-
+        <h3>timed_wait</h3>
 <pre>
 template &lt;typename ScopedTimedLock&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; xt);
+   bool timed_wait(ScopedTimedLock&amp; lock, const <a href=
+"xtime.html">xtime</a>&amp; xt);
 </pre>
 
-<p><b>Requires:</b> ScopedTimeLock meets the
-<A href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements.</p>
+        <p><b>Requires:</b> ScopedTimeLock meets the <a href=
+        "lock_concept.html#ScopedTimedLock">ScopedTimedLock</a>
+        requirements.</p>
 
-<p><b>Effects:</b> Releases the lock on the <A href="mutex_concept.html">mutex model</a>
-associated with the <code>lock</code>, blocks the current thread of execution until
-readied by a call to <code>this-&gt;notify_one()</code> or
-<code>this-&gt;notify_all()</code>, or until <code>xt</code>, and then reacquires the
-lock. All effects occur in an atomic fashion.</p>
+        <p><b>Effects:</b> Releases the lock on the <a href=
+        "mutex_concept.html">mutex model</a> associated with the <code>
+        lock</code>, blocks the current thread of execution until readied by a
+        call to <code>this-&gt;notify_one()</code> or <code>
+        this-&gt;notify_all()</code>, or until <code>xt</code>, and then
+        reacquires the lock. All effects occur in an atomic fashion.</p>
 
-<p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code> if
-<code>!lock.locked()</code></p>
+        <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code>
+        if <code>!lock.locked()</code></p>
 
-<p><b>Danger:</b> This version should always be used within a loop checking that the
-state logically associated with the <code>condition</code> has become true.  Without
-the loop, race conditions can ensue due to "spurious wake ups".  The second version
-encapsulates this loop idiom internally and is generally the preferred method.</p>
+        <p><b>Danger:</b> This version should always be used within a loop
+        checking that the state logically associated with the <code>
+        condition</code> has become true. Without the loop, race conditions can
+        ensue due to &quot;spurious wake ups&quot;. The second version
+        encapsulates this loop idiom internally and is generally the preferred
+        method.</p>
 
-<p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached, otherwise
-<code>true</code>.</p>
-
+        <p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached,
+        otherwise <code>true</code>.</p>
 <pre>
 template &lt;typename ScopedTimedLock, typename Pr&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; xt, Pr pred);
+   bool timed_wait(ScopedTimedLock&amp; lock, const <a href=
+"xtime.html">xtime</a>&amp; xt, Pr pred);
 </pre>
 
-<p><b>Requires: </b>ScopedTimeLock meets the
-<A href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements,
-return from <code>pred()</code> convertible to bool.</p>
+        <p><b>Requires:</b> ScopedTimeLock meets the <a href=
+        "lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements,
+        return from <code>pred()</code> convertible to bool.</p>
 
-<p><b>Effects: </b>As if:</p>
+        <p><b>Effects:</b> As if:</p>
+        <code>&nbsp;&nbsp;&nbsp;while (!pred())<br>
+         &nbsp;&nbsp;&nbsp;{<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!timed_wait(lock, xt))<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return
+        false;<br>
+         &nbsp;&nbsp;&nbsp;}</code> 
 
-<code>
-&nbsp;&nbsp;&nbsp;while (!pred())<br>
-&nbsp;&nbsp;&nbsp;{<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;if (!timed_wait(lock, xt))<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return false;<br>
-&nbsp;&nbsp;&nbsp;}
-</code>
+        <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code>
+        if <code>!lock.locked()</code></p>
 
-<p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code> if
-<code>!lock.locked()</code></p>
+        <p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached,
+        otherwise <code>true</code>.</p>
+        <hr>
 
-<p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached, otherwise
-<code>true</code>.</p>
-
-<hr>
-
-<h2><a name="Example">Example Usage</a></h2>
-
+        <h2><a name="Example">Example Usage</a></h2>
 <pre>
 #include &lt;iostream&gt;
 #include &lt;vector&gt;
-#include <A href="../../../boost/utility.hpp">&lt;boost/utility.hpp&gt;</a>
-#include <A href="../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
-#include <A href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href="../../../boost/utility.hpp">&lt;boost/utility.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 
 class bounded_buffer : private boost::noncopyable
 {
@@ -306,8 +313,7 @@ int main(int, char*[])
 }
 </pre>
 
-<p>Typical output (dependent on scheduling policies) is:</p>
-
+        <p>Typical output (dependent on scheduling policies) is:</p>
 <pre>
 sent: 0
 sent: 1
@@ -320,14 +326,15 @@ received: 3
 sent: 4
 received: 4
 </pre>
+        <hr>
 
-<hr>
+        <p>Revised 
+        <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01
+        October, 2001 
+        <!--webbot bot="Timestamp" endspan i-checksum="38291" --></p>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 October, 2001<!--webbot bot="Timestamp" endspan i-checksum="38291" -->
-</p>
-
-<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
-2001 all rights reserved.</i></p>
-
-</body>
+        <p><i>&copy; Copyright <a href="mailto:williamkempf@hotmail.com">
+        William E. Kempf</a> 2001 all rights reserved.</i></p>
+    </body>
 </html>
+

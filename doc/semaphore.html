@@ -1,86 +1,110 @@
 <html>
+    <head>
+        <meta http-equiv="Content-Type" content=
+        "text/html; charset=iso-8859-1">
+        <meta name="keywords" content="threads, BTL, thread library, C++">
+        <link rel="stylesheet" type="text/css" href="styles.css">
 
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, BTL, thread library, C++">
-<link rel="stylesheet" type="text/css" href="styles.css">
-<title>Boost.Threads, semaphore</title>
-</head>
+        <title>Boost.Threads, semaphore</title>
+    </head>
 
-<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+    <body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+        <table summary="header" border="0" cellpadding="7" cellspacing="0"
+        width="100%">
+            <tr>
+                <td valign="top" width="300">
+                    <h3><img height="86" alt="C++ Boost" src=
+                    "../../../c++boost.gif" width="277"></h3>
+                </td>
 
-<table border="0" cellpadding="7" cellspacing="0" width="100%">
-    <tr>
-        <td valign="top" width="300">
-			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
-        </td>
-        <td valign="top">
-			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">semaphore</h2>
-        </td>
-    </tr>
-</table>
+                <td valign="top">
+                    <h1 align="center">Boost.Threads</h1>
 
-<hr>
+                    <h2 align="center">semaphore</h2>
+                </td>
+            </tr>
+        </table>
+        <hr>
 
-<p><a href="#Introduction">Introduction</a><br>
-<a href="#Header">Header</a><br>
-<a href="#Synopsis">Synopsis</a><br>
-<a href="#Members">Members</a><br>
-<a href="#Example">Example</a></p>
+        <p><a href="#Introduction">Introduction</a><br>
+         <a href="#Header">Header</a><br>
+         <a href="#Synopsis">Synopsis</a><br>
+         <a href="#Members">Members</a><br>
+         <a href="#Example">Example</a></p>
 
-<h2><a name="Introduction">Introduction</a></h2>
+        <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <tt>semaphore</tt> class defines a classic synchronization primitive invented by the
-Dutch computer scientist Edsger W. Dijkstra.  A semaphore manages an internal counter.  This
-counter never goes below zero, or above a specified maximum value.  When calling
-<tt>semaphore::down</tt> the calling thread will block until the value is non-zero and then
-decrement the value in a single atomic operation.  When calling <tt>semaphore::up</tt> the
-calling thread will increment the value in a single atomic operation, failing if the value has
-already reached the specified maximum.</p>
+        <p>The <tt>semaphore</tt> class defines a classic synchronization
+        primitive invented by the Dutch computer scientist Edsger W. Dijkstra.
+        A semaphore manages an internal counter. This counter never goes below
+        zero, or above a specified maximum value. When calling <tt>
+        semaphore::down</tt> the calling thread will block until the value is
+        non-zero and then decrement the value in a single atomic operation.
+        When calling <tt>semaphore::up</tt> the calling thread will increment
+        the value in a single atomic operation, failing if the value has
+        already reached the specified maximum.</p>
 
-<p><b>Rationale:</b> The semaphore is the simplest synchronization primitive available and is generally the
-primitive used to build other synchronization concepts at some level of implementation. For this
-reason <b>Boost.Threads</b> defines the <tt>semaphore</tt> type in the classic form.  This simplifies
-usage and implementation, but it means that the interface is not as safe as other <b>Boost.Threads</b>
-interfaces.</p>
+        <p><b>Rationale:</b> The semaphore is the simplest synchronization
+        primitive available and is generally the primitive used to build other
+        synchronization concepts at some level of implementation. For this
+        reason <b>Boost.Threads</b> defines the <tt>semaphore</tt> type in the
+        classic form. This simplifies usage and implementation, but it means
+        that the interface is not as safe as other <b>Boost.Threads</b>
+        interfaces.</p>
 
-<p><b><a name="Danger">Danger</a>:</b> Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads,</b>
-there is no <A href="lock_concept.html">lock_concept</a> for the semaphore to help ensure proper
-usage. Great care must be taken when using a <tt>semaphore</tt> object to ensure
-<a href="definitions.html#Deadlock"> deadlock</a> or <a href="definitions.html#Race condition">race conditions</a> do not occur.&nbsp;</p>
+        <p><b><a name="Danger">Danger</a>:</b> Unlike the <a href=
+        "mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads,</b>
+        there is no <a href="lock_concept.html">lock_concept</a> for the
+        semaphore to help ensure proper usage. Great care must be taken when
+        using a <tt>semaphore</tt> object to ensure <a href=
+        "definitions.html#Deadlock">deadlock</a> or <a href=
+        "definitions.html#Race condition">race conditions</a> do not occur.</p>
 
-<p>The dangers are spelled out by <a href="bibliography.html#Andrews-83">[Andrews-83]</a>
-(function names updated, see historical note below):&nbsp;</p>
+        <p>The dangers are spelled out by <a href=
+        "bibliography.html#Andrews-83">[Andrews-83]</a> (function names
+        updated, see historical note below):</p>
 
-<blockquote>
+        <blockquote>
+            <p>Although semaphores can be used to program almost any kind of
+            synchronization, <b>down()</b> and <b>up()</b> are rather
+            unstructured primitives, and so it is easy to err when using them.
+            Execution of each critical section must begin with a <b>down()</b>
+            and end with a <b>up()</b> (on the same semaphore). Omitting a <b>
+            down()</b> or <b>up()</b>, or accidentally coding a <b>down()</b>
+            on one semaphore and a <b>up()</b> on another can have disastrous
+            effects, since mutually exclusive execution would no longer be
+            ensured. Also, when using semaphores, a programmer can forget to
+            include in critical sections all statements that reference shared
+            objects. This, too, could destroy the mutual exclusion required
+            within critical sections. A second difficulty with using semaphores
+            is that both condition synchronization and mutual exclusion are
+            programmed using the same pair of primitives. This makes it
+            difficult to identify the purpose of a given <b>down()</b> or <b>
+            up()</b> operation without looking at the other operations on the
+            corresponding semaphore. Since mutual exclusion and condition
+            synchronization are distinct concepts, they should have distinct
+            notations.</p>
+        </blockquote>
 
-<p>Although semaphores can be used to program almost any kind of synchronization,
-<b>down()</b> and <b>up()</b> are rather unstructured primitives, and so it is easy to err when using them. Execution of each critical section must begin with a
-<b>down()</b> and end with a <b>up()</b> (on the same semaphore). Omitting a <b>down()</b>
-or <b>up()</b>, or accidentally coding a <b>down()</b> on one semaphore and a <b>up()</b>
-on another can have disastrous effects, since mutually exclusive execution would no longer be ensured. Also, when using semaphores, a programmer can forget to include in critical sections all statements that reference shared objects. This, too, could destroy the mutual exclusion required within critical sections. A second difficulty with using semaphores is that both condition synchronization and mutual exclusion are programmed using the same pair of primitives. This makes it difficult to identify the purpose of a given
-<b>down()</b> or <b>up()</b> operation without looking at the other operations on the corresponding semaphore. Since mutual exclusion and condition synchronization are distinct concepts, they should have distinct notations.</p>
+        <p><b>Historical note:</b> Dijkstra&#39;s original name for <b>
+        down()</b> was <b>P</b> (short for the Dutch &quot;passeren&quot;,
+        &quot;to pass&quot;), and for <b>up()</b> was <b>V</b> (short for the
+        Dutch &quot;vrygeven&quot;, &quot;to release&quot;).</p>
 
-</blockquote>
-
-<p><b>Historical note: </b>Dijkstra's original name for <b>down()</b> was <b>P</b>
-(short for the Dutch &quot;passeren&quot;, &quot;to pass&quot;), and for <b>up()</b>
-was <b>V</b> (short for the Dutch &quot;vrygeven&quot;, &quot;to release&quot;).</p>
-
-<h2><a name="Header">Header</a></h2>
-
+        <h2><a name="Header">Header</a></h2>
 <pre>
-#include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
 </pre>
 
-<h2><a name="Synopsis">Synopsis</a></h2>
-
+        <h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
 namespace boost
 {
-    class semaphore : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
-        // Class semaphore meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+    class semaphore : private <a href=
+"../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+        // Class semaphore meets the <a href=
+"overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         explicit semaphore(unsigned count=0, unsigned max=0);
@@ -96,89 +120,81 @@ namespace boost
 }
 </pre>
 
-<h2><a name="Members">Members</a></h2>
+        <h2><a name="Members">Members</a></h2>
+        <hr>
 
-<hr>
-
-<h3>Constructor</h3>
-
+        <h3>Constructor</h3>
 <pre>
     explicit semaphore(unsigned count=0, unsigned max=0);
 </pre>
 
-<p><b>Effects:</b> As if:</p>
+        <p><b>Effects:</b> As if:</p>
 
-<p><code>&nbsp;&nbsp;&nbsp;&nbsp; m_count = count;<br>
-&nbsp;&nbsp;&nbsp;&nbsp; m_max = (max == 0 ? std::numeric_limits&lt;unsigned&gt;::max()
-? max );</code></p>
+        <p><code>&nbsp;&nbsp;&nbsp;&nbsp; m_count = count;<br>
+         &nbsp;&nbsp;&nbsp;&nbsp; m_max = (max == 0 ?
+        std::numeric_limits&lt;unsigned&gt;::max() ? max );</code></p>
+        <hr>
 
-<hr>
-
-<h3>Destructor</h3>
-
+        <h3>Destructor</h3>
 <pre>
     ~semaphore();
 </pre>
 
-<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+        <p><b>Effects:</b> Destroys <code>*this</code>.</p>
+        <hr>
 
-<hr>
-
-<h3>up</h3>
-
+        <h3>up</h3>
 <pre>
     bool up(unsigned count=1, unsigned* prev=0);
 </pre>
 
-<p><b>Effects:</b> As if:</p>
+        <p><b>Effects:</b> As if:</p>
 
-<p><code>&nbsp;&nbsp;&nbsp; unsigned ct;<br>
-&nbsp;&nbsp;&nbsp; bool ret;<br>
-&nbsp;&nbsp;&nbsp; { // as a single atomic operation:<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ct = m_count;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_count == m_max) ret =
-false;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret =
-true;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++m_count;<br>
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp; }<br>
-&nbsp;&nbsp;&nbsp; if (prev) *prev = m_count;<br>
-&nbsp;&nbsp;&nbsp; return ret;</code></p>
+        <p><code>&nbsp;&nbsp;&nbsp; unsigned ct;<br>
+         &nbsp;&nbsp;&nbsp; bool ret;<br>
+         &nbsp;&nbsp;&nbsp; { // as a single atomic operation:<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ct = m_count;<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_count == m_max)
+        ret = false;<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        ret = true;<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+        ++m_count;<br>
+         &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+         &nbsp;&nbsp;&nbsp; }<br>
+         &nbsp;&nbsp;&nbsp; if (prev) *prev = m_count;<br>
+         &nbsp;&nbsp;&nbsp; return ret;</code></p>
+        <hr>
 
-<hr>
-
-<h3>down</h3>
-
+        <h3>down</h3>
 <pre>
     void down();
 </pre>
 
-<p><b>Effects:</b> If <code>m_count == 0</code>, places the current thread in
-the <a href="definitions.html#State">blocked</a> state until <code>m_count != 0</code>.
-Finally, <code>--m_count</code>.<code>&nbsp;</code></p>
-
-<hr>
-
+        <p><b>Effects:</b> If <code>m_count == 0</code>, places the current
+        thread in the <a href="definitions.html#State">blocked</a> state until
+        <code>m_count != 0</code>. Finally, <code>--m_count</code>.</p>
+        <hr>
 <pre>
     bool down(const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
-<p><b>Effects:</b> If <code>m_count == 0</code>, places the current thread in
-the <a href="definitions.html#State">blocked</a> state until <code>m_count != 0</code>
-or <code>xt</code> is reached. Finally, <code>--m_count</code>.<code>&nbsp;</code></p>
+        <p><b>Effects:</b> If <code>m_count == 0</code>, places the current
+        thread in the <a href="definitions.html#State">blocked</a> state until
+        <code>m_count != 0</code> or <code>xt</code> is reached. Finally,
+        <code>--m_count</code>.</p>
 
-<p><b>Returns:</b> If xt was reached, true, else false.</p>
+        <p><b>Returns:</b> If xt was reached, true, else false.</p>
+        <hr>
 
-<hr>
-
-<h2><a name="Example">Example</a> Usage</h2>
-
+        <h2><a name="Example">Example</a> Usage</h2>
 <pre>
-#include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 #include &lt;iostream&gt;
 
 int global_data = 0;
@@ -205,22 +221,22 @@ int main(int, char*[])
 }
 </pre>
 
-<p>The output is:</p>
-
+        <p>The output is:</p>
 <pre>
 global_data == 1
 global_data == 2
 global_data == 3
 global_data == 4
 </pre>
+        <hr>
 
-<hr>
+        <p>Revised 
+        <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01
+        October, 2001 
+        <!--webbot bot="Timestamp" endspan i-checksum="38291" --></p>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 October, 2001<!--webbot bot="Timestamp" endspan i-checksum="38291" -->
-</p>
-
-<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
-2001 all rights reserved.</i></p>
-
-</body>
+        <p><i>&copy; Copyright <a href="mailto:williamkempf@hotmail.com">
+        William E. Kempf</a> 2001 all rights reserved.</i></p>
+    </body>
 </html>
+
