@@ -9,7 +9,10 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/barrier.hpp>
+#include <boost/thread/thread.hpp>
 
 namespace boost {
 
@@ -37,6 +40,7 @@ bool barrier::wait()
         return true;
     }
 
+    boost::cancellation_guard guard;
     while (gen == m_generation)
         m_cond.wait(lock);
     return false;
