@@ -38,13 +38,15 @@
   to define the <a href="#class-thread_pool">thread_pool</a> class.</p>
 <h2><a name="classes"></a>Classes</h2>
 <h3><a name="class-thread_pool"></a>Class <code>thread_pool</code></h3>
-		<p>The <tt>thread_pool</tt> class provides&nbsp;an interface for&nbsp;running jobs 
-			on a dynamically managed set&nbsp;of worker threads called a pool.&nbsp; When a 
-			job is added, it can execute on any&nbsp;available thread in the pool.&nbsp; 
-			This class controls&nbsp;both the maximum and minimum number of threads&nbsp;in 
-			the pool.&nbsp; If a thread in the pool is sitting idle&nbsp;for a 
-			period&nbsp;of time, it&nbsp;will exit unless by exiting the number of threads 
-			would dip below the minimum.</p>
+		
+<p>The <tt>thread_pool</tt> class provides&nbsp;an interface for&nbsp;running 
+  jobs on a dynamically managed set&nbsp;of worker threads called a pool.&nbsp; 
+  When a job is added, it can execute on any&nbsp;available thread in the pool.&nbsp; 
+  This class controls&nbsp;both the maximum and minimum number of threads&nbsp;in 
+  the pool.&nbsp; If a thread in the pool is sitting idle&nbsp;for a period&nbsp;of 
+  time, it&nbsp;will exit unless by exiting the number of threads would dip below 
+  the minimum. Thread pools provide an optimization over creating a new thread 
+  for each job since the pool can often remove the overhead of thread creation.</p>
 <h4><a name="class-thread_pool-synopsis"></a>Class <code>thread_pool</code> synopsis</h4>
 <pre>
 namespace boost
@@ -84,7 +86,8 @@ thread_pool(int max_threads=std::numeric_limits&lt;int&gt;::max(),
 			resources associated with the threads in the pool and with the queue of jobs 
 			still waiting to be executed.</dt>
 </dl>
-<h4><a name="class-spec-modifiers"></a>Class <code>{{class name}}</code> modifier functions</h4>
+<h4><a name="class-spec-modifiers"></a>Class <code>thread_pool</code> modifier 
+  functions</h4>
 <pre>
 void add(const boost::function0&lt;void&gt;&amp; job);
 </pre>
