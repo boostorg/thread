@@ -16,12 +16,41 @@
 #   include <windows.h>
 #endif
 
+#if defined(BOOST_HAS_PTHREADS)
+namespace {
+pthread_key_t key;
+pthread_once_t once = PTHREAD_ONCE_INIT;
+
+typedef void (*once_callback)();
+}
+#endif
+
+extern "C" {
+
+static void key_init()
+{
+    pthread_key_create(&key, 0);
+}
+
+static void do_once()
+{
+    once_callback cb = reinterpret_cast<once_callback>(pthread_getspecific(key));
+    (*cb)();
+}
+
+}
+
 namespace boost {
 
 void call_once(void (*func)(), once_flag& flag)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-	if (!flag)
+    once_flag tmp = flag;
+
+    // Memory barrier would be needed here to prevent race conditions on some platforms with
+    // partial ordering.
+
+	if (!tmp)
 	{
         char name[41];
         sprintf(name, "2AC1A572DB6944B0A65C38C4140AF2F4%X%X", GetCurrentProcessId(), &flag);
@@ -32,10 +61,16 @@ void call_once(void (*func)(), once_flag& flag)
         res = WaitForSingleObject(mutex, INFINITE);
         assert(res == WAIT_OBJECT_0);
 
-		if (!flag)
+        tmp = flag;
+		if (!tmp)
 		{
 			func();
-			flag = true;
+            tmp = true;
+
+            // Memory barrier would be needed here to prevent race conditions on some platforms
+            // with partial ordering.
+
+			flag = tmp;
 		}
 
 		res = ReleaseMutex(mutex);
@@ -44,7 +79,9 @@ void call_once(void (*func)(), once_flag& flag)
         assert(res);
 	}
 #elif defined(BOOST_HAS_PTHREADS)
-	pthread_once(&flag, func);
+    pthread_once(&once, &key_init);
+    pthread_setspecific(key, func);
+	pthread_once(&flag, do_once);
 #endif
 }
 

@@ -47,6 +47,9 @@ public:
     bool m_started;
 };
 
+} // unnamed namespace
+
+extern "C" {
 #if defined(BOOST_HAS_WINTHREADS)
 unsigned __stdcall thread_proxy(void* param)
 #elif defined(BOOST_HAS_PTHREADS)
@@ -66,7 +69,7 @@ static void* thread_proxy(void* param)
     return 0;
 }
 
-} // unnamed namespace
+}
 
 namespace boost {
 

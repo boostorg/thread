@@ -50,7 +50,6 @@ bool semaphore::up(unsigned count, unsigned* prev)
 {
     long p;
     bool ret = !!ReleaseSemaphore(reinterpret_cast<HANDLE>(m_sema), count, &p);
-    assert(ret || GetLastError() == ERROR_TOO_MANY_POSTS);
 
     if (prev)
         *prev = p;
