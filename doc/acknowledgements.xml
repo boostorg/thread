@@ -8,8 +8,7 @@
 last-revision="$Date$">
   <title>Acknowledgements</title>
   <para>William E. Kempf was the architect, designer, and implementor of 
-  <emphasis role="bold">Boost.Threads</emphasis>
-  .</para>
+  &Boost.Threads;.</para>
   <para>Mac OS Carbon implementation written by Mac Murrett.</para>
   <para>Dave Moore provided initial submissions and further comments on the 
   <code>barrier</code>
@@ -29,11 +28,17 @@ last-revision="$Date$">
   on the design), Paul Mclachlan, Thomas Matelich and Iain Hanson (for help
   in trying to get the build to work on other platforms), and Kevin S. Van
   Horn (for several updates/corrections to the documentation).</para>
+  <para>Mike Glassford finished changes to &Boost.Threads; that were begun
+  by William Kempf and moved them into the main CVS branch.
+  He also addressed a number of issues that were brought up on the Boost
+  developer's mailing list and provided some additions and changes to the 
+  read_write_mutex and related classes.</para>
   <para>The documentation was written by William E. Kempf. Beman Dawes
-  provided additional documentation material and editing.</para>
+  provided additional documentation material and editing.
+  Mike Glassford finished William Kempf's conversion of the documentation to 
+  BoostBook format and added a number of new sections.</para>
   <para>Discussions on the boost.org mailing list were essential in the
-  development of 
-  <emphasis role="bold">Boost.Threads</emphasis>
+  development of &Boost.Threads;
   . As of August 1, 2001, participants included Alan Griffiths, Albrecht
   Fritzsche, Aleksey Gurtovoy, Alexander Terekhov, Andrew Green, Andy Sawyer,
   Asger Alstrup Nielsen, Beman Dawes, Bill Klein, Bill Rutiser, Bill Wade,
