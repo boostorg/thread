@@ -31,11 +31,11 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>A <code>condition</code> is a synchronization primitive used to cause a thread to
+<p>An object of class <code>condition</code> is a synchronization primitive used to cause a thread to
 wait until a particular condition (or time) is met. A <code>condition</code> always works in
 conjunction with a <a href="mutex_concept.html">mutex model</a>.  The
 <a href="mutex_concept.html">mutex model</a> must be locked prior to waiting on the
-<code>condition</code>, which is insured by passing a <a href="lock_concept.html">lock model</a>
+<code>condition</code>, which is ensured by passing a <a href="lock_concept.html">lock model</a>
 to the <code>condition</code> class <code>wait</code> functions. While the thread is waiting on
 the <code>condition</code> the <a href="mutex_concept.html">mutex model</a> is unlocked.  When the
 thread returns from a call to one of the <code>condition</code> class <code>wait</code> functions,
@@ -45,7 +45,7 @@ the <a href="mutex_concept.html">mutex model</a> is again locked.</p>
 <i>Monitor Object</i> pattern. See <a href="bibliography.html#Schmidt-00">[Schmidt
 00]</a> and <a href="bibliography.html#Hoare-74">[Hoare 74</a>]. Monitors
 are one of the most important patterns for creating reliable multithreaded
-programs.</p>
+programs..</p>
 
 <p>See <a href="definitions.html"> Formal Definitions</a> for definitions of thread
 states <a href="definitions.html#state">blocked</a> and
@@ -71,14 +71,14 @@ public:
 
    void notify_one();
    void notify_all();
-   template &lt;typename L&gt;
-      void wait(L&amp; lock);
-   template &lt;typename L, typename Pr&gt;
-      void wait(L&amp; lock, Pr pred);
-   template &lt;typename L&gt;
-      bool timed_wait(L&amp; lock, const xtime&amp; xt);
-   template &lt;typename L, typename Pr&gt;
-      bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+   template &lt;typename ScopedLock&gt;
+      void wait(ScopedLock&amp; lock);
+   template &lt;typename ScopedLock, typename Pr&gt;
+      void wait(ScopedLock&amp; lock, Pr pred);
+   template &lt;typename ScopedTimedLock&gt;
+      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt);
+   template &lt;typename ScopedTimedLock, typename Pr&gt;
+      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, Pr pred);
 };
 
 } // namespace boost
@@ -136,19 +136,19 @@ to ready. If there are no waiting threads, <code>notify_all()</code> has no effe
 <h3>wait</h3>
 
 <pre>
-template &lt;typename L&gt;
-   void wait(L&amp; lock);
+template &lt;typename ScopedLock&gt;
+   void wait(ScopedLock&amp; lock);
 </pre>
 
-<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
-concept</a>.</p>
+<p><b>Requires:</b> ScopedLock meets the <a href="lock_concept.html#ScopedLock">ScopedLock</a>
+requirements.</p>
 
 <p><b>Effects:</b> Releases the lock on the <a href="mutex_concept.html">mutex model</a>
 associated with <code>lock</code>, blocks the current thread of execution until readied by a
 call to <code>*this-&gt;notify_one()</code> or <code>*this-&gt;notify_all()</code>, and then
 reacquires the lock. All effects occur in an atomic fashion.</p>
 
-<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
+<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock.locked()</code></p>
 
 <p><b>Danger:</b> This version should always be used within a loop checking that the state
 logically associated with the <code>condition</code> has become true.  Without the loop, race
@@ -156,68 +156,68 @@ conditions can ensue due to possible "spurious wake ups".  The second version en
 loop idiom internally and is generally the preferred method.</p>
 
 <pre>
-template &lt;typename L, typename Pr&gt;
-   void wait(L&amp; lock, Pr pred);
+template &lt;typename ScopedLock, typename Pr&gt;
+   void wait(ScopedLock&amp; lock, Pr pred);
 </pre>
 
-<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
-concept</a>. Return from <code>pred()</code> convertible to bool.</p>
+<p><b>Requires:</b>  ScopedLock meets the <a href="lock_concept.html#ScopedLock">ScopedLock</a> requirements,
+return from <code>pred()</code> convertible to bool.</p>
 
 <p><b>Effects:</b> As if:</p>
 
 <code>
-	while !(pred()) wait(lock)
+    &nbsp;&nbsp;&nbsp; while !(pred()) wait(lock)
 </code>
 
-<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
+<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock.locked()</code></p>
 
 <hr>
 
 <h3>timed_wait</h3>
 
 <pre>
-template &lt;typename L&gt;
-   bool timed_wait(L&amp; lock, const xtime&amp; xt);
+template &lt;typename ScopedTimedLock&gt;
+   bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt);
 </pre>
 
-<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
-concept</a>.</p>
+<p><b>Requires:</b>  ScopedTimeLock meets the <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements.</p>
 
 <p><b>Effects:</b> Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated
 with the <code>lock</code>, blocks the current thread of execution until readied by a call to
 <code>*this-&gt;notify_one()</code> or <code>*this-&gt;notify_all()</code>, or until <code>xt</code>,
 and then reacquires the lock. All effects occur in an atomic fashion.</p>
 
-<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
+<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock.locked()</code></p>
 
 <p><b>Danger:</b> This version should always be used within a loop checking that the state
 logically associated with the <code>condition</code> has become true.  Without the loop, race
 conditions can ensue due to "spurious wake ups".  The second version encapsulates this loop idiom
 internally and is generally the preferred method.</p>
 
-<p><b>Returns:</b> <code>false</code> if <code>xt</code> expires, otherwise <code>true</code>.</p>
+<p><b>Returns:</b> <code>false</code> if <code>xt</code>  is reached, otherwise <code>true</code>.</p>
 
+<hr>
 <pre>
-template &lt;typename L, typename Pr&gt;
-   bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+template &lt;typename ScopedTimedLock, typename Pr&gt;
+   bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, Pr pred);
 </pre>
 
-<p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
-concept</a>. Return from <code>pred()</code> convertible to bool.</p>
+<p><b>Requires: </b>ScopedTimeLock meets the <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements,
+return from <code>pred()</code> convertible to bool.</p>
 
 <p><b>Effects: </b>As if:</p>
 
 <code>
-    while (!pred())
+    &nbsp;&nbsp;&nbsp; while (!pred())
     {
         if (!timed_wait(lock, xt))
             return false;
     }
 </code>
 
-<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
+<p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock.locked()</code></p>
 
-<p><b>Returns:</b> <code>false</code> if <code>xt</code> expires, otherwise <code>true</code>.</p>
+<p><b>Returns:</b> <code>false</code> if <code>xt</code>  is reached, otherwise <code>true</code>.</p>
 
 <hr>
 
@@ -310,10 +310,10 @@ received: 4
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->19 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21079" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
 </p>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

@@ -43,11 +43,14 @@ would otherwise deadlock, or by unlock operations attempted by a thread that doe
 <h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
+namespace boost
+    
     class lock_error : public std::runtime_error
     {
     public:
        lock_error();
     };
+}
 </pre>
 
 <h2><a name="Members">Members</a></h2>
@@ -74,7 +77,7 @@ would otherwise deadlock, or by unlock operations attempted by a thread that doe
 int main(int, char*[])
 {
     boost::mutex mutex;
-    boost::mutex::scoped_lock lock(mutex);
+    boost::mutex::scoped_lock scoped_lock(mutex);
     try
     {
        boost::mutex::scoped_lock deadlock(mutex);
@@ -96,10 +99,10 @@ thread lock error - deadlock occurred.
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->25 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21072" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
 </p>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

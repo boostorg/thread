@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, recursive_mutex</title>
 </head>
 
@@ -15,26 +16,78 @@
         </td>
         <td valign="top">
 			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">recursive_mutex</h2>
+            <h2 align="center">recursive_mutex<br>
+            recursive_try_mutex<br>
+            recursive_timed_mutex</h2>
         </td>
     </tr>
 </table>
 
 <hr>
 
-<h3><a name="recursive_mutex">recursive_mutex</a></h3>
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#recursive_mutex Synopsis">Class recursive_mutex Synopsis</a><br>
+<a href="#recursive_mutex Members">Class recursive_mutex Members</a><br>
+<a href="#recursive_try_mutex Synopsis">Class recursive_try_mutex Synopsis</a><br>
+<a href="#recursive_try_mutex Members">Class recursive_try_mutex Members</a><br>
+<a href="#recursive_timed_mutex Synopsis">Class recursive_timed_mutex Synopsis</a><br>
+<a href="#recursive_timed_mutex Members">Class recursive_timed_mutex Members</a><br>
+<a href="#Example">Example</a></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
 
 <p>The <tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt>
-classes define full featured <a href="mutex_concept.html">mutex models</a>
-with recursive locking semantics. These models should be used to synchronize access to shared resources
+classes define full featured
+models of the <a href="mutex_concept.html#Mutex">Mutex</a>, <a href="mutex_concept.html#TryMutex">TryMutex</a>,
+and <a href="mutex_concept.html#TimedMutex">TimedMutex</a>  concepts with recursive locking semantics. These
+types should be used to synchronize access to shared resources
 when recursive locking by a single thread is likely to occur. A good example for this is when a class
-supplies "internal synchronization" to insure <a href="definitions.html#Thread-safe"> thread-safety</a> and a method on the class may have to call
-other methods on the class which would also attempt to lock the <a href="mutex_concept.html">mutex model</a>.
+supplies "internal synchronization" to ensure <a href="definitions.html#Thread-safe"> thread-safety</a> and a
+function of the class may have to call
+other functions of the class which also attempt to lock the mutex. For recursive locking mechanics, see
+<a href="mutex.html">mutexes</a>.
 
-<p>Each type adds another <A href="lock_concept.html">lock concept</a>, including the
-<A href="basic_lock.html">basic_lock</a>, <A href="basic_trylock.html">basic_trylock</a> and
-<A href="basic_timedlock.html">basic_timedlock</a> types. For the best possible performance you should use
-the mutex type that supports only the lock types that you need.</p>
+<p>Each class supplies one or more typedefs for lock types which model matching
+lock concepts. For the best possible performance you should use the mutex class that supports
+the minimum set of lock
+types that you need.</p>
+
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Mutex Class</b></td>
+    <td><b>Lock name</b></td>
+    <td><b>Implementation defined Lock Type</b></td>
+    <td><b>&nbsp;Lock Concept</b></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="#recursive_mutex Synopsis"><code>recursive_mutex</code></a></td>
+    <td valign="middle"><code>scoped_lock</code></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a></td>
+  </tr>
+  <tr>
+    <td valign="top"><tt><a href="#recursive_try_mutex Synopsis">recursive_try_mutex</a></tt> </td>
+    <td valign="middle"><code>scoped_lock<br>
+      scoped_try_lock</code></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_try_mutex&gt;<br>
+      </code></a><code><a href="scoped_try_lock.html">detail::scoped_try_lock&lt;recursive_try_mutex&gt;</a></code></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
+      <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a></td>
+  </tr>
+  <tr>
+    <td valign="top"><code><a href="#recursive_timed_mutex Synopsis">recursive_timed_mutex</a></code> </td>
+    <td valign="middle"><code>scoped_lock<br>
+      scoped_try_lock<br>
+      scoped_timed_lock</code></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_timed_mutex&gt;</code></a><br>
+      <a href="scoped_try_lock.html"><code>detail::scoped_try_lock&lt;recursive_timed_mutex&gt;</code></a><br>
+      <a href="scoped_timed_lock.html"><code>detail::scoped_timed_lock&lt;recursive_timed_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
+      <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a><br>
+      <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a></td>
+  </tr>
+</table>
 
 <p>The <tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt> employ a
 <tt>Recursive</tt> <a href="mutex_concept.html#LockingStrategies">locking strategy</a>, so attempts to
@@ -42,34 +95,40 @@ recursively lock them succeed and an internal "lock count" is maintained.  Attem
 by a thread that does not own a lock on them will result in a <a href="lock_error.html">lock_error</a>
 exception being thrown.</p>
 
-<p>Like all the <b>Boost.Threads</b> <a href="mutex_concept.html">mutex models</a>, the
+<p>The
 <tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt> leave the
-<a href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <tt>Unspecified</tt>. Programmers
-should assume that threads waiting for a lock on them shall acquire the lock in a random order, though the
-specific behavior for a given platform may be different.</p>
+<a href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <tt>Unspecified</tt>.
+Programmers should assume that threads waiting for a lock on objects of these types
+acquire
+the lock in a random order, even though the specific behavior for a given platform may be different.</p>
 
-<h2>Header</h2>
+<h2><a name="Header">Header</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/recursive_mutex.hpp">&lt;boost/thread/recursive_mutex.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
+<h2>Class <a name="recursive_mutex Synopsis"> recursive_mutex Synopsis</a></h2>
 
-<hr width="50%" align="left">
+<hr>
 
 <pre>
-    class recursive_mutex : private boost::noncopyable
+namespace boost
+{
+    class recursive_mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
     {
     public:
-       typedef boost::basic_lock&lt;recursive_mutex&gt; lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
       
        recursive_mutex();
        ~recursive_mutex();
     };
+}
 </pre>
 
-<hr width="50%" align="left">
+<h2>Class <a name="recursive_mutex Members">recursive_mutex Members</a></h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -77,7 +136,9 @@ specific behavior for a given platform may be different.</p>
     recursive_mutex();
 </pre>
 
-<p>Constructs a <tt>recursive_mutex</tt>.</p>
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
 
 <h3>Destructor</h3>
 
@@ -85,23 +146,37 @@ specific behavior for a given platform may be different.</p>
     ~recursive_mutex();
 </pre>
 
-<p>Destructs a <tt>recursive_mutex</tt>.</p>
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
 
-<hr width="50%" align="left">
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash..</p>
+
+<hr>
+
+<h2>
+Class <a name="recursive_try_mutex Synopsis">recursive_try_mutex Synopsis</a>
+</h2>
 
 <pre>
+namespace boost
+{
     class recursive_try_mutex : private boost::noncopyable
     {
     public:
-       typedef boost::basic_lock&lt;recursive_try_mutex&gt; lock;
-       typedef boost::basic_trylock&lt;recursive_try_mutex&gt; try_lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_try_lock;
       
        recursive_try_mutex();
        ~recursive_try_mutex();
     };
+}
 </pre>
 
-<hr width="50%" align="left">
+<h2>Class <a name="recursive_try_mutex Members">recursive_try_mutex Members</a></h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -109,7 +184,9 @@ specific behavior for a given platform may be different.</p>
     recursive_try_mutex();
 </pre>
 
-<p>Constructs a <tt>recursive_try_mutex</tt>.</p>
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
 
 <h3>Destructor</h3>
 
@@ -117,24 +194,40 @@ specific behavior for a given platform may be different.</p>
     ~recursive_try_mutex();
 </pre>
 
-<p>Destructs a <tt>recursive_try_mutex</tt>.</p>
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
 
-<hr width="50%" align="left">
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash..</p>
+
+<hr>
+
+<h2>
+Class <a name="recursive_timed_mutex Synopsis">recursive_timed_mutex Synopsis</a>
+</h2>
 
 <pre>
+namespace boost
+{
     class recursive_timed_mutex : private boost::noncopyable
     {
     public:
-       typedef boost::basic_lock&lt;recursive_timed_mutex&gt; lock;
-       typedef boost::basic_trylock&lt;recursive_timed_mutex&gt; try_lock;
-       typedef boost::basic_timedlock&lt;recursive_timed_mutex&gt; timed_lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_try_lock;
+       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_timed_lock;
       
        recursive_timed_mutex();
        ~recursive_timed_mutex();
     };
+}
 </pre>
 
-<hr width="50%" align="left">
+<h2>
+Class <a name="recursive_timed_mutex Members">recursive_timed_mutex Members</a>
+</h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -142,7 +235,9 @@ specific behavior for a given platform may be different.</p>
     recursive_timed_mutex();
 </pre>
 
-<p>Constructs a <tt>recursive_timed_mutex</tt>.</p>
+<p><b>Postconditions: </b><code>*this</code> is in the unlocked state.</p>
+
+<hr>
 
 <h3>Destructor</h3>
 
@@ -150,9 +245,16 @@ specific behavior for a given platform may be different.</p>
     ~recursive_timed_mutex();
 </pre>
 
-<p>Destructs a <tt>recursive_timed_mutex</tt>.</p>
+<p><b>Requires:</b> <code>*this</code> is in the unlocked state.</p>
 
-<h2>Example Usage</h2>
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
+resulting in undefined behavior such as a program crash..</p>
+
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
 
 <pre>
 #include <a href="../../../boost/thread/recursive_mutex.hpp">&lt;boost/thread/recursive_mutex.hpp&gt;</a>
@@ -169,12 +271,12 @@ public:
     counter() : count(0) { }
 
     int add(int val) {
-        boost::recursive_mutex::lock lock(mutex);
+        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
         count += val;
         return count;
     }   
     int increment() {
-        boost::recursive_mutex::lock lock(mutex);
+        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
         return add(1);
     }
 };
@@ -210,7 +312,10 @@ count == 4
 
 <hr>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->02 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34344" -->
+</p>
+
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

@@ -43,11 +43,11 @@ a limited set of integer operations are available with an <tt>atomic_t</tt> inst
        explicit atomic_t(value_type val=0);
     };
 
-    atomic_t::value_type read(const atomic_t& x);
-    atomic_t::value_type increment(atomic_t& x);
-    atomic_t::value_type decrement(atomic_t& x);
-    atomic_t::value_type swap(atomic_t& x, atomic_t::value_type y);
-    atomic_t::value_type compare_swap(atomic_t& x, atomic_t::value_type y, atomic_t::value_type z);
+    atomic_t::value_type read(const atomic_t&amp; x);
+    atomic_t::value_type increment(atomic_t&amp; x);
+    atomic_t::value_type decrement(atomic_t&amp; x);
+    atomic_t::value_type swap(atomic_t&amp; x, atomic_t::value_type y);
+    atomic_t::value_type compare_swap(atomic_t&amp; x, atomic_t::value_type y, atomic_t::value_type z);
 </pre>
 
 <h3>Constructor</h3>
@@ -61,7 +61,7 @@ a limited set of integer operations are available with an <tt>atomic_t</tt> inst
 <h3>read</h3>
 
 <pre>
-     atomic_t::value_type read(const atomic_t& x);
+     atomic_t::value_type read(const atomic_t&amp; x);
 </pre>
 
 <p>Gets the current value of <tt>x</tt>.</p>
@@ -69,7 +69,7 @@ a limited set of integer operations are available with an <tt>atomic_t</tt> inst
 <h3>increment</h3>
 
 <pre>
-    atomic_t::value_type increment(atomic_t& x);
+    atomic_t::value_type increment(atomic_t&amp; x);
 </pre>
 
 <p>Increments <tt>x</tt> and returns a value <tt>&lt; 0</tt> if the result is less than 0,
@@ -79,7 +79,7 @@ a limited set of integer operations are available with an <tt>atomic_t</tt> inst
 <h3>decrement</h3>
 
 <pre>
-    atomic_t::value_type decrement(atomic_t& x);
+    atomic_t::value_type decrement(atomic_t&amp; x);
 </pre>
 
 <p>Decrements <tt>x</tt> and returns a value <tt>&lt; 0</tt> if the result is less than 0,
@@ -89,7 +89,7 @@ a limited set of integer operations are available with an <tt>atomic_t</tt> inst
 <h3>swap</h3>
 
 <pre>
-    atomic_t::value_type swap(atomic_t& x, atomic_t::value_type y);
+    atomic_t::value_type swap(atomic_t&amp; x, atomic_t::value_type y);
 </pre>
 
 <p>Assigns the value of <tt>y</tt> to <tt>x</tt> and returns the value of <tt>x</tt> prior
@@ -98,7 +98,7 @@ to the swap.</p>
 <h3>compare_swap</h3>
 
 <pre>
-    atomic_t::value_type compare_swap(atomic_t& x, atomic_t::value_type y, atomic_t::value_type z);
+    atomic_t::value_type compare_swap(atomic_t&amp; x, atomic_t::value_type y, atomic_t::value_type z);
 </pre>
 
 <p>Compares the value of <tt>z</tt> to the value of <tt>x</tt> and if equal sets the value of
@@ -114,7 +114,7 @@ int test_main(int, char*[])
 {
     boost::atomic_t a;
     BOOST_TEST_VERIFY(boost::read(a) == 0);
-    BOOST_TEST_VERIFY(boost::increment(a) > 0);
+    BOOST_TEST_VERIFY(boost::increment(a) &gt; 0);
     BOOST_TEST_VERIFY(boost::decrement(a) == 0);
     BOOST_TEST_VERIFY(boost::swap(a, 1) == 0);
     BOOST_TEST_VERIFY(boost::swap(a, 2, 0) == 1);
@@ -124,7 +124,10 @@ int test_main(int, char*[])
 
 <hr>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+</p>
+
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

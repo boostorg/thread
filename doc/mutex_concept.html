@@ -15,41 +15,63 @@
         </td>
         <td valign="top">
 			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">Mutex Concept</h2>
+			<h2 align="center">Mutex Concepts</h2>
         </td>
     </tr>
 </table>
 
 <hr>
 
-<p>The purpose of a mutex (short for mutual-exclusion) is to serialize access to 
-a resource shared between multiple threads. The mutex concept formalizes this 
-idea. A model that implements the mutex concept has two states: locked and 
-unlocked.  Before using a resource that's shared, a thread would lock the mutex model,
-insuring that it was the only thread accessing the shared resource at a given
-time.  When done with the shared resource the thread would unlock the mutex model
-allowing another thread to acquire the lock and use the shared resource.</p>
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#LockingStrategies">Locking Strategies</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Recursive">Recursive</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#CheckedStrategy">Checked</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#UncheckedStrategy">Unchecked</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#UnspecifiedStrategy">Unspecified</a><br>
+<a href="#SchedulingPolicies">Scheduling Policies</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#FIFO">FIFO</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Priority Driven">Priority Driven</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#UndefinedScheduling">Undefined</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#UnspecifiedScheduling">Unspecified</a><br>
+<a href="#Requirements">Concept Requirements</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#Mutex">Mutex Concept</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#TryMutex">TryMutex Concept</a><br>
+&nbsp;&nbsp;&nbsp;&nbsp; <a href="#TimedMutex">TimedMutex Concept</a><br>
+<a href="#Models">
+Models</a></p>
 
-<p>Traditional C thread APIs, such as pthreads or Windows thread APIs, expose methods to
-lock and unlock a mutex model.  This is a dangerous way to expose the needed functionality
-since it's easy to forget to unlock a mutex model that's been locked.  When the flow of
-control is complex, with multiple return points, the likelihood that you'll forget to
-unlock a mutex model becomes even greater.  With exceptions it becomes nearly impossible
-to insure that you unlock the mutex.  Many C++ threading libraries have made use of a
-pattern known as <i>Scoped Locking</i><sup><A href="#footnote1">1</A></sup> to help insure
-that a programmer did not forget to unlock the mutex model.  With this pattern a
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>A mutex (short for mutual-exclusion) concept serializes access to 
+a resource shared between multiple threads. The <a href="#Mutex">Mutex</a>
+concept, with <a href="#TryMutex">TryMutex</a> and <a href="#TimedMutex">TimedMutex</a>
+refinements, formalize the requirements. A model that implements Mutex and its
+refinements has two states: <b> locked</b> and <b>unlocked</b>.  Before using a
+shared resource, a thread locks a Boost.Threads mutex model object,
+insuring <a href="definitions.html#Thread-safe">thread-safe</a> access to the shared resource.  When
+use of the shared resource is complete, the thread unlocks the mutex model
+object, allowing another thread to acquire the lock and use the shared resource.</p>
+
+<p>Traditional C thread APIs, like Pthreads or the Windows thread APIs, expose
+functions to
+lock and unlock a mutex model.  This is dangerous since it's easy to forget to unlock a
+locked mutex.  When the flow of
+control is complex, with multiple return points, the likelihood of forgetting to
+unlock a mutex model would become even greater. When exceptions are thrown, it becomes nearly impossible
+to ensure that the mutex is unlocked properly when using these traditional
+API's. The result is <a href="definitions.html#Deadlock">deadlock</a>.</p>
+
+<p>Many C++ threading libraries use a
+pattern known as <i>Scoped Locking</i> <a href="bibliography.html#Schmidt 00">[Schmidt
+00]</a> to free the programmer from the need to explicitly lock and unlock
+mutexes.  With this pattern, a
 <A href="lock_concept.html">lock concept</A> is employed where the lock model's constructor
-locks the associated mutex model and the destructor unlocks the mutex model.  The
-<b>Boost.Threads</b> library takes this pattern to the extreme, where lock concepts are the
-only way to lock and unlock a mutex model:  lock and unlock methods are not exposed by any
-mutex models in <b>Boost.Threads</b>.  This helps to insure safe usage patterns, especially
-with regard to code that may throw exceptions.</p>
-
-<p>The <b>Boost.Threads</b> library currently defines six mutex models:
-<A href="mutex.html">boost::mutex</A>, <A href="mutex.html">boost::try_mutex</A>,
-<A href="mutex.html">boost::timed_mutex</A>, <A href="recursive_mutex.html">boost::recursive_mutex</A>,
-<A href="recursive_mutex.html">boost::recursive_try_mutex</A> and
-<A href="recursive_mutex.html">boost::recursive_timed_mutex</A>.</p>
+locks the associated mutex model and the destructor automatically does the
+unlocking.  The
+<b>Boost.Threads</b> library takes this pattern to the extreme in that lock concepts are the
+only way to lock and unlock a mutex model:  lock and unlock functions are not exposed by any
+<b>Boost.Threads </b>mutex models.  This helps to ensure safe usage patterns, especially
+when code throws exceptions.</p>
 
 <h2><a name="LockingStrategies">Locking Strategies</a></h2>
 
@@ -57,45 +79,51 @@ with regard to code that may throw exceptions.</p>
 define the semantics for the locking operation when the calling thread already 
 owns a lock on the mutex model.</p>
 
-<h3>Recursive</h3>
+<h3><a name="Recursive">Recursive</a></h3>
 
 <p>With a recursive locking strategy when a thread attempts to acquire a lock on 
-the mutex model for which it already owns a lock the operation returns successfully. 
-Internally a lock count is maintained and the owning thread must unlock the 
+the mutex model for which it already owns a lock, the operation is successful.
+Note the distinction between a thread, which may have multiple locks outstanding
+on a recursive mutex, and a lock object, which even for a recursive mutex cannot
+have its lock() function called multiple times without first calling unlock().</p>
+
+<p>Internally a lock count is maintained and the owning thread must unlock the 
 mutex model the same number of times that it's locked it before the mutex model's 
-state returns to unlocked.  Since mutex model's in <b>Boost.Threads</b> expose
-locking functionality only through lock concepts it can be proven that a thread
-will always unlock a mutex model the same number of times that it's locked it.
+state returns to unlocked.  Since mutex models in <b>Boost.Threads</b> expose
+locking functionality only through lock concepts, a thread
+will always unlock a mutex model the same number of times that it locked it.
 This helps to eliminate a whole set of errors typically found in traditional
-C style APIs.</p>
+C style thread APIs.</p>
 
-<p>The <A href="recursive_mutex.html">boost::recursive_mutex</A>,
-<A href="recursive_mutex.html">boost::recursive_try_mutex</A>
-and <A href="recursive_mutex.html">boost::recursive_timed_mutex</A> use this locking strategy.</p>
+<p>Classes <A href="recursive_mutex.html">recursive_mutex</A>, <A href="recursive_mutex.html">recursive_try_mutex</A>
+and <A href="recursive_mutex.html">recursive_timed_mutex</A> use this locking strategy.</p>
 
-<h3>Checked</h3>
+<h3><a name="CheckedStrategy">Checked</a></h3>
 
 <p>With a checked locking strategy when a thread attempts to acquire a lock on 
-the mutex model for which it already owns a lock the operation will fail with
+the mutex model for which the thread already owns a lock, the operation will fail with
 some sort of error indication. Further, attempts by a thread to unlock a mutex
 that was not locked by the thread will also return some sort of error indication.
-In <b>Boost.Threads</b> an exception of type <A href="lock_error.html">boost::lock_error</A>
-is thrown in these cases.</p>
+In <b>Boost.Threads,</b> an exception of type <A href="lock_error.html">lock_error</A>
+would be thrown in these cases.</p>
 
-<h3>Unchecked</h3>
+<p><b>Boost.Threads</b> does not currently provide any mutex models that use this
+strategy.</p>
+
+<h3><a name="UncheckedStrategy">Unchecked</a></h3>
 
 <p>With an unchecked locking strategy when a thread attempts to acquire a lock 
-on the mutex model for which it already owns a lock the operation will deadlock. In 
+on the mutex model for which the thread already owns a lock the operation will <a href="definitions.html#Deadlock">deadlock</a>. In 
 general this locking strategy is less safe than a checked or recursive strategy, 
 but it's also a faster strategy and so is employed by many libraries.</p>
 
-<p><b>Boost.Threads</b> does not provide a mutex model that explicitly uses this
+<p><b>Boost.Threads</b> does not currently provide any mutex models that use this
 strategy.</p>
 
-<h3>Unspecified</h3>
+<h3><a name="UnspecifiedStrategy">Unspecified</a></h3>
 
-<p>With an unspecified locking strategy when a thread attempts to acquire a lock 
-on a mutex model for which it already owns a lock the operation results in 
+<p>With an unspecified locking strategy, when a thread attempts to acquire a lock 
+on a mutex model for which the thread already owns a lock the operation results in 
 <b>undefined behavior</b>.  When a mutex model has an unspecified locking strategy the
 programmer must assume that the mutex model instead uses an unchecked strategy.</p>
 
@@ -103,56 +131,147 @@ programmer must assume that the mutex model instead uses an unchecked strategy.<
 requires programmer discipline to use the mutex model properly. However, this strategy 
 allows an implementation to be as fast as possible with no restrictions on its implementation.
 This is especially true for portable implementations that wrap the native threading support
-of a platform. For this reason the <A href="mutex.html">boost::mutex</A>,
-<A href="mutex.html">boost::try_mutex</A> and <A href="mutex.html">boost::timed_mutex</A> use
+of a platform. For this reason, the classes <A href="mutex.html">mutex</A>, <A href="mutex.html">try_mutex</A> and
+<A href="mutex.html">timed_mutex</A> use
 this locking strategy despite the lack of safety.</p>
 
 <h2><a name="SchedulingPolicies">Scheduling Policies</a></h2>
 
 <p>Every mutex model follows one of several scheduling policies. These policies 
-define the semantics for when a mutex model has more than one thread waiting to 
-acquire a lock when the mutex model is unlocked. In other words, the policy defines 
-which thread shall acquire the lock in this case.</p>
+define the semantics when the mutex model is unlocked and there is more than one thread waiting to 
+acquire a lock. In other words, the policy defines 
+which waiting thread shall acquire the lock.</p>
 
-<h3>FIFO</h3>
+<h3><a name="FIFO">FIFO</a></h3>
 
-<p>With a FIFO scheduling policy threads waiting for the lock will acquire it in 
+<p>With a FIFO scheduling policy, threads waiting for the lock will acquire it in 
 a first come first serve order (or First In First Out). This can help prevent a 
 high priority thread from starving lower priority threads that are also waiting 
 on the mutex lock.</p>
 
-<h3>Priority Driven</h3>
+<h3><a name="Priority Driven">Priority Driven</a></h3>
 
-<p>With a Priority Driven scheduling policy the thread with the highest priority
+<p>With a Priority Driven scheduling policy, the thread with the highest priority
 acquires the lock. Note that this means that low-priority threads may never acquire
 the lock if the mutex model has high contention and there is always at least one high-priority
 thread waiting. This is known as thread starvation. When multiple threads of the same
 priority are waiting on the mutex lock one of the other scheduling priorities will
 determine which thread shall acquire the lock.</p>
 
-<h3>Undefined</h3>
+<h3><a name="UndefinedScheduling">Undefined</a></h3>
 
 <p>Threads acquire the lock in no particular order. Users should assume that 
 low-priority threads may wait indefinitely, and that threads of the same 
 priority acquire the lock in essentially random order.</p>
 
-<h3>Unspecified</h3>
+<h3><a name="UnspecifiedScheduling">Unspecified</a></h3>
 
 <p>The mutex model does not specify which scheduling policy is used. The programmer 
-must assume that an undefined scheduling policy is used. In order to insure 
-portability, all <b>Boost.Threads</b> mutex models use an unspecified scheduling policy.</p>
+must assume that an undefined scheduling policy is used. In order to ensure portability, all <b>Boost.Threads</b> mutex models use an unspecified scheduling policy.</p>
+
+<h2>Concept <a name="Requirements">Requirements</a></h2>
+
+<h3><a name="Mutex">Mutex</a>  Concept</h3>
+
+<p>A Mutex object has two states: locked and 
+unlocked. Mutex object state can only be determined by an object meeting
+the <a href="lock_concept.html#ScopedLock">ScopedLock</a> requirements and
+constructed for the Mutex object.</p>
+
+<p>A Mutex is <a href="../../utility/utility.htm#Class noncopyable">noncopyable</a>.</p>
+
+<p>For a Mutex type M and an object m of that type, the following
+expressions must be well-formed and have the indicated effects.</p>
+
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Expression</b></td>
+    <td><b>Effects</b></td>
+  </tr>
+  <tr>
+    <td><code>M m();</code></td>
+    <td>Constructs a mutex object m. Post-condition: m is unlocked.</td>
+  </tr>
+  <tr>
+    <td><code>(&amp;m)-&gt;~M();</code></td>
+    <td>Precondition: m is unlocked. Destroys a mutex object m.</td>
+  </tr>
+  <tr>
+    <td><code>M::scoped_lock</code></td>
+    <td>A type meeting the <a href="lock_concept.html#ScopedLock">ScopedLock</a>
+      requirements.</td>
+  </tr>
+</table>
+
+<h3><a name="TryMutex">TryMutex</a>  Concept</h3>
+<p>A TryMutex must meet the <a href="#Mutex"> Mutex</a> requirements. In addition, for a TryMutex type M and an object
+m of that type, the following
+expressions must be well-formed and have the indicated effects.</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Expression</b></td>
+    <td><b>Effects</b></td>
+  </tr>
+  <tr>
+    <td><code>M::scoped_try_lock</code></td>
+    <td>A type meeting the <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a>
+      requirements.</td>
+  </tr>
+</table>
+<h3><a name="TimedMutex">TimedMutex</a>  Concept</h3>
+<p>A TimedMutex must meet the <a href="#TryMutex"> TryMutex</a> requirements. In addition, for a
+TimedMutex type M and an object m of that type, the following
+expressions must be well-formed and have the indicated effects.</p>
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Expression</b></td>
+    <td><b>Effects</b></td>
+  </tr>
+  <tr>
+    <td><code>M::scoped_timed_lock</code></td>
+    <td>A type meeting the <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a>
+      requirements.</td>
+  </tr>
+</table>
+
+<h2><a name="Models">Models</a></h2>
+
+<p> <b>Boost.Threads</b> currently supplies six classes which model mutex
+concepts.</p>
+
+<table border="1" cellpadding="5">
+  <tr>
+    <td><b>Concept</b></td>
+    <td><b>Refines</b></td>
+    <td><b>Classes Modeling the Concept</b></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="#Mutex">Mutex</a></td>
+    <td valign="top">&nbsp;</td>
+    <td><A href="mutex.html">mutex</A><br>
+      <A href="recursive_mutex.html">recursive_mutex</A></td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="#TryMutex">TryMutex</a></td>
+    <td valign="top"><a href="#Mutex">Mutex</a></td>
+    <td><A href="mutex.html">try_mutex<br>
+      </A><A href="recursive_mutex.html">recursive_try_mutex</A> </td>
+  </tr>
+  <tr>
+    <td valign="top"><a href="#TimedMutex">TimedMutex</a></td>
+    <td valign="top"><a href="#TryMutex">TryMutex</a></td>
+    <td><A href="mutex.html">timed_mutex<br>
+      </A><A href="recursive_mutex.html">recursive_timed_mutex</A></td>
+  </tr>
+</table>
+<p>&nbsp;</p>
 
 <hr>
 
-<h2>Foot Notes</h2>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
+</p>
 
-<p><a name="footnote1"><sup>1</sup></a>&nbsp;Douglas Schmidt, Michael Stal, Hans Rohnert, Frank Buschmann:
-<i>Pattern-Oriented Software Architecture - Volume 2 (Patterns for Concurrent
-and Networked Objects)</i>, Wiley, 2000.</p>
-
-<hr>
-
-<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
 2001 all rights reserved.</i></p>
 
 </body>

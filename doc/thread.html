@@ -16,7 +16,7 @@
         </td>
         <td valign="top">
 			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">thread</h2>
+			<h2 align="center">Class thread</h2>
         </td>
     </tr>
 </table>
@@ -33,8 +33,9 @@
 
 <p>The <code>thread</code> class represents threads of execution, and provides
 the functionality to create and manage threads within the <b>Boost.Threads</b>
-library. See <A href="definitions.html">Formal Definition of "Thread"</A>
-for a precise description of "thread of execution", and definitions of thread states
+library. See <A href="definitions.html"> Definitions</A>
+for a precise description of "thread of execution", and definitions of threading
+related terms, and of thread states
 such as "blocked".</p>
 
 <p>A thread of execution has an initial function. For the program's
@@ -61,7 +62,7 @@ unspecified.</p>
 <pre>
 namespace boost {
 
-class thread : boost::noncopyable
+class thread : <a href="../../utility/utility.htm#noncopyable">boost::noncopyable</a>
 {
 public:
     thread();
@@ -88,7 +89,7 @@ public:
 <h3>Constructors</h3>
 
 <pre>
-thread();
+    thread();
 </pre>
 
 <p><b>Effects:</b> Constructs a <code>thread</code> object for the current thread
@@ -113,7 +114,7 @@ new thread of execution.</p>
     ~thread();
 </pre>
 
-<p><b>Effects:</b> Destroys the <code>thread</code> object.  The actual thread of execution may
+<p><b>Effects:</b>  Destroys <code>*this</code>. The actual thread of execution may
 continue to execute after the <code>thread</code> object has been destroyed.</p>
 
 <p><b>Notes:</b> To ensure a thread of execution runs to completion before the <code>thread</code>
@@ -216,7 +217,7 @@ struct thread_alarm
 
        boost::thread::sleep(xt);
 
-       std::cout &lt;&lt; "alarm sounded..." &lt;&lt; std::endl;
+       std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
    }
 
    int m_secs;
@@ -225,7 +226,7 @@ struct thread_alarm
 int main(int argc, char* argv[])
 {
    int secs = 5;
-   std::cout &lt;&lt; "setting alarm for 5 seconds..." &lt;&lt; std::endl;
+   std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
    boost::thread thrd(thread_alarm(5));
    thrd.join();
 }
@@ -240,10 +241,10 @@ alarm sounded...
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->19 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21079" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
 </p>
 
-<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
 2001 all rights reserved.</i></p>
 
 </body>

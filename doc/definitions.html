@@ -24,8 +24,7 @@
 <h2>Introduction</h2>
 <p>The definitions are given in terms of the <a href="bibliography.html#ISO-98"> C++ Standard</a>.&nbsp; References to the standard
 are in the form [1.2.3/4], which
-represents the section number and following the &quot;/&quot;, the paragraph
-number.</p>
+represents the section number, with the paragraph number following the &quot;/&quot;.</p>
 <p>Because the definitions are written in something akin to
 &quot;standardese&quot;, they can be difficult to understand.&nbsp; The intent
 isn't to confuse, but rather to clarify the additional requirements
@@ -34,19 +33,26 @@ Boost.Threads places on a C++ implementation as defined by the C++ Standard.</p>
 <h3>Thread</h3>
 <p>Thread is short for &quot;thread of execution&quot;. A thread of execution is an execution environment [1.9/7] within the execution environment
 of a C++ program [1.9]. The main() function [3.6.1] of the program is the
-initial function of the initial thread; a program in a multi-threading
-environment always has at least one initial thread even if the program makes no thread
-library calls.</p>
-<p>Each thread shares certain aspects of its execution environment with all
-other threads in the program:</p>
+initial function of the initial thread. A program in a multi-threading
+environment always has an initial thread even if the program explicitly creates
+no additional threads.</p>
+<p>Unless otherwise specified, each thread shares all aspects of its execution environment with
+other threads in the program. Shared aspects of the execution environment
+include, but are not limited to, the following:</p>
 <ul>
   <li>Static storage duration (static, extern) objects [3.7.1].</li>
 </ul>
 <ul>
-  <li>Dynamic storage duration (heap) objects [3.7.3].</li>
+  <li>Dynamic storage duration (heap) objects [3.7.3].&nbsp; Thus each memory
+    allocation will return a unique addresses, regardless of the thread making
+    the allocation request.</li>
 </ul>
 <ul>
-  <li>Unless otherwise specified, resources provided by the operating
+  <li>Automatic storage duration (stack) objects [3.7.2] accessed via pointer or
+    reference from another thread.</li>
+</ul>
+<ul>
+  <li>Resources provided by the operating
     system.&nbsp; For example, files.</li>
 </ul>
 <ul>
@@ -55,9 +61,6 @@ other threads in the program:</p>
 </ul>
 <p>Each thread has its own:</p>
 <ul>
-  <li>Priority and other specified thread attributes.&nbsp;</li>
-</ul>
-<ul>
   <li>Registers and current execution sequence (program counter) [1.9/5].</li>
 </ul>
 <ul>
@@ -65,9 +68,11 @@ other threads in the program:</p>
 </ul>
 <h3><a name="Thread-safe">Thread-safe</a></h3>
 <p>A program is thread-safe if it has no <a href="#Race condition">race
-conditions</a> and does not <a href="#Deadlock">deadlock</a>.</p>
-<p>Note that thread-safety does not necessarily imply
-efficiency.</p>
+conditions</a>, does not <a href="#Deadlock">deadlock</a>, and has no <a href="#Priority failure">priority
+failures</a>.</p>
+<p>Note that thread-safety does not necessarily imply efficiency, and than while
+some thread-safety violations can be determined statically at compile time, many
+thread-safety errors can only only be detected at runtime.</p>
 <h3>Thread <a name="State">State</a></h3>
 <p>During the lifetime of a thread, it shall be in one of the following
 states:</p>
@@ -83,11 +88,11 @@ states:</p>
   <tr>
     <td>Running</td>
     <td>Currently executing on a processor. Zero or more threads may be running
-      at any time, with a maximum of the number of processors.&nbsp;</td>
+      at any time, with a maximum equal to the number of processors.&nbsp;</td>
   </tr>
   <tr>
     <td>Blocked</td>
-    <td>Waiting for some resource other than a processor that is not currently
+    <td>Waiting for some resource other than a processor which is not currently
       available, or for the completion of calls to library functions [1.9/6].
       The term &quot;waiting&quot; is synonymous for &quot;blocked&quot;</td>
   </tr>
@@ -161,10 +166,14 @@ using the tools provided by Boost.Threads.&nbsp;</p>
 <p>Deadlock is an execution state where for some set of threads, each thread in
 the set is blocked waiting for some action by one of the other threads in the
 set. Since each is waiting on the others, none will ever become ready again.</p>
+<h3><a name="Priority failure">Priority failure</a></h3>
+<p>A priority failure (such as priority inversion or infinite overtaking) occurs
+when threads executed in such a sequence that required work is not performed in
+time to be useful.</p>
 <h2>Additions to the C++ Standard</h2>
 <p>An address [1.7] shall always point to the same memory byte, regardless of the
 thread or processor dereferencing the address.</p>
-<p>An object [1.8, 1.9] can be accessed from two or more threads if it is of
+<p>An object [1.8, 1.9] is accessible from two or more threads if it is of
 static storage duration (static, extern) [3.7.1], or if a pointer or reference to the
 object is explicitly or
 implicitly dereferenced.</p>
@@ -217,8 +226,8 @@ the abstract machine [1.9] shall be the same on all processors.</p>
 definition of observable behavior of the abstract machine to include additional library I/O
 functions [1.9/6] is extended to include threading library functions.</p>
 <p>When an exception is thrown and there is no matching exception handler in the
-same thread, behavior is the same as when there is no matching exception handler
-in the program [15.3/9].&nbsp; That is, terminate() is called, and it is implementation defined
+same thread, behavior is undefined.&nbsp; The preferred behavior is the same as when there is no matching exception handler
+in a program [15.3/9].&nbsp; That is, terminate() is called, and it is implementation defined
 whether or not the stack is unwound.</p>
 <h2><a name="Acknowledgements">Acknowledgements</a></h2>
 <p>This document has been much improved by the incorporation of comments from
@@ -226,9 +235,9 @@ William Kempf.</p>
 <p>The visibility rules are based on <a href="bibliography.html#Butenhof-97">[Butenhof
 97]</a>.&nbsp;</p>
 <hr>
-<p>© Copyright Beman Dawes, 2001</p>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->19 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14999" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->06 Aug 2001<!--webbot bot="Timestamp" endspan i-checksum="14760" -->
 </p>
+<p>© Copyright Beman Dawes, 2001</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>

@@ -57,7 +57,8 @@ in the next C++ standard.</p>
 
 <p>The Boost.Threads library supplies a set of low level primitives for writing multi-threaded
 programs, such as semaphores, mutexes and condition variables.  In fact, the first release of
-Boost.Threads supports only these low level primitives.  However, scientific research has shown
+Boost.Threads supports only these low level primitives.  However, computer
+science research has shown
 that use of these primitives is difficult since there's no way to mathematically prove that a
 usage pattern is correct, meaning it doesn't result in race conditions or deadlocks.  There
 are several algebras (such as CSP, CCS and Join calculus) that have been developed to help write
@@ -84,7 +85,7 @@ as well).  At first this may seem like a serious design flaw.  Why have a multi-
 that's not thread-safe itself?</p>
 
 <p>A lock object is not a synchronization primitive.  A lock object's sole responsibility is
-to insure that a mutex is both locked and unlocked in a manner that won't result in the common
+to ensure that a mutex is both locked and unlocked in a manner that won't result in the common
 error of locking a mutex and then forgetting to unlock it.  This means that instances of a
 lock object are only going to be created, at least in theory, within block scope and won't
 be shared between threads.  Only the mutex objects will be created outside of block scope and/or
@@ -372,7 +373,10 @@ library has gone with a noncopyable design.</p>
 
 <hr>
 
-<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+</p>
+
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
 2001 all rights reserved.</i></p>
 
 </body>

@@ -64,7 +64,7 @@ below.<p>
 		chances of this occurring.  The interfaces have been crafted to allow an
 		implementation the greatest chance of being as efficient as possible.  This
 		goal is often at odds with the goal for <i>safety</i>.  Every effort was made to
-		insure efficient implementations, but when in conflict <i>safety</i> has always taken
+		ensure efficient implementations, but when in conflict <i>safety</i> has always taken
 		precedence.</p>
 	</li>
 </ul>
@@ -101,8 +101,8 @@ need far out weighs the need for portable methods to create and manage threads.<
 portable primitive concepts for thread synchronization. Types provided in this phase include
 the <A href="semaphore.html">semaphore</a>, <A href="mutex.html">mutex/try_mutex/timed_mutex</a>,
 <A href="recursive_mutex.html">recursive_mutex/recursive_try_mutex/recursive_timed_mutex</a>,
-<A href="basic_lock.html">basic_lock</a>, <A href="basic_trylock.html">basic_trylock</a>,
-<A href="basic_timedlock.html">basic_timedlock</a> and <A href="lock_error.html">lock_error</a>.
+<A href="scoped_lock.html">scoped_lock</a>, <A href="scoped_try_lock.html">scoped_try_lock</a>,
+<A href="scoped_timed_lock.html">scoped_timed_lock</a> and <A href="lock_error.html">lock_error</a>.
 These are considered the "core" synchronization primitives, though there are others that will
 be added in later phases.</p>
 
@@ -117,12 +117,15 @@ the <b>Boost.Threads</b> library can be considered minimal but complete.</p>
 
 <h4>The Next Phase</h4>
 
-<p>The next phase shall address more advanced synchronization concepts, such as read/write mutexes
+<p>The next phase will address more advanced synchronization concepts, such as read/write mutexes
 and barriers.</p>
 
 <hr>
 
-<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+</p>
+
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

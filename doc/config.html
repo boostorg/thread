@@ -45,8 +45,10 @@ The one exception to this is BOOST_HAS_THREADS.</p>
 			platform specific implementation for <b>Boost.Threads</b> and that threading
 			support has been enabled in a platform specific manner.  For instance, on the
 			Win32 platform there's an implementation for <b>Boost.Threads</b> but unless
-			the program is compiled against one of the multi-threading runtimes (when the
-			compiler will predefine the macro _MT) this macro remains undefined.
+			the program is compiled against one of the multi-threading runtimes
+            (often determined by the
+			compiler predefining the macro _MT) the
+			BOOST_HAS_THREADS macro remains undefined.
 		</td>
 	</tr>
 	<tr>
@@ -54,7 +56,8 @@ The one exception to this is BOOST_HAS_THREADS.</p>
 			BOOST_HAS_WINTHREADS
 		</td>
 		<td valign="top">
-			Indicates that the platform has Win32 threading libraries that should be used
+			Indicates that the platform has the Microsoft Win32 threading libraries,
+            and that they should be used
 			to implement <b>Boost.Threads</b>.
 		</td>
 	</tr>
@@ -63,7 +66,8 @@ The one exception to this is BOOST_HAS_THREADS.</p>
 			BOOST_HAS_PTHREADS
 		</td>
 		<td valign="top">
-			Indicates that the platform has POSIX pthreads libraries that should be used
+			Indicates that the platform has the POSIX pthreads libraries, and that
+            they should be used
 			to implement <b>Boost.Threads</b>.
 		</td>
 	</tr>
@@ -89,7 +93,10 @@ The one exception to this is BOOST_HAS_THREADS.</p>
 </table>
 <hr>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+</p>
+
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

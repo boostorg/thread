@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, thread_group</title>
 </head>
 
@@ -22,21 +23,32 @@
 
 <hr>
 
-<p>The <tt>thread_group</tt> class provides easy grouping of threads in order to simplify several
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#Synopsis">Synopsis</a><br>
+<a href="#Members">Members</a><br>
+<a href="#Example">Example</a></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>The <tt>thread_group</tt> class provides a container for easy grouping of threads to simplify several
 common thread creation and management idioms.</p>
 
-<h2>Header</h2>
+<p>All <tt>thread_group</tt>  member functions are <a href="definitions.html#thread-safe">thread-safe</a>,
+except destruction.</p>
+
+<h2><a name="Header">Header</a></h2>
 
 <pre>
-#include &lt;boost/thread/thread.hpp&gt;
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
-
-<hr width="50%" align="left">
+<h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
-    class thread_group : boost::noncopyable
+namespace boost
+{
+    class thread_group : <a href="../../utility/utility.htm#noncopyable">boost::noncopyable</a>
     {
     public:
         thread_group();
@@ -47,9 +59,11 @@ common thread creation and management idioms.</p>
         void remove_thread(thread* thrd);
         void join_all();
     };
+}
 </pre>    
 
-<hr width="50%" align="left">
+<h2><a name="Members">Members</a></h2>
+<hr>
 
 <h3>Constructor</h3>
 
@@ -57,7 +71,9 @@ common thread creation and management idioms.</p>
     thread_group();
 </pre>
 
-<p>Constructs a <tt>thread_group</tt> object.</p>
+<p><b>Effects:</b> Constructs an empty <tt>thread_group</tt>  container.</p>
+
+<hr>
 
 <h3>Destructor</h3>
 
@@ -65,7 +81,12 @@ common thread creation and management idioms.</p>
     ~thread_group();
 </pre>
 
-<p>Destructs a <tt>thread_group</tt> object, deleting the managed <tt>thread</tt> objects.</p>
+<p><b>Effects:</b> Destroys each contained thread object.&nbsp; Destroys <code>*this</code>.</p>
+
+<p><b>Notes:</b> Behavior is undefined if another thread references *this during
+the execution of the destructor.</p>
+
+<hr>
 
 <h3>create_thread</h3>
 
@@ -73,8 +94,12 @@ common thread creation and management idioms.</p>
     thread* create_thread(const boost::function0&lt;void&gt;&amp; threadfunc);
 </pre>
 
-<p>Creates a new <tt>thread</tt> object that executes <tt>threadfunc</tt> and adds it to the
-<tt>thread_group</tt> object's list of managed <tt>thread</tt> objects.</p>
+<p><b>Effects:</b> Creates a new <tt>thread</tt> object that executes <tt>threadfunc</tt> and adds it to the
+<tt>thread_group</tt>  container object's list of managed <tt>thread</tt> objects.</p>
+
+<p><b>Returns:</b> Pointer to the newly created thread.</p>
+
+<hr>
 
 <h3>add_thread</h3>
 
@@ -82,9 +107,11 @@ common thread creation and management idioms.</p>
     void add_thread(thread* thrd);
 </pre>
 
-<p>Adds <tt>thrd</tt> to the <tt>thread_group</tt> object's list of managed <tt>thread</tt>
+<p><b>Effects:</b> Adds <tt>thrd</tt> to the <tt>thread_group</tt> object's list of managed <tt>thread</tt>
 objects.  The <tt>thrd</tt> object must have been allocated via operator new and will
 be deleted when the group is destroyed.</p>
+
+<hr>
 
 <h3>remove_thread</h3>
 
@@ -92,8 +119,13 @@ be deleted when the group is destroyed.</p>
     void remove_thread(thread* thrd);
 </pre>
 
-<p>Removes <tt>thrd</tt> from the <tt>thread_group</tt> object's list of managed <tt>thread</tt>
+<p><b>Effects:</b> Removes <code>*this</code>'s list of managed <tt>thread</tt>
 objects.</p>
+
+<p><b>Throws: </b>? if <tt>thrd</tt>  is not it <code>*this</code>'s list of managed <tt>thread</tt>
+objects.</p>
+
+<hr>
 
 <h3>join_all</h3>
 
@@ -101,13 +133,15 @@ objects.</p>
     void join_all();
 </pre>
 
-<p>Calls join() for each of the managed <tt>thread</tt> objects.</p>
+<p><b>Effects:</b> Calls <code> join()</code> on each of the managed <tt>thread</tt> objects.</p>
 
-<h2>Example Usage</h2>
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
 
 <pre>
 #include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostram&gt;
+#include &lt;iostream&gt;
 
 int count = 0;
 boost::mutex mutex;
@@ -122,7 +156,7 @@ int main(int argc, char* argv[])
 {
    boost::thread_group threads;
    for (int i = 0; i &lt; 10; ++i)
-      threads.create_thread(&increment_count);
+      threads.create_thread(&amp;increment_count);
    threads.join_all();
 }
 </pre>
@@ -143,7 +177,10 @@ count = 10
 </pre>
 <hr>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
+</p>
+
+<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>

@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, semaphore</title>
 </head>
 
@@ -22,32 +23,44 @@
 
 <hr>
 
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#Synopsis">Synopsis</a><br>
+<a href="#Members">Members</a><br>
+<a href="#Example">Example</a></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
+
 <p>The <tt>semaphore</tt> class defines a classic synchronization primitive invented by the
 Dutch computer scientist Edsger W. Dijkstra.  A semaphore manages an internal counter.  This
-counter may never go below zero, or above a specified maximum value.  When calling
+counter never goes below zero, or above a specified maximum value.  When calling
 <tt>semaphore::down</tt> the calling thread will block until the value is non-zero and then
-decrements the value in a single atomic operation.  When calling <tt>semaphore::up</tt> the
+decrement the value in a single atomic operation.  When calling <tt>semaphore::up</tt> the
 calling thread will increment the value in a single atomic operation, failing if the value has
 already reached the specified maximum.</p>
 
-<p>The semaphore is the simplest synchronization primitive available and is generally the
+<p><b>Rationale:</b> The semaphore is the simplest synchronization primitive available and is generally the
 primitive used to build other synchronization concepts at some level of implementation. For this
 reason <b>Boost.Threads</b> defines the <tt>semaphore</tt> type in the classic form.  This simplifies
 usage and implementation, but it means that the interface is not as safe as other <b>Boost.Threads</b>
-interfaces. Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads</b>
-there is no <A href="lock_concept.html">lock_concept</a> for the semaphore to help insure proper
-usage.  Care should be taken when using a <tt>semaphore</tt> object to insure deadlock and
-race conditions do not occur.</p>
+interfaces.</p>
 
-<h2>Header</h2>
+<p><b>Danger:</b> Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads,</b>
+there is no <A href="lock_concept.html">lock_concept</a> for the semaphore to help ensure proper
+usage. Great care must be taken when using a <tt>semaphore</tt> object to ensure
+<a href="definitions.html#Deadlock"> deadlock</a> or <a href="definitions.html#Race condition">race conditions</a> do not occur.</p>
+
+<h2><a name="Header">Header</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
+<h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
+namespace boost
+{
     class semaphore : private boost::noncopyable
     {
     public:
@@ -57,8 +70,16 @@ race conditions do not occur.</p>
         bool up(unsigned count=1, unsigned* prev=0);
         void down();
         bool down(const xtime&amp; xt);
+    private:
+        unsigned m_count;  <i>exposition only [ISO 17.3.2.3/2]
+</i>        unsigned m_max;    <i>exposition only [ISO 17.3.2.3/2]</i>
     };
+}
 </pre>
+
+<h2><a name="Members">Members</a></h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -66,10 +87,13 @@ race conditions do not occur.</p>
     explicit semaphore(unsigned count=0, unsigned max=0);
 </pre>
 
-<p>Constructs a <tt>semaphore</tt>. The <tt>count</tt> parameter is used to set the initial
-semaphore count and the <tt>max</tt> parameter is used to set the maximum value for the
-semaphore.  If <tt>max</tt> is <tt>0</tt> then the maximum value is set to the maximum
-possible value for the implementation.</p>
+<p><b>Effects:</b> As if:</p>
+
+<p><code>&nbsp;&nbsp;&nbsp;&nbsp; m_count = count;<br>
+&nbsp;&nbsp;&nbsp;&nbsp; m_max = (max == 0 ? std::numeric_limits&lt;unsigned&gt;::max()
+? max );</code></p>
+
+<hr>
 
 <h3>Destructor</h3>
 
@@ -77,7 +101,9 @@ possible value for the implementation.</p>
     ~semaphore();
 </pre>
 
-<p>Destructs a <tt>semaphore</tt>.</p>
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
+
+<hr>
 
 <h3>up</h3>
 
@@ -85,9 +111,25 @@ possible value for the implementation.</p>
     bool up(unsigned count=1, unsigned* prev=0);
 </pre>
 
-<p>Increments the semaphore by <tt>count</tt> and optionally returns the previous value of the semaphore
-in <tt>prev</tt>.  If the semaphore's value is already at the maximum value specified in the
-constructor then this operation fails immediately and returns a <tt>false</tt> value.</p>
+<p><b>Effects:</b> As if:</p>
+
+<p><code>&nbsp;&nbsp;&nbsp; unsigned ct;<br>
+&nbsp;&nbsp;&nbsp; bool ret;<br>
+&nbsp;&nbsp;&nbsp; { // as a single atomic operation:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ct = m_count;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; if (m_count == m_max) ret =
+false;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; else<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; {<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ret =
+true;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; ++m_count;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; }<br>
+&nbsp;&nbsp;&nbsp; if (prev) *prev = m_count;<br>
+&nbsp;&nbsp;&nbsp; return ret;</code></p>
+
+<hr>
 
 <h3>down</h3>
 
@@ -95,16 +137,25 @@ constructor then this operation fails immediately and returns a <tt>false</tt> v
     void down();
 </pre>
 
-<p>Decrements the semaphore by one, blocking indefinately if the semaphore's value is currently zero.</p>
+<p><b>Effects:</b> If <code>m_count == 0</code>, places the current thread in
+the <a href="definitions.html#State">blocked</a> state until <code>m_count != 0</code>.
+Finally, <code>--m_count</code>.<code>&nbsp;</code></p>
+
+<hr>
 
 <pre>
     bool down(const xtime&amp; xt);
 </pre>
 
-<p>Decrements the semaphore by one, blocking until <tt>xt</tt> if the semaphore's value is currently zero.
-If the operation times out a <tt>false</tt> value is returned.</p>
+<p><b>Effects:</b> If <code>m_count == 0</code>, places the current thread in
+the <a href="definitions.html#State">blocked</a> state until <code>m_count != 0</code>
+or <code>xt</code> is reached. Finally, <code>--m_count</code>.<code>&nbsp;</code></p>
 
-<h2>Example Usage</h2>
+<p><b>Returns:</b> If xt was reached, true, else false.</p>
+
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
 
 <pre>
 #include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
@@ -145,7 +196,10 @@ global_data == 4
 
 <hr>
 
-<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
+</p>
+
+<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
 
 </body>
