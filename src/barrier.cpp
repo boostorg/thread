@@ -12,7 +12,6 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/barrier.hpp>
-
 namespace boost {
 
 barrier::barrier(unsigned int count)
