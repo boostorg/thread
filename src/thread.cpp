@@ -249,7 +249,7 @@ bool thread_data::timed_join(const boost::xtime& xt)
         m_state = joining;
     }
 
-    int res = 0;
+    unsigned int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
     for (;;)
     {
@@ -304,6 +304,7 @@ bool thread_data::timed_join(const boost::xtime& xt)
     assert(m_state == joining);
     m_state = joined;
     m_cond.notify_all();
+	return true;
 }
 
 void thread_data::cancel()
@@ -404,7 +405,7 @@ void thread_data::set_scheduling_parameter(int policy,
     if (res == EINVAL)
         throw boost::invalid_thread_argument(res);
     if (res == ENOTSUP)
-        throw unsupported_thread_option(res);
+        throw boost::unsupported_thread_option(res);
     if (res == EPERM)
         throw boost::thread_permission_error(res);
     assert(res == 0);
@@ -569,11 +570,11 @@ thread::attributes& thread::attributes::set_stack_address(void* addr)
     int res = 0;
     res = pthread_attr_setstackaddr(&m_attr, addr);
     assert(res == 0);
+    return *this;
 #   else
     throw unsupported_thread_option(ENOTSUP);
 #   endif
 #endif
-    return *this;
 }
 
 void* thread::attributes::get_stack_address() const
@@ -860,8 +861,8 @@ int thread::max_priority(int policy)
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 #   endif
-#endif
     return 0;
+#endif
 }
 
 int thread::min_priority(int policy)
@@ -873,8 +874,8 @@ int thread::min_priority(int policy)
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 #   endif
-#endif
     return 0;
+#endif
 }
 
 void thread::sleep(const xtime& xt)
@@ -913,12 +914,12 @@ void thread::sleep(const xtime& xt)
         AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
         threads::mac::detail::safe_delay_until(&sWakeTime);
 #endif
+		thread::test_cancel();
         xtime cur;
         xtime_get(&cur, TIME_UTC);
         if (xtime_cmp(xt, cur) <= 0)
             return;
     }
-    thread::test_cancel();
 }
 
 void thread::yield()

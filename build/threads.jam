@@ -33,6 +33,7 @@
         :
         ## requirements ##
         : <sysinclude>$(BOOST_ROOT) <threading>multi $(pthreads-win32)
+		<borland><*><cxxflags>-w-8004 <borland><*><cxxflags>-w-8057
         ## default build ##
         :
     ;

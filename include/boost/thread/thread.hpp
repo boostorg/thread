@@ -143,7 +143,7 @@ public:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef unsigned int id_type;
 #else
-    typedef void* id_type;
+    typedef const void* id_type;
 #endif
 
     id_type id() const;
