@@ -1,4 +1,4 @@
-subproject SRC ;
+subproject src ;
 
 lib threads
 	: condition.cpp

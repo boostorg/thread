@@ -2,4 +2,4 @@
 project-root ;
 
 # Read subproject Jamfiles
-subinclude src ; #test example ;
+subinclude src test example ;
