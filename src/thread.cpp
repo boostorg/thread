@@ -13,9 +13,11 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/tss.hpp>
+#include <boost/type_traits/is_pointer.hpp>
 #include <new>
 #include <memory>
 #include <cassert>
+#include <functional>
 #include <errno.h>
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -52,6 +54,11 @@ public:
 	void cancel();
 	void test_cancel();
 	void run();
+#if defined(BOOST_HAS_WINTHREADS)
+	long id() const;
+#else
+	const void* id() const;
+#endif
 
 #if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 	void set_scheduling_parameter(int policy, const sched_param& param);
@@ -66,6 +73,7 @@ private:
 	int m_state;
 #if defined(BOOST_HAS_WINTHREADS)
     HANDLE m_thread;
+	DWORD m_id;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_t m_thread;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -141,6 +149,7 @@ thread::data::data()
 #if defined(BOOST_HAS_WINTHREADS)
 	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
 		&m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+	m_id = GetCurrentThreadId();
 #elif defined(BOOST_HAS_PTHREADS)
 	m_thread = pthread_self();
 #endif
@@ -236,6 +245,7 @@ void thread::data::run()
 #if defined(BOOST_HAS_WINTHREADS)
 		DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
 			&m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+		m_id = GetCurrentThreadId();
 #elif defined(BOOST_HAS_PTHREADS)
 		m_thread = pthread_self();
 #endif
@@ -244,6 +254,28 @@ void thread::data::run()
 	}
     m_threadfunc();
 }
+
+#if defined(BOOST_HAS_WINTHREADS)
+long thread::data::id() const
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	if (m_state != joined)
+		return m_id;
+	return 0; // throw instead?
+}
+#else
+const void* thread::data::id() const
+{
+	boost::mutex::scoped_lock lock(m_mutex);
+	if (m_state != joined)
+	{
+		if (boost::is_pointer<pthread_t>::value)
+			return m_thread;
+		return this;
+	}
+	return 0; // throw instead?
+}
+#endif
 
 #if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 
@@ -547,10 +579,25 @@ thread::thread(const function0<void>& threadfunc, attributes attr)
 	m_handle = param.release();
 }
 
+thread::thread(const thread& other)
+	: m_handle(other.m_handle)
+{
+	m_handle->addref();
+}
+
 thread::~thread()
 {
 	if (m_handle && m_handle->release())
 		delete m_handle;
+}
+
+thread& thread::operator=(const thread& other)
+{
+	if (m_handle->release())
+		delete m_handle;
+	m_handle = other.m_handle;
+	m_handle->addref();
+	return *this;
 }
 
 bool thread::operator==(const thread& other) const
@@ -561,6 +608,11 @@ bool thread::operator==(const thread& other) const
 bool thread::operator!=(const thread& other) const
 {
     return !operator==(other);
+}
+
+bool thread::operator<(const thread& other) const
+{
+	return std::less<thread::data*>()(m_handle, m_handle);
 }
 
 void thread::join()
@@ -681,6 +733,16 @@ void thread::yield()
     MPYield();
 #endif
 	thread::test_cancel();
+}
+
+#if defined(BOOST_HAS_WINTHREADS)
+long thread::id() const
+#else
+const void* thread::id() const
+#endif
+{
+	std::cout << *this;
+	return m_handle->id();
 }
 
 thread_group::thread_group()

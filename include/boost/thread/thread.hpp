@@ -17,6 +17,7 @@
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <iostream>
 #include <list>
 #include <memory>
 
@@ -119,10 +120,14 @@ public:
 
     thread();
     explicit thread(const function0<void>& threadfunc, attributes attr=attributes());
+	thread(const thread& other);
     ~thread();
+
+	thread& operator=(const thread& other);
 
     bool operator==(const thread& other) const;
     bool operator!=(const thread& other) const;
+	bool operator<(const thread& other) const;
 
     void join();
     void cancel();
@@ -145,8 +150,30 @@ public:
 	class data;
 
 private:
+	template <typename charT, typename Traits>
+		friend std::basic_ostream<charT, Traits>& operator<<(std::basic_ostream<charT, Traits>&, const thread&);
+	
+#if defined(BOOST_HAS_WINTHREADS)
+	long id() const;
+#else
+	const void* id() const;
+#endif
+
 	data* m_handle;
 };
+
+template <typename charT, typename Traits>
+std::basic_ostream<charT, Traits>& operator<<(std::basic_ostream<charT, Traits>& os, const thread& thrd)
+{
+	if (!os.good()) return os;
+
+	typename std::basic_ostream<charT, Traits>::sentry opfx(os);
+
+	if (opfx)
+		os << thrd.id();
+
+	return os;
+}
 
 class BOOST_THREAD_DECL thread_group : private noncopyable
 {
