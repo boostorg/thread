@@ -42,8 +42,7 @@ public:
 
     typedef detail::thread::scoped_lock<mutex> scoped_lock;
 
-    mutex();
-	mutex(const char* name);
+	mutex(const char* name=0);
     ~mutex();
 
 private:
@@ -84,8 +83,7 @@ public:
     typedef detail::thread::scoped_lock<try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
 
-    try_mutex();
-	try_mutex(const char* name);
+	try_mutex(const char* name=0);
     ~try_mutex();
 
 private:
@@ -128,8 +126,7 @@ public:
     typedef detail::thread::scoped_try_lock<timed_mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<timed_mutex> scoped_timed_lock;
 
-    timed_mutex();
-	timed_mutex(const char* name);
+	timed_mutex(const char* name=0);
     ~timed_mutex();
 
 private:

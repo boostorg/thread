@@ -1,14 +1,41 @@
 #include <boost/thread/detail/named.hpp>
+#include <string.h>
+#include <malloc.h>
 
 namespace {
 
-std::string encode(const char* str)
+char* concat(char* result, const char* buf)
+{
+	if (result == 0)
+		return strdup(buf);
+	
+	int len = strlen(result) + strlen(buf) + 1;
+	result = (char*)realloc(result, len);
+	strcat(result, buf);
+	return result;
+}
+
+char* get_root()
+{
+#if defined(BOOST_HAS_WINTHREADS)
+	return "";
+#elif defined(BOOST_HAS_PTHREADS)
+    return "/";
+#else
+	return "";
+#endif
+}
+
+char* encode(const char* str)
 {
 	const char* digits="0123456789abcdef";
-	std::string result;
+	char* result=0;
 	static char buf[100];
 	char* ebuf = buf + 100;
 	char* p = buf;
+	*p = 0;
+	strcat(p, get_root());
+	p = p + strlen(p);
 	while (*str)
 	{
 		if (((*str >= '0') && (*str <= '9')) ||
@@ -27,7 +54,7 @@ std::string encode(const char* str)
 			if (p + 3 >= ebuf)
 			{
 				*p = 0;
-				result += buf;
+				result = concat(result, buf);
 				p = buf;
 			}
 			*p = '%';
@@ -43,25 +70,14 @@ std::string encode(const char* str)
 		if (++p == ebuf)
 		{
 			*p = 0;
-			result += buf;
+			result = concat(result, buf);
 			p = buf;
 		}
 		++str;
 	}
 	*p = 0;
-	result += buf;
+	result = concat(result, buf);
 	return result;
-}
-
-std::string get_root()
-{
-#if defined(BOOST_HAS_WINTHREADS)
-	return "";
-#elif defined(BOOST_HAS_PTHREADS)
-    return "/";
-#else
-	return "";
-#endif
 }
 
 } // namespace
@@ -69,33 +85,38 @@ std::string get_root()
 namespace boost {
 namespace detail {
 
-named_object::named_object()
-{
-}
-
 named_object::named_object(const char* name)
-	: m_name(name)
+	: m_name(0), m_ename(0)
 {
+	if (name)
+	{
+		m_name = strdup(name);
+		if (*m_name == '%')
+			m_ename = m_name + 1;
+		else
+			m_ename = encode(name);
+	}
 }
 
 named_object::~named_object()
 {
+	if (m_name)
+	{
+		if (*m_name != '%')
+			free(m_ename);
+		free(m_name);
+	}
 }
 
-std::string named_object::name() const
+const char* named_object::name() const
 {
 	return m_name;
 }
 
-std::string named_object::effective_name() const
+const char* named_object::effective_name() const
 {
-	if (m_name.empty())
-		return m_name;
-	if (m_name[0] == '%')
-		return m_name.substr(1);
-	return get_root() + encode(m_name.c_str());
+	return m_ename;
 }
 
 } // namespace detail
 } // namespace boost
-

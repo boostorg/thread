@@ -34,12 +34,45 @@
 namespace {
 
 #if defined(BOOST_HAS_WINTHREADS)
+
+HANDLE mutex_cast(void* p)
+{
+    return reinterpret_cast<HANDLE>(p);
+}
+
+LPCRITICAL_SECTION critsect_cast(void* p)
+{
+    return reinterpret_cast<LPCRITICAL_SECTION>(p);
+}
+
+inline void close(void* mutex)
+{
+    int res = 0;
+    res = CloseHandle(mutex_cast(mutex));
+    assert(res);
+}
+
+inline int wait(void* mutex, int time)
+{
+    unsigned int res = 0;
+    res = WaitForSingleObject(mutex_cast(mutex), time);
+    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+    return res;
+}
+
+inline void release(void* mutex)
+{
+    int res = 0;
+    res = ReleaseMutex(mutex_cast(mutex));
+    assert(res);
+}
+
 class critsect_impl
 {
 public:
     critsect_impl()
     {
-        InitializeCriticalSection(&m_critsect);
+
     }
     ~critsect_impl()
     {
@@ -79,14 +112,14 @@ public:
         res = WaitForSingleObject(m_mutex, INFINITE);
         assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
     }
-    virtual bool trylock()
+    bool trylock()
     {
         unsigned int res = 0;
         res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
         assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
         return res == WAIT_OBJECT_0;
     }
-    virtual bool timedlock(const boost::xtime& xt)
+    bool timedlock(const boost::xtime& xt)
     {
         unsigned int res = 0;
         for (;;)
@@ -96,7 +129,7 @@ public:
 
             res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex),
                 milliseconds);
-            assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+
 
             if (res == WAIT_TIMEOUT)
             {
@@ -109,7 +142,7 @@ public:
             return res == WAIT_OBJECT_0;
         }
     }
-    virtual void unlock()
+    void unlock()
     {
         int res = 0;
         res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
@@ -126,58 +159,55 @@ private:
 namespace boost {
 
 #if defined(BOOST_HAS_WINTHREADS)
-mutex::mutex()
-{
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new critsect_impl());
-    }
-    catch (std::bad_alloc&)
-    {
-        m_mutex = 0;
-    }
-    if (!m_mutex)
-        throw thread_resource_error();
-    m_critsect = true;
-}
 
 mutex::mutex(const char* name)
     : boost::detail::named_object(name)
 {
-    try
+    if (name)
     {
-        m_mutex = reinterpret_cast<void*>(new mutex_impl(
-                                              effective_name().c_str()));
+        HANDLE mutex = CreateMutex(0, 0, effective_name());
+        if (mutex == INVALID_HANDLE_VALUE)
+            throw thread_resource_error();
+        m_critsect = false;
     }
-    catch (std::bad_alloc&)
+    else
     {
-        throw thread_resource_error();
+        try
+        {
+            LPCRITICAL_SECTION cs = new CRITICAL_SECTION;
+            InitializeCriticalSection(cs);
+            m_mutex = reinterpret_cast<void*>(cs);
+            m_critsect = true;
+        }
+        catch (std::bad_alloc&)
+        {
+            throw thread_resource_error();
+        }
     }
-    m_critsect = false;
 }
 
 mutex::~mutex()
 {
     if (m_critsect)
-        delete reinterpret_cast<critsect_impl*>(m_mutex);
+        delete critsect_cast(m_mutex);
     else
-        delete reinterpret_cast<mutex_impl*>(m_mutex);
+        close(m_mutex);
 }
 
 void mutex::do_lock()
 {
     if (m_critsect)
-        reinterpret_cast<critsect_impl*>(m_mutex)->lock();
+        EnterCriticalSection(critsect_cast(m_mutex));
     else
-        reinterpret_cast<mutex_impl*>(m_mutex)->lock();
+        wait(m_mutex, INFINITE);
 }
 
 void mutex::do_unlock()
 {
     if (m_critsect)
-        reinterpret_cast<critsect_impl*>(m_mutex)->unlock();
+        LeaveCriticalSection(critsect_cast(m_mutex));
     else
-        reinterpret_cast<mutex_impl*>(m_mutex)->unlock();
+        release(m_mutex);
 }
 
 void mutex::do_lock(cv_state&)
@@ -190,50 +220,32 @@ void mutex::do_unlock(cv_state&)
     do_unlock();
 }
 
-try_mutex::try_mutex()
-{
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new mutex_impl(0));
-    }
-    catch (std::bad_alloc&)
-    {
-        throw thread_resource_error();
-    }
-}
-
 try_mutex::try_mutex(const char* name)
     : boost::detail::named_object(name)
 {
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new mutex_impl(
-                                              effective_name().c_str()));
-    }
-    catch (std::bad_alloc&)
-    {
+    HANDLE mutex = CreateMutex(0, 0, effective_name());
+    if (mutex == INVALID_HANDLE_VALUE)
         throw thread_resource_error();
-    }
 }
 
 try_mutex::~try_mutex()
 {
-	delete reinterpret_cast<mutex_impl*>(m_mutex);
+    close(m_mutex);
 }
 
 void try_mutex::do_lock()
 {
-	reinterpret_cast<mutex_impl*>(m_mutex)->lock();
+    wait(m_mutex, INFINITE);
 }
 
 bool try_mutex::do_trylock()
 {
-	return reinterpret_cast<mutex_impl*>(m_mutex)->trylock();
+    return wait(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 void try_mutex::do_unlock()
 {
-	reinterpret_cast<mutex_impl*>(m_mutex)->unlock();
+    release(m_mutex);
 }
 
 void try_mutex::do_lock(cv_state&)
@@ -246,55 +258,53 @@ void try_mutex::do_unlock(cv_state&)
     do_unlock();
 }
 
-timed_mutex::timed_mutex()
-{
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new mutex_impl(0));
-    }
-    catch (std::bad_alloc&)
-    {
-        throw thread_resource_error();
-    }
-}
-
 timed_mutex::timed_mutex(const char* name)
     : boost::detail::named_object(name)
 {
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new mutex_impl(
-                                              effective_name().c_str()));
-    }
-    catch (std::bad_alloc&)
-    {
+    HANDLE mutex = CreateMutex(0, 0, effective_name());
+    if (mutex == INVALID_HANDLE_VALUE)
         throw thread_resource_error();
-    }
 }
 
 timed_mutex::~timed_mutex()
 {
-	delete reinterpret_cast<mutex_impl*>(m_mutex);
+    close(m_mutex);
 }
 
 void timed_mutex::do_lock()
 {
-	reinterpret_cast<mutex_impl*>(m_mutex)->lock();
+    wait(m_mutex, INFINITE);
 }
 
 bool timed_mutex::do_trylock()
 {
-	return reinterpret_cast<mutex_impl*>(m_mutex)->trylock();
+    return wait(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 bool timed_mutex::do_timedlock(const xtime& xt)
 {
-	return reinterpret_cast<mutex_impl*>(m_mutex)->timedlock(xt);
+    for (;;)
+    {
+        int milliseconds;
+        to_duration(xt, milliseconds);
+
+		int res = wait(m_mutex, milliseconds);
+
+        if (res == WAIT_TIMEOUT)
+        {
+            boost::xtime cur;
+            boost::xtime_get(&cur, boost::TIME_UTC);
+            if (boost::xtime_cmp(xt, cur) > 0)
+                continue;
+        }
+
+        return res == WAIT_OBJECT_0;
+    }
 }
 
 void timed_mutex::do_unlock()
 {
-	reinterpret_cast<mutex_impl*>(m_mutex)->unlock();
+	release(m_mutex);
 }
 
 void timed_mutex::do_lock(cv_state&)
