@@ -18,7 +18,9 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
-#   define NOMINMAX
+#   ifndef NOMINMAX
+#      define NOMINMAX
+#   endif 
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
