@@ -33,7 +33,6 @@
 			the specified locking strategy:
 
 			<informaltable>
-				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
 						<row>
@@ -124,7 +123,6 @@
 			the specified locking strategies:
 
 			<informaltable>
-				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
 						<row>
@@ -224,7 +222,6 @@
 			the specified locking strategies:
 
 			<informaltable>
-				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
 						<row>
