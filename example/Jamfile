@@ -14,11 +14,13 @@ include <module@>threads.jam ;
 
 template example
     ## sources ##
-    : <template>thread_base <lib>../build/boost_thread $(threadmon)
+    : <template>thread_base
+      <dll>../build/boost_thread
+      $(threadmon)
     ## requirements ##
     :
     ## default build ##
-    : release <runtime-link>static
+    : release <runtime-link>dynamic
 ;
 
 exe monitor : <template>example monitor.cpp ;

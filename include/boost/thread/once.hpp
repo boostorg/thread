@@ -17,6 +17,8 @@
 #   error   Thread support is unavailable!
 #endif
 
+#include <boost/thread/detail/config.hpp>
+
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
 #endif
@@ -35,7 +37,7 @@ typedef long once_flag;
 
 #endif
 
-void call_once(void (*func)(), once_flag& flag);
+void BOOST_THREAD_DECL call_once(void (*func)(), once_flag& flag);
 
 } // namespace boost
 

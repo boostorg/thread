@@ -20,7 +20,7 @@
 #endif
 
 #if defined(BOOST_HAS_WINTHREADS)
-#include "threadmon.hpp"
+#include <boost/thread/detail/threadmon.hpp>
 #include <map>
 namespace {
     typedef std::pair<void(*)(void*), void*> cleanup_info;

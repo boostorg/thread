@@ -12,6 +12,9 @@
 #ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
 #define BOOST_THREAD_EXCEPTIONS_PDM070801_H
 
+#include <boost/config.hpp>
+#include <boost/thread/detail/config.hpp>
+
 //  pdm: Sorry, but this class is used all over the place & I end up
 //       with recursive headers if I don't separate it
 //  wek: Not sure why recursive headers would cause compilation problems
@@ -22,18 +25,21 @@
 
 namespace boost {
 
-class lock_error : public std::logic_error
+class BOOST_THREAD_DECL lock_error : public std::logic_error
 {
 public:
     lock_error();
 };
 
-class thread_resource_error : public std::runtime_error
+class BOOST_THREAD_DECL thread_resource_error : public std::runtime_error
 {
 public:
     thread_resource_error();
 };
 
 } // namespace boost
+
+// Change log:
+//    3 Jan 03  WEKEMPF Modified for DLL implementation.
 
 #endif // BOOST_THREAD_CONFIG_PDM070801_H

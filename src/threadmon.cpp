@@ -1,12 +1,15 @@
 // threadmon.cpp : Defines the entry point for the DLL application.
 //
 
-#define BOOST_THREADMON_EXPORTS
-#include "threadmon.hpp"
+#include <boost/config.hpp>
 
-#ifdef BOOST_HAS_WINTHREADS
+#if defined(BOOST_HAS_WINTHREADS)
 
-#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
+#if defined(BOOST_THREAD_BUILD_DLL)
+
+#include <boost/thread/detail/threadmon.hpp>
+
+#define WIN32_LEAN_AND_MEAN  // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 
 #ifdef BOOST_MSVC
@@ -46,13 +49,18 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
         case DLL_THREAD_DETACH:
             {
                 // Call the thread's exit handlers.
-                exit_handlers* handlers = static_cast<exit_handlers*>(TlsGetValue(key));
+                exit_handlers* handlers =
+                    static_cast<exit_handlers*>(TlsGetValue(key));
                 if (handlers)
                 {
-                    for (exit_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+                    for (exit_handlers::iterator it = handlers->begin();
+                        it != handlers->end(); ++it)
+		    {
                         (*it)();
+		    }
 
-                    // Remove the exit handler list from the registered lists and then destroy it.
+                    // Remove the exit handler list from the registered lists
+                    // and then destroy it.
                     EnterCriticalSection(&cs);
                     registry.erase(handlers);
                     LeaveCriticalSection(&cs);
@@ -62,22 +70,31 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
             break;
         case DLL_PROCESS_DETACH:
             {
-                // Assume the main thread is ending (call its handlers) and all other threads
-                // have already ended.  If this DLL is loaded and unloaded dynamically at run time
+                // Assume the main thread is ending (call its handlers) and
+                // all other threads have already ended.  If this DLL is
+                // loaded and unloaded dynamically at run time
                 // this is a bad assumption, but this is the best we can do.
-                exit_handlers* handlers = static_cast<exit_handlers*>(TlsGetValue(key));
+                exit_handlers* handlers =
+                    static_cast<exit_handlers*>(TlsGetValue(key));
                 if (handlers)
                 {
-                    for (exit_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+                    for (exit_handlers::iterator it = handlers->begin();
+                        it != handlers->end(); ++it)
+		    {
                         (*it)();
+		    }
                 }
 
-                // Destroy any remaining exit handlers.  Above we assumed there'd only be the main
-                // thread left, but to insure we don't get memory leaks we won't make that assumption
+                // Destroy any remaining exit handlers.  Above we assumed
+                // there'd only be the main thread left, but to insure we
+                // don't get memory leaks we won't make that assumption
                 // here.
                 EnterCriticalSection(&cs);
-                for (registered_handlers::iterator it = registry.begin(); it != registry.end(); ++it)
+                for (registered_handlers::iterator it = registry.begin();
+                    it != registry.end(); ++it)
+		{
                     delete (*it);
+		}
                 LeaveCriticalSection(&cs);
                 DeleteCriticalSection(&cs);
                 TlsFree(key);
@@ -87,7 +104,7 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
     return TRUE;
 }
 
-int on_thread_exit(void (__cdecl * func)(void))
+extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void))
 {
     // Get the exit handlers for the current thread, creating and registering
     // one if it doesn't exist.
@@ -97,7 +114,7 @@ int on_thread_exit(void (__cdecl * func)(void))
         try
         {
             handlers = new exit_handlers;
-            // Handle "broken" implementations of operator new that don't throw.
+            // Handle broken implementations of operator new that don't throw.
             if (!handlers)
                 return -1;
         }
@@ -129,8 +146,8 @@ int on_thread_exit(void (__cdecl * func)(void))
         }
     }
 
-    // Attempt to add the handler to the list of exit handlers. If it's been previously
-    // added just report success and exit.
+    // Attempt to add the handler to the list of exit handlers. If it's been
+    // previously added just report success and exit.
     try
     {
         handlers->push_front(func);
@@ -142,5 +159,7 @@ int on_thread_exit(void (__cdecl * func)(void))
 
     return 0;
 }
+
+#endif // BOOST_THREAD_BUILD_DLL
 
 #endif // BOOST_HAS_WINTHREADS

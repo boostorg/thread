@@ -16,10 +16,6 @@ if $(NT)
               <library-file>$(install-path)/pre-built/lib/$(lib)
         ;
     }
-    else
-    {
-        threadmon = <dll>../build/boost_threadmon ;
-    }
 }
 
 template thread_base
