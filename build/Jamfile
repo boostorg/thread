@@ -62,9 +62,9 @@ lib boost_thread
 #######################
 # Stage the generated targets.
 
-stage bin-stage
-    : <lib>boost_thread $(threadmon)
-    : <tag><runtime-link-static>"s"
-      <tag><debug>"d"
-    : debug release <runtime-link>static/dynamic
-;
+#stage bin-stage
+#    : <lib>boost_thread $(threadmon)
+#    : <tag><runtime-link-static>"s"
+#      <tag><debug>"d"
+#    : debug release <runtime-link>static/dynamic
+#;

@@ -28,7 +28,7 @@ public:
     lock_error();
 };
 
-class thread_resource_error : public std::logic_error
+class thread_resource_error : public std::runtime_error
 {
 public:
     thread_resource_error();

@@ -195,7 +195,7 @@ bool recursive_timed_mutex::do_trylock()
 
 bool recursive_timed_mutex::do_timedlock(const xtime& xt)
 {
-    unsigned milliseconds;
+    int milliseconds;
     to_duration(xt, milliseconds);
 
     unsigned int res = 0;
@@ -936,7 +936,7 @@ bool recursive_timed_mutex::do_trylock()
 
 bool recursive_timed_mutex::do_timedlock(const xtime& xt)
 {
-    unsigned microseconds;
+    int microseconds;
     to_microduration(xt, microseconds);
     Duration lDuration = kDurationMicrosecond * microseconds;
 

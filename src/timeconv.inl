@@ -10,14 +10,14 @@
 // It is provided "as is" without express or implied warranty.
 
 namespace {
-    const unsigned MILLISECONDS_PER_SECOND = 1000;
-    const unsigned NANOSECONDS_PER_SECOND = 1000000000;
-    const unsigned NANOSECONDS_PER_MILLISECOND = 1000000;
+    const int MILLISECONDS_PER_SECOND = 1000;
+    const int NANOSECONDS_PER_SECOND = 1000000000;
+    const int NANOSECONDS_PER_MILLISECOND = 1000000;
 
-    const unsigned MICROSECONDS_PER_SECOND = 1000000;
-    const unsigned NANOSECONDS_PER_MICROSECOND = 1000;
+    const int MICROSECONDS_PER_SECOND = 1000000;
+    const int NANOSECONDS_PER_MICROSECOND = 1000;
 
-    inline void to_time(unsigned milliseconds, boost::xtime& xt)
+    inline void to_time(int milliseconds, boost::xtime& xt)
     {
         int res = 0;
         res = boost::xtime_get(&xt, boost::TIME_UTC);
@@ -45,7 +45,7 @@ namespace {
         }
     }
 
-    inline void to_time(unsigned milliseconds, timespec& ts)
+    inline void to_time(int milliseconds, timespec& ts)
     {
         boost::xtime xt;
         to_time(milliseconds, xt);
@@ -83,7 +83,7 @@ namespace {
     }
 #endif
 
-    inline void to_duration(const boost::xtime& xt, unsigned& milliseconds)
+    inline void to_duration(const boost::xtime& xt, int& milliseconds)
     {
         boost::xtime cur;
         int res = 0;
@@ -94,13 +94,13 @@ namespace {
             milliseconds = 0;
         else
         {
-            milliseconds = static_cast<unsigned>(((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
+            milliseconds = ((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
                 (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MILLISECOND/2)) /
-                NANOSECONDS_PER_MILLISECOND));
+                NANOSECONDS_PER_MILLISECOND);
         }
     }
 
-    inline void to_microduration(const boost::xtime& xt, unsigned& microseconds)
+    inline void to_microduration(const boost::xtime& xt, int& microseconds)
     {
         boost::xtime cur;
         int res = 0;
@@ -111,9 +111,9 @@ namespace {
             microseconds = 0;
         else
         {
-            microseconds = static_cast<unsigned long>(((xt.sec - cur.sec) * MICROSECONDS_PER_SECOND) +
+            microseconds = ((xt.sec - cur.sec) * MICROSECONDS_PER_SECOND) +
                 (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MICROSECOND/2)) /
-                NANOSECONDS_PER_MICROSECOND));
+                NANOSECONDS_PER_MICROSECOND);
         }
     }
 }
