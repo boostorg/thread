@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.  
 // It is provided "as is" without express or implied warranty.
 
+#define NOMINMAX
+
 #include <boost/thread/semaphore.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/limits.hpp>
@@ -18,7 +20,6 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
-#   define NOMINMAX
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
