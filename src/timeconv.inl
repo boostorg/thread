@@ -100,7 +100,7 @@ inline void to_duration(boost::xtime xt, int& milliseconds)
             xt.nsec += NANOSECONDS_PER_SECOND;
             --xt.sec;
         }
-        milliseconds = ((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
+        milliseconds = (int)((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
             (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MILLISECOND/2)) /
                 NANOSECONDS_PER_MILLISECOND);
     }
@@ -117,7 +117,7 @@ inline void to_microduration(const boost::xtime& xt, int& microseconds)
         microseconds = 0;
     else
     {
-        microseconds = ((xt.sec - cur.sec) * MICROSECONDS_PER_SECOND) +
+        microseconds = (int)((xt.sec - cur.sec) * MICROSECONDS_PER_SECOND) +
             (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MICROSECOND/2)) /
                 NANOSECONDS_PER_MICROSECOND);
     }

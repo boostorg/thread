@@ -31,7 +31,7 @@ namespace boost {
 
 #if defined(BOOST_HAS_WINTHREADS)
 recursive_mutex::recursive_mutex()
-    : m_count(0), m_mutex(0)
+    : m_mutex(0), m_count(0)
 {
     try
 	{
