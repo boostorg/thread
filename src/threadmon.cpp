@@ -13,6 +13,8 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 
+// Check this as well, for compatibility with pthreads-win32 (where this won't
+// be defined)
 #if defined(BOOST_THREAD_BUILD_DLL)
 
 #include <boost/thread/detail/threadmon.hpp>
@@ -25,18 +27,13 @@
 #endif
 
 #include <list>
-#include <set>
-#include <algorithm>
 
 typedef void (__cdecl * handler)(void);
 typedef std::list<handler> exit_handlers;
-typedef std::set<exit_handlers*> registered_handlers;
 
 namespace
 {
-CRITICAL_SECTION cs;
-DWORD key;
-registered_handlers registry;
+    DWORD key;
 }
 
 #if defined(__BORLANDC__)
@@ -48,66 +45,53 @@ BOOL WINAPI DllMain(HANDLE /*module*/, DWORD reason, LPVOID)
 {
     switch (reason)
     {
-    case DLL_PROCESS_ATTACH:
-        InitializeCriticalSection(&cs);
-        key = TlsAlloc();
-        break;
-    case DLL_THREAD_ATTACH:
-        break;
-    case DLL_THREAD_DETACH:
-    {
-        // Call the thread's exit handlers.
-        exit_handlers* handlers =
-            static_cast<exit_handlers*>(TlsGetValue(key));
-        if (handlers)
-        {
-            for (exit_handlers::iterator it = handlers->begin();
-                 it != handlers->end(); ++it)
+        case DLL_PROCESS_ATTACH:
+            key = TlsAlloc();
+            break;
+        case DLL_THREAD_ATTACH:
+            break;
+        case DLL_THREAD_DETACH:
             {
-                (*it)();
-            }
+                // Call the thread's exit handlers.
+                exit_handlers* handlers =
+                    static_cast<exit_handlers*>(TlsGetValue(key));
+                if (handlers)
+                {
+                    for (exit_handlers::iterator it = handlers->begin();
+                        it != handlers->end(); ++it)
+                    {
+                        (*it)();
+                    }
 
-            // Remove the exit handler list from the registered lists
-            // and then destroy it.
-            EnterCriticalSection(&cs);
-            registry.erase(handlers);
-            LeaveCriticalSection(&cs);
-            delete handlers;
-        }
-    }
-    break;
-    case DLL_PROCESS_DETACH:
-    {
-        // Assume the main thread is ending (call its handlers) and
-        // all other threads have already ended.  If this DLL is
-        // loaded and unloaded dynamically at run time
-        // this is a bad assumption, but this is the best we can do.
-        exit_handlers* handlers =
-            static_cast<exit_handlers*>(TlsGetValue(key));
-        if (handlers)
-        {
-            for (exit_handlers::iterator it = handlers->begin();
-                 it != handlers->end(); ++it)
+                    // Destroy the exit handler.
+                    delete handlers;
+                }
+            }
+            break;
+        case DLL_PROCESS_DETACH:
             {
-                (*it)();
-            }
-        }
+                // Assume the main thread is ending (call its handlers) and
+                // all other threads have already ended.  If this DLL is
+                // loaded and unloaded dynamically at run time
+                // this is a bad assumption, but this is the best we can do.
+                exit_handlers* handlers =
+                    static_cast<exit_handlers*>(TlsGetValue(key));
+                if (handlers)
+                {
+                    for (exit_handlers::iterator it = handlers->begin();
+                        it != handlers->end(); ++it)
+                    {
+                        (*it)();
+                    }
 
-        // Destroy any remaining exit handlers.  Above we assumed
-        // there'd only be the main thread left, but to insure we
-        // don't get memory leaks we won't make that assumption
-        // here.
-        EnterCriticalSection(&cs);
-        for (registered_handlers::iterator it = registry.begin();
-             it != registry.end(); ++it)
-        {
-            delete (*it);
-        }
-        LeaveCriticalSection(&cs);
-        DeleteCriticalSection(&cs);
-        TlsFree(key);
-    }
-    break;
+                    // Remove the exit handler list from the registered lists
+                    // and then destroy it.
+                    delete handlers;
+                }
+
+                TlsFree(key);
+            }
+            break;
     }
     return TRUE;
 }
@@ -137,25 +121,9 @@ extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void))
             delete handlers;
             return -1;
         }
-
-        // Attempt to register this new handler so that memory can be properly
-        // cleaned up.
-        try
-        {
-            EnterCriticalSection(&cs);
-            registry.insert(handlers);
-            LeaveCriticalSection(&cs);
-        }
-        catch (...)
-        {
-            LeaveCriticalSection(&cs);
-            delete handlers;
-            return -1;
-        }
     }
 
-    // Attempt to add the handler to the list of exit handlers. If it's been
-    // previously added just report success and exit.
+    // Attempt to add the handler to the list of exit handlers.
     try
     {
         handlers->push_front(func);
@@ -171,3 +139,9 @@ extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void))
 #endif // BOOST_THREAD_BUILD_DLL
 
 #endif // BOOST_HAS_WINTHREADS
+
+// Change Log:
+//  20 Mar 04  GLASSFORM for WEKEMPF 
+//      Removed uneccessary critical section:
+//          Windows already serializes calls to DllMain.
+//      Removed registered_handlers.
