@@ -4,8 +4,11 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <iostream>
-#include <windows.h>
-#include <process.h>
+
+#if defined(BOOST_HAS_WINTHREADS)
+#	include <windows.h>
+#	include <process.h>
+#endif
 
 enum game_state
 {

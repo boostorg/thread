@@ -11,9 +11,10 @@
 
 #include <boost/thread/semaphore.hpp>
 #include <boost/thread/xtime.hpp>
-#include <limits>
+#include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
+#include <errno.h>
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)

@@ -63,7 +63,7 @@
 #   if defined(_MT)
 #       define BOOST_HAS_THREADS
 #   endif
-//#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
+#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
 #   if !defined(BOOST_HAS_WINTHREADS)
 #       define BOOST_HAS_PTHREADS
 #       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
@@ -71,6 +71,20 @@
 #       pragma comment(lib, "pthreadVCE.lib")
 #   endif
 #   define BOOST_HAS_FTIME
+    //  pdm: this is for linux - is there a better #define to #if on?
+#elif defined( __GNUC__ )
+#   define BOOST_HAS_THREADS
+#   define BOOST_HAS_PTHREADS
+#   define BOOST_HAS_NANOSLEEP
+#   define BOOST_HAS_GETTIMEOFDAY
+    //  pdm: From the pthread.h header, one of these macros
+    //  must be defined for this stuff to exist.
+#   if defined( __USE_UNIX98 )
+#       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
+#   elif defined( __USE_GNU )
+#       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
+#       define BOOST_HAS_PTHREAD_YIELD
+#   endif
 #endif
 
 #endif // BOOST_THREAD_CONFIG_WEK070601_HPP

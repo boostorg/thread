@@ -12,7 +12,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp> 
-#include <limits>
+#include <boost/limits.hpp>
 #include <cassert>
 #include "timeconv.inl"
 

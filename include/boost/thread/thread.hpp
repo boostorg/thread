@@ -17,11 +17,12 @@
 #   error	Thread support is unavailable!
 #endif
 
+#include <boost/thread/exceptions.h>
+
 #include <boost/function.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <stdexcept>
 #include <list>
 
 #if defined(BOOST_HAS_PTHREADS)
@@ -31,12 +32,6 @@
 namespace boost {
 
 struct xtime;
-
-class lock_error : public std::runtime_error
-{
-public:
-    lock_error();
-};
 
 class thread : private noncopyable
 {
@@ -60,7 +55,9 @@ private:
     unsigned long m_thread;
     unsigned int m_id;
 #elif defined(BOOST_HAS_PTHREADS)
+public: // pdm: sorry about this, I'm getting an error in libs/boost/src/thread.cpp - you can work out how to best fix it ;)
     class thread_list;
+private:
     friend class thread_list;
 
     pthread_t m_thread;

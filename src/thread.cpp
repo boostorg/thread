@@ -271,7 +271,10 @@ void thread::sleep(const xtime& xt)
     assert(res == 0);
 #   elif defined(BOOST_HAS_NANOSLEEP)
     timespec ts;
-    to_timespec(xt, ts);
+    to_timespec_duration(xt, ts);
+
+		//  nanosleep takes a timespec that is an offset, not
+		//  an absolute time.
     nanosleep(&ts, 0);
 #   else
     semaphore sema;

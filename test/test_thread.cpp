@@ -11,7 +11,9 @@
 #define BOOST_INCLUDE_MAIN
 #include <boost/test/test_tools.hpp>
 
-#include <windows.h>
+#if defined(BOOST_HAS_WINTHREADS)
+#	include <windows.h>
+#endif
 
 template <typename M>
 void test_lock(M* dummy=0)

@@ -46,3 +46,4 @@ int xtime_get(struct xtime* xtp, int clock_type);
 //   8 Feb 01  WEKEMPF Initial version.
 
 #endif // BOOST_XTIME_WEK070601_HPP
+

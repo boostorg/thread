@@ -12,7 +12,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp> 
 #include <boost/thread/thread.hpp>
-#include <limits>
+#include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
 #include "timeconv.inl"

@@ -14,6 +14,8 @@
 
 #if defined(BOOST_HAS_FTIME)
 #   include <windows.h>
+#elif defined(BOOST_HAS_GETTIMEOFDAY)
+#	include <sys/time.h>
 #endif
 
 namespace boost {

@@ -13,6 +13,7 @@
 #define BOOST_XLOCK_WEK070601_HPP
 
 #include <boost/utility.hpp>
+#include <boost/thread/exceptions.h>
 
 namespace boost {
 
