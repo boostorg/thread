@@ -48,7 +48,7 @@ namespace boost {
 
 typedef <i>[implementation defined]</i> once_flag;
 const once_flag once_init = <i>[implementation defined]</i>;
-void call_once(void (*func)(), once_flag& flag);
+void call_once(void (*func)(), once_flag&amp; flag);
 
 } // namespace boost
 </pre>
@@ -58,7 +58,7 @@ void call_once(void (*func)(), once_flag& flag);
 <hr>
 <h3>once_flag</h3>
 
-<p>This opaque type is used as a flag to insure a routine is called only once.
+<p>This implementation defined type is used as a flag to insure a routine is called only once.
 Instances of this type should be statically initialized to <code>once_init</code>.</p>
 
 <hr>
@@ -71,7 +71,7 @@ to indicate that the logically associated routine has not been run yet.</p>
 <h3>call_once</h3>
 
 <pre>
-   void call_once(void (*func)(), once_flag& flag);
+   void call_once(void (*func)(), once_flag&amp; flag);
 </pre>
 
 <p><b>Effects:</b> As if (in an atomic fashion)</p>
@@ -101,7 +101,7 @@ void init()
 
 void thread_proc()
 {
-   boost::call_once(&init, once);
+   boost::call_once(&amp;init, once);
 }
 
 int main(int argc, char* argv[])
@@ -116,7 +116,7 @@ int main(int argc, char* argv[])
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

@@ -95,7 +95,7 @@ namespace boost { namespace detail { namespace thread {
 <h3>Constructor</h3>
 
 <pre>
-    scoped_timed_lock(TimedMutex&amp; mx, const xtime&amp; xt);
+    scoped_timed_lock(TimedMutex&amp; mx, const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
 <p><b>Effects:</b> Associates mutex <code>mx</code> with <code>*this</code>.
@@ -169,7 +169,7 @@ as indicated in <b>Effects</b>.</p>
 <h3>timed_lock</h3>
 
 <pre>
-    bool timed_lock(const xtime&amp; xt);
+    bool timed_lock(const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
 <p><b>Effects:</b>  Same as <code>lock()</code>, except that if xt is reached,
@@ -247,7 +247,7 @@ locked
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%B %d, %Y" startspan -->August 03, 2001<!--webbot bot="Timestamp" endspan i-checksum="21498" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%B %d, %Y" startspan -->September 04, 2001<!--webbot bot="Timestamp" endspan i-checksum="37969" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

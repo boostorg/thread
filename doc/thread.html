@@ -103,7 +103,7 @@ public:
     thread();
 </pre>
 
-<p><b>Effects:</b> Constructs a <code>thread</code> object for the current thread
+<p><b>Effects:</b> Constructs a <code>thread</code> object representing the current thread
 of execution.</p>
 
 <p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
@@ -114,7 +114,8 @@ of execution.</p>
     thread(const <A href="../../function/index.html">boost::function0</A>&lt;void&gt;&amp; threadfunc);
 </pre>
 
-<p><b>Effects:</b> Starts a new thread of execution.  Copies <code>threadfunc</code>
+<p><b>Effects:</b> Starts a new thread of execution and constructs a <code>thread</code> object
+representing it.  Copies <code>threadfunc</code>
 (which in turn copies the function object wrapped by <code>threadfunc</code>) to an
 internal location which persists for the lifetime of the new thread of execution.  Calls
 <code>operator()</code> on the copy of the <code>threadfunc</code> function object in
@@ -145,13 +146,18 @@ before the <code>thread</code> object is destroyed, call <code>join()</code>.</p
 
 <pre>
     bool operator==(const thread&amp; rhs);
-    bool operator!=(const thread&amp; rhs);
 </pre>
 
 <p><b>Requires:</b> The thread is non-terminated or <code>*this</code> is joinable.</p>
 
 <p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>rhs</code>
 represent the same thread of execution.</p>
+
+<pre>
+    bool operator!=(const thread&amp; rhs);
+</pre>
+
+<p><b>Returns:</b>  <code>!(*this==rhs)</code>.</p>
 
 <hr>
 <h3>join</h3>
@@ -172,7 +178,7 @@ are reclaimed.</p>
 <h3>sleep</h3>
 
 <pre>
-    static void sleep(const xtime&amp; xt);
+    static void sleep(const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
 <p><b>Effects:</b> The current thread of execution blocks until <code>xt</code> is
@@ -233,7 +239,7 @@ alarm sounded...
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->10 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34341" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>

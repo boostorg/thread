@@ -79,7 +79,7 @@ was <b>V</b> (short for the Dutch &quot;vrygeven&quot;, &quot;to release&quot;).
 <pre>
 namespace boost
 {
-    class semaphore : private boost::noncopyable
+    class semaphore : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
     {
     public:
         explicit semaphore(unsigned count=0, unsigned max=0);
@@ -162,7 +162,7 @@ Finally, <code>--m_count</code>.<code>&nbsp;</code></p>
 <hr>
 
 <pre>
-    bool down(const xtime&amp; xt);
+    bool down(const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
 <p><b>Effects:</b> If <code>m_count == 0</code>, places the current thread in
@@ -215,7 +215,7 @@ global_data == 4
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->16 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34353" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

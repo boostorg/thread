@@ -34,7 +34,7 @@
 <p>The <code>xtime</code> type is used to represent a point on some time scale or
 a duration in time. This type may be proposed for the C standard by Markus Kuhn.
 <b>Boost.Threads</b> provides only a very minimal implementation of this proposal
-and it's expected that a full implementation will be provided in Boost as a seperate
+and it's expected that a full implementation will be provided in Boost as a separate
 library, at which time <b>Boost.Threads</b> will deprecate its implementation.</p>
 
 <h2><a name="Header">Header</a></h2>
@@ -93,8 +93,7 @@ is 1970-01-01 00:00:00. This is the only clock type supported by <b>Boost.Thread
 
 <p><b>sec</b> represents the whole seconds that have passed since the epoch.</p>
 
-<p><b>nsec</b> represents the nano-seconds since the epoch that aren't included
-by <code>sec</code>.
+<p><b>nsec</b> represents the nanoseconds since <code>sec.</code>
 
 <hr>
 <h3>xtime_get</h3>
@@ -106,7 +105,11 @@ by <code>sec</code>.
 <p><b>Postcondition:</b> <code>xtp</code> represents the current point in time
 as a duration since the epoch specified by the <code>clock_type</code>.</p>
 
-<p><b>Notes:</b> The resolution is implementation specific.</p>
+<p><b>Notes:</b> The resolution is implementation specific.&nbsp; For many
+implementations the best resolution of time is far more than one nanosecond, and
+even when the resolution is reasonably good, the latency of a call to <code>xtime_get()</code>
+may be significant.&nbsp; For maximum portability, avoid durations of less than
+one second.</p>
 
 <hr>
 <h2><a name="Example">Example Usage</a></h2>
@@ -118,7 +121,7 @@ as a duration since the epoch specified by the <code>clock_type</code>.</p>
 int main(int argc, char* argv[])
 {
    boost::xtime xt;
-   boost::xtime_get(&xt, boost::TIME_UTC);
+   boost::xtime_get(&amp;xt, boost::TIME_UTC);
    xt.sec += 1;
    boost::thread::sleep(xt); // Sleep for 1 second
 }
@@ -126,7 +129,7 @@ int main(int argc, char* argv[])
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

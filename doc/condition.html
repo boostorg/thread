@@ -33,15 +33,16 @@
 
 <p>An object of class <code>condition</code> is a synchronization primitive used to
 cause a thread to wait until a particular shared-data condition (or time) is met.
-A <code>condition</code> always works in conjunction with a
-<A href="mutex_concept.html">mutex model</a>.  The
-<A href="mutex_concept.html">mutex model</a> must be locked prior to waiting on the
-<code>condition</code>, which is ensured by passing a
-<A href="lock_concept.html">lock model</a> to the <code>condition</code> class
-<code>wait</code> functions. While the thread is waiting on the <code>condition</code>
-the <A href="mutex_concept.html">mutex model</a> is unlocked.  When the thread returns
-from a call to one of the <code>condition</code> class <code>wait</code> functions,
-the <A href="mutex_concept.html">mutex model</a> is again locked.</p>
+A <code>condition</code>  object is always used in conjunction with a mutex
+object modeling a <a href="mutex_concept.html">Mutex Concept</a>. The mutex must be locked prior to waiting on the
+<code>condition</code>, which is ensured by passing a lock object modeling a <a href="lock_concept.html">Lock
+Concept</a> to the <code>condition</code> object's <code>wait</code> functions. While the thread is waiting on the <code>condition</code>
+object,
+the mutex associated with the lock is unlocked.  When the thread returns
+from a call to one of the <code>condition</code> object's <code>wait</code> functions,
+the mutex is again locked. The tricky lock/unlock/lock sequence is performed
+automatically by the <code>condition</code> object's <code>wait</code> 
+functions.</p>
 
 <p>The <code>condition</code> type is often used to implement the <i>Monitor Object</i>
 and other important patterns. See <A href="bibliography.html#Schmidt-00">[Schmidt-00]</a>
@@ -181,7 +182,7 @@ template &lt;typename ScopedLock, typename Pr&gt;
 
 <pre>
 template &lt;typename ScopedTimedLock&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt);
+   bool timed_wait(ScopedTimedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
 <p><b>Requires:</b> ScopedTimeLock meets the
@@ -207,7 +208,7 @@ encapsulates this loop idiom internally and is generally the preferred method.</
 <hr>
 <pre>
 template &lt;typename ScopedTimedLock, typename Pr&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, Pr pred);
+   bool timed_wait(ScopedTimedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; xt, Pr pred);
 </pre>
 
 <p><b>Requires: </b>ScopedTimeLock meets the
@@ -281,7 +282,7 @@ void sender(void*) {
     int n = 0;
     while (n &lt; 100) {
        buf.send(n);
-       std::cout &lt;&lt; "sent: " &lt;&lt; n &lt;&lt; std::endl;
+       std::cout &lt;&lt; &quot;sent: &quot; &lt;&lt; n &lt;&lt; std::endl;
        ++n;
     }
     buf.send(-1);
@@ -291,7 +292,7 @@ void receiver(void*) {
     int n;
     do {
        n = buf.receive();
-       std::cout &lt;&lt; "received: " &lt;&lt; n &lt;&lt; std::endl;
+       std::cout &lt;&lt; &quot;received: &quot; &lt;&lt; n &lt;&lt; std::endl;
     } while (n != -1); // -1 indicates end of buffer
 }
 
@@ -322,8 +323,7 @@ received: 4
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 
-August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34355" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

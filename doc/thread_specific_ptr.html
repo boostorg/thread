@@ -70,8 +70,8 @@ public:
     ~thread_specific_ptr();
 
     T* get() const;
-    T* operator->() const;
-    T& operator*() const;
+    T* operator-&gt;() const;
+    T&amp; operator*() const;
     T* release();
     void reset(T* p=0);
 };
@@ -127,13 +127,13 @@ for *this.</p>
 <h3>Smart Pointer Operations</h3>
 
 <pre>
-T* operator->() const;
+T* operator-&gt;() const;
 </pre>
 
 <p><b>Returns:</b> <code>get()</code></p>
 
 <pre>
-T& operator*() const;
+T&amp; operator*() const;
 </pre>
 
 <p><b>Returns:</b> <code>get()</code></p>
@@ -158,7 +158,7 @@ T* release();
 void reset(T* p=0);
 </pre>
 
-<p><b>Effects:</b> If <code>get() != p</code> then <code>delete get()</code>.</p>
+<p><b>Effects:</b> If <code>get()!= p</code> then <code>delete get()</code>.</p>
 
 <p><b>Postconditions:</b> <code>*this</code> holds the pointer <code>p</code> for
 the current thread. The pointer will be deleted when the thread terminates.</p>
@@ -201,7 +201,7 @@ int main(int argc, char* argv[])
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

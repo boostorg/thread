@@ -61,11 +61,11 @@ locked ObjA as well. This behavior can result in deadlock.  Other
 copy semantics result in similar problems (if you think you can prove this to
 be wrong then supply us with an alternative and we'll reconsider).</p>
 
-<h2>4. How can you prevent deadlock from occuring when a thread must lock multiple
-mutex instances?</h2>
+<h2>4. How can you prevent <a href="definitions.html#Deadlock"> deadlock</a> from occurring when a thread must lock multiple
+mutexes?</h2>
 
-<p>Always lock them in the same order.  One easy way of doing this is to use the
-mutex's address to determine the order in which they should be locked.  A future
+<p>Always lock them in the same order.  One easy way of doing this is to use
+each mutex's address to determine the order in which they are locked.  A future
 Boost.Threads concept may wrap this pattern up in a reusable class.</p>
 
 <h2>5. Don't noncopyable <a href="mutex_concept.html"> mutex</a> semantics mean that a
@@ -100,11 +100,11 @@ public:
    // For assignment we need to synchronize both objects!
    const counter&amp; operator=(const counter&amp; other)
    {
-      if (this == &other)
+      if (this == &amp;other)
          return *this;
          
-      boost::mutex::scoped_lock lock1(&m_mutex < &other.m_mutex ? m_mutex : other.m_mutex);
-      boost::mutex::scoped_lock lock2(&m_mutex > &other.m_mutex ? m_mutex : other.m_mutex);
+      boost::mutex::scoped_lock lock1(&amp;m_mutex &lt; &amp;other.m_mutex ? m_mutex : other.m_mutex);
+      boost::mutex::scoped_lock lock2(&amp;m_mutex &gt; &amp;other.m_mutex ? m_mutex : other.m_mutex);
       m_value = other.m_value;
       
       return *this;
@@ -164,7 +164,7 @@ by Darryl Green).</p>
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34355" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

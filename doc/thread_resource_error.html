@@ -32,8 +32,10 @@
 <h2><a name="Introduction">Introduction</a></h2>
 
 <p>The <code>thread_resource_error</code> class defines an exception type that is thrown
-by constructors in the <b>Boost.Threads</b> library when resources can not be
-acquired.</p>
+by constructors in the <b>Boost.Threads</b> library when thread related resources
+can not be
+acquired. This does not include memory allocation failures which instead throw
+std::bad_alloc.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -68,7 +70,7 @@ namespace boost
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

@@ -31,8 +31,9 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <tt>lock_error</tt> class defines an exception type that is thrown by lock operations that
-would otherwise deadlock, or by unlock operations attempted by a thread that does not own the lock.</p>
+<p>The <tt>lock_error</tt> class defines an exception type thrown to indicate a
+locking related error has been detected. Examples of such errors include a lock
+operation which can be determined to result in a deadlock, or unlock operations attempted by a thread that does not own the lock.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -99,7 +100,7 @@ thread lock error - deadlock occurred.
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->04 September, 2001<!--webbot bot="Timestamp" endspan i-checksum="39335" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
