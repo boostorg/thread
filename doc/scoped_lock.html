@@ -31,15 +31,18 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>This class template defines a generic lock type which meets the <a href="lock_concept.html#ScopedLock">ScopedLock</a>
-requirements. The <a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>,
+<p>This class template defines a generic lock type which meets the
+<a href="lock_concept.html#ScopedLock">ScopedLock</a> requirements. The
+<a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>,
 <a href="mutex.html">timed_mutex</a>, <a href="recursive_mutex.html">recursive_mutex</a>,
-<a href="recursive_mutex.html">recursive_try_mutex</a> and <a href="recursive_mutex.html">recursive_timed_mutex</a>
-classes all use this template to define their <code> scoped_lock</code> types.&nbsp;</p>
+<a href="recursive_mutex.html">recursive_try_mutex</a> and
+<a href="recursive_mutex.html">recursive_timed_mutex</a> classes all use this template
+to define their <code>scoped_lock</code> types.</p>
 
 <p>Like all the <b>Boost.Threads</b> <a href="lock_concept.html">lock models</a>,
-<tt>scoped_lock</tt> objects are meant to be short-lived. Objects of the class are not <a href="definitions.html#thread-safe">thread-safe</a>, and
-so should not be shared between threads.</p>
+<code>scoped_lock</code> objects are meant to be short-lived. Objects of the class
+are not <a href="definitions.html#thread-safe">thread-safe</a>, and so should not be
+shared between threads.</p>
 
 <p>Class <code> scoped_lock</code> follows the &quot;resource acquisition is
 initialization&quot; idiom <a href="bibliography.html#Stroustrup-00">[Stroustrup
@@ -50,7 +53,8 @@ the end of the enclosing scope. The lock() and unlock() members are usually not
 explicitly called, but are provided to allow for complex overlapping locks of multiple
 mutexes.</p>
 
-<p>The type used to instantiate the class must meet the <a href="mutex_concept.html#Mutex">Mutex</a> requirements.</p>
+<p>The type used to instantiate the class must meet the
+<a href="mutex_concept.html#Mutex">Mutex</a> requirements.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -64,8 +68,7 @@ mutexes.</p>
 <h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
-namespace boost
-{
+namespace boost { namespace detail { namespace thread {
     template &lt;typename Mutex&gt;
     class scoped_lock : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
     {
@@ -81,7 +84,8 @@ namespace boost
         operator const void*() const;
         bool locked() const;
     };
-
+} // namespace thread
+} // namespace detail
 } // namespace boost
 </pre>
 
@@ -96,7 +100,7 @@ namespace boost
 </pre>
 
 <p><b>Effects:</b> Associates mutex <code>mx</code> with <code>*this</code>.
-If <tt>lock_it</tt> is <tt>true,</tt> calls <tt>lock()</tt>.</p>
+If <code>lock_it</code> is <code>true,</code> calls <code>lock()</code>.</p>
 
 <hr>
 
@@ -106,7 +110,8 @@ If <tt>lock_it</tt> is <tt>true,</tt> calls <tt>lock()</tt>.</p>
     ~scoped_lock();
 </pre>
 
-<p><b>Effects:</b> If <code> locked()</code>, calls <code>unlock()</code>. Destroys <code>*this</code>.</p>
+<p><b>Effects:</b> If <code> locked()</code>, calls <code>unlock()</code>. Destroys
+<code>*this</code>.</p>
 
 <hr>
 
@@ -116,9 +121,9 @@ If <tt>lock_it</tt> is <tt>true,</tt> calls <tt>lock()</tt>.</p>
     void lock();
 </pre>
 
-<p><b>Effects:</b>  If the associated mutex
-is already locked by another lock in the current thread, the effects depend on the locking
-strategy of the associated mutex, as shown in the following table:</p>
+<p><b>Effects:</b>  If the associated mutex is already locked by another lock in the
+current thread, the effects depend on the locking strategy of the associated mutex, as
+shown in the following table:</p>
 
 <table border="1" cellpadding="5">
   <tr>
@@ -149,7 +154,7 @@ to the <a href="definitions.html#State">Running</a> state.
 
 <p><b>Postcondition:</b> locked()
 
-<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if <code>locked()</code>or
+<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if <code>locked()</code> or
 as indicated in <b>Effects</b>.</p>
 
 <hr>
@@ -172,11 +177,11 @@ as indicated in <b>Effects</b>.</p>
     operator const void*() const;
 </pre>
 
-<p><b>Returns:</b> If the associated mutex is currently locked, a value
-convertible to <code>true</code>, else a value convertible to <code>false</code>.</p>
+<p><b>Returns:</b> If the associated mutex is currently locked, a value convertible to
+<code>true</code>, else a value convertible to <code>false</code>.</p>
 
-<p><b>Rationale:</b> A <code>const void*</code> conversion is considered safer
-than a conversion to <code>bool</code>.</p>
+<p><b>Rationale:</b> A <code>const void*</code> conversion is considered safer than a
+conversion to <code>bool</code>.</p>
 
 <hr>
 <h3>locked</h3>
@@ -189,7 +194,8 @@ than a conversion to <code>bool</code>.</p>
 
 <h2><a name="Example">Example</a> Usage</h2>
 
-<p>See the example given in the documentation for the <a href="mutex.html">mutex</a> class.</p>
+<p>See the example given in the documentation for the <a href="mutex.html">mutex</a>
+class.</p>
 
 <hr>
 

@@ -194,10 +194,11 @@ void change_global_data(void*)
 int main(int, char*[])
 {
     const int num_threads = 4;
+    boost::thread_group thrds;
     for (int i=0; i &lt;  num_threads; ++i)
-        boost::thread::create(&amp;change_global_data, 0);
+        thrds.create(&amp;change_global_data, 0);
       
-    boost::thread::join_all();
+    thrds.join_all();
    
     return 0;
 }

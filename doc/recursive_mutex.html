@@ -37,41 +37,41 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt>
-classes define full featured
-models of the <a href="mutex_concept.html#Mutex">Mutex</a>, <a href="mutex_concept.html#TryMutex">TryMutex</a>,
-and <a href="mutex_concept.html#TimedMutex">TimedMutex</a>  concepts with recursive locking semantics. These
-types should be used to synchronize access to shared resources
-when recursive locking by a single thread is likely to occur. A good example for this is when a class
-supplies "internal synchronization" to ensure <a href="definitions.html#Thread-safe"> thread-safety</a> and a
-function of the class may have to call
-other functions of the class which also attempt to lock the mutex. For recursive locking mechanics, see
-<a href="mutex.html">mutexes</a>.
+<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and
+<code>recursive_timed_mutex</code> classes define full featured models of the
+<a href="mutex_concept.html#Mutex">Mutex</a>,
+<a href="mutex_concept.html#TryMutex">TryMutex</a> and
+<a href="mutex_concept.html#TimedMutex">TimedMutex</a> concepts with recursive locking
+semantics. These types should be used to synchronize access to shared resources
+when recursive locking by a single thread is likely to occur. A good example for this
+is when a class supplies "internal synchronization" to ensure
+<a href="definitions.html#Thread-safe">thread-safety</a> and a function of the class
+may have to call other functions of the class which also attempt to lock the mutex.
+For recursive locking mechanics, see <a href="mutex.html">mutexes</a>.
 
 <p>Each class supplies one or more typedefs for lock types which model matching
-lock concepts. For the best possible performance you should use the mutex class that supports
-the minimum set of lock
-types that you need.</p>
+lock concepts. For the best possible performance you should use the mutex class that
+supports the minimum set of lock types that you need.</p>
 
 <table border="1" cellpadding="5">
   <tr>
     <td><b>Mutex Class</b></td>
     <td><b>Lock name</b></td>
     <td><b>Implementation defined Lock Type</b></td>
-    <td><b>&nbsp;Lock Concept</b></td>
+    <td><b>Lock Concept</b></td>
   </tr>
   <tr>
     <td valign="top"><a href="#recursive_mutex Synopsis"><code>recursive_mutex</code></a></td>
     <td valign="middle"><code>scoped_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;recursive_mutex&gt;</code></a></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a></td>
   </tr>
   <tr>
-    <td valign="top"><tt><a href="#recursive_try_mutex Synopsis">recursive_try_mutex</a></tt> </td>
+    <td valign="top"><code><a href="#recursive_try_mutex Synopsis">recursive_try_mutex</a></code></td>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_try_mutex&gt;<br>
-      </code></a><code><a href="scoped_try_lock.html">detail::scoped_try_lock&lt;recursive_try_mutex&gt;</a></code></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;recursive_try_mutex&gt;<br>
+      </code></a><code><a href="scoped_try_lock.html">detail::thread::scoped_try_lock&lt;recursive_try_mutex&gt;</a></code></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
       <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a></td>
   </tr>
@@ -80,27 +80,28 @@ types that you need.</p>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock<br>
       scoped_timed_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;recursive_timed_mutex&gt;</code></a><br>
-      <a href="scoped_try_lock.html"><code>detail::scoped_try_lock&lt;recursive_timed_mutex&gt;</code></a><br>
-      <a href="scoped_timed_lock.html"><code>detail::scoped_timed_lock&lt;recursive_timed_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;recursive_timed_mutex&gt;</code></a><br>
+      <a href="scoped_try_lock.html"><code>detail::thread::scoped_try_lock&lt;recursive_timed_mutex&gt;</code></a><br>
+      <a href="scoped_timed_lock.html"><code>detail::thread::scoped_timed_lock&lt;recursive_timed_mutex&gt;</code></a></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
       <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a><br>
       <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a></td>
   </tr>
 </table>
 
-<p>The <tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt> employ a
-<tt>Recursive</tt> <a href="mutex_concept.html#LockingStrategies">locking strategy</a>, so attempts to
-recursively lock them succeed and an internal "lock count" is maintained.  Attempts to unlock them
-by a thread that does not own a lock on them will result in a <a href="lock_error.html">lock_error</a>
-exception being thrown.</p>
+<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and
+<code>recursive_timed_mutex</code> employ a <code>Recursive</code>
+<a href="mutex_concept.html#LockingStrategies">locking strategy</a>, so attempts to
+recursively lock them succeed and an internal "lock count" is maintained.  Attempts
+to unlock them by a thread that does not own a lock on them will result in a
+<a href="lock_error.html">lock_error</a> exception being thrown.</p>
 
-<p>The
-<tt>recursive_mutex</tt>, <tt>recursive_try_mutex</tt> and <tt>recursive_timed_mutex</tt> leave the
-<a href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <tt>Unspecified</tt>.
-Programmers should assume that threads waiting for a lock on objects of these types
-acquire
-the lock in a random order, even though the specific behavior for a given platform may be different.</p>
+<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and
+<code>recursive_timed_mutex</code> leave the
+<a href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as
+<code>Unspecified</code>. Programmers should assume that threads waiting for a lock on
+objects of these types acquire the lock in a random order, even though the specific
+behavior for a given platform may be different.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -115,14 +116,14 @@ the lock in a random order, even though the specific behavior for a given platfo
 <pre>
 namespace boost
 {
-    class recursive_mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
-    {
-    public:
-       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
+   class recursive_mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
+   {
+   public:
+      typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
       
-       recursive_mutex();
-       ~recursive_mutex();
-    };
+      recursive_mutex();
+      ~recursive_mutex();
+   };
 }
 </pre>
 

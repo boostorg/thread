@@ -35,7 +35,7 @@ class thread : private noncopyable
 {
 public:
     thread();
-    thread(const function0<void>& threadfunc);
+    explicit thread(const function0<void>& threadfunc);
     ~thread();
 
     bool operator==(const thread& other) const;

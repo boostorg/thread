@@ -31,22 +31,24 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <code>thread_specific_ptr</code> class defines an interface for using thread specific storage.
-Thread specific storage is data associated with individual threads and is often used to make
-operations <a href="definitions.html#Thread-safe">thread-safe</a> that rely on global data.</p>
+<p>The <code>thread_specific_ptr</code> class defines an interface for using thread
+specific storage. Thread specific storage is data associated with individual threads
+and is often used to make operations
+<a href="definitions.html#Thread-safe">thread-safe</a> that rely on global data.</p>
 
 <p>Template <code>thread_specific_ptr</code> stores a pointer to an object obtained via
-<code>new</code> on a thread-by-thread basis and deletes the object when a thread terminates.
-Each thread initially stores the null pointer in each <code>thread_specific_ptr</code> instance.</p>
+<code>new</code> on a thread-by-thread basis and calls delete on the contained pointer
+when the thread terminates. Each thread initially stores the null pointer in each
+<code>thread_specific_ptr</code> instance.</p>
 
 <p>The template <code>thread_specific_ptr</code> is useful in the following cases:</p>
 
 <ul>
-   <li>An interface was original written assuming a single thread of control and is being ported
-to a multi-threaded environment.</li>
-   <li>Each thread of control invokes sequences of methods that share data that must be logically
-accessed through a globally visible access point, but are physically unique for each thread,
-instead of being explicitly passed.</li>
+   <li>An interface was original written assuming a single thread of control and is
+       being ported to a multi-threaded environment.</li>
+   <li>Each thread of control invokes sequences of methods that share data that must be
+       logically accessed through a globally visible access point, but are physically
+       unique for each thread, instead of being explicitly passed.</li>
 </ul>
 
 <h2><a name="Header">Header</a></h2>
@@ -94,8 +96,8 @@ in all threads, with each thread initially storing a null pointer.</p>
 <p><b>Throws:</b> <code>boost::thread_resource_error</code> if the necessary resources
 can not be obtained.</p>
 
-<p><b>Notes:</b> There is an implementation specific limit to the number of thread specific
-storage objects that can be created, and this limit may be small.</p>
+<p><b>Notes:</b> There is an implementation specific limit to the number of thread
+specific storage objects that can be created, and this limit may be small.</p>
 
 <hr>
 <h3>Destructor</h3>
@@ -104,9 +106,10 @@ storage objects that can be created, and this limit may be small.</p>
 ~thread_specific_ptr();
 </pre>
 
-<p><b>Notes:</b> Does not destroy any data that may be stored in any thread's thread specific
-storage. For this reason you should not destroy a <code>thread_specific_ptr</code> object until
-you are certain there are no threads running that have made use of its thread specific storage.</p>
+<p><b>Notes:</b> Does not destroy any data that may be stored in any thread's thread
+specific storage. For this reason you should not destroy a
+<code>thread_specific_ptr</code> object until you are certain there are no threads
+running that have made use of its thread specific storage.</p>
 
 <hr>
 <h3>get</h3>
@@ -115,7 +118,8 @@ you are certain there are no threads running that have made use of its thread sp
 T* get() const;
 </pre>
 
-<p><b>Returns:</b> The object stored in thread specific storage for the current thread for *this.</p>
+<p><b>Returns:</b> The object stored in thread specific storage for the current thread
+for *this.</p>
 
 <p><b>Notes:</b> Each thread initially returns 0.</p>
 
@@ -154,9 +158,10 @@ T* release();
 void reset(T* p=0);
 </pre>
 
-<p><b>Effects:</b> If <code>get() != p</code> then <code>delete get()</code>.
+<p><b>Effects:</b> If <code>get() != p</code> then <code>delete get()</code>.</p>
 
-<p><b>Postconditions:</b> <code>*this</code> holds the pointer <code>p</code> for the current thread.</p>
+<p><b>Postconditions:</b> <code>*this</code> holds the pointer <code>p</code> for
+the current thread. The pointer will be deleted when the thread terminates.</p>
 
 <hr>
 <h2><a name="Example">Example Usage</a></h2>
@@ -166,11 +171,11 @@ void reset(T* p=0);
 #include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
 #include &lt;cassert&gt;
 
-boost::tss value;
+boost::thread_specific_ptr<int> value;
 
 void increment()
 {
-   int* p = static_cast<int*>(value.get());
+   int* p = value.get();
    ++*p;
 }
 
@@ -180,10 +185,9 @@ void thread_proc()
    for (int i=0; i&lt;10; ++i)
    {
        increment();
-       int* p = static_cast<int*>(value.get());
+       int* p = value.get();
        assert(*p == i+1);
    }
-   delete value.get();
 }
 
 int main(int argc, char* argv[])

@@ -48,10 +48,11 @@ cleanup handlers, and completion of the normal C++ function return behaviors, su
 as destruction of automatic storage (stack) objects and releasing any associated
 implementation resources.</p>
 
-<p>A thread object has an associated state which is either "joinable" or "non-joinable".</p>
+<p>A thread object has an associated state which is either "joinable" or
+"non-joinable".</p>
 
-<p>Except as described below, the policy used by an implementation of <b>Boost.Threads</b>
-to schedule transitions between thread states is unspecified.</p>
+<p>Except as described below, the policy used by an implementation of
+<b>Boost.Threads</b> to schedule transitions between thread states is unspecified.</p>
 
 <p><b>Note: </b>Just as the lifetime of a file may be different from the
 lifetime of an iostream object which represents the file, the lifetime of a
@@ -59,9 +60,9 @@ thread of execution may be different from the <code>thread</code> object which
 represents the thread of execution. In particular, after a call to <code>join()</code>,
 the thread of execution will no longer exist even though the <code>thread</code>
 object continues to exist until the end of its normal lifetime. The
-converse is also possible; if a <code>thread</code> object is destroyed without <code>join()</code>
-having first been called, the thread of execution continues until its initial function
-completes.</p>
+converse is also possible; if a <code>thread</code> object is destroyed without
+<code>join()</code> having first been called, the thread of execution continues until
+its initial function completes.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -114,10 +115,10 @@ of execution.</p>
 </pre>
 
 <p><b>Effects:</b> Starts a new thread of execution.  Copies <code>threadfunc</code>
-(which in turn copies the function object wrapped by <code>threadfunc</code>) to an internal
-location which persists for the lifetime of the new thread of execution.  Calls
-<code>operator()</code> on the copy of the <code>threadfunc</code> function object in the
-new thread of execution.</p>
+(which in turn copies the function object wrapped by <code>threadfunc</code>) to an
+internal location which persists for the lifetime of the new thread of execution.  Calls
+<code>operator()</code> on the copy of the <code>threadfunc</code> function object in
+the new thread of execution.</p>
 
 <p><b>Postcondition:</b> <code>*this</code> is joinable.</p>
 
@@ -161,8 +162,9 @@ represent the same thread of execution.</p>
 
 <p><b>Requires:</b> <code>*this != thread()</code> and <code>*this</code> is joinable.</p>
 
-<p><b>Effects:</b> The current thread of execution blocks until the initial function of the thread
-of execution represented by <code>*this</code> finishes and all resources are reclaimed.</p>
+<p><b>Effects:</b> The current thread of execution blocks until the initial function of
+the thread of execution represented by <code>*this</code> finishes and all resources
+are reclaimed.</p>
 
 <p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
 
@@ -173,7 +175,8 @@ of execution represented by <code>*this</code> finishes and all resources are re
     static void sleep(const xtime&amp; xt);
 </pre>
 
-<p><b>Effects:</b> The current thread of execution blocks until <code>xt</code>.</p>
+<p><b>Effects:</b> The current thread of execution blocks until <code>xt</code> is
+reached.</p>
 
 <hr>
 <h3>yield</h3>

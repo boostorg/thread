@@ -59,15 +59,15 @@ types that you need.</p>
   <tr>
     <td valign="top"><a href="#mutex Synopsis"><code>mutex</code></a></td>
     <td valign="middle"><code>scoped_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;mutex&gt;</code></a></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;mutex&gt;</code></a></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a></td>
   </tr>
   <tr>
     <td valign="top"><tt><a href="#try_mutex Synopsis">try_mutex</a></tt> </td>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;try_mutex&gt;<br>
-      </code></a><code><a href="scoped_try_lock.html">detail::scoped_try_lock&lt;try_mutex&gt;</a></code></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;try_mutex&gt;<br>
+      </code></a><code><a href="scoped_try_lock.html">detail::thread::scoped_try_lock&lt;try_mutex&gt;</a></code></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
       <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a></td>
   </tr>
@@ -76,9 +76,9 @@ types that you need.</p>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock<br>
       scoped_timed_lock</code></td>
-    <td valign="middle"><a href="scoped_lock.html"><code>detail::scoped_lock&lt;timed_mutex&gt;</code></a><br>
-      <a href="scoped_try_lock.html"><code>detail::scoped_try_lock&lt;timed_mutex&gt;</code></a><br>
-      <a href="scoped_timed_lock.html"><code>detail::scoped_timed_lock&lt;timed_mutex&gt;</code></a></td>
+    <td valign="middle"><a href="scoped_lock.html"><code>detail::thread::scoped_lock&lt;timed_mutex&gt;</code></a><br>
+      <a href="scoped_try_lock.html"><code>detail::thread::scoped_try_lock&lt;timed_mutex&gt;</code></a><br>
+      <a href="scoped_timed_lock.html"><code>detail::thread::scoped_timed_lock&lt;timed_mutex&gt;</code></a></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock">ScopedLock</a><br>
       <a href="lock_concept.html#ScopedTryLock">ScopedTryLock</a><br>
       <a href="lock_concept.html#ScopedTimedLock">ScopedTimedLock</a></td>
@@ -285,10 +285,11 @@ void change_count(void*)
 int main(int, char*[])
 {
     const int num_threads = 4;
+    boost::thread_group thrds;
     for (int i=0; i &lt; num_threads; ++i)
-        boost::thread::create(&amp;change_count, 0);
+        thrds.create(&amp;change_count, 0);
       
-    boost::thread::join_all();
+    thrds.join_all();
    
     return 0;
 }
