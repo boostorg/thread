@@ -21,8 +21,7 @@ namespace std { using ::strerror; }
 
 // BOOST_POSIX or BOOST_WINDOWS specify which API to use.
 # if !defined( BOOST_WINDOWS ) && !defined( BOOST_POSIX )
-#   if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) \
- || defined(__CYGWIN__)
+#   if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
 #     define BOOST_WINDOWS
 #   else
 #     define BOOST_POSIX
