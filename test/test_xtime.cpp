@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/xtime.hpp>
 
 #include <boost/test/unit_test.hpp>

@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp>
@@ -18,7 +20,7 @@
 #include <boost/test/unit_test_suite_ex.hpp>
 
 #define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
-#include "util.inl"
+#include <libs/thread/test/util.inl>
 
 template <typename M>
 struct test_lock
