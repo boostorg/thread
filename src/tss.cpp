@@ -11,246 +11,198 @@
 
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <vector>
 #include <stdexcept>
 #include <cassert>
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
+#   include <boost/thread/detail/threadmon.hpp>
 #endif
 
+namespace {
+
+typedef std::vector<void*> tss_slots;
+
+struct tss_data_t
+{
+    boost::mutex mutex;
+    std::vector<boost::function1<void, void*>*> cleanup_handlers;
 #if defined(BOOST_HAS_WINTHREADS)
-#include <boost/thread/detail/threadmon.hpp>
-#include <map>
-namespace {
-typedef std::pair<void(*)(void*), void*> cleanup_info;
-typedef std::map<int, cleanup_info> cleanup_handlers;
-
-DWORD key;
-boost::once_flag once = BOOST_ONCE_INIT;
-
-void init_cleanup_key()
-{
-    key = TlsAlloc();
-    assert(key != 0xFFFFFFFF);
-}
-
-void __cdecl cleanup()
-{
-    cleanup_handlers* handlers = static_cast<cleanup_handlers*>(
-        TlsGetValue(key));
-    for (cleanup_handlers::iterator it = handlers->begin();
-         it != handlers->end(); ++it)
-    {
-        cleanup_info info = it->second;
-        if (info.second)
-            info.first(info.second);
-    }
-    delete handlers;
-}
-
-cleanup_handlers* get_handlers()
-{
-    boost::call_once(&init_cleanup_key, once);
-
-    cleanup_handlers* handlers = static_cast<cleanup_handlers*>(
-        TlsGetValue(key));
-    if (!handlers)
-    {
-        try
-        {
-            handlers = new cleanup_handlers;
-        }
-        catch (...)
-        {
-            return 0;
-        }
-        int res = 0;
-        res = TlsSetValue(key, handlers);
-        assert(res);
-        res = on_thread_exit(&cleanup);
-        assert(res == 0);
-    }
-
-    return handlers;
-}
-}
+    DWORD native_key;
+#elif defined(BOOST_HAS_PTHREADS)
+    pthread_key_t native_key;
 #elif defined(BOOST_HAS_MPTASKS)
-#include <map>
-namespace {
-typedef std::pair<void(*)(void*), void*> cleanup_info;
-typedef std::map<int, cleanup_info> cleanup_handlers;
+    TaskStorageIndex native_key;
+#endif
+};
 
-TaskStorageIndex key;
-boost::once_flag once = BOOST_ONCE_INIT;
+tss_data_t* tss_data = 0;
+boost::once_flag tss_data_once = BOOST_ONCE_INIT;
 
-void init_cleanup_key()
+extern "C" void cleanup_slots(void* p)
 {
-    OSStatus lStatus = MPAllocateTaskStorageIndex(&key);
-    assert(lStatus == noErr);
+    tss_slots* slots = static_cast<tss_slots*>(p);
+    for (tss_slots::size_type i = 0; i < slots->size(); ++i)
+    {
+        boost::mutex::scoped_lock lock(tss_data->mutex);
+        (*tss_data->cleanup_handlers[i])((*slots)[i]);
+        (*slots)[i] = 0;
+    }
 }
 
-cleanup_handlers* get_handlers()
+void init_tss_data()
 {
-    boost::call_once(&init_cleanup_key, once);
+    std::auto_ptr<tss_data_t> temp(new tss_data_t);
 
-    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(
-        MPGetTaskStorageValue(key));
-    if (!handlers)
+#if defined(BOOST_HAS_WINTHREADS)
+    temp->native_key = TlsAlloc();
+    if (temp->native_key == 0xFFFFFFFF)
+        return;
+#elif defined(BOOST_HAS_PTHREADS)
+    int res = pthread_key_create(&temp->native_key, &cleanup_slots);
+    if (res != 0)
+        return;
+#elif defined(BOOST_HAS_MPTASKS)
+    OSStatus status = MPAllocateTaskStorageIndex(&temp->native_key);
+    if (status != noErr)
+        return;
+#endif
+
+    // Intentional memory "leak"
+    // This is the only way to ensure the mutex in the global data
+    // structure is available when cleanup handlers are run, since the
+    // execution order of cleanup handlers is unspecified on any platform
+    // with regards to C++ destructor ordering rules.
+    tss_data = temp.release();
+}
+
+#if defined(BOOST_HAS_WINTHREADS)
+tss_slots* get_slots(bool alloc);
+
+void __cdecl tss_thread_exit()
+{
+    tss_slots* slots = get_slots(false);
+    if (slots)
+        cleanup_slots(slots);
+}
+#endif
+
+tss_slots* get_slots(bool alloc)
+{
+    tss_slots* slots = 0;
+
+#if defined(BOOST_HAS_WINTHREADS)
+    slots = static_cast<tss_slots*>(
+        TlsGetValue(tss_data->native_key));
+#elif defined(BOOST_HAS_PTHREADS)
+    slots = static_cast<tss_slots*>(
+        pthread_getspecific(tss_data->native_key));
+#elif defined(BOOST_HAS_MPTASKS)
+    slots = static_cast<tss_slots*>(
+        MPGetTaskStorageValue(tss_data->native_key));
+#endif
+
+    if (slots == 0 && alloc)
     {
-        try
-        {
-            handlers = new cleanup_handlers;
-        }
-        catch (...)
-        {
+        std::auto_ptr<tss_slots> temp(new tss_slots);
+
+#if defined(BOOST_HAS_WINTHREADS)
+        if (on_thread_exit(&tss_thread_exit) == -1)
             return 0;
-        }
-        OSStatus lStatus = noErr;
-        lStatus = MPSetTaskStorageValue(key,
-            reinterpret_cast<TaskStorageValue>(handlers));
-        assert(lStatus == noErr);
-        // TODO - create a generalized mechanism for registering thread exit
-        // functions and use it here.
+        if (!TlsSetValue(tss_data->native_key, temp.get()))
+            return 0;
+#elif defined(BOOST_HAS_PTHREADS)
+        if (pthread_setspecific(tss_data->native_key, temp.get()) != 0)
+            return 0;
+#elif defined(BOOST_HAS_MPTASKS)
+        if (MPSetTaskStorageValue(tss_data->native_key, temp.get()) != noErr)
+            return 0;
+#endif
+
+        slots = temp.release();
     }
 
-    return handlers;
+    return slots;
 }
 
-}
+} // namespace
 
 namespace boost {
 
 namespace detail {
-
-
-void thread_cleanup()
+void tss::init(boost::function1<void, void*>* pcleanup)
 {
-    cleanup_handlers* handlers = reinterpret_cast<cleanup_handlers*>(
-        MPGetTaskStorageValue(key));
-    if(handlers != NULL)
+    boost::call_once(&init_tss_data, tss_data_once);
+    if (tss_data == 0)
+        throw thread_resource_error();
+    boost::mutex::scoped_lock lock(tss_data->mutex);
+    try
     {
-        for (cleanup_handlers::iterator it = handlers->begin();
-             it != handlers->end(); ++it)
+        tss_data->cleanup_handlers.push_back(pcleanup);
+        m_slot = tss_data->cleanup_handlers.size() - 1;
+    }
+    catch (...)
+    {
+        throw thread_resource_error();
+    }
+}
+
+void* tss::get() const
+{
+    tss_slots* slots = get_slots(false);
+
+    if (!slots)
+        return 0;
+
+    if (m_slot >= slots->size())
+        return 0;
+
+    return (*slots)[m_slot];
+}
+
+void tss::set(void* value)
+{
+    tss_slots* slots = get_slots(true);
+
+    if (!slots)
+        throw boost::thread_resource_error();
+
+    if (m_slot >= slots->size())
+    {
+        try
         {
-            cleanup_info info = it->second;
-            if (info.second)
-                info.first(info.second);
+            slots->resize(m_slot + 1);
         }
-        delete handlers;
+        catch (...)
+        {
+            throw boost::thread_resource_error();
+        }
     }
+
+    (*slots)[m_slot] = value;
 }
 
-
-} // namespace detail
-
-} // namespace boost
-
-#endif
-
-namespace boost { namespace detail {
-
-#if defined(BOOST_HAS_WINTHREADS)
-tss::tss(void (*cleanup)(void*))
+void tss::cleanup(void* value)
 {
-    m_key = TlsAlloc();
-    if (m_key == 0xFFFFFFFF)
-        throw thread_resource_error();
-
-    m_cleanup = cleanup;
+    boost::mutex::scoped_lock lock(tss_data->mutex);
+    (*tss_data->cleanup_handlers[m_slot])(value);
 }
-
-tss::~tss()
-{
-    int res = 0;
-    res = TlsFree(m_key);
-    assert(res);
-}
-
-void* tss::get() const
-{
-    return TlsGetValue(m_key);
-}
-
-bool tss::set(void* value)
-{
-    if (value && m_cleanup)
-    {
-        cleanup_handlers* handlers = get_handlers();
-        assert(handlers);
-        if (!handlers)
-            return false;
-        cleanup_info info(m_cleanup, value);
-        (*handlers)[m_key] = info;
-    }
-    return !!TlsSetValue(m_key, value);
-}
-#elif defined(BOOST_HAS_PTHREADS)
-tss::tss(void (*cleanup)(void*))
-{
-    int res = 0;
-    res = pthread_key_create(&m_key, cleanup);
-    if (res != 0)
-        throw thread_resource_error();
-}
-
-tss::~tss()
-{
-    int res = 0;
-    res = pthread_key_delete(m_key);
-    assert(res == 0);
-}
-
-void* tss::get() const
-{
-    return pthread_getspecific(m_key);
-}
-
-bool tss::set(void* value)
-{
-    return pthread_setspecific(m_key, value) == 0;
-}
-#elif defined(BOOST_HAS_MPTASKS)
-tss::tss(void (*cleanup)(void*))
-{
-    OSStatus lStatus = MPAllocateTaskStorageIndex(&m_key);
-    if(lStatus != noErr)
-        throw thread_resource_error();
-
-    m_cleanup = cleanup;
-}
-
-tss::~tss()
-{
-    OSStatus lStatus = MPDeallocateTaskStorageIndex(m_key);
-    assert(lStatus == noErr);
-}
-
-void* tss::get() const
-{
-    TaskStorageValue ulValue = MPGetTaskStorageValue(m_key);
-    return(reinterpret_cast<void *>(ulValue));
-}
-
-bool tss::set(void* value)
-{
-    if (value && m_cleanup)
-    {
-        cleanup_handlers* handlers = get_handlers();
-        assert(handlers);
-        if (!handlers)
-            return false;
-        cleanup_info info(m_cleanup, value);
-        (*handlers)[m_key] = info;
-    }
-    OSStatus lStatus = MPSetTaskStorageValue(m_key,
-        reinterpret_cast<TaskStorageValue>(value));
-    return(lStatus == noErr);
-}
-#endif
 
 } // namespace detail
 } // namespace boost
 
 // Change Log:
-//   6 Jun 01  WEKEMPF Initial version.
+//   6 Jun 01  
+//      WEKEMPF Initial version.
+//  30 May 02  WEKEMPF 
+//      Added interface to set specific cleanup handlers.
+//      Removed TLS slot limits from most implementations.
+//  22 Mar 04 GlassfordM for WEKEMPF
+//      Fixed: thread_specific_ptr::reset() doesn't check error returned
+//          by tss::set(); tss::set() now throws if it fails.
+//      Fixed: calling thread_specific_ptr::reset() or 
+//          thread_specific_ptr::release() causes double-delete: once on
+//          reset()/release() and once on ~thread_specific_ptr().
