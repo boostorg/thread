@@ -31,21 +31,38 @@
 			cleanup functionality to work on Win32 platforms.
 			Several options are currently being explored to resolve
 			this issue. In the meantime, the ability to link 
-			&Boost.Threads; statically has been added back 
-			<emphasis>with <classname>boost::thread_specific_ptr</classname>
-			support removed</emphasis> from the statically linked version.
-			The decision to add it back was made because its lack is
-			one of the most frequent complaints about &Boost.Threads;
-			and because the other approaches that are being investigated 
-			to deal with <classname>boost::thread_specific_ptr</classname>
+			&Boost.Threads; statically has been added back in
+			such a way that, on Win32 platforms only, the user is
+			required to call the cleanup functions on_thread_exit() 
+			and on_process_exit() at appropriate times. If these
+			functions are not properly called cleanup will not
+			work and leaks will result. In addition, in cases where
+			&Boost.Threads; doesn't call the cleanup functions itself,
+			the user is required to implement the (probably empty) function
+			tss_cleanup_implemented() in order to eliminate linker errors.
+			This function's only purpose is to serve as a flag: the linker
+			error stating that the function is missing warns the
+			the user of the necessity of caling the cleanup functions.
+			In addition, if &Boost.Threads; later implements tss cleanup
+			where it currently not implemented, the linker's
+			duplicate symbol error should warn the user that their custom
+			implementation is no longer needed.</para>
+			
+			<para>The decision to add back static-linking support
+			was made because its lack is one of the most frequent complaints 
+			about &Boost.Threads; and because the other approaches that are 
+			being investigated to deal with 
+			<classname>boost::thread_specific_ptr</classname>
 			cleanup look fairly promising.
+			
 			<note>&Boost.Threads; is still dynamically linked by default.
 			In order to force it to be statically linked, it is necessary to
 			#define BOOST_THREAD_USE_LIB before any of the &Boost.Threads;
 			header files are #included.</note>
+			
 			<note>If the <classname>boost::thread_specific_ptr</classname> cleanup
-			issue cannot be resolved by some other means, it is highly
-			likely that the option to statically link &Boost.Threads;
+			issue cannot be resolved by some other means, it is quite
+			possible that the option to statically link &Boost.Threads;
 			will be removed again in a future version of Boost, at least
 			for Win32 platforms. This is because the 
 			<classname>boost::thread_specific_ptr</classname> functionality
@@ -68,7 +85,14 @@
 			<classname>boost::read_write_mutex</classname>,
 			<classname>boost::try_read_write_mutex</classname>, and
 			<classname>boost::timed_read_write_mutex</classname>
-			were added.</para>
+			were added.
+			
+			<note>Since the read/write mutex and related classes are new,
+			both interface and implementation are liable to change
+			in future releases of &Boost.Threads;.
+			The lock concepts and lock promotion in particular are
+			still under discussion and very likely to change.</note>
+			</para>
 		</section>
 		
 		<section id="threads.release_notes.boost_1_32_0.change_log.thread_specific_ptr">
@@ -107,6 +131,12 @@
 			whenever possible; otherwise they use a Win32 mutex. As before, 
 			<classname>boost::timed_mutex</classname> and 
 			<classname>boost::recursive_timed_mutex</classname> use a Win32 mutex.</para>
+		</section>
+
+		<section id="threads.release_notes.boost_1_32_0.change_log.wince">
+			<title>Windows CE support improved</title>
+
+			<para>Minor changes were made to make Boost.Threads work on Windows CE.</para>
 		</section>
 	</section>
 </section>
