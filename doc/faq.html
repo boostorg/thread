@@ -163,10 +163,17 @@ private:
   by Darryl Green).</p>
 <h2><a name="question10"></a>10. Why has class semaphore disappeared?</h2>
 <p>Semaphore was removed as too error prone. The same effect can be achieved with
-  greater safety by the combination of a mutex and a condition variable.</p>
+  greater safety by the combination of a mutex and a condition variable. 
+Dijkstra (the semaphore's inventor), Hoare, and Brinch Hansen all depreciated 
+semaphores and advocated more structured alternatives. [<a href="bibliography.html#Andrews-83">Andrews-83]</a> 
+summarizes typical errors as &quot;omitting a <b>P</b> or a <b>V</b>, or accidentally 
+coding a <b>P</b> on one semaphore and a <b>V </b>on on another&quot;, forgetting to 
+include all references to shared objects in critical sections, and confusion 
+caused by using the same primitive for &quot;both condition synchronization and 
+mutual exclusion&quot;. </p>
 <hr>
 <p>Revised
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->09 January, 2003<!--webbot bot="Timestamp" endspan i-checksum="38582" -->
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->06 July, 2003<!--webbot bot="Timestamp" endspan i-checksum="21104" -->
 </p>
 <p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
