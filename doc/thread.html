@@ -7,11 +7,11 @@
 <body link="#0000ff" vlink="#800080">
 <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
     "header">
-  <tr> 
-    <td valign="top" width="300"> 
+  <tr>
+    <td valign="top" width="300">
       <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../c++boost.gif" border="0"></a></h3>
     </td>
-    <td valign="top"> 
+    <td valign="top">
       <h1 align="center">Boost.Threads</h1>
       <h2 align="center">Header &lt;<a href="../../../boost/thread/thread.hpp">boost/thread.hpp</a>&gt;</h2>
     </td>
@@ -19,33 +19,33 @@
 </table>
 <hr>
 <h2>Contents</h2>
-<dl class="page-index"> 
+<dl class="page-index">
   <dt><a href="#introduction">Introduction</a></dt>
   <dt><a href="#classes">Classes</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#class-thread">Class <code>thread</code></a></dt>
-    <dl class="page-index"> 
+    <dl class="page-index">
       <dt><a href="#class-thread-synopsis">Class <code>thread</code> synopsis</a></dt>
-      <dt><a href="#class-thread-ctors">Class <code>thread</code> constructors 
+      <dt><a href="#class-thread-ctors">Class <code>thread</code> constructors
         and destructor</a></dt>
-      <dt><a href="#class-thread-comparisons">Class <code>thread</code> comparison 
+      <dt><a href="#class-thread-comparisons">Class <code>thread</code> comparison
         functions</a></dt>
-      <dt><a href="#class-thread-modifiers">Class <code>thread</code> modifier 
+      <dt><a href="#class-thread-modifiers">Class <code>thread</code> modifier
         functions</a></dt>
       <dt><a href="#class-thread-statics">Class <code>thread</code> static functions</a></dt>
     </dl>
     <dt><a href="#class-thread_group">Class <code>thread_group</code></a></dt>
-    <dl class="page-index"> 
-      <dt><a href="#class-thread_group-synopsis">Class <code>thread_group</code> 
+    <dl class="page-index">
+      <dt><a href="#class-thread_group-synopsis">Class <code>thread_group</code>
         synopsis</a></dt>
-      <dt><a href="#class-thread_group-ctors">Class <code>thread_group</code> 
+      <dt><a href="#class-thread_group-ctors">Class <code>thread_group</code>
         constructors and destructor</a></dt>
-      <dt><a href="#class-thread_group-modifiers">Class <code>thread_group</code> 
+      <dt><a href="#class-thread_group-modifiers">Class <code>thread_group</code>
         modifier functions</a></dt>
     </dl>
   </dl>
   <dt><a href="#examples">Example(s)</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#example-thread">Simple usage of <code>boost::thread</code></a></dt>
     <dt><a href="#example-thread_group">Simple usage of <code>boost::thread_group</code></a></dt>
   </dl>
@@ -57,32 +57,32 @@
   which are used to create, observe and manage threads and groups of threads.</p>
 <h2><a name="classes"></a>Classes</h2>
 <h3><a name="class-thread"></a>Class <code>thread</code></h3>
-<p>The <code>thread</code> class represents threads of execution, and provides 
-  the functionality to create and manage threads within the <b> Boost.Threads</b> 
-  library. See <a href="definitions.html"> Definitions</a> for a precise description 
-  of &quot;thread of execution&quot;, and for definitions of threading related 
+<p>The <code>thread</code> class represents threads of execution, and provides
+  the functionality to create and manage threads within the <b> Boost.Threads</b>
+  library. See <a href="definitions.html"> Definitions</a> for a precise description
+  of &quot;thread of execution&quot;, and for definitions of threading related
   terms and of thread states such as &quot;blocked&quot;.</p>
-<p>A thread of execution has an initial function. For the program&#39;s initial 
-  thread, the initial function is <code>main()</code>. For other threads, the 
-  initial function is <code>operator()</code> of the function object passed to 
+<p>A thread of execution has an initial function. For the program&#39;s initial
+  thread, the initial function is <code>main()</code>. For other threads, the
+  initial function is <code>operator()</code> of the function object passed to
   the class <code>thread</code> constructor.</p>
-<p>A thread of execution is said to be &quot;finished&quot; or &quot;finished 
-  execution&quot; when its initial function returns or is terminated. This includes 
-  completion of all thread cleanup handlers, and completion of the normal C++ 
-  function return behaviors, such as destruction of automatic storage (stack) 
+<p>A thread of execution is said to be &quot;finished&quot; or &quot;finished
+  execution&quot; when its initial function returns or is terminated. This includes
+  completion of all thread cleanup handlers, and completion of the normal C++
+  function return behaviors, such as destruction of automatic storage (stack)
   objects and releasing any associated implementation resources.</p>
-<p>A thread object has an associated state which is either &quot;joinable&quot; 
+<p>A thread object has an associated state which is either &quot;joinable&quot;
   or &quot;non-joinable&quot;.</p>
-<p>Except as described below, the policy used by an implementation of <b>Boost.Threads</b> 
+<p>Except as described below, the policy used by an implementation of <b>Boost.Threads</b>
   to schedule transitions between thread states is unspecified.</p>
-<p><b>Note:</b> Just as the lifetime of a file may be different from the lifetime 
-  of an iostream object which represents the file, the lifetime of a thread of 
-  execution may be different from the <code> thread</code> object which represents 
-  the thread of execution. In particular, after a call to <code>join()</code>, 
-  the thread of execution will no longer exist even though the <code>thread</code> 
-  object continues to exist until the end of its normal lifetime. The converse 
-  is also possible; if a <code>thread</code> object is destroyed without <code>join()</code> 
-  having first been called, the thread of execution continues until its initial 
+<p><b>Note:</b> Just as the lifetime of a file may be different from the lifetime
+  of an iostream object which represents the file, the lifetime of a thread of
+  execution may be different from the <code> thread</code> object which represents
+  the thread of execution. In particular, after a call to <code>join()</code>,
+  the thread of execution will no longer exist even though the <code>thread</code>
+  object continues to exist until the end of its normal lifetime. The converse
+  is also possible; if a <code>thread</code> object is destroyed without <code>join()</code>
+  having first been called, the thread of execution continues until its initial
   function completes.</p>
 <h4><a name="class-thread-synopsis"></a>Class <code>thread</code> synopsis</h4>
 <pre>
@@ -107,13 +107,13 @@ public:
 };
 } // namespace boost
 </pre>
-<h4><a name="class-thread-ctors"></a>Class <code>thread</code> constructors and 
+<h4><a name="class-thread-ctors"></a>Class <code>thread</code> constructors and
   destructor</h4>
 <pre>
 thread();
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Constructs a <code>thread</code> object representing the 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Constructs a <code>thread</code> object representing the
     current thread of execution.</dt>
   <dt><b>Postconditions:</b> <code>*this</code> is non-joinable.</dt>
   <dt><b>Danger:</b> <code>*this</code> is valid only within the current thread.</dt>
@@ -121,43 +121,43 @@ thread();
 <pre>
 thread(const <a href="../../function/index.html">boost::function0</a>&lt;void&gt;&amp; threadfunc);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Starts a new thread of execution and constructs a <code>thread</code> 
-    object representing it. Copies <code> threadfunc</code> (which in turn copies 
-    the function object wrapped by <code>threadfunc</code>) to an internal location 
-    which persists for the lifetime of the new thread of execution. Calls <code>operator()</code> 
-    on the copy of the <code>threadfunc</code> function object in the new thread 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Starts a new thread of execution and constructs a <code>thread</code>
+    object representing it. Copies <code> threadfunc</code> (which in turn copies
+    the function object wrapped by <code>threadfunc</code>) to an internal location
+    which persists for the lifetime of the new thread of execution. Calls <code>operator()</code>
+    on the copy of the <code>threadfunc</code> function object in the new thread
     of execution.</dt>
   <dt><b>Postconditions:</b> <code>*this</code> is joinable.</dt>
-  <dt><b>Throws:</b> <code>boost::thread_resource_error</code> if a new thread 
+  <dt><b>Throws:</b> <code>boost::thread_resource_error</code> if a new thread
     of execution cannot be started.</dt>
 </dl>
 <pre>
 ~Thread();
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Destroys <code>*this</code>. The actual thread of execution 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Destroys <code>*this</code>. The actual thread of execution
     may continue to execute after the <code>thread</code> object has been destroyed.</dt>
-  <dt><b>Note:</b> If <code>*this</code> is joinable the actual thread of execution 
-    becomes &quot;detached&quot;. Any resources used by the thread will be reclaimed 
-    when the thread of execution completes. To ensure such a thread of execution 
-    runs to completion before the <code> thread</code> object is destroyed, call 
+  <dt><b>Note:</b> If <code>*this</code> is joinable the actual thread of execution
+    becomes &quot;detached&quot;. Any resources used by the thread will be reclaimed
+    when the thread of execution completes. To ensure such a thread of execution
+    runs to completion before the <code> thread</code> object is destroyed, call
     <code>join()</code>.</dt>
 </dl>
-<h4><a name="class-thread-comparisons"></a>Class <code>thread</code> comparison 
+<h4><a name="class-thread-comparisons"></a>Class <code>thread</code> comparison
   functions</h4>
 <pre>
 bool operator==(const thread&amp; rhs) const;
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> The thread is non-terminated or <code>*this</code> is joinable.</dt>
-  <dt><b>Returns:</b> <code>true</code> if <code>*this</code> and <code> rhs</code> 
+  <dt><b>Returns:</b> <code>true</code> if <code>*this</code> and <code> rhs</code>
     represent the same thread of execution.</dt>
 </dl>
 <pre>
 bool operator!=(const thread&amp; rhs) const;
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> The thread is non-terminated or <code>*this</code> is joinable.</dt>
   <dt><b>Returns:</b> <code>!(*this==rhs)</code>.</dt>
 </dl>
@@ -165,40 +165,40 @@ bool operator!=(const thread&amp; rhs) const;
 <pre>
 void join();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> <code>*this</code> is joinable.</dt>
-  <dt><b>Effects:</b> The current thread of execution blocks until the initial 
-    function of the thread of execution represented by <code> *this</code> finishes 
+  <dt><b>Effects:</b> The current thread of execution blocks until the initial
+    function of the thread of execution represented by <code> *this</code> finishes
     and all resources are reclaimed.</dt>
   <dt><b>Postconditions:</b> <code>*this</code> is non-joinable.</dt>
-  <dt><b>Notes:</b> If <code>*this == thread()</code> the result is implementation 
-    defined. If the implementation doesn&#39;t detect this the result will be 
+  <dt><b>Notes:</b> If <code>*this == thread()</code> the result is implementation
+    defined. If the implementation doesn&#39;t detect this the result will be
     <a href="definitions.html#Deadlock"> deadlock</a>.</dt>
 </dl>
 <h4><a name="class-thread-statics"></a>Class <code>thread</code> static functions</h4>
 <pre>
 static void sleep(const <a href="xtime.html">xtime</a>&amp; XT);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> The current thread of execution blocks until <code> XT</code> 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> The current thread of execution blocks until <code> XT</code>
     is reached.</dt>
 </dl>
 <pre>
 static void yield();
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> The current thread of execution is placed in the &quot;ready&quot; 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> The current thread of execution is placed in the &quot;ready&quot;
     state.</dt>
-  <dt><b>Notes:</b> Allow the current thread to give up the rest of its time slice 
-    (or other scheduling quota) to another thread. Particularly useful in non-preemptive 
+  <dt><b>Notes:</b> Allow the current thread to give up the rest of its time slice
+    (or other scheduling quota) to another thread. Particularly useful in non-preemptive
     implementations.</dt>
 </dl>
 <h3><a name="class-thread_group"></a>Class <code>thread_group</code></h3>
-<p>The <tt>thread_group</tt> class provides a container for easy grouping of threads 
+<p>The <tt>thread_group</tt> class provides a container for easy grouping of threads
   to simplify several common thread creation and management idioms.</p>
 <p>All <tt>thread_group</tt> member functions are <a href=
         "definitions.html#thread-safe">thread-safe</a>, except destruction.</p>
-<h4><a name="class-thread_group-synopsis"></a>Class <code>thread_group</code> 
+<h4><a name="class-thread_group-synopsis"></a>Class <code>thread_group</code>
   synopsis</h4>
 <pre>
 namespace boost {
@@ -216,62 +216,62 @@ namespace boost {
     };
 } // namespace boost
 </pre>
-<h4><a name="class-thread_group-ctors"></a>Class <code>thread_group</code> constructors 
+<h4><a name="class-thread_group-ctors"></a>Class <code>thread_group</code> constructors
   and destructor</h4>
 <pre>
 thread_group();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Effects:</b> Constructs an empty <code>thread_group</code> container.</dt>
 </dl>
 <pre>
 ~thread_group();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Effects:</b> Destroys each contained thread object. Destroys <code>*this</code>.</dt>
-  <dt><b>Notes:</b> Behavior is undefined if another thread references *this during 
+  <dt><b>Notes:</b> Behavior is undefined if another thread references *this during
     the execution of the destructor.</dt>
 </dl>
-<h4><a name="class-thread_group-modifiers"></a>Class <code>thread_group</code> 
+<h4><a name="class-thread_group-modifiers"></a>Class <code>thread_group</code>
   modifier functions</h4>
 <pre>
 thread* create_thread(const boost::function0&lt;void&gt;&amp; threadfunc);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Creates a new <tt>thread</tt> object that executes <tt>threadfunc</tt> 
-    and adds it to the <tt>thread_group</tt> container object&#39;s list of managed 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Creates a new <tt>thread</tt> object that executes <tt>threadfunc</tt>
+    and adds it to the <tt>thread_group</tt> container object&#39;s list of managed
     <tt>thread</tt> objects.</dt>
   <dt><b>Returns:</b> Pointer to the newly created thread.</dt>
 </dl>
 <pre>
 void add_thread(thread* thrd);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Adds <tt>thrd</tt> to the <tt>thread_group</tt> object&#39;s 
-    list of managed <tt>thread</tt> objects. The <tt>thrd</tt> object must have 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Adds <tt>thrd</tt> to the <tt>thread_group</tt> object&#39;s
+    list of managed <tt>thread</tt> objects. The <tt>thrd</tt> object must have
     been allocated via operator new and will be deleted when the group is destroyed.</dt>
 </dl>
 <pre>
 Void remove_thread(thread* thrd);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Removes <code>*this</code>&#39;s list of managed <tt>thread</tt> 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Removes <code>*this</code>&#39;s list of managed <tt>thread</tt>
     objects.</dt>
-  <dt><b>Throws:</b> ? if <tt>thrd</tt> is not it <code>*this</code>&#39;s list 
+  <dt><b>Throws:</b> ? if <tt>thrd</tt> is not it <code>*this</code>&#39;s list
     of managed <tt>thread</tt> objects.</dt>
 </dl>
 <pre>
 Void join_all();
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Effects:</b> Calls <code>join()</code> on each of the managed <tt>thread</tt> 
+<dl class="function-semantics">
+  <dt><b>Effects:</b> Calls <code>join()</code> on each of the managed <tt>thread</tt>
     objects.</dt>
 </dl>
 <h2><a name="functions"></a>Functions</h2>
 <pre>
 <a name="function-spec"></a>{{function}}
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> {{text}}</dt>
   <dt><b>Effects:</b> {{text}}</dt>
   <dt><b>Postconditions:</b> {{text}}</dt>
@@ -284,63 +284,14 @@ Void join_all();
 <p><a name="object-spec"></a>{{Object specifications}}</p>
 <h2><a name="examples"></a>Example(s)</h2>
 <h3><a name="example-thread"></a>Simple usage of <code>boost::thread</code></h3>
-<pre>
-#include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostream&gt;
-
-struct thread_alarm
-{
-   thread_alarm(int secs) : m_secs(secs) { }
-   void operator()()
-   {
-       boost::xtime XT;
-       boost::xtime_get(&amp;XT, boost::TIME_UTC);
-       xt.sec += m_secs;
-
-       boost::thread::sleep(XT);
-
-       std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
-   }
-
-   int m_secs;
-};
-
-int main(int argc, char* argv[])
-{
-   int secs = 5;
-   std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
-   thread_alarm alarm(secs);
-   boost::thread thrd(alarm);
-   thrd.join();
-}
-</pre>
+<p><a href="../example/thread.cpp">libs/thread/example/thread.cpp</a></p>
 <p>The output is:</p>
 <pre>
 setting alarm for 5 seconds...
 alarm sounded...
 </pre>
 <h3><a name="example-thread_group"></a>Simple usage of <code>boost::thread_group</code></h3>
-<pre>
-#include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostream&gt;
-
-int count = 0;
-boost::mutex mutex;
-
-void increment_count()
-{
-   boost::mutex::lock lock(mutex);
-   std::cout &lt;&lt; &quot;count = &quot; &lt;&lt; ++count &lt;&lt; std::endl;
-}
-
-int main(int argc, char* argv[])
-{
-   boost::thread_group threads;
-   for (int i = 0; i &lt; 10; ++i)
-      threads.create_thread(&amp;increment_count);
-   threads.join_all();
-}
-</pre>
+<p><a href="../example/thread_group.cpp">libs/thread/example/thread_group.cpp</a></p>
 <p>The output is:</p>
 <pre>
 count = 1
@@ -355,18 +306,18 @@ count = 9
 count = 10
 </pre>
 <hr>
-<p>Revised 
+<p>Revised
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001 
+  05 November, 2001
   <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
 </p>
-<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002. 
+<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
-<p>Permission to use, copy, modify, distribute and sell this software and its 
-  documentation for any purpose is hereby granted without fee, provided that the 
-  above copyright notice appear in all copies and that both that copyright notice 
-  and this permission notice appear in supporting documentation. William E. Kempf 
-  makes no representations about the suitability of this software for any purpose. 
+<p>Permission to use, copy, modify, distribute and sell this software and its
+  documentation for any purpose is hereby granted without fee, provided that the
+  above copyright notice appear in all copies and that both that copyright notice
+  and this permission notice appear in supporting documentation. William E. Kempf
+  makes no representations about the suitability of this software for any purpose.
   It is provided &quot;as is&quot; without express or implied warranty.</p>
 </body>
 </html>

@@ -31,17 +31,21 @@ subproject libs/thread/build ;
 SEARCH on <module@>threads.jam = $(SUBDIR) ;
 include <module@>threads.jam ;
 
+template thread_libs
+    ## sources ##
+    : <template>thread_base
+    ## requirements ##
+    :
+    ## default build ##
+    : debug release <runtime-link>static/dynamic
+;
+
 #######################
 # Conditionally declare the Boost.Threads dynamic link library boost_threadmon.
 
 if $(NT) && ! $(PTW32)
 {
-    dll boost_threadmon
-        : ../src/threadmon.cpp
-        : <include>$(BOOST_ROOT)
-          <threading>multi
-        : debug release <runtime-link>static/dynamic
-    ;
+    dll boost_threadmon : <template>thread_libs ../src/threadmon.cpp ;
 }
 
 #######################
@@ -51,13 +55,7 @@ if $(NT) && ! $(PTW32)
 CPP_SOURCES =
     condition mutex recursive_mutex thread tss xtime once exceptions thread_pool barrier rw_mutex ;
 
-lib boost_thread
-    : ../src/$(CPP_SOURCES).cpp
-    : <include>$(BOOST_ROOT)
-      <threading>multi
-      $(pthreads-win32)
-    : debug release <runtime-link>static/dynamic
-;
+lib boost_thread : <template>thread_libs ../src/$(CPP_SOURCES).cpp ;
 
 #######################
 # Stage the generated targets.

@@ -145,12 +145,25 @@ bool timed_mutex::do_trylock()
 
 bool timed_mutex::do_timedlock(const xtime& xt)
 {
-    int milliseconds;
-    to_duration(xt, milliseconds);
+    unsigned int res = 0;
+    for (;;)
+    {
+        int milliseconds;
+        to_duration(xt, milliseconds);
 
-    unsigned int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
-    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-    return res == WAIT_OBJECT_0;
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
+        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+
+        if (res == WAIT_TIMEOUT)
+        {
+            xtime cur;
+            xtime_get(&cur, TIME_UTC);
+            if (xtime_cmp(xt, cur) > 0)
+                continue;
+        }
+
+        return res == WAIT_OBJECT_0;
+    }
 }
 
 void timed_mutex::do_unlock()

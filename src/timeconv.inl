@@ -59,7 +59,7 @@ namespace {
         res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
-        if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
+        if (boost::xtime_cmp(xt, cur) <= 0)
         {
             ts.tv_sec = 0;
             ts.tv_nsec = 0;
@@ -90,7 +90,7 @@ namespace {
         res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
-        if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
+        if (boost::xtime_cmp(xt, cur) <= 0)
             milliseconds = 0;
         else
         {
@@ -107,7 +107,7 @@ namespace {
         res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
-        if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
+        if (boost::xtime_get(&cur, boost::TIME_UTC) <= 0)
             microseconds = 0;
         else
         {

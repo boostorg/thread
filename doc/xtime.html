@@ -7,11 +7,11 @@
 <body link="#0000ff" vlink="#800080">
 <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
     "header">
-  <tr> 
-    <td valign="top" width="300"> 
+  <tr>
+    <td valign="top" width="300">
       <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../c++boost.gif" border="0"></a></h3>
     </td>
-    <td valign="top"> 
+    <td valign="top">
       <h1 align="center">Boost.Threads</h1>
       <h2 align="center">Header &lt;<a href="../../../boost/thread/xtime.hpp">boost/thread/xtime.hpp</a>&gt;</h2>
     </td>
@@ -19,21 +19,21 @@
 </table>
 <hr>
 <h2>Contents</h2>
-<dl class="page-index"> 
+<dl class="page-index">
   <dt><a href="#introduction">Introduction</a></dt>
   <dt><a href="#values">Values</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#value-spec">TIME_UTC</a></dt>
   </dl>
   <dt><a href="#classes">Classes</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#class-spec">Struct <code>xtime</code></a></dt>
-    <dl class="page-index"> 
+    <dl class="page-index">
       <dt><a href="#class-xtime-synopsis">Struct <code>xtime</code> synopsis</a></dt>
     </dl>
   </dl>
   <dt><a href="#functions">Functions</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#function-xtime_get"><code>xtime_get</code></a></dt>
   </dl>
   <dt><a href="#examples">Example(s)</a></dt>
@@ -51,15 +51,15 @@ enum
     TIME_UTC
 }
 </pre>
-<p>The clock type for Coordinated Universal Time (UTC). The epoch for this clock 
+<p>The clock type for Coordinated Universal Time (UTC). The epoch for this clock
   type is 1970-01-01 00:00:00. This is the only clock type supported by <b>Boost.Threads</b>.</p>
 <h2><a name="classes"></a>Classes</h2>
 <h3><a name="class-xtime"></a>Struct <code>xtime</code></h3>
-<p>The <code>xtime</code> type is used to represent a point on some time scale 
-  or a duration in time. This type may be proposed for the C standard by Markus 
-  Kuhn. <b>Boost.Threads</b> provides only a very minimal implementation of this 
-  proposal and it&#39;s expected that a full implementation (or some other time 
-  library) will be provided in Boost as a separate library, at which time <b>Boost.Threads</b> 
+<p>The <code>xtime</code> type is used to represent a point on some time scale
+  or a duration in time. This type may be proposed for the C standard by Markus
+  Kuhn. <b>Boost.Threads</b> provides only a very minimal implementation of this
+  proposal and it&#39;s expected that a full implementation (or some other time
+  library) will be provided in Boost as a separate library, at which time <b>Boost.Threads</b>
   will deprecate its implementation.</p>
 <h4><a name="class-xtime-synopsis"></a>Struct <code>xtime</code> synopsis</h4>
 <pre>
@@ -80,42 +80,31 @@ namespace boost
 <pre>
 <a name="function-xtime_get"></a>int xtime_get(struct xtime* xtp, int clock_type);
 </pre>
-<dl class="function-semantics"> 
-  <dt><b>Postconditions:</b> <code>xtp</code> represents the current point in 
+<dl class="function-semantics">
+  <dt><b>Postconditions:</b> <code>xtp</code> represents the current point in
     time as a duration since the epoch specified by the <code> clock_type</code>.</dt>
   <dt><b>Returns:</b> <code>clock_type</code> if successful, otherwise 0.</dt>
-  <dt><b>Note:</b> The resolution is implementation specific. For many implementations 
-    the best resolution of time is far more than one nanosecond, and even when 
-    the resolution is reasonably good, the latency of a call to <code>xtime_get()</code> 
-    may be significant. For maximum portability, avoid durations of less than 
+  <dt><b>Note:</b> The resolution is implementation specific. For many implementations
+    the best resolution of time is far more than one nanosecond, and even when
+    the resolution is reasonably good, the latency of a call to <code>xtime_get()</code>
+    may be significant. For maximum portability, avoid durations of less than
     one second.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/xtime.hpp&gt;</a>
-
-int main(int argc, char* argv[])
-{
-   boost::xtime xt;
-   boost::xtime_get(&amp;XT, boost::TIME_UTC);
-   xt.sec += 1;
-   boost::thread::sleep(XT); // Sleep for 1 second
-}
-</pre>
+<p><a href="../example/xtime.cpp">libs/thread/example/xtime.cpp</a></p>
 <hr>
-<p>Revised 
+<p>Revised
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001 
+  05 November, 2001
   <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
 </p>
-<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002. 
+<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
-<p>Permission to use, copy, modify, distribute and sell this software and its 
-  documentation for any purpose is hereby granted without fee, provided that the 
-  above copyright notice appear in all copies and that both that copyright notice 
-  and this permission notice appear in supporting documentation. William E. Kempf 
-  makes no representations about the suitability of this software for any purpose. 
+<p>Permission to use, copy, modify, distribute and sell this software and its
+  documentation for any purpose is hereby granted without fee, provided that the
+  above copyright notice appear in all copies and that both that copyright notice
+  and this permission notice appear in supporting documentation. William E. Kempf
+  makes no representations about the suitability of this software for any purpose.
   It is provided &quot;as is&quot; without express or implied warranty.</p>
 </body>
 </html>

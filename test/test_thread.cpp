@@ -1,97 +1,89 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/test/test_tools.hpp>
+//#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test.hpp>
 
-#include <utils.inl>
-
-namespace {
-
-int test_value;
-
-struct thread_comparison_adapter
+namespace
 {
-	thread_comparison_adapter(void (*func)(boost::thread& parent), boost::thread& parent)
-		: func(func), parent(parent)
-	{
-	}
+    inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
+    {
+        boost::xtime cur;
+        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
 
-	void operator()()
-	{
-		(*func)(parent);
-	}
+        boost::xtime less = cur;
+        less.sec += less_seconds;
 
-	void (*func)(boost::thread& parent);
-	boost::thread& parent;
-};
+        boost::xtime greater = cur;
+        greater.sec += greater_seconds;
+
+        return (boost::xtime_cmp(xt, less) >= 0) && (boost::xtime_cmp(xt, greater) <= 0);
+    }
+
+    int test_value;
+
+    void simple_thread()
+    {
+        test_value = 999;
+    }
+
+    struct thread_adapter
+    {
+        thread_adapter(void (*func)(boost::thread& parent), boost::thread& parent)
+            : func(func), parent(parent)
+        {
+        }
+
+        void operator()()
+        {
+            (*func)(parent);
+        }
+
+        void (*func)(boost::thread& parent);
+        boost::thread& parent;
+    };
+
+    void comparison_thread(boost::thread& parent)
+    {
+        boost::thread thrd;
+        BOOST_TEST(thrd != parent);
+        BOOST_TEST(thrd == boost::thread());
+    }
+}
 
 void test_sleep()
 {
-	boost::xtime xt;
-	xtime_get(xt, 5);
-	boost::thread::sleep(xt);
-	// Insure it's in a range instead of checking actual equality due to time lapse
-	BOOST_TEST(xtime_in_range(xt, -1, 1));
-}
+    boost::xtime xt;
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
+    xt.sec += 3;
 
-void simple_thread()
-{
-	test_value = 999;
+    boost::thread::sleep(xt);
+
+    // Insure it's in a range instead of checking actual equality due to time lapse
+    BOOST_CHECK(xtime_in_range(xt, -1, 0));
 }
 
 void test_creation()
 {
-	try
-	{
-		test_value = 0;
-		boost::thread thrd(&simple_thread);
-		thrd.join();
-		// If creation fails there's little point in continuing...
-		BOOST_CRITICAL_TEST(test_value == 999);
-	}
-	catch (boost::thread_resource_error&)
-	{
-		BOOST_CRITICAL_ERROR("Caught thread_resource_error");
-	}
-}
-
-void comparison_thread(boost::thread& parent)
-{
-	boost::thread thrd;
-	BOOST_TEST(thrd != parent);
-	BOOST_TEST(thrd == boost::thread());
-}
-
-void cancelation_thread()
-{
-	for (;;)
-	{
-		boost::thread::test_cancel();
-		boost::xtime xt;
-		xtime_get(xt, 1);
-		boost::thread::sleep(xt);
-	}
+    test_value = 0;
+    boost::thread thrd(&simple_thread);
+    thrd.join();
+    BOOST_CHECK_EQUAL(test_value, 999);
 }
 
 void test_comparison()
 {
-	boost::thread self;
-	boost::thread thrd(thread_comparison_adapter(&comparison_thread, self));
-	thrd.join();
+    boost::thread self;
+    boost::thread thrd(thread_adapter(comparison_thread, self));
+    thrd.join();
 }
 
-void test_cancel()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-	boost::thread thrd(&cancelation_thread);
-	thrd.cancel();
-	thrd.join();
-}
+    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread test suite");
 
-} // namespace
+    test->add(BOOST_TEST_CASE(test_sleep));
+    test->add(BOOST_TEST_CASE(test_creation));
+    test->add(BOOST_TEST_CASE(test_comparison));
 
-void test_thread()
-{
-	test_sleep();
-	test_creation();
-	test_comparison();
-	test_cancel();
+    return test;
 }

@@ -1,68 +1,59 @@
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/test/test_tools.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 
-#include <iostream>
+#include <boost/test/unit_test.hpp>
 
-namespace {
-
-boost::mutex tss_mutex;
-int tss_instances = 0;
-
-struct tss_value_t
+namespace
 {
-    tss_value_t()
-    {
-        boost::mutex::scoped_lock lock(tss_mutex);
-        ++tss_instances;
-        value = 0;
-    }
-    ~tss_value_t()
-    {
-        boost::mutex::scoped_lock lock(tss_mutex);
-        --tss_instances;
-    }
-    int value;
-};
+    boost::mutex tss_mutex;
+    int tss_instances = 0;
 
-boost::thread_specific_ptr<tss_value_t>* tss_value = 0;
-//boost::thread_specific_ptr<tss_value_t> tss_value_no_delete(0);
-
-void test_tss_thread()
-{
-	boost::thread_specific_ptr<tss_value_t>& tss = *tss_value;
-	BOOST_TEST(tss.get() == 0);
-	tss_value_t* p = new tss_value_t();
-    tss.reset(p);
-	BOOST_TEST(tss.get() == p);
-
-    for (int i=0; i<1; ++i)
+    struct tss_value_t
     {
-        BOOST_TEST(tss->value == i);
-        ++tss->value;
+        tss_value_t()
+        {
+            boost::mutex::scoped_lock lock(tss_mutex);
+            ++tss_instances;
+            value = 0;
+        }
+        ~tss_value_t()
+        {
+            boost::mutex::scoped_lock lock(tss_mutex);
+            --tss_instances;
+        }
+        int value;
+    };
+
+    boost::thread_specific_ptr<tss_value_t> tss_value;
+
+    void test_tss_thread()
+    {
+        tss_value.reset(new tss_value_t());
+        for (int i=0; i<1000; ++i)
+        {
+            int& n = tss_value->value;
+            BOOST_CHECK_EQUAL(n, i);
+            ++n;
+        }
     }
 }
 
-} // namespace
-
-void test_thread_specific_ptr()
+void test_tss()
 {
-	{
-		boost::thread_specific_ptr<tss_value_t> tss;
-		tss_value = &tss;
+    const int NUMTHREADS=5;
+    boost::thread_group threads;
+    for (int i=0; i<NUMTHREADS; ++i)
+        threads.create_thread(&test_tss_thread);
+    threads.join_all();
+    BOOST_CHECK_EQUAL(tss_instances, 0);
+}
 
-		BOOST_TEST(tss.get() == 0);
-		tss_value_t* p = new tss_value_t();
-		tss.reset(p);
-		BOOST_TEST(tss.get() == p);
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+{
+    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: tss test suite");
 
-		const int NUMTHREADS=2;
-		boost::thread_group threads;
-		for (int i=0; i<NUMTHREADS; ++i)
-			threads.create_thread(&test_tss_thread);
-		threads.join_all();
-		BOOST_TEST(tss_instances == 1);
-	}
-	BOOST_TEST(tss_instances == 0);
+    test->add(BOOST_TEST_CASE(test_tss));
+
+    return test;
 }

@@ -244,14 +244,28 @@ void condition::do_wait()
 
 bool condition::do_timed_wait(const xtime& xt)
 {
-    int milliseconds;
-    to_duration(xt, milliseconds);
-
+    bool ret = false;
     unsigned int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
-    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
-    bool ret = (res == WAIT_OBJECT_0);
+    for (;;)
+    {
+        int milliseconds;
+        to_duration(xt, milliseconds);
+
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
+        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+        ret = (res == WAIT_OBJECT_0);
+
+        if (res == WAIT_TIMEOUT)
+        {
+            xtime cur;
+            xtime_get(&cur, TIME_UTC);
+            if (xtime_cmp(xt, cur) > 0)
+                continue;
+        }
+
+        break;
+    }
 
     unsigned was_waiting=0;
     unsigned was_gone=0;

@@ -91,7 +91,7 @@ private:
         enter_wait();
 #endif
 
-        typedef typename detail::thread::lock_ops<M> lock_ops;
+        typedef detail::thread::lock_ops<M> lock_ops;
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -111,7 +111,7 @@ private:
         enter_wait();
 #endif
 
-        typedef typename detail::thread::lock_ops<M> lock_ops;
+        typedef detail::thread::lock_ops<M> lock_ops;
         typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 

@@ -2,22 +2,6 @@
 #  distribute this software is granted provided this copyright notice appears
 #  in all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
-#
-# Boost.Threads build and test Jamfile
-#
-# Declares the following targets:
-#   1. monitor, an example program.
-#   2. starvephil, an example program.
-#   3. tennis, an example program.
-# Additional configuration variables used:
-#   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
-#      library should be used instead of "native" threads. This feature is
-#      mostly used for testing and it's generally recommended you use the
-#      native threading libraries instead. PTW32 should be set to be a list
-#      of two strings, the first specifying the installation path of the
-#      pthreads-win32 library and the second specifying which library
-#      variant to link against (see the pthreads-win32 documentation).
-#      Example: jam -sPTW32="c:\pthreads-win32 pthreadVCE.lib"
 
 # Declare the location of this subproject relative to the root.
 subproject libs/thread/example ;
@@ -28,41 +12,23 @@ subproject libs/thread/example ;
 SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include <module@>threads.jam ;
 
-#######################
-# Declare the Boost.Threads example program monitor.
-
-exe monitor
-    : monitor/monitor.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
+template example
+    ## sources ##
+    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    ## requirements ##
+    :
+    ## default build ##
+    : release <runtime-link>static
 ;
 
-#######################
-# Declare the Boost.Threads example program starvephil.
-
-exe starvephil
-    : starvephil/starvephil.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
-
-#######################
-# Declare the Boost.Threads example program tennis.
-
-exe tennis
-    : tennis/tennis.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
+exe monitor : <template>example monitor.cpp ;
+exe starvephil : <template>example starvephil.cpp ;
+exe tennis : <template>example tennis.cpp ;
+exe condition : <template>example condition.cpp ;
+exe mutex : <template>example mutex.cpp ;
+exe once : <template>example once.cpp ;
+exe recursive_mutex : <template>example recursive_mutex.cpp ;
+exe thread : <template>example thread.cpp ;
+exe thread_group : <template>example thread_group.cpp ;
+exe tss : <template>example tss.cpp ;
+exe xtime : <template>example xtime.cpp ;

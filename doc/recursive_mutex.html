@@ -7,40 +7,40 @@
 <body link="#0000ff" vlink="#800080">
 <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
     "header">
-  <tr> 
-    <td valign="top" width="300"> 
+  <tr>
+    <td valign="top" width="300">
       <h3><a href="../../../index.htm"><img height="86" width="277" alt="C++ Boost" src="../../../c++boost.gif" border="0"></a></h3>
     </td>
-    <td valign="top"> 
+    <td valign="top">
       <h1 align="center">Boost.Threads</h1>
       <h2 align="center">Header &lt;<a href="../../../boost/thread/recursive_mutex.hpp">boost/thread/recursive_mutex.hpp</a>&gt;</h2>    </td>
   </tr>
 </table>
 <hr>
 <h2>Contents</h2>
-<dl class="page-index"> 
+<dl class="page-index">
   <dt><a href="#introduction">Introduction</a></dt>
   <dt><a href="#classes">Classes</a></dt>
-  <dl class="page-index"> 
+  <dl class="page-index">
     <dt><a href="#class-recursive_mutex">Class <code>recursive_mutex</code></a></dt>
-    <dl class="page-index"> 
-      <dt><a href="#class-recursive_mutex-synopsis">Class <code>recursive_mutex</code> 
+    <dl class="page-index">
+      <dt><a href="#class-recursive_mutex-synopsis">Class <code>recursive_mutex</code>
         synopsis</a></dt>
-      <dt><a href="#class-recursive_mutex-ctors">Class <code>recursive_mutex</code> 
+      <dt><a href="#class-recursive_mutex-ctors">Class <code>recursive_mutex</code>
         constructors and destructor</a></dt>
     </dl>
     <dt><a href="#class-recursive_try_mutex">Class <code>recursive_try_mutex</code></a></dt>
-    <dl class="page-index"> 
-      <dt><a href="#class-recursive_try_mutex-synopsis">Class <code>recursive_try_mutex</code> 
+    <dl class="page-index">
+      <dt><a href="#class-recursive_try_mutex-synopsis">Class <code>recursive_try_mutex</code>
         synopsis</a></dt>
-      <dt><a href="#class-recursive_try_mutex-ctors">Class <code>recursive_try_mutex</code> 
+      <dt><a href="#class-recursive_try_mutex-ctors">Class <code>recursive_try_mutex</code>
         constructors and destructor</a></dt>
     </dl>
     <dt><a href="#class-recursive_timed_mutex">Class <code>recursive_timed_mutex</code></a></dt>
-    <dl class="page-index"> 
-      <dt><a href="#class-recursive_timed_mutex-synopsis">Class <code>recursive_timed_mutex</code> 
+    <dl class="page-index">
+      <dt><a href="#class-recursive_timed_mutex-synopsis">Class <code>recursive_timed_mutex</code>
         synopsis</a></dt>
-      <dt><a href="#class-recursive_timed_mutex-ctors">Class <code>recursive_timed_mutex</code> 
+      <dt><a href="#class-recursive_timed_mutex-ctors">Class <code>recursive_timed_mutex</code>
         constructors and destructor</a></dt>
     </dl>
   </dl>
@@ -65,26 +65,26 @@
   lock concepts. For the best possible performance you should use the mutex class 
   that supports the minimum set of lock types that you need.</p>
 <table summary="lock types" border="1" cellpadding="5">
-  <tr> 
+  <tr>
     <td><b>Mutex Class</b></td>
     <td><b>Lock name</b></td>
     <td><b>Lock Concept</b></td>
   </tr>
-  <tr> 
+  <tr>
     <td valign="top"><a href="#recursive_mutex Synopsis"><code> recursive_mutex</code></a></td>
     <td valign="middle"><code>scoped_lock</code></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock"> ScopedLock</a></td>
   </tr>
-  <tr> 
+  <tr>
     <td valign="top"><code><a href="#recursive_try_mutex Synopsis"> recursive_try_mutex</a></code></td>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock</code></td>
     <td valign="middle"><a href="lock_concept.html#ScopedLock"> ScopedLock</a><br>
       <a href="lock_concept.html#ScopedTryLock"> ScopedTryLock</a></td>
   </tr>
-  <tr> 
+  <tr>
     <td valign="top"><code><a href=
-                "#recursive_timed_mutex Synopsis"> recursive_timed_mutex</a></code> 
+                "#recursive_timed_mutex Synopsis"> recursive_timed_mutex</a></code>
     </td>
     <td valign="middle"><code>scoped_lock<br>
       scoped_try_lock<br>
@@ -94,23 +94,23 @@
       <a href="lock_concept.html#ScopedTimedLock"> ScopedTimedLock</a></td>
   </tr>
 </table>
-<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and <code>recursive_timed_mutex</code> 
-  employ a <code>Recursive</code> <a href="mutex_concept.html#LockingStrategies">locking 
-  strategy</a>, so attempts to recursively lock them succeed and an internal &quot;lock 
-  count&quot; is maintained. Attempts to unlock them by a thread that does not 
+<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and <code>recursive_timed_mutex</code>
+  employ a <code>Recursive</code> <a href="mutex_concept.html#LockingStrategies">locking
+  strategy</a>, so attempts to recursively lock them succeed and an internal &quot;lock
+  count&quot; is maintained. Attempts to unlock them by a thread that does not
   own a lock on them will result in <b>undefined behavior</b>.</p>
-<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and <code>recursive_timed_mutex</code> 
+<p>The <code>recursive_mutex</code>, <code>recursive_try_mutex</code> and <code>recursive_timed_mutex</code>
   leave the <a href=
-        "mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <code> 
-  Unspecified</code>. Programmers should assume that threads waiting for a lock 
-  on objects of these types acquire the lock in a random order, even though the 
+        "mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <code>
+  Unspecified</code>. Programmers should assume that threads waiting for a lock
+  on objects of these types acquire the lock in a random order, even though the
   specific behavior for a given platform may be different.</p>
 <h2><a name="classes"></a>Classes</h2>
 <h3><a name="class-recursive_mutex"></a>Class <code>recursive_mutex</code></h3>
-<p>The <code>recursive_mutex</code> class is a model of <a href="mutex_concept.html#Mutex-concept">Mutex</a> 
-  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional 
+<p>The <code>recursive_mutex</code> class is a model of <a href="mutex_concept.html#Mutex-concept">Mutex</a>
+  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional
   facilities beyond the requirements of these concepts.</p>
-<h4><a name="class-recursive_mutex-synopsis"></a>Class <code>recursive_mutex</code> 
+<h4><a name="class-recursive_mutex-synopsis"></a>Class <code>recursive_mutex</code>
   synopsis</h4>
 <pre>
 namespace boost
@@ -120,33 +120,33 @@ namespace boost
     {
     public:
         typedef [implementation defined; see Introduction] scoped_lock;
-        
+
         recursive_mutex();
         ~recursive_mutex();
     };
 };
 </pre>
-<h4><a name="class-recursive_mutex-ctors"></a>Class <code>recursive_mutex</code> 
+<h4><a name="class-recursive_mutex-ctors"></a>Class <code>recursive_mutex</code>
   constructors and destructor</h4>
 <pre>
 recursive_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Postconditions:</b> <code>*this</code> is in an unlocked state.</dt>
 </dl>
 <pre>
 ~recursive_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> <code>*this</code> is in an unlocked sate.</dt>
-  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error 
+  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error
     resulting in undefined behavior such as a program crash.</dt>
 </dl>
 <h3><a name="class-recursive_try_mutex"></a>Class <code>recursive_try_mutex</code></h3>
-<p>The <code>recursive_try_mutex</code> class is a model of <a href="mutex_concept.html#TryMutex-concept">TryMutex</a> 
-  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional 
+<p>The <code>recursive_try_mutex</code> class is a model of <a href="mutex_concept.html#TryMutex-concept">TryMutex</a>
+  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional
   facilities beyond the requirements of these concepts.</p>
-<h4><a name="class-recursive_try_mutex-synopsis"></a>Class <code>recursive_try_mutex</code> 
+<h4><a name="class-recursive_try_mutex-synopsis"></a>Class <code>recursive_try_mutex</code>
   synopsis</h4>
 <pre>
 namespace boost
@@ -157,33 +157,33 @@ namespace boost
     Public:
         typedef [implementation defined; see Introduction] scoped_lock;
         typedef [implementation defined; see Introduction] scoped_try_lock;
-        
+
         recursive_try_mutex();
         ~recursive_try_mutex();
     };
 };
 </pre>
-<h4><a name="class-recursive_try_mutex-ctors"></a>Class <code>recursive_try_mutex</code> 
+<h4><a name="class-recursive_try_mutex-ctors"></a>Class <code>recursive_try_mutex</code>
   constructors and destructor</h4>
 <pre>
 recursive_try_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Postconditions:</b> <code>*this</code> is in an unlocked state.</dt>
 </dl>
 <pre>
 ~recursive_try_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> <code>*this</code> is in an unlocked sate.</dt>
-  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error 
+  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error
     resulting in undefined behavior such as a program crash.</dt>
 </dl>
 <h3><a name="class-recursive_timed_mutex"></a>Class <code>recursive_timed_mutex</code></h3>
-<p>The <code>recursive_timed_mutex</code> class is a model of <a href="mutex_concept.html#TimedMutex-concept">TimedMutex</a> 
-  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional 
+<p>The <code>recursive_timed_mutex</code> class is a model of <a href="mutex_concept.html#TimedMutex-concept">TimedMutex</a>
+  and <a href="overview.html#non-copyable">NonCopyable</a>, and provides no additional
   facilities beyond the requirements of these concepts.</p>
-<h4><a name="class-recursive_timed_mutex-synopsis"></a>Class <code>recursive_timed_mutex</code> 
+<h4><a name="class-recursive_timed_mutex-synopsis"></a>Class <code>recursive_timed_mutex</code>
   synopsis</h4>
 <pre>
 namespace boost
@@ -195,74 +195,30 @@ namespace boost
         typedef [implementation defined; see Introduction] scoped_lock;
         typedef [implementation defined; see Introduction] scoped_try_lock;
         typedef [implementation defined; see Introduction] scoped_timed_lock;
-        
+
         recursive_timed_mutex();
         ~recursive_timed_mutex();
     };
 };
 </pre>
-<h4><a name="class-recursive_timed_mutex-ctors"></a>Class <code>recursive_timed_mutex</code> 
+<h4><a name="class-recursive_timed_mutex-ctors"></a>Class <code>recursive_timed_mutex</code>
   constructors and destructor</h4>
 <pre>
 recursive_timed_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Postconditions:</b> <code>*this</code> is in an unlocked state.</dt>
 </dl>
 <pre>
 ~recursive_timed_mutex();
 </pre>
-<dl class="function-semantics"> 
+<dl class="function-semantics">
   <dt><b>Requires:</b> <code>*this</code> is in an unlocked sate.</dt>
-  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error 
+  <dt><b>Danger:</b> Destruction of a locked mutex is a serious programming error
     resulting in undefined behavior such as a program crash.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/recursive_mutex.hpp">&lt;boost/thread/recursive_mutex.hpp&gt;</a>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include &lt;iostream&gt;
-
-class counter
-{
-public:
-    counter() : count(0) { }
-
-    int add(int val) {
-        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
-        count += val;
-        return count;
-    }   
-    int increment() {
-        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
-        return add(1);
-    }
-
-private:
-    boost::recursive_mutex mutex;
-    int count;
-};
-
-counter c;
-
-void change_count(void*)
-{
-    std::cout &lt;&lt; &quot;count == &quot; &lt;&lt; c.increment() &lt;&lt; std::endl;
-}
-
-int main(int, char*[])
-{
-    const int num_threads=4;
-
-    boost::thread_group threads;   
-    for (int i=0; i &lt; num_threads; ++i)
-        threads.create_thread(&amp;change_count, 0);
-      
-    threads.join_all();
-   
-    return 0;
-}
-</pre>
+<p><a href="../example/recursive_mutex.cpp">libs/thread/example/recursive_mutex.cpp</a></p>
 <p>The output is:</p>
 <pre>
 count == 1
@@ -271,18 +227,18 @@ count == 3
 count == 4
 </pre>
 <hr>
-<p>Revised 
+<p>Revised
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001 
+  05 November, 2001
   <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
 </p>
-<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002. 
+<p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
-<p>Permission to use, copy, modify, distribute and sell this software and its 
-  documentation for any purpose is hereby granted without fee, provided that the 
-  above copyright notice appear in all copies and that both that copyright notice 
-  and this permission notice appear in supporting documentation. William E. Kempf 
-  makes no representations about the suitability of this software for any purpose. 
+<p>Permission to use, copy, modify, distribute and sell this software and its
+  documentation for any purpose is hereby granted without fee, provided that the
+  above copyright notice appear in all copies and that both that copyright notice
+  and this permission notice appear in supporting documentation. William E. Kempf
+  makes no representations about the suitability of this software for any purpose.
   It is provided &quot;as is&quot; without express or implied warranty.</p>
 </body>
 </html>
