@@ -11,6 +11,7 @@
   <xi:include href="condition-ref.xml"/>
   <xi:include href="exceptions-ref.xml"/>
   <xi:include href="mutex-ref.xml"/>
+  <xi:include href="once-ref.xml"/>
   <xi:include href="recursive_mutex-ref.xml"/>
   <xi:include href="rw_mutex-ref.xml"/>
   <xi:include href="thread-ref.xml"/>
