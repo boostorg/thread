@@ -1,0 +1,17 @@
+SubDir TOP src ;
+
+lib threads
+	: condition.cpp
+	  mutex.cpp
+	  recursive_mutex.cpp
+	  semaphore.cpp
+	  thread.cpp
+	  tss.cpp
+	  xtime.cpp
+	## Requirements ##
+	: <include>..
+	  <threading>multi
+	## default-BUILD ##
+	: debug release
+	;
+

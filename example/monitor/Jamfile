@@ -1,0 +1,11 @@
+SubDir TOP example monitor ;
+
+exe monitor
+	: monitor.cpp
+	  <lib>../../src/threads
+	## Requirements ##
+	: <include>../..
+	  <threading>multi
+	## default-BUILD ##
+	: debug release
+	;

@@ -1,0 +1,5 @@
+SubDir TOP example ;
+
+SubInclude TOP example monitor ;
+SubInclude TOP example starvephil ;
+SubInclude TOP example tennis ;

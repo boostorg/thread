@@ -1,0 +1,212 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, thread</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">thread</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The <tt>thread</tt> class provides the functionality need to create and manage threads
+within the <b>Boost.Threads</b> library.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include &lt;boost/thread/thread.hpp&gt;
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    class thread
+    {
+    public:
+        thread();
+        thread(const thread& other);
+        ~thread();
+
+        thread& operator=(const thread& other);
+        thread& swap(thread& other);
+        bool operator==(const thread& other);
+        bool operator!=(const thread& other);
+        bool is_alive() const;
+        void join();
+
+        static thread create(void (*threadfunc)(void*), void* param);
+        static thread self();
+        static void join_all();
+        static void sleep(const xtime& xt);
+        static void yield();
+    };
+</pre>    
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    thread();
+</pre>
+
+<p>Constructs a <tt>thread</tt> object that's not associated with any running thread.</p>
+
+<pre>
+    thread(const thread& other);
+</pre>
+
+<p>Copy constructs a <tt>thread</tt> object, adding a reference to the associated running thread.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~thread();
+</pre>
+
+<p>Destructs a <tt>thread</tt>, removing a reference to the associated running thread.</p>
+
+<h3>Assignment</h3>
+
+<pre>
+    thread& operator=(const thread& other);
+</pre>
+
+<p>Assigns the <tt>thread</tt> to reference the same running thread associated with <tt>other</tt>.</p>
+
+<h3>swap</h3>
+
+<pre>
+    thread& swap(thread& other);
+</pre>
+
+<p>Swaps the <tt>thread</tt> with <tt>other</tt>, exchanging the references to the respective
+associated running threads.</p>
+
+<h3>Comparison Operators</h3>
+
+<pre>
+    bool operator==(const thread& other);
+    bool operator!=(const thread& other);
+</pre>
+
+<p>Compares the <tt>thread</tt> to <tt>other</tt> to see if they refer to the same associated
+running threads.</p>
+
+<h3>is_alive</h3>
+
+<pre>
+    bool is_alive() const;
+</pre>
+
+<p>Determines if the associated running thread is still executing.  This operation is only really
+useful to perform "busy waits" on the thread since any other use is likely to result in a race
+condition.</p>
+
+<h3>join</h3>
+
+<pre>
+   void join();
+<pre>
+
+<p>Causes the current thread to "join" the associated running thread.  In other words, the current
+thread will block until the associated running thread finishes its execution.</p>
+
+<h3>create</h3>
+
+<pre>
+    static thread create(void (*threadfunc)(void*), void* param);
+</pre>
+
+<p>Creates a running thread which calls <tt>threadfunc</tt> passing it a value of <tt>param</tt>.</p>
+
+<h3>self</h3>
+
+<pre>
+    static thread self();
+</pre>
+
+<p>Returns a <tt>thread</tt> referencing the currently running thread.</p>
+
+<h3>join_all</h3>
+
+<pre>
+    static void join_all();
+</pre>
+
+<p>Causes the current thread to "join" all the other currently running threads.  In other words, the
+current thread will block until all the other running threads finish their execution.</p>
+
+<h3>sleep</h3>
+
+<pre>
+    static void sleep(const xtime& xt);
+</pre>
+
+<p>Causes the current thread to block until <tt>xt</tt>.</p>
+
+<h3>yield</h3>
+
+<pre>
+    static void yield();
+</pre>
+
+<p>Causes the current thread to give up the rest of its time to any other thread that may be waiting
+on CPU time.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include &lt;boost/thread/thread.hpp&gt;
+#include &lt;iostram&gt;
+
+void alarm(void* p)
+{
+    int* pn = static_cast<int*>(p);
+   
+    boost::xtime xt;
+    boost::xtime_get(&xt, boost::TIME_UTC);
+    xt.sec += *pn;
+   
+    boost::thread::sleep(xt);
+   
+    std::cout &lt;&lt; "alarm sounded..." &lt;&lt; std::endl;
+}
+
+int main(int argc, char* argv[])
+{
+    int secs = 5;
+    std::cout &lt;&lt; "setting alarm for 5 seconds..." &lt;&lt; std::endl;
+    boost::thread::create(&alarm, &secs);
+    boost::thread::join_all();
+}
+</pre>
+
+<p>The output is:</p>
+
+<pre>
+setting alarm for 5 seconds...
+alarm sounded...
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

@@ -1,0 +1,11 @@
+SubDir TOP example tennis ;
+
+exe tennis
+	: tennis.cpp
+	  <lib>../../src/threads
+	## Requirements ##
+	: <include>../..
+	  <threading>multi
+	## default-BUILD ##
+	: debug release
+	;

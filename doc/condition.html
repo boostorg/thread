@@ -1,0 +1,250 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, condition</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080" text="#000000">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">condition</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>A <tt>condition</tt> is a synchronization primitive that can be employed to suspend a thread
+and reactivate it when a particular condition is met. A <tt>condition</tt> always works in
+conjunction with a <a href="mutex_concept.html">mutex model</a>.  The
+<a href="mutex_concept.html">mutex model</a> must be locked prior to waiting on the <tt>condition</tt>,
+which is insured by passing a <a href="lock_concept.html">lock model</a> to the <tt>wait</tt>
+methods. While the thread is suspended waiting on the <tt>condition</tt> the
+<a href="mutex_concept.html">mutex model</a> is unlocked.  When the thread returns from a call
+to one of the <tt>wait</tt> methods the <a href="mutex_concept.html">mutex model</a> is again
+locked.</p>
+
+<p>The <tt>condition</tt> type is often used to implement the
+<i><a href="#Schmidt">Monitor Object</a></i> pattern.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include <a href="../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    class condition : private boost::noncopyable
+    {
+    public:
+       condition();
+       ~condition();
+
+       void notify_one();
+       void notify_all();
+       template &lt;typename L&gt;
+          void wait(L&amp; lock);
+       template &lt;typename L, typename Pr&gt;
+          void wait(L&amp; lock, Pr pred);
+       template &lt;typename L&gt;
+          bool timed_wait(L&amp; lock, const xtime&amp; xt);
+       template &lt;typename L, typename Pr&gt;
+          bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+    };
+</pre>
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    condition();
+</pre>
+
+<p>Constructs a <tt>condition</tt>.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~condition();
+</pre>
+
+<p>Destructs a <tt>condition</tt>.</p>
+
+<h3>notify_one</h3>
+
+<pre>
+    void notify_one();
+</pre>
+
+<p>If there are any waiting threads releases at least one.</p>
+
+<h3>notify_all</h3>
+
+<pre>
+    void notify_all();
+</pre>
+
+<p>Releases all waiting threads.</p>
+
+<h3>wait</h3>
+
+<pre>
+    template &lt;typename L&gt;
+       void wait(L&amp; lock);
+</pre>
+
+<p>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with <tt>lock</tt>,
+waits for the condition to be notified and then reacquires the lock all in an atomic fashion.
+This version should always be used within a loop checking that the state logically associated
+with the <tt>condition</tt> has become true.  With out the loop race conditions can ensue due to
+possible "spurious wake ups".  The second version encapsulates this idiom internally and should
+generally be the preferred method.</p>
+
+<pre>
+    template &lt;typename L, typename Pr&gt;
+       void wait(L&amp; lock, Pr pred);
+</pre>
+
+<p>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with <tt>lock</tt>,
+waits for the condition to be notified and for <tt>pred</tt> to be <tt>true</tt> then
+reacquires the lock
+all in an atomic fashion.</p>
+
+<h3>timed_wait</h3>
+
+<pre>
+    template &lt;typename L&gt;
+       bool timed_wait(L&amp; lock, const xtime&amp; xt);
+</pre>
+
+<p>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with the <tt>lock</tt>,
+waits for the condition to be notified or until <tt>xt</tt> and then reacquires the lock
+all in an atomic fashion. If the wait timed out the return value is <tt>false</tt>. This version should
+always be used within a loop checking that the state logically associated with the <tt>condition</tt> has
+become true.  With out the loop race conditions can ensue due to "spurious wake ups".  The second version
+encapsulates this idiom internally and should generally be the preferred method.</p>
+
+<pre>
+    template &lt;typename L, typename Pr&gt;
+       bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+</pre>
+
+<p>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with the <tt>lock</tt>,
+waits for the condition to be notified and for <tt>pred</tt> to be <tt>true</tt> or until <tt>xt</tt>
+and then reacquires the lock all in an atomic fashion. If the wait timed out the return value is <tt>false</tt>.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include &lt;iostream&gt;
+#include &lt;vector&gt;
+#include <a href="../../../boost/utility.hpp">&lt;boost/utility.hpp&gt;</a>
+#include <a href="../../../boost/thread/condition.hpp">&lt;boost/thread/condition.hpp&gt;</a>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+
+class bounded_buffer : private boost::noncopyable
+{
+private:
+    int begin, end, buffered;
+    std::vector&lt;int&gt; circular_buf;
+    boost::condition buffer_not_full, buffer_not_empty;
+    boost::mutex monitor;
+
+    typedef boost::mutex::lock lock;
+
+public:
+    buffer(int n) : begin(0), end(0), buffered(0), circular_buf(n) { }
+
+    void send (int m) {
+        lock lk(monitor);
+        while (buffered == circular_buf.size())
+            buffer_not_full.wait(lk);
+        circular_buf[end] = m;
+        end = (end+1) % circular_buf.size();
+        ++buffered;
+        buffer_not_empty.notify_one();
+    }
+    int receive() {
+        lock lk(monitor);
+        while (buffered == 0 &amp;&amp; !finished)
+            buffer_not_empty.wait(lk);
+        int i = circular_buf[begin];
+        begin = (begin+1) % circular_buf.size();
+        --buffered;
+        buffer_not_full.notify_one();
+        return i;
+    }
+};
+
+bounded_buffer buf(2);
+
+void sender(void*) {
+    int n = 0;
+    while (n &lt; 100) {
+       buf.send(n);
+       std::cout &lt;&lt; &quot;sent: &quot; &lt;&lt; n &lt;&lt; std::endl;
+       ++n;
+    }
+    buf.send(-1);
+}
+
+void receiver(void*) {
+    int n;
+    do {
+       n = buf.receive();
+       std::cout &lt;&lt; &quot;received: &quot; &lt;&lt; n &lt;&lt; std::endl;
+    } while (n != -1); // -1 indicates end of buffer
+}
+
+int main(int, char*[])
+{
+    boost::thread::create(&amp;sender, 0);
+    boost::thread::create(&amp;receiver, 0);
+    boost::thread::join_all();
+    return 0;
+}
+</pre>
+
+<p>Typical output (dependent on scheduling policies) is:</p>
+
+<pre>
+sent: 0
+sent: 1
+received: 0
+received: 1
+sent: 2
+sent: 3
+received: 2
+received: 3
+sent: 4
+received: 4
+</pre>
+
+<hr>
+
+<h2>References</h2>
+
+<p>Douglas <a name="Schmidt">Schmidt</a>, Michael Stal, Hans Rohnert, Frank Buschmann:
+<i>Pattern-Oriented Software Architecture - Volume 2 (Patterns for Concurrent
+and Networked Objects)</i>, Wiley, 2000.</p>
+
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

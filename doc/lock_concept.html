@@ -1,0 +1,60 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, Lock Concept</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">Lock Concept</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The purpose of a lock concept is to provide an exception safe means for acquiring and 
+releasing a <a href="mutex_concept.html">mutex model</a>.  In other words they are an
+implementation of the <i>Scoped Locking</i><sup><a href="#footnote1">1</a></sup> pattern.</p>
+
+<p>Lock models are constructed with a reference to a <a href="mutex_concept.html">mutex model</a>
+and typically acquire ownership of the <a href="mutex_concept.html">mutex model</a> by setting
+its state to locked. They also insure ownership is relinquished in the destructor. Lock
+models also expose methods to query the lock status and to manually lock and unlock the
+<a href="mutex_concept.html">mutex model</a>.</p>
+
+<p>Instances of lock models are meant to be short lived, expected to be used at block scope
+only. In particular it should be noted that lock models are not thread safe.  Lock models
+must maintain state to indicate whether or not they've been locked and this state is not
+protected by any synchronization concepts. For this reason an instance of a lock model
+should never be shared between multiple threads.</p>
+
+<p><b>Boost.Threads</b> provides three templates used to expose lock models for specific
+<a href="mutex_concept.html">mutex models</a>: <a href="basic_lock.html">basic_lock</a>,
+<a href="basic_trylock.html">basic_trylock</a> and
+<a href="basic_timedlock.html">basic_timedlock</a>.</p>
+
+<hr>
+
+<h2>Foot Notes</h2>
+
+<p><a name="footnote1"><sup>1</sup></a>&nbsp;Douglas Schmidt, Michael Stal, Hans Rohnert, Frank Buschmann:
+<i>Pattern-Oriented Software Architecture - Volume 2 (Patterns for Concurrent
+and Networked Objects)</i>, Wiley, 2000.</p>
+
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

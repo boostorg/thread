@@ -1,0 +1,11 @@
+SubDir TOP example starvephil ;
+
+exe starvephil
+	: starvephil.cpp
+	  <lib>../../src/threads
+	## Requirements ##
+	: <include>../..
+	  <threading>multi
+	## default-BUILD ##
+	: debug release
+	;

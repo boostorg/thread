@@ -1,0 +1,152 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, semaphore</title>
+</head>
+
+<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">semaphore</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The <tt>semaphore</tt> class defines a classic synchronization primitive invented by the
+Dutch computer scientist Edsger W. Dijkstra.  A semaphore manages an internal counter.  This
+counter may never go below zero, or above a specified maximum value.  When calling
+<tt>semaphore::down</tt> the calling thread will block until the value is non-zero and then
+decrements the value in a single atomic operation.  When calling <tt>semaphore::up</tt> the
+calling thread will increment the value in a single atomic operation, failing if the value has
+already reached the specified maximum.</p>
+
+<p>The semaphore is the simplest synchronization primitive available and is generally the
+primitive used to build other synchronization concepts at some level of implementation. For this
+reason <b>Boost.Threads</b> defines the <tt>semaphore</tt> type in the classic form.  This simplifies
+usage and implementation, but it means that the interface is not as safe as other <b>Boost.Threads</b>
+interfaces. Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads</b>
+there is no <A href="lock_concept.html">lock_concept</a> for the semaphore to help insure proper
+usage.  Care should be taken when using a <tt>semaphore</tt> object to insure deadlock and
+race conditions do not occur.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
+</pre>
+
+<h2>Public Interface</h2>
+
+<pre>
+    class semaphore : private boost::noncopyable
+    {
+    public:
+        explicit semaphore(unsigned count=0, unsigned max=0);
+        ~semaphore();
+        
+        bool up(unsigned count=1, unsigned* prev=0);
+        void down();
+        bool down(const xtime&amp; xt);
+    };
+</pre>
+
+<h3>Constructor</h3>
+
+<pre>
+    explicit semaphore(unsigned count=0, unsigned max=0);
+</pre>
+
+<p>Constructs a <tt>semaphore</tt>. The <tt>count</tt> parameter is used to set the initial
+semaphore count and the <tt>max</tt> parameter is used to set the maximum value for the
+semaphore.  If <tt>max</tt> is <tt>0</tt> then the maximum value is set to the maximum
+possible value for the implementation.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~semaphore();
+</pre>
+
+<p>Destructs a <tt>semaphore</tt>.</p>
+
+<h3>up</h3>
+
+<pre>
+    bool up(unsigned count=1, unsigned* prev=0);
+</pre>
+
+<p>Increments the semaphore by <tt>count</tt> and optionally returns the previous value of the semaphore
+in <tt>prev</tt>.  If the semaphore's value is already at the maximum value specified in the
+constructor then this operation fails immediately and returns a <tt>false</tt> value.</p>
+
+<h3>down</h3>
+
+<pre>
+    void down();
+</pre>
+
+<p>Decrements the semaphore by one, blocking indefinately if the semaphore's value is currently zero.</p>
+
+<pre>
+    bool down(const xtime&amp; xt);
+</pre>
+
+<p>Decrements the semaphore by one, blocking until <tt>xt</tt> if the semaphore's value is currently zero.
+If the operation times out a <tt>false</tt> value is returned.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include <a href="../../../boost/thread/semaphore.hpp">&lt;boost/thread/semaphore.hpp&gt;</a>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include &lt;iostream&gt;
+
+int global_data = 0;
+boost::semaphore global_semaphore;
+
+void change_global_data(void*)
+{
+    global_semaphore.down();
+    ++global_data;
+    std::cout &lt;&lt; &quot;global_data == &quot; &lt;&lt; global_data  &lt;&lt; std::endl;
+    global_semaphore.up();
+}
+
+int main(int, char*[])
+{
+    const int num_threads = 4;
+    for (int i=0; i &lt;  num_threads; ++i)
+        boost::thread::create(&amp;change_global_data, 0);
+      
+    boost::thread::join_all();
+   
+    return 0;
+}
+</pre>
+
+<p>The output is:</p>
+
+<pre>
+global_data == 1
+global_data == 2
+global_data == 3
+global_data == 4
+</pre>
+
+<hr>
+
+<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

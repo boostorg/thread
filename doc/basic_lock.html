@@ -1,0 +1,122 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, basic_lock</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">basic_lock</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>This template class defines a generic <a href="lock_concept.html">lock concept</a> type. The
+<a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>, <a href="mutex.html">timed_mutex</a>,
+<a href="recursive_mutex.html">recursive_mutex</a>, <a href="recursive_mutex.html">recursive_try_mutex</a> and
+<a href="recursive_mutex.html">recursive_timed_mutex</a> all use this template to define their
+<tt>lock</tt> types.</p>
+
+<p>Like all the <b>Boost.Threads</b> <a href="lock_concept.html">lock models</a>, the
+<tt>basic_lock</tt> is meant to be short lived and is not thread safe, so should not be shared
+between threads.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include <a href="../../../boost/thread/xlock.hpp">&lt;boost/thread/xlock.hpp&gt;</a>
+    <i>This header is usually not included directly by programmers.</i>
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    template &lt;typename M&gt;
+    class basic_lock : private boost::noncopyable
+    {
+    public:
+        typedef M mutex_type;
+        
+        explicit basic_lock(M&amp; mx, bool lock_it=true);
+        ~basic_lock();
+        
+        void lock();
+        void unlock();
+        
+        operator const void*() const;
+    };
+</pre>
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    explicit basic_lock(M&amp; mx, bool lock_it=true);
+</pre>
+
+<p>Constructs a <tt>basic_lock</tt> and if <tt>lock_it</tt> is <tt>true</tt> then calls <tt>lock</tt>.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~basic_lock();
+</pre>
+
+<p>Destructs the <tt>basic_lock</tt> and if locked calls <tt>unlock</tt>.</p>
+
+<h3>lock</h3>
+
+<pre>
+    void lock();
+</pre>
+
+<p>Locks the associated <a href="mutex_concept.html">mutex model</a>.  If the <tt>basic_lock</tt>
+is already locked then a <a href="lock_error.html">lock_error</a> is thrown.  Depending on the
+<a href="mutex_concept.html#LockingStrategies">locking strategy</a> of the
+<a href="mutex_concept.html">mutex model</a> if the calling thread already owns a lock through
+another <a href="lock_concept.html">lock model</a> this may cause a deadlock or for a
+<a href="lock_error.html">lock_error</a> to be thrown.</p>
+
+<h3>unlock</h3>
+
+<pre>
+    void unlock();
+</pre>
+
+<p>Unlocks the associated <a href="mutex_concept.html#Mutex">mutex model</a>.  If the <tt>basic_lock</tt>
+is not already locked then a <a href="lock_error.html">lock_error</a> is thrown.</p>
+
+<h3>const void* Conversion</h3>
+
+<pre>
+    operator const void*() const;
+</pre>
+
+<p>Implicitly converts the lock to a value that can be used in boolean expressions to test if the
+lock is currently locked or not.</p>
+
+<h2>Example Usage</h2>
+
+<p>See the example given in the documentation for the <a href="mutex.html">mutex</a> class.</p>
+
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

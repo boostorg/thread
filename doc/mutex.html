@@ -1,0 +1,210 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, mutex</title>
+</head>
+
+<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">mutex / try_mutex / timed_mutex</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The <tt>mutex</tt>, <tt>try_mutex</tt> and <tt>timed_mutex</tt> classes define full featured
+<A href="mutex_concept.html">mutex models</a>. These type should be used to synchronize access to
+shared resources when recursive locking mechanics need not be employed. Each type adds another
+<A href="lock_concept.html">lock concept</a>, including the <A href="basic_lock.html">basic_lock</a>,
+<A href="basic_trylock.html">basic_trylock</a> and <A href="basic_timedlock.html">basic_timedlock</a>
+types. For the best possible performance you should use the mutex type that supports only the lock
+types that you need.</p>
+
+<p>The <tt>mutex</tt>, <tt>try_mutex</tt> and <tt>timed_mutex</tt> use an <tt>Unspecified</tt>
+<A href="mutex_concept.html#LockingStrategies">locking strategy</a>, so attempts to recursively lock
+them or attempts to unlock them by threads that don't own a lock on them result in <b>undefined behavior</b>.
+This strategy allows implementations to be as efficient as possible on any given platform. It is, however,
+recommended that implementations include some debugging support to detect misuse when <tt>NDEBUG</tt> is
+not defined.</p>
+
+<p>Like all the <b>Boost.Threads</b> <A href="mutex_concept.html">mutex models</a>, the <tt>mutex</tt>,
+<tt>try_mutex</tt> and <tt>timed_mutex</tt> leave the
+<A href="mutex_concept.html#SchedulingPolicies">scheduling policy</a> as <tt>Unspecified</tt>.
+Programmers should assume that threads waiting for a lock on these <tt>mutex types</tt> shall acquire
+the lock in a random order, though the specific behavior for a given platform may be different.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    class mutex : private boost::noncopyable
+    {
+    public:
+        typedef boost::basic_lock&lt;mutex&gt; lock;
+        
+        mutex();
+        ~mutex();
+    };
+</pre>
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    mutex();
+</pre>
+
+<p>Constructs a <tt>mutex</tt>.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~mutex();
+</pre>
+
+<p>Destructs a <tt>mutex</tt>.</p>
+
+<hr width="50%" align="left">
+
+<pre>
+    class try_mutex : private boost::noncopyable
+    {
+    public:
+        typedef boost::basic_lock&lt;try_mutex&gt; lock;
+        typedef boost::basic_trylock&lt;try_mutex&gt; trylock;
+        
+        try_mutex();
+        ~try_mutex();
+    };
+</pre>
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    try_mutex();
+</pre>
+
+<p>Constructs a <tt>try_mutex</tt>.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~try_mutex();
+</pre>
+
+<p>Destructs a <tt>try_mutex</tt>.</p>
+
+<hr width="50%" align="left">
+
+<pre>
+    class timed_mutex : private boost::noncopyable
+    {
+    public:
+        typedef boost::basic_lock&lt;timed_mutex&gt; lock;
+        typedef boost::basic_trylock&lt;timed_mutex&gt; trylock;
+        typedef boost::basic_timedlock&lt;timed_mutex&gt; timedlock;
+        
+        timed_mutex();
+        ~timed_mutex();
+    };
+</pre>
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    timed_mutex();
+</pre>
+
+<p>Constructs a <tt>timed_mutex</tt>.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~timed_mutex();
+</pre>
+
+<p>Destructs a <tt>mutex</tt>.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include &lt;iostream&gt;
+
+boost::mutex io_mutex; // The iostreams are not gauranteed to be thread safe!
+
+class counter
+{
+private:
+    boost::mutex mutex;
+    int count;
+   
+public:
+    counter() : count(0) { }
+   
+    int increment() {
+        boost::mutex::lock lock(mutex);
+        return ++count;
+    }
+};
+
+counter c;
+
+void change_count(void*)
+{
+    int i = c.increment();
+    boost::mutex::lock lock(io_mutex);
+    std::cout &lt;&lt; &quot;count == &quot; &lt;&lt; i &lt;&lt; std::endl;
+}
+
+int main(int, char*[])
+{
+    const int num_threads = 4;
+    for (int i=0; i &lt; num_threads; ++i)
+        boost::thread::create(&amp;change_count, 0);
+      
+    boost::thread::join_all();
+   
+    return 0;
+}
+</pre>
+
+<p>The output is:</p>
+
+<pre>
+count == 1
+count == 2
+count == 3
+count == 4
+</pre>
+
+<hr>
+
+<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

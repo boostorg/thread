@@ -1,0 +1,11 @@
+SubDir TOP test ;
+
+exe test_thread
+	: test_thread.cpp
+	  <lib>../src/threads
+	## Requirements ##
+	: <include>..
+	  <threading>multi
+	## default-BUILD ##
+	: debug release
+	;

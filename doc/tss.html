@@ -1,0 +1,125 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, tss</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">tss</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The <tt>tss</tt> class defines an interface for using thread specific storage.  Thread
+specific storage is data associated with individual threads and is often used to make
+operations that rely on global data thread safe.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    class tss
+    {
+    public:
+        tss();
+        ~tss();
+
+        void* get() const;
+        bool set(void* value);
+    };
+</pre>    
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    tss();
+</pre>
+
+<p>Constructs a <tt>tss</tt> object for accessing thread specific storage.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~tss();
+</pre>
+
+<p>Destructs a <tt>tss</tt>.</p>
+
+<h3>get</h3>
+
+<pre>
+    void* get() const;
+</pre>
+
+<p>Retrieves the thread specific storage for the current thread.</p>
+
+<h3>set</h3>
+
+<pre>
+    bool set(void* value);
+</pre>
+
+<p>Sets the thread specific storage for the current thread. Returns <tt>false</tt> on failure.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
+#include &lt;cassert&gt;
+
+boost::tss value;
+
+void increment()
+{
+   int* p = static_cast<int*>(value.get());
+   ++*p;
+}
+
+void thread_proc(void*)
+{
+   value.set(new int(0)); // initialize the thread's storage
+   for (int i=0; i&lt;10; ++i)
+   {
+       increment();
+       int* p = static_cast<int*>(value.get());
+       assert(*p == i+1);
+   }
+}
+
+int main(int argc, char* argv[])
+{
+   for (int i=0; i&lt;5; ++i)
+      boost::thread::create(&amp;thread_proc, 0);
+   boost::thread::join_all();
+}
+</pre>
+
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>
