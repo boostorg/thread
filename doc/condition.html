@@ -31,24 +31,26 @@
 
 <h2><a name="Introduction">Introduction</a></h2>
 
-<p>A <tt>condition</tt> is a synchronization primitive used to cause a thread to
-wait until a particular condition (or time)&nbsp; is met. A <tt>condition</tt> always works in
+<p>A <code>condition</code> is a synchronization primitive used to cause a thread to
+wait until a particular condition (or time) is met. A <code>condition</code> always works in
 conjunction with a <a href="mutex_concept.html">mutex model</a>.  The
-<a href="mutex_concept.html">mutex model</a> must be locked prior to waiting on the <tt>condition</tt>,
-which is insured by passing a <a href="lock_concept.html">lock model</a> to the <code>condition</code> class <tt>wait</tt> functions. While the thread is waiting on the <tt>condition</tt> the
-<a href="mutex_concept.html">mutex model</a> is unlocked.  When the thread returns from a call
-to one of the <code>condition</code> class <tt>wait</tt> functions, the <a href="mutex_concept.html">mutex model</a> is again
-locked.</p>
+<a href="mutex_concept.html">mutex model</a> must be locked prior to waiting on the
+<code>condition</code>, which is insured by passing a <a href="lock_concept.html">lock model</a>
+to the <code>condition</code> class <code>wait</code> functions. While the thread is waiting on
+the <code>condition</code> the <a href="mutex_concept.html">mutex model</a> is unlocked.  When the
+thread returns from a call to one of the <code>condition</code> class <code>wait</code> functions,
+the <a href="mutex_concept.html">mutex model</a> is again locked.</p>
 
-<p>The <tt>condition</tt> type is often used to implement the
+<p>The <code>condition</code> type is often used to implement the
 <i>Monitor Object</i> pattern. See <a href="bibliography.html#Schmidt-00">[Schmidt
-00]</a>&nbsp;and <a href="bibliography.html#Hoare-74">[Hoare 74</a>]. Monitors
+00]</a> and <a href="bibliography.html#Hoare-74">[Hoare 74</a>]. Monitors
 are one of the most important patterns for creating reliable multithreaded
 programs.</p>
 
-<p>See <a href="thread_formal_definition.html"> Formal Definitions</a> for definitions of thread states <a href="thread_formal_definition.html#state">blocked</a>
-and <a href="thread_formal_definition.html#state">ready</a>. Note that
-&quot;waiting&quot; is a synonym for blocked.</p>
+<p>See <a href="thread_formal_definition.html"> Formal Definitions</a> for definitions of thread
+states <a href="thread_formal_definition.html#state">blocked</a> and
+<a href="thread_formal_definition.html#state">ready</a>. Note that &quot;waiting&quot; is a synonym
+for blocked.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -58,26 +60,29 @@ and <a href="thread_formal_definition.html#state">ready</a>. Note that
 
 <h2><a name="Synopsis">Synopsis</a></h2>
 
-<pre>namespace boost
- { 
-   class condition : private noncopyable
-    {
-    public:
-       condition();
-       ~condition();
+<pre>
+namespace boost { 
 
-       void notify_one();
-       void notify_all();
-       template &lt;typename L&gt;
-          void wait(L&amp; lock);
-       template &lt;typename L, typename Pr&gt;
-          void wait(L&amp; lock, Pr pred);
-       template &lt;typename L&gt;
-          bool timed_wait(L&amp; lock, const xtime&amp; xt);
-       template &lt;typename L, typename Pr&gt;
-          bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
-    };
- }</pre>
+class condition : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
+{
+public:
+   condition();
+   ~condition();
+
+   void notify_one();
+   void notify_all();
+   template &lt;typename L&gt;
+      void wait(L&amp; lock);
+   template &lt;typename L, typename Pr&gt;
+      void wait(L&amp; lock, Pr pred);
+   template &lt;typename L&gt;
+      bool timed_wait(L&amp; lock, const xtime&amp; xt);
+   template &lt;typename L, typename Pr&gt;
+      bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+};
+
+} // namespace boost
+</pre>
 
 <h2><a name="Members">Members</a></h2>
 
@@ -86,81 +91,83 @@ and <a href="thread_formal_definition.html#state">ready</a>. Note that
 <h3>Constructor</h3>
 
 <pre>
-    condition();
+condition();
 </pre>
 
-<p><b>Effects: </b>Constructs a <tt>condition</tt>.</p>
+<p><b>Effects:</b> Constructs a <code>condition</code>.</p>
 
 <hr>
 
 <h3>Destructor</h3>
 
 <pre>
-    ~condition();
+~condition();
 </pre>
 
-<p><b>Effects: </b>Destroys <code>*this</code>.</p>
+<p><b>Effects:</b> Destroys <code>*this</code>.</p>
 
 <hr>
 
 <h3>notify_one</h3>
 
 <pre>
-    void notify_one();
+void notify_one();
 </pre>
 
-<p><b>Effects: </b>If there is a thread waiting on <code>*this</code>, change
-that thread's state to ready.<b>&nbsp;</b> Otherwise there is no effect.</p>
+<p><b>Effects:</b> If there is a thread waiting on <code>*this</code>, change
+that thread's state to ready. Otherwise there is no effect.</p>
 
-<p><b>Notes: </b>If more that one thread is waiting on the condition, it is
-unspecified which is made ready.&nbsp;</p>
+<p><b>Notes:</b> If more that one thread is waiting on the condition, it is
+unspecified which is made ready.</p>
 
 <hr>
 
 <h3>notify_all</h3>
 
 <pre>
-    void notify_all();
+void notify_all();
 </pre>
 
-<p><b>Effects: </b>Change the state of all threads waiting on <code>*this</code>
-to ready. If there are no waiting threads, <code>notify()</code> has no effect.</p>
+<p><b>Effects:</b> Change the state of all threads waiting on <code>*this</code>
+to ready. If there are no waiting threads, <code>notify_all()</code> has no effect.</p>
 
 <hr>
 
 <h3>wait</h3>
 
 <pre>
-    template &lt;typename L&gt;
-       void wait(L&amp; lock);
+template &lt;typename L&gt;
+   void wait(L&amp; lock);
 </pre>
 
-<p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
+<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
 concept</a>.</p>
 
-<p><b>Effects: </b>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with <tt>lock</tt>,
-blocks the current thread of execution until readied by a call to <code>*this-&gt;notify()</code>
-or <code>*this-&gt;notify_all()</code>, and then reacquires the lock.&nbsp; All
-effects occur in an atomic fashion.</p>
+<p><b>Effects:</b> Releases the lock on the <a href="mutex_concept.html">mutex model</a>
+associated with <code>lock</code>, blocks the current thread of execution until readied by a
+call to <code>*this-&gt;notify_one()</code> or <code>*this-&gt;notify_all()</code>, and then
+reacquires the lock. All effects occur in an atomic fashion.</p>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
-<p><b>Danger: </b>This version should always be used within a loop checking that the state logically associated
-with the <tt>condition</tt> has become true.  Without the loop, race conditions can ensue due to
-possible "spurious wake ups".  The second version encapsulates this loop idiom internally and
-is generally the preferred method.</p>
+<p><b>Danger:</b> This version should always be used within a loop checking that the state
+logically associated with the <code>condition</code> has become true.  Without the loop, race
+conditions can ensue due to possible "spurious wake ups".  The second version encapsulates this
+loop idiom internally and is generally the preferred method.</p>
 
 <pre>
-    template &lt;typename L, typename Pr&gt;
-       void wait(L&amp; lock, Pr pred);
+template &lt;typename L, typename Pr&gt;
+   void wait(L&amp; lock, Pr pred);
 </pre>
 
-<p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
+<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
 concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 
-<p><b>Effects: </b>As if:</p>
+<p><b>Effects:</b> As if:</p>
 
-<pre> while !(pred()) wait(lock)</pre>
+<pre>
+	while !(pred()) wait(lock)
+</pre>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
@@ -169,38 +176,39 @@ concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 <h3>timed_wait</h3>
 
 <pre>
-    template &lt;typename L&gt;
-       bool timed_wait(L&amp; lock, const xtime&amp; xt);
+template &lt;typename L&gt;
+   bool timed_wait(L&amp; lock, const xtime&amp; xt);
 </pre>
 
-<p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
+<p><b>Requires:</b> <code>L</code> meet the requirements of the <a href="lock_concept.html">Lock
 concept</a>.</p>
 
-<p><b>Effects: </b>Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated with the <tt>lock</tt>,
-blocks the current thread of execution until readied by a call to <code>*this-&gt;notify()</code>
-or <code>*this-&gt;notify_all()</code>, or until <tt>xt,</tt> and then reacquires the lock.&nbsp; All
-effects occur in an atomic fashion.</p>
+<p><b>Effects:</b> Releases the lock on the <a href="mutex_concept.html">mutex model</a> associated
+with the <code>lock</code>, blocks the current thread of execution until readied by a call to
+<code>*this-&gt;notify_one()</code> or <code>*this-&gt;notify_all()</code>, or until <code>xt</code>,
+and then reacquires the lock. All effects occur in an atomic fashion.</p>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
-<p><b>Danger:</b> This version should
-always be used within a loop checking that the state logically associated with the <tt>condition</tt> has
-become true.  Without the loop, race conditions can ensue due to "spurious wake ups".  The second version
-encapsulates this loop idiom internally and is generally the preferred method.</p>
+<p><b>Danger:</b> This version should always be used within a loop checking that the state
+logically associated with the <code>condition</code> has become true.  Without the loop, race
+conditions can ensue due to "spurious wake ups".  The second version encapsulates this loop idiom
+internally and is generally the preferred method.</p>
 
-<p><b>Returns:</b> <tt>false</tt> if <code>xt </code>expires, otherwise <code>true</code>.&nbsp;</p>
+<p><b>Returns:</b> <code>false</code> if <code>xt</code> expires, otherwise <code>true</code>.</p>
 
 <pre>
-    template &lt;typename L, typename Pr&gt;
-       bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
+template &lt;typename L, typename Pr&gt;
+   bool timed_wait(L&amp; lock, const xtime&amp; xt, Pr pred);
 </pre>
 
 <p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
-concept</a>.&nbsp; Return from <code>pred()</code> convertible to bool.</p>
+concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 
-<p><b>Effects: </b>As if: <b>&nbsp;</b></p>
+<p><b>Effects: </b>As if:</p>
 
-<pre>    while (!pred())
+<pre>
+    while (!pred())
     {
         if (!timed_wait(lock, xt))
             return false;
@@ -209,11 +217,11 @@ concept</a>.&nbsp; Return from <code>pred()</code> convertible to bool.</p>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
-<p><b>Returns:</b> <tt>false</tt> if <code>xt </code>expires, otherwise <code>true</code>.</p>
+<p><b>Returns:</b> <code>false</code> if <code>xt</code> expires, otherwise <code>true</code>.</p>
 
 <hr>
 
-<h2><a name="Example">Example</a> Usage</h2>
+<h2><a name="Example">Example Usage</a></h2>
 
 <pre>
 #include &lt;iostream&gt;

@@ -59,6 +59,8 @@ unspecified.</p>
 <h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
+namespace boost {
+
 class thread : boost::noncopyable
 {
 public:
@@ -76,6 +78,8 @@ public:
     static void sleep(const xtime&amp; xt);
     static void yield();
 };
+
+} // namespace boost
 </pre>
 
 <h2><a name="Members">Members</a></h2>
@@ -233,7 +237,11 @@ int main(int argc, char* argv[])
 setting alarm for 5 seconds...
 alarm sounded...
 </pre>
+
 <hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21075" -->
+</p>
 
 <p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
 2001 all rights reserved.</i></p>

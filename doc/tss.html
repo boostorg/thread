@@ -44,7 +44,9 @@ operations that rely on global data thread safe.</p>
 <h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
-class tss
+namespace boost {
+
+class tss : boost::noncopyable
 {
 public:
     tss();
@@ -53,6 +55,8 @@ public:
     void* get() const;
     bool set(void* value);
 };
+
+} // namespace boost
 </pre>    
 
 <h2><a name="Members">Members</a></h2>
@@ -140,6 +144,9 @@ int main(int argc, char* argv[])
 </pre>
 
 <hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21075" -->
+</p>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>

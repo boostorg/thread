@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, FAQ</title>
 </head>
 
@@ -22,7 +23,7 @@
 
 <hr>
 
-<h2>Are lock objects thread safe?</h2>
+<h2>1. Are lock objects thread safe?</h2>
 
 <p><b>No!</b>  Lock objects are not meant to be shared between threads.  They are meant to
 be short lived objects created on automatic storage within a code block.  Any other usage
@@ -30,7 +31,7 @@ is just likely to lead to errors and won't really be of actual benefit any way. 
 mutexes, not locks.  For more information on this see the documentation on the
 <a href="rationale.html#lock_objects">rationale</a> behind the design for lock objects.</p>
 
-<h2>Why was Boost.Threads modelled after the (platform specific library name)
+<h2>2. Why was Boost.Threads modelled after the (platform specific library name)
 library?</h2>
 
 <p>It wasn't.  As the developer I tried very hard to not let my own biases show in the
@@ -41,7 +42,83 @@ for this concept in POSIX.  On the other hand, lack of a condition variable conc
 Windows API was a big mistake since it's the only way to model a monitor pattern.  If you think
 you see a bias for any platform/library, you're probably wrong.</p>
 
+<h2>3. Why do Mutex Concepts have noncopyable semantics?  Doesn't this mean that any
+class design with a mutex member will be noncopyable as well?</h2>
+
+<p>Why is to insure that deadlocks don't occur.  The only logical form of copy would be to
+use some sort of shallow copy semantics in which multiple mutex objects could refer
+to the same mutex state.  This means that if ObjA has a mutex object as part of its state
+and ObjB is copy constructed from it then when ObjB::foo() locks the mutex it has effectively
+locked ObjA as well.  It should be obvious how this behavior can result in deadlock.  Other
+copy semantics will just result in similar problems (if you think you can prove this to
+be wrong then supply us with an alternative and we'll reconsider).</p>
+
+<p>However, to answer the second question, no this does not mean that an object with a mutex
+member must be noncopyable.  All it means is that the compiler can't generate a copy constructor
+and assignment operator.  This is a <b>good thing</b>, however, since the compiler generated
+operations would not be thread safe any way.  The following is a simple example of a class
+with copyable semantics and internal synchronization through a mutex member.</p>
+
+<pre>
+class counter
+{
+public:
+   // Doesn't need synchronization since there can be no references to *this
+   // until after it's constructed!
+   explicit counter(int initial_value)
+      : m_value(initial_value)
+   {
+   }
+   
+   // We only need to syncronize other for the same reason we don't have to
+   // synchronize on construction!
+   counter(const counter& other)
+   {
+      boost::mutex::lock lock(other.m_mutex);
+      m_value = other.m_value;
+   }
+   
+   // For assignment we need to synchronize both objects!
+   const counter& operator=(const counter& other)
+   {
+      boost::mutex::lock lock(m_mutex);
+      boost::mutex::lock lock(other.m_mutex);
+      m_value = other.m_value;
+      return *this;
+   }
+   
+   int value() const
+   {
+      boost::mutex::lock lock(m_mutex);
+      return m_value;
+   }
+   int increment()
+   {
+      boost::mutex::lock lock(m_mutex);
+      return ++m_value;
+   }
+   
+private:
+   // See FAQ # 4.
+   mutable boost::mutex m_mutex;
+   int m_value;
+};
+</pre>
+
+<h2>4. The Monitor Pattern seems to have a flaw. How can you lock the internal
+mutex in a const method?</h2>
+
+<p>Actually, the Monitor Pattern as described in <a href="bibliography.html#Schmidt-00">[Schmidt
+00]</a> already provides the answer to this question in the implementation examples
+given. The mutex should simply be declared as mutable. The internal state of mutex
+types could have been made mutable with all lock calls made via const methods, but
+this does a poor job of documenting the actual semantics. Declaring a mutex member
+as mutable is a small price to pay for clear documentation of semantics.</p>
+
 <hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21075" -->
+</p>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
