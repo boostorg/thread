@@ -23,20 +23,20 @@ subproject libs/thread/build ;
 import ./threads ;
 
 {
-    CPP_SOURCES = 
-        barrier 
-        condition 
-        exceptions 
-        mutex 
+    CPP_SOURCES =
+        barrier
+        condition
+        exceptions
+        mutex
         once
-        recursive_mutex 
+        recursive_mutex
         read_write_mutex
-        thread 
+        thread
         tss_hooks
         tss_dll
         tss_pe
-        tss 
-        xtime 
+        tss
+        xtime
         ;
 
     template boost_thread_lib_base
@@ -45,6 +45,7 @@ import ./threads ;
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
           <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
+          <threading>multi #:should be unnecessary (because already included in thread_base)
           <define>BOOST_THREAD_BUILD_LIB=1
           <runtime-link>static
           # the common names rule ensures that the library will
@@ -56,10 +57,11 @@ import ./threads ;
 
     template boost_thread_dll_base
         : ## sources ##
-          <template>thread_base 
+          <template>thread_base
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
           <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
+          <threading>multi #:should be unnecessary (because already included in thread_base)
           <define>BOOST_THREAD_BUILD_DLL=1
           <runtime-link>dynamic
           # the common names rule ensures that the library will
@@ -79,7 +81,7 @@ import ./threads ;
 
     dll $(boost_thread_lib_name)
         : ## sources ##
-          <template>boost_thread_dll_base 
+          <template>boost_thread_dll_base
         : ## requirements ##
           <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name)
         : ## default build ##
