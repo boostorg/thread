@@ -45,12 +45,30 @@ below.<p>
 	<li><b>Portability</b>
 		<p><b>Boost.Threads</b> was designed to be highly portable.  The goal is for the
 		interface to be easily implemented on any platform that supports threads,
-		and possibly even on platforms with out native thread support.</p>
+		and possibly even on platforms without native thread support.</p>
 	<li><b>Safety</b>
 		<p><b>Boost.Threads</b> was designed to be as safe as possible.  Writing
         <a href="file:///c:/boost/site/libs/thread/doc/definitions.html#Thread-safe">thread-safe</a>
         code is very difficult and successful libraries must strive to insulate
-		the programmer from dangerous constructs as much as possible.</p>
+		the programmer from dangerous constructs as much as possible. This is accomplished
+        in several ways:</p>
+      <ul>
+        <li><p align="left">C++ language features are used make correct usage easy (if possible,
+          the default) and error-prone impossible or at least more difficult.
+          For example, see the <a href="mutex_concept.html">Mutex</a> and <a href="lock_concept.html">Lock</a>
+          designs, and how note how they interact.</p></li>
+        <li>
+          <p align="left">Certain traditional concurrent programming features
+          are considered so error-prone that they are not provided at all. For
+          example, see the <a href="rationale.html#Events">Events Not Provided</a>
+          rationale.</p>
+        </li>
+        <li>
+          <p align="left">Dangerous features, or features which may be misused,
+          are identified as such in the documentation to make users aware of
+          potential pitfalls. For example, see <a href="semaphore.html#Danger">Semaphore</a>.</p>
+        </li>
+      </ul>
 	<li><b>Flexibility</b>
 		<p><b>Boost.Threads</b> was designed to be flexible.  This goal is often at odds
 		with <i>safety</i>.  When functionality might be compromised by the desire
@@ -122,7 +140,7 @@ and barriers.</p>
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->16 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34353" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

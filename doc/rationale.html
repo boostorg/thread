@@ -22,7 +22,7 @@
 
 <hr>
 
-<p>This page explains the rationale behind various design decisions in the Boost.Threads
+<p>This page explains the rationale behind various design decisions in the <b> Boost.Threads</b>
 library.  Having the rationale documented here should explain how we arrived at the current
 design as well as prevent future rehashing of discussions and thought processes that have
 already occurred.  It can also give users a lot of insight into the design process required
@@ -109,7 +109,7 @@ as the lock object is properly used there's no danger of any multi-threading iss
 <h2><a name="thread">Rationale for Non-copyable Thread Type</a></h2>
 
 <p>Programmers who are used to C libraries for multi-threaded programming are likely to
-wonder why Boost.Threads uses a non-copyable design for boost::thread.  After all, the C
+wonder why Boost.Threads uses a non-copyable design for <a href="thread.html">boost::thread</a>.  After all, the C
 thread types are copyable, and you often have a need for copying them within user code.
 However, careful comparison of C designs to C++ designs shows a flaw in this logic.</p>
 
@@ -371,9 +371,57 @@ Given all of this it's a narrow margin, but the thread design prevails.</p>
 the normal designs that C++ programmers are used to dealing with, the Boost.Threads
 library has gone with a noncopyable design.</p>
 
+<h2>Rationale for not providing <i><a name="Events">Event</a> Variables</i></h2>
+
+<p><i>Event variables </i>are simply far too error-prone.&nbsp; <a href="condition.html">Condition
+variables</a> are a much safer alternative.</p>
+
+<p>[Note that Graphical User Interface <i>events</i> are a different concept,
+and are not what is being discussed here.]</p>
+
+<p>Event variables were one of the first synchronization primitives. They are
+still used today, for example, in the native Windows multithreading API.</p>
+
+<p>Yet both respected computer science researchers and experienced
+multithreading practitioners believe event variables are so inherently
+error-prone that they should never be used, and thus should not be part of a
+multithreading library.</p>
+
+<p>Per Brinch Hansen <a href="bibliography.html#Brinch-Hansen-73">[Brinch Hansen
+73]</a> analyzed event variables in some detail, pointing out [emphasis his]
+that &quot;<i>event operations force the programmer to be aware of the relative
+speeds of the sending and receiving processes</i>&quot;. His summary:</p>
+
+<blockquote>
+  <p>We must therefore conclude that event variables of the previous type are
+  impractical for system design. <i>The effect of an interaction between two
+  processes must be independent of the speed at which it is carried out.</i></p>
+
+</blockquote>
+<p>Experienced programmers using the Windows platform today
+report that event variables are a continuing source of errors, even after previous
+bad experiences caused them to be very careful in their use of event
+variables.&nbsp; Overt problems can be avoided, for example, by teaming the
+event variable with a mutex, but that may just convert a <a href="definitions.html#Race condition">race
+condition</a> into another problem, such as excessive resource use. One of the most
+distressing aspects of the experience reports is the claim that many defects are
+latent.&nbsp; That is, the programs appear to work correctly, but contain
+hidden timing dependencies which will cause them to fail when environmental
+factors or usage patterns change, altering relative thread timings.</p>
+
+<p>The decision to exclude event variables from Boost.Threads has been
+surprising to some Windows programmers.&nbsp; They have written programs which
+work using event variables, and wonder what the problem is.&nbsp; It seems
+similar to the &quot;goto considered harmful&quot; controversy of 30 years ago.
+It isn't that events, like gotos, can't be made to work, but rather that
+virtually all programs using alternatives will be easier to write, debug,
+read, maintain, and be less likely to contain latent defects.</p>
+
+<p>[Rationale provided by Beman Dawes]</p>
+
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34342" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34355" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>

@@ -45,10 +45,28 @@ reason <b>Boost.Threads</b> defines the <tt>semaphore</tt> type in the classic f
 usage and implementation, but it means that the interface is not as safe as other <b>Boost.Threads</b>
 interfaces.</p>
 
-<p><b>Danger:</b> Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads,</b>
+<p><b><a name="Danger">Danger</a>:</b> Unlike the <A href="mutex_concept.html">mutex models</a> supplied by <b>Boost.Threads,</b>
 there is no <A href="lock_concept.html">lock_concept</a> for the semaphore to help ensure proper
 usage. Great care must be taken when using a <tt>semaphore</tt> object to ensure
-<a href="definitions.html#Deadlock"> deadlock</a> or <a href="definitions.html#Race condition">race conditions</a> do not occur.</p>
+<a href="definitions.html#Deadlock"> deadlock</a> or <a href="definitions.html#Race condition">race conditions</a> do not occur.&nbsp;</p>
+
+<p>The dangers are spelled out by <a href="bibliography.html#Andrews-83">[Andrews-83]</a>
+(function names updated, see historical note below):&nbsp;</p>
+
+<blockquote>
+
+<p>Although semaphores can be used to program almost any kind of synchronization,
+<b>down()</b> and <b>up()</b> are rather unstructured primitives, and so it is easy to err when using them. Execution of each critical section must begin with a
+<b>down()</b> and end with a <b>up()</b> (on the same semaphore). Omitting a <b>down()</b>
+or <b>up()</b>, or accidentally coding a <b>down()</b> on one semaphore and a <b>up()</b>
+on another can have disastrous effects, since mutually exclusive execution would no longer be ensured. Also, when using semaphores, a programmer can forget to include in critical sections all statements that reference shared objects. This, too, could destroy the mutual exclusion required within critical sections. A second difficulty with using semaphores is that both condition synchronization and mutual exclusion are programmed using the same pair of primitives. This makes it difficult to identify the purpose of a given
+<b>down()</b> or <b>up()</b> operation without looking at the other operations on the corresponding semaphore. Since mutual exclusion and condition synchronization are distinct concepts, they should have distinct notations.</p>
+
+</blockquote>
+
+<p><b>Historical note: </b>Dijkstra's original name for <b>down()</b> was <b>P</b>
+(short for the Dutch &quot;passeren&quot;, &quot;to pass&quot;), and for <b>up()</b>
+was <b>V</b> (short for the Dutch &quot;vrygeven&quot;, &quot;to release&quot;).</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -196,7 +214,7 @@ global_data == 4
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->16 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34353" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

@@ -51,7 +51,7 @@ The WIN32 thread API lacks condition variables, even though these are critical
 for the important Monitor pattern <a href="bibliography.html#Schmidt-00">[Schmidt
 00]</a>.&nbsp;&nbsp;&nbsp;</p>
 
-<h2>3. Why do <a href="mutex_concept.html"> Mutex Concepts</a> have noncopyable semantics?</h2>
+<h2>3. Why do <a href="mutex_concept.html"> Mutexes</a> have noncopyable semantics?</h2>
 
 <p>To ensure that <a href="definitions.html#Deadlock"> deadlocks</a> don't occur.  The only logical form of copy would be to
 use some sort of shallow copy semantics in which multiple mutex objects could refer
@@ -61,7 +61,7 @@ locked ObjA as well. This behavior can result in deadlock.  Other
 copy semantics result in similar problems (if you think you can prove this to
 be wrong then supply us with an alternative and we'll reconsider).</p>
 
-<h2>4.&nbsp; Don't noncopyable mutex semantics mean that a
+<h2>4.&nbsp; Don't noncopyable <a href="mutex_concept.html"> mutex</a> semantics mean that a
 class with a mutex member will be noncopyable as well?</h2>
 
 <p>No, but it does means is that the compiler can't generate a copy constructor
@@ -115,7 +115,7 @@ private:
 };
 </pre>
 
-<h2>5. How can you lock a mutex member in a const member function, in order to
+<h2>5. How can you lock a <a href="mutex_concept.html"> mutex</a> member in a const member function, in order to
 implement the Monitor Pattern?</h2>
 
 <p>The Monitor Pattern mutex <a href="bibliography.html#Schmidt-00">[Schmidt
@@ -125,11 +125,12 @@ functions, but
 this does a poor job of documenting the actual semantics. Declaring a mutex member
 as mutable clearly documentations the intended semantics.</p>
 
-<h2>6. Why supply <a href="condition.html">condition</a> variables rather than
-event objects?</h2>
+<h2>6. Why supply <a href="condition.html">condition variables</a> rather than <a href="rationale.html#Events">
+event variables</a>?</h2>
 
 <p>Condition variables result in user code much less prone to <a href="definitions.html#Race condition">race
-conditions</a> than event objects.&nbsp; See <a href="bibliography.html#Hoare-74">[Hoare74]</a>
+conditions</a> than event variables.&nbsp; See <a href="rationale.html#Events">Rationale</a>
+for analysis. Also see <a href="bibliography.html#Hoare-74">[Hoare74]</a>
 and <a href="bibliography.html#Schmidt-00">[Schmidt
 00]</a>.</p>
 
@@ -151,7 +152,7 @@ by Darryl Green).</p>
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->10 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34341" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34355" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
