@@ -15,7 +15,6 @@
   <xi:include href="recursive_mutex-ref.xml"/>
   <xi:include href="rw_mutex-ref.xml"/>
   <xi:include href="thread-ref.xml"/>
-  <xi:include href="thread_pool-ref.xml"/>
   <xi:include href="tss-ref.xml"/>
   <xi:include href="xtime-ref.xml"/>
 </library-reference>
