@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/tss.hpp"
+	last-revision="$Date$">
+	<namespace name="boost">
+		<class name="thread_specific_ptr">
+			<purpose>
+				The <classname>thread_specific_ptr</classname> class defines 
+				an interface for using thread specific storage.
+			</purpose>
+			
+			<description>
+				<para>Thread specific storage is data associated with 
+				individual threads and is often used to make operations
+				that rely on global data 
+				<link linkend="threads.glossary.thread-safe">thread-safe</link>.
+				</para>
+				
+				<para>Template <classname>thread_specific_ptr</classname> 
+				stores a pointer to an object obtained on a thread-by-thread
+				basis and calls a specified cleanup handler on the contained
+				pointer when the thread terminates. The cleanup handlers are
+				called in the reverse order of construction of the 
+				<classname>thread_specific_ptr</classname>s, and for the 
+				initial thread are called by the destructor, providing the 
+				same ordering guarantees as for normal declarations. Each
+				thread initially stores the null pointer in each
+				<classname>thread_specific_ptr</classname> instance.</para>
+				
+				<para>The template <classname>thread_specific_ptr</classname>
+				is useful in the following cases:
+					<itemizedlist>
+						<listitem>An interface was originally written assuming 
+						a single thread of control and it is being ported to a
+						multithreaded environment.</listitem>
+						
+						<listitem>Each thread of control invokes sequences of
+						methods that share data that are physically unique
+						for each thread, but must be logically accessed
+						through a globally visible access point instead of 
+						being explicitly passed.</listitem>
+					</itemizedlist>
+				</para>
+			</description>
+			
+			<inherit access="private">
+				<type><classname>boost::noncopyable</classname></type>
+				<purpose>Exposition only</purpose>
+			</inherit>
+			
+			<constructor>
+				<requires>The expression <code>delete get()</code> is well
+				formed.</requires>
+				
+				<effects>A thread-specific data key is allocated and visible to
+				all threads in the process. Upon creation, the value 
+				<code>NULL</code> will be associated with the new key in all 
+				active threads. A cleanup method is registered with the key 
+				that will call <code>delete</code> on the value associated 
+				with the key for a thread when it exits. When a thread exits,
+				if a key has a registered cleanup method and the thread has a
+				non-<code>NULL</code> value associated with that key, the value
+				of the key is set to <code>NULL</code> and then the cleanup 
+				method is called with the previously associated value as its 
+				sole argument. The order in which registered cleanup methods 
+				are called when a thread exits is undefined. If after all the
+				cleanup methods have been called for all non-<code>NULL</code>
+				values, there are still some non-<code>NULL</code> values
+				with associated cleanup handlers the result is undefined
+				behavior.</effects>
+				
+				<throws><classname>boost::thread_resource_error</classname> if
+				the necessary resources can not be obtained.</throws>
+				
+				<notes>There may be an implementation specific limit to the 
+				number of thread specific storage objects that can be created,
+				and this limit may be small.</notes>
+				
+				<rationale>The most common need for cleanup will be to call 
+				<code>delete</code> on the associated value. If other forms
+				of cleanup are required the overloaded constructor should be
+				called instead.</rationale>
+			</constructor>
+			
+			<constructor>
+				<parameter name="cleanup">
+					<paramtype>void (*cleanup)(void*)</paramtype>
+				</parameter>
+				
+				<effects>A thread-specific data key is allocated and visible to
+				all threads in the process. Upon creation, the value 
+				<code>NULL</code> will be associated with the new key in all 
+				active threads. The <code>cleanup</code> method is registered
+				with the key and will be called for a thread with the value 
+				associated with the key for that thread when it exits. When a
+				thread exits, if a key has a registered cleanup method and the
+				thread has a non-<code>NULL</code> value associated with that
+				key, the value of the key is set to <code>NULL</code> and then
+				the cleanup method is called with the previously associated
+				value as its sole argument. The order in which registered
+				cleanup methods are called when a thread exits is undefined.
+				If after all the cleanup methods have been called for all 
+				non-<code>NULL</code> values, there are still some 
+				non-<code>NULL</code> values with associated cleanup handlers
+				the result is undefined behavior.</effects>
+				
+				<throws><classname>boost::thread_resource_error</classname> if
+				the necessary resources can not be obtained.</throws>
+				
+				<notes>There may be an implementation specific limit to the 
+				number of thread specific storage objects that can be created,
+				 and this limit may be small.</notes>
+				 
+				 <rationale>There is the occasional need to register 
+				 specialized cleanup methods, or to register no cleanup method
+				 at all (done by passing <code>NULL</code> to this constructor.
+				 </rationale>
+			</constructor>
+			
+			<destructor>
+				<effects>Deletes the thread-specific data key allocated by the
+				constructor. The thread-specific data values associated with
+				the key need not be <code>NULL</code>. It is the responsibility
+				of the application to perform any cleanup actions for data
+				associated with the key.</effects>
+				
+				<notes>Does not destroy any data that may be stored in any
+				thread's thread specific storage. For this reason you should
+				not destroy a <classname>thread_specific_ptr</classname> object
+				until you are certain there are no threads running that have
+				made use of its thread specific storage.</notes>
+				
+				<rationale>Associated data is not cleaned up because registered
+				cleanup methods need to be run in the thread that allocated the
+				associated data to be guarranteed to work correctly. There's no
+				safe way to inject the call into another thread's execution
+				path, making it impossible to call the cleanup methods safely.
+				</rationale>
+			</destructor>
+			
+			<method-group name="modifier functions">
+				<method name="release">
+					<type>T*</type>
+					
+					<postconditions><code>*this</code> holds the null pointer
+					for the current thread.</postconditions>
+					
+					<returns><code>this-&gt;get()</code> prior to the call.</returns>
+					
+					<rationale>This method provides a mechanism for the user to
+					relinquish control of the data associated with the 
+					thread-specific key.</rationale>
+				</method>
+			
+				<method name="reset">
+					<type>void</type>
+
+					<parameter name="p">
+						<paramtype>T*</paramtype>
+						<default>0</default>
+					</parameter>
+					
+					<effects>If <code>this-&gt;get() != p &amp;&amp; 
+					this-&gt;get() != NULL</code> then call the 
+					associated cleanup function.</effects>
+					
+					<postconditions><code>*this</code> holds the pointer 
+					<code>p</code> for the current thread.</postconditions>
+				</method>
+			</method-group>
+			
+			<method-group name="observer functions">
+				<method name="get" cv="const">
+					<type>T*</type>
+					
+					<returns>The object stored in thread specific storage for
+					the current thread for <code>*this</code>.</returns>
+					
+					<notes>Each thread initially returns 0.</notes>
+				</method>
+				
+				<method name="operator-&gt;" cv="const">
+					<type>T*</type>
+					
+					<returns><code>this-&gt;get()</code>.</returns>
+				</method>
+				
+				<method name="operator*()" cv="const">
+					<type>T&amp;</type>
+					
+					<requires><code>this-&gt;get() != 0</code></requires>
+					
+					<returns><code>this-&gt;get()</code>.</returns>
+				</method>
+			</method-group>
+		</class>
+	</namespace>
+</header>
