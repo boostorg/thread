@@ -36,28 +36,16 @@ include <module@>threads.jam ;
 
 if $(NT) && ! $(PTW32)
 {
-    dll boost_threadmon
-        : ../src/threadmon.cpp
-        : <sysinclude>$(BOOST_ROOT)
-          <threading>multi
-        : debug release <runtime-link>static/dynamic
-    ;
+    dll boost_threadmon : <template>thread_base ../src/threadmon.cpp ;
 }
 
 #######################
 # Declare the Boost.Threads static link library libboost_thread.
 
 # Base names of the source files for libboost_thread.
-CPP_SOURCES =
-    condition mutex recursive_mutex thread tss xtime once exceptions ;
+CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once exceptions ;
 
-lib boost_thread
-    : ../src/$(CPP_SOURCES).cpp
-    : <sysinclude>$(BOOST_ROOT)
-      <threading>multi
-      $(pthreads-win32)
-    : debug release <runtime-link>static/dynamic
-;
+lib boost_thread : <template>thread_base ../src/$(CPP_SOURCES).cpp ;
 
 #######################
 # Stage the generated targets.

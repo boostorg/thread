@@ -179,7 +179,7 @@ void test_condition_waits()
     BOOST_CHECK_EQUAL(data.awoken, 4);
 }
 
-boost::unit_test_framework::test_suite* condition_tests()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: condition test suite");
 

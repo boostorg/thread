@@ -29,7 +29,7 @@ void test_once()
 	BOOST_CHECK_EQUAL(once_value, 1);
 }
 
-boost::unit_test_framework::test_suite* once_tests()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: once test suite");
 

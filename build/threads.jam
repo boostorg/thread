@@ -21,3 +21,12 @@ if $(NT)
         threadmon = <dll>../build/boost_threadmon ;
     }
 }
+
+template thread_base
+    ## sources ##
+    :
+    ## requirements ##
+    : <sysinclude>$(BOOST_ROOT) <threading>multi $(pthreads-win32)
+    ## default build ##
+    : debug release <runtime-link>static/dynamic
+;

@@ -28,16 +28,20 @@ include <module@>threads.jam ;
 
 sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp test_tss.cpp test_once.cpp ;
 
+template test_base
+    ## sources ##
+    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    ## requirements ##
+    :
+    ## default build ##
+    :
+;
+
 #######################
 # Declare the Boost.Threads unit test program test_thread.
 
-unit-test test_thread
-    : $(sources)
-      <lib>../build/boost_thread
-      <lib>../../test/build/unit_test_framework
-      $(threadmon)
-    : <sysinclude>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
+unit-test test_thread : <template>test_base test_thread.cpp ;
+unit-test test_mutex : <template>test_base test_mutex.cpp ;
+unit-test test_condition : <template>test_base test_condition.cpp ;
+unit-test test_tss : <template>test_base test_tss.cpp ;
+unit-test test_once : <template>test_base test_once.cpp ;

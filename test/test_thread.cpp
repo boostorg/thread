@@ -77,7 +77,7 @@ void test_comparison()
 	thrd.join();
 }
 
-boost::unit_test_framework::test_suite* thread_tests()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread test suite");
 
