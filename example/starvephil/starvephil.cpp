@@ -63,7 +63,7 @@ private:
 
 canteen g_canteen;
 
-void chef(void*)
+void chef()
 {
 	const int chickens = 4;
 	{
@@ -139,15 +139,25 @@ struct thread_adapt
     void* _param;
 };
 
+class thread_adapter
+{
+public:
+    thread_adapter(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    void operator()() const { _func(_param); }
+private:
+    void (*_func)(void*);
+    void* _param;
+};
+
 int main(int argc, char* argv[])
 {
-    boost::thread::create(&chef, 0);
+    boost::thread::create(&chef);
     phil p[] = { phil(0), phil(1), phil(2), phil(3), phil(4) };
-    boost::thread::create(&phil::do_thread, &p[0]);
-    boost::thread::create(&phil::do_thread, &p[1]);
-    boost::thread::create(&phil::do_thread, &p[2]);
-    boost::thread::create(&phil::do_thread, &p[3]);
-    boost::thread::create(&phil::do_thread, &p[4]);
+    boost::thread::create(thread_adapter(&phil::do_thread, &p[0]));
+    boost::thread::create(thread_adapter(&phil::do_thread, &p[1]));
+    boost::thread::create(thread_adapter(&phil::do_thread, &p[2]));
+    boost::thread::create(thread_adapter(&phil::do_thread, &p[3]));
+    boost::thread::create(thread_adapter(&phil::do_thread, &p[4]));
     boost::thread::join_all();
     return 0;
 }

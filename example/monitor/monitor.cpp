@@ -48,7 +48,7 @@ public:
         return buf;
     }
     
-    static void do_sender_thread(void*)
+    static void do_sender_thread()
     {
         for (int n = 0; n < ITERS; ++n)
         {
@@ -60,7 +60,7 @@ public:
         }
     }
     
-    static void do_receiver_thread(void*)
+    static void do_receiver_thread()
     {
         int n;
         do
@@ -83,8 +83,8 @@ void do_test(M* dummy=0)
 {
     typedef buffer_t<M> buffer_type;
     buffer_type::get_buffer();
-    boost::thread::create(&buffer_type::do_sender_thread, 0);
-    boost::thread::create(&buffer_type::do_receiver_thread, 0);
+    boost::thread::create(&buffer_type::do_sender_thread);
+    boost::thread::create(&buffer_type::do_receiver_thread);
     boost::thread::join_all();
 }
 

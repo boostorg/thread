@@ -210,11 +210,21 @@ void condition_test_thread(void* param)
 	data->awoken++;
 }
 
+class thread_adapter
+{
+public:
+    thread_adapter(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    void operator()() const { _func(_param); }
+private:
+    void (*_func)(void*);
+    void* _param;
+};
+
 void test_condition_notify_one()
 {
 	condition_test_data data;
 
-    boost::thread::create(&condition_test_thread, &data);
+    boost::thread::create(thread_adapter(&condition_test_thread, &data));
 
 	{
 		boost::mutex::lock lock(data.mutex);
@@ -233,7 +243,7 @@ void test_condition_notify_all()
 	condition_test_data data;
 
 	for (int i = 0; i < NUMTHREADS; ++i)
-        boost::thread::create(&condition_test_thread, &data);
+        boost::thread::create(thread_adapter(&condition_test_thread, &data));
 
 	{
 		boost::mutex::lock lock(data.mutex);
@@ -302,7 +312,7 @@ void test_condition_waits()
 {
     condition_test_data data;
 
-    boost::thread::create(&condition_test_waits, &data);
+    boost::thread::create(thread_adapter(&condition_test_waits, &data));
 
     boost::xtime xt;
 
@@ -390,7 +400,7 @@ void test_semaphore()
     BOOST_TEST(boost::read(atomic) == 20);
 }*/
 
-void test_tss_thread(void*)
+void test_tss_thread()
 {
     static boost::tss value;
     value.set(new int(0));

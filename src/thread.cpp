@@ -97,7 +97,7 @@ namespace boost
             static void* thread_proc(void* param);
 #endif
 
-            static thread_state* create(const boost::detail::threadfunc& func, void* param);
+            static thread_state* create(const boost::detail::threadfunc& func);
 
         private:
             unsigned long _refs;
@@ -105,7 +105,6 @@ namespace boost
             condition _cond;
             int _state;
             threadfunc _func;
-            void* _param;
 #if defined(BOOST_HAS_WINTHREADS)
             HANDLE _thread;
 #elif defined(BOOST_HAS_PTHREADS)
@@ -188,7 +187,7 @@ namespace boost
 
             try
             {
-                state->_func(state->_param);
+                state->_func();
             }
             catch (...)
             {
@@ -206,14 +205,13 @@ namespace boost
             return 0;
         }
 
-        thread_state* thread_state::create(const boost::detail::threadfunc& func, void* param)
+        thread_state* thread_state::create(const boost::detail::threadfunc& func)
         {
             thread_state* state = new thread_state();
             mutex::lock lock(state->_mutex);
 
             assert(func);
             state->_func = func;
-            state->_param = param;
 
 #if defined(BOOST_HAS_WINTHREADS)
             unsigned id;
@@ -276,10 +274,10 @@ namespace boost
             _state->join();
     }
 
-    thread thread::create(const detail::threadfunc& func, void* param)
+    thread thread::create(const detail::threadfunc& func)
     {
         thread temp;
-        temp._state = detail::thread_state::create(func, param);
+        temp._state = detail::thread_state::create(func);
         return temp;
     }
 

@@ -67,12 +67,22 @@ struct thread_adapt
     void* _param;
 };
 
+class thread_adapter
+{
+public:
+    thread_adapter(void (*func)(void*), void* param) : _func(func), _param(param) { }
+    void operator()() const { _func(_param); }
+private:
+    void (*_func)(void*);
+    void* _param;
+};
+
 int main(int argc, char* argv[])
 {
     state = START;
 
-    boost::thread::create(&player, (void*)PLAYER_A);
-    boost::thread::create(&player, (void*)PLAYER_B);
+    boost::thread::create(thread_adapter(&player, (void*)PLAYER_A));
+    boost::thread::create(thread_adapter(&player, (void*)PLAYER_B));
 
     boost::xtime xt;
     boost::xtime_get(&xt, boost::TIME_UTC);
