@@ -76,8 +76,6 @@ namespace
         BOOST_CHECK_EQUAL(data->notified, 4);
         data->awoken++;
         data->condition.notify_one();
-
-		boost::thread::sleep(delay(60));
     }
 }
 
@@ -183,7 +181,7 @@ void test_condition_waits()
 	// We should have already tested notify_one here, so
 	// a timed test with the default execution_monitor::use_condition
 	// should be OK, and gives the fastest performance
-	timed_test(&do_test_condition_waits, 120);
+	timed_test(&do_test_condition_waits, 12);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
