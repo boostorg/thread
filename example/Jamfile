@@ -1,3 +1,3 @@
-subproject example ;
+subproject libs/thread/example ;
 
-subinclude example/monitor example/starvephil example/tennis ;
+subinclude libs/thread/example/monitor libs/thread/example/starvephil libs/thread/example/tennis ;

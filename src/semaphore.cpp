@@ -14,13 +14,13 @@
 #include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
-#include <errno.h>
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
+#   include <errno.h>
 #   include <boost/thread/mutex.hpp>
 #   include <boost/thread/condition.hpp>
 #endif

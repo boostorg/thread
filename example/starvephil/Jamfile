@@ -1,11 +1,12 @@
-subproject example/starvephil ;
+subproject libs/thread/example/starvephil ;
 
 exe starvephil
-	: starvephil.cpp
-	  <lib>../../src/threads
-	## Requirements ##
-	: <include>../..
-	  <threading>multi
-	## default-BUILD ##
-	: debug release
-	;
+        : starvephil.cpp
+          <lib>../../src/threads
+        ## Requirements ##
+        : <include>../..
+          <include>$(BOOST_ROOT)
+          <threading>multi
+        ## default-BUILD ##
+        : debug release
+        ;

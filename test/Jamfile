@@ -1,11 +1,12 @@
-subproject test ;
+subproject libs/thread/test ;
 
 exe test_thread
-	: test_thread.cpp
-	  <lib>../src/threads
-	## Requirements ##
-	: <include>..
-	  <threading>multi
-	## default-BUILD ##
-	: debug release
-	;
+        : test_thread.cpp
+          <lib>../src/threads
+        ## Requirements ##
+        : <include>..
+          <include>$(BOOST_ROOT)
+          <threading>multi
+        ## default-BUILD ##
+        : debug release
+        ;

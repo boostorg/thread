@@ -1,11 +1,12 @@
-subproject example/tennis ;
+subproject libs/thread/example/tennis ;
 
 exe tennis
-	: tennis.cpp
-	  <lib>../../src/threads
-	## Requirements ##
-	: <include>../..
-	  <threading>multi
-	## default-BUILD ##
-	: debug release
-	;
+        : tennis.cpp
+          <lib>../../src/threads
+        ## Requirements ##
+        : <include>../..
+          <include>$(BOOST_ROOT)
+          <threading>multi
+        ## default-BUILD ##
+        : debug release
+        ;

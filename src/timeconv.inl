@@ -1,18 +1,13 @@
-/*
- * Copyright (C) 2001
- * William E. Kempf
- *
- * Permission to use, copy, modify, distribute and sell this software
- * and its documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  William E. Kempf makes no representations
- * about the suitability of this software for any purpose.  
- * It is provided "as is" without express or implied warranty.
- *
- * Revision History (excluding minor changes for specific compilers)
- *    1 Jun 01  Initial creation.
- */
+// Copyright (C) 2001
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.  
+// It is provided "as is" without express or implied warranty.
  
 namespace {
 	const unsigned MILLISECONDS_PER_SECOND = 1000;
@@ -90,3 +85,5 @@ namespace {
 	}
 }
 
+// Change Log:
+//    1 Jun 01  Initial creation.

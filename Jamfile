@@ -1,7 +1,6 @@
-# Declare this to be the project root directory
-project-root ;
+subproject libs/thread ;
 
 #NEEDLIBS = "-lpthread"
 
 # Read subproject Jamfiles
-subinclude src test example ;
+subinclude libs/thread/src libs/thread/test libs/thread/example ;

@@ -1,18 +1,18 @@
 subproject libs/thread/src ;
 
 lib threads
-	: condition.cpp
-	  mutex.cpp
-	  recursive_mutex.cpp
-	  semaphore.cpp
-	  thread.cpp
-	  tss.cpp
-	  xtime.cpp
-	## Requirements ##
-	: <include>..
-      <include>$(BOOST_ROOT)
-	  <threading>multi
-	## default-BUILD ##
-	: debug release
-	;
+        : condition.cpp
+          mutex.cpp
+          recursive_mutex.cpp
+          semaphore.cpp
+          thread.cpp
+          tss.cpp
+          xtime.cpp
+        ## Requirements ##
+        : <include>..
+          <include>$(BOOST_ROOT)
+          <threading>multi
+        ## default-BUILD ##
+        : debug release
+        ;
 

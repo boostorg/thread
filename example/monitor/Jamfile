@@ -1,11 +1,12 @@
-subproject example/monitor ;
+subproject libs/thread/example/monitor ;
 
 exe monitor
-	: monitor.cpp
-	  <lib>../../src/threads
-	## Requirements ##
-	: <include>../..
-	  <threading>multi
-	## default-BUILD ##
-	: debug release
-	;
+        : monitor.cpp
+          <lib>../../src/threads
+        ## Requirements ##
+        : <include>../..
+          <include>$(BOOST_ROOT)
+          <threading>multi
+        ## default-BUILD ##
+        : debug release
+        ;
