@@ -12,14 +12,7 @@
 # Boost.Threads test Jamfile
 #
 # Additional configuration variables used:
-#   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
-#      library should be used instead of "native" threads. This feature is
-#      mostly used for testing and it's generally recommended you use the
-#      native threading libraries instead. PTW32 should be set to be a list
-#      of two strings, the first specifying the installation path of the
-#      pthreads-win32 library and the second specifying which library
-#      variant to link against (see the pthreads-win32 documentation).
-#      Example: jam -sPTW32="c:\pthreads-win32 pthreadVCE.lib"
+#   See threads.jam.
 
 # Declare the location of this subproject relative to the root.
 subproject libs/thread/test ;
