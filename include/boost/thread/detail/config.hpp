@@ -28,7 +28,7 @@
 #   elif defined(BOOST_THREAD_USE_LIB) //Use lib
 #       define BOOST_THREAD_DECL
 #   else //Use default
-#       if defined(BOOST_MSVC)
+#       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)
             //For VC++, choose according to threading library setting
 #           if defined(_DLL)
                 //Threading library is dll: use Boost.Threads dll
