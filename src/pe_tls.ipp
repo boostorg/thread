@@ -19,22 +19,19 @@ extern "C" void tss_cleanup_implemented(void)
 
 extern "C" int _tls_used;
 
-int dummy() 
+int dummy(void)
 {
     return _tls_used;
 }
 
 //Report thread and process detach events.
 
-void NTAPI tls_callback  (PVOID, DWORD Reason, PVOID) 
+void NTAPI tls_callback(PVOID, DWORD Reason, PVOID) 
 {
-    if(Reason == DLL_THREAD_DETACH)
+    if (Reason == DLL_THREAD_DETACH)
         on_thread_exit();
-    else if(Reason == DLL_PROCESS_DETACH) 
-    {
+    else if (Reason == DLL_PROCESS_DETACH) 
         on_thread_exit();
-        on_process_exit();
-    }
 }
 
 // Add callback to the TLS callback list in TLS directory.
