@@ -18,12 +18,14 @@
 #include <boost/config/requires_threads.hpp>
 
 #include <boost/utility.hpp>
-#include <boost/thread/detail/lock.hpp>
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/lock.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
-#elif defined(BOOST_HAS_MPTASKS)
+#endif
+
+#if defined(BOOST_HAS_MPTASKS)
 #   include "scoped_critical_region.hpp"
 #endif
 
@@ -31,7 +33,8 @@ namespace boost {
 
 struct xtime;
 
-class BOOST_THREAD_DECL recursive_mutex : private noncopyable
+class BOOST_THREAD_DECL recursive_mutex
+    : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<recursive_mutex>;
@@ -58,6 +61,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
+    bool m_critical_section;
     unsigned long m_count;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
@@ -74,7 +78,8 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL recursive_try_mutex : private noncopyable
+class BOOST_THREAD_DECL recursive_try_mutex
+    : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<recursive_try_mutex>;
@@ -104,6 +109,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
+    bool m_critical_section;
     unsigned long m_count;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
@@ -120,7 +126,8 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL recursive_timed_mutex : private noncopyable
+class BOOST_THREAD_DECL recursive_timed_mutex
+    : private noncopyable
 {
 public:
     friend class detail::thread::lock_ops<recursive_timed_mutex>;

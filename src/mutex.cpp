@@ -19,47 +19,56 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
+#   include <new>
+#   include <boost/thread/once.hpp>
 #   include <windows.h>
 #   include <time.h>
+#   include "mutex.inl"
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#   include <MacErrors.h>
-#   include "mac/init.hpp"
-#   include "mac/safe.hpp"
+#    include <MacErrors.h>
+#    include "mac/init.hpp"
+#    include "mac/safe.hpp"
 #endif
 
 namespace boost {
 
 #if defined(BOOST_HAS_WINTHREADS)
-mutex::mutex() : m_mutex(0)
+
+mutex::mutex()
+    : m_mutex(0)
+    , m_critical_section(false)
 {
-    try
-    {
-        m_mutex = reinterpret_cast<void*>(new CRITICAL_SECTION);
-    }
-    catch (...)
-    {
-    }
-    if (!m_mutex)
-        throw thread_resource_error();
-    InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
+    m_critical_section = true;
+    if (m_critical_section)
+        m_mutex = new_critical_section();
+    else
+        m_mutex = new_mutex(0);
 }
 
 mutex::~mutex()
 {
-    DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
-    delete reinterpret_cast<LPCRITICAL_SECTION>(m_mutex);
+    if (m_critical_section)
+        delete_critical_section(m_mutex);
+    else
+        delete_mutex(m_mutex);
 }
 
 void mutex::do_lock()
 {
-    EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
+    if (m_critical_section)
+        wait_critical_section_infinite(m_mutex);
+    else
+        wait_mutex(m_mutex, INFINITE);
 }
 
 void mutex::do_unlock()
 {
-    LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
+    if (m_critical_section)
+        release_critical_section(m_mutex);
+    else
+        release_mutex(m_mutex);
 }
 
 void mutex::do_lock(cv_state&)
@@ -73,39 +82,46 @@ void mutex::do_unlock(cv_state&)
 }
 
 try_mutex::try_mutex()
+    : m_mutex(0)
+    , m_critical_section(false)
 {
-    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
-    if (!m_mutex)
-        throw thread_resource_error();
+    m_critical_section = has_TryEnterCriticalSection();
+    if (m_critical_section)
+        m_mutex = new_critical_section();
+    else
+        m_mutex = new_mutex(0);
 }
 
 try_mutex::~try_mutex()
 {
-    int res = 0;
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    if (m_critical_section)
+        delete_critical_section(m_mutex);
+    else
+        delete_mutex(m_mutex);
 }
 
 void try_mutex::do_lock()
 {
-    int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
+    if (m_critical_section)
+        wait_critical_section_infinite(m_mutex);
+    else
+        wait_mutex(m_mutex, INFINITE);
 }
 
 bool try_mutex::do_trylock()
 {
-    unsigned int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
-    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-    return res == WAIT_OBJECT_0;
+    if (m_critical_section)
+        return wait_critical_section_try(m_mutex);
+    else
+        return wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 void try_mutex::do_unlock()
 {
-    int res = 0;
-    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    if (m_critical_section)
+        release_critical_section(m_mutex);
+    else
+        release_mutex(m_mutex);
 }
 
 void try_mutex::do_lock(cv_state&)
@@ -119,51 +135,40 @@ void try_mutex::do_unlock(cv_state&)
 }
 
 timed_mutex::timed_mutex()
+    : m_mutex(0)
 {
-    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
-    if (!m_mutex)
-        throw thread_resource_error();
+    m_mutex = new_mutex(0);
 }
 
 timed_mutex::~timed_mutex()
 {
-    int res = 0;
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    delete_mutex(m_mutex);
 }
 
 void timed_mutex::do_lock()
 {
-    int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
+    wait_mutex(m_mutex, INFINITE);
 }
 
 bool timed_mutex::do_trylock()
 {
-    unsigned int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
-    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-    return res == WAIT_OBJECT_0;
+    return wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 bool timed_mutex::do_timedlock(const xtime& xt)
 {
-    unsigned int res = 0;
     for (;;)
     {
         int milliseconds;
         to_duration(xt, milliseconds);
 
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex),
-            milliseconds);
-        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+        int res = wait_mutex(m_mutex, milliseconds);
 
         if (res == WAIT_TIMEOUT)
         {
-            xtime cur;
-            xtime_get(&cur, TIME_UTC);
-            if (xtime_cmp(xt, cur) > 0)
+            boost::xtime cur;
+            boost::xtime_get(&cur, boost::TIME_UTC);
+            if (boost::xtime_cmp(xt, cur) > 0)
                 continue;
         }
 
@@ -173,9 +178,7 @@ bool timed_mutex::do_timedlock(const xtime& xt)
 
 void timed_mutex::do_unlock()
 {
-    int res = 0;
-    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    release_mutex(m_mutex);
 }
 
 void timed_mutex::do_lock(cv_state&)
@@ -187,7 +190,9 @@ void timed_mutex::do_unlock(cv_state&)
 {
     do_unlock();
 }
+
 #elif defined(BOOST_HAS_PTHREADS)
+
 mutex::mutex()
 {
     int res = 0;
@@ -417,6 +422,7 @@ void timed_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
 }
+
 #elif defined(BOOST_HAS_MPTASKS)
 
 using threads::mac::detail::safe_enter_critical_region;
@@ -548,6 +554,7 @@ void timed_mutex::do_unlock(cv_state& /*state*/)
 {
     do_unlock();
 }
+
 #endif
 
 } // namespace boost
