@@ -16,11 +16,6 @@
 #ifndef BOOST_READ_WRITE_MUTEX_JDM030602_HPP
 #define BOOST_READ_WRITE_MUTEX_JDM030602_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
-
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
@@ -32,13 +27,15 @@
 
 namespace boost {
 
-typedef enum
-{
-    sp_writer_priority,               //Prefer writers; can starve readers
-    sp_reader_priority,               //Prefer readers; can starve writers
-    sp_alternating_many_reads,        //Alternate readers and writers; before a writer, release all queued readers 
-    sp_alternating_single_read        //Alternate readers and writers; before a writer, release only on queued reader
-} read_write_scheduling_policy;       //:Move out of global scope? And rename to scheduling_policy? Or replace with policy template parameter?
+namespace read_write_scheduling_policy {
+    typedef enum
+    {
+        writer_priority,               //Prefer writers; can starve readers
+        reader_priority,               //Prefer readers; can starve writers
+        alternating_many_reads,        //Alternate readers and writers; before a writer, release all queued readers 
+        alternating_single_read        //Alternate readers and writers; before a writer, release only on queued reader
+    } read_write_scheduling_policy;
+} // namespace read_write_scheduling_policy
 
 namespace detail {
 
@@ -54,7 +51,7 @@ struct read_write_mutex_impl
     typedef detail::thread::scoped_try_lock<Mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<Mutex> scoped_timed_lock;
 
-    read_write_mutex_impl(read_write_scheduling_policy sp)
+    read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy sp)
         : m_num_waiting_writers(0),
           m_num_waiting_readers(0),
           m_state_waiting_promotion(false),
@@ -72,7 +69,7 @@ struct read_write_mutex_impl
     int m_state;    // -1 = excl locked
                     // 0 = unlocked
                     // 1-> INT_MAX - shared locked
-    const read_write_scheduling_policy m_sp;
+    const read_write_scheduling_policy::read_write_scheduling_policy m_sp;
     bool m_readers_next;
 
     void do_read_lock();
@@ -92,7 +89,7 @@ struct read_write_mutex_impl
     bool do_timed_promote_to_write_lock(const xtime &xt);
 
     bool locked();
-    read_write_lock_state state();
+    read_write_lock_state::read_write_lock_state state();
 
 private:
     void do_unlock_scheduling_impl();
@@ -106,13 +103,14 @@ private:
 class BOOST_THREAD_DECL read_write_mutex : private noncopyable
 {
 public:
-    read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
+    read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
     ~read_write_mutex() { }
 
-    read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<read_write_mutex>;
-    typedef detail::thread::scoped_read_write_lock<read_write_mutex> scoped_read_write_lock;
+    typedef detail::thread::scoped_read_write_lock<
+        read_write_mutex> scoped_lock;
 
 private:
     // Operations that will eventually be done only
@@ -124,8 +122,8 @@ private:
 
     void do_demote_to_read_lock();
 
-    bool locked(); //:make public?
-    read_write_lock_state state(); //:make public?
+    bool locked();
+    read_write_lock_state::read_write_lock_state state();
 
     detail::thread::read_write_mutex_impl<mutex> m_impl; 
 };
@@ -133,15 +131,16 @@ private:
 class BOOST_THREAD_DECL try_read_write_mutex : private noncopyable
 {
 public:
-    try_read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
+    try_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
     ~try_read_write_mutex() { }
 
-    read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<try_read_write_mutex>;
-    typedef detail::thread::scoped_read_write_lock<try_read_write_mutex> scoped_read_write_lock;
+    typedef detail::thread::scoped_read_write_lock<
+        try_read_write_mutex> scoped_lock;
     typedef detail::thread::scoped_try_read_write_lock<
-        try_read_write_mutex> scoped_try_read_write_lock;
+        try_read_write_mutex> scoped_try_lock;
 
 private:
     // Operations that will eventually be done only
@@ -159,8 +158,8 @@ private:
 
     bool do_try_promote_to_write_lock();
 
-    bool locked(); //:make public?
-    read_write_lock_state state(); //:make public?
+    bool locked();
+    read_write_lock_state::read_write_lock_state state();
 
     detail::thread::read_write_mutex_impl<try_mutex> m_impl; 
 };
@@ -168,17 +167,18 @@ private:
 class BOOST_THREAD_DECL timed_read_write_mutex : private noncopyable
 {
 public:
-    timed_read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
+    timed_read_write_mutex(read_write_scheduling_policy::read_write_scheduling_policy sp) : m_impl(sp) { }
     ~timed_read_write_mutex() { }
 
-    read_write_scheduling_policy policy() const { return m_impl.m_sp; }
+    read_write_scheduling_policy::read_write_scheduling_policy policy() const { return m_impl.m_sp; }
 
     friend class detail::thread::read_write_lock_ops<timed_read_write_mutex>;
-    typedef detail::thread::scoped_read_write_lock<timed_read_write_mutex> scoped_read_write_lock;
+    typedef detail::thread::scoped_read_write_lock<
+        timed_read_write_mutex> scoped_lock;
     typedef detail::thread::scoped_try_read_write_lock<
-        timed_read_write_mutex> scoped_try_read_write_lock;
+        timed_read_write_mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_read_write_lock<
-        timed_read_write_mutex> scoped_timed_read_write_lock;
+        timed_read_write_mutex> scoped_timed_lock;
 
 private:
     // Operations that will eventually be done only
@@ -199,8 +199,8 @@ private:
     bool do_try_promote_to_write_lock();
     bool do_timed_promote_to_write_lock(const xtime &xt);
 
-    bool locked(); //:make public?
-    read_write_lock_state state(); //:make public?
+    bool locked();
+    read_write_lock_state::read_write_lock_state state();
 
     detail::thread::read_write_mutex_impl<timed_mutex> m_impl; 
 };

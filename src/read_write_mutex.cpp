@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/assert.hpp>
 #include <boost/thread/read_write_mutex.hpp>
 #include <boost/thread/xtime.hpp>
@@ -86,7 +88,7 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
     BOOST_ASSERT(valid_lock(m_state));
 
     // Wait until no exclusive lock is held.
-    if (m_sp == sp_reader_priority)
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
         //If readers have priority, only wait if a 
         //writer actually has the lock
@@ -97,7 +99,7 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
             --m_num_waiting_readers;
         }
     }
-    else BOOST_ASSERT_ELSE(m_sp == sp_writer_priority || m_sp == sp_alternating_many_reads || m_sp == sp_alternating_single_read)
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::writer_priority || m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
     {
         //Otherwise, wait if a) a writer has the lock, or 
         //b) a reader has the lock and there are waiting writers
@@ -156,7 +158,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 {
-    Mutex::scoped_try_lock l(m_prot);
+    Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -172,19 +174,19 @@ bool read_write_mutex_impl<Mutex>::do_try_read_lock()
     else if (m_num_waiting_writers > 0)
     {
         // There are also waiting writers.  Use scheduling policy.
-        if (m_sp == sp_reader_priority)
+        if (m_sp == read_write_scheduling_policy::reader_priority)
         {
             BOOST_ASSERT(valid_read_lockable(m_state));
             ++m_state;
             ret = true;
         }
-        else if (m_sp == sp_writer_priority)
+        else if (m_sp == read_write_scheduling_policy::writer_priority)
         {
             // A writer is waiting - don't grant this try lock, and 
             //   return immediately (don't increase waiting_readers count)
             ret = false;
         }
-        else BOOST_ASSERT_ELSE(m_sp == sp_alternating_many_reads || m_sp == sp_alternating_single_read)
+        else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
         {
             // For alternating scheduling priority, 
             // I don't think that try_ locks should step in front of others
@@ -218,7 +220,7 @@ bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot);
+    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -260,7 +262,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
         return false;
 
     // Wait until no exclusive lock is held.
-    if (m_sp == sp_reader_priority)
+    if (m_sp == read_write_scheduling_policy::reader_priority)
     {
         //If readers have priority, only wait if a 
         //writer actually has the lock
@@ -275,7 +277,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
             --m_num_waiting_readers;
         }
     }
-    else BOOST_ASSERT_ELSE(m_sp == sp_writer_priority || m_sp == sp_alternating_many_reads || m_sp == sp_alternating_single_read)
+    else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::writer_priority || m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
     {
         //Otherwise, wait if a) a writer has the lock, or 
         //b) a reader has the lock and there are waiting writers
@@ -391,7 +393,7 @@ bool read_write_mutex_impl<Mutex>::do_demote_to_read_lock_impl()
         //If the conditions are right, release other readers
         if (m_num_waiting_readers > 0)
         {
-            if (m_num_waiting_writers == 0 || m_sp == sp_reader_priority || (m_sp == sp_alternating_many_reads && m_readers_next))
+            if (m_num_waiting_writers == 0 || m_sp == read_write_scheduling_policy::reader_priority || (m_sp == read_write_scheduling_policy::alternating_many_reads && m_readers_next))
                 m_waiting_readers.notify_all();
         }
 
@@ -419,7 +421,7 @@ void read_write_mutex_impl<Mutex>::do_demote_to_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_demote_to_read_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot);
+    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
     BOOST_ASSERT(valid_write_lock(m_state));
 
     if (!l.locked())
@@ -443,7 +445,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_demote_to_read_lock(const boost::xti
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_promote_to_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot);
+    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
     BOOST_ASSERT(valid_read_lock(m_state));
 
     if (!l.locked())
@@ -545,7 +547,7 @@ bool read_write_mutex_impl<Mutex>::locked()
 }
 
 template<typename Mutex>
-read_write_lock_state read_write_mutex_impl<Mutex>::state()
+read_write_lock_state::read_write_lock_state read_write_mutex_impl<Mutex>::state()
 {
     int state = m_state;
     BOOST_ASSERT(valid_lock(state));
@@ -553,15 +555,15 @@ read_write_lock_state read_write_mutex_impl<Mutex>::state()
     if (state > 0)
     {
         BOOST_ASSERT(valid_read_lock(state));
-        return READ_LOCK;
+        return read_write_lock_state::read_locked;
     }
     else if (state == -1)
     {
         BOOST_ASSERT(valid_write_lock(state));
-        return WRITE_LOCK;
+        return read_write_lock_state::write_locked;
     }
     else BOOST_ASSERT_ELSE(state == 0)
-        return NO_LOCK;
+        return read_write_lock_state::unlocked;
 }
 
 template<typename Mutex>
@@ -577,21 +579,21 @@ void read_write_mutex_impl<Mutex>::do_unlock_scheduling_impl()
     {
         // We have both types waiting, and -either- could proceed.
         //    Choose which to release based on scheduling policy.
-        if (m_sp == sp_reader_priority)
+        if (m_sp == read_write_scheduling_policy::reader_priority)
         {
             m_waiting_readers.notify_all();
         }
-        else if (m_sp == sp_writer_priority)
+        else if (m_sp == read_write_scheduling_policy::writer_priority)
         {
             m_waiting_writers.notify_one();
         }
-        else BOOST_ASSERT_ELSE(m_sp == sp_alternating_many_reads || m_sp == sp_alternating_single_read)
+        else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_many_reads || m_sp == read_write_scheduling_policy::alternating_single_read)
         {
             if (m_readers_next)
             {
-                if (m_sp == sp_alternating_many_reads)
+                if (m_sp == read_write_scheduling_policy::alternating_many_reads)
                     m_waiting_readers.notify_all();
-                else BOOST_ASSERT_ELSE(m_sp == sp_alternating_single_read)
+                else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read)
                     m_waiting_readers.notify_one();
             }
             else //(!m_readers_next)
@@ -644,7 +646,7 @@ bool read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state read_write_mutex::state()
+read_write_lock_state::read_write_lock_state read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -700,7 +702,7 @@ bool try_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state try_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state try_read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -776,7 +778,7 @@ bool timed_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state timed_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state timed_read_write_mutex::state()
 {
     return m_impl.state();
 }
