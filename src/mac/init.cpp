@@ -47,7 +47,7 @@ bool thread_init()
 
 bool create_singletons()
 {
-	using ::boost::detail::thread::singleton;
+    using ::boost::detail::thread::singleton;
 
     singleton<remote_call_manager>::instance();
 

@@ -92,7 +92,7 @@ inline R context ## _remote_call(stack R (*pfnF)(                               
                                       BOOST_REMOTE_CALL_COMMA_ ## n                 \
                                   BOOST_REMOTE_CALL_ARGUMENT_LIST_ ## n)            \
 {                                                                                   \
-	using ::boost::detail::thread::singleton;										\
+    using ::boost::detail::thread::singleton;                                       \
     using detail::remote_call_manager;                                              \
     function<R> oFunc(bind(pfnF BOOST_REMOTE_CALL_FUNCTION_ARGUMENT_LIST_ ## n));   \
     remote_call_manager &rManager(singleton<remote_call_manager>::instance());      \

@@ -11,25 +11,25 @@
 #include <boost/test/test_tools.hpp>
 
 #if defined(BOOST_HAS_WINTHREADS)
-#	include <windows.h>
+#   include <windows.h>
 #endif
 
 template <typename M>
 void test_lock(M* dummy=0)
 {
-	typedef M mutex_type;
-	typedef typename M::scoped_lock lock_type;
+    typedef M mutex_type;
+    typedef typename M::scoped_lock lock_type;
 
-	mutex_type mutex;
-	boost::condition condition;
+    mutex_type mutex;
+    boost::condition condition;
 
     // Test the lock's constructors.
     {
         lock_type lock(mutex, false);
         BOOST_TEST(!lock);
     }
-	lock_type lock(mutex);
-	BOOST_TEST(lock);
+    lock_type lock(mutex);
+    BOOST_TEST(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
@@ -39,24 +39,24 @@ void test_lock(M* dummy=0)
     // Test the lock and the mutex with condition variables.
     // No one is going to notify this condition variable.  We expect to
     // time out.
-	BOOST_TEST(condition.timed_wait(lock, xt) == false);
-	BOOST_TEST(lock);
+    BOOST_TEST(condition.timed_wait(lock, xt) == false);
+    BOOST_TEST(lock);
 
     // Test the lock and unlock methods.
-	lock.unlock();
-	BOOST_TEST(!lock);
-	lock.lock();
-	BOOST_TEST(lock);
+    lock.unlock();
+    BOOST_TEST(!lock);
+    lock.lock();
+    BOOST_TEST(lock);
 }
 
 template <typename M>
 void test_trylock(M* dummy=0)
 {
-	typedef M mutex_type;
-	typedef typename M::scoped_try_lock try_lock_type;
+    typedef M mutex_type;
+    typedef typename M::scoped_try_lock try_lock_type;
 
-	mutex_type mutex;
-	boost::condition condition;
+    mutex_type mutex;
+    boost::condition condition;
 
     // Test the lock's constructors.
     {
@@ -67,8 +67,8 @@ void test_trylock(M* dummy=0)
         try_lock_type lock(mutex, false);
         BOOST_TEST(!lock);
     }
-	try_lock_type lock(mutex, true);
-	BOOST_TEST(lock);
+    try_lock_type lock(mutex, true);
+    BOOST_TEST(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
@@ -78,28 +78,28 @@ void test_trylock(M* dummy=0)
     // Test the lock and the mutex with condition variables.
     // No one is going to notify this condition variable.  We expect to
     // time out.
-	BOOST_TEST(condition.timed_wait(lock, xt) == false);
+    BOOST_TEST(condition.timed_wait(lock, xt) == false);
     BOOST_TEST(lock);
 
     // Test the lock, unlock and trylock methods.
-	lock.unlock();
-	BOOST_TEST(!lock);
-	lock.lock();
-	BOOST_TEST(lock);
-	lock.unlock();
-	BOOST_TEST(!lock);
-	BOOST_TEST(lock.try_lock());
-	BOOST_TEST(lock);
+    lock.unlock();
+    BOOST_TEST(!lock);
+    lock.lock();
+    BOOST_TEST(lock);
+    lock.unlock();
+    BOOST_TEST(!lock);
+    BOOST_TEST(lock.try_lock());
+    BOOST_TEST(lock);
 }
 
 template <typename M>
 void test_timedlock(M* dummy=0)
 {
-	typedef M mutex_type;
-	typedef typename M::scoped_timed_lock timed_lock_type;
+    typedef M mutex_type;
+    typedef typename M::scoped_timed_lock timed_lock_type;
 
-	mutex_type mutex;
-	boost::condition condition;
+    mutex_type mutex;
+    boost::condition condition;
 
     // Test the lock's constructors.
     {
@@ -115,8 +115,8 @@ void test_timedlock(M* dummy=0)
         timed_lock_type lock(mutex, false);
         BOOST_TEST(!lock);
     }
-	timed_lock_type lock(mutex, true);
-	BOOST_TEST(lock);
+    timed_lock_type lock(mutex, true);
+    BOOST_TEST(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
@@ -127,15 +127,15 @@ void test_timedlock(M* dummy=0)
     // No one is going to notify this condition variable.  We expect to
     // time out.
     BOOST_TEST(condition.timed_wait(lock, xt) == false);
-	BOOST_TEST(lock);
+    BOOST_TEST(lock);
 
     // Test the lock, unlock and timedlock methods.
     lock.unlock();
-	BOOST_TEST(!lock);
-	lock.lock();
-	BOOST_TEST(lock);
-	lock.unlock();
-	BOOST_TEST(!lock);
+    BOOST_TEST(!lock);
+    lock.lock();
+    BOOST_TEST(lock);
+    lock.unlock();
+    BOOST_TEST(!lock);
     BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
     xt.nsec += 100000000;
     BOOST_TEST(lock.timed_lock(xt));
@@ -194,23 +194,23 @@ void test_recursive_timed_mutex()
 
 struct condition_test_data
 {
-	condition_test_data() : notified(0), awoken(0) { }
+    condition_test_data() : notified(0), awoken(0) { }
 
-	boost::mutex mutex;
-	boost::condition condition;
-	int notified;
-	int awoken;
+    boost::mutex mutex;
+    boost::condition condition;
+    int notified;
+    int awoken;
 };
 
 void condition_test_thread(void* param)
 {
     condition_test_data* data = static_cast<condition_test_data*>(param);
-	boost::mutex::scoped_lock lock(data->mutex);
-	BOOST_TEST(lock);
-	while (!(data->notified > 0))
-		data->condition.wait(lock);
-	BOOST_TEST(lock);
-	data->awoken++;
+    boost::mutex::scoped_lock lock(data->mutex);
+    BOOST_TEST(lock);
+    while (!(data->notified > 0))
+        data->condition.wait(lock);
+    BOOST_TEST(lock);
+    data->awoken++;
 }
 
 class thread_adapter
@@ -225,39 +225,39 @@ private:
 
 void test_condition_notify_one()
 {
-	condition_test_data data;
+    condition_test_data data;
 
     boost::thread thread(thread_adapter(&condition_test_thread, &data));
 
-	{
-		boost::mutex::scoped_lock lock(data.mutex);
-		BOOST_TEST(lock);
-		data.notified++;
-		data.condition.notify_one();
-	}
+    {
+        boost::mutex::scoped_lock lock(data.mutex);
+        BOOST_TEST(lock);
+        data.notified++;
+        data.condition.notify_one();
+    }
 
     thread.join();
-	BOOST_TEST(data.awoken == 1);
+    BOOST_TEST(data.awoken == 1);
 }
 
 void test_condition_notify_all()
 {
-	const int NUMTHREADS = 5;
+    const int NUMTHREADS = 5;
     boost::thread_group threads;
-	condition_test_data data;
+    condition_test_data data;
 
-	for (int i = 0; i < NUMTHREADS; ++i)
+    for (int i = 0; i < NUMTHREADS; ++i)
         threads.create_thread(thread_adapter(&condition_test_thread, &data));
 
-	{
-		boost::mutex::scoped_lock lock(data.mutex);
-		BOOST_TEST(lock);
-		data.notified++;
-		data.condition.notify_all();
-	}
+    {
+        boost::mutex::scoped_lock lock(data.mutex);
+        BOOST_TEST(lock);
+        data.notified++;
+        data.condition.notify_all();
+    }
 
     threads.join_all();
-	BOOST_TEST(data.awoken == NUMTHREADS);
+    BOOST_TEST(data.awoken == NUMTHREADS);
 }
 
 struct cond_predicate

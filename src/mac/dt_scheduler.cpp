@@ -38,7 +38,7 @@ dt_scheduler::dt_scheduler():
     m_uppTask(NULL),
     m_lTask(0UL)
 {
-	using ::boost::detail::thread::singleton;
+    using ::boost::detail::thread::singleton;
 
     ot_context &rContext(singleton<ot_context>::instance());
 

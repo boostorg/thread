@@ -198,7 +198,7 @@ OSStatus safe_wait(function<OSStatus, Duration> &rFunction, Duration lDuration)
             }
             if(lDuration != kDurationForever)
             {
-            	bExpired = (force_cast<uint64_t>(UpTime()) < ullExpiration);
+                bExpired = (force_cast<uint64_t>(UpTime()) < ullExpiration);
             }
         } while(lStatus == kMPTimeoutErr && bExpired == false);
 

@@ -28,7 +28,7 @@ namespace detail {
 
 
 // these functions are used to wain in an execution context-independent manor.  All of these
-//	functions are both MP- and ST-safe.
+//  functions are both MP- and ST-safe.
 
 OSStatus safe_wait_on_semaphore(MPSemaphoreID pSemaphoreID, Duration lDuration);
 OSStatus safe_enter_critical_region(MPCriticalRegionID pCriticalRegionID, Duration lDuration, MPCriticalRegionID pCriticalRegionCriticalRegionID = kInvalidID);

@@ -95,7 +95,7 @@ int xtime_get(struct xtime* xtp, int clock_type)
         xtp->nsec = ts.tv_nsec;
         return clock_type;
 #elif defined(BOOST_HAS_MPTASKS)
-		using detail::thread::force_cast;
+        using detail::thread::force_cast;
     // the Mac OS does not have an MP-safe way of getting the date/time, so we use a
     //  delta from the startup time.  We _could_ defer this and use something that is
     //  interrupt-safe, but this would be _SLOW_, and we need speed here.

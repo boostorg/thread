@@ -5,8 +5,8 @@
 #include <iostream>
 
 #if defined(BOOST_HAS_WINTHREADS)
-#	include <windows.h>
-#	include <process.h>
+#   include <windows.h>
+#   include <process.h>
 #endif
 
 enum game_state
