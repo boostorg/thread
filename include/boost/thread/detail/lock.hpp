@@ -22,6 +22,22 @@ namespace boost {
 class condition;
 struct xtime;
 
+namespace lock_state {
+    typedef enum
+    {
+        unlocked=0,
+        locked=1
+    } lock_state;
+} //namespace lock_state
+
+namespace blocking_mode {
+    typedef enum
+    {
+        non_blocking=0,
+        blocking=1
+    } blocking_mode;
+} //namespace blocking_mode
+
 namespace detail { namespace thread {
 
 template <typename Mutex>
