@@ -29,14 +29,14 @@
 #       define BOOST_THREAD_DECL
 #   else //Use default
 #       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)
-            //For VC++, choose according to threading library setting
+            //For VC++, choose according to VC++ runtime library setting
 #           if defined(_DLL)
-                //Threading library is dll: use Boost.Threads dll
+                //VC++ runtime library is dll: use Boost.Threads dll
 #               define BOOST_THREAD_USE_DLL
 #               define BOOST_THREAD_DECL __declspec(dllimport)
 #               define BOOST_DYN_LINK
 #           else
-                //Threading library is lib: used Boost.Threads lib
+                //VC++ runtime library is lib: used Boost.Threads lib
 #               define BOOST_THREAD_USE_LIB
 #               define BOOST_THREAD_DECL
 #           endif
