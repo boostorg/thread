@@ -14,7 +14,7 @@ include <module@>threads.jam ;
 
 template example
     ## sources ##
-    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    : <template>thread_base <lib>../build/boost_thread $(threadmon)
     ## requirements ##
     :
     ## default build ##
