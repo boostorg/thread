@@ -66,7 +66,7 @@ public:
 
 private:
     mutable boost::mutex m_mutex;
-    boost::condition m_cond;
+    mutable boost::condition m_cond;
     boost::function0<void> m_threadfunc;
 	unsigned int m_refcount;
 	int m_state;
@@ -175,12 +175,8 @@ thread::data::data()
 
 thread::data::~data()
 {
-	boost::mutex::scoped_lock lock(m_mutex);
-
 	if (m_state != joined)
 	{
-		lock.unlock();
-
 		int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
 		res = CloseHandle(m_thread);
@@ -195,66 +191,79 @@ thread::data::~data()
 		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
 		assert(lStatus == noErr);
 #endif
-
-		lock.lock();
-		m_state = joined;
-		m_cond.notify_all();
 	}
 }
 
 void thread::data::addref()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
 	++m_refcount;
 }
 
 bool thread::data::release()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
 	return (--m_refcount == 0);
 }
 
 void thread::data::join()
 {
-	boost::mutex::scoped_lock lock(m_mutex);
-
-	while (m_state == creating || m_state == joining)
-		m_cond.wait(lock);
-
-	if (m_state != joined)
 	{
-		m_state = joining;
-		lock.unlock();
+		boost::mutex::scoped_lock lock(m_mutex);
+		while (m_state == creating)
+			m_cond.wait(lock);
 
-		int res = 0;
+		if (m_state == joined)
+			return;
+
+		if (m_state == joining)
+		{
+			while (m_state == joining)
+				m_cond.wait(lock);
+			return;
+		}
+
+		m_state = joining;
+	}
+
+	int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-		res = WaitForSingleObject(m_thread, INFINITE);
-		assert(res == WAIT_OBJECT_0);
-		res = CloseHandle(m_thread);
-		assert(res);
+	res = WaitForSingleObject(m_thread, INFINITE);
+	assert(res == WAIT_OBJECT_0);
+	res = CloseHandle(m_thread);
+	assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-		res = pthread_join(m_thread, 0);
-		assert(res == 0);
+	res = pthread_join(m_thread, 0);
+	assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
-		assert(lStatus == noErr);
+	OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+	assert(lStatus == noErr);
 #endif
 
-		lock.lock();
-		m_state = joined;
-		m_cond.notify_all();
-	}
+	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
+	m_state = joined;
+	m_cond.notify_all();
 }
 
 void thread::data::cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
 	m_canceled = true;
 }
 
 void thread::data::test_cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
 	if (m_canceled)
 		throw boost::thread_cancel();
 }
@@ -280,14 +289,21 @@ void thread::data::run()
 long thread::data::id() const
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
+
 	if (m_state != joined)
 		return m_id;
+
 	return 0; // throw instead?
 }
 #else
 const void* thread::data::id() const
 {
 	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
+
 	if (m_state != joined)
 	{
 		const void* res = as_pointer<pthread_t>::from(m_thread);
@@ -295,18 +311,22 @@ const void* thread::data::id() const
 			res = this;
 		return res;
 	}
+
 	return 0; // throw instead?
 }
 #endif
 
 void thread::data::set_scheduling_parameter(int policy, const sched_param& param)
 {
+	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
+
 #if defined(BOOST_HAS_WINTHREADS)
 	if (policy != sched_other)
 		throw boost::invalid_thread_argument();
 	if (param.priority < THREAD_PRIORITY_LOWEST || param.priority > THREAD_PRIORITY_HIGHEST)
 		throw boost::invalid_thread_argument();
-	boost::mutex::scoped_lock lock(m_mutex);
 	BOOL res = FALSE;
 	res = SetThreadPriority(m_thread, param.priority);
 	if (res == ERROR_ACCESS_DENIED)  // guessing about possible return value
@@ -331,14 +351,16 @@ void thread::data::set_scheduling_parameter(int policy, const sched_param& param
 
 void thread::data::get_scheduling_parameter(int& policy, sched_param& param) const
 {
+	boost::mutex::scoped_lock lock(m_mutex);
+	while (m_state == creating)
+		m_cond.wait(lock);
+
 #if defined(BOOST_HAS_WINTHREADS)
 	policy = sched_other;
-	boost::mutex::scoped_lock lock(m_mutex);
 	param.priority = GetThreadPriority(m_thread);
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
-	boost::mutex::scoped_lock lock(m_mutex);
 	res = pthread_getschedparam(m_thread, &policy, &param);
 	assert(res == 0);
 #   else
