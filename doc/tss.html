@@ -49,9 +49,12 @@
   threads and is often used to make operations <a href="definitions.html#Thread-safe">thread-safe</a> 
   that rely on global data.</p>
 <p>Template <code>thread_specific_ptr</code> stores a pointer to an object obtained 
-  via <code>new</code> on a thread-by-thread basis and calls delete on the contained 
-  pointer when the thread terminates. Each thread initially stores the null pointer 
-  in each <code> thread_specific_ptr</code> instance.</p>
+  via <code>new</code> on a thread-by-thread basis and calls a specified cleanup 
+  handler on the contained pointer when the thread terminates. The cleanup handlers 
+  are called in the reverse order of construction of the <code>thread_specific_ptr</code>s, 
+  and for the initial thread are called by the destructor, providing the same 
+  ordering gaurantees as for normal declarations. Each thread initially stores 
+  the null pointer in each <code> thread_specific_ptr</code> instance.</p>
 <p>The template <code>thread_specific_ptr</code> is useful in the following cases:</p>
 <ul>
   <li>An interface was originally written assuming a single thread of control 

@@ -24,20 +24,21 @@ struct tss_value_t
     int value;
 };
 
-boost::thread_specific_ptr<tss_value_t> tss_value;
+boost::thread_specific_ptr<tss_value_t>* tss_value = 0;
 //boost::thread_specific_ptr<tss_value_t> tss_value_no_delete(0);
 
 void test_tss_thread()
 {
-	BOOST_TEST(tss_value.get() == 0);
+	boost::thread_specific_ptr<tss_value_t>& tss = *tss_value;
+	BOOST_TEST(tss.get() == 0);
 	tss_value_t* p = new tss_value_t();
-    tss_value.reset(p);
-	BOOST_TEST(tss_value.get() == p);
+    tss.reset(p);
+	BOOST_TEST(tss.get() == p);
 
-    for (int i=0; i<1000; ++i)
+    for (int i=0; i<1; ++i)
     {
-        BOOST_TEST(tss_value->value == i);
-        ++tss_value->value;
+        BOOST_TEST(tss->value == i);
+        ++tss->value;
     }
 }
 
@@ -45,10 +46,21 @@ void test_tss_thread()
 
 void test_thread_specific_ptr()
 {
-    /*const int NUMTHREADS=5;
-    boost::thread_group threads;
-    for (int i=0; i<NUMTHREADS; ++i)
-        threads.create_thread(&test_tss_thread);
-    threads.join_all();
-    BOOST_TEST(tss_instances == 0);*/
+	{
+		boost::thread_specific_ptr<tss_value_t> tss;
+		tss_value = &tss;
+
+		BOOST_TEST(tss.get() == 0);
+		tss_value_t* p = new tss_value_t();
+		tss.reset(p);
+		BOOST_TEST(tss.get() == p);
+
+		const int NUMTHREADS=2;
+		boost::thread_group threads;
+		for (int i=0; i<NUMTHREADS; ++i)
+			threads.create_thread(&test_tss_thread);
+		threads.join_all();
+		BOOST_TEST(tss_instances == 1);
+	}
+	BOOST_TEST(tss_instances == 0);
 }
