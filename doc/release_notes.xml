@@ -42,7 +42,7 @@
 			tss_cleanup_implemented() in order to eliminate linker errors.
 			This function's only purpose is to serve as a flag: the linker
 			error stating that the function is missing warns the
-			the user of the necessity of caling the cleanup functions.
+			the user of the necessity of calling the cleanup functions.
 			In addition, if &Boost.Threads; later implements tss cleanup
 			where it currently not implemented, the linker's
 			duplicate symbol error should warn the user that their custom
