@@ -38,6 +38,8 @@
   </section>
   <section>
     <title>Dangers</title>
+    <section>
+    <title>General considerations</title>
     <para>Beyond the errors which can occur in single-threaded programs,
     multithreaded programs are subject to additional errors:
     <itemizedlist>
@@ -59,9 +61,12 @@
 	errors. These aren't rare or exotic failures - they are virtually guaranteed
 	to occur unless multithreaded code is designed to avoid them. Priority
 	failures are somewhat less common, but are nonetheless serious.</para>
-    <para>The <link linkend="threads.introduction">&Boost.Threads; design</link>
+    <para>The <link linkend="threads.design">&Boost.Threads; design</link>
     attempts to minimize these errors, but they will still occur unless the
     programmer proactively designs to avoid them.</para>
+	<note>Please also see <xref linkend="threads.implementation_notes"/>
+	for additional, implementation-specific considerations.</note>
+	</section>
     <section>
       <title>Testing and debugging considerations</title>
       <para>Multithreaded programs are non-deterministic. In other words, the
@@ -164,15 +169,15 @@
     </section>
   </section>
   <section>
-    <title>Common guarantees for all Boost.Threads components</title>
+    <title>Common guarantees for all &Boost.Threads; components</title>
     <section>
       <title>Exceptions</title>
-      <para><emphasis role="bold">Boost.Threads</emphasis> destructors never
+      <para>&Boost.Threads; destructors never
 	  throw exceptions. Unless otherwise specified, other
-	  <emphasis role="bold">Boost.Threads</emphasis> functions that do not have
+	  &Boost.Threads; functions that do not have
 	  an exception-specification may throw implementation-defined
 	  exceptions.</para>
-      <para>In particular, <emphasis role="bold">Boost.Threads</emphasis>
+      <para>In particular, &Boost.Threads;
 	  reports failure to allocate storage by throwing an exception of type
 	  <code>std::bad_alloc</code> or a class derived from
 	  <code>std::bad_alloc</code>, failure to obtain thread resources other than
@@ -186,7 +191,7 @@
     </section>
     <section>
       <title>NonCopyable requirement</title>
-      <para><emphasis role="bold">Boost.Threads</emphasis> classes documented as
+      <para>&Boost.Threads; classes documented as
 	  meeting the NonCopyable requirement disallow copy construction and copy
 	  assignment. For the sake of exposition, the synopsis of such classes show
 	  private derivation from <classname>boost::noncopyable</classname>. Users
