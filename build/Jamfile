@@ -45,7 +45,6 @@ import ./threads ;
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
           <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
-          <threading>multi #:should be unnecessary (because already included in thread_base)
           <define>BOOST_THREAD_BUILD_LIB=1
           <runtime-link>static
           # the common names rule ensures that the library will
@@ -61,7 +60,6 @@ import ./threads ;
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
           <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
-          <threading>multi #:should be unnecessary (because already included in thread_base)
           <define>BOOST_THREAD_BUILD_DLL=1
           <runtime-link>dynamic
           # the common names rule ensures that the library will
