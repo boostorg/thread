@@ -3,7 +3,11 @@ if $(NT)
 {
     if $(PTW32)
     {
-        PTW32_REQUIREMENTS = <define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn ;
+        PTW32_REQUIREMENTS =
+			<define>BOOST_HAS_PTHREADS
+			<define>PtW32NoCatchWarn
+			<include>$(PTW32)/include
+		    <library-file>$(PTW32)/lib/pthreadVCE$(SUFLIB) ;
         BOOST_THREADMON_DLL = ;
     }
     else
@@ -14,7 +18,7 @@ if $(NT)
                 # requirements
                 : <include>$(BOOST_ROOT)
                 <threading>multi
-                #<runtime-link>static/dynamic
+                <runtime-link>static/dynamic
                 : debug release ;
             BOOST_THREADMON_DLL = ;
         }

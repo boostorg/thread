@@ -33,6 +33,7 @@ unit-test test_thread : test_thread.cpp
     # requirements
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
+    <library-file>c:/home/pthreads/pre-built/lib/pthreadVCE.lib
     <threading>multi
-    #<runtime-link>static/dynamic
+    <runtime-link>static/dynamic
     : debug release ;
