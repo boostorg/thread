@@ -40,9 +40,13 @@ bad things happen.
         {
             return false;
         }
-        inline void OutputDebugStringA(LPCTSTR)
-        {
-        }
+#   endif
+#   if !defined(OutputDebugString)
+        inline void OutputDebugStringA(LPCSTR)
+        {}
+        inline void OutputDebugStringW(LPCWSTR)
+        {}
+        #define OutputDebugString(str)
 #   endif
 
 #   if defined(BOOST_READ_WRITE_MUTEX_USE_TRACE) && !defined(BOOST_NO_STRINGSTREAM)
@@ -443,7 +447,7 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
     {
         //Alternating priority: wait while write-locked or while not readers' turn
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_readers, m_num_max_waking_readers, false);
         while (m_state == -1 || (m_num_waiting_writers > 0 && m_num_waking_readers == 0 && waker_exists()))
         {
@@ -488,7 +492,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
     {
         //Reader priority: wait while locked or while readers are waiting
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
 //:     if (m_num_waiting_readers > 0 && m_num_waking_readers == 0)
 //:         do_wake_all_readers();
@@ -506,7 +510,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
     {
         //Writer priority: wait while locked
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state != 0)
         {
@@ -527,7 +531,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 
         //Alternating priority: wait while locked or while not writers' turn
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state != 0 || (m_num_waking_readers > 0 && waker_exists()))
         {
@@ -687,7 +691,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     {
         //Reader priority: wait while write-locked
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_readers, m_num_max_waking_readers, false);
         while (m_state == -1)
         {
@@ -708,7 +712,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     {
         //Writer priority: wait while write-locked or while writers are waiting
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_readers, m_num_max_waking_readers, false);
 //:     if (m_num_waiting_writers > 0 && m_num_waking_writers == 0)
 //:         do_wake_one_writer();
@@ -731,7 +735,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     {
         //Alternating priority: wait while write-locked or while not readers' turn
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         while (m_state == -1 || (m_num_waiting_writers > 0 && m_num_waking_readers == 0 && waker_exists()))
         {
             adjust_dual_count adjust_waking(m_num_waking_readers, m_num_max_waking_readers, false);
@@ -794,7 +798,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     {
         //Reader priority: wait while locked or while readers are waiting
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
 //:     if (m_num_waiting_readers > 0 && m_num_waking_readers == 0)
 //:         do_wake_all_readers();
@@ -817,7 +821,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     {
         //Writer priority: wait while locked
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state != 0)
         {
@@ -843,7 +847,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
 
         //Alternating priority: wait while locked or while not writers' turn
 
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state != 0 || (m_num_waking_readers > 0 && waker_exists()))
         {
@@ -1012,7 +1016,7 @@ void read_write_mutex_impl<Mutex>::do_promote_to_write_lock()
     }
     else BOOST_ASSERT_ELSE(m_state > 1 && !m_state_waiting_promotion)
     {
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state > 1)
         {
@@ -1111,7 +1115,7 @@ bool read_write_mutex_impl<Mutex>::do_timed_promote_to_write_lock(const boost::x
     }
     else BOOST_ASSERT_ELSE(m_state > 1 && !m_state_waiting_promotion)
     {   
-        BOOST_DEFINE_LOOP_COUNT;
+        BOOST_DEFINE_LOOP_COUNT
         adjust_dual_count adjust_waking(m_num_waking_writers, m_num_max_waking_writers, false);
         while (m_state > 1)
         {
