@@ -28,9 +28,9 @@
 #endif
 
 #if defined(BOOST_ASSERT)
-    #define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), true)
+#   define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), false) {} else
 #else
-    #define BOOST_ASSERT_ELSE(expr) if (true)
+#   define BOOST_ASSERT_ELSE(expr) if (false) {} else
 #endif
 
 bool boost_error(char const* expr, char const* func, char const* file, long line)
