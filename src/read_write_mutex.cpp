@@ -36,6 +36,8 @@
 bool boost_error(char const* expr, char const* func, char const* file, long line)
 {
     #if WINVER
+        using namespace std;
+
         #ifndef ELEMENTS
         #define ELEMENTS(a) (sizeof(a)/sizeof(*(a)))
         #endif
