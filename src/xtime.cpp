@@ -79,7 +79,15 @@ int xtime_get(struct xtime* xtp, int clock_type)
     {
 #if defined(BOOST_HAS_FTIME)
         FILETIME ft;
+#   if defined(BOOST_NO_GETSYSTEMTIMEASFILETIME)
+        {
+            SYSTEMTIME st;
+            GetSystemTime(&st);
+            SystemTimeToFileTime(&st,&ft);
+        }
+#   else
         GetSystemTimeAsFileTime(&ft);
+#   endif
         const boost::uint64_t TIMESPEC_TO_FILETIME_OFFSET =
             ((boost::uint64_t)27111902UL << 32) +
             (boost::uint64_t)3577643008UL;
