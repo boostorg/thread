@@ -173,7 +173,7 @@ the current thread.</p>
 #include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
 #include &lt;cassert&gt;
 
-boost::thread_specific_ptr<int> value;
+boost::thread_specific_ptr&lt;int&gt; value;
 
 void increment()
 {
@@ -196,7 +196,7 @@ int main(int argc, char* argv[])
 {
    boost::thread_group threads;
    for (int i=0; i&lt;5; ++i)
-      threads.create(&amp;thread_proc);
+      threads.create_thread(&amp;thread_proc);
    threads.join_all();
 }
 </pre>
