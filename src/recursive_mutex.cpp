@@ -23,17 +23,23 @@
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#    include <MacErrors.h>
-#    include "safe.hpp"
+#   include <MacErrors.h>
+#   include "safe.hpp"
 #endif
 
 namespace boost {
 
 #if defined(BOOST_HAS_WINTHREADS)
 recursive_mutex::recursive_mutex()
-    : m_count(0)
+    : m_mutex(0), m_count(0)
 {
-    m_mutex = reinterpret_cast<void*>(new(std::nothrow) CRITICAL_SECTION);
+    try
+    {
+       m_mutex = reinterpret_cast<void*>(new CRITICAL_SECTION);
+    }
+    catch (...)
+    {
+    }
     if (!m_mutex)
         throw thread_resource_error();
     InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));

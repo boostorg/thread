@@ -28,8 +28,7 @@ subproject libs/thread/tutorial ;
 # Include threads.jam for Boost.Threads global build information.
 # This greatly simplifies the Jam code needed to configure the build
 # for the various Win32 build types.
-SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
-include <module@>threads.jam ;
+import ../build/threads ;
 
 {
     template tutorial
