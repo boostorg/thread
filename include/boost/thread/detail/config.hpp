@@ -50,9 +50,13 @@
 #   endif
 #else
 #   define BOOST_THREAD_DECL
-#   if defined(BOOST_THREAD_USE_LIB) //Use lib
-#   else //Use dll
+#   if defined(BOOST_THREAD_USE_LIB) //Use dll
+#       define BOOST_THREAD_USE_DLL
 #       define BOOST_DYN_LINK
+#   elif defined(BOOST_THREAD_USE_DLL) //Use lib
+#       define BOOST_THREAD_USE_LIB
+#   else //Use default
+#       define BOOST_THREAD_USE_LIB
 #   endif
 #endif // BOOST_HAS_WINTHREADS
 
