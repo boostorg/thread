@@ -23,6 +23,41 @@ struct xtime;
     namespace detail { namespace thread {
 
     template <typename Mutex>
+    class lock_ops : private noncopyable
+    {
+    private:
+        lock_ops() { }
+
+    public:
+        typedef typename Mutex::cv_state lock_state;
+
+        static void lock(Mutex& m)
+        {
+            m.do_lock();
+        }
+        static bool trylock(Mutex& m)
+        {
+            return m.do_trylock();
+        }
+        static bool timedlock(Mutex& m, const xtime& xt)
+        {
+            return m.do_timedlock(xt);
+        }
+        static void unlock(Mutex& m)
+        {
+            m.do_unlock();
+        }
+        static void lock(Mutex& m, lock_state& state)
+        {
+            m.do_lock(state);
+        }
+        static void unlock(Mutex& m, lock_state& state)
+        {
+            m.do_unlock(state);
+        }
+    };
+
+    template <typename Mutex>
     class scoped_lock : private noncopyable
     {
     public:
@@ -41,13 +76,13 @@ struct xtime;
         void lock()
         {
             if (m_locked) throw lock_error();
-            m_mutex.do_lock();
+            lock_ops<Mutex>::lock(m_mutex);
             m_locked = true;
         }
         void unlock()
         {
             if (!m_locked) throw lock_error();
-            m_mutex.do_unlock();
+            lock_ops<Mutex>::unlock(m_mutex);
             m_locked = false;
         }
 
@@ -85,18 +120,18 @@ struct xtime;
         void lock()
         {
             if (m_locked) throw lock_error();
-            m_mutex.do_lock();
+            lock_ops<TryMutex>::lock(m_mutex);
             m_locked = true;
         }
         bool try_lock()
         {
             if (m_locked) throw lock_error();
-            return (m_locked = m_mutex.do_trylock());
+            return (m_locked = lock_ops<TryMutex>::trylock(m_mutex));
         }
         void unlock()
         {
             if (!m_locked) throw lock_error();
-            m_mutex.do_unlock();
+            lock_ops<TryMutex>::unlock(m_mutex);
             m_locked = false;
         }
 
@@ -134,18 +169,18 @@ struct xtime;
         void lock()
         {
             if (m_locked) throw lock_error();
-            m_mutex.do_lock();
+            lock_ops<TimedMutex>::lock(m_mutex);
             m_locked = true;
         }
         bool timed_lock(const xtime& xt)
         {
             if (m_locked) throw lock_error();
-            return (m_locked = m_mutex.do_timedlock(xt));
+            return (m_locked = lock_ops<TimedMutex>::timedlock(m_mutex, xt));
         }
         void unlock()
         {
             if (!m_locked) throw lock_error();
-            m_mutex.do_unlock();
+            lock_ops<TimedMutex>::unlock(m_mutex);
             m_locked = false;
         }
 

@@ -88,8 +88,9 @@ private:
         enter_wait();
 #endif
 
-        typename M::cv_state state;
-        mutex.do_unlock(state);
+        typedef detail::thread::lock_ops<M> lock_ops;
+        lock_ops::lock_state state;
+        lock_ops::unlock(mutex, state);
 
 #if defined(BOOST_HAS_PTHREADS)
         do_wait(state.pmutex);
@@ -97,7 +98,7 @@ private:
         do_wait();
 #endif
 
-        mutex.do_lock(state);
+        lock_ops::lock(mutex, state);
     }
 
     template <typename M>
@@ -107,8 +108,9 @@ private:
         enter_wait();
 #endif
 
-        typename M::cv_state state;
-        mutex.do_unlock(state);
+        typedef detail::thread::lock_ops<M> lock_ops;
+        lock_ops::lock_state state;
+        lock_ops::unlock(mutex, state);
 
         bool ret = false;
 
@@ -118,7 +120,7 @@ private:
         ret = do_timed_wait(xt);
 #endif
 
-        mutex.do_lock(state);
+        lock_ops::lock(mutex, state);
 
         return ret;
     }
