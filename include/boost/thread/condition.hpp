@@ -19,6 +19,7 @@
 
 #include <boost/thread/exceptions.hpp>
 #include <boost/utility.hpp>
+#include <boost/thread/detail/lock.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -88,7 +89,7 @@ private:
         enter_wait();
 #endif
 
-        typedef detail::thread::lock_ops<M> lock_ops;
+        typedef typename detail::thread::lock_ops<M> lock_ops;
         lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
@@ -108,7 +109,7 @@ private:
         enter_wait();
 #endif
 
-        typedef detail::thread::lock_ops<M> lock_ops;
+        typedef typename detail::thread::lock_ops<M> lock_ops;
         lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
