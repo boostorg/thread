@@ -5,6 +5,8 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 
+// Check this is well, for compatibility with pthreads-win32 (where this won't
+// be defined)
 #if defined(BOOST_THREAD_BUILD_DLL)
 
 #include <boost/thread/detail/threadmon.hpp>
@@ -17,18 +19,13 @@
 #endif
 
 #include <list>
-#include <set>
-#include <algorithm>
 
 typedef void (__cdecl * handler)(void);
 typedef std::list<handler> exit_handlers;
-typedef std::set<exit_handlers*> registered_handlers;
 
 namespace
 {
-    CRITICAL_SECTION cs;
     DWORD key;
-    registered_handlers registry;
 }
 
 #if defined(__BORLANDC__)
@@ -41,7 +38,6 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
     switch (reason)
     {
         case DLL_PROCESS_ATTACH:
-            InitializeCriticalSection(&cs);
             key = TlsAlloc();
             break;
         case DLL_THREAD_ATTACH:
@@ -55,15 +51,12 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
                 {
                     for (exit_handlers::iterator it = handlers->begin();
                         it != handlers->end(); ++it)
-		    {
+                    {
                         (*it)();
-		    }
+                    }
 
                     // Remove the exit handler list from the registered lists
                     // and then destroy it.
-                    EnterCriticalSection(&cs);
-                    registry.erase(handlers);
-                    LeaveCriticalSection(&cs);
                     delete handlers;
                 }
             }
@@ -80,23 +73,15 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
                 {
                     for (exit_handlers::iterator it = handlers->begin();
                         it != handlers->end(); ++it)
-		    {
+                    {
                         (*it)();
-		    }
+                    }
+
+                    // Remove the exit handler list from the registered lists
+                    // and then destroy it.
+                    delete handlers;
                 }
 
-                // Destroy any remaining exit handlers.  Above we assumed
-                // there'd only be the main thread left, but to insure we
-                // don't get memory leaks we won't make that assumption
-                // here.
-                EnterCriticalSection(&cs);
-                for (registered_handlers::iterator it = registry.begin();
-                    it != registry.end(); ++it)
-		{
-                    delete (*it);
-		}
-                LeaveCriticalSection(&cs);
-                DeleteCriticalSection(&cs);
                 TlsFree(key);
             }
             break;
@@ -129,25 +114,9 @@ extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void))
             delete handlers;
             return -1;
         }
-
-        // Attempt to register this new handler so that memory can be properly
-        // cleaned up.
-        try
-        {
-            EnterCriticalSection(&cs);
-            registry.insert(handlers);
-            LeaveCriticalSection(&cs);
-        }
-        catch (...)
-        {
-            LeaveCriticalSection(&cs);
-            delete handlers;
-            return -1;
-        }
     }
 
-    // Attempt to add the handler to the list of exit handlers. If it's been
-    // previously added just report success and exit.
+    // Attempt to add the handler to the list of exit handlers.
     try
     {
         handlers->push_front(func);

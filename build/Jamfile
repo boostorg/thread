@@ -41,13 +41,13 @@ template thread_libs
     : debug release <runtime-link>static/dynamic
 ;
 
-
 #######################
 # Declare the Boost.Threads static link library libboost_thread.
 
 # Base names of the source files for libboost_thread.
+
 CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
-              exceptions threadmon ;
+              exceptions thread_pool barrier rw_mutex threadmon ;
 
 #if $(NT) && ! $(PTW32)
 #{

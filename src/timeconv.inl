@@ -24,7 +24,8 @@ namespace {
         assert(res == boost::TIME_UTC);
 
         xt.sec += (milliseconds / MILLISECONDS_PER_SECOND);
-        xt.nsec += ((milliseconds % MILLISECONDS_PER_SECOND) * NANOSECONDS_PER_MILLISECOND);
+        xt.nsec += ((milliseconds % MILLISECONDS_PER_SECOND) *
+            NANOSECONDS_PER_MILLISECOND);
 
         if (xt.nsec > static_cast<const int>(NANOSECONDS_PER_SECOND))
         {

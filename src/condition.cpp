@@ -479,7 +479,8 @@ void condition_impl::notify_all()
     unsigned signals = 0;
 
     OSStatus lStatus = noErr;
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
 
     if (m_waiting != 0) // the m_gate is already closed
@@ -545,7 +546,8 @@ void condition_impl::do_wait()
     unsigned was_waiting=0;
     unsigned was_gone=0;
 
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
     was_waiting = m_waiting;
     was_gone = m_gone;
@@ -605,7 +607,8 @@ bool condition_impl::do_timed_wait(const xtime& xt)
     unsigned was_waiting=0;
     unsigned was_gone=0;
 
-    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
+        m_mutex_mutex);
     assert(lStatus == noErr);
     was_waiting = m_waiting;
     was_gone = m_gone;

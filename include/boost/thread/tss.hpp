@@ -19,6 +19,7 @@
 
 #include <boost/utility.hpp>
 #include <boost/thread/detail/config.hpp>
+#include <boost/function.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -28,55 +29,93 @@
 
 namespace boost {
 
-    namespace detail {
-        class BOOST_THREAD_DECL tss : private noncopyable
-        {
-        public:
-            tss(void (*cleanup)(void*)=0);
-            ~tss();
+namespace detail {
 
-            void* get() const;
-            bool set(void* value);
+class BOOST_THREAD_DECL tss_ref
+{
+public:
+    tss_ref();
+};
 
-        private:
-        #if defined(BOOST_HAS_WINTHREADS)
-            unsigned long m_key;
-            void (*m_cleanup)(void*);
-        #elif defined(BOOST_HAS_PTHREADS)
-            pthread_key_t m_key;
-        #elif defined(BOOST_HAS_MPTASKS)
-            TaskStorageIndex m_key;
-            void (*m_cleanup)(void*);
-        #endif
-        };
+class BOOST_THREAD_DECL tss : private noncopyable
+{
+public:
+	template <typename F>
+		tss(const F& cleanup) {
+			boost::function1<void, void*>* pcleanup = 0;
+			try
+			{
+				pcleanup = new boost::function1<void, void*>(cleanup);
+				init(pcleanup);
+			}
+			catch (...)
+			{
+				delete pcleanup;
+				throw boost::thread_resource_error();
+			}
+		}
 
-    #if defined(BOOST_HAS_MPTASKS)
-        void thread_cleanup();
-    #endif
-    }
+    void* get() const;
+    void set(void* value);
+    void cleanup(void* p);
+
+private:
+    int m_slot;
+
+	void init(boost::function1<void, void*>* pcleanup);
+};
+
+#if defined(BOOST_HAS_MPTASKS)
+    void thread_cleanup();
+#endif
+
+/*struct tss_adapter
+{
+    tss_adapter(boost::function1<void, void*> cleanup) : m_cleanup(cleanup) { }
+    void operator()(void* p) { m_cleanup(p); }
+    boost::function1<void, void*> m_cleanup;
+};*/
+
+} // namespace detail
 
 template <typename T>
 class thread_specific_ptr : private noncopyable
 {
 public:
-    thread_specific_ptr() : m_tss(&thread_specific_ptr<T>::cleanup) { }
+    thread_specific_ptr()
+        : m_tss(&thread_specific_ptr<T>::cleanup) { }
+    thread_specific_ptr(void (*clean)(void*))
+        : m_tss(clean) { }
+    ~thread_specific_ptr() { reset(); }
 
     T* get() const { return static_cast<T*>(m_tss.get()); }
     T* operator->() const { return get(); }
     T& operator*() const { return *get(); }
-    T* release() { T* temp = get(); m_tss.set(0); return temp; }
-    void reset(T* p=0) { T* cur = get(); if (cur == p) return; delete cur; m_tss.set(p); }
+    T* release() { T* temp = get(); if (tmp) m_tss.set(0); return temp; }
+    void reset(T* p=0)
+    {
+        T* cur = get();
+        if (cur == p) return;
+        m_tss.set(p);
+        if (cur) m_tss.cleanup(cur);
+    }
 
 private:
     static void cleanup(void* p) { delete static_cast<T*>(p); }
-
-    mutable detail::tss m_tss;
+    detail::tss m_tss;
 };
 
 } // namespace boost
 
+namespace {
+    // This injects a tss_ref into every namespace and helps to insure we
+    // get a proper value for the "main" thread
+    boost::detail::tss_ref _tss_ref__7BAFF4714CFC42ae9C425F60CE3714D8;
+}
+
 // Change Log:
 //   6 Jun 01  WEKEMPF Initial version.
+//  30 May 02  WEKEMPF Added interface to set specific cleanup handlers.
+//                     Removed TLS slot limits from most implementations.
 
 #endif // BOOST_TSS_WEK070601_HPP
-

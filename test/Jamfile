@@ -23,14 +23,13 @@ subproject libs/thread/test ;
 # Include threads.jam for Boost.Threads global build information.
 # This greatly simplifies the Jam code needed to configure the build
 # for the various Win32 build types.
+
 SEARCH on threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include threads.jam ;
 
 # bring in rules for testing
 SEARCH on testing.jam = $(BOOST_BUILD_PATH) ;
 include testing.jam ;
-
-sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp test_tss.cpp test_once.cpp ;
 
 template test
     ## sources ##
@@ -44,6 +43,9 @@ template test
     : debug release <runtime-link>static/dynamic
 ;
 
+sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp
+    test_tss.cpp test_once.cpp ;
+
 #######################
 # Declare the Boost.Threads unit test program test_thread.
 
@@ -53,3 +55,4 @@ run test_condition.cpp <template>test ;
 run test_tss.cpp <template>test ;
 run test_once.cpp <template>test ;
 run test_xtime.cpp <template>test ;
+
