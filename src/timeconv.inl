@@ -6,9 +6,9 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
- 
+
 namespace {
     const unsigned MILLISECONDS_PER_SECOND = 1000;
     const unsigned NANOSECONDS_PER_SECOND = 1000000000;

@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/mutex.hpp>
@@ -338,7 +338,7 @@ bool timed_mutex::do_timedlock(const xtime& xt)
         if (res == ETIMEDOUT)
             break;
     }
-    
+
     bool ret = false;
     if (!m_locked)
     {

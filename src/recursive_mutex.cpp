@@ -6,11 +6,11 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/xtime.hpp> 
+#include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/limits.hpp>
 #include <stdexcept>
@@ -249,7 +249,7 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
 {
     state = m_count;
     m_count = 0;
-    
+
     int res = 0;
     res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
@@ -610,7 +610,7 @@ recursive_timed_mutex::recursive_timed_mutex()
     res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
-    
+
     res = pthread_cond_init(&m_unlocked, 0);
     if (res != 0)
     {
@@ -706,7 +706,7 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
                 break;
             assert(res == 0);
         }
-        
+
         if (!m_valid_id)
         {
             m_thread_id = tid;

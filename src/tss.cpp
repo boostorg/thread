@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/tss.hpp>
@@ -106,8 +106,8 @@ bool tss::set(void* value)
         assert(handlers);
         if (!handlers)
             return false;
-		cleanup_info info(m_cleanup, value);
-		(*handlers)[m_key] = info;
+        cleanup_info info(m_cleanup, value);
+        (*handlers)[m_key] = info;
     }
     return !!TlsSetValue(m_key, value);
 }

@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #ifndef BOOST_RECURSIVE_MUTEX_WEK070601_HPP
@@ -14,7 +14,7 @@
 
 #include <boost/config.hpp>
 #ifndef BOOST_HAS_THREADS
-#   error	Thread support is unavailable!
+#   error   Thread support is unavailable!
 #endif
 
 #include <boost/utility.hpp>
@@ -34,12 +34,12 @@ class recursive_mutex : private noncopyable
 public:
     friend class detail::thread::scoped_lock<recursive_mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<recursive_mutex> scoped_lock;
-    
+
     recursive_mutex();
     ~recursive_mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef std::size_t cv_state;
@@ -75,13 +75,13 @@ public:
     friend class detail::thread::scoped_lock<recursive_try_mutex>;
     friend class detail::thread::scoped_try_lock<recursive_try_mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<recursive_try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<recursive_try_mutex> scoped_try_lock;
-    
+
     recursive_try_mutex();
     ~recursive_try_mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef std::size_t cv_state;
@@ -97,7 +97,7 @@ private:
     void do_unlock();
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
-    
+
 #if defined(BOOST_HAS_WINTHREADS)
     unsigned long m_mutex;
     unsigned long m_count;
@@ -119,14 +119,14 @@ public:
     friend class detail::thread::scoped_try_lock<recursive_timed_mutex>;
     friend class detail::thread::scoped_timed_lock<recursive_timed_mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<recursive_timed_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<recursive_timed_mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<recursive_timed_mutex> scoped_timed_lock;
-    
+
     recursive_timed_mutex();
     ~recursive_timed_mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef std::size_t cv_state;
@@ -143,7 +143,7 @@ private:
     void do_unlock();
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
-    
+
 #if defined(BOOST_HAS_WINTHREADS)
     unsigned long m_mutex;
     unsigned long m_count;

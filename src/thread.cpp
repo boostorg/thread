@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/thread.hpp>
@@ -163,8 +163,8 @@ void thread::sleep(const xtime& xt)
     timespec ts;
     to_timespec_duration(xt, ts);
 
-	//  nanosleep takes a timespec that is an offset, not
-	//  an absolute time.
+    //  nanosleep takes a timespec that is an offset, not
+    //  an absolute time.
     nanosleep(&ts, 0);
 #   else
     semaphore sema;
