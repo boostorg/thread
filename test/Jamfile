@@ -39,8 +39,8 @@ import testing ;
              <define>BOOST_THREAD_USE_LIB=1
              <define>BOOST_THREAD_TEST=1
              <runtime-link>static
+             <threading>multi
          : ## default build ##
-             <threading>multi #:why is this necessary?
      ;
     
      template boost_thread_test_dll
@@ -56,8 +56,8 @@ import testing ;
              <define>BOOST_THREAD_USE_DLL=1
              <define>BOOST_THREAD_TEST=1
              <runtime-link>dynamic
+             <threading>multi
          : ## default build ##
-             <threading>multi #:why is this necessary?
      ;
 
      test-suite "threads"
