@@ -171,7 +171,7 @@ OSStatus safe_wait(function<OSStatus, Duration> &rFunction, Duration lDuration)
     // get the expiration time in UpTime units
         if(lDuration == kDurationForever)
         {
-            ullExpiration = ::std::numeric_limits<uint64_t>::max();
+            ullExpiration = (::std::numeric_limits<uint64_t>::max)();
         }
         else if(lDuration == kDurationImmediate)
         {
