@@ -1,6 +1,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/test/test_tools.hpp>
+
+#include <boost/test/unit_test.hpp>
 
 #include <utils.inl>
 
@@ -37,8 +38,12 @@ void test_add_find_remove()
 
 } // namespace
 
-void test_thread_group()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-	test_create_thread();
-	test_add_find_remove();
+    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread_group test suite");
+
+    test->add(BOOST_TEST_CASE(&test_create_thread));
+    test->add(BOOST_TEST_CASE(&test_add_find_remove));
+
+    return test;
 }

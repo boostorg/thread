@@ -2,7 +2,8 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread_pool.hpp>
-#include <boost/test/test_tools.hpp>
+
+#include <boost/test/unit_test.hpp>
 
 const int MAX_POOL_THREADS=8;
 const int MIN_POOL_THREADS=2;
@@ -248,11 +249,14 @@ void test_detach()
     BOOST_TEST(0 ==  wc_after_detach);
 }
 
-void test_thread_pool()
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-    test_heterogeneous();
-    test_recursive();
-    test_cancel();
-    test_detach();
-}
+    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread_pool test suite");
 
+    test->add(BOOST_TEST_CASE(&test_heterogeneous));
+    test->add(BOOST_TEST_CASE(&test_recursive));
+    test->add(BOOST_TEST_CASE(&test_cancel));
+	test->add(BOOST_TEST_CASE(&test_detach));
+
+    return test;
+}

@@ -28,9 +28,9 @@
 
 #include "timeconv.inl"
 
-namespace {
+namespace boost {
 
-class thread_data
+class thread::data
 {
 public:
 	enum
@@ -41,13 +41,12 @@ public:
 		joined
 	};
 
-    thread_data(const boost::function0<void>& threadfunc);
-	thread_data();
-	~thread_data();
+    data(const boost::function0<void>& threadfunc);
+	data();
+	~data();
 
 	void addref();
 	bool release();
-	boost::thread::category_type category();
 	void join();
 	void cancel();
 	void test_cancel();
@@ -67,27 +66,71 @@ private:
     MPQueueID m_pJoinQueueID;
     MPTaskID m_pTaskID;
 #endif
-	boost::thread::category_type m_category;
 	bool m_canceled;
 };
 
-void release_tss_data(void* pdata)
+} // namespace boost
+
+namespace {
+
+void release_tss_data(boost::thread::data* data)
 {
-	thread_data* tdata = (thread_data*)pdata;
-	assert(tdata);
-	if (tdata->release())
-		delete tdata;
+	assert(data);
+	if (data->release())
+		delete data;
 }
 
-boost::thread_specific_ptr<thread_data> tss_thread_data(&release_tss_data);
+boost::thread_specific_ptr<boost::thread::data> tss_thread_data(&release_tss_data);
 
-thread_data::thread_data(const boost::function0<void>& threadfunc)
-	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_category(boost::thread::boost), m_canceled(false)
+struct thread_equals
+{
+	thread_equals(boost::thread& thrd) : m_thrd(thrd) { }
+	bool operator()(boost::thread* thrd) { return *thrd == m_thrd; }
+	boost::thread& m_thrd;
+};
+
+} // unnamed namespace
+
+extern "C" {
+
+#if defined(BOOST_HAS_WINTHREADS)
+unsigned __stdcall thread_proxy(void* param)
+#elif defined(BOOST_HAS_PTHREADS)
+static void* thread_proxy(void* param)
+#elif defined(BOOST_HAS_MPTASKS)
+static OSStatus thread_proxy(void* param)
+#endif
+{
+    try
+    {
+		boost::thread::data* tdata = static_cast<boost::thread::data*>(param);
+		tss_thread_data.reset(tdata);
+		tdata->run();
+    }
+	catch (boost::thread_cancel)
+	{
+	}
+    catch (...)
+    {
+		std::terminate();
+    }
+#if defined(BOOST_HAS_MPTASKS)
+    ::boost::detail::thread_cleanup();
+#endif
+    return 0;
+}
+
+} // extern "C"
+
+namespace boost {
+
+thread::data::data(const boost::function0<void>& threadfunc)
+	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_canceled(false)
 {
 }
 
-thread_data::thread_data()
-	: m_refcount(2), m_state(running), m_category(boost::thread::native), m_canceled(false)
+thread::data::data()
+	: m_refcount(2), m_state(running), m_canceled(false)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
@@ -97,10 +140,14 @@ thread_data::thread_data()
 #endif
 }
 
-thread_data::~thread_data()
+thread::data::~data()
 {
-	if (m_category == boost::thread::native || m_state != joined)
+	boost::mutex::scoped_lock lock(m_mutex);
+
+	if (m_state != joined)
 	{
+		lock.unlock();
+
 		int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
 		res = CloseHandle(m_thread);
@@ -112,28 +159,26 @@ thread_data::~thread_data()
 		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
 		assert(lStatus == noErr);
 #endif
+
+		lock.lock();
+		m_state = joined;
+		m_cond.notify_all();
 	}
 }
 
-void thread_data::addref()
+void thread::data::addref()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	++m_refcount;
 }
 
-bool thread_data::release()
+bool thread::data::release()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	return (--m_refcount == 0);
 }
 
-boost::thread::category_type thread_data::category()
-{
-	boost::mutex::scoped_lock lock(m_mutex);
-	return m_category;
-}
-
-void thread_data::join()
+void thread::data::join()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 
@@ -143,8 +188,6 @@ void thread_data::join()
 	if (m_state != joined)
 	{
 		m_state = joining;
-		m_cond.notify_all();
-
 		lock.unlock();
 
 		int res = 0;
@@ -162,25 +205,25 @@ void thread_data::join()
 #endif
 
 		lock.lock();
-
 		m_state = joined;
+		m_cond.notify_all();
 	}
 }
 
-void thread_data::cancel()
+void thread::data::cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	m_canceled = true;
 }
 
-void thread_data::test_cancel()
+void thread::data::test_cancel()
 {
 	boost::mutex::scoped_lock lock(m_mutex);
 	if (m_canceled)
 		throw boost::thread_cancel();
 }
 
-void thread_data::run()
+void thread::data::run()
 {
 	{
 		boost::mutex::scoped_lock lock(m_mutex);
@@ -190,52 +233,27 @@ void thread_data::run()
 #elif defined(BOOST_HAS_PTHREADS)
 		m_thread = pthread_self();
 #endif
-		m_state = thread_data::running;
+		m_state = thread::data::running;
 		m_cond.notify_all();
 	}
     m_threadfunc();
 }
 
-struct thread_equals
+thread_cancel::thread_cancel()
 {
-	thread_equals(boost::thread& thrd) : m_thrd(thrd) { }
-	bool operator()(boost::thread* thrd) { return *thrd == m_thrd; }
-	boost::thread& m_thrd;
-};
-
-} // unnamed namespace
-
-extern "C" {
-#if defined(BOOST_HAS_WINTHREADS)
-unsigned __stdcall thread_proxy(void* param)
-#elif defined(BOOST_HAS_PTHREADS)
-static void* thread_proxy(void* param)
-#elif defined(BOOST_HAS_MPTASKS)
-static OSStatus thread_proxy(void* param)
-#endif
-{
-    try
-    {
-        thread_data* tdata = static_cast<thread_data*>(param);
-		tss_thread_data.reset(tdata);
-		tdata->run();
-    }
-	catch (boost::thread_cancel)
-	{
-	}
-    catch (...)
-    {
-		terminate();
-    }
-#if defined(BOOST_HAS_MPTASKS)
-    ::boost::detail::thread_cleanup();
-#endif
-    return 0;
 }
 
+thread_cancel::~thread_cancel()
+{
 }
 
-namespace boost {
+thread::attributes::attributes()
+{
+}
+
+thread::attributes::~attributes()
+{
+}
 
 thread::thread()
     : m_handle(0)
@@ -246,10 +264,10 @@ thread::thread()
     m_pTaskID = MPCurrentTaskID();
     m_pJoinQueueID = kInvalidID;
 #endif
-	thread_data* tdata = tss_thread_data.get();
+	thread::data* tdata = tss_thread_data.get();
 	if (tdata == 0)
 	{
-		tdata = new(std::nothrow) thread_data;
+		tdata = new(std::nothrow) thread::data;
 		if (!tdata)
 			throw thread_resource_error();
 		tss_thread_data.reset(tdata);
@@ -259,10 +277,10 @@ thread::thread()
 	m_handle = tdata;
 }
 
-thread::thread(const function0<void>& threadfunc)
+thread::thread(const function0<void>& threadfunc, attributes attr)
     : m_handle(0)
 {
-	std::auto_ptr<thread_data> param(new(std::nothrow) thread_data(threadfunc));
+	std::auto_ptr<thread::data> param(new(std::nothrow) thread::data(threadfunc));
 	if (param.get() == 0)
 		throw thread_resource_error();
 #if defined(BOOST_HAS_WINTHREADS)
@@ -301,9 +319,8 @@ thread::thread(const function0<void>& threadfunc)
 
 thread::~thread()
 {
-//	thread_data* tdata = static_cast<thread_data*>(m_handle);
-//	if (tdata && tdata->release())
-//		delete tdata;
+	if (m_handle && m_handle->release())
+		delete m_handle;
 }
 
 bool thread::operator==(const thread& other) const
@@ -316,35 +333,27 @@ bool thread::operator!=(const thread& other) const
     return !operator==(other);
 }
 
-thread::category_type thread::category() const
-{
-	thread_data* tdata = static_cast<thread_data*>(m_handle);
-	return tdata->category();
-}
-
 void thread::join()
 {
-	thread_data* tdata = static_cast<thread_data*>(m_handle);
-	tdata->join();
+	m_handle->join();
 }
 
 void thread::cancel()
 {
-	thread_data* tdata = static_cast<thread_data*>(m_handle);
-	tdata->cancel();
+	m_handle->cancel();
 }
 
 void thread::test_cancel()
 {
 	thread self;
-	thread_data* tdata = static_cast<thread_data*>(self.m_handle);
-	tdata->test_cancel();
+	self.m_handle->test_cancel();
 }
 
 void thread::sleep(const xtime& xt)
 {
-    for (int foo=0; foo < 5; ++foo)
+    for (;;)
     {
+		thread::test_cancel();
 #if defined(BOOST_HAS_WINTHREADS)
         int milliseconds;
         to_duration(xt, milliseconds);
@@ -381,6 +390,7 @@ void thread::sleep(const xtime& xt)
         if (xtime_cmp(xt, cur) <= 0)
             return;
     }
+	thread::test_cancel();
 }
 
 void thread::yield()
@@ -404,6 +414,7 @@ void thread::yield()
 #elif defined(BOOST_HAS_MPTASKS)
     MPYield();
 #endif
+	thread::test_cancel();
 }
 
 thread_group::thread_group()

@@ -42,39 +42,35 @@ boost::once_flag tss_data_once = BOOST_ONCE_INIT;
 
 void init_tss_data()
 {
+	std::auto_ptr<tss_data_t> temp(new tss_data_t);
+
+#if defined(BOOST_HAS_WINTHREADS)
+    temp->native_key = TlsAlloc();
+	if (temp->native_key == 0xFFFFFFFF)
+		return;
+#elif defined(BOOST_HAS_PTHREADS)
+    int res = 0;
+    res = pthread_key_create(&temp->native_key, &cleanup_slots);
+	if (res != 0)
+		return;
+#endif
+
     // Intentional memory "leak"
-    // This is the only way to insure the mutex in the global data
+    // This is the only way to ensure the mutex in the global data
     // structure is available when cleanup handlers are run, since the
     // execution order of cleanup handlers is unspecified on any platform
     // with regards to C++ destructor ordering rules.
-    tss_data = new tss_data_t;
-#if defined(BOOST_HAS_WINTHREADS)
-    tss_data->native_key = TlsAlloc();
-	if (tss_data->native_key == 0xFFFFFFFF)
-	{
-		delete tss_data;
-		tss_data = 0;
-		return;
-	}
-#elif defined(BOOST_HAS_PTHREADS)
-    int res = 0;
-    res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
-	if (res != 0)
-	{
-		delete tss_data;
-		tss_data = 0;
-		return;
-	}
-#endif
+	tss_data = temp.release();
 }
 
 extern "C" void cleanup_slots(void* p)
 {
     tss_slots* slots = static_cast<tss_slots*>(p);
-    boost::mutex::scoped_lock lock(tss_data->mutex);
 	for (tss_slots::size_type i = 0; i < slots->size(); ++i)
     {
+	    boost::mutex::scoped_lock lock(tss_data->mutex);
 		(*tss_data->cleanup_handlers[i])((*slots)[i]);
+		(*slots)[i] = 0;
     }
 }
 
@@ -124,67 +120,63 @@ tss_slots* get_slots(bool alloc)
 namespace boost {
 
 namespace detail {
-    tss_ref::tss_ref()
+void tss::init(boost::function1<void, void*>* pcleanup)
+{
+    boost::call_once(&init_tss_data, tss_data_once);
+	if (tss_data == 0)
+		throw thread_resource_error();
+    boost::mutex::scoped_lock lock(tss_data->mutex);
+	try
+	{
+		tss_data->cleanup_handlers.push_back(pcleanup);
+		m_slot = tss_data->cleanup_handlers.size() - 1;
+	}
+	catch (...)
+	{
+		throw thread_resource_error();
+	}
+}
+
+void* tss::get() const
+{
+    tss_slots* slots = get_slots(false);
+
+    if (!slots)
+        return 0;
+
+    if (m_slot >= slots->size())
+        return 0;
+
+    return (*slots)[m_slot];
+}
+	
+void tss::set(void* value)
+{
+    tss_slots* slots = get_slots(true);
+
+    if (!slots)
+        throw boost::thread_resource_error();
+
+    if (m_slot >= slots->size())
     {
-        boost::call_once(&init_tss_data, tss_data_once);
-    }
-
-	void tss::init(boost::function1<void, void*>* pcleanup)
-    {
-		if (tss_data == 0)
-			throw thread_resource_error();
-        boost::mutex::scoped_lock lock(tss_data->mutex);
-		try
-		{
-			tss_data->cleanup_handlers.push_back(pcleanup);
-			m_slot = tss_data->cleanup_handlers.size() - 1;
-		}
-		catch (...)
-		{
-			throw thread_resource_error();
-		}
-    }
-
-    void* tss::get() const
-    {
-        tss_slots* slots = get_slots(false);
-
-        if (!slots)
-            return 0;
-
-        if (m_slot >= slots->size())
-            return 0;
-
-        return (*slots)[m_slot];
-    }
-		
-    void tss::set(void* value)
-    {
-        tss_slots* slots = get_slots(true);
-
-        if (!slots)
-            throw boost::thread_resource_error();
-
-        if (m_slot >= slots->size())
+        try
         {
-            try
-            {
-                slots->resize(m_slot + 1);
-            }
-            catch (...)
-            {
-                throw boost::thread_resource_error();
-            }
+            slots->resize(m_slot + 1);
         }
-
-        (*slots)[m_slot] = value;
+        catch (...)
+        {
+            throw boost::thread_resource_error();
+        }
     }
 
-    void tss::cleanup(void* value)
-    {
-        boost::mutex::scoped_lock lock(tss_data->mutex);
-		(*tss_data->cleanup_handlers[m_slot])(value);
-    }
+    (*slots)[m_slot] = value;
+}
+
+void tss::cleanup(void* value)
+{
+    boost::mutex::scoped_lock lock(tss_data->mutex);
+	(*tss_data->cleanup_handlers[m_slot])(value);
+}
 
 } // namespace detail
 

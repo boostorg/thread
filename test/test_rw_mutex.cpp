@@ -1,7 +1,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/rw_mutex.hpp>
-#include <boost/test/test_tools.hpp>
+
+#include <boost/test/unit_test.hpp>
 
 #include <iostream>
 
@@ -306,4 +307,13 @@ void test_rw_mutex()
         std::cout << "timed test, sp=" << i << "\n";
         test_timed_rw_mutex(timed_rw);  
     }
+}
+
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+{
+    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: rw_mutex test suite");
+
+    test->add(BOOST_TEST_CASE(&test_rw_mutex));
+
+    return test;
 }

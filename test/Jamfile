@@ -50,9 +50,13 @@ sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp
 # Declare the Boost.Threads unit test program test_thread.
 
 run test_thread.cpp <template>test ;
+run test_thread_group.cpp <template>test ;
 run test_mutex.cpp <template>test  ;
 run test_condition.cpp <template>test ;
 run test_tss.cpp <template>test ;
 run test_once.cpp <template>test ;
 run test_xtime.cpp <template>test ;
+run test_barrier.cpp <template>test ;
+#run test_rw_mutex.cpp <template>test ;
+run test_thread_pool.cpp <template>test ;
 
