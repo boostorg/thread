@@ -240,7 +240,7 @@ bool condition::do_timed_wait(const xtime& xt)
     unsigned milliseconds;
     to_duration(xt, milliseconds);
 
-    int res = 0;
+    unsigned int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 

@@ -26,7 +26,7 @@ int xtime_get(struct xtime* xtp, int clock_type)
 #if defined(BOOST_HAS_FTIME)
         FILETIME ft;
         GetSystemTimeAsFileTime(&ft);
-        const __int64 TIMESPEC_TO_FILETIME_OFFSET = ((__int64)27111902 << 32) + (__int64)3577643008;
+        const boost::uint64_t TIMESPEC_TO_FILETIME_OFFSET = ((boost::uint64_t)27111902UL << 32) + (boost::uint64_t)3577643008UL;
         xtp->sec = (int)((*(__int64*)&ft - TIMESPEC_TO_FILETIME_OFFSET) / 10000000);
         xtp->nsec = (int)((*(__int64*)&ft - TIMESPEC_TO_FILETIME_OFFSET -
             ((__int64)xtp->sec * (__int64)10000000)) * 100);

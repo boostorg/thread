@@ -18,6 +18,7 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
+#   define NOMINMAX
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -68,7 +69,7 @@ bool semaphore::down(const xtime& xt)
 {
     unsigned milliseconds;
     to_duration(xt, milliseconds);
-    int res = 0;
+    unsigned int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_sema), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
     return res == WAIT_OBJECT_0;
