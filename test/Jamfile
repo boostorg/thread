@@ -44,9 +44,9 @@ template test_base
 #######################
 # Declare the Boost.Threads unit test program test_thread.
 
-run <template>test_base test_thread.cpp ;
-run <template>test_base test_mutex.cpp ;
-run <template>test_base test_condition.cpp ;
-run <template>test_base test_tss.cpp ;
-run <template>test_base test_once.cpp ;
-run <template>test_base test_xtime.cpp ;
+run test_thread.cpp <template>test_base ;
+run test_mutex.cpp <template>test_base  ;
+run test_condition.cpp <template>test_base ;
+run test_tss.cpp <template>test_base ;
+run test_once.cpp <template>test_base ;
+run test_xtime.cpp <template>test_base ;
