@@ -158,7 +158,9 @@ is generally the preferred method.</p>
 <p><b>Requires: </b>L meet the requirements of the <a href="lock_concept.html">Lock
 concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 
-<p><b>Effects: </b>As if: <code>while !(pred()) wait(lock)</code></p>
+<p><b>Effects: </b>As if:</p>
+
+<pre> while !(pred()) wait(lock)</pre>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
