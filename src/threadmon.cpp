@@ -9,7 +9,7 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-#include <boost/config.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #if defined(BOOST_HAS_WINTHREADS)
 

@@ -12,12 +12,9 @@
 #ifndef BOOST_TSS_WEK070601_HPP
 #define BOOST_TSS_WEK070601_HPP
 
-#include <boost/config.hpp>
-
-// insist on threading support being available:
-#include <boost/config/requires_threads.hpp>
-
 #include <boost/thread/detail/config.hpp>
+
+#ifndef BOOST_THREAD_NO_TSS_CLEANUP
 
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
@@ -110,6 +107,7 @@ private:
 
 } // namespace boost
 
+#endif BOOST_THREAD_NO_TSS_CLEANUP
 #endif // BOOST_TSS_WEK070601_HPP
 
 // Change Log:
