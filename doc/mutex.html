@@ -320,7 +320,7 @@ private:
 
 counter c;
 
-void change_count(void*)
+void change_count()
 {
     int i = c.increment();
     boost::mutex::scoped_lock scoped_lock(io_mutex);
@@ -332,7 +332,7 @@ int main(int, char*[])
     const int num_threads = 4;
     boost::thread_group thrds;
     for (int i=0; i &lt; num_threads; ++i)
-        thrds.create_thread(&amp;change_count, 0);
+        thrds.create_thread(&amp;change_count);
       
     thrds.join_all();
    
