@@ -49,11 +49,11 @@ void test_tss()
     BOOST_CHECK_EQUAL(tss_instances, 0);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: tss test suite");
 
-	test->add(BOOST_TEST_CASE(&test_tss));
+	test->add(BOOST_TEST_CASE(test_tss));
 
 	return test;
 }
