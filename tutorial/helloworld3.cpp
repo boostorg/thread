@@ -10,17 +10,16 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/thread.hpp>
+#include <boost/bind.hpp>
 #include <iostream>
 
-struct helloworld
+void helloworld(const char* who)
 {
-    helloworld(const char* who) : m_who(who) { }
-    void operator()() { std::cout << m_who << "says, \"Hello World.\"" << std::endl; }
-    const char* m_who;
-};
+    std::cout << who << "says, \"Hello World.\"" << std::endl;
+}
 
 int main()
 {
-    boost::thread thrd(helloworld("Bob"));
+    boost::thread thrd(boost::bind(&helloworld, "Bob"));
     thrd.join();
 }
