@@ -79,7 +79,9 @@ public:
     void addref();
     bool release();
     void join();
+    bool timed_join(const boost::xtime& xt);
     void cancel();
+    bool cancelled() const;
     void enable_cancellation();
     void disable_cancellation();
     void test_cancel();
@@ -107,7 +109,7 @@ private:
     MPQueueID m_pJoinQueueID;
     MPTaskID m_pTaskID;
 #endif
-    bool m_canceled;
+    bool m_cancelled;
     int m_cancellation_disabled_level;
     bool m_native;
 };
@@ -123,12 +125,12 @@ boost::thread_specific_ptr<thread_data> tss_thread_data(&release_tss_data);
 
 thread_data::thread_data(const boost::function0<void>& threadfunc)
     : m_threadfunc(threadfunc), m_refcount(2), m_state(creating),
-      m_canceled(false), m_cancellation_disabled_level(0), m_native(false)
+      m_cancelled(false), m_cancellation_disabled_level(0), m_native(false)
 {
 }
 
 thread_data::thread_data()
-    : m_refcount(1), m_state(running), m_canceled(false),
+    : m_refcount(1), m_state(running), m_cancelled(false),
       m_cancellation_disabled_level(0), m_native(true)
 {
 #if defined(BOOST_HAS_WINTHREADS)
@@ -193,7 +195,8 @@ void thread_data::join()
         {
             while (m_state == joining)
                 m_cond.wait(lock);
-            return;
+            if (m_state == joined)
+                return;
         }
 
         m_state = joining;
@@ -216,8 +219,89 @@ void thread_data::join()
 #endif
 
     boost::mutex::scoped_lock lock(m_mutex);
-    while (m_state == creating)
-        m_cond.wait(lock);
+    assert(m_state == joining);
+    m_state = joined;
+    m_cond.notify_all();
+}
+
+bool thread_data::timed_join(const boost::xtime& xt)
+{
+    {
+        boost::mutex::scoped_lock lock(m_mutex);
+        while (m_state == creating)
+            m_cond.wait(lock);
+
+        if (m_state == joined)
+            return true;
+
+        if (m_state == joining)
+        {
+            while (m_state == joining)
+            {
+                if (!m_cond.timed_wait(lock, xt))
+                    return m_state == joined;
+            }
+            if (m_state == joined)
+                return true;
+            assert(m_state == running);
+        }
+
+        m_state = joining;
+    }
+
+    int res = 0;
+#if defined(BOOST_HAS_WINTHREADS)
+    for (;;)
+    {
+        int milliseconds;
+        to_duration(xt, milliseconds);
+
+        res = WaitForSingleObject(m_thread, milliseconds);
+        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+
+        if (res == WAIT_TIMEOUT)
+        {
+            boost::xtime cur;
+            boost::xtime_get(&cur, boost::TIME_UTC);
+            if (boost::xtime_cmp(xt, cur) > 0)
+                continue;
+            boost::mutex::scoped_lock lock(m_mutex);
+            assert(m_state == joining);
+            m_state = running;
+            m_cond.notify_all();
+            return false;
+        }
+        break;
+    }
+
+    assert(res == WAIT_OBJECT_0);
+    res = CloseHandle(m_thread);
+    assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+    timespec ts;
+    to_timespec(xt, ts);
+
+    res = pthread_timedjoin(m_thread, 0, ts);
+
+    if (res == ETIMEDOUT)
+    {
+        boost::mutex::scoped_lock lock(m_mutex);
+        assert(m_state == joining);
+        m_state = running;
+        m_cond.notify_all();
+        return false;
+    }
+
+    assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+    OSStatus lStatus =
+        threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL,
+            NULL, kDurationForever);
+    assert(lStatus == noErr);
+#endif
+
+    boost::mutex::scoped_lock lock(m_mutex);
+    assert(m_state == joining);
     m_state = joined;
     m_cond.notify_all();
 }
@@ -227,15 +311,19 @@ void thread_data::cancel()
     boost::mutex::scoped_lock lock(m_mutex);
     while (m_state == creating)
         m_cond.wait(lock);
-    m_canceled = true;
+    m_cancelled = true;
+}
+
+bool thread_data::cancelled() const
+{
+    boost::mutex::scoped_lock lock(m_mutex);
+    return m_cancelled;
 }
 
 void thread_data::test_cancel()
 {
     boost::mutex::scoped_lock lock(m_mutex);
-    while (m_state == creating)
-        m_cond.wait(lock);
-    if (m_cancellation_disabled_level == 0 && m_canceled)
+    if (m_cancellation_disabled_level == 0 && m_cancelled)
         throw boost::thread_cancel();
 }
 

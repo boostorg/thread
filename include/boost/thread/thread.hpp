@@ -124,7 +124,9 @@ public:
     bool operator<(const thread& other) const;
 
     void join();
+    bool timed_join(const xtime& xt);
     void cancel();
+    bool cancelled() const;
 
     void set_scheduling_parameter(int policy, const sched_param& param);
     void get_scheduling_parameter(int& policy, sched_param& param) const;
