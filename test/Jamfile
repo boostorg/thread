@@ -27,7 +27,7 @@ else
     BOOST_THREADMON_LIB = ;
 }
 
-exe test_thread : test_thread.cpp
+unit-test test_thread : test_thread.cpp
     <lib>../build/libboost_thread
 	$(BOOST_THREADMON_LIB)
     # requirements

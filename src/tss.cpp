@@ -22,21 +22,24 @@
 #if defined(BOOST_HAS_WINTHREADS)
 #include <set>
 namespace {
-    typedef std::pair<boost::tss*,void(*)(void*)> cleanup_info;
+    typedef std::pair<void(*)(void*), void*> cleanup_info;
+    typedef std::pair<int, cleanup_info> cleanup_node;
     struct cleanup_info_less
     {
-		bool operator()(const cleanup_info& x, const cleanup_info& y) const
+		bool operator()(const cleanup_node& x, const cleanup_node& y) const
 		{
 			return x.first < y.first;
 		}
     };
-    typedef std::set<cleanup_info, cleanup_info_less> cleanup_handlers;
+    typedef std::set<cleanup_node, cleanup_info_less> cleanup_handlers;
 
     DWORD key;
+    boost::once_flag once = boost::once_init;
 
     void init_cleanup_key()
     {
         key = TlsAlloc();
+        assert(key != 0xFFFFFFFF);
     }
 
     void __cdecl cleanup()
@@ -44,25 +47,33 @@ namespace {
         cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
         for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
         {
-            cleanup_info info = *it;
-            void* ptr = info.first->get();
-            if (ptr)
-                info.second(ptr);
+            cleanup_node node = *it;
+            cleanup_info info = node.second;
+            if (info.second)
+                info.first(info.second);
         }
         delete handlers;
     }
 
     cleanup_handlers* get_handlers()
     {
-        static boost::once_flag once = BOOST_ONCE_INIT;
         boost::call_once(&init_cleanup_key, once);
 
         cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
         if (!handlers)
         {
-            handlers = new cleanup_handlers;
-            TlsSetValue(key, handlers);
-            on_thread_exit(&cleanup);
+            try
+            {
+                handlers = new cleanup_handlers;
+            }
+            catch (...)
+            {
+                return 0;
+            }
+            int res = TlsSetValue(key, handlers);
+            assert(res);
+            res = on_thread_exit(&cleanup);
+            assert(res == 0);
         }
 
         return handlers;
@@ -103,10 +114,16 @@ bool tss::set(void* value)
         assert(handlers);
         if (!handlers)
             return false;
-        cleanup_info info(this, m_cleanup);
-        cleanup_handlers::iterator it = handlers->lower_bound(info);
+        cleanup_info info(m_cleanup, value);
+        cleanup_node node(m_key, info);
+        cleanup_handlers::iterator it = handlers->lower_bound(node);
         if (it == handlers->end())
-            handlers->insert(cleanup_info(this, m_cleanup));
+        {
+            if (!handlers->insert(node).second)
+                return false;
+        }
+        else
+            (*it).second = info;
     }
     return TlsSetValue(m_key, value);
 }

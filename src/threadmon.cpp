@@ -9,16 +9,18 @@
 
 #pragma warning(disable : 4786)
 #include <list>
+#include <set>
 #include <algorithm>
 
 typedef void (__cdecl * handler)(void);
 typedef std::list<handler> exit_handlers;
+typedef std::set<exit_handlers*> registered_handlers;
 
 namespace
 {
     CRITICAL_SECTION cs;
     DWORD key;
-    std::list<exit_handlers*> hndlrlst;
+    registered_handlers registry;
 }
 
 BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
@@ -42,8 +44,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
 
                     // Remove the exit handler list from the registered lists and then destroy it.
                     EnterCriticalSection(&cs);
-                    std::list<exit_handlers*>::iterator found = std::find(hndlrlst.begin(), hndlrlst.end(), handlers);
-                    hndlrlst.erase(found);
+                    registry.erase(handlers);
                     LeaveCriticalSection(&cs);
                     delete handlers;
                 }
@@ -65,7 +66,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
                 // thread left, but to insure we don't get memory leaks we won't make that assumption
                 // here.
                 EnterCriticalSection(&cs);
-                for (std::list<exit_handlers*>::iterator it = hndlrlst.begin(); it != hndlrlst.end(); ++it)
+                for (registered_handlers::iterator it = registry.begin(); it != registry.end(); ++it)
                     delete (*it);
                 LeaveCriticalSection(&cs);
                 DeleteCriticalSection(&cs);
@@ -107,7 +108,7 @@ int on_thread_exit(void (__cdecl * func)(void))
         try
         {
             EnterCriticalSection(&cs);
-            hndlrlst.push_back(handlers);
+            registry.insert(handlers);
             LeaveCriticalSection(&cs);
         }
         catch (...)
@@ -122,10 +123,7 @@ int on_thread_exit(void (__cdecl * func)(void))
     // added just report success and exit.
     try
     {
-        exit_handlers::iterator it = std::find(handlers->begin(), handlers->end(), func);
-        if (it != handlers->end())
-            return 0;
-        handlers->push_back(func);
+        handlers->push_front(func);
     }
     catch (...)
     {

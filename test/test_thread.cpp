@@ -449,10 +449,33 @@ void test_tss()
 {
     const int NUMTHREADS=5;
     boost::thread_group threads;
-    for (int i=0; i<5; ++i)
+    for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_tss_thread);
     threads.join_all();
     BOOST_TEST(tss_instances == 0);
+}
+
+int once_value = 0;
+boost::once_flag once = boost::once_init;
+
+void init_once_value()
+{
+    once_value++;
+}
+
+void test_once_thread()
+{
+    boost::call_once(&init_once_value, once);
+}
+
+void test_once()
+{
+    const int NUMTHREADS=5;
+    boost::thread_group threads;
+    for (int i=0; i<NUMTHREADS; ++i)
+        threads.create_thread(&test_once_thread);
+    threads.join_all();
+    BOOST_TEST(once_value == 1);
 }
 
 int test_main(int, char*[])
@@ -466,5 +489,6 @@ int test_main(int, char*[])
     test_condition();
     test_semaphore();
     test_tss();
+    test_once();
     return 0;
 }
