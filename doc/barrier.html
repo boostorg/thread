@@ -36,7 +36,8 @@
 </dl>
 <hr>
 <h2><a name="introduction"></a>Introduction</h2>
-<p>{{Introductory text}}</p>
+<p>Include the header &lt;<a href="../../../boost/thread/barrier.hpp">boost/thread/barrier.hpp</a>&gt; 
+  to define the class <code>boost::barrier</code>.</p>
 <h2><a name="classes"></a>Classes</h2>
 <h3><a name="class-barrier"></a>Class <code>barrier</code></h3>
 <p>An object of class <code>barrier</code> is a synchronization primitive used 
@@ -53,11 +54,11 @@
 <p>See <A href="definitions.html">Formal Definitions</A> for definitions of thread 
   states <A href="definitions.html#state">blocked</A> and <A href="definitions.html#state"> 
   ready</A>. Note that "waiting" is a synonym for blocked.</p>
-<P>The header &lt;boost/threads/barrier.hpp&gt; contains a second class, "one_shot_barrier" 
+<P>The header &lt;<a href="../../../boost/thread/barrier.hpp">boost/threads/barrier.hpp</a>&gt; contains a second class, "one_shot_barrier" 
   which allows for one generation of waiting.&nbsp; If the N+1th thread calls 
   wait(), an exception will be thrown.&nbsp; One use case for barriers is to synchronize 
   threads as they start on some initialization process.&nbsp; Once that is completed, 
-  the threads can run freely.&nbsp; Boost::one_shot_barrier provides a somewhat 
+  the threads can run freely.&nbsp; boost::one_shot_barrier provides a somewhat 
   more lightweight implementation of barrier for those cases.&nbsp; The author 
   isn't convinced that this use case justified an additional class in Boost.Threads, 
   however.</P>
@@ -125,78 +126,36 @@ int wait();
   <dt><b>Danger:</b> If the barrier is destroyed before wait() can return, the 
     behavior is undefined.</dt>
 </dl>
-<h4><a name="class-spec-observers"></a>Class <code>{{class name}}</code> observer 
-  functions</h4>
-<pre>
-{{function}}
-</pre>
-<dl class="function-semantics"> 
-  <dt><b>Requires:</b> {{text}}</dt>
-  <dt><b>Effects:</b> {{text}}</dt>
-  <dt><b>Postconditions:</b> {{text}}</dt>
-  <dt><b>Returns:</b> {{text}}</dt>
-  <dt><b>Throws:</b> {{text}}</dt>
-  <dt><b>Complexity:</b> {{text}}</dt>
-  <dt><b>Note:</b> {{text}}</dt>
-  <dt><b>Danger:</b> {{text}}</dt>
-  <dt><b>Rationale:</b> {{text}}</dt>
-</dl>
-<h4><a name="class-spec-statics"></a>Class <code>{{class name}}</code> static 
-  functions</h4>
-<pre>
-{{function}}
-</pre>
-<dl class="function-semantics"> 
-  <dt><b>Requires:</b> {{text}}</dt>
-  <dt><b>Effects:</b> {{text}}</dt>
-  <dt><b>Postconditions:</b> {{text}}</dt>
-  <dt><b>Returns:</b> {{text}}</dt>
-  <dt><b>Throws:</b> {{text}}</dt>
-  <dt><b>Complexity:</b> {{text}}</dt>
-  <dt><b>Note:</b> {{text}}</dt>
-  <dt><b>Danger:</b> {{text}}</dt>
-  <dt><b>Rationale:</b> {{text}}</dt>
-</dl>
-<h2><a name="functions"></a>Functions</h2>
-<pre>
-<a name="function-spec"></a>{{function}}
-</pre>
-<dl class="function-semantics"> 
-  <dt><b>Requires:</b> {{text}}</dt>
-  <dt><b>Effects:</b> {{text}}</dt>
-  <dt><b>Postconditions:</b> {{text}}</dt>
-  <dt><b>Returns:</b> {{text}}</dt>
-  <dt><b>Throws:</b> {{text}}</dt>
-  <dt><b>Complexity:</b> {{text}}</dt>
-  <dt><b>Note:</b> {{text}}</dt>
-  <dt><b>Danger:</b> {{text}}</dt>
-  <dt><b>Rationale:</b> {{text}}</dt>
-</dl>
-<h2><a name="objects"></a>Objects</h2>
-<p><a name="object-spec"></a>{{Object specifications}}</p>
 <h2><a name="examples"></a>Example(s)</h2>
 <pre>
+#include <a href="../../../boost/thread/condition.hpp">&lt;boost/thread/barrier.hpp&gt;</a>
+#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
 #include &lt;iostream&gt;
-#include <A href="../../../boost/thread/condition.hpp"  condition.hpp?? thread boost ..>&lt;boost/thread/barrier.hpp&gt;</A>
-#include <A href="../../../boost/thread/thread.hpp"  thread boost .. thread.hpp??>&lt;boost/thread/thread.hpp&gt;</A>
 
-const int N_THREADS=10;
+const int N_THREADS = 10;
 boost::barrier gen_barrier(N_THREADS);
+int global_parameter = 0;
+boost::mutex mutex;
 
 static void worker()
 {
     int i;
-    for(i = 0; i &lt; 5; i++)
+    for (i = 0; i &lt; 5; i++)
     {
         // Simulate 5 cycles of computation...
-        if(gen_barrier.wait() == boost::BOOST_SERIAL_THREAD)
+        if (gen_barrier.wait() == boost::BOOST_SERIAL_THREAD)
         {
+		    boost::mutex::scoped_lock lock(mutex);
             global_parameter++;
         }
     }
     // Let one worker "report" the results
-    if(gen_barrier.wait() == boost::BOOST_SERIAL_THREAD)
+    if (gen_barrier.wait() == boost::BOOST_SERIAL_THREAD)
+	{
+	    boost::mutex::scoped_lock lock(lock);
         std::cout &lt;&lt; "Global Parameter=" &lt;&lt; global_parameter &lt;&lt; "\n";
+    }
 }
 
 int main(int, char*[])
