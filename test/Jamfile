@@ -34,7 +34,8 @@ sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp test_tss.cp
 
 template test
     ## sources ##
-    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/boost_unit_test_framework $(threadmon)
+    ## <lib>../../test/build/unit_test
     ## requirements ##
     :
     ## default build ##
