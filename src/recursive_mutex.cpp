@@ -30,47 +30,35 @@ namespace boost {
 recursive_mutex::recursive_mutex()
     : m_count(0)
 {
-    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(new(std::nothrow) CRITICAL_SECTION);
     if (!m_mutex)
         throw thread_resource_error();
+    InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 recursive_mutex::~recursive_mutex()
 {
-    int res = 0;
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
+    delete reinterpret_cast<LPCRITICAL_SECTION>(m_mutex);
 }
 
 void recursive_mutex::do_lock()
 {
-    int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
+    EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 
     if (++m_count > 1)
-    {
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-        assert(res);
-    }
+        LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 void recursive_mutex::do_unlock()
 {
     if (--m_count == 0)
-    {
-        int res = 0;
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-        assert(res);
-    }
+        LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 void recursive_mutex::do_lock(cv_state& state)
 {
-    int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
-
+    EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
     m_count = state;
 }
 
@@ -78,10 +66,7 @@ void recursive_mutex::do_unlock(cv_state& state)
 {
     state = m_count;
     m_count = 0;
-
-    int res = 0;
-    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 recursive_try_mutex::recursive_try_mutex()

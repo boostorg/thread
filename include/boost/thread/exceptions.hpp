@@ -9,13 +9,6 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-// This file is used to configure Boost.Threads during development
-// in order to decouple dependency on any Boost release.  Once
-// accepted into Boost these contents will be moved to <boost/config>
-// or some other appropriate build configuration and all
-// #include <boost/thread/config.hpp> statements will be changed
-// accordingly.
-
 #ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
 #define BOOST_THREAD_EXCEPTIONS_PDM070801_H
 
@@ -32,13 +25,13 @@ namespace boost {
 class lock_error : public std::runtime_error
 {
 public:
-    lock_error() : std::runtime_error("thread lock error") { }
+    lock_error();
 };
 
 class thread_resource_error : public std::runtime_error
 {
 public:
-    thread_resource_error() : std::runtime_error("thread resource error") { }
+    thread_resource_error();
 };
 
 } // namespace boost

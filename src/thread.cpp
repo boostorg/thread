@@ -10,7 +10,6 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/thread.hpp>
-#include <boost/thread/semaphore.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
 #include <cassert>
@@ -167,8 +166,10 @@ void thread::sleep(const xtime& xt)
     //  an absolute time.
     nanosleep(&ts, 0);
 #   else
-    semaphore sema;
-    sema.down(xt);
+    mutex mx;
+    mutex::scoped_lock lock(mx);
+    condition cond;
+    cond.timed_wait(lock, xt);
 #   endif
 #endif
 }

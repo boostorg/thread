@@ -70,17 +70,16 @@
         Supported in Boost.Threads</a></h2>
 
         <p>The Boost.Threads library supplies a set of low level primitives for
-        writing multi-threaded programs, such as semaphores, mutexes and
-        condition variables. In fact, the first release of Boost.Threads
-        supports only these low level primitives. However, computer science
-        research has shown that use of these primitives is difficult since
-        there&#39;s no way to mathematically prove that a usage pattern is
-        correct, meaning it doesn&#39;t result in race conditions or deadlocks.
-        There are several algebras (such as CSP, CCS and Join calculus) that
-        have been developed to help write provably correct parallel processes.
-        In order to prove the correctness these processes must be coded using
-        higher level abstractions. So why does Boost.Threads support the lower
-        level concepts?</p>
+        writing multi-threaded programs, such as mutexes and condition variables.
+        In fact, the first release of Boost.Threads supports only these low level
+        primitives. However, computer science research has shown that use of these
+        primitives is difficult since there&#39;s no way to mathematically prove
+        that a usage pattern is correct, meaning it doesn&#39;t result in race
+        conditions or deadlocks. There are several algebras (such as CSP, CCS and
+        Join calculus) that have been developed to help write provably correct
+        parallel processes. In order to prove the correctness these processes must
+        be coded using higher level abstractions. So why does Boost.Threads support
+        the lower level concepts?</p>
 
         <p>The reason is simple: the higher level concepts need to be
         implemented using at least some of the lower level concepts. So having
