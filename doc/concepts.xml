@@ -195,7 +195,7 @@
 				and constructed for the Mutex object.</para>
 				
 				<para>A Mutex is
-				<ulink url="../../utility/utility.htm#Class%20noncopyable">
+				<ulink url="../../libs/utility/utility.htm#Class%20noncopyable">
 				NonCopyable</ulink>.</para>
 				<para>For a Mutex type <code>M</code>
 				and an object <code>m</code> of that type, 
@@ -1180,7 +1180,7 @@
 									the specified time, if any). A
 									read-lock will be granted to all pending readers 
 									before any other thread can acquire a write-lock.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1188,7 +1188,7 @@
 									<entry>write-lock</entry>
 									<entry>Grant the write-lock immediately, if and
 									only if there are no pending read-lock requests.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1200,7 +1200,7 @@
 									for read-locks exist. If other write-lock
 									requests exist, the lock is granted in accordance
 									with the intra-class scheduling policy.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1212,18 +1212,18 @@
 									for read-locks exist. If other write-lock
 									requests exist, the lock is granted in accordance
 									with the intra-class scheduling policy.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
 									<entry>read-locked</entry>
 									<entry>promote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 								<row> 
 									<entry>write-locked</entry>
 									<entry>demote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 							</tbody>
 						</tgroup>
@@ -1261,7 +1261,7 @@
 									<entry>Grant the additional read-lock immediately, 
 									<emphasis role="bold">IF</emphasis> no outstanding
 									requests for a write-lock exist; otherwise TODO.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1272,7 +1272,7 @@
 									releases its lock. The read lock will be granted
 									once no other outstanding write-lock requests
 									exist.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1289,7 +1289,7 @@
 									is granted in accordance with the intra-class
 									scheduling policy. This request will be granted
 									before any new read-lock requests are granted.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1301,18 +1301,18 @@
 									granted in accordance with the intra-class
 									scheduling policy. This request will be granted
 									before any new read-lock requests are granted.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
 									<entry>read-locked</entry>
 									<entry>promote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 								<row> 
 									<entry>write-locked</entry>
 									<entry>demote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 							</tbody>
 						</tgroup>
@@ -1355,7 +1355,7 @@
 									write-locks is granted and released. If other
 									read-lock requests exist, all read-locks will be
 									granted as a group.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1366,7 +1366,7 @@
 									outstanding write-lock requests exist, they will
 									have to wait until all current read-lock requests
 									are serviced.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1385,7 +1385,7 @@
 									lock will be granted to one of them in accordance
 									with the intra-class scheduling policy.</para>
 									
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1399,18 +1399,18 @@
 									released. If other write-lock requests exist,
 									this lock will be granted in accordance with the
 									intra-class scheduling policy.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
 									<entry>read-locked</entry>
 									<entry>promote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 								<row> 
 									<entry>write-locked</entry>
 									<entry>demote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 							</tbody>
 						</tgroup>
@@ -1451,7 +1451,7 @@
 									write-lock requests exist, this lock will not
 									be granted until at least one of the write-locks
 									is granted and released.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1464,7 +1464,7 @@
 									exist, exactly one read-lock request will be
 									granted before the next write-lock is granted.
 									</para>
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
@@ -1485,7 +1485,7 @@
 									in accordance with the intra-class
 									scheduling policy.</para></entry>
 									
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 								</row>
 								<row> 
 									<entry>write-locked</entry>
@@ -1498,18 +1498,18 @@
 									released. If other write-lock requests exist,
 									this lock will be granted in accordance with
 									the intra-class scheduling policy.
-									<p>TODO: try-lock, timed-lock.</p>
+									<para>TODO: try-lock, timed-lock.</para>
 									</entry>
 								</row>
 								<row> 
 									<entry>read-locked</entry>
 									<entry>promote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 								<row> 
 									<entry>write-locked</entry>
 									<entry>demote</entry>
-									<entry><p>TODO</p></entry>
+									<entry><para>TODO</para></entry>
 								</row>
 							</tbody>
 						</tgroup>
@@ -1553,7 +1553,7 @@
 				requirements and constructed for the ReadWriteMutex object.</para>
 				
 				<para>A ReadWriteMutex is 
-				<ulink url="../../utility/utility.htm#Class%20noncopyable">NonCopyable</ulink>.
+				<ulink url="../../libs/utility/utility.htm#Class%20noncopyable">NonCopyable</ulink>.
 				</para>
 				
 				<para>For a ReadWriteMutex type <code>M</code>, 
