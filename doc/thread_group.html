@@ -1,0 +1,150 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, thread_group</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">thread_group</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<p>The <tt>thread_group</tt> class provides easy grouping of threads in order to simplify several
+common thread creation and management idioms.</p>
+
+<h2>Header</h2>
+
+<pre>
+#include &lt;boost/thread/thread.hpp&gt;
+</pre>
+
+<h2>Public Interface</h2>
+
+<hr width="50%" align="left">
+
+<pre>
+    class thread_group : boost::noncopyable
+    {
+    public:
+        thread_group();
+        ~thread_group();
+
+        thread* create_thread(const boost::function0&lt;void&gt;&amp; threadfunc);
+        void add_thread(thread* thrd);
+        void remove_thread(thread* thrd);
+        void join_all();
+    };
+</pre>    
+
+<hr width="50%" align="left">
+
+<h3>Constructor</h3>
+
+<pre>
+    thread_group();
+</pre>
+
+<p>Constructs a <tt>thread_group</tt> object.</p>
+
+<h3>Destructor</h3>
+
+<pre>
+    ~thread_group();
+</pre>
+
+<p>Destructs a <tt>thread_group</tt> object, deleting the managed <tt>thread</tt> objects.</p>
+
+<h3>create_thread</h3>
+
+<pre>
+    thread* create_thread(const boost::function0&lt;void&gt;&amp; threadfunc);
+</pre>
+
+<p>Creates a new <tt>thread</tt> object that executes <tt>threadfunc</tt> and adds it to the
+<tt>thread_group</tt> object's list of managed <tt>thread</tt> objects.</p>
+
+<h3>add_thread</h3>
+
+<pre>
+    void add_thread(thread* thrd);
+</pre>
+
+<p>Adds <tt>thrd</tt> to the <tt>thread_group</tt> object's list of managed <tt>thread</tt>
+objects.  The <tt>thrd</tt> object must have been allocated via operator new and will
+be deleted when the group is destroyed.</p>
+
+<h3>remove_thread</h3>
+
+<pre>
+    void remove_thread(thread* thrd);
+</pre>
+
+<p>Removes <tt>thrd</tt> from the <tt>thread_group</tt> object's list of managed <tt>thread</tt>
+objects.</p>
+
+<h3>join_all</h3>
+
+<pre>
+    void join_all();
+</pre>
+
+<p>Calls join() for each of the managed <tt>thread</tt> objects.</p>
+
+<h2>Example Usage</h2>
+
+<pre>
+#include &lt;boost/thread/thread.hpp&gt;
+#include &lt;iostram&gt;
+
+int count = 0;
+boost::mutex mutex;
+
+void increment_count()
+{
+   boost::mutex::lock lock(mutex);
+   std::cout &lt;&lt; &quot;count = &quot; &lt;&lt; ++count &lt;&lt; std::endl;
+}
+
+int main(int argc, char* argv[])
+{
+   boost::thread_group threads;
+   for (int i = 0; i &lt; 10; ++i)
+      threads.create_thread(&increment_count);
+   threads.join_all();
+}
+</pre>
+
+<p>The output is:</p>
+
+<pre>
+count = 1
+count = 2
+count = 3
+count = 4
+count = 5
+count = 6
+count = 7
+count = 8
+count = 9
+count = 10
+</pre>
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>
