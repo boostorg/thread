@@ -3,15 +3,16 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, thread</title>
 </head>
 
-<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
 
 <table border="0" cellpadding="7" cellspacing="0" width="100%">
     <tr>
         <td valign="top" width="300">
-			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
         </td>
         <td valign="top">
 			<h1 align="center">Boost.Threads</h1>
@@ -22,69 +23,105 @@
 
 <hr>
 
-<p>The <tt>thread</tt> class provides the functionality to create and manage threads
-within the <b>Boost.Threads</b> library. See <a href="thread_formal_definition.html">Formal
-Definition of &quot;Thread&quot;</a> for a precise description of what a thread
-is.</p>
+<p><A href="#Introduction">Introduction</A><br>
+<A href="#Header">
+Header</A><br>
+<A href="#Synopsis">
+Synopsis</A><br>
+<A href="#Members">
+Members</A><br>
+<A href="#Example">
+Example</A></p>
 
-<h2>Header</h2>
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>The <code>thread</code> class represents threads of execution, and provides
+the functionality to create and manage threads within the <b>Boost.Threads</b>
+library. See <A href="thread_formal_definition.html">Formal Definition of "Thread"</A>
+for a precise description of "thread of execution", and definitions of thread states
+such as "blocked".</p>
+
+<p>A thread of execution has an initial function. For the program's
+initial thread, the initial function is <code>main()</code>. For other
+threads, the initial function is <code>operator()</code> of the function object
+passed to the class <code>thread</code> constructor.</p>
+
+<p>A thread of execution is said to be "finished" or "finished
+execution" when its initial function returns or is terminated, and any
+associated implementation resources have been released.</p>
+
+<p>Except as described below, the policy used by an implementation of
+<b>Boost.Threads</b> to schedule transitions between thread states is
+unspecified.</p>
+
+<h2><a name="Header">Header</a></h2>
 
 <pre>
-#include &lt;boost/thread/thread.hpp&gt;
+#include <A href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</A>
 </pre>
 
-<h2>Public Interface</h2>
-
-<hr width="50%" align="left">
+<h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
-    class thread : boost::noncopyable
-    {
-    public:
-        thread();
-        thread(const boost::function0&lt;void&gt;&amp; threadfunc);
-        ~thread();
+class thread : boost::noncopyable
+{
+public:
+    thread();
+    thread(const boost::function0&lt;void&gt;&amp; threadfunc);
+    ~thread();
 
-        bool operator==(const thread&amp; other) const;
-        bool operator!=(const thread&amp; other) const;
+    bool operator==(const thread&amp; other) const;
+    bool operator!=(const thread&amp; other) const;
 
-        void join();
-        bool try_join();
-        bool timed_join(const xtime& xt);
+    void join();
+    bool try_join();
+    bool timed_join(const xtime&amp; xt);
 
-        static void sleep(const xtime& xt);
-        static void yield();
-    };
-</pre>    
+    static void sleep(const xtime&amp; xt);
+    static void yield();
+};
+</pre>
 
-<hr width="50%" align="left">
+<h2>
+    <a name="Members">Members</a>
+</h2>
 
-<h3>Constructor</h3>
+<hr>
+<h3>Constructors</h3>
 
 <pre>
     thread();
 </pre>
 
-<p>Constructs a <tt>thread</tt> object that's associated with the currently running thread
+<p><b>Effects:</b> Constructs a <code>thread</code> object for the current thread
 of execution.</p>
 
 <pre>
-    thread(const boost::function0&lt;void&gt;&amp; threadfunc);
+    thread(const <A href="../../function/index.html">boost::function0</A>&lt;void&gt;&amp; threadfunc);
 </pre>
 
-<p>Starts a new thread of execution that calls <tt>threadfunc</tt> and constructs a <tt>thread</tt>
-object that's associated with it.</p>
+<p><b>Effects:</b> Starts a new thread of execution.  Copies <code>threadfunc</code>
+(which in turn copies the function object wrapped by <code>threadfunc</code>) to an internal
+location which persists for the lifetime of the new thread of execution.  Calls
+<code>operator()</code> on the copy of the <code>threadfunc</code> function object in the
+new thread of execution.</p>
 
+<p><b>Throws:</b> <code>std::bad_alloc</code> if a new thread of execution cannot be started.</p>
+
+<hr>
 <h3>Destructor</h3>
 
 <pre>
     ~thread();
 </pre>
 
-<p>Destructs a <tt>thread</tt> object.  The actual thread of execution may continue to run after
-the <tt>thread</tt> object has been destroyed.  If you need to insure a thread of execution
-runs to completion before the <tt>thread</tt> object is destroyed you should call join().</p>
+<p><b>Effects:</b> Destroys the <code>thread</code> object.  The actual thread of execution may
+continue to execute after the <code>thread</code> object has been destroyed.</p>
 
+<p><b>Notes:</b> To ensure a thread of execution runs to completion before the <code>thread</code>
+object is destroyed, call <code>join()</code>.</p>
+
+<hr>
 <h3>Comparison Operators</h3>
 
 <pre>
@@ -92,56 +129,79 @@ runs to completion before the <tt>thread</tt> object is destroyed you should cal
     bool operator!=(const thread&amp; other);
 </pre>
 
-<p>Compares a <tt>thread</tt> object to <tt>other</tt> to see if they are associated with the same
-running thread of execution.</p>
+<p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>other</code>
+represent the same the same thread of execution.</p>
 
+<hr>
 <h3>join</h3>
 
 <pre>
-   void join();
+    void join();
 </pre>
 
-<p>Causes the current thread to "join" the associated running thread of execution.  In other words,
-the current thread will block until the associated running thread of execution finishes.</p>
+<p><b>Requires:</b> <code>*this != thread()</code></p>
 
+<p><b>Effects:</b> The current thread of execution blocks until the thread of execution
+represented by <code>*this</code> finishes. In other words, causes the currently
+executing thread of execution to "join" the associated running thread of execution.</p>
+
+<hr>
 <h3>try_join</h3>
 
 <pre>
-   bool try_join();
+    bool try_join();
 </pre>
 
-<p>Attempts to "join" a thread with out blocking when the thread of execution is still running.
-If the thread of execution has finished the return value shall be <tt>true</tt>, otherwise it shall
-be <tt>false</tt>.</p>
+<p><b>Requires:</b> <code>*this != thread()</code></p>
 
+<p><b>Returns:</b> <code>true</code> if the thread of execution represented by <code>*this</code>
+has finished execution.</p>
+
+<p><b>Notes:</b> <code>try_join()</code> is in effect a non-blocking attempt to "join".</p>
+
+<hr>
 <h3>timed_join</h3>
 
 <pre>
-   bool timed_join(const xtime& xt);
+    bool timed_join(const xtime&amp; xt);
 </pre>
 
-<p>Attempts to "join" a thread, blocking until either the thread of execution finishes or
-until <tt>xt</tt>.  If the thread of execution has finished or finishes before <tt>xt</tt>
-the return value shall be <tt>true</tt>, otherwise it shall be <tt>false</tt>.</p>
+<p><b>Requires:</b> <code>*this != thread()</code></p>
 
+<p><b>Effects:</b> The current thread of execution blocks until either the thread of execution
+represented by <code>*this</code> finishes or the time specified by <code>xt</code>
+expires.</p>
+
+<p><b>Returns:</b> <code>true</code> if the thread of execution represented by <code>*this</code>
+finished execution.</p>
+
+<p><b>Notes:</b> <code>timed_join()</code> is in effect an attempt to "join" which
+only blocks for a specified time.</p>
+
+<hr>
 <h3>sleep</h3>
 
 <pre>
     static void sleep(const xtime&amp; xt);
 </pre>
 
-<p>Causes the current thread to block until <tt>xt</tt>.</p>
+<p><b>Effects:</b> The current thread of execution blocks until <code>xt</code>.</p>
 
+<hr>
 <h3>yield</h3>
 
 <pre>
     static void yield();
 </pre>
 
-<p>Causes the current thread to give up the rest of its time slice to any other thread that may be waiting
-on CPU time.  This method may also used to allow for a non-preemptive implementation.</p>
+<p><b>Effects:</b> The current thread of execution is placed in the "ready" state.</p>
 
-<h2>Example Usage</h2>
+<p><b>Notes:</b> Allow the current thread to give up the rest of its time slice
+(or other scheduling quota) to another thread. Also useful in non-preemptive
+implementations.</p>
+
+<hr>
+<h2><a name="Example">Example Usage</a></h2>
 
 <pre>
 #include &lt;boost/thread/thread.hpp&gt;
@@ -155,19 +215,19 @@ struct thread_alarm
        boost::xtime xt;
        boost::xtime_get(&amp;xt, boost::TIME_UTC);
        xt.sec += m_secs;
-   
+
        boost::thread::sleep(xt);
-   
-       std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
+
+       std::cout &lt;&lt; "alarm sounded..." &lt;&lt; std::endl;
    }
-   
+
    int m_secs;
 };
 
 int main(int argc, char* argv[])
 {
    int secs = 5;
-   std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
+   std::cout &lt;&lt; "setting alarm for 5 seconds..." &lt;&lt; std::endl;
    boost::thread thrd(thread_alarm(5));
    thrd.join();
 }
@@ -181,7 +241,7 @@ alarm sounded...
 </pre>
 <hr>
 
-<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+<p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
 2001 all rights reserved.</i></p>
 
 </body>
