@@ -31,17 +31,11 @@ SEARCH on <module@>threads.jam = $(SUBDIR) ;
 include <module@>threads.jam ;
 
 {
-	ADVAPI32 = ;
-	if ($NT)
-	{
-		ADVAPI32 = <find-library>advapi32 ;
-	}
-	
     template thread_libs
         ## sources ##
         : <template>thread_base
         ## requirements ##
-        : $(ADVAPI32)
+        :
         ## default build ##
         :
     ;

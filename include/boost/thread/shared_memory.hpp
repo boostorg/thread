@@ -42,9 +42,6 @@ public:
 
     void* get() const { return m_ptr; }
 
-	static const char* root();
-	static void set_root(const char* root);
-
 private:
     void init(const char *name, std::size_t len, int flags,
         const boost::function1<void, void*>* initfunc);

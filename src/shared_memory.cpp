@@ -32,157 +32,49 @@
 
 namespace {
 
-#if defined(BOOST_HAS_WINTHREADS)
-
-// Terminal services detection, as found in MSDN
-bool validate_prod_suite(const char* suite);
-
-bool has_terminal_services()
+std::string encode(const char* str)
 {
-    bool result = FALSE;
-    DWORD version;
-    OSVERSIONINFOEXA osver;
-    DWORDLONG condition = 0;
-    HMODULE hmodk32 = NULL;
-    HMODULE hmodntdll = NULL;
-    typedef ULONGLONG (WINAPI *PFnVerSetCondition)
-        (ULONGLONG, ULONG, UCHAR);
-    typedef BOOL (WINAPI *PFnVerifyVersionA)
-        (POSVERSIONINFOEXA, DWORD, DWORDLONG);
-
-    PFnVerSetCondition pfnVerSetCondition;
-    PFnVerifyVersionA pfnVerifyVersionA;
-
-    version = GetVersion();
-
-    // Are we running Windows NT?
-    if (!(version & 0x80000000))
-    {
-        // Is it Windows 2000 or greater?
-        if (LOBYTE(LOWORD(version)) > 4)
-        {
-            // On Windows 2000 and later, use the VerifyVersionInfo and
-            // VerSetConditionMask functions. Don't static link because
-            // it won't load on earlier systems.
-            hmodntdll = GetModuleHandleA("ntdll.dll");
-            if (hmodntdll)
-            {
-                pfnVerSetCondition = (PFnVerSetCondition)GetProcAddress(
-                    hmodntdll, "VerSetConditionMask");
-                if (pfnVerSetCondition != NULL)
-                {
-                    condition = (*pfnVerSetCondition)(condition,
-                        VER_SUITENAME, VER_AND);
-
-                    // Get a VerifyVersionInfo pointer.
-                    hmodk32 = GetModuleHandleA("KERNEL32.DLL");
-                    if (hmodk32 != NULL)
-                    {
-                        pfnVerifyVersionA = (PFnVerifyVersionA)GetProcAddress(
-                            hmodk32, "VerifyVersionInfoA") ;
-                        if (pfnVerifyVersionA != NULL)
-                        {
-                            ZeroMemory(&osver, sizeof(osver));
-                            osver.dwOSVersionInfoSize = sizeof(osver);
-                            osver.wSuiteMask = VER_SUITE_TERMINAL;
-                            result = (*pfnVerifyVersionA)(&osver,
-                                VER_SUITENAME, condition);
-                        }
-                    }
-                }
-            }
-        }
-        else  // This is Windows NT 4.0 or earlier.
-            result = validate_prod_suite("Terminal Server");
-    }
-
-    return result;
-}
-
-bool validate_prod_suite(const char* suite)
-{
-    bool validated = false;
-    long result;
-    HKEY hkey = NULL;
-    DWORD type = 0;
-    DWORD size = 0;
-    LPSTR suites = NULL;
-    LPSTR csuite;
-
-    // Open the ProductOptions key.
-    result = RegOpenKeyA(HKEY_LOCAL_MACHINE,
-		"System\\CurrentControlSet\\Control\\ProductOptions", &hkey);
-    if (result != ERROR_SUCCESS)
-        goto exit;
-
-    // Determine required size of ProductSuite buffer.
-    result = RegQueryValueExA( hkey, "ProductSuite", NULL, &type,
-        NULL, &size );
-    if (result != ERROR_SUCCESS || !size)
-        goto exit;
-
-    // Allocate buffer.
-    suites = (LPSTR)LocalAlloc(LPTR, size);
-    if (!suites)
-        goto exit;
-
-    // Retrieve array of product suite strings.
-    result = RegQueryValueExA(hkey, "ProductSuite", NULL, &type,
-        (LPBYTE)suites, &size);
-    if (result != ERROR_SUCCESS || type != REG_MULTI_SZ)
-        goto exit;
-
-    // Search for suite name in array of strings.
-    csuite = suites;
-    while (*csuite)
-    {
-        if (lstrcmpA(csuite, suite) == 0)
-        {
-            validated = true;
-            break;
-        }
-        csuite += (lstrlenA(csuite) + 1);
-    }
-
-exit:
-    if (suites)
-        LocalFree(suites);
-
-    if (hkey)
-        RegCloseKey(hkey);
-
-    return validated;
-}
-
-#endif // BOOST_HAS_WINTHREADS
-
-boost::once_flag once = BOOST_ONCE_INIT;
-
-class root_object
-{
-public:
-    root_object()
-    {
-#if defined(BOOST_HAS_WINTHREADS)
-		if (has_terminal_services())
-			m_root = "Local\\";
+	const char* digits="0123456789abcdef";
+	std::string result;
+	while (str)
+	{
+		if (((*str >= '0') && (*str <= '9')) ||
+			((*str >= 'a') && (*str <= 'z')) ||
+			((*str >= 'A') && (*str <= 'Z')) ||
+			(*str == '/') || (*str == '.') || (*str == '_'))
+		{
+			result += *str;
+		}
+		else if (*str == ' ')
+		{
+			result += '+';
+		}
 		else
-			m_root = "";
-#elif defined(BOOST_HAS_PTHREADS)
-        m_root = "/";
-#endif
-    }
+		{
+			result += '%';
+			int v = *str;
+			std::string hex;
+			while (v)
+			{
+				hex = std::string() + digits[v % 16] + hex;
+				v /= 16;
+			}
+			result += hex;
+		}
+	}
+	return result;
+}
 
-    std::string m_root;
-    boost::mutex m_mutex;
-};
-
-root_object* g_root = 0;
-
-void init_root()
+std::string get_root()
 {
-    static root_object instance;
-    g_root = &instance;
+
+#if defined(BOOST_HAS_WINTHREADS)
+	return "";
+#elif defined(BOOST_HAS_PTHREADS)
+    return "/";
+#else
+	return "";
+#endif
 }
 
 } // namespace
@@ -231,7 +123,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
     if (name[0] == '%')
         sname = &name[1];
     else
-        sname = std::string(root()) + name;
+        sname = get_root() + encode(name);
     std::string mxname = sname + "mx94543CBD1523443dB128451E51B5103E";
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -344,20 +236,6 @@ void shared_memory::init(const char *name, size_t len, int flags,
     res = sem_unlink(mxname.c_str());
     assert(res == 0);
 #endif
-}
-
-const char* shared_memory::root()
-{
-    call_once(&init_root, once);
-    mutex::scoped_lock lock(g_root->m_mutex);
-    return g_root->m_root.c_str();
-}
-
-void shared_memory::set_root(const char* root)
-{
-    call_once(&init_root, once);
-    mutex::scoped_lock lock(g_root->m_mutex);
-    g_root->m_root = root;
 }
 
 }   // namespace boost
