@@ -13,54 +13,46 @@
 # declare the location of this subproject relative to the root
 subproject libs/thread/example ;
 
-# Do some OS-specific setup
-if $(NT)
-{
-    BOOST_THREADMON_LIB = <lib>../build/libboost_threadmon ;
-}
-else
-{
-    BOOST_THREADMON_LIB = ;
-}
+# declare BUILD_THREADMON to 0 (just in case the user defined it) so that threads.jam
+# knows what to do with <dll>boost_threadmon
+BUILD_THREADMON = 0 ;
+
+# include threads.jam for Boost.Threads global build information
+SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
+include <module@>threads.jam ;
 
 #######################
-
-#
 # Declare the Boost.Threads monitor example program.
-#
 
 exe monitor : monitor/monitor.cpp
-    <lib>../build/libboost_thread
-	$(BOOST_THREADMON_LIB)
+    <lib>../build/boost_thread
+    $(BOOST_THREADMON_DLL) # if on Win32 and not using pthreads-win32
     # requirements
     : <include>$(BOOST_ROOT)
+    $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
     : debug release ;
 
 #######################
-
-#
 # Declare the Boost.Threads starvephil example program.
-#
 
 exe starvephil : starvephil/starvephil.cpp
-    <lib>../build/libboost_thread
-	$(BOOST_THREADMON_LIB)
+    <lib>../build/boost_thread
+    $(BOOST_THREADMON_DLL) # if on Win32 and not using pthreads-win32
     # requirements
     : <include>$(BOOST_ROOT)
+    $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
     : debug release ;
 
 #######################
-
-#
 # Declare the Boost.Threads tennis example program.
-#
 
 exe tennis : tennis/tennis.cpp
-    <lib>../build/libboost_thread
-	$(BOOST_THREADMON_LIB)
+    <lib>../build/boost_thread
+    $(BOOST_THREADMON_DLL) # if on Win32 and not using pthreads-win32
     # requirements
     : <include>$(BOOST_ROOT)
+    $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
     : debug release ;
