@@ -92,7 +92,7 @@ private:
 #endif
 
         typedef typename detail::thread::lock_ops<M> lock_ops;
-        lock_ops::lock_state state;
+        typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
 #if defined(BOOST_HAS_PTHREADS)
@@ -112,7 +112,7 @@ private:
 #endif
 
         typedef typename detail::thread::lock_ops<M> lock_ops;
-        lock_ops::lock_state state;
+        typename lock_ops::lock_state state;
         lock_ops::unlock(mutex, state);
 
         bool ret = false;
