@@ -38,7 +38,7 @@ extern "C"
 
 static inline uint64_t get_nanoseconds()
 {
-	using boost::detail::thread::force_cast;
+    using boost::detail::thread::force_cast;
     return(force_cast<uint64_t>(AbsoluteToNanoseconds(UpTime())));
 }
 

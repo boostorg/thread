@@ -20,7 +20,7 @@
 #if defined(BOOST_HAS_WINTHREADS)
 #   ifndef NOMINMAX
 #      define NOMINMAX
-#   endif 
+#   endif
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
@@ -93,7 +93,7 @@ void condition::notify_one()
 
         ++m_waiting;
         --m_blocked;
-		signals = 1;
+        signals = 1;
     }
     else
     {
@@ -116,8 +116,8 @@ void condition::notify_one()
         }
     }
 
-	res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-	assert(res);
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    assert(res);
 
     if (signals)
     {
@@ -519,7 +519,7 @@ void condition::do_wait()
     OSStatus lStatus = noErr;
     lStatus = safe_wait_on_semaphore(m_queue, kDurationForever);
     assert(lStatus == noErr);
-    
+
     unsigned was_waiting=0;
     unsigned was_gone=0;
 
@@ -579,7 +579,7 @@ bool condition::do_timed_wait(const xtime& xt)
     assert(lStatus == noErr || lStatus == kMPTimeoutErr);
 
     bool ret = (lStatus == noErr);
-    
+
     unsigned was_waiting=0;
     unsigned was_gone=0;
 

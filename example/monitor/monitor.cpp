@@ -15,12 +15,12 @@ class buffer_t
 {
 public:
     typedef typename M::scoped_lock scoped_lock;
-    
+
     buffer_t(int n)
         : p(0), c(0), full(0), buf(n)
     {
     }
-    
+
     void send(int m)
     {
         scoped_lock lk(mutex);
@@ -42,13 +42,13 @@ public:
         cond.notify_one();
         return i;
     }
-    
+
     static buffer_t& get_buffer()
     {
         static buffer_t buf(2);
         return buf;
     }
-    
+
     static void do_sender_thread()
     {
         for (int n = 0; n < ITERS; ++n)
@@ -60,11 +60,11 @@ public:
             get_buffer().send(n);
         }
     }
-    
+
     static void do_receiver_thread()
     {
-		for (int x=0; x < (ITERS/2); ++x)
-		{
+        for (int x=0; x < (ITERS/2); ++x)
+        {
             int n = get_buffer().receive();
             {
                 boost::mutex::scoped_lock lock(io_mutex);
@@ -72,7 +72,7 @@ public:
             }
         }
     }
-    
+
 private:
     M mutex;
     boost::condition cond;
@@ -86,11 +86,11 @@ void do_test(M* dummy=0)
     typedef buffer_t<M> buffer_type;
     buffer_type::get_buffer();
     boost::thread thrd1(&buffer_type::do_receiver_thread);
-	boost::thread thrd2(&buffer_type::do_receiver_thread);
+    boost::thread thrd2(&buffer_type::do_receiver_thread);
     boost::thread thrd3(&buffer_type::do_sender_thread);
     thrd1.join();
     thrd2.join();
-	thrd3.join();
+    thrd3.join();
 }
 
 void test_buffer()

@@ -32,24 +32,24 @@ TaskStorageIndex g_ulIndex(0UL);
 
 void do_thread_startup()
 {
-	if(g_ulIndex == 0UL)
-	{
-		OSStatus lStatus = MPAllocateTaskStorageIndex(&g_ulIndex);
-		assert(lStatus == noErr);
-	}
-	set_thread_cleanup_task(NULL);
+    if(g_ulIndex == 0UL)
+    {
+        OSStatus lStatus = MPAllocateTaskStorageIndex(&g_ulIndex);
+        assert(lStatus == noErr);
+    }
+    set_thread_cleanup_task(NULL);
 }
 
 void do_thread_cleanup()
 {
-	void (*pfnTask)() = MPGetTaskValue(g_ulIndex)
+    void (*pfnTask)() = MPGetTaskValue(g_ulIndex)
 }
 
 
 void set_thread_cleanup_task(void (*pfnTask)())
 {
-	lStatus = MPSetTaskValue(g_ulIndex, reinterpret_cast<TaskStorageValue>(pfnTask));
-	assert(lStatus == noErr);
+    lStatus = MPSetTaskValue(g_ulIndex, reinterpret_cast<TaskStorageValue>(pfnTask));
+    assert(lStatus == noErr);
 }
 
 
