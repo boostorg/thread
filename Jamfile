@@ -1,6 +1,0 @@
-subproject libs/thread ;
-
-#NEEDLIBS = "-lpthread"
-
-# Read subproject Jamfiles
-subinclude libs/thread/src libs/thread/test libs/thread/example ;

@@ -5,6 +5,7 @@
 #include <boost/thread/semaphore.hpp>
 //#include <boost/thread/atomic.hpp>
 #include <boost/thread/tss.hpp>
+#include <boost/thread/once.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 
@@ -405,16 +406,41 @@ void test_semaphore()
     BOOST_TEST(boost::read(atomic) == 20);
 }*/
 
+boost::mutex tss_mutex;
+int tss_instances = 0;
+
+struct tss_value_t
+{
+    tss_value_t()
+    {
+        boost::mutex::scoped_lock lock(tss_mutex);
+        ++tss_instances;
+        value = 0;
+    }
+    ~tss_value_t()
+    {
+        boost::mutex::scoped_lock lock(tss_mutex);
+        --tss_instances;
+    }
+    int value;
+};
+
+void destroy_tss_value(void* ptr)
+{
+    delete static_cast<tss_value_t*>(ptr);
+}
+
+boost::tss tss_value(&destroy_tss_value);
+
 void test_tss_thread()
 {
-    static boost::tss value;
-    value.set(new int(0));
+    tss_value.set(new tss_value_t);
 
     for (int i=0; i<1000; ++i)
     {
-        int* pn = static_cast<int*>(value.get());
-        BOOST_TEST(*pn == i);
-        ++*pn;
+        int& pn = static_cast<tss_value_t*>(tss_value.get())->value;
+        BOOST_TEST(pn == i);
+        ++pn;
         boost::thread::yield();
     }
 }
@@ -426,6 +452,7 @@ void test_tss()
     for (int i=0; i<5; ++i)
         threads.create_thread(&test_tss_thread);
     threads.join_all();
+    BOOST_TEST(tss_instances == 0);
 }
 
 int test_main(int, char*[])

@@ -10,6 +10,8 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/tss.hpp>
+#include <boost/thread/once.hpp>
+#include "threadmon.hpp"
 #include <stdexcept>
 #include <cassert>
 
@@ -17,16 +19,69 @@
 #   include <windows.h>
 #endif
 
+#if defined(BOOST_HAS_WINTHREADS)
+#include <set>
+namespace {
+    typedef std::pair<boost::tss*,void(*)(void*)> cleanup_info;
+    struct cleanup_info_less
+    {
+		bool operator()(const cleanup_info& x, const cleanup_info& y) const
+		{
+			return x.first < y.first;
+		}
+    };
+    typedef std::set<cleanup_info, cleanup_info_less> cleanup_handlers;
+
+    DWORD key;
+
+    void init_cleanup_key()
+    {
+        key = TlsAlloc();
+    }
+
+    void __cdecl cleanup()
+    {
+        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
+        for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+        {
+            cleanup_info info = *it;
+            void* ptr = info.first->get();
+            if (ptr)
+                info.second(ptr);
+        }
+        delete handlers;
+    }
+
+    cleanup_handlers* get_handlers()
+    {
+        static boost::once_flag once = BOOST_ONCE_INIT;
+        boost::call_once(&init_cleanup_key, once);
+
+        cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
+        if (!handlers)
+        {
+            handlers = new cleanup_handlers;
+            TlsSetValue(key, handlers);
+            on_thread_exit(&cleanup);
+        }
+
+        return handlers;
+    }
+}
+#endif
+
 namespace boost {
 
 #if defined(BOOST_HAS_WINTHREADS)
-tss::tss()
+tss::tss(void (*cleanup)(void*))
 {
     m_key = TlsAlloc();
     assert(m_key != 0xFFFFFFFF);
 
     if (m_key == 0xFFFFFFFF)
         throw std::runtime_error("boost::tss : failure to construct");
+
+    m_cleanup = cleanup;
 }
 
 tss::~tss()
@@ -42,12 +97,23 @@ void* tss::get() const
 
 bool tss::set(void* value)
 {
+    if (value && m_cleanup)
+    {
+        cleanup_handlers* handlers = get_handlers();
+        assert(handlers);
+        if (!handlers)
+            return false;
+        cleanup_info info(this, m_cleanup);
+        cleanup_handlers::iterator it = handlers->lower_bound(info);
+        if (it == handlers->end())
+            handlers->insert(cleanup_info(this, m_cleanup));
+    }
     return TlsSetValue(m_key, value);
 }
 #elif defined(BOOST_HAS_PTHREADS)
-tss::tss()
+tss::tss(void (*cleanup)(void*))
 {
-    int res = pthread_key_create(&m_key, 0);
+    int res = pthread_key_create(&m_key, cleanup);
     assert(res == 0);
 
     if (res != 0)

@@ -9,15 +9,13 @@
 // about the suitability of this software for any purpose.  
 // It is provided "as is" without express or implied warranty.
 
-#ifndef BOOST_TSS_WEK070601_HPP
-#define BOOST_TSS_WEK070601_HPP
+#ifndef BOOST_ONCE_WEK080101_HPP
+#define BOOST_ONCE_WEK080101_HPP
 
 #include <boost/thread/config.hpp>
 #ifndef BOOST_HAS_THREADS
 #   error	Thread support is unavailable!
 #endif
-
-#include <boost/utility.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -25,28 +23,16 @@
 
 namespace boost {
 
-class tss : private noncopyable
-{
-public:
-    tss(void (*cleanup)(void*)=0);
-    ~tss();
-
-    void* get() const;
-    bool set(void* value);
-
-private:
-#if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_key;
-    void (*m_cleanup)(void*);
-#elif defined(BOOST_HAS_PTHREADS)
-    pthread_key_t m_key;
+#if defined(BOOST_HAS_PTHREADS)
+typedef pthread_once_t once_flag;
+#define BOOST_ONCE_INIT PTHREAD_ONCE_INIT
+#elif defined(BOOST_HAS_WINTHREADS)
+typedef bool once_flag;
+#define BOOST_ONCE_INIT false
 #endif
-};
+
+void call_once(void (*func)(), once_flag& flag);
 
 } // namespace boost
 
-// Change Log:
-//   6 Jun 01  WEKEMPF Initial version.
-
-#endif // BOOST_TSS_WEK070601_HPP
-
+#endif // BOOST_ONCE_WEK080101_HPP

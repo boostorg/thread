@@ -13,6 +13,7 @@
 #define BOOST_XTIME_WEK070601_HPP
 
 #include <boost/stdint.h>
+#include <boost/thread/config.hpp>
 
 namespace boost {
 
