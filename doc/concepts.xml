@@ -195,7 +195,7 @@
 				and constructed for the Mutex object.</para>
 				
 				<para>A Mutex is
-				<ulink url="../../utility/utility.htm#Class%20noncopyable">
+				<ulink url="../../libs/utility/utility.htm#Class%20noncopyable">
 				NonCopyable</ulink>.</para>
 				<para>For a Mutex type <code>M</code>
 				and an object <code>m</code> of that type, 
@@ -1553,7 +1553,7 @@
 				requirements and constructed for the ReadWriteMutex object.</para>
 				
 				<para>A ReadWriteMutex is 
-				<ulink url="../../utility/utility.htm#Class%20noncopyable">NonCopyable</ulink>.
+				<ulink url="../../libs/utility/utility.htm#Class%20noncopyable">NonCopyable</ulink>.
 				</para>
 				
 				<para>For a ReadWriteMutex type <code>M</code>, 
