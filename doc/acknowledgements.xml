@@ -15,11 +15,11 @@ last-revision="$Date$">
   , 
   <code>thread_pool</code>
   , 
-  <code>rw_mutex</code>
+  <code>read_write_mutex</code>
   , 
-  <code>rw_try_mutex</code>
+  <code>read_write_try_mutex</code>
   and 
-  <code>rw_timed_mutex</code>
+  <code>read_write_timed_mutex</code>
   classes.</para>
   <para>Important contributions were also made by Jeremy Siek (lots of input
   on the design and on the implementation), Alexander Terekhov (lots of input

@@ -1354,7 +1354,7 @@
 								</entry>
 							</row>
 							<row> 
-								<entry><code>M::scoped_rw_lock</code></entry>
+								<entry><code>M::scoped_read_write_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedReadWriteLock</link>
 								requirements. </entry>
@@ -1387,7 +1387,7 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_try_rw_lock</code></entry>
+								<entry><code>M::scoped_try_read_write_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTryReadWriteLock</link>
 								requirements.</entry>
@@ -1420,7 +1420,7 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_timed_rw_lock</code></entry>
+								<entry><code>M::scoped_timed_read_write_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTimedReadWriteLock</link> 
 								requirements.</entry>
