@@ -7,8 +7,9 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 
-#define BOOST_INCLUDE_MAIN
-#include <boost/test/test_tools.hpp>
+//#define BOOST_INCLUDE_MAIN
+//#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test.hpp>
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
@@ -26,27 +27,27 @@ void test_lock(M* dummy=0)
     // Test the lock's constructors.
     {
         lock_type lock(mutex, false);
-        BOOST_TEST(!lock);
+        BOOST_CHECK(!lock);
     }
     lock_type lock(mutex);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.nsec += 100000000;
 
     // Test the lock and the mutex with condition variables.
     // No one is going to notify this condition variable.  We expect to
     // time out.
-    BOOST_TEST(condition.timed_wait(lock, xt) == false);
-    BOOST_TEST(lock);
+    BOOST_CHECK(!condition.timed_wait(lock, xt));
+    BOOST_CHECK(lock);
 
     // Test the lock and unlock methods.
     lock.unlock();
-    BOOST_TEST(!lock);
+    BOOST_CHECK(!lock);
     lock.lock();
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
 }
 
 template <typename M>
@@ -61,35 +62,35 @@ void test_trylock(M* dummy=0)
     // Test the lock's constructors.
     {
         try_lock_type lock(mutex);
-        BOOST_TEST(lock);
+        BOOST_CHECK(lock);
     }
     {
         try_lock_type lock(mutex, false);
-        BOOST_TEST(!lock);
+        BOOST_CHECK(!lock);
     }
     try_lock_type lock(mutex, true);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.nsec += 100000000;
 
     // Test the lock and the mutex with condition variables.
     // No one is going to notify this condition variable.  We expect to
     // time out.
-    BOOST_TEST(condition.timed_wait(lock, xt) == false);
-    BOOST_TEST(lock);
+    BOOST_CHECK(!condition.timed_wait(lock, xt));
+    BOOST_CHECK(lock);
 
     // Test the lock, unlock and trylock methods.
     lock.unlock();
-    BOOST_TEST(!lock);
+    BOOST_CHECK(!lock);
     lock.lock();
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
     lock.unlock();
-    BOOST_TEST(!lock);
-    BOOST_TEST(lock.try_lock());
-    BOOST_TEST(lock);
+    BOOST_CHECK(!lock);
+    BOOST_CHECK(lock.try_lock());
+    BOOST_CHECK(lock);
 }
 
 template <typename M>
@@ -105,40 +106,40 @@ void test_timedlock(M* dummy=0)
     {
         // Construct and initialize an xtime for a fast time out.
         boost::xtime xt;
-        BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
         xt.nsec += 100000000;
 
         timed_lock_type lock(mutex, xt);
-        BOOST_TEST(lock);
+        BOOST_CHECK(lock);
     }
     {
         timed_lock_type lock(mutex, false);
-        BOOST_TEST(!lock);
+        BOOST_CHECK(!lock);
     }
     timed_lock_type lock(mutex, true);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
 
     // Construct and initialize an xtime for a fast time out.
     boost::xtime xt;
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.nsec += 100000000;
 
     // Test the lock and the mutex with condition variables.
     // No one is going to notify this condition variable.  We expect to
     // time out.
-    BOOST_TEST(condition.timed_wait(lock, xt) == false);
-    BOOST_TEST(lock);
+    BOOST_CHECK(!condition.timed_wait(lock, xt));
+    BOOST_CHECK(lock);
 
     // Test the lock, unlock and timedlock methods.
     lock.unlock();
-    BOOST_TEST(!lock);
+    BOOST_CHECK(!lock);
     lock.lock();
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
     lock.unlock();
-    BOOST_TEST(!lock);
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK(!lock);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.nsec += 100000000;
-    BOOST_TEST(lock.timed_lock(xt));
+    BOOST_CHECK(lock.timed_lock(xt));
 }
 
 void test_mutex()
@@ -206,10 +207,10 @@ void condition_test_thread(void* param)
 {
     condition_test_data* data = static_cast<condition_test_data*>(param);
     boost::mutex::scoped_lock lock(data->mutex);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
     while (!(data->notified > 0))
         data->condition.wait(lock);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
     data->awoken++;
 }
 
@@ -231,13 +232,13 @@ void test_condition_notify_one()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_TEST(lock);
+        BOOST_CHECK(lock);
         data.notified++;
         data.condition.notify_one();
     }
 
     thread.join();
-    BOOST_TEST(data.awoken == 1);
+    BOOST_CHECK_EQUAL(data.awoken, 1);
 }
 
 void test_condition_notify_all()
@@ -251,13 +252,13 @@ void test_condition_notify_all()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_TEST(lock);
+        BOOST_CHECK(lock);
         data.notified++;
         data.condition.notify_all();
     }
 
     threads.join_all();
-    BOOST_TEST(data.awoken == NUMTHREADS);
+    BOOST_CHECK_EQUAL(data.awoken, NUMTHREADS);
 }
 
 struct cond_predicate
@@ -275,40 +276,40 @@ void condition_test_waits(void* param)
     condition_test_data* data = static_cast<condition_test_data*>(param);
 
     boost::mutex::scoped_lock lock(data->mutex);
-    BOOST_TEST(lock);
+    BOOST_CHECK(lock);
 
     // Test wait.
     while (data->notified != 1)
         data->condition.wait(lock);
-    BOOST_TEST(lock);
-    BOOST_TEST(data->notified == 1);
+    BOOST_CHECK(lock);
+    BOOST_CHECK_EQUAL(data->notified, 1);
     data->awoken++;
     data->condition.notify_one();
 
     // Test predicate wait.
     data->condition.wait(lock, cond_predicate(data->notified, 2));
-    BOOST_TEST(lock);
-    BOOST_TEST(data->notified == 2);
+    BOOST_CHECK(lock);
+    BOOST_CHECK_EQUAL(data->notified, 2);
     data->awoken++;
     data->condition.notify_one();
 
     // Test timed_wait.
     boost::xtime xt;
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.nsec += 100000000;
     while (data->notified != 3)
         data->condition.timed_wait(lock, xt);
-    BOOST_TEST(lock);
-    BOOST_TEST(data->notified == 3);
+    BOOST_CHECK(lock);
+    BOOST_CHECK_EQUAL(data->notified, 3);
     data->awoken++;
     data->condition.notify_one();
 
     // Test predicate timed_wait.
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.sec += 2;
-    BOOST_TEST(data->condition.timed_wait(lock, xt, cond_predicate(data->notified, 4)));
-    BOOST_TEST(lock);
-    BOOST_TEST(data->notified == 4);
+    BOOST_CHECK(data->condition.timed_wait(lock, xt, cond_predicate(data->notified, 4)));
+    BOOST_CHECK(lock);
+    BOOST_CHECK_EQUAL(data->notified, 4);
     data->awoken++;
 }
 
@@ -322,46 +323,46 @@ void test_condition_waits()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_TEST(lock);
+        BOOST_CHECK(lock);
 
-        BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
         data.condition.notify_one();
         while (data.awoken != 1)
             data.condition.wait(lock);
-        BOOST_TEST(data.awoken == 1);
+        BOOST_CHECK_EQUAL(data.awoken, 1);
 
-        BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
         data.condition.notify_one();
         while (data.awoken != 2)
             data.condition.wait(lock);
-        BOOST_TEST(data.awoken == 2);
+        BOOST_CHECK_EQUAL(data.awoken, 2);
 
-        BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
         data.condition.notify_one();
         while (data.awoken != 3)
             data.condition.wait(lock);
-        BOOST_TEST(data.awoken == 3);
+        BOOST_CHECK_EQUAL(data.awoken, 3);
     }
 
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.sec += 1;
     boost::thread::sleep(xt);
     data.notified++;
     data.condition.notify_one();
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.sec += 1;
     boost::thread::sleep(xt);
     thread.join();
-    BOOST_TEST(data.awoken == 4);
+    BOOST_CHECK_EQUAL(data.awoken, 4);
 }
 
 void test_condition()
@@ -398,7 +399,7 @@ void test_tss_thread()
     for (int i=0; i<1000; ++i)
     {
         int& n = tss_value->value;
-        BOOST_TEST(n == i);
+        BOOST_CHECK_EQUAL(n, i);
         ++n;
     }
 }
@@ -410,7 +411,7 @@ void test_tss()
     for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_tss_thread);
     threads.join_all();
-    BOOST_TEST(tss_instances == 0);
+    BOOST_CHECK_EQUAL(tss_instances, 0);
 }
 
 int once_value = 0;
@@ -433,19 +434,23 @@ void test_once()
     for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_once_thread);
     threads.join_all();
-    BOOST_TEST(once_value == 1);
+    BOOST_CHECK_EQUAL(once_value, 1);
 }
 
-int test_main(int, char*[])
+//int test_main(int, char*[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
 {
-    test_mutex();
-    test_try_mutex();
-    test_timed_mutex();
-    test_recursive_mutex();
-    test_recursive_try_mutex();
-    test_recursive_timed_mutex();
-    test_condition();
-    test_tss();
-    test_once();
-    return 0;
+	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads test suite");
+
+    test->add(BOOST_TEST_CASE(&test_mutex));
+    test->add(BOOST_TEST_CASE(&test_try_mutex));
+    test->add(BOOST_TEST_CASE(&test_timed_mutex));
+    test->add(BOOST_TEST_CASE(&test_recursive_mutex));
+    test->add(BOOST_TEST_CASE(&test_recursive_try_mutex));
+    test->add(BOOST_TEST_CASE(&test_recursive_timed_mutex));
+    test->add(BOOST_TEST_CASE(&test_condition));
+    test->add(BOOST_TEST_CASE(&test_tss));
+    test->add(BOOST_TEST_CASE(&test_once));
+
+    return test;
 }

@@ -32,6 +32,7 @@ include <module@>threads.jam ;
 unit-test test_thread
     : test_thread.cpp
       <lib>../build/boost_thread
+      <lib>../../test/build/unit_test_framework
       $(threadmon)
     : <sysinclude>$(BOOST_ROOT)
       $(pthreads-win32)
