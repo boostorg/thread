@@ -28,7 +28,7 @@
 classes define full featured <a href="mutex_concept.html">mutex models</a>
 with recursive locking semantics. These models should be used to synchronize access to shared resources
 when recursive locking by a single thread is likely to occur. A good example for this is when a class
-supplies "internal synchronization" to insure thread safety and a method on the class may have to call
+supplies "internal synchronization" to insure <a href="thread_formal_definition.html#Thread-safe"> thread-safety</a> and a method on the class may have to call
 other methods on the class which would also attempt to lock the <a href="mutex_concept.html">mutex model</a>.
 
 <p>Each type adds another <A href="lock_concept.html">lock concept</a>, including the

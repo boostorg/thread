@@ -23,7 +23,7 @@
 
 <hr>
 
-<h2>1. Are lock objects thread safe?</h2>
+<h2>1. Are lock objects <a href="thread_formal_definition.html#Thread-safe">thread-safe</a>?</h2>
 
 <p><b>No!</b>  Lock objects are not meant to be shared between threads.  They are meant to
 be short lived objects created on automatic storage within a code block.  Any other usage
@@ -31,7 +31,7 @@ is just likely to lead to errors and won't really be of actual benefit any way. 
 mutexes, not locks.  For more information on this see the documentation on the
 <a href="rationale.html#lock_objects">rationale</a> behind the design for lock objects.</p>
 
-<h2>2. Why was Boost.Threads modelled after the (platform specific library name)
+<h2>2. Why was Boost.Threads modeled after the (platform specific library name)
 library?</h2>
 
 <p>It wasn't.  As the developer I tried very hard to not let my own biases show in the
@@ -56,7 +56,7 @@ be wrong then supply us with an alternative and we'll reconsider).</p>
 <p>However, to answer the second question, no this does not mean that an object with a mutex
 member must be noncopyable.  All it means is that the compiler can't generate a copy constructor
 and assignment operator.  This is a <b>good thing</b>, however, since the compiler generated
-operations would not be thread safe any way.  The following is a simple example of a class
+operations would not be <a href="thread_formal_definition.html#Thread-safe"> thread-safe</a> any way.  The following is a simple example of a class
 with copyable semantics and internal synchronization through a mutex member.</p>
 
 <pre>
@@ -72,14 +72,14 @@ public:
    
    // We only need to syncronize other for the same reason we don't have to
    // synchronize on construction!
-   counter(const counter& other)
+   counter(const counter&amp; other)
    {
       boost::mutex::lock lock(other.m_mutex);
       m_value = other.m_value;
    }
    
    // For assignment we need to synchronize both objects!
-   const counter& operator=(const counter& other)
+   const counter&amp; operator=(const counter&amp; other)
    {
       boost::mutex::lock lock(m_mutex);
       boost::mutex::lock lock(other.m_mutex);
@@ -117,7 +117,7 @@ as mutable is a small price to pay for clear documentation of semantics.</p>
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->17 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21075" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->19 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21079" -->
 </p>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>

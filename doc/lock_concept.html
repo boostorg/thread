@@ -33,7 +33,7 @@ models also expose methods to query the lock status and to manually lock and unl
 <a href="mutex_concept.html">mutex model</a>.</p>
 
 <p>Instances of lock models are meant to be short lived, expected to be used at block scope
-only. In particular it should be noted that lock models are not thread safe.  Lock models
+only. In particular it should be noted that lock models are not <a href="file:///c:/boost/site/libs/thread/doc/thread_formal_definition.html#Thread-safe">thread-safe</a>.  Lock models
 must maintain state to indicate whether or not they've been locked and this state is not
 protected by any synchronization concepts. For this reason an instance of a lock model
 should never be shared between multiple threads.</p>

@@ -25,7 +25,7 @@
 <h3>Motivation</h3>
 
 <p>With client/server and three-tier architectures becoming common place in today's
-world it's becoming increasingly important for programs to be able to handle parallel
+world, it's becoming increasingly important for programs to be able to handle parallel
 processing.  Modern day operating systems usually provide some support for this
 through native thread APIs.  Unfortunately, writing portable code that makes use
 of parallel processing in C++ is made very difficult by a lack of a standard interface
@@ -47,8 +47,9 @@ below.<p>
 		interface to be easily implemented on any platform that supports threads,
 		and possibly even on platforms with out native thread support.</p>
 	<li><b>Safety</b>
-		<p><b>Boost.Threads</b> was designed to be as safe as possible.  Writing thread
-		safe code is very difficult and successful libraries must strive to insulate
+		<p><b>Boost.Threads</b> was designed to be as safe as possible.  Writing
+        <a href="file:///c:/boost/site/libs/thread/doc/thread_formal_definition.html#Thread-safe">thread-safe</a>
+        code is very difficult and successful libraries must strive to insulate
 		the programmer from dangerous constructs as much as possible.</p>
 	<li><b>Flexibility</b>
 		<p><b>Boost.Threads</b> was designed to be flexible.  This goal is often at odds
@@ -70,7 +71,7 @@ below.<p>
 
 <h3>Iterative Phases</h3>
 
-<p>Another goal of the <b>Boost.Threads</b> was for it to take a dynamic, iterative
+<p>Another goal of <b>Boost.Threads</b> was to take a dynamic, iterative
 approach in its development.  The computing industry is still exploring the concepts of parallel programming.
 Most thread libraries supply only simple primitive concepts for thread synchronization.
 These concepts are very simple, but they are very difficult to use safely or to provide
@@ -88,11 +89,12 @@ several growth cycles.  Each phase in its development shall be roughly documente
 
 <p>Boost is all about providing high quality libraries with implementations for many platforms.
 Unfortunately, there's a big problem faced by developers wishing to supply such high quality
-libraries, namely thread safety.  The C++ standard doesn't address threads at all, but real
+libraries, namely thread-safety.  The C++ standard doesn't address threads at all, but real
 world programs often make use of native threading support.  A portable library that doesn't
-address the issue of thread safety is there for not much help to a programmer who wants to
+address the issue of thread-safety is there for not much help to a programmer who wants to
 use the library in his multi-threaded application.  So there's a very great need for portable
-primitives that will allow the library developer to create thread safe implementations.  This
+primitives that will allow the library developer to create <a href="file:///c:/boost/site/libs/thread/doc/thread_formal_definition.html#Thread-safe">thread-safe</a>
+implementations.  This
 need far out weighs the need for portable methods to create and manage threads.</p>
 
 <p>Because of this need, the first phase of <b>Boost.Threads</b> focuses solely on providing

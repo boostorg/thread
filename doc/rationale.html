@@ -25,7 +25,7 @@
 <p>This page explains the rationale behind various design decisions in the Boost.Threads
 library.  Having the rationale documented here should explain how we arrived at the current
 design as well as prevent future rehashing of discussions and thought processes that have
-already occured.  It can also give users a lot of insight into the design process required
+already occurred.  It can also give users a lot of insight into the design process required
 for this library.</p>
 
 <h2><a name="library">Rationale for the Creation of Boost.Threads</a></h2>
@@ -78,9 +78,10 @@ higher level concepts there's also an argument for accessibility.</p>
 <h2><a name="lock_objects">Rationale for the Lock Design</a></h2>
 
 <p>Programmers who are used to multi-threaded programming issues will quickly note that the
-Boost.Thread's design for mutex lock concepts is not thread safe (this is clearly documented
+Boost.Thread's design for mutex lock concepts is not <a href="file:///c:/boost/site/libs/thread/doc/thread_formal_definition.html#Thread-safe">thread-safe</a>
+(this is clearly documented
 as well).  At first this may seem like a serious design flaw.  Why have a multi-threading primitive
-that's not thread safe itself?</p>
+that's not thread-safe itself?</p>
 
 <p>A lock object is not a synchronization primitive.  A lock object's sole responsibility is
 to insure that a mutex is both locked and unlocked in a manner that won't result in the common
@@ -94,14 +95,13 @@ such usage would be required.</p>
 <p>Lock objects must maintain some state information.  In order to allow a program to determine
 if a try_lock or timed_lock was successful the lock object must retain state indicating
 the success or failure of the call made in its constructor.  If a lock object were to have
-such state and remain thread safe it would need to synchronize access to the state information
+such state and remain thread-safe it would need to synchronize access to the state information
 which would result in roughly doubling the time of most operations.  Worse, since checking
 the state can occur only by a call after construction we'd have a race condition if the lock
 object were shared between threads.</p>
 
 <p>So, to avoid the overhead of synchronizing access to the state information and to avoid
-the race condition the Boost.Threads library simply does nothing to make lock objects thread
-safe.  Instead, sharing a lock object between threads results in undefined behavior.  Since the
+the race condition the Boost.Threads library simply does nothing to make lock objects thread-safe.  Instead, sharing a lock object between threads results in undefined behavior.  Since the
 only proper usage of lock objects is within block scope this isn't a problem, and so long
 as the lock object is properly used there's no danger of any multi-threading issues.</p>
 
