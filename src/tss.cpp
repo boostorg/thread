@@ -9,7 +9,11 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/tss.hpp>
+#ifndef BOOST_THREAD_NO_TSS_CLEANUP
+
 #include <boost/thread/once.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -193,6 +197,8 @@ void tss::cleanup(void* value)
 
 } // namespace detail
 } // namespace boost
+
+#endif BOOST_THREAD_NO_TSS_CLEANUP
 
 // Change Log:
 //   6 Jun 01  
