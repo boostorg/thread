@@ -11,11 +11,14 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#if defined(BOOST_HAS_FTIME)
+#   define __STDC_CONSTANT_MACROS
+#endif
+
 #include <boost/thread/xtime.hpp>
 
 #if defined(BOOST_HAS_FTIME)
 #   include <windows.h>
-#   define __STDC_CONSTANT_MACROS
 #   include <boost/cstdint.hpp>
 #elif defined(BOOST_HAS_GETTIMEOFDAY)
 #   include <sys/time.h>
