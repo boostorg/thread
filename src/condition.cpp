@@ -40,7 +40,7 @@ condition_impl::condition_impl()
 {
     m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
     m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0,
-                                                      std::numeric_limits<long>::max(),
+                                                      (std::numeric_limits<long>::max)(),
                                                       0));
     m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
 
@@ -220,7 +220,7 @@ void condition_impl::do_wait()
                         m_gone = 0;
                 }
         }
-    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+    else if (++m_gone == ((std::numeric_limits<unsigned>::max)() / 2))
         {
             // timeout occured, normalize the m_gone count
             // this may occur if many calls to wait with a timeout are made and
@@ -304,7 +304,7 @@ bool condition_impl::do_timed_wait(const xtime& xt)
                         m_gone = 0;
                 }
         }
-    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+    else if (++m_gone == ((std::numeric_limits<unsigned>::max)() / 2))
         {
             // timeout occured, normalize the m_gone count
             // this may occur if many calls to wait with a timeout are made and
@@ -568,7 +568,7 @@ void condition_impl::do_wait()
                         m_gone = 0;
                 }
         }
-    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+    else if (++m_gone == ((std::numeric_limits<unsigned>::max)() / 2))
         {
             // timeout occured, normalize the m_gone count
             // this may occur if many calls to wait with a timeout are made and
@@ -636,7 +636,7 @@ bool condition_impl::do_timed_wait(const xtime& xt)
                         m_gone = 0;
                 }
         }
-    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+    else if (++m_gone == ((std::numeric_limits<unsigned>::max)() / 2))
         {
             // timeout occured, normalize the m_gone count
             // this may occur if many calls to wait with a timeout are made and
