@@ -26,7 +26,7 @@ import ../build/threads ;
 import testing ;
 
 {
-     template test_lib
+     template boost_thread_test_lib
          : ## sources ##
              <template>thread_base
              ../src/tss_null.cpp
@@ -37,11 +37,12 @@ import testing ;
              <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
              <define>BOOST_ALL_NO_LIB=1
              <define>BOOST_THREAD_USE_LIB=1
+             <define>BOOST_THREAD_TEST=1
              <runtime-link>static
          : ## default build ##
      ;
     
-     template test_dll
+     template boost_thread_test_dll
          : ## sources ##
              <template>thread_base
              ../src/tss_null.cpp
@@ -52,28 +53,29 @@ import testing ;
              <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
              <define>BOOST_ALL_NO_LIB=1
              <define>BOOST_THREAD_USE_DLL=1
+             <define>BOOST_THREAD_TEST=1
              <runtime-link>dynamic
          : ## default build ##
      ;
 
      test-suite "threads"
          : 
-           [ run test_thread.cpp <template>test_dll ]
-           [ run test_mutex.cpp <template>test_dll ]
-           [ run test_condition.cpp <template>test_dll ]
-           [ run test_tss.cpp <template>test_dll ]
-           [ run test_once.cpp <template>test_dll ]
-           [ run test_xtime.cpp <template>test_dll ]
-           [ run test_barrier.cpp <template>test_dll ]
-           [ run test_read_write_mutex.cpp <template>test_dll ]
+           [ run test_thread.cpp <template>boost_thread_test_dll ]
+           [ run test_mutex.cpp <template>boost_thread_test_dll ]
+           [ run test_condition.cpp <template>boost_thread_test_dll ]
+           [ run test_tss.cpp <template>boost_thread_test_dll ]
+           [ run test_once.cpp <template>boost_thread_test_dll ]
+           [ run test_xtime.cpp <template>boost_thread_test_dll ]
+           [ run test_barrier.cpp <template>boost_thread_test_dll ]
+           [ run test_read_write_mutex.cpp <template>boost_thread_test_dll ]
            
-           [ run test_thread.cpp <template>test_lib           : : : : test_thread_lib ]
-           [ run test_mutex.cpp <template>test_lib            : : : : test_mutex_lib  ]
-           [ run test_condition.cpp <template>test_lib        : : : : test_condition_lib  ]
-           [ run test_tss.cpp <template>test_lib              : : : : test_tss_lib  ]
-           [ run test_once.cpp <template>test_lib             : : : : test_once_lib  ]
-           [ run test_xtime.cpp <template>test_lib            : : : : test_xtime_lib  ]
-           [ run test_barrier.cpp <template>test_lib          : : : : test_barrier_lib  ]
-           [ run test_read_write_mutex.cpp <template>test_lib : : : : test_read_write_mutex_lib  ]
+           [ run test_thread.cpp <template>boost_thread_test_lib           : : : : test_thread_lib ]
+           [ run test_mutex.cpp <template>boost_thread_test_lib            : : : : test_mutex_lib  ]
+           [ run test_condition.cpp <template>boost_thread_test_lib        : : : : test_condition_lib  ]
+           [ run test_tss.cpp <template>boost_thread_test_lib              : : : : test_tss_lib  ]
+           [ run test_once.cpp <template>boost_thread_test_lib             : : : : test_once_lib  ]
+           [ run test_xtime.cpp <template>boost_thread_test_lib            : : : : test_xtime_lib  ]
+           [ run test_barrier.cpp <template>boost_thread_test_lib          : : : : test_barrier_lib  ]
+           [ run test_read_write_mutex.cpp <template>boost_thread_test_lib : : : : test_read_write_mutex_lib  ]
      ;
 }
