@@ -354,42 +354,18 @@ do_rdunlock()
     {
         m_waiting_promotion.notify_one();
     }
-    else if(m_state == 0 && m_num_waiting_writers > 0)
+    else if(m_state == 0)
     {
-        // When unlocking a reader and reaching the "idle" state,
-        // no matter what the scheduling priority is, we'll always
-        // be waking up a waiting writer. 
-        //
-        // Q: "But what about sp_reader_priority?"
-        // A: Any readers would have already obtained the lock, since 
-        //    this thread also held a read lock.  A reader never has to 
-        //    wait when a read lock is held, UNLESS we are giving writers
-        //    priority.
-        
-        m_waiting_writers.notify_one();
+        do_wakeups();
     }
-    
-    // Set a flag to help alternating priorities
-    m_readers_next = 0;
 }
 
 
 template<typename Mutex>
 void
 rw_mutex_impl<Mutex>::
-do_wrunlock()
-{
-    // Protect internal state.
-    Mutex::scoped_lock l(m_prot);
-  
-    if(m_state == -1)
-        m_state = 0;
-    else
-        throw lock_error();
-
-    // After a writer is unlocked, we are always back in the unlocked state.
-    //
-
+do_wakeups()
+{       
     if( m_num_waiting_writers > 0 && 
         m_num_waiting_readers > 0)
     {
@@ -435,10 +411,31 @@ do_wrunlock()
         // Only readers - scheduling doesn't matter
         m_waiting_readers.notify_all();
     }
+} 
+
+
+template<typename Mutex>
+void
+rw_mutex_impl<Mutex>::
+do_wrunlock()
+{
+    // Protect internal state.
+    Mutex::scoped_lock l(m_prot);
+  
+    if(m_state == -1)
+        m_state = 0;
+    else
+        throw lock_error();
+
+    // After a writer is unlocked, we are always back in the unlocked state.
+    //
+    do_wakeups();
 }
 
-    }   // namespace thread
-    }   // namespace detail
+
+
+}   // namespace thread
+}   // namespace detail
 
 
 

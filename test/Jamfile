@@ -29,8 +29,12 @@ include <module@>threads.jam ;
 #######################
 # Declare the Boost.Threads unit test program test_thread.
 
+# Base names of the source files for test_thread.
+CPP_SOURCES =
+    test_thread test_rw_mutex ;
+
 unit-test test_thread
-    : test_thread.cpp
+    : $(CPP_SOURCES).cpp
       <lib>../build/boost_thread
       $(threadmon)
     : <include>$(BOOST_ROOT)
@@ -39,12 +43,3 @@ unit-test test_thread
     : debug release <runtime-link>static/dynamic
 ;
 
-unit-test rw_mutex_test
-    : rw_mutex_test.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <include>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;

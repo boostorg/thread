@@ -4,13 +4,10 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
-#define BOOST_INCLUDE_MAIN
+#include <boost/thread/rw_mutex.hpp>
 #include <boost/test/test_tools.hpp>
 
-#include <boost/thread/rw_mutex.hpp>
-
 static int shared_val=0; 
-
 
 boost::xtime xsecs(int secs)
 {
@@ -33,17 +30,16 @@ private:
     RW &_param2;
 };
 
-
 template<typename RW>
 struct data
 {
-    data(int id,RW &m) :m_id(id), m_value(0), m_rw_mutex(m){}
+    data(int id,RW &m,int secs=0) :m_id(id), m_value(-1), m_secs(secs), m_rw_mutex(m){}
     int m_value;
     int m_id;
+    int m_secs;
 
     RW& m_rw_mutex;           // Reader/Writer mutex
 };
-
 
 // plain_writer excercises the "infinite" lock for each
 //   RW_mutex type.
@@ -62,7 +58,6 @@ void plain_writer(void *arg,RW &rw)
     pdata->m_value = shared_val;
 }
 
-
 template<typename RW>
 void plain_reader(void *arg,RW &rw)
 {
@@ -71,9 +66,6 @@ void plain_reader(void *arg,RW &rw)
 
     pdata->m_value = shared_val;
 }
-
-
-
 
 template<typename RW>
 void try_writer(void *arg,RW &rw)
@@ -106,15 +98,13 @@ void try_reader(void *arg,RW &rw)
     }
 }
 
-
-
 template<typename RW>
 void timed_writer(void *arg,RW &rw)
 {
     data<RW> *pdata = (data<RW> *) arg;
     
     boost::xtime xt;
-    xt = xsecs(2);
+    xt = xsecs(pdata->m_secs);
     RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
 
     if(l.timed_wrlock(xt))
@@ -130,15 +120,16 @@ template<typename RW>
 void timed_reader(void *arg,RW &rw)
 {
     data<RW> *pdata = (data<RW> *) arg;
-    RW::scoped_try_rw_lock l(rw);
+    boost::xtime xt;
+    xt = xsecs(pdata->m_secs);
 
-    if(l.try_rdlock())
+    RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
+
+    if(l.timed_rdlock(xt))
     {
         pdata->m_value = shared_val;
     }
 }
-
-
 
 template<typename RW>
 void dump_times(const char *prefix,data<RW> *pdata)
@@ -147,14 +138,10 @@ void dump_times(const char *prefix,data<RW> *pdata)
         "   In:" << pdata->m_start.LowPart <<
         "   Holding:" << pdata->m_holding.LowPart <<
         "   Out: " << pdata->m_end.LowPart << std::endl;
-
-
 }
 
-
 template<typename RW>
-void 
-test_plain_rw_mutex(RW &rw_mutex)
+void test_plain_rw_mutex(RW &rw_mutex)
 {
     shared_val = 0;
 	data<RW> r1(1,rw_mutex);
@@ -213,11 +200,8 @@ test_plain_rw_mutex(RW &rw_mutex)
     }
 }
 
-
-
 template<typename RW>
-void 
-test_try_rw_mutex(RW &rw_mutex)
+void test_try_rw_mutex(RW &rw_mutex)
 {
 	data<RW> r1(1,rw_mutex);
     data<RW> w1(2,rw_mutex);
@@ -244,8 +228,8 @@ test_try_rw_mutex(RW &rw_mutex)
     tw1.join();
 
     BOOST_TEST(w1.m_value == 10);
-    BOOST_TEST(r1.m_value == 0);        // Try would return w/o waiting
-    BOOST_TEST(w2.m_value == 0);        // Try would return w/o waiting
+    BOOST_TEST(r1.m_value == -1);        // Try would return w/o waiting
+    BOOST_TEST(w2.m_value == -1);        // Try would return w/o waiting
 
     // We finish by repeating the plain tests with the try lock
     //  This is important to verify that try locks are proper rw_mutexes as
@@ -254,15 +238,13 @@ test_try_rw_mutex(RW &rw_mutex)
 
 }
 
-
 template<typename RW>
-void 
-test_timed_rw_mutex(RW &rw_mutex)
+void test_timed_rw_mutex(RW &rw_mutex)
 {
-    data<RW> r1(1,rw_mutex);
-    data<RW> r2(2,rw_mutex);
-    data<RW> w1(2,rw_mutex);
-    data<RW> w2(3,rw_mutex);
+    data<RW> r1(1,rw_mutex,1);
+    data<RW> r2(2,rw_mutex,3);
+    data<RW> w1(3,rw_mutex,3);
+    data<RW> w2(4,rw_mutex,1);
 
     // We begin with some specialized tests for "timed" behavior
 
@@ -272,19 +254,18 @@ test_timed_rw_mutex(RW &rw_mutex)
     boost::thread tw1(thread_adapter<RW>(timed_writer,&w1,rw_mutex));
 
     boost::thread::sleep(xsecs(1));
+    // Writer two will "clearly" try for the lock after the readers 
+    //  have tried for it.  Writer will wait up 1 second for the lock.  This write will fail.
+    boost::thread tw2(thread_adapter<RW>(timed_writer,&w2,rw_mutex));
 
     // Readers one and two will "clearly" try for the lock after writer
-    //   one already holds it.  Readers will wait up to 5 seconds for
+    //   one already holds it.  1st reader will wait 1 second, and will fail
+    //   to get the lock.  2nd reader will wait 3 seconds, and will get 
     //   the lock.
+
     boost::thread tr1(thread_adapter<RW>(timed_reader,&r1,rw_mutex));
     boost::thread tr2(thread_adapter<RW>(timed_reader,&r2,rw_mutex));
 
-    boost::thread::sleep(xsecs(1));
-    // Writer two will "clearly" try for the lock after the readers 
-    //  have tries for it.  Writer will wait up to 4 seconds for the lock.
-    boost::thread tw2(thread_adapter<RW>(timed_writer,&w2,rw_mutex));
-
- 
 
     tw1.join();
     tr1.join();
@@ -293,28 +274,13 @@ test_timed_rw_mutex(RW &rw_mutex)
 
 
     BOOST_TEST(w1.m_value == 10);
-    BOOST_TEST(r1.m_value == 0);
-    BOOST_TEST(w2.m_value == 0);
+    BOOST_TEST(r1.m_value == -1);
+    BOOST_TEST(r2.m_value == 10);
+    BOOST_TEST(w2.m_value == -1);
 
     // We follow by repeating the try tests with the timed lock.
     //  This is important to verify that timed locks are proper try locks as well
     test_try_rw_mutex(rw_mutex);
-}
-
-
-
-
-void test_rw_mutex2()
-{
-    using namespace boost;
-    rw_mutex rw(sp_writer_priority);
-    
-    {
-        rw_mutex::scoped_rw_lock l(rw,EXCL_LOCK);
-    }
-    {
-        rw_mutex::scoped_rw_lock l(rw,SHARED_LOCK);
-    }
 }
 
 void test_rw_mutex()
@@ -334,15 +300,7 @@ void test_rw_mutex()
         std::cout << "try test, sp=" << i << "\n";
         test_try_rw_mutex(try_rw);
 
-   //     std::cout << "timed test, sp=" << i << "\n";
-   //     test_timed_rw_mutex(timed_rw);  
+        std::cout << "timed test, sp=" << i << "\n";
+        test_timed_rw_mutex(timed_rw);  
     }
 }
-
-int test_main(int argc,char *argv[])
-{
-    test_rw_mutex();
-
-    return 0;
-};
-
