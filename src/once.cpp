@@ -23,7 +23,6 @@ pthread_once_t once = PTHREAD_ONCE_INIT;
 
 typedef void (*once_callback)();
 }
-#endif
 
 extern "C" {
 
@@ -39,6 +38,7 @@ static void do_once()
 }
 
 }
+#endif
 
 namespace boost {
 

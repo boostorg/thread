@@ -21,7 +21,9 @@
 
 #include <boost/config.hpp>
 
-// Define if threading support is enabled for the toolset.
+#error "Included <boost/thread/config.hpp>"
+
+/*// Define if threading support is enabled for the toolset.
 #undef BOOST_HAS_THREADS
 
 // Define if threading should be implemented in terms of Win32 threads.
@@ -93,6 +95,6 @@
 #       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
 #       define BOOST_HAS_PTHREAD_YIELD
 #   endif
-#endif
+#endif*/
 
 #endif // BOOST_THREAD_CONFIG_WEK070601_HPP

@@ -12,7 +12,7 @@
 #ifndef BOOST_TSS_WEK070601_HPP
 #define BOOST_TSS_WEK070601_HPP
 
-#include <boost/thread/config.hpp>
+#include <boost/config.hpp>
 #ifndef BOOST_HAS_THREADS
 #   error	Thread support is unavailable!
 #endif
