@@ -48,7 +48,7 @@ namespace {
 	tss_data_t* tss_data = 0;
 	boost::once_flag tss_once = BOOST_ONCE_INIT;
 
-	void cleanup_slots(void* p)
+	extern "C" void cleanup_slots(void* p)
 	{
 		tss_slots* slots = static_cast<tss_slots*>(p);
 		boost::mutex::scoped_lock lock(tss_data->mutex);
@@ -151,11 +151,23 @@ namespace boost {
 			tss_data->next_free = tss_data->slot_info[m_slot].next_free;
 			tss_data->slot_info[m_slot].next_free = -1;
 			tss_data->slot_info[m_slot].cleanup = cleanup;
+
+			// Record the current slots "generation", which is used to insure
+			// we don't access a pointer that was set in a previous incarnation
+			// of a reused slot which has been deallocated.  Recording this here
+			// is an optimization that allows us to have lock free access to
+			// TSS data.
+			m_generation = tss_data->slot_info[m_slot].generation;
 		}
 
 		tss::~tss()
 		{
 			boost::mutex::scoped_lock lock(tss_data->mutex);
+
+			// Increment the "generation" here.  We do this here in the destructor
+			// instead of the constructor specifically to "leak" data stored in
+			// an thread's TSS immediately, rather then later, which may give
+			// users a false sense that their code isn't flawed.
 			tss_data->slot_info[m_slot].generation++;
 			tss_data->slot_info[m_slot].next_free = tss_data->next_free;
 			tss_data->next_free = m_slot;
@@ -171,7 +183,10 @@ namespace boost {
 			if (m_slot >= slots->size())
 				return 0;
 
-			return (*slots)[m_slot].second;
+			if ((*slots)[m_slot].first == m_generation)
+				return (*slots)[m_slot].second;
+
+			return 0;
 		}
 		
 		void tss::set(void* value)
@@ -193,8 +208,7 @@ namespace boost {
 				}
 			}
 
-			boost::mutex::scoped_lock lock(tss_data->mutex);
-			(*slots)[m_slot].first = tss_data->slot_info[m_slot].generation;
+			(*slots)[m_slot].first = m_generation;
 			(*slots)[m_slot].second = value;
 		}
 

@@ -46,6 +46,7 @@ namespace boost {
 
         private:
 			int m_slot;
+			int m_generation;
         };
 
     #if defined(BOOST_HAS_MPTASKS)
