@@ -37,10 +37,12 @@ namespace {
 
 	void init_tss()
 	{
-		static boost::mutex mutex;
-		static key_type keys;
-		pmutex = &mutex;
-		pkeys = &keys;
+//		static boost::mutex mutex;
+//		static key_type keys;
+//		pmutex = &mutex;
+//		pkeys = &keys;
+		pmutex = new boost::mutex;
+		pkeys = new key_type;
 		key = TlsAlloc();
 		assert(key != 0xFFFFFFFF);
 		next_key = 0;

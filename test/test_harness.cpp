@@ -2,6 +2,7 @@
 #include <boost/test/test_tools.hpp>
 
 #include <iostream>
+#include <process.h>
 
 extern void test_xtime_get();
 extern void test_thread();
@@ -47,5 +48,6 @@ int test_main(int, char*[])
 	run_test(&test_barrier);
 	run_test(&test_thread_pool);
 //	run_test(&test_rw_mutex);
+//	_endthreadex(0);
     return 0;
 }
