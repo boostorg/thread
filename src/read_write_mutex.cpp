@@ -84,36 +84,25 @@ bad things happen.
                 << std::endl;
             ::OutputDebugStringA(stream.str().c_str());
         }
-#   else
-        inline void DoTrace(
-            const char* message,
-            int state,
-            int num_waiting_writers,
-            int num_waiting_readers,
-            bool state_waiting_promotion,
-            int num_waking_writers,
-            int num_waking_readers,
-            int num_max_waking_writers,
-            int num_max_waking_readers,
-            bool readers_next
-            )
-        {
-        }
-#   endif
 
-#   define BOOST_READ_WRITE_MUTEX_TRACE(message) \
-        DoTrace(                                 \
-            message,                             \
-            m_state,                             \
-            m_num_waiting_writers,               \
-            m_num_waiting_readers,               \
-            m_state_waiting_promotion,           \
-            m_num_waking_writers,                \
-            m_num_waking_readers,                \
-            m_num_max_waking_writers,            \
-            m_num_max_waking_readers,            \
-            m_readers_next                       \
-            )
+#       define BOOST_READ_WRITE_MUTEX_TRACE(message) \
+            DoTrace(                                 \
+                message,                             \
+                m_state,                             \
+                m_num_waiting_writers,               \
+                m_num_waiting_readers,               \
+                m_state_waiting_promotion,           \
+                m_num_waking_writers,                \
+                m_num_waking_readers,                \
+                m_num_max_waking_writers,            \
+                m_num_max_waking_readers,            \
+                m_readers_next                       \
+                )
+#   endif
+#endif
+
+#if !defined(BOOST_READ_WRITE_MUTEX_TRACE)
+#   define BOOST_READ_WRITE_MUTEX_TRACE(message)
 #endif
 
 #if defined(BOOST_ASSERT)
