@@ -39,7 +39,7 @@ void test_xtime_get()
 	}
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: xtime test suite");
 
