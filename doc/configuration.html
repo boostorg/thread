@@ -18,7 +18,7 @@
   </tr>
 </table>
 <hr>
-<dl class="page-index">
+<dl class="page-index"> 
   <dt><a href="#introduction">Introduction</a></dt>
   <dt><a href="#lib-defined-public">Public Library Defined Macros</a></dt>
   <dt><a href="#lib-defined-impl">Library Defined Implementation Macros</a></dt>
@@ -28,8 +28,8 @@
   as well as configuration macros meant to be supplied by the application. These 
   macros are documented here.</p>
 <h2><a name="lib-defined-public"></a>Public Library Defined Macros</h2>
-<p>These macros are defined by <b>Boost.Threads</b> but are expected to be used by application 
-  code.</p>
+<p>These macros are defined by <b>Boost.Threads</b> but are expected to be used 
+  by application code.</p>
 <table summary="public library defined macros" cellspacing="10" width="100%">
   <tr> 
     <td><b>Macro</b></td>
@@ -41,14 +41,14 @@
       is a platform specific implementation for <b>Boost.Threads</b> and that 
       threading support has been enabled in a platform specific manner. For instance, 
       on the Win32 platform there&#39;s an implementation for <b>Boost.Threads</b> 
-      but unless the program is compiled against one of the multi-threading runtimes 
+      but unless the program is compiled against one of the multithreading runtimes 
       (often determined by the compiler predefining the macro _MT) the BOOST_HAS_THREADS 
       macro remains undefined.</td>
   </tr>
 </table>
 <h2><a name="lib-defined-impl"></a>Library Defined Implementation Macros</h2>
-<p>These macros are defined by <b>Boost.Threads</b> and are implementation details of interest 
-  only to implementers.</p>
+<p>These macros are defined by <b>Boost.Threads</b> and are implementation details 
+  of interest only to implementors.</p>
 <table summary="library defined implementation macros" cellspacing="10" width="100%">
   <tr> 
     <td><b>Macro</b></td>
@@ -70,7 +70,7 @@
       and the FILETIME type to calculate the current time. This is an implementation 
       detail used by boost::detail::getcurtime().</td>
   </tr>
-  <tr>
+  <tr> 
     <td>BOOST_HAS_GETTTIMEOFDAY</td>
     <td>Indicates that the implementation should use gettimeofday() to calculate 
       the current time. This is an implementation detail used by boost::detail::getcurtime().</td>

@@ -2,7 +2,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <link rel="stylesheet" type="text/css" href="../../../boost.css">
-<title>Boost.Threads - Overview</title>
+<title>Boost.Threads - Introduction to Design</title>
 </head>
 <body link="#0000ff" vlink="#800080">
 <table border="0" cellpadding="7" cellspacing="0" width="100%" summary=
@@ -80,7 +80,9 @@
       odds with <i>safety</i>. When functionality might be compromised by the 
       desire to keep the interface safe, <b> Boost.Threads</b> has been designed 
       to provide the functionality, but to make it&#39;s use prohibitive for general 
-      use.</p>
+      use. In other words, the interfaces have been designed such that it's usually 
+      obvious when something is unsafe, and the documentation is written to explain 
+      why.</p>
   </li>
   <li> <b>Efficiency</b> 
     <p><b>Boost.Threads</b> was designed to be as efficient as possible. When 
@@ -100,12 +102,11 @@
   parallel programming. Most thread libraries supply only simple primitive concepts 
   for thread synchronization. These concepts are very simple, but they are very 
   difficult to use safely or to provide formal proofs for constructs built on 
-  top of them. Until recently, these primitives were &quot;state of the art&quot; 
-  and the only concepts available to programmers. Recently there has been a lot 
-  of research in other concepts, such as in &quot;Communicating Sequential Processes.&quot; 
-  <b>Boost.Threads</b> was designed in iterative steps, providing the building 
-  blocks necessary for the next step, and giving the researcher the tools necessary 
-  to explore new concepts in a portable manner.</p>
+  top of them. There has been a lot of research in other concepts, such as in 
+  &quot;Communicating Sequential Processes.&quot; <b>Boost.Threads</b> was designed 
+  in iterative steps, providing the building blocks necessary for the next step, 
+  and giving the researcher the tools necessary to explore new concepts in a portable 
+  manner.</p>
 <p>Given the goal of following a dynamic, iterative approach <b> Boost.Threads</b> 
   shall go through several growth cycles. Each phase in its development shall 
   be roughly documented here.</p>
@@ -116,28 +117,28 @@
   standard doesn&#39;t address threads at all, but real world programs often make 
   use of native threading support. A portable library that doesn&#39;t address 
   the issue of thread-safety is there for not much help to a programmer who wants 
-  to use the library in his multi-threaded application. So there&#39;s a very 
-  great need for portable primitives that will allow the library developer to 
-  create <a href="definitions.html#Thread-safe"> thread-safe</a> implementations. 
-  This need far out weighs the need for portable methods to create and manage 
-  threads.</p>
+  to use the library in his multithreaded application. So there&#39;s a very great 
+  need for portable primitives that will allow the library developer to create 
+  <a href="definitions.html#Thread-safe"> thread-safe</a> implementations. This 
+  need far out weighs the need for portable methods to create and manage threads.</p>
 <p>Because of this need, the first phase of <b>Boost.Threads</b> focuses solely 
   on providing portable primitive concepts for thread synchronization. Types provided 
   in this phase include the <a href="mutex.html"> mutex/try_mutex/timed_mutex</a>, 
   <a href="recursive_mutex.html"> recursive_mutex/recursive_try_mutex/recursive_timed_mutex</a>, 
   <a href=
         "scoped_lock.html">scoped_lock</a>, <a href="scoped_try_lock.html"> scoped_try_lock</a>, 
-  <a href="scoped_timed_lock.html"> scoped_timed_lock</a> and <a href="lock_error.html">lock_error</a>. 
+  <a href="scoped_timed_lock.html"> scoped_timed_lock</a> and <a href="exceptions.html#class-lock_error">lock_error</a>. 
   These are considered the &quot;core&quot; synchronization primitives, though 
   there are others that will be added in later phases.</p>
 <h3><a name="phase2"></a>Phase 2, Thread Management and Thread Specific Storage</h3>
 <p>This phase addresses the creation and management of threads and provides a 
   mechanism for thread specific storage (data associated with a thread instance). 
   Thread management is a tricky issue in C++, so this phase addresses only the 
-  basic needs of multi-threaded program. Later phases are likely to add additional 
+  basic needs of multithreaded program. Later phases are likely to add additional 
   functionality in this area. This phase of <b>Boost.Threads</b> adds the <a href="thread.html">thread</a> 
-  and <a href="thread_specific_ptr.html">thread_specific_ptr</a> types. With these 
-  additions the <b>Boost.Threads</b> library can be considered minimal but complete.</p>
+  and <a href="tss.html#class-thread_specific_ptr">thread_specific_ptr</a> types. 
+  With these additions the <b>Boost.Threads</b> library can be considered minimal 
+  but complete.</p>
 <h3><a name="next-phase"></a>The Next Phase</h3>
 <p>The next phase will address more advanced synchronization concepts, such as 
   read/write mutexes and barriers.</p>
