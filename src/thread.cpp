@@ -14,6 +14,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/type_traits/is_pointer.hpp>
+#include <boost/mpl/if.hpp>
 #include <new>
 #include <memory>
 #include <cassert>
@@ -86,6 +87,24 @@ private:
 } // namespace boost
 
 namespace {
+
+struct pointer_based
+{
+	template <typename T>
+		static const void* do_from(const T& obj) { return obj; }
+};
+
+struct value_based
+{
+	template <typename T>
+		static const void* do_from(const T& obj) { return 0; }
+};
+
+template <typename T>
+struct as_pointer : private boost::mpl::if_<boost::is_pointer<T>, pointer_based, value_based>::type
+{
+	static const void* from(const T& obj) { return do_from(obj); }
+};
 
 void release_tss_data(boost::thread::data* data)
 {
@@ -269,9 +288,10 @@ const void* thread::data::id() const
 	boost::mutex::scoped_lock lock(m_mutex);
 	if (m_state != joined)
 	{
-		if (boost::is_pointer<pthread_t>::value)
-			return m_thread;
-		return this;
+		const void* res = as_pointer<pthread_t>::from(m_thread);
+		if (res == 0)
+			res = this;
+		return res;
 	}
 	return 0; // throw instead?
 }
