@@ -35,7 +35,7 @@ exe monitor
     : monitor/monitor.cpp
       <lib>../build/boost_thread
       $(threadmon)
-    : <include>$(BOOST_ROOT)
+    : <sysinclude>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
     : debug release <runtime-link>static/dynamic
@@ -48,7 +48,7 @@ exe starvephil
     : starvephil/starvephil.cpp
       <lib>../build/boost_thread
       $(threadmon)
-    : <include>$(BOOST_ROOT)
+    : <sysinclude>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
     : debug release <runtime-link>static/dynamic
@@ -61,7 +61,7 @@ exe tennis
     : tennis/tennis.cpp
       <lib>../build/boost_thread
       $(threadmon)
-    : <include>$(BOOST_ROOT)
+    : <sysinclude>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
     : debug release <runtime-link>static/dynamic

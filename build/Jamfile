@@ -38,7 +38,7 @@ if $(NT) && ! $(PTW32)
 {
     dll boost_threadmon
         : ../src/threadmon.cpp
-        : <include>$(BOOST_ROOT)
+        : <sysinclude>$(BOOST_ROOT)
           <threading>multi
         : debug release <runtime-link>static/dynamic
     ;
@@ -53,7 +53,7 @@ CPP_SOURCES =
 
 lib boost_thread
     : ../src/$(CPP_SOURCES).cpp
-    : <include>$(BOOST_ROOT)
+    : <sysinclude>$(BOOST_ROOT)
       <threading>multi
       $(pthreads-win32)
     : debug release <runtime-link>static/dynamic
