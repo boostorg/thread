@@ -31,7 +31,7 @@ include <module@>threads.jam ;
 
 # Base names of the source files for test_thread.
 CPP_SOURCES =
-    test_harness test_thread test_mutex test_rw_mutex test_condition test_tss test_call_once test_barrier test_thread_pool test_xtime ;
+    test_harness test_thread test_thread_group test_mutex test_rw_mutex test_condition test_tss test_call_once test_barrier test_thread_pool test_xtime ;
 
 unit-test test_harness
     : $(CPP_SOURCES).cpp

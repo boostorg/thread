@@ -1,6 +1,6 @@
 #include <boost/thread/thread.hpp>
-#include <boost/test/test_tools.hpp>
 #include <boost/thread/xtime.hpp>
+#include <boost/test/test_tools.hpp>
 
 #include <utils.inl>
 

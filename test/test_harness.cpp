@@ -5,6 +5,7 @@
 
 extern void test_xtime_get();
 extern void test_thread();
+extern void test_thread_group();
 extern void test_mutex();
 extern void test_try_mutex();
 extern void test_timed_mutex();
@@ -33,6 +34,7 @@ int test_main(int, char*[])
 {
 	run_test(&test_xtime_get);
 	run_test(&test_thread);
+	run_test(&test_thread_group);
     run_test(&test_mutex);
     run_test(&test_try_mutex);
     run_test(&test_timed_mutex);
