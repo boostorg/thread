@@ -49,6 +49,7 @@ import ./threads ;
           <template>thread_base
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
+          <sysinclude>$(BOOST_ROOT)
           <define>BOOST_THREAD_BUILD_LIB=1
           <runtime-link>static
           # the common names rule ensures that the library will
@@ -63,6 +64,7 @@ import ./threads ;
           <template>thread_base 
           ../src/$(CPP_SOURCES).cpp
         : ## requirements ##
+          <sysinclude>$(BOOST_ROOT)
           <define>BOOST_THREAD_BUILD_DLL=1
           <runtime-link>dynamic
           # the common names rule ensures that the library will
