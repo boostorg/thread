@@ -51,7 +51,7 @@ void plain_writer(void *arg,RW &rw)
     data<RW> *pdata = (data<RW> *) arg;
    // std::cout << "-->W" << pdata->m_id << "\n";
     
-    RW::scoped_rw_lock l(rw,boost::EXCL_LOCK);
+    typename RW::scoped_rw_lock l(rw,boost::EXCL_LOCK);
 
     boost::thread::sleep(xsecs(3));
     shared_val += 10;
@@ -63,7 +63,7 @@ template<typename RW>
 void plain_reader(void *arg,RW &rw)
 {
     data<RW> *pdata = (data<RW> *) arg;
-    RW::scoped_rw_lock l(rw,boost::SHARED_LOCK);
+    typename RW::scoped_rw_lock l(rw,boost::SHARED_LOCK);
 
     pdata->m_value = shared_val;
 }
@@ -74,7 +74,7 @@ void try_writer(void *arg,RW &rw)
     data<RW> *pdata = (data<RW> *) arg;
    // std::cout << "-->W" << pdata->m_id << "\n";
     
-    RW::scoped_try_rw_lock l(rw,boost::NO_LOCK);
+    typename RW::scoped_try_rw_lock l(rw,boost::NO_LOCK);
 
     if(l.try_wrlock())
     {
@@ -91,7 +91,7 @@ template<typename RW>
 void try_reader(void *arg,RW &rw)
 {
     data<RW> *pdata = (data<RW> *) arg;
-    RW::scoped_try_rw_lock l(rw);
+    typename RW::scoped_try_rw_lock l(rw);
 
     if(l.try_rdlock())
     {
@@ -106,7 +106,7 @@ void timed_writer(void *arg,RW &rw)
     
     boost::xtime xt;
     xt = xsecs(pdata->m_secs);
-    RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
+    typename RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
 
     if(l.timed_wrlock(xt))
     {
@@ -124,7 +124,7 @@ void timed_reader(void *arg,RW &rw)
     boost::xtime xt;
     xt = xsecs(pdata->m_secs);
 
-    RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
+    typename RW::scoped_timed_rw_lock l(rw,boost::NO_LOCK);
 
     if(l.timed_rdlock(xt))
     {
