@@ -186,13 +186,13 @@ template &lt;typename ScopedLock, typename Pr&gt;
 
         <h3>timed_wait</h3>
 <pre>
-template &lt;typename ScopedTimedLock&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const <a href=
+template &lt;typename ScopedLock&gt;
+   bool timed_wait(ScopedLock&amp; lock, const <a href=
 "xtime.html">xtime</a>&amp; xt);
 </pre>
 
-        <p><b>Requires:</b> ScopedTimeLock meets the <a href=
-        "lock_concept.html#ScopedTimedLock">ScopedTimedLock</a>
+        <p><b>Requires:</b> ScopedLock meets the <a href=
+        "lock_concept.html#ScopedLock">ScopedLock</a>
         requirements.</p>
 
         <p><b>Effects:</b> Releases the lock on the <a href=
@@ -215,13 +215,13 @@ template &lt;typename ScopedTimedLock&gt;
         <p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached,
         otherwise <code>true</code>.</p>
 <pre>
-template &lt;typename ScopedTimedLock, typename Pr&gt;
-   bool timed_wait(ScopedTimedLock&amp; lock, const <a href=
+template &lt;typename ScopedLock, typename Pr&gt;
+   bool timed_wait(ScopedLock&amp; lock, const <a href=
 "xtime.html">xtime</a>&amp; xt, Pr pred);
 </pre>
 
-        <p><b>Requires:</b> ScopedTimeLock meets the <a href=
-        "lock_concept.html#ScopedTimedLock">ScopedTimedLock</a> requirements,
+        <p><b>Requires:</b> ScopedLock meets the <a href=
+        "lock_concept.html#ScopedLock">ScopedLock</a> requirements,
         return from <code>pred()</code> convertible to bool.</p>
 
         <p><b>Effects:</b> As if:</p>
