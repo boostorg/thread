@@ -95,7 +95,7 @@ int xtime_get(struct xtime* xtp, int clock_type)
 #   endif
         static const boost::uint64_t TIMESPEC_TO_FILETIME_OFFSET =
             UINT64_C(116444736000000000);
-
+        
         const boost::uint64_t ft64 =
             (static_cast<boost::uint64_t>(ft.dwHighDateTime) << 32)
             + ft.dwLowDateTime;
