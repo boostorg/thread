@@ -4,7 +4,7 @@ lib pthread : : <name>pthread ;
 
 project boost/thread
     : source-location ../src 
-    : use-requirements <library>pthread
+    : usage-requirements <library>pthread
     ;
 
 CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once exceptions ;
