@@ -158,7 +158,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 {
-    Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -220,7 +220,7 @@ bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -421,7 +421,7 @@ void read_write_mutex_impl<Mutex>::do_demote_to_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_demote_to_read_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_write_lock(m_state));
 
     if (!l.locked())
@@ -489,7 +489,7 @@ void read_write_mutex_impl<Mutex>::do_promote_to_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_promote_to_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_read_lock(m_state));
 
     if (!l.locked())
