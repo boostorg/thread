@@ -425,23 +425,15 @@ struct tss_value_t
     int value;
 };
 
-void destroy_tss_value(void* ptr)
-{
-    delete static_cast<tss_value_t*>(ptr);
-}
-
-boost::tss tss_value(&destroy_tss_value);
+boost::thread_specific_ptr<tss_value_t> tss_value;
 
 void test_tss_thread()
 {
-    tss_value.set(new tss_value_t);
-
     for (int i=0; i<1000; ++i)
     {
-        int& pn = static_cast<tss_value_t*>(tss_value.get())->value;
-        BOOST_TEST(pn == i);
-        ++pn;
-        boost::thread::yield();
+        int& n = tss_value->value;
+        BOOST_TEST(n == i);
+        ++n;
     }
 }
 

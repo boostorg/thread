@@ -25,22 +25,49 @@
 
 namespace boost {
 
-class tss : private noncopyable
+    namespace detail {
+        class tss : private noncopyable
+        {
+        public:
+            tss(void (*cleanup)(void*)=0);
+            ~tss();
+
+            void* get() const;
+            bool set(void* value);
+
+        private:
+        #if defined(BOOST_HAS_WINTHREADS)
+            unsigned long m_key;
+            void (*m_cleanup)(void*);
+        #elif defined(BOOST_HAS_PTHREADS)
+            pthread_key_t m_key;
+        #endif
+        };
+    }
+
+template <typename T>
+class thread_specific_ptr : private noncopyable
 {
 public:
-    tss(void (*cleanup)(void*)=0);
-    ~tss();
+    thread_specific_ptr() : m_tss(&thread_specific_ptr<T>::cleanup) { }
 
-    void* get() const;
-    bool set(void* value);
+    T* get() const
+    {
+        T* ptr = static_cast<T*>(m_tss.get());
+        if (!ptr)
+        {
+            ptr = new T;
+            m_tss.set(ptr);
+        }
+        return ptr;
+    }
+    T* operator->() const { return get(); }
+    T& operator*() const { return *get(); }
 
 private:
-#if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_key;
-    void (*m_cleanup)(void*);
-#elif defined(BOOST_HAS_PTHREADS)
-    pthread_key_t m_key;
-#endif
+    static void cleanup(void* p) { delete static_cast<T*>(p); }
+
+    mutable detail::tss m_tss;
 };
 
 } // namespace boost

@@ -81,7 +81,7 @@ namespace {
 }
 #endif
 
-namespace boost {
+namespace boost { namespace detail {
 
 #if defined(BOOST_HAS_WINTHREADS)
 tss::tss(void (*cleanup)(void*))
@@ -154,6 +154,7 @@ bool tss::set(void* value)
 }
 #endif
 
+} // namespace detail
 } // namespace boost
 
 // Change Log:
