@@ -73,17 +73,17 @@ void test_creation()
 void test_comparison()
 {
 	boost::thread self;
-	boost::thread thrd(thread_adapter(&comparison_thread, self));
+	boost::thread thrd(thread_adapter(comparison_thread, self));
 	thrd.join();
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread test suite");
 
-    test->add(BOOST_TEST_CASE(&test_sleep));
-	test->add(BOOST_TEST_CASE(&test_creation));
-	test->add(BOOST_TEST_CASE(&test_comparison));
+    test->add(BOOST_TEST_CASE(test_sleep));
+	test->add(BOOST_TEST_CASE(test_creation));
+	test->add(BOOST_TEST_CASE(test_comparison));
 
     return test;
 }

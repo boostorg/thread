@@ -15,7 +15,7 @@ namespace
 
 	void test_once_thread()
 	{
-		boost::call_once(&init_once_value, once);
+		boost::call_once(init_once_value, once);
 	}
 }
 
@@ -29,11 +29,11 @@ void test_once()
 	BOOST_CHECK_EQUAL(once_value, 1);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: once test suite");
 
-	test->add(BOOST_TEST_CASE(&test_once));
+	test->add(BOOST_TEST_CASE(test_once));
 
 	return test;
 }
