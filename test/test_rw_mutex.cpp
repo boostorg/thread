@@ -35,8 +35,8 @@ template <typename RW>
 struct data
 {
     data(int id, RW &m, int secs=0) : m_id(id), m_value(-1), m_secs(secs), m_rw_mutex(m) { }
-    int m_value;
     int m_id;
+    int m_value;
     int m_secs;
 
     RW& m_rw_mutex;           // Reader/Writer mutex
