@@ -52,7 +52,7 @@ namespace {
 	{
 		tss_slots* slots = static_cast<tss_slots*>(p);
 		boost::mutex::scoped_lock lock(tss_data->mutex);
-		for (int i = 0; i < tss_data->slot_info.size(); ++i)
+		for (tss_slot_info_vector::size_type i = 0; i < tss_data->slot_info.size(); ++i)
 		{
 			int generation = (*slots)[i].first;
 			void *& data = (*slots)[i].second;
@@ -85,9 +85,7 @@ namespace {
 		tss_data->native_key = TlsAlloc();
 		assert(tss_data->native_key != 0xFFFFFFFF);
 #elif defined(BOOST_HAS_PTHREADS)
-		tss_data->native_key 
-		int res = 0;
-		res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
+		int res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
 		assert(res == 0);
 #endif
 		tss_data->next_free = -1;

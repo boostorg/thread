@@ -21,10 +21,9 @@
 #   include <windows.h>
 #   include <process.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#    include <DriverServices.h>
-
-#    include "init.hpp"
-#    include "safe.hpp"
+#   include <DriverServices.h>
+#   include "init.hpp"
+#   include "safe.hpp"
 #endif
 
 #include "timeconv.inl"
