@@ -82,6 +82,11 @@ thread_exception::~thread_exception() throw()
 {
 }
 
+int thread_exception::native_error() const
+{
+    return m_sys_err; 
+}
+
 const char* thread_exception::message() const
 {
     if (m_sys_err != 0)
