@@ -4,7 +4,7 @@
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
 <link rel="stylesheet" type="text/css" href="styles.css">
-<title>Boost.Threads, basic_lock</title>
+<title>Boost.Threads, scoped_lock</title>
 </head>
 
 <body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
@@ -16,7 +16,7 @@
         </td>
         <td valign="top">
 			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">basic_lock</h2>
+			<h2 align="center">scoped_lock</h2>
         </td>
     </tr>
 </table>
@@ -35,24 +35,24 @@
 concept</a> type. The <a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>,
 <a href="mutex.html">timed_mutex</a>, <a href="recursive_mutex.html">recursive_mutex</a>,
 <a href="recursive_mutex.html">recursive_try_mutex</a> and <a href="recursive_mutex.html">recursive_timed_mutex</a>
-classes all use this template to define their <tt>lock</tt> types. Instances of class <code>basic_lock</code>
+classes all use this template to define their <tt>lock</tt> types. Instances of class <code>scoped_lock</code>
 meet the <a href="lock_concept.html#requirements">Lock requirements</a>.</p>
 
 <p>Like all the <b>Boost.Threads</b> <a href="lock_concept.html">lock models</a>,
-<tt>basic_lock</tt> objects are meant to be short lived. Objects of class <tt>basic_lock</tt>
+<tt>scoped_lock</tt> objects are meant to be short-lived. Objects of class <tt>scoped_lock</tt>
 are not <a href="definitions.html#thread-safe">thread-safe</a>, and
 so should not be shared between threads.</p>
 
-<p>Class basic_lock follows the &quot;resource acquisition is
+<p>Class <code> scoped_lock</code> follows the &quot;resource acquisition is
 initialization&quot; idiom <a href="bibliography.html#Stroustrup-00">[Stroustrup
 00 14.4.1]</a> and is a realization of the &quot;Scoped Locking Pattern&quot;
 <a href="bibliography.html#Schmidt-00">[Schmidt-00]</a>. Thus the usage is to let the
 constructor do the locking, and then let the destructor do the unlocking automatically at
-the end of the enclosing scope. The lock() and unlock() members are commonly not
-explicitly called, but allow for complex overlapping locks of multiple
+the end of the enclosing scope. The lock() and unlock() members are usually not
+explicitly called, but are provided to allow for complex overlapping locks of multiple
 <a href="mutex_concept.html">Mutex concepts</a>.</p>
 
-<p>The type <code>M</code> used to instantiate class <code>basic_lock</code>
+<p>The type <code>M</code> used to instantiate class <code>scoped_lock</code>
 must meet the <a href="mutex_concept.html#requirements">Mutex requirements</a>.</p>
 
 <h2><a name="Header">Header</a></h2>
@@ -70,18 +70,19 @@ must meet the <a href="mutex_concept.html#requirements">Mutex requirements</a>.<
 namespace boost {
 
     template &lt;typename M&gt;
-    class basic_lock : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
+    class scoped_lock : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
     {
     public:
         typedef M mutex_type;
         
-        explicit basic_lock(M&amp; mx, bool lock_it=true);
-        ~basic_lock();
+        explicit scoped_lock(M&amp; mx, bool lock_it=true);
+        ~scoped_lock();
         
         void lock();
         void unlock();
         
         operator const void*() const;
+        bool locked() const;
     };
 
 } // namespace boost
@@ -94,7 +95,7 @@ namespace boost {
 <h3>Constructor</h3>
 
 <pre>
-    explicit basic_lock(M&amp; mx, bool lock_it=true);
+    explicit scoped_lock(M&amp; mx, bool lock_it=true);
 </pre>
 
 <p><b>Effects:</b> Associates mutex <code>mx</code> with <code>*this</code>.
@@ -105,10 +106,10 @@ If <tt>lock_it</tt> is <tt>true,</tt> then calls <tt>lock()</tt>.</p>
 <h3>Destructor</h3>
 
 <pre>
-    ~basic_lock();
+    ~scoped_lock();
 </pre>
 
-<p><b>Effects:</b> If locked calls <tt>unlock()</tt>, then destroys <code>*this</code>.</p>
+<p><b>Effects:</b> If <code> locked()</code>, calls <tt>unlock()</tt>, then destroys <code>*this</code>.</p>
 
 <hr>
 
@@ -118,10 +119,10 @@ If <tt>lock_it</tt> is <tt>true,</tt> then calls <tt>lock()</tt>.</p>
     void lock();
 </pre>
 
-<p><b>Requires:</b> this->operator const void*() == 0 (not locked).</p>
+<p><b>Requires:</b>  <code>!locked()</code></p>
 
 <p><b>Effects:</b> Attempts to lock the associated mutex.  If the associated mutex
-is already locked by the currently running thread the effects depend on the locking
+is already locked by the current thread, the effects depend on the locking
 strategy of the associated mutex, as shown in the following table:</p>
 
 <table border="1" cellpadding="5">
@@ -145,10 +146,9 @@ strategy of the associated mutex, as shown in the following table:</p>
   </tr>
 </table>
 
-<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if the lock object is
-already locked or if the associated mutex uses the Checked
+<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if <code>locked()</code>or if the associated mutex uses the Checked
 <a href="mutex_concept.html#LockingStrategies">Locking Strategy</a> and has
-already been locked by the currently running thread.
+already been locked by the current thread.
 
 <hr>
 
@@ -160,8 +160,7 @@ already been locked by the currently running thread.
 
 <p><b>Effects: </b>Unlocks the associated mutex.</p>
 
-<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if the associated
-mutex is not already locked.</p>
+<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if <code>!locked()</code>.</p>
 
 <hr>
 
@@ -178,6 +177,13 @@ convertible to <code>true</code>, else a value convertible to <code>false</code>
 than a conversion to <code>bool</code>.</p>
 
 <hr>
+<h3>locked</h3>
+<pre>
+    bool locked() const;
+</pre>
+<p><b>Returns:</b>  <code>this-&gt;operator const void*() != 0</code>.</p>
+
+<hr>
 
 <h2><a name="Example">Example</a> Usage</h2>
 
@@ -185,7 +191,7 @@ than a conversion to <code>bool</code>.</p>
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->19 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21079" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->25 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21072" -->
 </p>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
