@@ -21,22 +21,22 @@
   <dt><a href="#introduction">Introduction</a></dt>
   <dt><a href="#locking-strategies">Locking Strategies</a></dt>
   <dl class="page-index"> 
-    <dt><a href="locking-strategy-recursive">Recursive</a></dt>
-    <dt><a href="locking-strategy-checked">Checked</a></dt>
-    <dt><a href="locking-strategy-unchecked">Unchecked</a></dt>
-    <dt><a href="locking-strategy-unspecified">Unspecified</a></dt>
+    <dt><a href="#locking-strategy-recursive">Recursive</a></dt>
+    <dt><a href="#locking-strategy-checked">Checked</a></dt>
+    <dt><a href="#locking-strategy-unchecked">Unchecked</a></dt>
+    <dt><a href="#locking-strategy-unspecified">Unspecified</a></dt>
   </dl>
   <dt><a href="#scheduling-policies">Scheduling Policies</a></dt>
   <dl class="page-index"> 
-    <dt><a href="scheduling-policy-FIFO">FIFO</a></dt>
-    <dt><a href="scheduling-policy-priority-driven">Priority Driven</a></dt>
-    <dt><a href="scheduling-policy-unspecified">Unspecified</a></dt>
+    <dt><a href="#scheduling-policy-FIFO">FIFO</a></dt>
+    <dt><a href="#scheduling-policy-priority-driven">Priority Driven</a></dt>
+    <dt><a href="#scheduling-policy-unspecified">Unspecified</a></dt>
   </dl>
   <dt><a href="#concept-requirements">Concept Requirements</a></dt>
   <dl class="page-index"> 
-    <dt><a href="Mutex-concept">Mutex Concept</a></dt>
-    <dt><a href="TryMutex-concept">TryMutex Concept</a></dt>
-    <dt><a href="TimedMutex-concept">TimedMutex Concept</a></dt>
+    <dt><a href="#Mutex-concept">Mutex Concept</a></dt>
+    <dt><a href="#TryMutex-concept">TryMutex Concept</a></dt>
+    <dt><a href="#TimedMutex-concept">TimedMutex Concept</a></dt>
   </dl>
   <dt><a href="#models">Models</a></dt>
 </dl>
@@ -47,11 +47,11 @@
   refinements, formalize the requirements. A model that implements Mutex and its 
   refinements has two states: <b>locked</b> and <b>unlocked</b>. Before using 
   a shared resource, a thread locks a <b>Boost.Threads</b> mutex object (an object 
-  whose type is a model of <a href=#Mutex-concept">Mutex</a> or one of it's refinements), 
-  insuring <a href="definitions.html#thread-safe">thread-safe</a> access to the 
-  shared resource. When use of the shared resource is complete, the thread unlocks 
-  the mutex object, allowing another thread to acquire the lock and use the shared 
-  resource.</p>
+  whose type is a model of <a href="#Mutex-concept">Mutex</a> or one of it's 
+  refinements), insuring <a href="definitions.html#thread-safe">thread-safe</a> 
+  access to the shared resource. When use of the shared resource is complete, 
+  the thread unlocks the mutex object, allowing another thread to acquire the 
+  lock and use the shared resource.</p>
 <p>Traditional C thread APIs, like POSIX threads or the Windows thread APIs, expose 
   functions to lock and unlock a mutex object. This is dangerous since it&#39;s 
   easy to forget to unlock a locked mutex. When the flow of control is complex, 
@@ -88,7 +88,7 @@
   APIs.</p>
 <p>Classes <a href="recursive_mutex.html#class-recursive_mutex">recursive_mutex</a>, 
   <a href="recursive_mutex.html#class-recursive_try_mutex">recursive_try_mutex</a> 
-  and <a href="recursive_mutex.html#class-recursive_timred_mutex">recursive_timed_mutex</a> 
+  and <a href="recursive_mutex.html#class-recursive_timed_mutex">recursive_timed_mutex</a> 
   use this locking strategy.</p>
 <h3><a name="locking-strategy-checked"></a>Checked</h3>
 <p>With a checked locking strategy when a thread attempts to acquire a lock on 
