@@ -165,15 +165,17 @@ private:
 <p>Semaphore was removed as too error prone. The same effect can be achieved with
   greater safety by the combination of a mutex and a condition variable. 
 Dijkstra (the semaphore's inventor), Hoare, and Brinch Hansen all depreciated 
-semaphores and advocated more structured alternatives. [<a href="bibliography.html#Andrews-83">Andrews-83]</a> 
+semaphores and advocated more structured alternatives. In a 1969 letter to 
+Brinch Hansen, Wirth said &quot;semaphores ... are not suitable for for higher level 
+languages.&quot; [<a href="bibliography.html#Andrews-83">Andrews-83]</a> 
 summarizes typical errors as &quot;omitting a <b>P</b> or a <b>V</b>, or accidentally 
 coding a <b>P</b> on one semaphore and a <b>V </b>on on another&quot;, forgetting to 
 include all references to shared objects in critical sections, and confusion 
 caused by using the same primitive for &quot;both condition synchronization and 
-mutual exclusion&quot;. </p>
+mutual exclusion&quot;.</p>
 <hr>
 <p>Revised
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->06 July, 2003<!--webbot bot="Timestamp" endspan i-checksum="21104" -->
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->19 July, 2003<!--webbot bot="Timestamp" endspan i-checksum="21111" -->
 </p>
 <p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
