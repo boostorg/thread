@@ -86,8 +86,7 @@
         "definitions.html#Thread-safe">thread-safe</a>. The following is a simple
   example of a class with copyable semantics and internal synchronization through
   a mutex member.</p>
-<pre>
-class counter
+<pre>class counter
 {
 public:
    // Doesn't need synchronization since there can be no references to *this
@@ -145,8 +144,8 @@ private:
   a mutex member as mutable clearly documents the intended semantics.</p>
 <h2><a name="question7"></a>7. Why supply <a href="condition.html">condition variables</a>
   rather than <a href="rationale.html#Events">event variables</a>?</h2>
-<p>Condition variables result in user code much less prone to <a href=
-        "definitions.html#Race condition">race conditions</a> than event variables.
+<p>Condition variables result in user code much less prone to
+<a href="definitions.html#definition-race-condition">race conditions</a> than event variables.
   See <a href="rationale.html#Events">Rationale</a> for analysis. Also see <a href="bibliography.html#Hoare-74">[Hoare
   74]</a> and <a href="bibliography.html#Schmidt-00">[Schmidt 00]</a>.</p>
 <h2><a name="question8"></a>8. Why isn&#39;t thread cancellation or termination
@@ -167,9 +166,7 @@ private:
   greater safety by the combination of a mutex and a condition variable.</p>
 <hr>
 <p>Revised
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001
-  <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->09 January, 2003<!--webbot bot="Timestamp" endspan i-checksum="38582" -->
 </p>
 <p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
