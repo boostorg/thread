@@ -24,7 +24,7 @@ int shared_val = 0;
 boost::xtime xsecs(int secs)
 {
     boost::xtime ret;
-    BOOST_TEST(boost::TIME_UTC == boost::xtime_get(&ret, boost::TIME_UTC));
+    BOOST_CHECK(boost::TIME_UTC == boost::xtime_get(&ret, boost::TIME_UTC));
     ret.sec += secs;
     return ret;
 }
@@ -186,33 +186,33 @@ void test_plain_read_write_mutex(RW &rw)
 
     if (rw.policy() == boost::read_write_scheduling_policy::writer_priority)
     {
-        BOOST_TEST(w1.m_value == 10);
-        BOOST_TEST(w2.m_value == 20);
-        BOOST_TEST(r1.m_value == 20);   // Readers get in after 2nd writer
-        BOOST_TEST(r2.m_value == 20);
+        BOOST_CHECK(w1.m_value == 10);
+        BOOST_CHECK(w2.m_value == 20);
+        BOOST_CHECK(r1.m_value == 20);   // Readers get in after 2nd writer
+        BOOST_CHECK(r2.m_value == 20);
     }
     else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
     {
-        BOOST_TEST(w1.m_value == 10);
-        BOOST_TEST(w2.m_value == 20);
-        BOOST_TEST(r1.m_value == 10);   // Readers get in before 2nd writer
-        BOOST_TEST(r2.m_value == 10);
+        BOOST_CHECK(w1.m_value == 10);
+        BOOST_CHECK(w2.m_value == 20);
+        BOOST_CHECK(r1.m_value == 10);   // Readers get in before 2nd writer
+        BOOST_CHECK(r2.m_value == 10);
     }
     else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
     {
-        BOOST_TEST(w1.m_value == 10);
-        BOOST_TEST(w2.m_value == 20);
-        BOOST_TEST(r1.m_value == 10);   // Readers get in before 2nd writer
-        BOOST_TEST(r2.m_value == 10);
+        BOOST_CHECK(w1.m_value == 10);
+        BOOST_CHECK(w2.m_value == 20);
+        BOOST_CHECK(r1.m_value == 10);   // Readers get in before 2nd writer
+        BOOST_CHECK(r2.m_value == 10);
     }
     else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
     {
-        BOOST_TEST(w1.m_value == 10);
-        BOOST_TEST(w2.m_value == 20);
+        BOOST_CHECK(w1.m_value == 10);
+        BOOST_CHECK(w2.m_value == 20);
 
         // One Reader gets in before 2nd writer, but we can't tell
         // which reader will "win", so just check their sum.
-        BOOST_TEST((r1.m_value + r2.m_value == 30));
+        BOOST_CHECK((r1.m_value + r2.m_value == 30));
     }
 }
 
@@ -243,9 +243,9 @@ void test_try_read_write_mutex(RW &rw)
     tr1.join();
     tw1.join();
 
-    BOOST_TEST(w1.m_value == 10);
-    BOOST_TEST(r1.m_value == -1);        // Try would return w/o waiting
-    BOOST_TEST(w2.m_value == -1);        // Try would return w/o waiting
+    BOOST_CHECK(w1.m_value == 10);
+    BOOST_CHECK(r1.m_value == -1);        // Try would return w/o waiting
+    BOOST_CHECK(w2.m_value == -1);        // Try would return w/o waiting
 
     // We finish by repeating the plain tests with the try lock
     //  This is important to verify that try locks are proper read_write_mutexes as
@@ -290,10 +290,10 @@ void test_timed_read_write_mutex(RW &rw)
     tw2.join();
 
 
-    BOOST_TEST(w1.m_value == 10);
-    BOOST_TEST(r1.m_value == -1);
-    BOOST_TEST(r2.m_value == 10);
-    BOOST_TEST(w2.m_value == -1);
+    BOOST_CHECK(w1.m_value == 10);
+    BOOST_CHECK(r1.m_value == -1);
+    BOOST_CHECK(r2.m_value == 10);
+    BOOST_CHECK(w2.m_value == -1);
 
     // We follow by repeating the try tests with the timed lock.
     //  This is important to verify that timed locks are proper try locks as
