@@ -49,7 +49,7 @@ if $(NT) && ! $(PTW32)
 
 # Base names of the source files for libboost_thread.
 CPP_SOURCES =
-    condition mutex recursive_mutex thread tss xtime once exceptions thread_pool barrier ;
+    condition mutex recursive_mutex thread tss xtime once exceptions thread_pool barrier rw_mutex ;
 
 lib boost_thread
     : ../src/$(CPP_SOURCES).cpp

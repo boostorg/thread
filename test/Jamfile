@@ -58,3 +58,13 @@ unit-test test_barrier
       <threading>multi
     : debug release <runtime-link>static/dynamic
 ;
+
+unit-test rw_mutex_test
+    : rw_mutex_test.cpp
+      <lib>../build/boost_thread
+      $(threadmon)
+    : <include>$(BOOST_ROOT)
+      $(pthreads-win32)
+      <threading>multi
+    : debug release <runtime-link>static/dynamic
+;
