@@ -149,7 +149,8 @@
         </listitem>
       </itemizedlist></para>
       <para>It is possible to write thread-safe implementations of these by
-      using <classname>thread-specific storage</classname>, and several C++
+      using thread specific storage (see
+	  <classname>boost::thread_specific_ptr</classname>), and several C++ 
 	  compiler vendors do just that. The technique is well-know and is explained
 	  in &cite.Butenhof97;.</para>
       <para>But at least one vendor (HP-UX) does not provide thread-safe

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/recursive_mutex.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="recursive_mutex">
+	</class>
+	<class name="recursive_try_mutex">
+	</class>
+	<class name="recursive_timed_mutex">
+	</class>
+  </namespace>
+</header>

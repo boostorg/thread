@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
-"http://www.boost.org/tools/boostbook/dtd/boostbook.dtd">
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
 <library name="Threads" dirname="thread" id="threads"
 last-revision="$Date$"
 xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -32,6 +35,9 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
   <xi:include href="overview.xml"/>
   <xi:include href="design.xml"/>
   <xi:include href="concepts.xml"/>
+  <xi:include href="reference.xml"/>
+  <xi:include href="rationale.xml"/>
+  <xi:include href="faq.xml"/>
   <xi:include href="glossary.xml"/>
   <xi:include href="acknowledgements.xml"/>
   <xi:include href="bibliography.xml"/>

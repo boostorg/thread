@@ -6,7 +6,7 @@
 ]>
 <glossary id="threads.glossary" last-revision="$Date$">
   <title>Glossary</title>
-  <para>Definitions are given in terms of the C++ Standard
+  <para>Definitions are given in terms of the C++ Standard &mdash;
   &cite.ISO98;. References to the standard are in the form [1.2.3/4], which
   represents the section number, with the paragraph number following the
   "/".</para>
