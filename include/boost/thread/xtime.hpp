@@ -39,7 +39,13 @@ struct xtime
     int_fast32_t nsec;
 };
 
-int xtime_get(struct xtime* xtp, int clock_type);
+int xtime_get(xtime* xtp, int clock_type);
+inline int xtime_cmp(const xtime& xtp1, const xtime& xtp2)
+{
+	int res = xtp1.sec - xtp2.sec;
+	if (res == 0) res = xtp1.nsec - xtp2.nsec;
+	return res;
+}
 
 } // namespace boost
 

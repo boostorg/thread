@@ -17,6 +17,8 @@
 #include <cassert>
 #include "timeconv.inl"
 
+#include <iostream>
+
 #if defined(BOOST_HAS_WINTHREADS)
 #   ifndef NOMINMAX
 #      define NOMINMAX
@@ -242,71 +244,103 @@ void condition::do_wait()
     }
 }
 
+//#define DOFIX
+
 bool condition::do_timed_wait(const xtime& xt)
 {
-    int milliseconds;
-    to_duration(xt, milliseconds);
+	bool ret = false;
+	unsigned int res = 0;
 
-    unsigned int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
-    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+#if defined(DOFIX)
+	for (;;)
+	{
+#endif
+		int milliseconds;
+		to_duration(xt, milliseconds);
+		if (milliseconds < 0)
+			std::cout << "milliseconds < 0" << std::endl;
+		if (milliseconds > 10000)
+			std::cout << "milliseconds > 10000" << std::endl;
+//		assert(milliseconds > 0);
 
-    bool ret = (res == WAIT_OBJECT_0);
+		res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
+		assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
-    unsigned was_waiting=0;
-    unsigned was_gone=0;
+		ret = (res == WAIT_OBJECT_0);
 
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
-    was_waiting = m_waiting;
-    was_gone = m_gone;
-    if (was_waiting != 0)
-    {
-        if (!ret) // timeout
-        {
-            if (m_blocked != 0)
-                --m_blocked;
-            else
-                ++m_gone; // count spurious wakeups
-        }
-        if (--m_waiting == 0)
-        {
-            if (m_blocked != 0)
-            {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
-                assert(res);
-                was_waiting = 0;
-            }
-            else if (m_gone != 0)
-                m_gone = 0;
-        }
-    }
-    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
-    {
-        // timeout occured, normalize the m_gone count
-        // this may occur if many calls to wait with a timeout are made and
-        // no call to notify_* is made
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-        m_blocked -= m_gone;
-        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-        assert(res);
-        m_gone = 0;
-    }
-    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+#if defined(DOFIX)
+		if (ret)
+			break;
 
-    if (was_waiting == 1)
-    {
-        for (/**/ ; was_gone; --was_gone)
-        {
-            // better now than spurious later
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
-            assert(res ==  WAIT_OBJECT_0);
-        }
-        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
-        assert(res);
-    }
+		xtime now;
+		xtime_get(&now, TIME_UTC);
+		if (xtime_cmp(xt, now) >= 0)
+			break;
+	}
+#endif
+
+	unsigned was_waiting=0;
+	unsigned was_gone=0;
+
+	res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+	assert(res == WAIT_OBJECT_0);
+	was_waiting = m_waiting;
+	was_gone = m_gone;
+	if (was_waiting != 0)
+	{
+		if (!ret) // timeout?
+		{
+			if (m_blocked != 0)
+				--m_blocked;
+			else
+				++m_gone; // count spurious wakeups
+		}
+		if (--m_waiting == 0)
+		{
+			if (m_blocked != 0)
+			{
+				res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
+				assert(res);
+				was_waiting = 0;
+			}
+			else if (m_gone != 0)
+				m_gone = 0;
+		}
+	}
+	else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+	{
+		// timeout occured, normalize the m_gone count
+		// this may occur if many calls to wait with a timeout are made and
+		// no call to notify_* is made
+		res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+		assert(res == WAIT_OBJECT_0);
+		m_blocked -= m_gone;
+		res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+		assert(res);
+		m_gone = 0;
+	}
+	res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+	assert(res);
+
+	if (was_waiting == 1)
+	{
+		for (/**/ ; was_gone; --was_gone)
+		{
+			// better now than spurious later
+			res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+			assert(res ==  WAIT_OBJECT_0);
+		}
+		res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+		assert(res);
+	}
+
+//		if (!ret)
+//		{
+//			xtime now;
+//			xtime_get(&now, TIME_UTC);
+//			if (xtime_cmp(xt, now) >= 0)
+//				break;
+//		}
 
     return ret;
 }

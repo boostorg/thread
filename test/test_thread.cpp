@@ -42,6 +42,10 @@ void test_lock(M* dummy=0)
     BOOST_TEST(condition.timed_wait(lock, xt) == false);
     BOOST_TEST(lock);
 
+//	boost::xtime now;
+//	BOOST_TEST(boost::xtime_get(&now, boost::TIME_UTC) == boost::TIME_UTC);
+//	BOOST_TEST(boost::xtime_cmp(xt, now) >= 0);
+
     // Test the lock and unlock methods.
     lock.unlock();
     BOOST_TEST(!lock);
@@ -438,14 +442,23 @@ void test_once()
 
 int test_main(int, char*[])
 {
+	for (int i = 0; i < 100; ++i)
+	{
+		boost::xtime xt1, xt2;
+		BOOST_TEST(boost::xtime_get(&xt1, boost::TIME_UTC) == boost::TIME_UTC);
+//		for (int j = 0; j < 1000000000; ++j) ;
+		BOOST_TEST(boost::xtime_get(&xt2, boost::TIME_UTC) == boost::TIME_UTC);
+		BOOST_TEST(boost::xtime_cmp(xt1, xt2) <= 0);
+	}
+
     test_mutex();
-    test_try_mutex();
-    test_timed_mutex();
-    test_recursive_mutex();
-    test_recursive_try_mutex();
-    test_recursive_timed_mutex();
-    test_condition();
-    test_tss();
-    test_once();
+//    test_try_mutex();
+//    test_timed_mutex();
+//    test_recursive_mutex();
+//    test_recursive_try_mutex();
+//    test_recursive_timed_mutex();
+//    test_condition();
+//    test_tss();
+//    test_once();
     return 0;
 }

@@ -12,6 +12,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
+
+#include <exception>
 #include <cassert>
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -72,6 +74,8 @@ static OSStatus thread_proxy(void* param)
     }
     catch (...)
     {
+		using namespace std;
+		terminate();
     }
 #if defined(BOOST_HAS_MPTASKS)
     ::boost::detail::thread_cleanup();
