@@ -191,14 +191,12 @@ void thread::join()
 
 void thread::sleep(const xtime& xt)
 {
-	for (;;)
+	for (int foo=0; foo < 5; ++foo)
 	{
 #if defined(BOOST_HAS_WINTHREADS)
 		int milliseconds;
 		to_duration(xt, milliseconds);
 		Sleep(milliseconds);
-		xtime xt2;
-		xtime_get(&xt2, TIME_UTC);
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
 		timespec ts;
@@ -226,7 +224,9 @@ void thread::sleep(const xtime& xt)
 		AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
 		threads::mac::detail::safe_delay_until(&sWakeTime);
 #endif
-		if (xtime_cmp(xt, xt2) >= 0)
+		xtime cur;
+		xtime_get(&cur, TIME_UTC);
+		if (xtime_cmp(xt, cur) <= 0)
 			return;
 	}
 }

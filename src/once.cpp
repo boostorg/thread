@@ -78,12 +78,7 @@ namespace boost {
 void call_once(void (*func)(), once_flag& flag)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-    once_flag tmp = flag;
-
-    // Memory barrier would be needed here to prevent race conditions on some platforms with
-    // partial ordering.
-
-    if (!tmp)
+    if (InterlockedCompareExchange(&flag, 1, 1) == 0)
     {
 #if defined(BOOST_NO_STRINGSTREAM)
         std::ostrstream strm;
@@ -101,16 +96,10 @@ void call_once(void (*func)(), once_flag& flag)
         res = WaitForSingleObject(mutex, INFINITE);
         assert(res == WAIT_OBJECT_0);
 
-        tmp = flag;
-        if (!tmp)
+	    if (InterlockedCompareExchange(&flag, 1, 1) == 0)
         {
             func();
-            tmp = true;
-
-            // Memory barrier would be needed here to prevent race conditions on some platforms
-            // with partial ordering.
-
-            flag = tmp;
+			InterlockedExchange(&flag, 1);
         }
 
         res = ReleaseMutex(mutex);

@@ -6,6 +6,23 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite_ex.hpp>
 
+namespace
+{
+	inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
+	{
+		boost::xtime cur;
+		BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), boost::TIME_UTC);
+
+		boost::xtime less = cur;
+		less.sec += less_seconds;
+
+		boost::xtime greater = cur;
+		greater.sec += greater_seconds;
+
+		return (boost::xtime_cmp(xt, less) >= 0) && (boost::xtime_cmp(xt, greater) <= 0);
+	}
+}
+
 template <typename M>
 struct test_lock
 {
@@ -128,6 +145,7 @@ struct test_timedlock
 		// time out.
 		BOOST_CHECK(!condition.timed_wait(lock, xt));
 		BOOST_CHECK(lock);
+		BOOST_CHECK(xtime_in_range(xt, -1, 0));
 
 		// Test the lock, unlock and timedlock methods.
 		lock.unlock();

@@ -54,12 +54,12 @@ void test_sleep()
 {
 	boost::xtime xt;
 	BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
-	xt.sec += 5;
+	xt.sec += 3;
 	
 	boost::thread::sleep(xt);
 
 	// Insure it's in a range instead of checking actual equality due to time lapse
-	BOOST_CHECK(xtime_in_range(xt, -1, 1));
+	BOOST_CHECK(xtime_in_range(xt, -1, 0));
 }
 
 void test_creation()
