@@ -17,10 +17,8 @@
 #include <boost/thread/thread.hpp>
 
 namespace {
-
 const int ITERS = 100;
 boost::mutex io_mutex;
-
 } // namespace
 
 template <typename M>

@@ -60,8 +60,10 @@ void player(void* param)
         {
             cond.wait(lock);
             if (state == other)
+            {
                 std::cout << "---" << player_name(active)
                           << ": Spurious wakeup!" << std::endl;
+            }
         } while (state == other);
     }
 
