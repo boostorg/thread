@@ -19,6 +19,8 @@
 
 #include <libs/thread/test/util.inl>
 
+#include <iostream>
+
 #if defined(BOOST_HAS_WINTHREADS)
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>    
@@ -106,6 +108,13 @@ void do_test_tss()
     for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_tss_thread);
     threads.join_all();
+
+    std::cout
+        << "tss_instances = " << tss_instances
+        << "; tss_total = " << tss_total
+        << "\n";
+    std::cout.flush();
+
     BOOST_CHECK_EQUAL(tss_instances, 0);
     BOOST_CHECK_EQUAL(tss_total, 5);
 
@@ -133,6 +142,12 @@ void do_test_tss()
         join_native_thread(thread3);
         join_native_thread(thread2);
         join_native_thread(thread1);
+
+        std::cout
+            << "tss_instances = " << tss_instances
+            << "; tss_total = " << tss_total
+            << "\n";
+        std::cout.flush();
 
         BOOST_CHECK_EQUAL(tss_instances, 0);
         BOOST_CHECK_EQUAL(tss_total, 5);
