@@ -46,14 +46,13 @@
 			  (if possible) and error-prone usage impossible or at least more
 			  difficult. For example, see the <link
 			  linkend="threads.concepts.Mutex">Mutex</link> and <link
-			  linkend="threads.concepts.Lock">Lock</link> designs, and how note
+			  linkend="threads.concepts.Lock">Lock</link> designs, and note
 			  how they interact.</para>
             </listitem>
             <listitem>
               <para>Certain traditional concurrent programming features are
 			  considered so error-prone that they are not provided at all. For
-			  example, see the <link linkend="threads.rationale.events">Events
-			  Not Provided</link> rationale.</para>
+			  example, see <xref linkend="threads.rationale.events" />.</para>
             </listitem>
             <listitem>
               <para>Dangerous features, or features which may be misused, are
@@ -99,12 +98,12 @@
 	approach in its development. The computing industry is still exploring the
 	concepts of parallel programming. Most thread libraries supply only simple
 	primitive concepts for thread synchronization. These concepts are very
-	simple, but they are very difficult to use safely or to provide formal
+	simple, but it is very difficult to use them safely or to provide formal
 	proofs for constructs built on top of them. There has been a lot of research
-	in other concepts, such as in "Communicating Sequential Processes."
-	&Boost.Threads; was designed in iterative steps, providing the building
-	blocks necessary for the next step, and giving the researcher the tools
-	necessary to explore new concepts in a portable manner.</para>
+	into other concepts, such as in "Communicating Sequential Processes."
+	&Boost.Threads; was designed in iterative steps, with each step providing 
+	the building blocks necessary for the next step and giving the researcher 
+	the tools necessary to explore new concepts in a portable manner.</para>
     <para>Given the goal of following a dynamic, iterative approach
 	&Boost.Threads; shall go through several growth cycles. Each phase in its
 	development shall be roughly documented here.</para>
@@ -116,7 +115,7 @@
 	faced by developers wishing to supply such high quality libraries, namely
 	thread-safety. The C++ standard doesn't address threads at all, but real
 	world programs often make use of native threading support. A portable
-	library that doesn't address the issue of thread-safety is there for not
+	library that doesn't address the issue of thread-safety is therefore not
 	much help to a programmer who wants to use the library in his multithreaded
 	application. So there's a very great need for portable primitives that will
 	allow the library developer to create <link
@@ -126,9 +125,11 @@
     <para>Because of this need, the first phase of &Boost.Threads; focuses
 	solely on providing portable primitive concepts for thread
 	synchronization. Types provided in this phase include the
-	<classname>boost::mutex</classname> / <classname>boost::try_mutex</classname> /
-	<classname>boost::timed_mutex</classname>, <classname>boost::recursive_mutex</classname> /
-	<classname>boost::recursive_try_mutex</classname> /
+	<classname>boost::mutex</classname>, 
+	<classname>boost::try_mutex</classname>,
+	<classname>boost::timed_mutex</classname>, 
+	<classname>boost::recursive_mutex</classname>,
+	<classname>boost::recursive_try_mutex</classname>,
 	<classname>boost::recursive_timed_mutex</classname>, and
 	<classname>boost::lock_error</classname>. These are considered the "core"
 	synchronization primitives, though there are others that will be added in

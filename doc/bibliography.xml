@@ -30,8 +30,8 @@ last-revision="$Date$">
       </authorgroup>
       <title>
         <ulink
-        url="http://www.acm.org/pubs/citations/journals/surveys/1983-15-1/p3-andrews/">
-        Concepts and Notations for Concurrent Programming</ulink>
+        url="http://www.acm.org/pubs/citations/journals/surveys/1983-15-1/p3-andrews/"
+        >Concepts and Notations for Concurrent Programming</ulink>
       </title>
     </biblioset>
     <para>Good general background reading. Includes descriptions of Path
@@ -42,11 +42,11 @@ last-revision="$Date$">
     <abbrev id="threads.bib.Boost.abbrev">Boost</abbrev>
     <bibliomisc>The <emphasis>Boost</emphasis> world wide web site.
 	<ulink url="http:/www.boost.org">http://www.boost.org</ulink></bibliomisc>
-	<para>Boost.Threads is one of many Boost libraries. The Boost web
+	<para>&Boost.Threads; is one of many Boost libraries. The Boost web
     site includes a great deal of documentation and general information which
     applies to all Boost libraries. Current copies of the libraries including
     documentation and test programs may be downloaded from the web
-    site</para>
+    site.</para>
   </biblioentry>
   <biblioentry id="threads.bib.Hansen73">
     <abbrev id="threads.bib.Hansen73.abbrev">Hansen73</abbrev>
@@ -63,8 +63,8 @@ last-revision="$Date$">
       </author>
       <title>
         <ulink
-        url="http://www.acm.org/pubs/articles/journals/surveys/1973-5-4/p223-hansen/">
-        Concurrent Programming Concepts</ulink>
+        url="http://www.acm.org/pubs/articles/journals/surveys/1973-5-4/p223-hansen/"
+        >Concurrent Programming Concepts</ulink>
       </title>
     </biblioset>
     <para>"This paper describes the evolution of language features for
@@ -72,14 +72,13 @@ last-revision="$Date$">
     monitors." Includes analysis of why events are considered error-prone. Also
     noteworthy because of an introductory quotation from Christopher Alexander;
     Brinch Hansen was years ahead of others in recognizing pattern concepts
-    applied to software too</para>
+    applied to software, too.</para>
   </biblioentry>
   <biblioentry id="threads.bib.Butenhof97">
     <abbrev id="threads.bib.Butenhof97.abbrev">Butenhof97</abbrev>
 	<title>
-	  <ulink url="http://cseng.aw.com/book/0,3828,0201633922,00.html">Programming with
-      POSIX Threads
-	  </ulink>
+	  <ulink url="http://cseng.aw.com/book/0,3828,0201633922,00.html"
+	  >Programming with POSIX Threads </ulink>
 	</title>
 	<author>
 	  <firstname>David</firstname>
@@ -103,8 +102,8 @@ last-revision="$Date$">
 	</biblioset>
 	<biblioset relation="article">
       <title>
-	    <ulink url=" http://www.acm.org/classics/feb96/">Monitors: An Operating
-		System Structuring Concept</ulink>
+	    <ulink url=" http://www.acm.org/classics/feb96/"
+	    >Monitors: An Operating System Structuring Concept</ulink>
       </title>
       <author>
         <firstname>C.A.R.</firstname>
@@ -114,7 +113,7 @@ last-revision="$Date$">
 	</biblioset>
 	<para>Hoare and Brinch Hansen's work on Monitors is the basis for reliable
 	multithreading patterns. This is one of the most often referenced papers in
-	all of computer science, and with good reason</para>
+	all of computer science, and with good reason.</para>
   </biblioentry>
   <biblioentry id="threads.bib.ISO98">
     <abbrev id="threads.bib.ISO98.abbrev">ISO98</abbrev>
@@ -147,18 +146,18 @@ last-revision="$Date$">
 	  </author>
 	  <title>
 	    <ulink
-		url="http://www.acm.org/pubs/citations/journals/surveys/1989-21-4/p593-mcdowell/">Debugging
-		Concurrent Programs</ulink>
+		url="http://www.acm.org/pubs/citations/journals/surveys/1989-21-4/p593-mcdowell/"
+		>Debugging Concurrent Programs</ulink>
 	  </title>
 	</biblioset>
 	<para>Identifies many of the unique failure modes and debugging difficulties
-	associated with concurrent programs</para>
+	associated with concurrent programs.</para>
   </biblioentry>
   <biblioentry id="threads.bib.SchmidtPyarali">
     <abbrev id="threads.bib.SchmidtPyarali.abbrev">SchmidtPyarali</abbrev>
 	<title>
-	  <ulink url="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html8">Strategies
-	  for Implementing POSIX Condition Variables on Win32</ulink>
+	  <ulink url="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html8"
+	  >Strategies for Implementing POSIX Condition Variables on Win32</ulink>
 	</title> 
 	<authorgroup>
 	  <author>
@@ -173,9 +172,9 @@ last-revision="$Date$">
 	</authorgroup>
 	<orgname>Department of Computer Science, Washington University, St. Louis,
 	Missouri</orgname>
-	<para>Rationale for understanding Boost.Threads condition
+	<para>Rationale for understanding &Boost.Threads; condition
 	variables. Note that Alexander Terekhov found some bugs in the
-	implementation given in this article, so pthreads-win32 and Boost.Threads
+	implementation given in this article, so pthreads-win32 and &Boost.Threads;
 	are even more complicated yet.</para>
   </biblioentry>
   <biblioentry id="threads.bib.SchmidtStalRohnertBuschmann">
@@ -183,8 +182,8 @@ last-revision="$Date$">
 	id="threads.bib.SchmidtStalRohnertBuschmann.abbrev">SchmidtStalRohnertBuschmann</abbrev>
 	<title>
 	  <ulink
-	  url="http://www.wiley.com/Corporate/Website/Objects/Products/0,9049,104671,00.html">Pattern-Oriented
-	  Architecture Volume 2</ulink>
+	  url="http://www.wiley.com/Corporate/Website/Objects/Products/0,9049,104671,00.html"
+	  >Pattern-Oriented Architecture Volume 2</ulink>
 	</title>
 	<subtitle>Patterns for Concurrent and Networked Objects</subtitle>
 	<titleabbrev>POSA2</titleabbrev>
@@ -211,14 +210,14 @@ last-revision="$Date$">
 	<copyright><year>2000</year></copyright>
 	<para>This is a very good explanation of how to apply several patterns
 	useful for concurrent programming. Among the patterns documented is the
-	Monitor Pattern mentioned frequently in the Boost.Threads
+	Monitor Pattern mentioned frequently in the &Boost.Threads;
 	documentation.</para>
   </biblioentry>
   <biblioentry id="threads.bib.Stroustrup">
     <abbrev id="threads.bib.Stroustrup.abbrev">Stroustrup</abbrev>
 	<title>
-	  <ulink url="http://cseng.aw.com/book/0,3828,0201700735,00.html">The C++
-	  Programming Language</ulink>
+	  <ulink url="http://cseng.aw.com/book/0,3828,0201700735,00.html"
+	  >The C++ Programming Language</ulink>
 	</title>
 	<edition>Special Edition</edition>
 	<publisher>Addison-Wesley</publisher>
@@ -226,6 +225,6 @@ last-revision="$Date$">
 	<isbn>ISBN: 0-201-70073-5</isbn>
 	<para>The first book a C++ programmer should own. Note that the 3rd edition
 	(and subsequent editions like the Special Edition) has been rewritten to
-	cover the ISO standard language and library</para>
+	cover the ISO standard language and library.</para>
   </biblioentry>
 </bibliography>
