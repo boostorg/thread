@@ -40,7 +40,7 @@ meet the <a href="lock_concept.html#requirements">Lock requirements</a>.</p>
 
 <p>Like all the <b>Boost.Threads</b> <a href="lock_concept.html">lock models</a>,
 <tt>basic_lock</tt> objects are meant to be short lived. Objects of class <tt>basic_lock</tt>
-are not <a href="thread_formal_definition.html#thread-safe">thread-safe</a>, and
+are not <a href="definitions.html#thread-safe">thread-safe</a>, and
 so should not be shared between threads.</p>
 
 <p>Class basic_lock follows the &quot;resource acquisition is
@@ -141,7 +141,7 @@ strategy of the associated mutex, as shown in the following table:</p>
   <tr>
     <td>Unspecified</td>
     <td>Undefined behavior [<a href="bibliography.html#ISO">ISO</a> 1.3.12] (but
-      typically, <a href="thread_formal_definition.html#Deadlock">deadlock</a>.)</td>
+      typically, <a href="definitions.html#Deadlock">deadlock</a>.)</td>
   </tr>
 </table>
 

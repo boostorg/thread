@@ -23,7 +23,7 @@
 
 <hr>
 
-<h2>1. Are lock objects <a href="thread_formal_definition.html#Thread-safe">thread-safe</a>?</h2>
+<h2>1. Are lock objects <a href="definitions.html#Thread-safe">thread-safe</a>?</h2>
 
 <p><b>No!</b>  Lock objects are not meant to be shared between threads.  They are meant to
 be short lived objects created on automatic storage within a code block.  Any other usage
@@ -56,7 +56,7 @@ be wrong then supply us with an alternative and we'll reconsider).</p>
 <p>However, to answer the second question, no this does not mean that an object with a mutex
 member must be noncopyable.  All it means is that the compiler can't generate a copy constructor
 and assignment operator.  This is a <b>good thing</b>, however, since the compiler generated
-operations would not be <a href="thread_formal_definition.html#Thread-safe"> thread-safe</a> any way.  The following is a simple example of a class
+operations would not be <a href="definitions.html#Thread-safe"> thread-safe</a> any way.  The following is a simple example of a class
 with copyable semantics and internal synchronization through a mutex member.</p>
 
 <pre>
