@@ -11,7 +11,7 @@ namespace
     inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
     {
         boost::xtime cur;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
 
         boost::xtime less = cur;
         less.sec += less_seconds;
@@ -44,7 +44,7 @@ struct test_lock
 
         // Construct and initialize an xtime for a fast time out.
         boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.nsec += 100000000;
 
         // Test the lock and the mutex with condition variables.
@@ -86,7 +86,7 @@ struct test_trylock
 
         // Construct and initialize an xtime for a fast time out.
         boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.nsec += 100000000;
 
         // Test the lock and the mutex with condition variables.
@@ -122,7 +122,7 @@ struct test_timedlock
         {
             // Construct and initialize an xtime for a fast time out.
             boost::xtime xt;
-            BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+            BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
             xt.nsec += 100000000;
 
             timed_lock_type lock(mutex, xt);
@@ -137,7 +137,7 @@ struct test_timedlock
 
         // Construct and initialize an xtime for a fast time out.
         boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.nsec += 100000000;
 
         // Test the lock and the mutex with condition variables.
@@ -154,7 +154,7 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
         lock.unlock();
         BOOST_CHECK(!lock);
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.nsec += 100000000;
         BOOST_CHECK(lock.timed_lock(xt));
         BOOST_CHECK(lock ? true : false);
