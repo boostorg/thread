@@ -53,7 +53,7 @@ public:
     void cleanup(void* p);
 
 private:
-    int m_slot;
+    unsigned int m_slot;
 
 	void init(boost::function1<void, void*>* pcleanup);
 };
@@ -78,9 +78,16 @@ class thread_specific_ptr : private noncopyable
 {
 public:
     thread_specific_ptr()
-		: m_tss(new(std::nothrow) boost::function1<void, void*>(boost::detail::tss_adapter<T>(&thread_specific_ptr<T>::cleanup))) { }
+		: m_tss(new boost::function1<void, void*>(
+					boost::detail::tss_adapter<T>(
+						&thread_specific_ptr<T>::cleanup)))
+	{
+	}
     thread_specific_ptr(void (*clean)(T*))
-		: m_tss(new(std::nothrow) boost::function1<void, void*>(boost::detail::tss_adapter<T>(clean))) { }
+		: m_tss(new boost::function1<void, void*>(
+					boost::detail::tss_adapter<T>(clean)))
+	{
+	}
     ~thread_specific_ptr() { reset(); }
 
     T* get() const { return static_cast<T*>(m_tss.get()); }

@@ -688,7 +688,7 @@ thread::thread(const thread& other)
 thread::~thread()
 {
 	if (m_handle && static_cast<thread_data*>(m_handle)->release())
-		delete m_handle;
+		delete static_cast<thread_data*>(m_handle);
 }
 
 thread& thread::operator=(const thread& other)
