@@ -34,4 +34,5 @@ unit-test test_thread : test_thread.cpp
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
+    #<runtime-link>static/dynamic
     : debug release ;

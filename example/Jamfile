@@ -31,6 +31,7 @@ exe monitor : monitor/monitor.cpp
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
+    #<runtime-link>static/dynamic
     : debug release ;
 
 #######################
@@ -43,6 +44,7 @@ exe starvephil : starvephil/starvephil.cpp
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
+    #<runtime-link>static/dynamic
     : debug release ;
 
 #######################
@@ -55,4 +57,5 @@ exe tennis : tennis/tennis.cpp
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS) # if using pthreads-win32
     <threading>multi
+    #<runtime-link>static/dynamic
     : debug release ;
