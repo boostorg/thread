@@ -18,6 +18,12 @@
 
 	<section id="threads.concepts.mutexes">
 		<title>Mutexes</title>
+
+		<note>Certain changes to the mutexes and lock concepts are
+		currently under discussion. In particular, the combination of
+		the multiple lock concepts into a single lock concept
+		is likely, and the combination of the multiple mutex
+		concepts into a single mutex concept is also possible.</note>
 		
 		<para>A mutex (short for mutual-exclusion) object is used to serialize
 		access to a resource shared between multiple threads. The
@@ -729,6 +735,11 @@
 
 	<section id="threads.concepts.read-write-mutexes">
 	<title>Read/Write Mutexes</title>
+		<note>Since the read/write mutex and related classes are new,
+		both interface and implementation are liable to change
+		in future releases of &Boost.Threads;.
+		The lock concepts and lock promotion and demotion in particular 
+		are still under discussion and very likely to change.</note>
 
 		<para>A read/write mutex (short for reader/writer mutual-exclusion) object
 		is used to serialize access to a resource shared between multiple 
@@ -1086,12 +1097,9 @@
 				both threads will be waiting for the other to release their read-lock.
 				</para>
 				
-				<para>Currently, &Boost.Threads; supports lock promotion only
-				through <code>try_promote()</code> and <code>timed_promote()</code>
-				operations. <note>Note that, with <code>timed_promote()</code>,
-				temporary deadlock can still occur, but since the promotion
-				attempt will eventually time out the deadlock will eventually
-				end.</note></para>
+				<para>Currently, &Boost.Threads; supports lock promotion
+				through <code>promote()</code>, <code>try_promote()</code>,
+				and <code>timed_promote()</code> operations.</para>
 			</section>
 			
 			<section id="threads.concepts.read-write-locking-strategies.demotion">
@@ -1577,9 +1585,21 @@
 								</entry>
 							</row>
 							<row> 
-								<entry><code>M::scoped_lock</code></entry>
+								<entry><code>M::scoped_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedReadWriteLock</link>
+								<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>
+								requirements. </entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_read_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
+								requirements. </entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_write_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
 								requirements. </entry>
 							</row>
 						</tbody>
@@ -1610,9 +1630,21 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_try_lock</code></entry>
+								<entry><code>M::scoped_try_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTryReadWriteLock</link>
+								<link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>
+								requirements.</entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_try_read_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
+								requirements.</entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_try_write_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
 								requirements.</entry>
 							</row>
 						</tbody>
@@ -1643,9 +1675,21 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_timed_lock</code></entry>
+								<entry><code>M::scoped_timed_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTimedReadWriteLock</link> 
+								<link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link> 
+								requirements.</entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_timed_read_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link> 
+								requirements.</entry>
+							</row>
+							<row> 
+								<entry><code>M::scoped_timed_write_lock</code></entry>
+								<entry>A type meeting the 
+								<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link> 
 								requirements.</entry>
 							</row>
 						</tbody>
@@ -1861,6 +1905,19 @@
 									the lock.</para>
 									
 									<para>Postcondition: <code>state() == read_write_lock_state::read_locked</code></para>
+								</entry>
+							</row>
+							<row>
+								<entry><code>lk.promote()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::read_locked</code>
+									or if the lock cannot be promoted because another lock
+									on the same mutex is already waiting to be promoted.</para>
+									
+									<para>Makes a blocking attempt to convert the lock held on the associated
+									read/write mutex object from a read-lock to a write-lock without releasing
+									the lock.</para>
 								</entry>
 							</row>
 							<row>
@@ -2191,9 +2248,9 @@
 							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
 							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
 							<entry>
-								<para><classname>boost::read_write_mutex::scoped_lock</classname></para>
-								<para><classname>boost::try_read_write_mutex::scoped_lock</classname></para>
-								<para><classname>boost::timed_read_write_mutex::scoped_lock</classname></para>
+								<para><classname>boost::read_write_mutex::scoped_read_write_lock</classname></para>
+								<para><classname>boost::try_read_write_mutex::scoped_read_write_lock</classname></para>
+								<para><classname>boost::timed_read_write_mutex::scoped_read_write_lock</classname></para>
 							</entry>
 						</row>
 						<row>
@@ -2205,8 +2262,8 @@
 							<entry><link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
 							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
 							<entry>
-								<para><classname>boost::try_read_write_mutex::scoped_try_lock</classname></para>
-								<para><classname>boost::timed_read_write_mutex::scoped_try_lock</classname></para>
+								<para><classname>boost::try_read_write_mutex::scoped_try_read_write_lock</classname></para>
+								<para><classname>boost::timed_read_write_mutex::scoped_try_read_write_lock</classname></para>
 							</entry>
 						</row>
 						<row>
@@ -2218,7 +2275,7 @@
 							<entry><link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link></entry>
 							<entry><link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
 							<entry>
-								<para><classname>boost::timed_read_write_mutex::scoped_timed_lock</classname></para>
+								<para><classname>boost::timed_read_write_mutex::scoped_timed_read_write_lock</classname></para>
 							</entry>
 						</row>
 					</tbody>
