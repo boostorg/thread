@@ -50,17 +50,12 @@ public:
     static void yield();
 
 private:
-#if defined(BOOST_HAS_WINTHREADS)
-    void* m_thread;
-    unsigned int m_id;
-#elif defined(BOOST_HAS_PTHREADS)
-private:
-    pthread_t m_thread;
-#elif defined(BOOST_HAS_MPTASKS)
+#if defined(BOOST_HAS_MPTASKS)
     MPQueueID m_pJoinQueueID;
     MPTaskID m_pTaskID;
 #endif
     bool m_joinable;
+	void* m_handle;
 };
 
 class thread_group : private noncopyable

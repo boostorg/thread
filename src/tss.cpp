@@ -166,7 +166,7 @@ void* tss::get() const
 
 bool tss::set(void* value)
 {
-    if (value && m_cleanup)
+    if (m_cleanup)
     {
         cleanup_handlers* handlers = get_handlers();
         assert(handlers);
@@ -226,7 +226,7 @@ void* tss::get() const
 
 bool tss::set(void* value)
 {
-    if (value && m_cleanup)
+    if (m_cleanup)
     {
         cleanup_handlers* handlers = get_handlers();
         assert(handlers);

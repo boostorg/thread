@@ -12,6 +12,9 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/thread/tss.hpp>
+#include <new>
+#include <memory>
 #include <cassert>
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -22,35 +25,107 @@
 
 #    include "init.hpp"
 #    include "safe.hpp"
-#    include <boost/thread/tss.hpp>
 #endif
 
 #include "timeconv.inl"
 
 namespace {
 
-class thread_param
+class thread_data
 {
 public:
-    thread_param(const boost::function0<void>& threadfunc) : m_threadfunc(threadfunc), m_started(false) { }
-    void wait()
-    {
-        boost::mutex::scoped_lock scoped_lock(m_mutex);
-        while (!m_started)
-            m_condition.wait(scoped_lock);
-    }
-    void started()
-    {
-        boost::mutex::scoped_lock scoped_lock(m_mutex);
-        m_started = true;
-        m_condition.notify_one();
-    }
+	enum
+	{
+		creating,
+		running,
+		joining,
+		joined
+	};
+
+    thread_data(const boost::function0<void>& threadfunc)
+		: m_threadfunc(threadfunc), m_refcount(2), m_state(creating)
+	{
+	}
+	~thread_data()
+	{
+		if (m_state != joined)
+		{
+			int res = 0;
+#if defined(BOOST_HAS_WINTHREADS)
+			res = CloseHandle(m_thread);
+			assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+			res = pthread_detach(m_thread, 0);
+			assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+			OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+			assert(lStatus == noErr);
+#endif
+		}
+	}
+
+	void addref()
+	{
+		boost::mutex::scoped_lock lock(m_mutex);
+		++m_refcount;
+	}
+
+	bool release()
+	{
+		boost::mutex::scoped_lock lock(m_mutex);
+		return (--m_refcount == 0);
+	}
+
+	void join()
+	{
+		boost::mutex::scoped_lock lock(m_mutex);
+
+		while (m_state == creating || m_state == joining)
+			m_cond.wait(lock);
+
+		if (m_state != joined)
+		{
+			m_state = joining;
+			m_cond.notify_all();
+
+			lock.unlock();
+
+			int res = 0;
+#if defined(BOOST_HAS_WINTHREADS)
+			res = WaitForSingleObject(m_thread, INFINITE);
+			assert(res == WAIT_OBJECT_0);
+			res = CloseHandle(m_thread);
+			assert(res);
+#elif defined(BOOST_HAS_PTHREADS)
+			res = pthread_join(m_thread, 0);
+			assert(res == 0);
+#elif defined(BOOST_HAS_MPTASKS)
+			OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+			assert(lStatus == noErr);
+#endif
+
+			lock.lock();
+
+			m_state = joined;
+		}
+	}
 
     boost::mutex m_mutex;
-    boost::condition m_condition;
-    const boost::function0<void>& m_threadfunc;
-    bool m_started;
+    boost::condition m_cond;
+    boost::function0<void> m_threadfunc;
+	unsigned int m_refcount;
+	int m_state;
+#if defined(BOOST_HAS_WINTHREADS)
+    HANDLE m_thread;
+#elif defined(BOOST_HAS_PTHREADS)
+    pthread_t m_thread;
+#elif defined(BOOST_HAS_MPTASKS)
+    MPQueueID m_pJoinQueueID;
+    MPTaskID m_pTaskID;
+#endif
 };
+
+boost::thread_specific_ptr<thread_data> tss_thread_data;
 
 struct thread_equals
 {
@@ -72,10 +147,22 @@ static OSStatus thread_proxy(void* param)
 {
     try
     {
-        thread_param* p = static_cast<thread_param*>(param);
-        boost::function0<void> threadfunc = p->m_threadfunc;
-        p->started();
-        threadfunc();
+        thread_data* p = static_cast<thread_data*>(param);
+		tss_thread_data.reset(p);
+		{
+			boost::mutex::scoped_lock lock(p->m_mutex);
+#if defined(BOOST_HAS_WINTHREADS)
+			DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
+				&p->m_thread, 0, FALSE, DUPLICATE_SAME_ACCESS);
+#elif defined(BOOST_HAS_PTHREADS)
+			p->m_thread = pthread_self();
+#endif
+			p->m_state = thread_data::running;
+			p->m_cond.notify_all();
+		}
+        p->m_threadfunc();
+		if (!p->release())
+			tss_thread_data.release();
     }
     catch (...)
     {
@@ -91,32 +178,40 @@ static OSStatus thread_proxy(void* param)
 namespace boost {
 
 thread::thread()
-    : m_joinable(false)
+    : m_handle(0)
 {
-#if defined(BOOST_HAS_WINTHREADS)
-    m_thread = reinterpret_cast<void*>(GetCurrentThread());
-    m_id = GetCurrentThreadId();
-#elif defined(BOOST_HAS_PTHREADS)
-    m_thread = pthread_self();
-#elif defined(BOOST_HAS_MPTASKS)
+#if defined(BOOST_HAS_MPTASKS)
     threads::mac::detail::thread_init();
     threads::mac::detail::create_singletons();
     m_pTaskID = MPCurrentTaskID();
     m_pJoinQueueID = kInvalidID;
 #endif
+	thread_data* p = tss_thread_data.get();
+	if (p == 0)
+	{
+		// TODO
+	}
+	if (p != 0) // remove after todo
+		p->addref();
+	m_handle = p;
 }
 
 thread::thread(const function0<void>& threadfunc)
-    : m_joinable(true)
+    : m_handle(0)
 {
-    thread_param param(threadfunc);
+	std::auto_ptr<thread_data> param(new(std::nothrow) thread_data(threadfunc));
+	if (param.get() == 0)
+		throw thread_resource_error();
+	m_handle = param.get();
 #if defined(BOOST_HAS_WINTHREADS)
-    m_thread = reinterpret_cast<void*>(_beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id));
-    if (!m_thread)
+	unsigned int id;
+    HANDLE h = (HANDLE)_beginthreadex(0, 0, &thread_proxy,	param.get(), 0, &id);
+    if (!h)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)
     int res = 0;
-    res = pthread_create(&m_thread, 0, &thread_proxy, &param);
+	pthread_t t;
+    res = pthread_create(&t, 0, &thread_proxy, param.get());
     if (res != 0)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_MPTASKS)
@@ -130,7 +225,7 @@ thread::thread(const function0<void>& threadfunc)
     lStatus = MPCreateQueue(&m_pJoinQueueID);
     if(lStatus != noErr) throw thread_resource_error();
 
-    lStatus = MPCreateTask(&thread_proxy, &param, 0UL, m_pJoinQueueID, NULL, NULL,
+    lStatus = MPCreateTask(&thread_proxy, param.get(), 0UL, m_pJoinQueueID, NULL, NULL,
                             0UL, &m_pTaskID);
     if(lStatus != noErr)
     {
@@ -139,36 +234,19 @@ thread::thread(const function0<void>& threadfunc)
         throw thread_resource_error();
     }
 #endif
-    param.wait();
+	param.release();
 }
 
 thread::~thread()
 {
-    if (m_joinable)
-    {
-#if defined(BOOST_HAS_WINTHREADS)
-        int res = 0;
-        res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
-        assert(res);
-#elif defined(BOOST_HAS_PTHREADS)
-        pthread_detach(m_thread);
-#elif defined(BOOST_HAS_MPTASKS)
-        assert(m_pJoinQueueID != kInvalidID);
-        OSStatus lStatus = MPDeleteQueue(m_pJoinQueueID);
-        assert(lStatus == noErr);
-#endif
-    }
+	thread_data* p = static_cast<thread_data*>(m_handle);
+	if (p != 0 && p->release())
+		delete p;
 }
 
 bool thread::operator==(const thread& other) const
 {
-#if defined(BOOST_HAS_WINTHREADS)
-    return other.m_id == m_id;
-#elif defined(BOOST_HAS_PTHREADS)
-    return pthread_equal(m_thread, other.m_thread) != 0;
-#elif defined(BOOST_HAS_MPTASKS)
-    return other.m_pTaskID == m_pTaskID;
-#endif
+	return m_handle == other.m_handle;
 }
 
 bool thread::operator!=(const thread& other) const
@@ -178,22 +256,9 @@ bool thread::operator!=(const thread& other) const
 
 void thread::join()
 {
-    int res = 0;
-#if defined(BOOST_HAS_WINTHREADS)
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), INFINITE);
-    assert(res == WAIT_OBJECT_0);
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
-    assert(res);
-#elif defined(BOOST_HAS_PTHREADS)
-    res = pthread_join(m_thread, 0);
-    assert(res == 0);
-#elif defined(BOOST_HAS_MPTASKS)
-    OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
-    assert(lStatus == noErr);
-#endif
-    // This isn't a race condition since any race that could occur would
-    // have us in undefined behavior territory any way.
-    m_joinable = false;
+	thread_data* p = static_cast<thread_data*>(m_handle);
+	if (p != 0)
+		p->join();
 }
 
 void thread::sleep(const xtime& xt)

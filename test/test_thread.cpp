@@ -40,11 +40,18 @@ void simple_thread()
 
 void test_creation()
 {
-	test_value = 0;
-	boost::thread thrd(&simple_thread);
-	thrd.join();
-	// If creation fails there's little point in continuing...
-	BOOST_CRITICAL_TEST(test_value == 999);
+	try
+	{
+		test_value = 0;
+		boost::thread thrd(&simple_thread);
+		thrd.join();
+		// If creation fails there's little point in continuing...
+		BOOST_CRITICAL_TEST(test_value == 999);
+	}
+	catch (boost::thread_resource_error& err)
+	{
+		BOOST_CRITICAL_ERROR("Caught thread_resource_error");
+	}
 }
 
 void comparison_thread(boost::thread& parent)
