@@ -192,13 +192,13 @@ void thread::join()
 void thread::sleep(const xtime& xt)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned milliseconds;
+    int milliseconds;
     to_duration(xt, milliseconds);
     Sleep(milliseconds);
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
     timespec ts;
-    to_timespec(xt, ts);
+    to_timespec_duration(xt, ts);
     int res = 0;
     res = pthread_delay_np(&ts);
     assert(res == 0);
@@ -216,7 +216,7 @@ void thread::sleep(const xtime& xt)
     cond.timed_wait(lock, xt);
 #   endif
 #elif defined(BOOST_HAS_MPTASKS)
-    unsigned microseconds;
+    int microseconds;
     to_microduration(xt, microseconds);
     Duration lMicroseconds(kDurationMicrosecond * microseconds);
     AbsoluteTime sWakeTime(DurationToAbsolute(lMicroseconds));
