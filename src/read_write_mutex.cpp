@@ -1696,47 +1696,49 @@ read_write_lock_state::read_write_lock_state_enum timed_read_write_mutex::state(
     return m_impl.state();
 }
 
-//Explicit instantiations of read/write locks to catch syntax errors in templates
+#if !defined(NDEBUG)
+    //Explicit instantiations of read/write locks to catch syntax errors in templates
 
-template class boost::detail::thread::scoped_read_write_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_read_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_read_write_lock<timed_read_write_mutex>;
+    template class boost::detail::thread::scoped_read_write_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_read_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_read_write_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_try_read_write_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_try_read_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_try_read_write_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_try_read_write_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_try_read_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_try_read_write_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_timed_read_write_lock<read_write_mutex>;
-//template class boost::detail::thread::scoped_timed_read_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_read_write_lock<read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_read_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
 
-//Explicit instantiations of read locks to catch syntax errors in templates
+    //Explicit instantiations of read locks to catch syntax errors in templates
 
-template class boost::detail::thread::scoped_read_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_read_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_read_lock<timed_read_write_mutex>;
+    template class boost::detail::thread::scoped_read_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_read_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_read_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_try_read_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_try_read_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_try_read_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_try_read_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_try_read_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_try_read_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_timed_read_lock<read_write_mutex>;
-//template class boost::detail::thread::scoped_timed_read_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_timed_read_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_read_lock<read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_read_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_timed_read_lock<timed_read_write_mutex>;
 
-//Explicit instantiations of write locks to catch syntax errors in templates
+    //Explicit instantiations of write locks to catch syntax errors in templates
 
-template class boost::detail::thread::scoped_write_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_write_lock<timed_read_write_mutex>;
+    template class boost::detail::thread::scoped_write_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_write_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_try_write_lock<read_write_mutex>;
-template class boost::detail::thread::scoped_try_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_try_write_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_try_write_lock<read_write_mutex>;
+    template class boost::detail::thread::scoped_try_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_try_write_lock<timed_read_write_mutex>;
 
-//template class boost::detail::thread::scoped_timed_write_lock<read_write_mutex>;
-//template class boost::detail::thread::scoped_timed_write_lock<try_read_write_mutex>;
-template class boost::detail::thread::scoped_timed_write_lock<timed_read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_write_lock<read_write_mutex>;
+    //template class boost::detail::thread::scoped_timed_write_lock<try_read_write_mutex>;
+    template class boost::detail::thread::scoped_timed_write_lock<timed_read_write_mutex>;
+#endif
 } // namespace boost
 
 // Change Log:
