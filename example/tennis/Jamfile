@@ -1,4 +1,4 @@
-SubDir TOP example tennis ;
+subproject example/tennis ;
 
 exe tennis
 	: tennis.cpp

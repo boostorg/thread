@@ -1,4 +1,4 @@
-SubDir TOP example starvephil ;
+subproject example/starvephil ;
 
 exe starvephil
 	: starvephil.cpp

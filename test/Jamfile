@@ -2,7 +2,7 @@ subproject test ;
 
 exe test_thread
 	: test_thread.cpp
-#	  <lib>../src/threads
+	  <lib>../src/threads
 	## Requirements ##
 	: <include>..
 	  <threading>multi
