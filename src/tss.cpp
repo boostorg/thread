@@ -85,8 +85,8 @@ namespace {
 		tss_data->native_key = TlsAlloc();
 		assert(tss_data->native_key != 0xFFFFFFFF);
 #elif defined(BOOST_HAS_PTHREADS)
-		int res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
-		res;
+		int res = 0;
+		res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
 		assert(res == 0);
 #endif
 		tss_data->next_free = -1;
