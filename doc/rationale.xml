@@ -60,13 +60,14 @@
 	the fact remains that many multithreaded programs are written using only the
 	lower level concepts, so they are useful in and of themselves, even if it's
 	hard to prove that their usage is correct. Since many users will be familiar
-	with these lower level concepts but be unfamiliar with any of the higher
-	level concepts there's also an argument for accessibility.</para>
+	with these lower level concepts but unfamiliar with any of the higher
+	level concepts, supporting the lower level concepts provides
+	greater accessibility.</para>
   </section>
   <section id="threads.rationale.locks">
     <title>Rationale for the Lock Design</title>
     <para>Programmers who are used to multithreaded programming issues will
-	quickly note that the Boost.Thread's design for mutex lock concepts is not
+	quickly note that the &Boost.Threads; design for mutex lock concepts is not
 	<link linkend="threads.glossary.thread-safe">thread-safe</link> (this is
 	clearly documented as well). At first this may seem like a serious design
 	flaw. Why have a multithreading primitive that's not thread-safe
@@ -78,7 +79,7 @@
 	going to be created, at least in theory, within block scope and won't be
 	shared between threads. Only the mutex objects will be created outside of
 	block scope and/or shared between threads. Though it's possible to create a
-	lock object outside of block scope and to share it between threads to do so
+	lock object outside of block scope and to share it between threads, to do so
 	would not be a typical usage (in fact, to do so would likely be an
 	error). Nor are there any cases when such usage would be required.</para>
     <para>Lock objects must maintain some state information. In order to allow a
@@ -87,10 +88,10 @@
 	in its constructor. If a lock object were to have such state and remain
 	thread-safe it would need to synchronize access to the state information
 	which would result in roughly doubling the time of most operations. Worse,
-	since checking the state can occur only by a call after construction we'd
+	since checking the state can occur only by a call after construction, we'd
 	have a race condition if the lock object were shared between threads.</para>
     <para>So, to avoid the overhead of synchronizing access to the state
-	information and to avoid the race condition the &Boost.Threads; library
+	information and to avoid the race condition, the &Boost.Threads; library
 	simply does nothing to make lock objects thread-safe. Instead, sharing a
 	lock object between threads results in undefined behavior. Since the only
 	proper usage of lock objects is within block scope this isn't a problem, and
@@ -109,7 +110,7 @@
 	noncopyable type in C. For this reason types that represent system resources
 	in C are often designed to behave very similarly to a pointer to dynamic
 	memory. There's an API for acquiring the resource and an API for releasing
-	the resources. For memory we have pointers as the type and alloc/free for
+	the resource. For memory we have pointers as the type and alloc/free for
 	the acquisition and release APIs. For files we have FILE* as the type and
 	fopen/fclose for the acquisition and release APIs. You can freely copy
 	instances of the types but must manually manage the lifetime of the actual
@@ -137,7 +138,7 @@
 	pseudo-code illustrating the six typical usage patterns of a thread
 	object.</para>
 	<section id="threads.rationale.non-copyable.simple">
-	  <title>1. Simple creation of a thread.</title>
+	  <title>1. Use case: Simple creation of a thread.</title>
       <programlisting>
       void foo()
       {
@@ -146,7 +147,7 @@
       </programlisting>
 	</section>
 	<section id="threads.rationale.non-copyable.joined">
-	  <title>2. Creation of a thread that's later joined.</title>
+	  <title>2. Use case: Creation of a thread that's later joined.</title>
       <programlisting>
       void foo()
       {
@@ -156,7 +157,7 @@
       </programlisting>
 	</section>
 	<section id="threads.rationale.non-copyable.loop">
-	  <title>3. Simple creation of several threads in a loop.</title>
+	  <title>3. Use case: Simple creation of several threads in a loop.</title>
       <programlisting>
       void foo()
       {
@@ -166,7 +167,7 @@
       </programlisting>
 	</section>
 	<section id="threads.rationale.non-copyable.loop-join">
-	  <title>4. Creation of several threads in a loop which are later joined.</title>
+	  <title>4. Use case: Creation of several threads in a loop which are later joined.</title>
       <programlisting>
       void foo()
       {
@@ -178,7 +179,7 @@
       </programlisting>
 	</section>
 	<section id="threads.rationale.non-copyable.pass">
-	  <title>5. Creation of a thread whose ownership is passed to another object/method.</title>
+	  <title>5. Use case: Creation of a thread whose ownership is passed to another object/method.</title>
       <programlisting>
       void foo()
       {
@@ -188,7 +189,7 @@
       </programlisting>
 	</section>
 	<section id="threads.rationale.non-copyable.shared">
-	  <title>6. Creation of a thread whose ownership is shared between multiple
+	  <title>6. Use case: Creation of a thread whose ownership is shared between multiple
 	  objects.</title>
 	  <programlisting>
       void foo()
@@ -220,8 +221,8 @@
 	use a concept for any of the usage patterns there would be a good argument
 	for choosing the other design. So we'll code all six usage patterns using
 	both designs.</para>
-	<section>
-	  <title>1.</title>
+	<section id="threads.rationale_comparison.non-copyable.simple">
+	  <title>1. Comparison: simple creation of a thread.</title>
 	  <programlisting>
       void foo()
       {
@@ -233,8 +234,8 @@
       }
       </programlisting>
 	</section>
-	<section>
-	  <title>2.</title>
+	<section id="threads.rationale_comparison.non-copyable.joined">
+	  <title>2. Comparison: creation of a thread that's later joined.</title>
 	  <programlisting>
       void foo()
       {
@@ -248,8 +249,8 @@
       }
       </programlisting>
 	</section>
-	<section>
-	  <title>3.</title>
+	<section id="threads.rationale_comparison.non-copyable.loop">
+	  <title>3. Comparison: simple creation of several threads in a loop.</title>
       <programlisting>
       void foo()
       {
@@ -263,8 +264,8 @@
       }
       </programlisting>
 	</section>
-	<section>
-	  <title>4.</title>
+	<section id="threads.rationale_comparison.non-copyable.loop-join">
+	  <title>4. Comparison: creation of several threads in a loop which are later joined.</title>
       <programlisting>
       void foo()
       {
@@ -284,8 +285,8 @@
       }
       </programlisting>
 	</section>
-	<section>
-	  <title>5.</title>
+	<section id="threads.rationale_comparison.non-copyable.pass">
+	  <title>5. Comparison: creation of a thread whose ownership is passed to another object/method.</title>
       <programlisting>
       void foo()
       {
@@ -299,8 +300,9 @@
       }
       </programlisting>
 	</section>
-	<section>
-	  <title>6.</title>
+	<section id="threads.rationale_comparison.non-copyable.shared">
+	  <title>6. Comparison: creation of a thread whose ownership is shared 
+	  between multiple objects.</title>
       <programlisting>
       void foo()
       {
@@ -318,12 +320,20 @@
 	</section>
     <para>This shows the usage patterns being nearly identical in complexity for
 	both designs. The only actual added complexity occurs because of the use of
-	operator new in (4), (5) and (6) and the use of std::auto_ptr and
-	boost::shared_ptr in (4) and (6) respectively. However, that's not really
+	operator new in 
+	<link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link>,
+	<link linkend="threads.rationale_comparison.non-copyable.pass">(5)</link>, and
+	<link linkend="threads.rationale_comparison.non-copyable.shared">(6)</link>;
+	and the use of std::auto_ptr and boost::shared_ptr in 
+	<link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link> and 
+	<link linkend="threads.rationale_comparison.non-copyable.shared">(6)</link>
+	respectively. However, that's not really
 	much added complexity, and C++ programmers are used to using these idioms
-	any way. Some may dislike the presence of operator new in user code, but
+	anyway. Some may dislike the presence of operator new in user code, but
 	this can be eliminated by proper design of higher level concepts, such as
-	the boost::thread_group class that simplifies example (4) down to:</para>
+	the boost::thread_group class that simplifies example 
+	<link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link>
+	down to:</para>
     <programlisting>
     void foo()
     {
@@ -335,27 +345,43 @@
     </programlisting>
     <para>So ease of use is really a wash and not much help in picking a
 	design.</para>
-    <para>So what about performance? If you look at the above code examples we
-	can analyze the theoretical impact to performance that both designs
-	have. For (1) we can see that platforms that don't have a ref-counted native
+    <para>So what about performance? Looking at the above code examples, 
+    we can analyze the theoretical impact to performance that both designs
+	have. For <link linkend="threads.rationale_comparison.non-copyable.simple">(1)</link>
+	we can see that platforms that don't have a ref-counted native
 	thread type (POSIX, for instance) will be impacted by a thread_ref
 	design. Even if the native thread type is ref-counted there may be an impact
 	if more state information has to be maintained for concepts foreign to the
-	native API, such as clean up stacks for Win32 implementations. For (2) the
-	performance impact will be identical to (1). The same for (3). For (4)
+	native API, such as clean up stacks for Win32 implementations. 
+	For <link linkend="threads.rationale_comparison.non-copyable.joined">(2)</link>
+	and <link linkend="threads.rationale_comparison.non-copyable.loop">(3)</link>
+	the performance impact will be identical to
+	<link linkend="threads.rationale_comparison.non-copyable.simple">(1)</link>.
+	For <link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link>
 	things get a little more interesting and we find that theoretically at least
 	the thread_ref may perform faster since the thread design requires dynamic
 	memory allocation/deallocation. However, in practice there may be dynamic
 	allocation for the thread_ref design as well, it will just be hidden from
 	the user. As long as the implementation has to do dynamic allocations the
-	thread_ref loses again because of the reference management. For (5) we see
-	the same impact as we do for (4). For (6) we still have a possible impact to
+	thread_ref loses again because of the reference management. For 
+	<link linkend="threads.rationale_comparison.non-copyable.pass">(5)</link> we see
+	the same impact as we do for 
+	<link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link>.
+	For <link linkend="threads.rationale_comparison.non-copyable.shared">(6)</link>
+	we still have a possible impact to
 	the thread design because of dynamic allocation but thread_ref no longer
 	suffers because of its reference management, and in fact, theoretically at
 	least, the thread_ref may do a better job of managing the references. All of
-	this indicates that thread wins for (1), (2) and (3), with (4) and (5) the
-	winner depends on the implementation and the platform but the thread design
-	probably has a better chance, and with (6) it will again depend on the
+	this indicates that thread wins for 
+	<link linkend="threads.rationale_comparison.non-copyable.simple">(1)</link>, 
+	<link linkend="threads.rationale_comparison.non-copyable.joined">(2)</link> and 
+	<link linkend="threads.rationale_comparison.non-copyable.loop">(3)</link>; with 
+	<link linkend="threads.rationale_comparison.non-copyable.loop-join">(4)</link>
+	and <link linkend="threads.rationale_comparison.non-copyable.pass">(5)</link> the
+	winner depending on the implementation and the platform but with the thread design
+	probably having a better chance; and with 
+	<link linkend="threads.rationale_comparison.non-copyable.shared">(6)</link> 
+	it will again depend on the
 	implementation and platform but this time we favor thread_ref
 	slightly. Given all of this it's a narrow margin, but the thread design
 	prevails.</para>
@@ -367,13 +393,11 @@
     <title>Rationale for not providing <emphasis>Event Variables</emphasis></title>
     <para><emphasis>Event variables</emphasis> are simply far too
 	error-prone. <classname>boost::condition</classname> variables are a much safer
-	alternative.</para>
-    <para>[Note that Graphical User Interface <emphasis>events</emphasis> are a
-	different concept, and are not what is being discussed here.]</para>
+	alternative. [Note that Graphical User Interface <emphasis>events</emphasis> are 
+	a different concept, and are not what is being discussed here.]</para>
     <para>Event variables were one of the first synchronization primitives. They
 	are still used today, for example, in the native Windows multithreading
-	API.</para>
-	<para>Yet both respected computer science researchers and experienced
+	API. Yet both respected computer science researchers and experienced
 	multithreading practitioners believe event variables are so inherently
 	error-prone that they should never be used, and thus should not be part of a
 	multithreading library.</para>
@@ -404,7 +428,7 @@
 	to the "goto considered harmful" controversy of 30 years ago. It isn't that
 	events, like gotos, can't be made to work, but rather that virtually all
 	programs using alternatives will be easier to write, debug, read, maintain,
-	and be less likely to contain latent defects.</para>
+	and will be less likely to contain latent defects.</para>
     <para>[Rationale provided by Beman Dawes]</para>
   </section>
 </section>

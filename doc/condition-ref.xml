@@ -59,7 +59,7 @@
           <effects><simpara>If there is a thread waiting on <code>*this</code>,
               change that thread's state to ready. Otherwise there is no
               effect.</simpara></effects>
-          <notes><simpara>If more than one thread is waiting on the condition,
+          <notes><simpara>If more than one thread is waiting on <code>*this</code>,
               it is unspecified which is made ready. After returning to a ready
               state the notified thread must still acquire the mutex again (which
               occurs within the call to one of the <classname>condition</classname>
@@ -91,7 +91,7 @@
               requirements.</simpara></requires>
           <effects><simpara>Releases the lock on the <link
                 linkend="threads.concepts.mutexes">mutex object</link>
-              associated with lock, blocks the current thread of execution
+              associated with <code>lock</code>, blocks the current thread of execution
               until readied by a call to <code>this->notify_one()</code>
               or<code> this->notify_all()</code>, and then reacquires the
               lock.</simpara></effects>
@@ -118,7 +118,7 @@
           <requires><simpara><code>ScopedLock</code> meets the <link
                 linkend="threads.concepts.ScopedLock">ScopedLock</link>
               requirements and the return from <code>pred()</code> is
-              convertible to bool.</simpara></requires>
+              convertible to <code>bool</code>.</simpara></requires>
           <effects><simpara>As if: <code>while (!pred())
                 wait(lock)</code></simpara></effects>
           <throws><simpara><classname>lock_error</classname> if
@@ -145,11 +145,11 @@
               requirements.</simpara></requires>
           <effects><simpara>Releases the lock on the <link
                 linkend="threads.concepts.mutexes">mutex object</link>
-              associated with lock, blocks the current thread of execution
+              associated with <code>lock</code>, blocks the current thread of execution
               until readied by a call to <code>this->notify_one()</code>
-              or<code> this->notify_all()</code>, or until <code>xt</code> and
-              then reacquires the lock.</simpara></effects>
-          <returns><simpara><code>false</code> if <code>xt</code> is reached,
+              or<code> this->notify_all()</code>, or until time <code>xt</code> 
+              is reached, and then reacquires the lock.</simpara></effects>
+          <returns><simpara><code>false</code> if time <code>xt</code> is reached,
               otherwise <code>true</code>.</simpara></returns>
           <throws><simpara><classname>lock_error</classname> if
               <code>!lock.locked()</code></simpara></throws>
@@ -174,7 +174,7 @@
           <requires><simpara><code>ScopedLock</code> meets the <link
                 linkend="threads.concepts.ScopedLock">ScopedLock</link>
               requirements and the return from <code>pred()</code> is
-              convertible to bool.</simpara></requires>
+              convertible to <code>bool</code>.</simpara></requires>
           <effects><simpara>As if: <code>while (!pred()) { if (!timed_wait(lock,
                 xt)) return false; } return true;</code></simpara></effects>
           <returns><simpara><code>false</code> if <code>xt</code> is reached,
