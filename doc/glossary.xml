@@ -202,6 +202,24 @@
 	  performed in time to be useful.</para>
 	</glossdef>
   </glossentry>
+  <glossentry id="threads.glossary.undefined-behavior">
+    <glossterm>Undefined Behavior</glossterm>
+	<glossdef>
+	  <para>The result of certain operations in &Boost.Threads; is undefined;
+	  this means that those operations can invoke almost any behavior when
+	  they are executed.</para>
+	  
+	  <para>An operation whose behavior is undefined can work "correctly"
+	  in some implementations (i.e., do what the programmer thought it
+	  would do), while in other implementations it may exhibit almost
+	  any "incorrect" behavior--such as returning an invalid value,
+	  throwing an exception, generating an access violation, or terminating 
+	  the process.</para>
+	  
+	  <para>Executing a statement whose behavior is undefined is a
+	  programming error.</para>
+	</glossdef>
+  </glossentry>
   <glossentry id="threads.glossary.memory-visibility">
     <glossterm>Memory Visibility</glossterm>
 	<glossdef>
@@ -268,7 +286,7 @@
 	  <para>When an exception is thrown and there is no matching exception handler
 	  in the same thread, behavior is undefined. The preferred behavior is the
 	  same as when there is no matching exception handler in a program
-	  [15.3/9]. That is, terminate() is called, and it is implementation defined
+	  [15.3/9]. That is, terminate() is called, and it is implementation-defined
 	  whether or not the stack is unwound.</para>
     </glossdef>
   </glossentry>
