@@ -18,7 +18,9 @@
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
-#   include <process.h>
+#   if !defined(BOOST_NO_THREADEX)
+#      include <process.h>
+#   endif
 #elif defined(BOOST_HAS_MPTASKS)
 #   include <DriverServices.h>
 
@@ -30,6 +32,37 @@
 #include "timeconv.inl"
 
 namespace {
+
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_NO_THREADEX)
+// Windows CE doesn't define _beginthreadex
+
+struct ThreadProxyData
+{
+    typedef unsigned (__stdcall* func)(void*);
+    func start_address_;
+    void* arglist_;
+    ThreadProxyData(func start_address,void* arglist) : start_address_(start_address), arglist_(arglist) {}
+};
+
+DWORD WINAPI ThreadProxy(LPVOID args)
+{
+    ThreadProxyData* data=reinterpret_cast<ThreadProxyData*>(args);
+    DWORD ret=data->start_address_(data->arglist_);
+    delete data;
+    return ret;
+}
+
+inline unsigned _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*), 
+void* arglist, unsigned initflag,unsigned* thrdaddr)
+{
+    DWORD threadID;
+    HANDLE hthread=CreateThread(static_cast<LPSECURITY_ATTRIBUTES>(security),stack_size,ThreadProxy,
+        new ThreadProxyData(start_address,arglist),initflag,&threadID);
+    if (hthread!=0)
+        *thrdaddr=threadID;
+    return reinterpret_cast<unsigned>(hthread);
+}
+#endif
 
 class thread_param
 {
