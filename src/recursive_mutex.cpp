@@ -36,8 +36,8 @@ namespace boost {
 
 recursive_mutex::recursive_mutex()
     : m_mutex(0)
-    , m_count(0)
 	, m_critical_section(false)
+    , m_count(0)
 {
     m_critical_section = true;
     if (m_critical_section)
@@ -104,8 +104,8 @@ void recursive_mutex::do_unlock(cv_state& state)
 
 recursive_try_mutex::recursive_try_mutex()
     : m_mutex(0)
-    , m_count(0)
     , m_critical_section(false)
+    , m_count(0)
 {
     m_critical_section = has_TryEnterCriticalSection();
     if (m_critical_section)
