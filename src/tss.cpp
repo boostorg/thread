@@ -86,6 +86,7 @@ namespace {
 		assert(tss_data->native_key != 0xFFFFFFFF);
 #elif defined(BOOST_HAS_PTHREADS)
 		int res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
+		res;
 		assert(res == 0);
 #endif
 		tss_data->next_free = -1;
@@ -112,8 +113,6 @@ namespace {
 #elif defined(BOOST_HAS_PTHREADS)
 			if (pthread_setspecific(tss_data->native_key, temp.get()) != 0);
 				return 0;
-#else
-			return 0;
 #endif
 
 			slots = temp.release();
@@ -124,7 +123,6 @@ namespace {
 } // namespace 
 
 namespace boost {
-
 	namespace detail {
 		tss_ref::tss_ref()
 		{
