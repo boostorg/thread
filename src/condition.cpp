@@ -30,9 +30,9 @@ namespace boost {
 condition::condition()
     : m_gone(0), m_blocked(0), m_waiting(0)
 {
-    m_gate = reinterpret_cast<unsigned long>(CreateSemaphore(0, 1, 1, 0));
-    m_queue = reinterpret_cast<unsigned long>(CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_gate = reinterpret_cast<void*>(CreateSemaphore(0, 1, 1, 0));
+    m_queue = reinterpret_cast<void*>(CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
 
     if (!m_gate || !m_queue || !m_mutex)
     {

@@ -30,7 +30,7 @@ namespace boost {
 #if defined(BOOST_HAS_WINTHREADS)
 mutex::mutex()
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -68,7 +68,7 @@ void mutex::do_unlock(cv_state&)
 
 try_mutex::try_mutex()
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -114,7 +114,7 @@ void try_mutex::do_unlock(cv_state&)
 
 timed_mutex::timed_mutex()
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }

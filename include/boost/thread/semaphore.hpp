@@ -39,7 +39,7 @@ public:
 
 private:
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_sema;
+    void* m_sema;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
     pthread_cond_t m_condition;

@@ -77,7 +77,7 @@ thread::thread()
     : m_joinable(false)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-    m_thread = reinterpret_cast<unsigned long>(GetCurrentThread());
+    m_thread = reinterpret_cast<void*>(GetCurrentThread());
     m_id = GetCurrentThreadId();
 #elif defined(BOOST_HAS_PTHREADS)
     m_thread = pthread_self();
@@ -89,7 +89,7 @@ thread::thread(const function0<void>& threadfunc)
 {
     thread_param param(threadfunc);
 #if defined(BOOST_HAS_WINTHREADS)
-    m_thread = _beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id);
+    m_thread = reinterpret_cast<void*>(_beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id));
     if (!m_thread)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)

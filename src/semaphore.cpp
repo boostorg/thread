@@ -36,7 +36,7 @@ semaphore::semaphore(unsigned count, unsigned max)
     if (static_cast<long>(max) <= 0)
         max = std::numeric_limits<long>::max();
 
-    m_sema = reinterpret_cast<unsigned long>(CreateSemaphore(0, count, max, 0));
+    m_sema = reinterpret_cast<void*>(CreateSemaphore(0, count, max, 0));
     if (!m_sema)
         throw thread_resource_error();
 }

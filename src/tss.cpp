@@ -27,7 +27,7 @@ namespace {
     typedef std::map<int, cleanup_info> cleanup_handlers;
 
     DWORD key;
-    boost::once_flag once = boost::once_init;
+    boost::once_flag once = BOOST_ONCE_INIT;
 
     void init_cleanup_key()
     {
