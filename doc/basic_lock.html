@@ -32,25 +32,25 @@
 <h2><a name="Introduction">Introduction</a></h2>
 
 <p>This class template defines a generic <a href="http://cvs.sourceforge.net/cgi-bin/viewcvs.cgi/~checkout~/boost/boost/libs/thread/doc/Attic/lock_concept.html">lock
-concept</a> type. The
-<a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>, <a href="mutex.html">timed_mutex</a>,
-<a href="recursive_mutex.html">recursive_mutex</a>, <a href="recursive_mutex.html">recursive_try_mutex</a> and
-<a href="recursive_mutex.html">recursive_timed_mutex</a>  classes all use this template to define their
-<tt>lock</tt> types. Instances of class basic_lock meet the <a href="lock_concept.html#requirements">Lock
-requirements</a>.</p>
+concept</a> type. The <a href="mutex.html">mutex</a>, <a href="mutex.html">try_mutex</a>,
+<a href="mutex.html">timed_mutex</a>, <a href="recursive_mutex.html">recursive_mutex</a>,
+<a href="recursive_mutex.html">recursive_try_mutex</a> and <a href="recursive_mutex.html">recursive_timed_mutex</a>
+classes all use this template to define their <tt>lock</tt> types. Instances of class <code>basic_lock</code>
+meet the <a href="lock_concept.html#requirements">Lock requirements</a>.</p>
 
 <p>Like all the <b>Boost.Threads</b> <a href="lock_concept.html">lock models</a>,
 <tt>basic_lock</tt> objects are meant to be short lived. Objects of class <tt>basic_lock</tt>
 are not <a href="thread_formal_definition.html#thread-safe">thread-safe</a>, and
-so should not be shared
-between threads.</p>
+so should not be shared between threads.</p>
 
 <p>Class basic_lock follows the &quot;resource acquisition is
-initialization&quot; idiom [<a href="bibliography.html#Stroustrup-00">Stroustrup
-00</a> 14.4.1].&nbsp; Thus a common usage is to let the constructor do the
-locking, and then let the destructor do the unlocking automatically at the end
-of the enclosing scope. The lock() and unlock() members are commonly not
-explicitly called.</p>
+initialization&quot; idiom <a href="bibliography.html#Stroustrup-00">[Stroustrup
+00 14.4.1]</a> and is a realization of the &quot;Scoped Locking Pattern&quot;
+<a href="bibliography.html#Schmidt-00">[Schmidt-00]</a>. Thus the usage is to let the
+constructor do the locking, and then let the destructor do the unlocking automatically at
+the end of the enclosing scope. The lock() and unlock() members are commonly not
+explicitly called, but allow for complex overlapping locks of multiple
+<a href="mutex_concept.html">Mutex concepts</a>.</p>
 
 <p>The type <code>M</code> used to instantiate class <code>basic_lock</code>
 must meet the <a href="mutex_concept.html#requirements">Mutex requirements</a>.</p>
@@ -97,7 +97,7 @@ namespace boost {
     explicit basic_lock(M&amp; mx, bool lock_it=true);
 </pre>
 
-<p><b>Effects: </b>Associates mutex <code>mx</code> with <code>*this</code>.&nbsp;
+<p><b>Effects:</b> Associates mutex <code>mx</code> with <code>*this</code>.
 If <tt>lock_it</tt> is <tt>true,</tt> then calls <tt>lock()</tt>.</p>
 
 <hr>
@@ -108,7 +108,7 @@ If <tt>lock_it</tt> is <tt>true,</tt> then calls <tt>lock()</tt>.</p>
     ~basic_lock();
 </pre>
 
-<p><b>Effects: </b>If locked calls <tt>unlock()</tt>, then destroys <code>*this</code>.&nbsp;</p>
+<p><b>Effects:</b> If locked calls <tt>unlock()</tt>, then destroys <code>*this</code>.</p>
 
 <hr>
 
@@ -118,17 +118,16 @@ If <tt>lock_it</tt> is <tt>true,</tt> then calls <tt>lock()</tt>.</p>
     void lock();
 </pre>
 
-<p><b>Requires:</b> If the locking strategy of the associated mutex is anything
-other than recursive, the associated mutex must not already be locked.</p>
+<p><b>Requires:</b> this->operator const void*() == 0 (not locked).</p>
 
-<p><b>Effects: </b>If the associated mutex is not already locked, locks
-it.&nbsp; Otherwise, the effect depends on the locking strategy of the
-associated mutex, as shown in the following table:</p>
+<p><b>Effects:</b> Attempts to lock the associated mutex.  If the associated mutex
+is already locked by the currently running thread the effects depend on the locking
+strategy of the associated mutex, as shown in the following table:</p>
 
 <table border="1" cellpadding="5">
   <tr>
-    <td><i><a href="mutex_concept.html#LockingStrategies">Locking Strategy<br>
-      </a>of associated mutex</i></td>
+    <td><i><a href="mutex_concept.html#LockingStrategies">Locking Strategy</a><br>
+      of associated mutex</i></td>
     <td><i>Effect if associated mutex is already locked</i></td>
   </tr>
   <tr>
@@ -145,6 +144,11 @@ associated mutex, as shown in the following table:</p>
       typically, <a href="thread_formal_definition.html#Deadlock">deadlock</a>.)</td>
   </tr>
 </table>
+
+<p><b>Throws:</b> <a href="lock_error.html">lock_error</a> if the lock object is
+already locked or if the associated mutex uses the Checked
+<a href="mutex_concept.html#LockingStrategies">Locking Strategy</a> and has
+already been locked by the currently running thread.
 
 <hr>
 

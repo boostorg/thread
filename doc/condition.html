@@ -165,9 +165,9 @@ concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 
 <p><b>Effects:</b> As if:</p>
 
-<pre>
+<code>
 	while !(pred()) wait(lock)
-</pre>
+</code>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
@@ -207,13 +207,13 @@ concept</a>. Return from <code>pred()</code> convertible to bool.</p>
 
 <p><b>Effects: </b>As if:</p>
 
-<pre>
+<code>
     while (!pred())
     {
         if (!timed_wait(lock, xt))
             return false;
     }
-</pre>
+</code>
 
 <p><b>Throws:</b> <code><a href="lock_error.html">lock_error</a></code> if <code>!lock</code></p>
 
