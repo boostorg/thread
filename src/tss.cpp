@@ -180,11 +180,13 @@ tss::tss(boost::function1<void, void*> cleanup)
 {
 	m_key = alloc_key(this);
 	m_clean = cleanup;
+	m_module = (void*)LoadLibrary("boostthreadmon.dll");
 }
 
 tss::~tss()
 {
 	free_key(m_key);
+	FreeLibrary((HMODULE)m_module);
 }
 
 void* tss::get() const
