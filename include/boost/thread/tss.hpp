@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -28,32 +28,32 @@
 
 namespace boost {
 
-    namespace detail {
-        class BOOST_THREAD_DECL tss : private noncopyable
-        {
-        public:
-            tss(void (*cleanup)(void*)=0);
-            ~tss();
+namespace detail {
+class BOOST_THREAD_DECL tss : private noncopyable
+{
+public:
+    tss(void (*cleanup)(void*)=0);
+    ~tss();
 
-            void* get() const;
-            bool set(void* value);
+    void* get() const;
+    bool set(void* value);
 
-        private:
-        #if defined(BOOST_HAS_WINTHREADS)
-            unsigned long m_key;
-            void (*m_cleanup)(void*);
-        #elif defined(BOOST_HAS_PTHREADS)
-            pthread_key_t m_key;
-        #elif defined(BOOST_HAS_MPTASKS)
-            TaskStorageIndex m_key;
-            void (*m_cleanup)(void*);
-        #endif
-        };
+private:
+#if defined(BOOST_HAS_WINTHREADS)
+    unsigned long m_key;
+    void (*m_cleanup)(void*);
+#elif defined(BOOST_HAS_PTHREADS)
+    pthread_key_t m_key;
+#elif defined(BOOST_HAS_MPTASKS)
+    TaskStorageIndex m_key;
+    void (*m_cleanup)(void*);
+#endif
+};
 
-    #if defined(BOOST_HAS_MPTASKS)
-        void thread_cleanup();
-    #endif
-    }
+#if defined(BOOST_HAS_MPTASKS)
+void thread_cleanup();
+#endif
+}
 
 template <typename T>
 class thread_specific_ptr : private noncopyable
@@ -65,7 +65,13 @@ public:
     T* operator->() const { return get(); }
     T& operator*() const { return *get(); }
     T* release() { T* temp = get(); m_tss.set(0); return temp; }
-    void reset(T* p=0) { T* cur = get(); if (cur == p) return; delete cur; m_tss.set(p); }
+    void reset(T* p=0)
+    {
+        T* cur = get();
+        if (cur == p) return;
+        delete cur;
+        m_tss.set(p);
+    }
 
 private:
     static void cleanup(void* p) { delete static_cast<T*>(p); }
