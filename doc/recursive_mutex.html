@@ -48,21 +48,21 @@
 </dl>
 <hr>
 <h2><a name="introduction"></a>Introduction</h2>
-<p>Include the header &lt;<a href="../../../boost/thread/recursive_mutex.hpp">boost/thread/recursive_mutex.hpp</a>&gt;
-  to define the <a href="#class-recursive_mutex">recursive_mutex</a>, <a href="#class-recursive_try_mutex">recursive_try_mutex</a>
+<p>Include the header &lt;<a href="../../../boost/thread/recursive_mutex.hpp">boost/thread/recursive_mutex.hpp</a>&gt; 
+  to define the <a href="#class-recursive_mutex">recursive_mutex</a>, <a href="#class-recursive_try_mutex">recursive_try_mutex</a> 
   and <a href="#class-recursive_timed_mutex">recursive_timed_mutex</a> classes.</p>
-<p>The <a href="#class-recursive_mutex">recursive_mutex</a>, <a href="#class-recursive_try_mutex">recursive_try_mutex</a>
-  and <a href="#class-recursive_timed_mutex">recursive_timed_mutex</a> classes
-  are models of <a href="mutex_concept.html#Mutex-concept">Mutex</a>, <a href="mutex_concept.html#TryMutex-concept">TryMutex</a>,
-  and <a href="mutex_concept.html#TimedMutex-concept">TimedMutex</a> respectively.
-  These types should be used to synchronize access to shared resources when recursive
-  locking by a single thread is likely to occur. A good example for this is when
-  a class supplies &quot;internal synchronization&quot; to ensure <a href="definitions.html#Thread-safe">
-  thread-safety</a> and a function of the class may have to call other functions
-  of the class which also attempt to lock the mutex. For recursive locking mechanics,
+<p>The <a href="#class-recursive_mutex">recursive_mutex</a>, <a href="#class-recursive_try_mutex">recursive_try_mutex</a> 
+  and <a href="#class-recursive_timed_mutex">recursive_timed_mutex</a> classes 
+  are models of <a href="mutex_concept.html#Mutex-concept">Mutex</a>, <a href="mutex_concept.html#TryMutex-concept">TryMutex</a>, 
+  and <a href="mutex_concept.html#TimedMutex-concept">TimedMutex</a> respectively. 
+  These types should be used to synchronize access to shared resources when recursive 
+  locking by a single thread is likely to occur. A good example for this is when 
+  a class supplies &quot;internal synchronization&quot; to ensure <a href="definitions.html#Thread-safe"> 
+  thread-safety</a> and a function of the class may have to call other functions 
+  of the class which also attempt to lock the mutex. For recursive locking mechanics, 
   see <a href="mutex.html">mutexes</a>.</p>
-<p>Each class supplies one or more typedefs for lock types which model matching
-  lock concepts. For the best possible performance you should use the mutex class
+<p>Each class supplies one or more typedefs for lock types which model matching 
+  lock concepts. For the best possible performance you should use the mutex class 
   that supports the minimum set of lock types that you need.</p>
 <table summary="lock types" border="1" cellpadding="5">
   <tr>
