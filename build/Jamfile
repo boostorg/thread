@@ -66,5 +66,5 @@ stage bin-stage
     : <lib>boost_thread $(threadmon)
     : <tag><runtime-link-static>"s"
       <tag><debug>"d"
-    : debug release
+    : debug release <runtime-link>static/dynamic
 ;
