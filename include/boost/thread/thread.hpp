@@ -17,16 +17,14 @@
 #   error	Thread support is unavailable!
 #endif
 
-#include <boost/thread/exceptions.hpp>
-
-#include <boost/function.hpp>
 #include <boost/utility.hpp>
+#include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
 #include <list>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
+#   include <boost/thread/condition.hpp>
 #endif
 
 namespace boost {

@@ -19,8 +19,12 @@
 #ifndef BOOST_THREAD_EXCEPTIONS_PDM070801_H
 #define BOOST_THREAD_EXCEPTIONS_PDM070801_H
 
-//  Sorry, but this class is used all over the place & I end up
-//  with recursive headers if I don't separate it
+//  pdm: Sorry, but this class is used all over the place & I end up
+//       with recursive headers if I don't separate it
+//  wek: Not sure why recursive headers would cause compilation problems
+//       given the include guards, but regardless it makes sense to
+//       seperate this out any way.
+
 #include <stdexcept>
 
 namespace boost {

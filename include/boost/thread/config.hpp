@@ -72,6 +72,10 @@
 #   endif
 #   define BOOST_HAS_FTIME
     //  pdm: this is for linux - is there a better #define to #if on?
+    //  wek: not sure how else to do this, but GNU CC on Win32 should probably
+    //       use BOOST_HAS_WINTHREADS, and I expect there will be other
+    //       platform specific variations for this compiler toolset.  Need
+    //       to decide how to handle this.
 #elif defined( __GNUC__ )
 #   define BOOST_HAS_THREADS
 #   define BOOST_HAS_PTHREADS
@@ -79,6 +83,10 @@
 #   define BOOST_HAS_GETTIMEOFDAY
     //  pdm: From the pthread.h header, one of these macros
     //  must be defined for this stuff to exist.
+    //  wek: This seems like a harmless enough method to determine these
+    //       switches, but one should note that some implementations may not
+    //       use these.  Notably, pthreads-win32 doesn't define either
+    //       __USE_UNIX98 or __USE_GNU.
 #   if defined( __USE_UNIX98 )
 #       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
 #   elif defined( __USE_GNU )
