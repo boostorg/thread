@@ -133,9 +133,9 @@
 
             atexit(on_thread_exit);
 
-//:         //Call Boost process entry callback here
-//:
-//:         on_process_enter();
+            //Call Boost process entry callback here
+
+            on_process_enter();
 
             return INIRETSUCCESS;
         }
