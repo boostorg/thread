@@ -262,6 +262,7 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
     assert(res);
 }
 #elif defined(BOOST_HAS_PTHREADS)
+
 recursive_mutex::recursive_mutex()
     : m_count(0)
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -269,8 +270,7 @@ recursive_mutex::recursive_mutex()
 #   endif
 {
     pthread_mutexattr_t attr;
-    int res = 0;
-    res = pthread_mutexattr_init(&attr);
+    int res = pthread_mutexattr_init(&attr);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -279,6 +279,10 @@ recursive_mutex::recursive_mutex()
 #   endif
 
     res = pthread_mutex_init(&m_mutex, &attr);
+    {
+        int res = pthread_mutexattr_destroy(&attr);
+        assert(res == 0);
+    }
     if (res != 0)
         throw thread_resource_error();
 
@@ -421,8 +425,7 @@ recursive_try_mutex::recursive_try_mutex()
 #   endif
 {
     pthread_mutexattr_t attr;
-    int res = 0;
-    res = pthread_mutexattr_init(&attr);
+    int res = pthread_mutexattr_init(&attr);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -431,6 +434,10 @@ recursive_try_mutex::recursive_try_mutex()
 #   endif
 
     res = pthread_mutex_init(&m_mutex, &attr);
+    {
+        int res = pthread_mutexattr_destroy(&attr);
+        assert(res == 0);
+    }
     if (res != 0)
         throw thread_resource_error();
 
