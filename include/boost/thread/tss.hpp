@@ -14,8 +14,6 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#ifndef BOOST_THREAD_NO_TSS_CLEANUP
-
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -107,8 +105,7 @@ private:
 
 } // namespace boost
 
-#endif BOOST_THREAD_NO_TSS_CLEANUP
-#endif // BOOST_TSS_WEK070601_HPP
+#endif //BOOST_TSS_WEK070601_HPP
 
 // Change Log:
 //   6 Jun 01  
