@@ -33,19 +33,19 @@ public:
 };
 
 
-template<class T>
+template <class T>
 inline singleton<T>::singleton()
 {
     /* no-op */
 }
 
-template<class T>
+template <class T>
 inline singleton<T>::~singleton()
 {
     /* no-op */
 }
 
-template<class T>
+template <class T>
 /*static*/ T &singleton<T>::instance()
 {
     // function-local static to force this to work correctly at static

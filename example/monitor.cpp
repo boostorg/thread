@@ -19,7 +19,7 @@
 namespace {
 const int ITERS = 100;
 boost::mutex io_mutex;
-}
+} // namespace
 
 template <typename M>
 class buffer_t

@@ -51,8 +51,8 @@ public:
         {
             boost::mutex::scoped_lock lock(iomx);
             std::cout << "(" << clock()
-                      << ") Chef: ouch ... make room ... this dish is very "
-                      << "hot ..." << std::endl;
+                      << ") Chef: ouch ... make room ... this dish is "
+                      << "very hot ..." << std::endl;
         }
         boost::xtime xt;
         boost::xtime_get(&xt, boost::TIME_UTC);
@@ -108,8 +108,8 @@ struct phil
     void run() {
         {
             boost::mutex::scoped_lock lock(iomx);
-            std::cout << "(" << clock() << ") Phil" << m_id << ": starting ..."
-                      << std::endl;
+            std::cout << "(" << clock() << ") Phil" << m_id
+                      << ": starting ..." << std::endl;
         }
         for (;;)
         {
