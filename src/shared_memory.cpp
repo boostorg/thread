@@ -36,32 +36,50 @@ std::string encode(const char* str)
 {
 	const char* digits="0123456789abcdef";
 	std::string result;
-	while (str)
+	static char buf[100];
+	char* ebuf = buf + 100;
+	char* p = buf;
+	while (*str)
 	{
 		if (((*str >= '0') && (*str <= '9')) ||
 			((*str >= 'a') && (*str <= 'z')) ||
 			((*str >= 'A') && (*str <= 'Z')) ||
 			(*str == '/') || (*str == '.') || (*str == '_'))
 		{
-			result += *str;
+			*p = *str;
 		}
 		else if (*str == ' ')
 		{
-			result += '+';
+			*p = '+';
 		}
 		else
 		{
-			result += '%';
-			int v = *str;
-			std::string hex;
-			while (v)
+			if (p + 3 >= ebuf)
 			{
-				hex = std::string() + digits[v % 16] + hex;
+				*p = 0;
+				result += buf;
+				p = buf;
+			}
+			*p = '%';
+			char* e = p + 2;
+			int v = *str;
+			while (e > p)
+			{
+				*e-- = digits[v % 16];
 				v /= 16;
 			}
-			result += hex;
+			p += 2;
 		}
+		if (++p == ebuf)
+		{
+			*p = 0;
+			result += buf;
+			p = buf;
+		}
+		++str;
 	}
+	*p = 0;
+	result += buf;
 	return result;
 }
 
@@ -107,10 +125,22 @@ shared_memory::~shared_memory()
         assert(res == 0);
         res = close(m_hmap);
         assert(res == 0);
-        res = shm_unlink(m_name.c_str());
+        res = shm_unlink(effective_name());
         assert(res == 0);
 #endif
     }
+}
+
+std::string shared_memory::name() const
+{
+	return m_name;
+}
+
+std::string shared_memory::effective_name() const
+{
+	if (m_name[0] == '%')
+		return m_name.substr(1);
+	return get_root() + encode(m_name.c_str());
 }
 
 void shared_memory::init(const char *name, size_t len, int flags,
@@ -119,12 +149,9 @@ void shared_memory::init(const char *name, size_t len, int flags,
     int res = 0;
     bool should_init = false;
 
-    std::string sname;
-    if (name[0] == '%')
-        sname = &name[1];
-    else
-        sname = get_root() + encode(name);
-    std::string mxname = sname + "mx94543CBD1523443dB128451E51B5103E";
+	m_name = name;
+    std::string ename = effective_name();
+    std::string mxname = ename + "mx94543CBD1523443dB128451E51B5103E";
 
 #if defined(BOOST_HAS_WINTHREADS)
     HANDLE mutex = CreateMutexA(0, FALSE, mxname.c_str());
@@ -137,7 +164,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
     {
         DWORD protect = (flags & write) ? PAGE_READWRITE : PAGE_READONLY;
         m_hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, protect,
-            0, len, sname.c_str());
+            0, len, ename.c_str());
         if (m_hmap == INVALID_HANDLE_VALUE ||
             ((flags & exclusive) && GetLastError() == ERROR_ALREADY_EXISTS))
         {
@@ -157,7 +184,7 @@ void shared_memory::init(const char *name, size_t len, int flags,
     else
     {
         DWORD protect = (flags & write) ? FILE_MAP_WRITE : FILE_MAP_READ;
-        m_hmap = OpenFileMapping(protect, FALSE, sname.c_str());
+        m_hmap = OpenFileMapping(protect, FALSE, ename.c_str());
         if (m_hmap == INVALID_HANDLE_VALUE)
         {
             res = ReleaseMutex(mutex);
@@ -170,7 +197,6 @@ void shared_memory::init(const char *name, size_t len, int flags,
     m_ptr = MapViewOfFile(m_hmap, FILE_MAP_WRITE, 0, 0, 0);
     assert(m_ptr);
 #elif defined(BOOST_HAS_PTHREADS)
-    m_name = sname;
     m_len = len;
 
 	sem_t* sem = sem_open(mxname.c_str(), O_CREAT);

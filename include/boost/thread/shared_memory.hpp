@@ -42,15 +42,18 @@ public:
 
     void* get() const { return m_ptr; }
 
+	std::string name() const;
+	std::string effective_name() const;
+
 private:
     void init(const char *name, std::size_t len, int flags,
         const boost::function1<void, void*>* initfunc);
 
     void *m_ptr;        // Pointer to shared memory block
+    std::string m_name;
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_hmap;
 #elif defined(BOOST_HAS_PTHREADS)
-    std::string m_name;
     std::size_t m_len;
     int m_hmap;
 #endif
