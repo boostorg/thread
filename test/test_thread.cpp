@@ -1,133 +1,114 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
-//#include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test.hpp>
-#include <utils.inl>
 
-namespace
+#define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
+#include "util.inl"
+
+int test_value;
+
+void simple_thread()
 {
-    int test_value;
+    test_value = 999;
+}
 
-    void simple_thread()
-    {
-        test_value = 999;
-    }
-
-    void cancel_thread()
-    {
-		// This block will test the cancellation guard. If it
-		// doesn't work, we'll be cancelled with out setting
-		// the test_value to 999.
-		try
-		{
-			boost::cancellation_guard guard;
-			// Sleep long enough to let the main thread cancel us
-			boost::thread::sleep(xtime_get_future(3));
-		}
-		catch (boost::thread_cancel& cancel)
-		{
-			test_value = 666; // indicates unexpected cancellation
-			throw; // Make sure to re-throw!
-		}
-
-		// This block tests the cancellation itself.  If it
-		// works a thread_cancel exception will be thrown,
-		// and in the catch handler for it we'll set our
-		// exptected test_value of 999.
-		try
-		{
-			boost::thread::test_cancel();
-		}
-		catch (boost::thread_cancel& cancel)
-		{
-			test_value = 999;
-			throw; // Make sure to re-throw!
-		}
-    }
-
-    struct thread_adapter
-    {
-        thread_adapter(void (*func)(boost::thread& parent),
-            boost::thread& parent) : func(func), parent(parent)
-        {
-        }
-
-        void operator()()
-        {
-            (*func)(parent);
-        }
-
-        void (*func)(boost::thread& parent);
-        boost::thread& parent;
-    };
-
-	struct indirect_adapter
+void cancel_thread()
+{
+	// This block will test the cancellation guard. If it
+	// doesn't work, we'll be cancelled with out setting
+	// the test_value to 999.
+	try
 	{
-		indirect_adapter(void (*func)()) : func(func) { }
-		void operator()()
-		{
-			boost::thread thrd(func);
-			thrd.join();
-		}
-		void (*func)();
-	};
-
-    void comparison_thread(boost::thread& parent)
-    {
-        boost::thread thrd;
-        BOOST_TEST(thrd != parent);
-        BOOST_TEST(thrd == boost::thread());
-    }
-
-	void priority_thread()
-	{
-		int policy;
-		boost::sched_param param;
-		boost::thread self;
-		self.get_scheduling_parameter(policy, param);
-		test_value = param.priority;
-		int new_prio = boost::thread::min_priority(policy);
-		BOOST_CHECK(new_prio != param.priority);
-		param.priority = new_prio;
-		self.set_scheduling_parameter(policy, param);
-		param.priority++;
-		self.get_scheduling_parameter(policy, param);
-		BOOST_CHECK_EQUAL(new_prio, param.priority);
+		boost::cancellation_guard guard;
+		// Sleep long enough to let the main thread cancel us
+		boost::thread::sleep(delay(3));
 	}
+	catch (boost::thread_cancel& cancel)
+	{
+		test_value = 666; // indicates unexpected cancellation
+		throw; // Make sure to re-throw!
+	}
+
+	// This block tests the cancellation itself.  If it
+	// works a thread_cancel exception will be thrown,
+	// and in the catch handler for it we'll set our
+	// exptected test_value of 999.
+	try
+	{
+		boost::thread::test_cancel();
+	}
+	catch (boost::thread_cancel& cancel)
+	{
+		test_value = 999;
+		throw; // Make sure to re-throw!
+	}
+}
+
+void priority_thread()
+{
+	int policy;
+	boost::sched_param param;
+	boost::thread self;
+	self.get_scheduling_parameter(policy, param);
+	test_value = param.priority;
+	int new_prio = boost::thread::min_priority(policy);
+	BOOST_CHECK(new_prio != param.priority);
+	param.priority = new_prio;
+	self.set_scheduling_parameter(policy, param);
+	param.priority++;
+	self.get_scheduling_parameter(policy, param);
+	BOOST_CHECK_EQUAL(new_prio, param.priority);
+}
+
+void comparison_thread(boost::thread* parent)
+{
+    boost::thread thrd;
+    BOOST_TEST(thrd != *parent);
+    BOOST_TEST(thrd == boost::thread());
 }
 
 void test_sleep()
 {
-    boost::xtime xt = xtime_get_future(3);
+    boost::xtime xt = delay(3);
     boost::thread::sleep(xt);
 
     // Insure it's in a range instead of checking actual equality due to time
-    // lapse
-    BOOST_CHECK(xtime_in_range(xt, -1, 0));
+	// lapse
+    BOOST_CHECK(in_range(xt));
+}
+
+void do_test_creation()
+{
+    test_value = 0;
+    boost::thread thrd(&simple_thread);
+	boost::thread::sleep(delay(2));
+    BOOST_CHECK_EQUAL(test_value, 999);
 }
 
 void test_creation()
 {
-    test_value = 0;
-    boost::thread thrd(&simple_thread);
-	boost::thread::sleep(xtime_get_future(2));
-    BOOST_CHECK_EQUAL(test_value, 999);
+	timed_test(&do_test_creation, 1);
+}
+
+void do_test_join()
+{
+	test_value = 0;
+	boost::thread thrd(&simple_thread);
+	thrd.join();
+	BOOST_CHECK_EQUAL(test_value, 999);
 }
 
 void test_join()
 {
-	test_value = 0;
-	boost::thread thrd = boost::thread(indirect_adapter(&simple_thread));
-	boost::thread::sleep(xtime_get_future(2));
-	BOOST_CHECK_EQUAL(test_value, 999);
+	timed_test(&do_test_join, 1);
 }
 
-void test_comparison()
+void do_test_comparison()
 {
     boost::thread self;
 	BOOST_CHECK(self == boost::thread());
 
-    boost::thread thrd(thread_adapter(comparison_thread, self));
+    boost::thread thrd(bind(&comparison_thread, &self));
 	boost::thread thrd2 = thrd;
 
 	BOOST_CHECK(thrd != self);
@@ -136,13 +117,23 @@ void test_comparison()
     thrd.join();
 }
 
-void test_cancel()
+void test_comparison()
+{
+	timed_test(&do_test_comparison, 1);
+}
+
+void do_test_cancel()
 {
 	test_value = 0;
 	boost::thread thrd(&cancel_thread);
 	thrd.cancel();
 	thrd.join();
 	BOOST_CHECK_EQUAL(test_value, 999); // only true if thread was cancelled
+}
+
+void test_cancel()
+{
+	timed_test(&do_test_cancel, 1);
 }
 
 void test_thread_attributes()

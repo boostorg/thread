@@ -3,23 +3,22 @@
 
 #include <boost/test/unit_test.hpp>
 
-namespace
+#include "util.inl"
+
+int once_value = 0;
+boost::once_flag once = BOOST_ONCE_INIT;
+
+void init_once_value()
 {
-    int once_value = 0;
-    boost::once_flag once = BOOST_ONCE_INIT;
-
-    void init_once_value()
-    {
-        once_value++;
-    }
-
-    void test_once_thread()
-    {
-        boost::call_once(init_once_value, once);
-    }
+    once_value++;
 }
 
-void test_once()
+void test_once_thread()
+{
+    boost::call_once(init_once_value, once);
+}
+
+void do_test_once()
 {
     const int NUMTHREADS=5;
     boost::thread_group threads;
@@ -27,6 +26,11 @@ void test_once()
         threads.create_thread(&test_once_thread);
     threads.join_all();
     BOOST_CHECK_EQUAL(once_value, 1);
+}
+
+void test_once()
+{
+	timed_test(&do_test_once, 2);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
