@@ -133,15 +133,25 @@ conditions</a> than event objects.&nbsp; See <a href="bibliography.html#Hoare-74
 and <a href="bibliography.html#Schmidt-00">[Schmidt
 00]</a>.</p>
 
-<h2>7. Why aren't thread cancellation or termination provided?</h2>
+<h2>7. Why isn't thread cancellation or termination provided?</h2>
 
 <p>There's a valid need for thread termination, so at some point Boost.Threads
 probably will include it, but only after we can find a truly safe (and portable)
 mechanism for this concept.</p>
 
+<h2>8. Is it safe for threads to share automatic storage duration (stack)
+objects via pointers or references?</h2>
+
+<p>Only if you can guarantee that the lifetime of the stack object will not end
+while other threads might still access the object. Thus the safest practice is
+to avoid sharing stack objects, particularly in designs where threads are
+created and destroyed dynamically. Restrict sharing of stack objects to simple
+designs with very clear and unchanging function and thread lifetimes. (Suggested
+by Darryl Green).</p>
+
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->08 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34356" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->10 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34341" -->
 </p>
 
 <p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
