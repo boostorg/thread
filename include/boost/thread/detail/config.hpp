@@ -30,16 +30,16 @@
 #   else //Use default
 #       if defined(BOOST_MSVC)
             //For VC++, choose according to threading library setting
-#           #if defined(_DLL)
+#           if defined(_DLL)
                 //Threading library is dll: use Boost.Threads dll
 #               define BOOST_THREAD_USE_DLL
 #               define BOOST_THREAD_DECL __declspec(dllimport)
 #               define BOOST_DYN_LINK
-#           #else
+#           else
                 //Threading library is lib: used Boost.Threads lib
 #               define BOOST_THREAD_USE_LIB
 #               define BOOST_THREAD_DECL
-#           #endif
+#           endif
 #       else
             //For compilers not yet supporting auto-tss cleanup
             //with Boost.Threads lib, use Boost.Threads dll
