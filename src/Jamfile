@@ -1,4 +1,4 @@
-subproject src ;
+subproject libs/thread/src ;
 
 lib threads
 	: condition.cpp
@@ -10,6 +10,7 @@ lib threads
 	  xtime.cpp
 	## Requirements ##
 	: <include>..
+      <include>$(BOOST_ROOT)
 	  <threading>multi
 	## default-BUILD ##
 	: debug release
