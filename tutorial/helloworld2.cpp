@@ -3,13 +3,12 @@
 
 struct helloworld
 {
-    helloworld(const char* who) : m_who(who) { }
-    void operator()() { std::cout << m_who << "says, \"Hello World.\"" << std::endl; }
-    const char* m_who;
+    helloworld() { }
+    void operator()() { std::cout << "Hello World." << std::endl; }
 };
 
 int main()
 {
-    boost::thread thrd(helloworld("Bob"));
+    boost::thread thrd(helloworld());
     thrd.join();
 }
