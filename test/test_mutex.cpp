@@ -6,22 +6,8 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/test/unit_test_suite_ex.hpp>
 
-namespace
-{
-    inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
-    {
-        boost::xtime cur;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-
-        boost::xtime less = cur;
-        less.sec += less_seconds;
-
-        boost::xtime greater = cur;
-        greater.sec += greater_seconds;
-
-        return (boost::xtime_cmp(xt, less) >= 0) && (boost::xtime_cmp(xt, greater) <= 0);
-    }
-}
+#define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
+#include "util.inl"
 
 template <typename M>
 struct test_lock
@@ -43,9 +29,7 @@ struct test_lock
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
-        boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-        xt.nsec += 100000000;
+        boost::xtime xt = delay(0, 100);
 
         // Test the lock and the mutex with condition variables.
         // No one is going to notify this condition variable.  We expect to
@@ -85,9 +69,7 @@ struct test_trylock
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
-        boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-        xt.nsec += 100000000;
+        boost::xtime xt = delay(0, 100);
 
         // Test the lock and the mutex with condition variables.
         // No one is going to notify this condition variable.  We expect to
@@ -121,9 +103,7 @@ struct test_timedlock
         // Test the lock's constructors.
         {
             // Construct and initialize an xtime for a fast time out.
-            boost::xtime xt;
-            BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-            xt.nsec += 100000000;
+            boost::xtime xt = delay(0, 100);
 
             timed_lock_type lock(mutex, xt);
             BOOST_CHECK(lock ? true : false);
@@ -136,16 +116,14 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
-        boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-        xt.nsec += 100000000;
+        boost::xtime xt = delay(0, 100);
 
         // Test the lock and the mutex with condition variables.
         // No one is going to notify this condition variable.  We expect to
         // time out.
         BOOST_CHECK(!condition.timed_wait(lock, xt));
         BOOST_CHECK(lock ? true : false);
-        BOOST_CHECK(xtime_in_range(xt, -1, 0));
+        BOOST_CHECK(in_range(xt));
 
         // Test the lock, unlock and timedlock methods.
         lock.unlock();
@@ -154,8 +132,7 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
         lock.unlock();
         BOOST_CHECK(!lock);
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
-        xt.nsec += 100000000;
+		xt = delay(0, 100);
         BOOST_CHECK(lock.timed_lock(xt));
         BOOST_CHECK(lock ? true : false);
     }
@@ -175,43 +152,73 @@ struct test_recursive_lock
     }
 };
 
-void test_mutex()
+void do_test_mutex()
 {
     test_lock<boost::mutex>()();
 }
 
-void test_try_mutex()
+void test_mutex()
+{
+	timed_test(&do_test_mutex, 3);
+}
+
+void do_test_try_mutex()
 {
     test_lock<boost::try_mutex>()();
     test_trylock<boost::try_mutex>()();
 }
 
-void test_timed_mutex()
+void test_try_mutex()
+{
+	timed_test(&do_test_try_mutex, 3);
+}
+
+void do_test_timed_mutex()
 {
     test_lock<boost::timed_mutex>()();
     test_trylock<boost::timed_mutex>()();
     test_timedlock<boost::timed_mutex>()();
 }
 
-void test_recursive_mutex()
+void test_timed_mutex()
+{
+	timed_test(&do_test_timed_mutex, 3);
+}
+
+void do_test_recursive_mutex()
 {
     test_lock<boost::recursive_mutex>()();
     test_recursive_lock<boost::recursive_mutex>()();
 }
 
-void test_recursive_try_mutex()
+void test_recursive_mutex()
+{
+	timed_test(&do_test_recursive_mutex, 3);
+}
+
+void do_test_recursive_try_mutex()
 {
     test_lock<boost::recursive_try_mutex>()();
     test_trylock<boost::recursive_try_mutex>()();
     test_recursive_lock<boost::recursive_try_mutex>()();
 }
 
-void test_recursive_timed_mutex()
+void test_recursive_try_mutex()
+{
+	timed_test(&do_test_recursive_try_mutex, 3);
+}
+
+void do_test_recursive_timed_mutex()
 {
     test_lock<boost::recursive_timed_mutex>()();
     test_trylock<boost::recursive_timed_mutex>()();
     test_timedlock<boost::recursive_timed_mutex>()();
     test_recursive_lock<boost::recursive_timed_mutex>()();
+}
+
+void test_recursive_timed_mutex()
+{
+	timed_test(&do_test_recursive_timed_mutex, 3);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
