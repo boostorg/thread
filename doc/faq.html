@@ -1,0 +1,50 @@
+<html>
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<meta name="keywords" content="threads, BTL, thread library, C++">
+<title>Boost.Threads, FAQ</title>
+</head>
+
+<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+
+<table border="0" cellpadding="7" cellspacing="0" width="100%">
+    <tr>
+        <td valign="top" width="300">
+			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
+        </td>
+        <td valign="top">
+			<h1 align="center">Boost.Threads</h1>
+			<h2 align="center">Frequently Asked Questions</h2>
+        </td>
+    </tr>
+</table>
+
+<hr>
+
+<h2>Are lock objects thread safe?</h2>
+
+<p><b>No!</b>  Lock objects are not meant to be shared between threads.  They are meant to
+be short lived objects created on automatic storage within a code block.  Any other usage
+is just likely to lead to errors and won't really be of actual benefit any way.  Share
+mutexes, not locks.  For more information on this see the documentation on the
+<a href="rationale.html#lock_objects">rationale</a> behind the design for lock objects.</p>
+
+<h2>Why was Boost.Threads modelled after the (platform specific library name)
+library?</h2>
+
+<p>It wasn't.  As the developer I tried very hard to not let my own biases show in the
+development of this library.  Each library has its own strengths and weaknesses and I wanted
+to avoid the mistakes made by others (though I'm sure I made plenty of my own).  For instance,
+inclusion of a max value for semaphores seemed like a smart decision despite the lack of support
+for this concept in POSIX.  On the other hand, lack of a condition variable concept in the
+Windows API was a big mistake since it's the only way to model a monitor pattern.  If you think
+you see a bias for any platform/library, you're probably wrong.</p>
+
+<hr>
+
+<p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
+2001 all rights reserved.</i></p>
+
+</body>
+</html>

@@ -28,7 +28,7 @@ design as well as prevent future rehashing of discussions and thought processes 
 already occured.  It can also give users a lot of insight into the design process required
 for this library.</p>
 
-<h2>Rationale for the Creation of Boost.Threads</h2>
+<h2><a name="library">Rationale for the Creation of Boost.Threads</a></h2>
 
 <p>Processes often have a degree of "potential parallelism" and it can often be more intuitive
 to design systems with this in mind.  Further, these parallel processes can result in more responsive
@@ -53,7 +53,7 @@ for writing multi-threaded programs on numerous platforms.  There's a hope that 
 be the basis for a more detailed proposal for the C++ standards committee to consider for inclusion
 in the next C++ standard.</p>
 
-<h2>Rationale for the Low Level Primitives Supported in Boost.Threads</h2>
+<h2><a name="primitives">Rationale for the Low Level Primitives Supported in Boost.Threads</a></h2>
 
 <p>The Boost.Threads library supplies a set of low level primitives for writing multi-threaded
 programs, such as semaphores, mutexes and condition variables.  In fact, the first release of
@@ -75,7 +75,7 @@ useful in and of themselves, even if it's hard to prove that their usage is corr
 many users will be familiar with these lower level concepts but be unfamiliar with any of the 
 higher level concepts there's also an argument for accessibility.</p>
 
-<h2>Rationale for the Lock Design</h2>
+<h2><a name="lock_objects">Rationale for the Lock Design</a></h2>
 
 <p>Programmers who are used to multi-threaded programming issues will quickly note that the
 Boost.Thread's design for mutex lock concepts is not thread safe (this is clearly documented
@@ -105,7 +105,7 @@ safe.  Instead, sharing a lock object between threads results in undefined behav
 only proper usage of lock objects is within block scope this isn't a problem, and so long
 as the lock object is properly used there's no danger of any multi-threading issues.</p>
 
-<h2>Rationale for Non-copyable Thread Type</h2>
+<h2><a name="thread">Rationale for Non-copyable Thread Type</a></h2>
 
 <p>Programmers who are used to C libraries for multi-threaded programming are likely to
 wonder why Boost.Threads uses a non-copyable design for boost::thread.  After all, the C
