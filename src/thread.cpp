@@ -220,6 +220,7 @@ bool thread::operator!=(const thread& other) const
 
 void thread::join()
 {
+    assert(m_joinable); //See race condition comment below
     int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), INFINITE);
