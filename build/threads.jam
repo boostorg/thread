@@ -1,0 +1,30 @@
+# Do some OS-specific setup
+if $(NT)
+{
+    if $(PTW32)
+    {
+        PTW32_REQUIREMENTS = <define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn ;
+        BOOST_THREADMON_DLL = ;
+    }
+    else
+    {
+        if $(BUILD_THREADMON) = 1
+        {
+            dll boost_threadmon : ../src/threadmon.cpp
+                # requirements
+                : <include>$(BOOST_ROOT)
+                <threading>multi
+                #<runtime-link>static/dynamic
+                : debug release ;
+            BOOST_THREADMON_DLL = ;
+        }
+        else
+        {
+            BOOST_THREADMON_DLL = <dll>../build/boost_threadmon ;
+        }
+    }
+}
+else
+{
+    BOOST_THREADMON_DLL = ;
+}
