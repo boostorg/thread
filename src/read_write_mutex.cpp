@@ -178,9 +178,11 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        //Writer priority: wait while locked
+        //Shut down extra readers that were scheduled only because of no waiting writers
 
         m_num_readers_to_wake = 0;
+
+        //Writer priority: wait while locked
 
         int loop_count = 0;
         while (m_state != 0)
@@ -422,7 +424,28 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     }
     else
     {
-        //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
+        if (m_num_readers_to_wake > 0)
+        {
+            //If there were readers scheduled to wake, 
+            //decrement the number in case we were that reader.
+            //If only one was scheduled to wake, the scheduling
+            //algorithm will schedule another if one is available;
+            //if more than one, one fewer reader will run before
+            //the scheduling algorithm is called again. This last
+            //case is not ideal, especially if a lot of waiting
+            //readers timeout, but without knowing whether
+            //we were actually one of the readers that was
+            //scheduled to wake it's difficult to come up
+            //with a better plan.
+            --m_num_readers_to_wake;
+        }
+
+        if (m_state == 0)
+        {
+            //If there is no thread with a lock that will 
+            //call do_scheduling_impl() when it unlocks, call it ourselves
+            do_timeout_scheduling_impl();
+        }
     }
 
     return !fail;
@@ -459,9 +482,11 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
     {
-        //Writer priority: wait while locked
+        //Shut down extra readers that were scheduled only because of no waiting writers
 
         m_num_readers_to_wake = 0;
+
+        //Writer priority: wait while locked
 
         int loop_count = 0;
         while (m_state != 0)
@@ -518,7 +543,12 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     }
     else
     {
-        //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
+        if (m_state == 0)
+        {
+            //If there is no thread with a lock that will 
+            //call do_scheduling_impl() when it unlocks, call it ourselves
+            do_timeout_scheduling_impl();
+        }
     }
 
     return !fail;
@@ -796,6 +826,13 @@ read_write_lock_state::read_write_lock_state_enum read_write_mutex_impl<Mutex>::
 
 template<typename Mutex>
 void read_write_mutex_impl<Mutex>::do_unlock_scheduling_impl()
+{
+    BOOST_ASSERT(m_state == 0);
+    do_scheduling_impl();
+}
+
+template<typename Mutex>
+void read_write_mutex_impl<Mutex>::do_timeout_scheduling_impl()
 {
     BOOST_ASSERT(m_state == 0);
     do_scheduling_impl();

@@ -97,8 +97,10 @@ struct read_write_mutex_impl
 private:
 
     void do_unlock_scheduling_impl();
+    void do_timeout_scheduling_impl();
     void do_demote_scheduling_impl();
     void do_scheduling_impl();
+
     bool do_demote_to_read_lock_impl();
 };
 
