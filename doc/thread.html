@@ -22,8 +22,10 @@
 
 <hr>
 
-<p>The <tt>thread</tt> class provides the functionality need to create and manage threads
-within the <b>Boost.Threads</b> library.</p>
+<p>The <tt>thread</tt> class provides the functionality to create and manage threads
+within the <b>Boost.Threads</b> library. See <a href="thread_formal_definition.html">Formal
+Definition of &quot;Thread&quot;</a> for a precise description of what a thread
+is.</p>
 
 <h2>Header</h2>
 
@@ -40,20 +42,20 @@ within the <b>Boost.Threads</b> library.</p>
     {
     public:
         thread();
-        thread(const thread& other);
+        thread(const thread&amp; other);
         ~thread();
 
-        thread& operator=(const thread& other);
-        thread& swap(thread& other);
-        bool operator==(const thread& other);
-        bool operator!=(const thread& other);
+        thread&amp; operator=(const thread&amp; other);
+        thread&amp; swap(thread&amp; other);
+        bool operator==(const thread&amp; other);
+        bool operator!=(const thread&amp; other);
         bool is_alive() const;
         void join();
 
         static thread create(void (*threadfunc)(void*), void* param);
         static thread self();
         static void join_all();
-        static void sleep(const xtime& xt);
+        static void sleep(const xtime&amp; xt);
         static void yield();
     };
 </pre>    
@@ -69,7 +71,7 @@ within the <b>Boost.Threads</b> library.</p>
 <p>Constructs a <tt>thread</tt> object that's not associated with any running thread.</p>
 
 <pre>
-    thread(const thread& other);
+    thread(const thread&amp; other);
 </pre>
 
 <p>Copy constructs a <tt>thread</tt> object, adding a reference to the associated running thread.</p>
@@ -85,7 +87,7 @@ within the <b>Boost.Threads</b> library.</p>
 <h3>Assignment</h3>
 
 <pre>
-    thread& operator=(const thread& other);
+    thread&amp; operator=(const thread&amp; other);
 </pre>
 
 <p>Assigns the <tt>thread</tt> to reference the same running thread associated with <tt>other</tt>.</p>
@@ -93,7 +95,7 @@ within the <b>Boost.Threads</b> library.</p>
 <h3>swap</h3>
 
 <pre>
-    thread& swap(thread& other);
+    thread&amp; swap(thread&amp; other);
 </pre>
 
 <p>Swaps the <tt>thread</tt> with <tt>other</tt>, exchanging the references to the respective
@@ -102,8 +104,8 @@ associated running threads.</p>
 <h3>Comparison Operators</h3>
 
 <pre>
-    bool operator==(const thread& other);
-    bool operator!=(const thread& other);
+    bool operator==(const thread&amp; other);
+    bool operator!=(const thread&amp; other);
 </pre>
 
 <p>Compares the <tt>thread</tt> to <tt>other</tt> to see if they refer to the same associated
@@ -123,7 +125,10 @@ condition.</p>
 
 <pre>
    void join();
+</pre>
 <pre>
+
+</pre>
 
 <p>Causes the current thread to "join" the associated running thread.  In other words, the current
 thread will block until the associated running thread finishes its execution.</p>
@@ -156,7 +161,7 @@ current thread will block until all the other running threads finish their execu
 <h3>sleep</h3>
 
 <pre>
-    static void sleep(const xtime& xt);
+    static void sleep(const xtime&amp; xt);
 </pre>
 
 <p>Causes the current thread to block until <tt>xt</tt>.</p>
@@ -181,19 +186,19 @@ void alarm(void* p)
     int* pn = static_cast<int*>(p);
    
     boost::xtime xt;
-    boost::xtime_get(&xt, boost::TIME_UTC);
+    boost::xtime_get(&amp;xt, boost::TIME_UTC);
     xt.sec += *pn;
    
     boost::thread::sleep(xt);
    
-    std::cout &lt;&lt; "alarm sounded..." &lt;&lt; std::endl;
+    std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
 }
 
 int main(int argc, char* argv[])
 {
     int secs = 5;
-    std::cout &lt;&lt; "setting alarm for 5 seconds..." &lt;&lt; std::endl;
-    boost::thread::create(&alarm, &secs);
+    std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
+    boost::thread::create(&amp;alarm, &amp;secs);
     boost::thread::join_all();
 }
 </pre>
@@ -203,6 +208,7 @@ int main(int argc, char* argv[])
 <pre>
 setting alarm for 5 seconds...
 alarm sounded...
+</pre>
 <hr>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
