@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, lock_error</title>
 </head>
 
@@ -22,16 +23,24 @@
 
 <hr>
 
-<p>The <tt>lock_error</tt> class defines an exception type that is thrown by lock operations that
-would deadlock or unlock operations performed by a thread that does not own the lock.</p>
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#Synopsis">Synopsis</a><br>
+<a href="#Members">Members</a><br>
+<a href="#Example">Example</a></p>
 
-<h2>Header</h2>
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>The <tt>lock_error</tt> class defines an exception type that is thrown by lock operations that
+would otherwise deadlock, or by unlock operations attempted by a thread that does not own the lock.</p>
+
+<h2><a name="Header">Header</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
+<h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
     class lock_error : public std::runtime_error
@@ -41,15 +50,21 @@ would deadlock or unlock operations performed by a thread that does not own the 
     };
 </pre>
 
+<h2><a name="Members">Members</a></h2>
+
+<hr>
+
 <h3>Constructor</h3>
 
 <pre>
     lock_error();
 </pre>
 
-<p>Constructs a <tt>lock_error</tt>.</p>
+<p>Constructs a <tt>lock_error</tt> object.</p>
 
-<h2>Example Usage</h2>
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
 
 <pre>
 #include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
@@ -59,16 +74,17 @@ would deadlock or unlock operations performed by a thread that does not own the 
 int main(int, char*[])
 {
     boost::mutex mutex;
-    boost::mutex::lock lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
     try
     {
-       boost::mutex::lock deadlock(mutex);
+       boost::mutex::scoped_lock deadlock(mutex);
        std::cout &lt;&lt; &quot;lock succeeded&quot; &lt;&lt; std::endl;
     }
     catch (boost::lock_error&amp; err)
     {
        std::cout &lt;&lt; err.what() &lt;&lt; &quot; - deadlock occurred.&quot; &lt;&lt; std::endl;
     }
+    return 0;
 }
 </pre>
 
@@ -79,6 +95,9 @@ thread lock error - deadlock occurred.
 </pre>
 
 <hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->25 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21072" -->
+</p>
 
 <p><i>Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
