@@ -26,11 +26,13 @@ subproject libs/thread/test ;
 SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include <module@>threads.jam ;
 
+sources = test.cpp test_thread.cpp test_mutex.cpp test_condition.cpp test_tss.cpp test_once.cpp ;
+
 #######################
 # Declare the Boost.Threads unit test program test_thread.
 
 unit-test test_thread
-    : test_thread.cpp
+    : $(sources)
       <lib>../build/boost_thread
       <lib>../../test/build/unit_test_framework
       $(threadmon)
