@@ -24,7 +24,7 @@
 #endif
 
 #include <boost/function.hpp>
-#include <limits>
+#include <boost/limits.hpp>
 
 namespace boost {
 
