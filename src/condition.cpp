@@ -73,7 +73,7 @@ void condition::notify_one()
         }
 
         ++m_waiting;
-        --m_blocked = 0;
+        --m_blocked;
     }
     else
     {

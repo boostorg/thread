@@ -197,7 +197,7 @@ implementations.</p>
 
 struct thread_alarm
 {
-   thread_alarm(int* secs) : m_secs(secs) { }
+   thread_alarm(int secs) : m_secs(secs) { }
    void operator()()
    {
        boost::xtime xt;
@@ -216,7 +216,7 @@ int main(int argc, char* argv[])
 {
    int secs = 5;
    std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
-   boost::thread thrd(thread_alarm(5));
+   boost::thread thrd(thread_alarm(secs));
    thrd.join();
 }
 </pre>
