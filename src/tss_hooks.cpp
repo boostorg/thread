@@ -31,8 +31,8 @@
                 throw boost::thread_resource_error();
         }
 
-        const DWORD invalid_key = TLS_OUT_OF_INDEXES;
-        DWORD tls_key = invalid_key;
+        const DWORD invalid_tls_key = TLS_OUT_OF_INDEXES;
+        DWORD tls_key = invalid_tls_key;
 
         unsigned long attached_thread_count = 0;
     }
@@ -56,10 +56,10 @@
 
         //Allocate a tls slot if necessary.
 
-        if (tls_key == invalid_key)
+        if (tls_key == invalid_tls_key)
             tls_key = TlsAlloc();
 
-        if (tls_key == invalid_key)
+        if (tls_key == invalid_tls_key)
             return -1;
 
         //Get the exit handlers list for the current thread from tls.
@@ -132,10 +132,10 @@
 
         //Free the tls slot if one was allocated.
 
-        if (tls_key != invalid_key)
+        if (tls_key != invalid_tls_key)
         {
             TlsFree(tls_key);
-            tls_key = invalid_key;
+            tls_key = invalid_tls_key;
         }
     }
 
@@ -152,7 +152,7 @@
 
         //Get the exit handlers list for the current thread from tls.
 
-        if (tls_key == invalid_key)
+        if (tls_key == invalid_tls_key)
             return;
 
         thread_exit_handlers* exit_handlers =
@@ -160,8 +160,13 @@
 
         //If a handlers list was found, use it.
 
-        if (exit_handlers)
+        if (exit_handlers && TlsSetValue(tls_key, 0))
         {
+            BOOST_ASSERT(attached_thread_count > 0);
+            --attached_thread_count;
+
+            lock.unlock();
+
             //Call each handler and remove it from the list
 
             while (!exit_handlers->empty())
@@ -171,21 +176,8 @@
                 exit_handlers->pop_front();
             }
 
-            //Remove the exit handlers list from tls and delete it
-
-            if (TlsSetValue(tls_key, 0))
-            {
-                BOOST_ASSERT(attached_thread_count > 0);
-                --attached_thread_count;
-
-                //Only delete the handlers list if we succeed in
-                //setting the tls value to 0; otherwise, another call
-                //to this function might get a pointer to the deleted
-                //handlers and try to use it.
-
-                delete exit_handlers;
-                exit_handlers = 0;
-            }
+            delete exit_handlers;
+            exit_handlers = 0;
         }
     }
 
