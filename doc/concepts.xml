@@ -356,9 +356,10 @@
 	</section>
 	<section id="threads.concepts.ScopedLock">
 	  <title>ScopedLock Concept</title>
-      <para>A ScopedLock is a refinement of <a href="#Lock">Lock</a>. For a
-	  ScopedLock type <code>L</code> and an object <code>lk</code> of that type,
-	  and an object <code>m</code> of a type meeting the <link
+      <para>A ScopedLock is a refinement of <link
+	  linkend="threads.concepts.Lock">Lock</link>. For a ScopedLock type
+	  <code>L</code> and an object <code>lk</code> of that type, and an object
+	  <code>m</code> of a type meeting the <link
 	  linkend="threads.concepts.Mutex">Mutex</link> requirements, and an object
 	  <code>b</code> of type <code>bool</code>, the following expressions must
 	  be well-formed and have the indicated effects.
