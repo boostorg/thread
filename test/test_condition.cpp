@@ -20,10 +20,10 @@ namespace
 	{
 		condition_test_data* data = static_cast<condition_test_data*>(param);
 		boost::mutex::scoped_lock lock(data->mutex);
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		while (!(data->notified > 0))
 			data->condition.wait(lock);
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		data->awoken++;
 	}
 
@@ -52,19 +52,19 @@ namespace
 		condition_test_data* data = static_cast<condition_test_data*>(param);
 
 		boost::mutex::scoped_lock lock(data->mutex);
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 
 		// Test wait.
 		while (data->notified != 1)
 			data->condition.wait(lock);
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		BOOST_CHECK_EQUAL(data->notified, 1);
 		data->awoken++;
 		data->condition.notify_one();
 
 		// Test predicate wait.
 		data->condition.wait(lock, cond_predicate(data->notified, 2));
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		BOOST_CHECK_EQUAL(data->notified, 2);
 		data->awoken++;
 		data->condition.notify_one();
@@ -75,7 +75,7 @@ namespace
 		xt.sec += 10;
 		while (data->notified != 3)
 			data->condition.timed_wait(lock, xt);
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		BOOST_CHECK_EQUAL(data->notified, 3);
 		data->awoken++;
 		data->condition.notify_one();
@@ -85,7 +85,7 @@ namespace
 		xt.sec += 10;
 		cond_predicate pred(data->notified, 4);
 		BOOST_CHECK(data->condition.timed_wait(lock, xt, pred));
-		BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 		BOOST_CHECK(pred());
 		BOOST_CHECK_EQUAL(data->notified, 4);
 		data->awoken++;
@@ -101,7 +101,7 @@ void test_condition_notify_one()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
         data.notified++;
         data.condition.notify_one();
     }
@@ -121,7 +121,7 @@ void test_condition_notify_all()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
         data.notified++;
         data.condition.notify_all();
     }
@@ -140,7 +140,7 @@ void test_condition_waits()
 
     {
         boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock);
+		BOOST_CHECK(lock ? true : false);
 
         BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
         xt.sec += 1;
@@ -149,6 +149,7 @@ void test_condition_waits()
         data.condition.notify_one();
         while (data.awoken != 1)
             data.condition.wait(lock);
+		BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 1);
 
         BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
@@ -158,6 +159,7 @@ void test_condition_waits()
         data.condition.notify_one();
         while (data.awoken != 2)
             data.condition.wait(lock);
+		BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 2);
 
         BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
@@ -167,6 +169,7 @@ void test_condition_waits()
         data.condition.notify_one();
         while (data.awoken != 3)
             data.condition.wait(lock);
+		BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 3);
 
 		BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
@@ -176,6 +179,7 @@ void test_condition_waits()
 		data.condition.notify_one();
 		while (data.awoken != 4)
 			data.condition.wait(lock);
+		BOOST_CHECK(lock ? true : false);
 		BOOST_CHECK_EQUAL(data.awoken, 4);
 	}
 
@@ -186,7 +190,7 @@ void test_condition_waits()
     BOOST_CHECK_EQUAL(data.awoken, 4);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int argc, char* argv[])
+boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
 	boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: condition test suite");
 
