@@ -176,6 +176,13 @@
             }
             return TRUE;
         }
+    #elif defined(BOOST_THREAD_BUILD_LIB)
+        #if defined(BOOST_MSVC) && (BOOST_MSVC >= 1310) //1310 == VC++ 7.1
+            //As currently defined, the following is known
+            //to work only for VC++ 7.1.
+            //It is known not to work with VC 6.
+            #include <libs/thread/src/pe_tls.ipp>
+        #endif
     #endif // BOOST_THREAD_BUILD_DLL
 #endif // BOOST_HAS_WINTHREADS
 
