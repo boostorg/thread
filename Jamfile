@@ -1,0 +1,5 @@
+project-root ; # declare this to be the project root directory
+# Read subproject Jamfiles
+subinclude src ;
+# subinclude example ;
+subinclude test ;

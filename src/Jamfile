@@ -1,4 +1,4 @@
-SubDir TOP src ;
+subproject SRC ;
 
 lib threads
 	: condition.cpp

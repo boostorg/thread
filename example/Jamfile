@@ -1,5 +1,3 @@
-SubDir TOP example ;
+subproject example ;
 
-SubInclude TOP example monitor ;
-SubInclude TOP example starvephil ;
-SubInclude TOP example tennis ;
+subinclude example/monitor ;

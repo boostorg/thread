@@ -1,4 +1,4 @@
-SubDir TOP example monitor ;
+subproject example/monitor ;
 
 exe monitor
 	: monitor.cpp
