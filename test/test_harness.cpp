@@ -23,7 +23,7 @@ namespace {
 void run_test(void (*func)())
 {
 	// Indicate testing progress...
-	std::cout << '.';
+	std::cout << '.' << std::flush;
 	(*func)();
 }
 
