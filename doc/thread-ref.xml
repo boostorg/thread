@@ -1,0 +1,266 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/thread.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="thread">
+		<purpose>
+			<para>The <classname>thread</classname> class represents threads of
+			execution, and provides the functionality to create and manage 
+			threads within the &Boost.Threads; library. See 
+			<xref linkend="threads.glossary"/> for a precise description of 
+			<link linkend="threads.glossary.thread">thread of execution</link>,
+			and for definitions of threading-related terms and of thread states such as 
+			<link linkend="threads.glossary.thread-state">blocked</link>.</para>
+		</purpose>
+
+		<description>
+			<para>A <link linkend="threads.glossary.thread">thread of execution</link>
+			has an initial function. For the program's initial thread, the initial 
+			function is <code>main()</code>. For other threads, the initial 
+			function is <code>operator()</code> of the function object passed to
+			the <classname>thread</classname> object's constructor.</para>
+
+			<para>A thread of execution  is said to be &quot;finished&quot; 
+			or to have &quot;finished execution&quot; when its initial function returns or 
+			is terminated. This includes completion of all thread cleanup 
+			handlers, and completion of the normal C++ function return behaviors,
+			such as destruction of automatic storage (stack) objects and releasing 
+			any associated implementation resources.</para>
+
+			<para>A thread object has an associated state which is either
+			&quot;joinable&quot; or &quot;non-joinable&quot;.</para>
+
+			<para>Except as described below, the policy used by an implementation
+			of &Boost.Threads; to schedule transitions between thread states is 
+			unspecified.</para>
+
+			<para><note>Just as the lifetime of a file may be different from the
+			lifetime of an <code>iostream</code> object which represents the file, the lifetime
+			of a thread of execution may be different from the 
+			<classname>thread</classname> object which represents the thread of 
+			execution. In particular, after a call to <code>join()</code>,
+			the thread of execution will no longer exist even though the 
+			<classname>thread</classname> object continues to exist until the 
+			end of its normal lifetime. The converse is also possible; if 
+			a <classname>thread</classname> object is destroyed without 
+			<code>join()</code> first having been called, the thread of execution 
+			continues until its initial function completes.</note></para>
+		</description>
+
+		<inherit access="private">
+			<type><classname>boost::noncopyable</classname></type>
+			<purpose>Exposition only</purpose>
+		</inherit>
+
+		<constructor>
+			<effects>Constructs a <classname>thread</classname> object 
+			representing the current thread of execution.</effects>
+			
+			<postconditions><code>*this</code> is non-joinable.</postconditions>
+			
+			<notes><emphasis role="bold">Danger:</emphasis>
+			<code>*this</code> is valid only within the current thread.</notes>
+		</constructor>
+
+		<constructor specifiers="explicit">
+			<parameter name="threadfunc">
+				<paramtype>const boost::function0&lt;void&gt;&amp;</paramtype>
+			</parameter>
+			
+			<effects>
+				Starts a new thread of execution and constructs a 
+				<classname>thread</classname> object representing it. 
+				Copies <code>threadfunc</code> (which in turn copies
+				the function object wrapped by <code>threadfunc</code>) 
+				to an internal location which persists for the lifetime 
+				of the new thread of execution. Calls <code>operator()</code>
+				on the copy of the <code>threadfunc</code> function object 
+				in the new thread of execution.
+			</effects>
+			
+			<postconditions><code>*this</code> is joinable.</postconditions>
+
+			<throws><code>boost::thread_resource_error</code> if a new thread
+			of execution cannot be started.</throws>
+		</constructor>
+		
+		<destructor>
+			<effects>Destroys <code>*this</code>. The actual thread of 
+			execution may continue to execute after the 
+			<classname>thread</classname> object has been destroyed.
+			</effects>
+			
+			<notes>If <code>*this</code> is joinable the actual thread 
+			of execution becomes &quot;detached&quot;. Any resources used 
+			by the thread will be reclaimed when the thread of execution 
+			completes. To ensure such a thread of execution runs to completion
+			before the <classname>thread</classname> object is destroyed, call
+			<code>join()</code>.</notes>
+		</destructor>
+		
+		<method-group name="comparison">
+			<method name="operator==" cv="const">
+				<type>bool</type>
+				
+				<parameter name="rhs">
+					<type>const thread&amp;</type>
+				</parameter>
+				
+				<requires>The thread is non-terminated or <code>*this</code>
+				is joinable.</requires>
+				  
+				<returns><code>true</code> if <code>*this</code> and 
+				<code>rhs</code> represent the same thread of 
+				execution.</returns>
+			</method>
+			
+			<method name="operator!=" cv="const">
+				<type>bool</type>
+				
+				<parameter name="rhs">
+					<type>const thread&amp;</type>
+				</parameter>
+				
+				<requires>The thread is non-terminated or <code>*this</code>
+				is joinable.</requires>
+				  
+				<returns><code>!(*this==rhs)</code>.</returns>
+			</method>
+		</method-group>
+
+		<method-group name="modifier">
+			<method name="join">
+				<type>void</type>
+				
+				<requires><code>*this</code> is joinable.</requires>
+				  
+				<effects>The current thread of execution blocks until the 
+				initial function of the thread of execution represented by 
+				<code>*this</code> finishes and all resources are 
+				reclaimed.</effects>
+				
+				<postcondition><code>*this</code> is non-joinable.</postcondition>
+				
+				<notes>If <code>*this == thread()</code> the result is 
+				implementation-defined. If the implementation doesn't
+				detect this the result will be 
+				<link linkend="threads.glossary.deadlock">deadlock</link>.
+				</notes>
+			</method>
+		</method-group>
+
+		<method-group name="static">
+			<method name="sleep" specifiers="static">
+				<type>void</type>
+				
+				<parameter name="xt">
+					<paramtype>const <classname>xtime</classname>&amp;</paramtype>
+				</parameter>
+				
+				<effects>The current thread of execution blocks until 
+				<code>xt</code> is reached.</effects>
+			</method>
+			
+			<method name="yield" specifiers="static">
+				<type>void</type>
+
+				<effects>The current thread of execution is placed in the
+				<link linkend="threads.glossary.thread-state">ready</link> 
+				state.</effects>
+				
+				<notes>
+					<simpara>Allow the current thread to give up the rest of its 
+					time slice (or other scheduling quota) to another thread. 
+					Particularly useful in non-preemptive implementations.</simpara>
+				</notes>
+			</method>
+		</method-group>
+	</class>
+
+	<class name="thread_group">
+		<purpose>
+			The <classname>thread_group</classname> class provides a container
+			for easy grouping of threads to simplify several common thread 
+			creation and management idioms.
+		</purpose>
+
+		<inherit access="private">
+			<type><classname>boost::noncopyable</classname></type>
+			<purpose>Exposition only</purpose>
+		</inherit>
+
+
+		<constructor>
+			<effects>Constructs an empty <classname>thread_group</classname>
+			container.</effects>
+		</constructor>
+		
+		<destructor>
+			<effects>Destroys each contained thread object. Destroys <code>*this</code>.</effects>
+			
+			<notes>Behavior is undefined if another thread references 
+			<code>*this </code> during the execution of the destructor.
+			</notes>
+		</destructor>
+
+		<method-group name="modifier">
+			<method name="create_thread">
+				<type><classname>thread</classname>*</type>
+				
+				<parameter name="threadfunc">
+					<paramtype>const boost::function0&lt;void&gt;&amp;</paramtype>
+				</parameter>
+				
+				<effects>Creates a new <classname>thread</classname> object 
+				that executes <code>threadfunc</code> and adds it to the 
+				<code>thread_group</code> container object's list of managed
+				<classname>thread</classname> objects.</effects>
+				
+				<returns>Pointer to the newly created 
+				<classname>thread</classname> object.</returns>
+			</method>
+
+			<method name="add_thread">
+				<type>void</type>
+				
+				<parameter name="thrd">
+					<paramtype><classname>thread</classname>* thrd</paramtype>
+				</parameter>
+				
+				<effects>Adds <code>thrd</code> to the 
+				<classname>thread_group</classname> object's list of managed 
+				<classname>thread</classname> objects. The <code>thrd</code> 
+				object must have been allocated via <code>operator new</code> and will 
+				be deleted when the group is destroyed.</effects>
+			</method>
+
+			<method name="remove_thread">
+				<type>void</type>
+				
+				<parameter name="thrd">
+					<paramtype><classname>thread</classname>* thrd</paramtype>
+				</parameter>
+				
+				<effects>Removes <code>thread</code> from <code>*this</code>'s
+				list of managed <classname>thread</classname> objects.</effects>
+				
+				<throws><emphasis role="bold">???</emphasis> if 
+				<code>thrd</code> is not in <code>*this</code>'s list
+				of managed <classname>thread</classname> objects.</throws>
+			</method>
+
+			<method name="join_all">
+				<type>void</type>
+				
+				<effects>Calls <code>join()</code> on each of the managed 
+				<classname>thread</classname> objects.</effects>
+			</method>
+		</method-group>
+	</class>
+  </namespace>
+</header>

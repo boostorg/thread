@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="thread.configuration" last-revision="$Date$">
+	<title>Configuration</title>
+	<para>&Boost.Threads; uses several configuration macros in &lt;boost/config.hpp&gt;,
+	as well as configuration macros meant to be supplied by the application. These
+	macros are documented here.
+	</para>
+	<section id="thread.configuration.public">
+		<title>Library Defined Public Macros</title>
+		<para>
+	These macros are defined by &Boost.Threads; but are expected to be used
+	by application code.
+		</para>
+		<informaltable>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>Macro</entry>
+						<entry>Meaning</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>BOOST_HAS_THREADS</entry>
+						<entry>
+	Indicates that threading support is available. This means both that there
+	is a platform specific implementation for &Boost.Threads; and that
+	threading support has been enabled in a platform specific manner. For instance,
+	on the Win32 platform there&#39;s an implementation for &Boost.Threads;
+	but unless the program is compiled against one of the multithreading runtimes
+	(often determined by the compiler predefining the macro _MT) the BOOST_HAS_THREADS
+	macro remains undefined.
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</informaltable>
+	</section>
+	<section id="thread.configuration.implementation">
+		<title>Library Defined Implementation Macros</title>
+		<para>
+	These macros are defined by &Boost.Threads; and are implementation details
+	of interest only to implementors.
+		</para>
+		<informaltable>
+			<tgroup cols="2">
+				<thead>
+					<row>
+						<entry>Macro</entry>
+						<entry>Meaning</entry>
+					</row>
+				</thead>
+				<tbody>
+					<row>
+						<entry>BOOST_HAS_WINTHREADS</entry>
+						<entry>
+	Indicates that the platform has the Microsoft Win32 threading libraries,
+	and that they should be used to implement &Boost.Threads;.
+			            </entry>
+					</row>
+					<row>
+						<entry>BOOST_HAS_PTHREADS</entry>
+						<entry>
+	Indicates that the platform has the POSIX pthreads libraries, and that
+	they should be used to implement &Boost.Threads;.
+						</entry>
+					</row>
+					<row>
+						<entry>BOOST_HAS_FTIME</entry>
+						<entry>
+	Indicates that the implementation should use GetSystemTimeAsFileTime()
+	and the FILETIME type to calculate the current time. This is an implementation
+	detail used by boost::detail::getcurtime().
+						</entry>
+					</row>
+					<row>
+						<entry>BOOST_HAS_GETTTIMEOFDAY</entry>
+						<entry>
+	Indicates that the implementation should use gettimeofday() to calculate
+	the current time. This is an implementation detail used by boost::detail::getcurtime().
+						</entry>
+					</row>
+				</tbody>
+			</tgroup>
+		</informaltable>
+	</section>
+</section>

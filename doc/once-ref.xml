@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/once.hpp"
+	last-revision="$Date$">
+	<macro name="BOOST_ONCE_INIT">
+		<purpose>The <functionname>call_once</functionname> function and
+		<code>once_flag</code> type (statically initialized to 
+		<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
+		routine exactly once. This can be used to initialize data in a
+		<link linkend="threads.glossary.thread-safe">thread-safe</link>
+		manner.</purpose>
+		
+		<description>The implementation-defined macro 
+		<macroname>BOOST_ONCE_INIT</macroname> is a constant value used to 
+		initialize <code>once_flag</code> instances to indicate that the 
+		logically associated routine has not been run yet. See 
+		<functionname>call_once</functionname> for more details.</description>
+	</macro>
+		
+	<namespace name="boost">
+		<typedef name="once_flag">
+			<purpose>The <functionname>call_once</functionname> function and
+			<code>once_flag</code> type (statically initialized to 
+			<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
+			routine exactly once. This can be used to initialize data in a
+			<link linkend="threads.glossary.thread-safe">thread-safe</link>
+			manner.</purpose>
+			
+			<description>The implementation-defined type <code>once_flag</code>
+			is used as a flag to insure a routine is called only once.
+			Instances of this type should be statically initialized to
+			<macroname>BOOST_ONCE_INIT</macroname>. See 
+			<functionname>call_once</functionname> for more details.
+			</description>
+
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+
+		<function name="call_once">
+			<purpose>The <functionname>call_once</functionname> function and
+			<code>once_flag</code> type (statically initialized to 
+			<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
+			routine exactly once. This can be used to initialize data in a
+			<link linkend="threads.glossary.thread-safe">thread-safe</link>
+			manner.</purpose>
+			
+			<description>
+			<para>Example usage is as follows:</para>
+			<para>
+<programlisting>//Example usage:
+boost::once_flag once = BOOST_ONCE_INIT;
+
+void init()
+{
+    //...
+}
+
+void thread_proc()
+{
+    boost::call_once(&amp;init, once);
+}</programlisting>
+			</para></description>
+			
+			<parameter name="func">
+				<paramtype>void (*func)()</paramtype>
+			</parameter>
+			
+			<parameter name="flag">
+				<paramtype>once_flag&amp;</paramtype>
+			</parameter>
+			
+			<requires>The function <code>func</code> shall not throw
+			exceptions.</requires>
+			
+			<effects>As if (in an atomic fashion): 
+			<code>if (flag == BOOST_ONCE_INIT) func();</code></effects>
+			
+			<postconditions><code>flag != BOOST_ONCE_INIT</code>
+			</postconditions>
+		</function>
+	</namespace>
+</header>

@@ -1,0 +1,26 @@
+<!ENTITY Boost.Threads "<emphasis role='bold'>Boost.Threads</emphasis>">
+<!ENTITY Boost.Build "<emphasis role='bold'>Boost.Build</emphasis>">
+<!ENTITY cite.AndrewsSchneider83  "<citation><xref
+linkend='threads.bib.AndrewsSchneider83'
+endterm='threads.bib.AndrewsSchneider83.abbrev'/></citation>">
+<!ENTITY cite.Boost "<citation><xref linkend='threads.bib.Boost'
+endterm='threads.bib.Boost.abbrev'/></citation>">
+<!ENTITY cite.Hansen73 "<citation><xref linkend='threads.bib.Hansen73'
+endterm='threads.bib.Hansen73.abbrev'/></citation>">
+<!ENTITY cite.Butenhof97 "<citation><xref linkend='threads.bib.Butenhof97'
+endterm='threads.bib.Butenhof97.abbrev'/></citation>">
+<!ENTITY cite.Hoare74 "<citation><xref linkend='threads.bib.Hoare74'
+endterm='threads.bib.Hoare74.abbrev'/></citation>">
+<!ENTITY cite.ISO98 "<citation><xref linkend='threads.bib.ISO98'
+endterm='threads.bib.ISO98.abbrev'/></citation>">
+<!ENTITY cite.McDowellHelmbold89 "<citation><xref
+linkend='threads.bib.McDowellHelmbold89'
+endterm='threads.bib.McDowellHelmbold89.abbrev'/></citation>">
+<!ENTITY cite.SchmidtPyarali "<citation><xref
+linkend='threads.bib.SchmidtPyarali'
+endterm='threads.bib.SchmidtPyarali.abbrev'/></citation>">
+<!ENTITY cite.SchmidtStalRohnertBuschmann "<citation><xref
+linkend='threads.bib.SchmidtStalRohnertBuschmann'
+endterm='threads.bib.SchmidtStalRohnertBuschmann.abbrev'/></citation>">
+<!ENTITY cite.Stroustrup "<citation><xref linkend='threads.bib.Stroustrup'
+endterm='threads.bib.Stroustrup.abbrev'/></citation>">

@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="threads.release_notes" last-revision="$Date$">
+	<title>Release Notes</title>
+	<section id="threads.release_notes.boost_1_32_0">
+		<title>Boost 1.32.0</title>
+
+		<section id="threads.release_notes.boost_1_32_0.change_log.documentation">
+			<title>Documentation converted to BoostBook</title>
+
+			<para>The documentation was converted to BoostBook format,
+			and a number of errors and inconsistencies were
+			fixed in the process.
+			Since this was a fairly large task, there are likely to be 
+			more errors and inconsistencies remaining. If you find any,
+			please report them!</para>
+		</section>
+
+		<section id="threads.release_notes.boost_1_32_0.change_log.static_link">
+			<title>Static-link build option added</title>
+
+			<para>The option to link &Boost.Threads; as a static
+			library has been added back with some limitations.
+			This feature was originally removed because
+			<classname>boost::thread_specific_ptr</classname> required
+			that &Boost.Threads; be dynamically linked in order for its
+			cleanup functionality to work on Win32 platforms.
+			Several options are currently being explored to resolve
+			this issue. In the meantime, the ability to link 
+			&Boost.Threads; statically has been added back 
+			<emphasis>with <classname>boost::thread_specific_ptr</classname>
+			support removed</emphasis> from the statically linked version.
+			The decision to add it back was made because its lack is
+			one of the most frequent complaints about &Boost.Threads;
+			and because the other approaches that are being investigated 
+			to deal with <classname>boost::thread_specific_ptr</classname>
+			cleanup look fairly promising.
+			<note>&Boost.Threads; is still dynamically linked by default.
+			In order to force it to be statically linked, it is necessary to
+			#define BOOST_THREAD_USE_LIB before any of the &Boost.Threads;
+			header files are #included.</note>
+			<note>If the <classname>boost::thread_specific_ptr</classname> cleanup
+			issue cannot be resolved by some other means, it is highly
+			likely that the option to statically link &Boost.Threads;
+			will be removed again in a future version of Boost, at least
+			for Win32 platforms. This is because the 
+			<classname>boost::thread_specific_ptr</classname> functionality
+			will be increasingly used by &Boost.Threads; itself,
+			so that proper cleanup will become essential
+			in future versions of &Boost.Threads;.</note>
+			</para>
+		</section>
+		
+		<section id="threads.release_notes.boost_1_32_0.change_log.barrier">
+			<title>Barrier functionality added</title>
+
+			<para>A new class, <classname>boost::barrier</classname>, was added.</para>
+		</section>
+		
+		<section id="threads.release_notes.boost_1_32_0.change_log.read_write_mutex">
+			<title>Read/write mutex functionality added</title>
+
+			<para>New classes, 
+			<classname>boost::read_write_mutex</classname>,
+			<classname>boost::try_read_write_mutex</classname>, and
+			<classname>boost::timed_read_write_mutex</classname>
+			were added.</para>
+		</section>
+		
+		<section id="threads.release_notes.boost_1_32_0.change_log.thread_specific_ptr">
+			<title>Thread-specific pointer functionality changed</title>
+
+			<para>The <classname>boost::thread_specific_ptr</classname> 
+			constructor now takes an optional pointer to a cleanup function that
+			is called to release the thread-specific data that is being pointed
+			to by <classname>boost::thread_specific_ptr</classname> objects.</para>
+
+			<para>Fixed: the number of available thread-specific storage "slots"
+			is too small on some platforms.</para>
+
+			<para>Fixed: <functionname>thread_specific_ptr::reset()</functionname>
+			doesn't check error returned by <functionname>tss::set()</functionname>
+			(the <functionname>tss::set()</functionname> function now throws
+			if it fails instead of returning an error code).</para>
+
+			<para>Fixed: calling 
+			<functionname>boost::thread_specific_ptr::reset()</functionname> or 
+			<functionname>boost::thread_specific_ptr::release()</functionname>
+			causes double-delete: once when 
+			<functionname>boost::thread_specific_ptr::reset()</functionname> or
+			<functionname>boost::thread_specific_ptr::release()</functionname> 
+			is called and once when 
+			<functionname>boost::thread_specific_ptr::~thread_specific_ptr()</functionname>
+			is called.</para>
+		</section>
+
+		<section id="threads.release_notes.boost_1_32_0.change_log.mutex">
+			<title>Mutex implementation changed for Win32</title>
+
+			<para>On Win32, <classname>boost::mutex</classname>, 
+			<classname>boost::try_mutex</classname>, <classname>boost::recursive_mutex</classname>,
+			and <classname>boost::recursive_try_mutex</classname> now use a Win32 critical section 
+			whenever possible; otherwise they use a Win32 mutex. As before, 
+			<classname>boost::timed_mutex</classname> and 
+			<classname>boost::recursive_timed_mutex</classname> use a Win32 mutex.</para>
+		</section>
+	</section>
+</section>

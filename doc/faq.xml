@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="threads.faq" last-revision="$Date$">
+  <title>Frequently Asked Questions</title>
+  <qandaset>
+    <qandaentry>
+	  <question>
+	    <para>Are lock objects <link
+		linkend="threads.glossary.thread-safe">thread safe</link>?</para>
+	  </question>
+	  <answer>
+	    <para><emphasis role="bold">No!</emphasis> Lock objects are not meant to
+		be shared between threads. They are meant to be short-lived objects
+		created on automatic storage within a code block. Any other usage is
+		just likely to lead to errors and won't really be of actual benefit anyway.
+		Share <link linkend="threads.concepts.mutexes">Mutexes</link>, not
+		Locks. For more information see the <link
+		linkend="threads.rationale.locks">rationale</link> behind the
+		design for lock objects.</para>
+	  </answer>
+	</qandaentry>
+    <qandaentry>
+      <question>
+	    <para>Why was &Boost.Threads; modeled after (specific library
+		name)?</para>
+	  </question>
+	  <answer>
+	    <para>It wasn't. &Boost.Threads; was designed from scratch. Extensive
+		design discussions involved numerous people representing a wide range of
+		experience across many platforms. To ensure portability, the initial
+		implements were done in parallel using POSIX Threads and the Win32
+		threading API. But the &Boost.Threads; design is very much in the spirit
+		of C++, and thus doesn't model such C based APIs.</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why wasn't &Boost.Threads; modeled after (specific library
+	    name)?</para>
+	  </question>
+	  <answer>
+        <para>Existing C++ libraries either seemed dangerous (often failing to
+		take advantage of prior art to reduce errors) or had excessive
+		dependencies on library components unrelated to threading. Existing C
+		libraries couldn't meet our C++ requirements, and were also missing
+		certain features. For instance, the WIN32 thread API lacks condition
+		variables, even though these are critical for the important Monitor
+		pattern &cite.SchmidtStalRohnertBuschmann;.</para>
+      </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why do <link linkend="threads.concepts.mutexes">Mutexes</link>
+		have noncopyable semantics?</para>
+	  </question>
+	  <answer>
+        <para>To ensure that <link
+		linkend="threads.glossary.deadlock">deadlocks</link> don't occur. The
+		only logical form of copy would be to use some sort of shallow copy
+		semantics in which multiple mutex objects could refer to the same mutex
+		state. This means that if ObjA has a mutex object as part of its state
+		and ObjB is copy constructed from it, then when ObjB::foo() locks the
+		mutex it has effectively locked ObjA as well. This behavior can result
+		in deadlock. Other copy semantics result in similar problems (if you
+		think you can prove this to be wrong then supply us with an alternative
+		and we'll reconsider).</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>How can you prevent <link
+		linkend="threads.glossary.deadlock">deadlock</link> from occurring when
+		a thread must lock multiple mutexes?</para>
+	  </question>
+	  <answer>
+	    <para>Always lock them in the same order. One easy way of doing this is
+		to use each mutex's address to determine the order in which they are
+		locked. A future &Boost.Threads; concept may wrap this pattern up in a
+		reusable class.</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Don't noncopyable <link
+		linkend="threads.concepts.mutexes">Mutex</link> semantics mean that a
+		class with a mutex member will be noncopyable as well?</para>
+	  </question>
+	  <answer>
+	    <para>No, but what it does mean is that the compiler can't generate a
+		copy constructor and assignment operator, so they will have to be coded
+		explicitly. This is a <emphasis role="bold">good thing</emphasis>,
+		however, since the compiler generated operations would not be <link
+		linkend="threads.glossary.thread-safe">thread-safe</link>. The following
+		is a simple example of a class with copyable semantics and internal
+        synchronization through a mutex member.</para>
+<programlisting>
+class counter
+{
+public:
+   // Doesn't need synchronization since there can be no references to *this
+   // until after it's constructed!
+   explicit counter(int initial_value)
+      : m_value(initial_value)
+   {
+   }
+   // We only need to synchronize other for the same reason we don't have to
+   // synchronize on construction!
+   counter(const counter&amp; other)
+   {
+      boost::mutex::scoped_lock scoped_lock(other.m_mutex);
+      m_value = other.m_value;
+   }
+   // For assignment we need to synchronize both objects!
+   const counter&amp; operator=(const counter&amp; other)
+   {
+      if (this == &amp;other)
+         return *this;
+      boost::mutex::scoped_lock lock1(&amp;m_mutex &lt; &amp;other.m_mutex ? m_mutex : other.m_mutex);
+      boost::mutex::scoped_lock lock2(&amp;m_mutex &gt; &amp;other.m_mutex ? m_mutex : other.m_mutex);
+      m_value = other.m_value;
+      return *this;
+   }
+   int value() const
+   {
+      boost::mutex::scoped_lock scoped_lock(m_mutex);
+      return m_value;
+   }
+   int increment()
+   {
+      boost::mutex::scoped_lock scoped_lock(m_mutex);
+      return ++m_value;
+   }
+private:
+   mutable boost::mutex m_mutex;
+   int m_value;
+};
+</programlisting>
+      </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>How can you lock a <link
+		linkend="threads.concepts.mutexes">Mutex</link> member in a const member
+		function, in order to implement the Monitor Pattern?</para>
+	  </question>
+	  <answer>
+	    <para>The Monitor Pattern &cite.SchmidtStalRohnertBuschmann; mutex
+		should simply be declared as mutable. See the example code above. The
+		internal state of mutex types could have been made mutable, with all
+		lock calls made via const functions, but this does a poor job of
+		documenting the actual semantics (and in fact would be incorrect since
+		the logical state of a locked mutex clearly differs from the logical
+		state of an unlocked mutex). Declaring a mutex member as mutable clearly
+		documents the intended semantics.</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why supply <classname>boost::condition</classname> variables rather than
+		event variables?</para>
+	  </question>
+	  <answer>
+	    <para>Condition variables result in user code much less prone to <link
+		linkend="threads.glossary.race-condition">race conditions</link> than
+		event variables. See <xref linkend="threads.rationale.events" /> 
+		for analysis. Also see &cite.Hoare74; and &cite.SchmidtStalRohnertBuschmann;.
+		</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why isn't thread cancellation or termination provided?</para>
+	  </question>
+	  <answer>
+	    <para>There's a valid need for thread termination, so at some point
+		&Boost.Threads; probably will include it, but only after we can find a
+		truly safe (and portable) mechanism for this concept.</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Is it safe for threads to share automatic storage duration (stack)
+		objects via pointers or references?</para>
+	  </question>
+	  <answer>
+	    <para>Only if you can guarantee that the lifetime of the stack object
+		will not end while other threads might still access the object. Thus the
+		safest practice is to avoid sharing stack objects, particularly in
+		designs where threads are created and destroyed dynamically. Restrict
+		sharing of stack objects to simple designs with very clear and
+		unchanging function and thread lifetimes. (Suggested by Darryl
+		Green).</para>
+	  </answer>
+	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why has class semaphore disappeared?</para>
+	  </question>
+	  <answer>
+	    <para>Semaphore was removed as too error prone. The same effect can be
+		achieved with greater safety by the combination of a mutex and a
+		condition variable.</para>
+	  </answer>
+	</qandaentry>
+  </qandaset>
+</section>

@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/barrier.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="barrier">
+      <inherit access="private">
+        <type><classname>boost::noncopyable</classname></type>
+        <purpose>Exposition only</purpose>
+      </inherit>
+
+      <purpose>
+        <para>An object of class <classname>barrier</classname> is a synchronization 
+        primitive used  to cause a set of threads to wait until they each perform a 
+        certain function or each reach a particular point in their execution.</para>
+      </purpose>
+
+      <description>
+		<para>When a barrier is created, it is initialized with a thread count N.
+		The first N-1 calls to <code>wait()</code> will all cause their threads to be blocked. 
+		The Nth call to <code>wait()</code> will allow all  of the waiting threads, including 
+		the Nth thread, to be placed in a ready state.  The Nth call will also "reset"
+		the barrier such that, if an additional N+1th call is made to <code>wait()</code>, 
+		it will be as though this were the first call to <code>wait()</code>; in other
+		words, the N+1th to 2N-1th calls to <code>wait()</code> will cause their
+		threads to be blocked, and the 2Nth call to <code>wait()</code> will allow all of 
+		the waiting threads, including the 2Nth thread, to be placed in a ready state
+		and reset the barrier. This functionality allows the same set of N threads to re-use 
+		a barrier object to  synchronize their execution at multiple points during their 
+		execution.</para>
+		<para>See <xref linkend="threads.glossary"/> for definitions of thread 
+		states <link linkend="threads.glossary.thread-state">blocked</link>
+		and <link linkend="threads.glossary.thread-state">ready</link>.
+		Note that "waiting" is a synonym for blocked.</para>
+      </description>
+      
+      <constructor>
+        <parameter name="count">
+	        <paramtype>size_t</paramtype>
+        </parameter>
+
+        <effects><simpara>Constructs a <classname>barrier</classname> object that 
+        will cause <code>count</code> threads to block on a call to <code>wait()</code>.
+        </simpara></effects>
+      </constructor>
+
+      <destructor>
+        <effects><simpara>Destroys <code>*this</code>. If threads are still executing 
+		their <code>wait()</code> operations, the behavior for these threads is undefined.
+		</simpara></effects>
+      </destructor>
+
+      <method-group name="waiting">
+        <method name="wait">
+          <type>bool</type>
+
+          <effects><simpara>Wait until N threads call <code>wait()</code>, where
+          N equals the <code>count</code> provided to the constructor for the 
+          barrier object.</simpara>
+          <simpara><emphasis role="bold">Note</emphasis> that if the barrier is 
+          destroyed before <code>wait()</code> can return, the behavior is 
+          undefined.</simpara></effects>
+          
+          <returns>Exactly one of the N threads will receive a return value
+		  of <code>true</code>, the others will receive a value of <code>false</code>. 
+		  Precisely which thread receives the return value of <code>true</code> will 
+		  be implementation-defined. Applications can use this value to designate one 
+		  thread as a leader that will take a certain action, and the other threads 
+		  emerging from the barrier can wait for that action to take place.</returns>
+        </method>		
+      </method-group>
+	</class>
+  </namespace>
+</header>

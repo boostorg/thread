@@ -1,0 +1,202 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="threads.overview" last-revision="$Date$">
+  <title>Overview</title>
+  <section id="threads.introduction">
+    <title>Introduction</title>
+    <para>&Boost.Threads; allows C++ programs to execute as multiple,
+    asynchronous, independent threads-of-execution. Each thread has its own
+    machine state including program instruction counter and registers. Programs
+    which execute as multiple threads are called multithreaded programs to
+    distinguish them from traditional single-threaded programs. The <link
+	linkend="threads.glossary">glossary</link> gives a more complete description
+	of the multithreading execution environment.</para>
+    <para>Multithreading provides several advantages:
+    <itemizedlist>
+      <listitem>
+        <para>Programs which would otherwise block waiting for some external
+        event can continue to respond if the blocking operation is placed in a
+        separate thread. Multithreading is usually an absolute requirement for
+        these programs.</para>
+      </listitem>
+      <listitem>
+        <para>Well-designed multithreaded programs may execute faster than
+        single-threaded programs, particularly on multiprocessor hardware.
+        Note, however, that poorly-designed multithreaded programs are often
+        slower than single-threaded programs.</para>
+      </listitem>
+      <listitem>
+        <para>Some program designs may be easier to formulate using a
+        multithreaded approach. After all, the real world is
+        asynchronous!</para>
+      </listitem>
+    </itemizedlist></para>
+  </section>
+  <section>
+    <title>Dangers</title>
+    <section>
+    <title>General considerations</title>
+    <para>Beyond the errors which can occur in single-threaded programs,
+    multithreaded programs are subject to additional errors:
+    <itemizedlist>
+      <listitem>
+        <para><link linkend="threads.glossary.race-condition">Race
+	    conditions</link></para>
+      </listitem>
+      <listitem>
+        <para><link linkend="threads.glossary.deadlock">Deadlock</link>
+        (sometimes called "deadly embrace")</para>
+      </listitem>
+      <listitem>
+        <para><link linkend="threads.glossary.priority-failure">Priority
+        failures</link> (priority inversion, infinite overtaking, starvation,
+		etc.)</para>
+      </listitem>
+    </itemizedlist></para>
+    <para>Every multithreaded program must be designed carefully to avoid these
+	errors. These aren't rare or exotic failures - they are virtually guaranteed
+	to occur unless multithreaded code is designed to avoid them. Priority
+	failures are somewhat less common, but are nonetheless serious.</para>
+    <para>The <link linkend="threads.design">&Boost.Threads; design</link>
+    attempts to minimize these errors, but they will still occur unless the
+    programmer proactively designs to avoid them.</para>
+	<note>Please also see <xref linkend="threads.implementation_notes"/>
+	for additional, implementation-specific considerations.</note>
+	</section>
+    <section>
+      <title>Testing and debugging considerations</title>
+      <para>Multithreaded programs are non-deterministic. In other words, the
+      same program with the same input data may follow different execution
+      paths each time it is invoked. That can make testing and debugging a
+      nightmare:
+      <itemizedlist>
+        <listitem>
+          <para>Failures are often not repeatable.</para>
+        </listitem>
+        <listitem>
+          <para>Probe effect causes debuggers to produce very different results
+          from non-debug uses.</para>
+        </listitem>
+        <listitem>
+          <para>Debuggers require special support to show thread state.</para>
+        </listitem>
+        <listitem>
+          <para>Tests on a single processor system may give no indication of
+          serious errors which would appear on multiprocessor systems, and visa
+          versa. Thus test cases should include a varying number of
+          processors.</para>
+        </listitem>
+        <listitem>
+          <para>For programs which create a varying number of threads according
+          to workload, tests which don't span the full range of possibilities
+          may miss serious errors.</para>
+        </listitem>
+      </itemizedlist></para>
+    </section>
+    <section>
+      <title>Getting a head start</title>
+      <para>Although it might appear that multithreaded programs are inherently
+      unreliable, many reliable multithreaded programs do exist. Multithreading
+      techniques are known which lead to reliable programs.</para>
+      <para>Design patterns for reliable multithreaded programs, including the
+      important <emphasis>monitor</emphasis> pattern, are presented in 
+      <emphasis>Pattern-Oriented Software Architecture Volume 2 - Patterns for
+      Concurrent and Networked Objects</emphasis>
+	  &cite.SchmidtStalRohnertBuschmann;. Many important multithreading programming
+	  considerations (independent of threading library) are discussed in
+	  <emphasis>Programming with POSIX Threads</emphasis> &cite.Butenhof97;.</para>
+      <para>Doing some reading before attempting multithreaded designs will
+      give you a head start toward reliable multithreaded programs.</para>
+    </section>
+  </section>
+  <section>
+    <title>C++ Standard Library usage in multithreaded programs</title>
+    <section>
+      <title>Runtime libraries</title>
+      <para>
+      <emphasis role="bold">Warning:</emphasis> Multithreaded programs such as
+	  those using &Boost.Threads; must link to <link
+	  linkend="threads.glossary.thread-safe">thread-safe</link> versions of
+	  all runtime libraries used by the program, including the runtime library
+	  for the C++ Standard Library. Failure to do so will cause <link
+	  linkend="threads.glossary.race-condition">race conditions</link> to occur
+	  when multiple threads simultaneously execute runtime library functions for
+	  <code>new</code>, <code>delete</code>, or other language features which
+	  imply shared state.</para>
+    </section>
+    <section>
+      <title>Potentially non-thread-safe functions</title>
+      <para>Certain C++ Standard Library functions inherited from C are
+      particular problems because they hold internal state between
+      calls:
+      <itemizedlist>
+        <listitem>
+          <para><code>rand</code></para>
+        </listitem>
+        <listitem>
+          <para><code>strtok</code></para>
+        </listitem>
+        <listitem>
+          <para><code>asctime</code></para>
+        </listitem>
+        <listitem>
+          <para><code>ctime</code></para>
+        </listitem>
+        <listitem>
+          <para><code>gmtime</code></para>
+        </listitem>
+        <listitem>
+          <para><code>localtime</code></para>
+        </listitem>
+      </itemizedlist></para>
+      <para>It is possible to write thread-safe implementations of these by
+      using thread specific storage (see
+	  <classname>boost::thread_specific_ptr</classname>), and several C++ 
+	  compiler vendors do just that. The technique is well-know and is explained
+	  in &cite.Butenhof97;.</para>
+      <para>But at least one vendor (HP-UX) does not provide thread-safe
+      implementations of the above functions in their otherwise thread-safe
+      runtime library. Instead they provide replacement functions with
+      different names and arguments.</para>
+      <para><emphasis role="bold">Recommendation:</emphasis> For the most
+	  portable, yet thread-safe code, use Boost replacements for the problem
+	  functions. See the <libraryname>Boost Random Number Library</libraryname>
+	  and <libraryname>Boost Tokenizer Library</libraryname>.</para>
+    </section>
+  </section>
+  <section>
+    <title>Common guarantees for all &Boost.Threads; components</title>
+    <section>
+      <title>Exceptions</title>
+      <para>&Boost.Threads; destructors never
+	  throw exceptions. Unless otherwise specified, other
+	  &Boost.Threads; functions that do not have
+	  an exception-specification may throw implementation-defined
+	  exceptions.</para>
+      <para>In particular, &Boost.Threads;
+	  reports failure to allocate storage by throwing an exception of type
+	  <code>std::bad_alloc</code> or a class derived from
+	  <code>std::bad_alloc</code>, failure to obtain thread resources other than
+	  memory by throwing an exception of type
+	  <classname>boost::thread_resource_error</classname>, and certain lock
+	  related failures by throwing an exception of type
+	  <classname>boost::lock_error</classname>.</para>
+      <para><emphasis role="bold">Rationale:</emphasis> Follows the C++ Standard
+	  Library practice of allowing all functions except destructors or other
+	  specified functions to throw exceptions on errors.</para>
+    </section>
+    <section>
+      <title>NonCopyable requirement</title>
+      <para>&Boost.Threads; classes documented as
+	  meeting the NonCopyable requirement disallow copy construction and copy
+	  assignment. For the sake of exposition, the synopsis of such classes show
+	  private derivation from <classname>boost::noncopyable</classname>. Users
+	  should not depend on this derivation, however, as implementations are free
+	  to meet the NonCopyable requirement in other ways.</para>
+    </section>
+  </section>
+</section>

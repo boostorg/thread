@@ -1,0 +1,230 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<bibliography id="threads.bibliography"
+last-revision="$Date$">
+  <title>Bibliography</title>
+  <biblioentry id="threads.bib.AndrewsSchneider83">
+    <abbrev id="threads.bib.AndrewsSchneider83.abbrev">AndrewsSchnieder83</abbrev>
+    <biblioset relation="journal">
+      <title>ACM Computing Surveys</title>
+      <volumenum>Vol. 15</volumenum>
+      <issuenum>No. 1</issuenum>
+      <date>March, 1983</date>
+    </biblioset>
+    <biblioset relation="article">
+      <authorgroup>
+        <author>
+          <firstname>Gregory</firstname>
+          <othername>R.</othername>
+          <surname>Andrews</surname>
+        </author>
+        <author>
+          <firstname>Fred</firstname>
+          <othername>B.</othername>
+          <surname>Schneider</surname>
+        </author>
+      </authorgroup>
+      <title>
+        <ulink
+        url="http://www.acm.org/pubs/citations/journals/surveys/1983-15-1/p3-andrews/"
+        >Concepts and Notations for Concurrent Programming</ulink>
+      </title>
+    </biblioset>
+    <para>Good general background reading. Includes descriptions of Path
+    Expressions, Message Passing, and Remote Procedure Call in addition to the
+    basics</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.Boost">
+    <abbrev id="threads.bib.Boost.abbrev">Boost</abbrev>
+    <bibliomisc>The <emphasis>Boost</emphasis> world wide web site.
+	<ulink url="http:/www.boost.org">http://www.boost.org</ulink></bibliomisc>
+	<para>&Boost.Threads; is one of many Boost libraries. The Boost web
+    site includes a great deal of documentation and general information which
+    applies to all Boost libraries. Current copies of the libraries including
+    documentation and test programs may be downloaded from the web
+    site.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.Hansen73">
+    <abbrev id="threads.bib.Hansen73.abbrev">Hansen73</abbrev>
+    <biblioset relation="journal">
+      <title>ACM Computing Surveys</title>
+      <volumenum>Vol. 5</volumenum>
+      <issuenum>No. 4</issuenum>
+      <date>December, 1983</date>
+    </biblioset>
+    <biblioset relation="article">
+      <author>0-201-63392-2 
+        <firstname>Per Brinch</firstname>
+        <lastname>Hansen</lastname>
+      </author>
+      <title>
+        <ulink
+        url="http://www.acm.org/pubs/articles/journals/surveys/1973-5-4/p223-hansen/"
+        >Concurrent Programming Concepts</ulink>
+      </title>
+    </biblioset>
+    <para>"This paper describes the evolution of language features for
+    multiprogramming from event queues and semaphores to critical regions and
+    monitors." Includes analysis of why events are considered error-prone. Also
+    noteworthy because of an introductory quotation from Christopher Alexander;
+    Brinch Hansen was years ahead of others in recognizing pattern concepts
+    applied to software, too.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.Butenhof97">
+    <abbrev id="threads.bib.Butenhof97.abbrev">Butenhof97</abbrev>
+	<title>
+	  <ulink url="http://cseng.aw.com/book/0,3828,0201633922,00.html"
+	  >Programming with POSIX Threads </ulink>
+	</title>
+	<author>
+	  <firstname>David</firstname>
+	  <othername>R.</othername>
+	  <surname>Butenhof</surname>
+	</author>
+	<publisher>Addison-Wesley</publisher>
+	<copyright><year>1997</year></copyright>
+	<isbn>ISNB: 0-201-63392-2</isbn>
+	<para>This is a very readable explanation of threads and how to use
+	them. Many of the insights given apply to all multithreaded programming, not
+	just POSIX Threads</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.Hoare74">
+    <abbrev id="threads.bib.Hoare74.abbrev">Hoare74</abbrev>
+	<biblioset relation="journal">
+	  <title>Communications of the ACM</title>
+	  <volumenum>Vol. 17</volumenum>
+	  <issuenum>No. 10</issuenum>
+	  <date>October, 1974</date>
+	</biblioset>
+	<biblioset relation="article">
+      <title>
+	    <ulink url=" http://www.acm.org/classics/feb96/"
+	    >Monitors: An Operating System Structuring Concept</ulink>
+      </title>
+      <author>
+        <firstname>C.A.R.</firstname>
+        <surname>Hoare</surname>
+      </author>
+	  <pagenums>549-557</pagenums>
+	</biblioset>
+	<para>Hoare and Brinch Hansen's work on Monitors is the basis for reliable
+	multithreading patterns. This is one of the most often referenced papers in
+	all of computer science, and with good reason.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.ISO98">
+    <abbrev id="threads.bib.ISO98.abbrev">ISO98</abbrev>
+	<title>
+	  <ulink url="http://www.ansi.org">Programming Language C++</ulink>
+	</title>
+	<orgname>ISO/IEC</orgname>
+    <releaseinfo>14882:1998(E)</releaseinfo>
+	<para>This is the official C++ Standards document. Available from the ANSI
+	(American National Standards Institute) Electronic Standards Store.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.McDowellHelmbold89">
+    <abbrev id="threads.bib.McDowellHelmbold89.abbrev">McDowellHelmbold89</abbrev>
+	<biblioset relation="journal">
+	  <title>Communications of the ACM</title>
+	  <volumenum>Vol. 21</volumenum>
+	  <issuenum>No. 2</issuenum>
+	  <date>December, 1989</date>
+	</biblioset>
+	<biblioset>
+	  <author>
+	    <firstname>Charles</firstname>
+		<othername>E.</othername>
+		<surname>McDowell</surname>
+	  </author>
+	  <author>
+	    <firstname>David</firstname>
+		<othername>P.</othername>
+		<surname>Helmbold</surname>
+	  </author>
+	  <title>
+	    <ulink
+		url="http://www.acm.org/pubs/citations/journals/surveys/1989-21-4/p593-mcdowell/"
+		>Debugging Concurrent Programs</ulink>
+	  </title>
+	</biblioset>
+	<para>Identifies many of the unique failure modes and debugging difficulties
+	associated with concurrent programs.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.SchmidtPyarali">
+    <abbrev id="threads.bib.SchmidtPyarali.abbrev">SchmidtPyarali</abbrev>
+	<title>
+	  <ulink url="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html8"
+	  >Strategies for Implementing POSIX Condition Variables on Win32</ulink>
+	</title> 
+	<authorgroup>
+	  <author>
+	    <firstname>Douglas</firstname>
+		<othername>C.</othername>
+		<surname>Schmidt</surname>
+	  </author>
+	  <author>
+	    <firstname>Irfan</firstname>
+		<surname>Pyarali</surname>
+	  </author>
+	</authorgroup>
+	<orgname>Department of Computer Science, Washington University, St. Louis,
+	Missouri</orgname>
+	<para>Rationale for understanding &Boost.Threads; condition
+	variables. Note that Alexander Terekhov found some bugs in the
+	implementation given in this article, so pthreads-win32 and &Boost.Threads;
+	are even more complicated yet.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.SchmidtStalRohnertBuschmann">
+    <abbrev
+	id="threads.bib.SchmidtStalRohnertBuschmann.abbrev">SchmidtStalRohnertBuschmann</abbrev>
+	<title>
+	  <ulink
+	  url="http://www.wiley.com/Corporate/Website/Objects/Products/0,9049,104671,00.html"
+	  >Pattern-Oriented Architecture Volume 2</ulink>
+	</title>
+	<subtitle>Patterns for Concurrent and Networked Objects</subtitle>
+	<titleabbrev>POSA2</titleabbrev>
+	<authorgroup>
+	  <author>
+	    <firstname>Douglas</firstname>
+		<othername>C.</othername>
+		<surname>Schmidt</surname>
+	  </author>
+	  <author>
+	    <firstname>Michael</firstname>
+		<lastname>Stal</lastname>
+	  </author>
+	  <author>
+	    <firstname>Hans</firstname>
+		<surname>Rohnert</surname>
+	  </author>
+	  <author>
+	    <firstname>Frank</firstname>
+		<surname>Buschmann</surname>
+	  </author>
+	</authorgroup>
+	<publisher>Wiley</publisher>
+	<copyright><year>2000</year></copyright>
+	<para>This is a very good explanation of how to apply several patterns
+	useful for concurrent programming. Among the patterns documented is the
+	Monitor Pattern mentioned frequently in the &Boost.Threads;
+	documentation.</para>
+  </biblioentry>
+  <biblioentry id="threads.bib.Stroustrup">
+    <abbrev id="threads.bib.Stroustrup.abbrev">Stroustrup</abbrev>
+	<title>
+	  <ulink url="http://cseng.aw.com/book/0,3828,0201700735,00.html"
+	  >The C++ Programming Language</ulink>
+	</title>
+	<edition>Special Edition</edition>
+	<publisher>Addison-Wesley</publisher>
+	<copyright><year>2000</year></copyright>
+	<isbn>ISBN: 0-201-70073-5</isbn>
+	<para>The first book a C++ programmer should own. Note that the 3rd edition
+	(and subsequent editions like the Special Edition) has been rewritten to
+	cover the ISO standard language and library.</para>
+  </biblioentry>
+</bibliography>

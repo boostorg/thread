@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="thread.build" last-revision="$Date$">
+	<title>Build</title>
+	<para>
+	How you build the &Boost.Threads; libraries, and how you build your own applications
+	that use those libraries, are some of the most frequently asked questions. Build
+	processes are difficult to deal with in a portable manner. That's one reason
+	why &Boost.Threads; makes use of &Boost.Build;.
+	In general you should refer to the documentation for &Boost.Build;.
+	This document will only supply you with some simple usage examples for how to
+	use <emphasis>bjam</emphasis> to build and test &Boost.Threads;. In addition, this document
+	will try to explain the build requirements so that users may create their own
+	build processes (for instance, create an IDE specific project), both for building
+	and testing &Boost.Threads;, as well as for building their own projects using
+	&Boost.Threads;.
+	</para>
+	<section id="thread.build.building">
+		<title>Building the &Boost.Threads; Libraries</title>
+		<para>
+	To build the &Boost.Threads; libraries using &Boost.Build;, simply change to the
+	directory <emphasis>boost_root</emphasis>/libs/thread/build and execute the command:
+		<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis></programlisting>
+	This will create the debug and the release builds of the &Boost.Threads; library.
+	<note>Invoking the above command in <emphasis>boost_root</emphasis> will build all of 
+	the Boost distribution, including &Boost.Threads;.</note>
+		</para>
+		<para>
+	The Jamfile supplied with &Boost.Threads; produces a dynamic link library named
+	<emphasis>boost_thread{build-specific-tags}.{extension}</emphasis>, where the build-specific
+	tags indicate the toolset used to build the library, whether it's a debug or release
+	build, what version of Boost was used, etc.; and the extension is the appropriate extension
+	for a dynamic link library for the platform for which &Boost.Threads; is being built.
+	For instance, a debug library built for Win32 with VC++ 7.1 using Boost 1.31 would
+	be named <emphasis>boost_thread-vc71-mt-gd-1_31.dll</emphasis>.
+		</para>
+		<para>
+	The source files that are used to create the &Boost.Threads; library
+	are all of the *.cpp files found in <emphasis>boost_root</emphasis>/libs/thread/src.
+	These need to be built with the compiler's and linker's multi-threading support enabled.
+	If you want to create your own build solution you'll have to follow these same
+	guidelines. One of the most frequently reported problems when trying to do this
+	occurs from not enabling the compiler's and linker's support for multi-threading.
+		</para>
+	</section>
+	<section id="thread.build.testing">
+		<title>Testing the &Boost.Threads; Libraries</title>
+		<para>
+	To test the &Boost.Threads; libraries using &Boost.Build;, simply change to the
+	directory <emphasis>boost_root</emphasis>/libs/thread/test and execute the command:
+			<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis> test</programlisting>
+		</para>
+	</section>
+</section>
