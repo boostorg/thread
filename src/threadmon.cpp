@@ -45,7 +45,7 @@ BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
                 exit_handlers* handlers = static_cast<exit_handlers*>(TlsGetValue(key));
                 if (handlers)
                 {
-                    for (exit_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
+                    for (exit_handlers::reverse_iterator it = handlers->rbegin(); it != handlers->rend(); ++it)
                         (*it)();
 
                     delete handlers;
