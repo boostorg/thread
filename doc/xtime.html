@@ -105,10 +105,12 @@ is 1970-01-01 00:00:00. This is the only clock type supported by <b>Boost.Thread
 <p><b>Postcondition:</b> <code>xtp</code> represents the current point in time
 as a duration since the epoch specified by the <code>clock_type</code>.</p>
 
-<p><b>Notes:</b> The resolution is implementation specific.&nbsp; For many
+<p><b>Returns:</b> <code>clock_type</code> if successful, otherwise 0.
+
+<p><b>Notes:</b> The resolution is implementation specific. For many
 implementations the best resolution of time is far more than one nanosecond, and
 even when the resolution is reasonably good, the latency of a call to <code>xtime_get()</code>
-may be significant.&nbsp; For maximum portability, avoid durations of less than
+may be significant. For maximum portability, avoid durations of less than
 one second.</p>
 
 <hr>

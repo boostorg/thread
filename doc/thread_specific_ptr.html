@@ -85,7 +85,7 @@ public:
 <h3>Constructor</h3>
 
 <pre>
-thread_specific_ptr();
+   thread_specific_ptr();
 </pre>
 
 <p><b>Postconditions:</b> A thread specific storage  has been reserved for use by *this
@@ -103,7 +103,7 @@ specific storage objects that can be created, and this limit may be small.</p>
 <h3>Destructor</h3>
 
 <pre>
-~thread_specific_ptr();
+   ~thread_specific_ptr();
 </pre>
 
 <p><b>Notes:</b> Does not destroy any data that may be stored in any thread's thread
@@ -115,7 +115,7 @@ running that have made use of its thread specific storage.</p>
 <h3>get</h3>
 
 <pre>
-T* get() const;
+   T* get() const;
 </pre>
 
 <p><b>Returns:</b> The object stored in thread specific storage for the current thread
@@ -127,13 +127,13 @@ for *this.</p>
 <h3>Smart Pointer Operations</h3>
 
 <pre>
-T* operator-&gt;() const;
+   T* operator-&gt;() const;
 </pre>
 
 <p><b>Returns:</b> <code>get()</code></p>
 
 <pre>
-T&amp; operator*() const;
+   T&amp; operator*() const;
 </pre>
 
 <p><b>Returns:</b> <code>get()</code></p>
@@ -144,7 +144,7 @@ T&amp; operator*() const;
 <h3>Release</h3>
 
 <pre>
-T* release();
+   T* release();
 </pre>
 
 <p><b>Returns:</b> <code>get()</code></p>
@@ -155,13 +155,15 @@ T* release();
 <h3>Reset</h3>
 
 <pre>
-void reset(T* p=0);
+   void reset(T* p=0);
 </pre>
 
 <p><b>Effects:</b> If <code>get()!= p</code> then <code>delete get()</code>.</p>
 
 <p><b>Postconditions:</b> <code>*this</code> holds the pointer <code>p</code> for
-the current thread. The pointer will be deleted when the thread terminates.</p>
+the current thread.</p>
+
+<p><b>Notes:</b> The pointer will be deleted when the thread terminates.</p>
 
 <hr>
 <h2><a name="Example">Example Usage</a></h2>
@@ -192,7 +194,7 @@ void thread_proc()
 
 int main(int argc, char* argv[])
 {
-   boost::thread::thread_group threads;
+   boost::thread_group threads;
    for (int i=0; i&lt;5; ++i)
       threads.create(&amp;thread_proc);
    threads.join_all();

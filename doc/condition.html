@@ -75,12 +75,12 @@ public:
    void notify_all();
    template &lt;typename ScopedLock&gt;
       void wait(ScopedLock&amp; lock);
-   template &lt;typename ScopedLock, typename Pr&gt;
-      void wait(ScopedLock&amp; lock, Pr pred);
+   template &lt;typename ScopedLock, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
+      void wait(ScopedLock&amp; lock, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
    template &lt;typename ScopedTimedLock&gt;
       bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt);
-   template &lt;typename ScopedTimedLock, typename Pr&gt;
-      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, Pr pred);
+   template &lt;typename ScopedTimedLock, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
+      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
 };
 
 } // namespace boost

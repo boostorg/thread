@@ -79,7 +79,7 @@ class thread : <a href="../../utility/utility.htm#noncopyable">boost::noncopyabl
 {
 public:
     thread();
-    thread(const boost::function0&lt;void&gt;&amp; threadfunc);
+    explicit thread(const boost::function0&lt;void&gt;&amp; threadfunc);
     ~thread();
 
     bool operator==(const thread&amp; rhs) const;

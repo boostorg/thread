@@ -106,7 +106,7 @@ void thread_proc()
 
 int main(int argc, char* argv[])
 {
-   boost::thread::thread_group threads;
+   boost::thread_group threads;
    for (int i=0; i&lt;5; ++i)
       threads.create(&amp;thread_proc);
    threads.join_all();
