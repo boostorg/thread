@@ -36,6 +36,5 @@ unit-test test_thread
     : <include>$(BOOST_ROOT)
       $(pthreads-win32)
       <threading>multi
-      <runtime-link>static/dynamic
-    : debug release
+    : debug release <runtime-link>static/dynamic
 ;
