@@ -117,7 +117,8 @@
             }
 
             //Destroy the exit handlers
-            delete handlers;
+            if (TlsSetValue(key, 0))
+                delete handlers;
         }
     }
 
