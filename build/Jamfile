@@ -29,7 +29,7 @@ if $(NT)
     }
     else
     {
-        dll libboost_threadmon : ../src/threadmon.cpp
+        dll boost_threadmon : ../src/threadmon.cpp
             # requirements
             : <include>$(BOOST_ROOT)
             <threading>multi
@@ -41,7 +41,7 @@ if $(NT)
 CPP_SOURCES =
     condition mutex recursive_mutex thread tss xtime once exceptions ;
 
-lib libboost_thread : ../src/$(CPP_SOURCES).cpp
+lib boost_thread : ../src/$(CPP_SOURCES).cpp
     # requirements
     : <include>$(BOOST_ROOT)
     $(PTW32_REQUIREMENTS)
