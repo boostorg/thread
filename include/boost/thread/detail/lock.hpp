@@ -22,22 +22,6 @@ namespace boost {
 class condition;
 struct xtime;
 
-namespace lock_state {
-    typedef enum
-    {
-        unlocked=0,
-        locked=1
-    } lock_state;
-} //namespace lock_state
-
-namespace blocking_mode {
-    typedef enum
-    {
-        non_blocking=0,
-        blocking=1
-    } blocking_mode;
-} //namespace blocking_mode
-
 namespace detail { namespace thread {
 
 template <typename Mutex>
@@ -79,7 +63,7 @@ template <typename Mutex>
 class scoped_lock : private noncopyable
 {
 public:
-    typedef Mutex mutex_type;
+    typedef typename Mutex mutex_type;
 
     explicit scoped_lock(Mutex& mx, bool initially_locked=true)
         : m_mutex(mx), m_locked(false)
@@ -118,7 +102,7 @@ template <typename TryMutex>
 class scoped_try_lock : private noncopyable
 {
 public:
-    typedef TryMutex mutex_type;
+    typedef typename TryMutex mutex_type;
 
     explicit scoped_try_lock(TryMutex& mx)
         : m_mutex(mx), m_locked(false)
@@ -167,7 +151,7 @@ template <typename TimedMutex>
 class scoped_timed_lock : private noncopyable
 {
 public:
-    typedef TimedMutex mutex_type;
+    typedef typename TimedMutex mutex_type;
 
     scoped_timed_lock(TimedMutex& mx, const xtime& xt)
         : m_mutex(mx), m_locked(false)
