@@ -27,4 +27,23 @@
 #   define BOOST_THREAD_DECL
 #endif // BOOST_THREAD_SHARED_LIB
 
+//
+// Automatically link to the correct build variant where possible. 
+// 
+#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL)
+//
+// Set the name of our library, this will get undef'ed by auto_link.hpp
+// once it's done with it:
+//
+#define BOOST_LIB_NAME boost_thread
+//
+// If we're importing code from a dll, then tell auto_link.hpp about it:
+//
+#  define BOOST_DYN_LINK
+//
+// And include the header that does the work:
+//
+#include <boost/config/auto_link.hpp>
+#endif  // auto-linking disabled
+
 #endif // BOOST_THREAD_CONFIG_WEK1032003_HPP
