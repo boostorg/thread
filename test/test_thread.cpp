@@ -6,6 +6,7 @@
 //#include <boost/thread/atomic.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/xtime.hpp>
 
 #define BOOST_INCLUDE_MAIN
 #include <boost/test/test_tools.hpp>

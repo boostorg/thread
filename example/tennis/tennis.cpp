@@ -2,6 +2,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/semaphore.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/thread/xtime.hpp>
 #include <iostream>
 #include <windows.h>
 #include <process.h>

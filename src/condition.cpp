@@ -1,23 +1,17 @@
-/*
- * Copyright (C) 2001
- * William E. Kempf
- *
- * Permission to use, copy, modify, distribute and sell this software
- * and its documentation for any purpose is hereby granted without fee,
- * provided that the above copyright notice appear in all copies and
- * that both that copyright notice and this permission notice appear
- * in supporting documentation.  William E. Kempf makes no representations
- * about the suitability of this software for any purpose.  
- * It is provided "as is" without express or implied warranty.
- *
- * Revision History (excluding minor changes for specific compilers)
- *    8 Feb 01  Initial version.
- *   22 May 01  Modified to use xtime for time outs.
- */
+// Copyright (C) 2001
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.  
+// It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/condition.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp> 
-#include <boost/thread/condition.hpp>
 #include <limits>
 #include <cassert>
 #include "timeconv.inl"
@@ -28,312 +22,317 @@
 #   include <errno.h>
 #endif
 
-namespace boost
-{
+namespace boost {
+
 #if defined(BOOST_HAS_WINTHREADS)
-    condition::condition()
-        : _gone(0), _blocked(0), _waiting(0)
+condition::condition()
+    : m_gone(0), m_blocked(0), m_waiting(0)
+{
+    m_gate = reinterpret_cast<unsigned long>(CreateSemaphore(0, 1, 1, 0));
+    m_queue = reinterpret_cast<unsigned long>(CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
+    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+
+    if (!m_gate || !m_queue || !m_mutex)
     {
-        _gate = reinterpret_cast<unsigned long>(CreateSemaphore(0, 1, 1, 0));
-        _queue = reinterpret_cast<unsigned long>(CreateSemaphore(0, 0, std::numeric_limits<long>::max(), 0));
-        _mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+        int res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
+        assert(res);
+        res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
+        assert(res);
+        res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+        assert(res);
 
-        if (!_gate || !_queue || !_mutex)
+        throw std::runtime_error("boost::condition : failure to construct");
+    }
+}
+
+condition::~condition()
+{
+    int res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
+    assert(res);
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
+    assert(res);
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    assert(res);
+}
+
+void condition::notify_one()
+{
+    unsigned signals = 0;
+
+    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    assert(res == WAIT_OBJECT_0);
+
+    if (m_waiting != 0) // the m_gate is already closed
+    {
+        if (m_blocked == 0)
         {
-            int res = CloseHandle(reinterpret_cast<HANDLE>(_gate));
+            res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
             assert(res);
-            res = CloseHandle(reinterpret_cast<HANDLE>(_queue));
-            assert(res);
-            res = CloseHandle(reinterpret_cast<HANDLE>(_mutex));
-            assert(res);
+            return;
+        }
 
-            throw std::runtime_error("boost::condition : failure to construct");
+        ++m_waiting;
+        --m_blocked = 0;
+    }
+    else
+    {
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        if (m_blocked > m_gone)
+        {
+            if (m_gone != 0)
+            {
+                m_blocked -= m_gone;
+                m_gone = 0;
+            }
+            signals = m_waiting = 1;
+            --m_blocked;
+        }
+        else
+        {
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+            assert(res);
+        }
+
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        assert(res);
+
+        if (signals)
+        {
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
+            assert(res);
         }
     }
+}
+
+void condition::notify_all()
+{
+    unsigned signals = 0;
+
+    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    assert(res == WAIT_OBJECT_0);
+
+    if (m_waiting != 0) // the m_gate is already closed
+    {
+        if (m_blocked == 0)
+        {
+            res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+            assert(res);
+            return;
+        }
+
+        m_waiting += (signals = m_blocked);
+        m_blocked = 0;
+    }
+    else
+    {
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        if (m_blocked > m_gone)
+        {
+            if (m_gone != 0)
+            {
+                m_blocked -= m_gone;
+                m_gone = 0;
+            }
+            signals = m_waiting = m_blocked;
+            m_blocked = 0;
+        }
+        else
+        {
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+            assert(res);
+        }
+
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        assert(res);
+
+        if (signals)
+        {
+            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
+            assert(res);
+        }
+    }
+}
+
+void condition::enter_wait()
+{
+    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+    assert(res == WAIT_OBJECT_0);
+    ++m_blocked;
+    res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+    assert(res);
+}
+
+void condition::do_wait()
+{
+    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+    assert(res == WAIT_OBJECT_0);
     
-    condition::~condition()
+    unsigned was_waiting=0;
+    unsigned was_gone=0;
+
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    assert(res == WAIT_OBJECT_0);
+    was_waiting = m_waiting;
+    was_gone = m_gone;
+    if (was_waiting != 0)
     {
-        int res = CloseHandle(reinterpret_cast<HANDLE>(_gate));
+        if (--m_waiting == 0)
+        {
+            if (m_blocked != 0)
+            {
+                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
+                assert(res);
+                was_waiting = 0;
+            }
+            else if (m_gone != 0)
+                m_gone = 0;
+        }
+    }
+    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
+    {
+        // timeout occured, normalize the m_gone count
+        // this may occur if many calls to wait with a timeout are made and
+        // no call to notify_* is made
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+        assert(res == WAIT_OBJECT_0);
+        m_blocked -= m_gone;
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
         assert(res);
-        res = CloseHandle(reinterpret_cast<HANDLE>(_queue));
-        assert(res);
-        res = CloseHandle(reinterpret_cast<HANDLE>(_mutex));
+        m_gone = 0;
+    }
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    assert(res);
+
+    if (was_waiting == 1)
+    {
+        for (/**/ ; was_gone; --was_gone)
+        {
+            // better now than spurious later
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+            assert(res == WAIT_OBJECT_0);
+        }
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
         assert(res);
     }
+}
 
-    void condition::notify_one()
+bool condition::do_timed_wait(const xtime& xt)
+{
+    unsigned milliseconds;
+    to_duration(xt, milliseconds);
+
+    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
+    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
+
+    bool ret = (res == WAIT_OBJECT_0);
+    
+    unsigned was_waiting=0;
+    unsigned was_gone=0;
+
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    assert(res == WAIT_OBJECT_0);
+    was_waiting = m_waiting;
+    was_gone = m_gone;
+    if (was_waiting != 0)
     {
-        unsigned signals = 0;
-
-        int res = WaitForSingleObject(reinterpret_cast<HANDLE>(_mutex), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-
-        if (_waiting != 0) // the _gate is already closed
+        if (!ret) // timeout
         {
-            if (_blocked == 0)
-            {
-                res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-                assert(res);
-                return;
-            }
-
-            ++_waiting;
-            --_blocked = 0;
-        }
-        else
-        {
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(_gate), INFINITE);
-            assert(res == WAIT_OBJECT_0);
-            if (_blocked > _gone)
-            {
-                if (_gone != 0)
-                {
-                    _blocked -= _gone;
-                    _gone = 0;
-                }
-                signals = _waiting = 1;
-                --_blocked;
-            }
+            if (m_blocked != 0)
+                --m_blocked;
             else
+                ++m_gone; // count spurious wakeups
+        }
+        if (--m_waiting == 0)
+        {
+            if (m_blocked != 0)
             {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
+                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0); // open m_gate
                 assert(res);
+                was_waiting = 0;
             }
-
-            res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-            assert(res);
-
-            if (signals)
-            {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_queue), signals, 0);
-                assert(res);
-            }
+            else if (m_gone != 0)
+                m_gone = 0;
         }
     }
-
-    void condition::notify_all()
+    else if (++m_gone == (std::numeric_limits<unsigned>::max() / 2))
     {
-        unsigned signals = 0;
-
-        int res = WaitForSingleObject(reinterpret_cast<HANDLE>(_mutex), INFINITE);
+        // timeout occured, normalize the m_gone count
+        // this may occur if many calls to wait with a timeout are made and
+        // no call to notify_* is made
+        res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
         assert(res == WAIT_OBJECT_0);
-
-        if (_waiting != 0) // the _gate is already closed
-        {
-            if (_blocked == 0)
-            {
-                res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-                assert(res);
-                return;
-            }
-
-            _waiting += (signals = _blocked);
-            _blocked = 0;
-        }
-        else
-        {
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(_gate), INFINITE);
-            assert(res == WAIT_OBJECT_0);
-            if (_blocked > _gone)
-            {
-                if (_gone != 0)
-                {
-                    _blocked -= _gone;
-                    _gone = 0;
-                }
-                signals = _waiting = _blocked;
-                _blocked = 0;
-            }
-            else
-            {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
-                assert(res);
-            }
-
-            res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-            assert(res);
-
-            if (signals)
-            {
-                res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_queue), signals, 0);
-                assert(res);
-            }
-        }
+        m_blocked -= m_gone;
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
+        assert(res);
+        m_gone = 0;
     }
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    assert(res);
 
-    void condition::enter_wait()
+    if (was_waiting == 1)
     {
-        int res = WaitForSingleObject(reinterpret_cast<HANDLE>(_gate), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-        ++_blocked;
-        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
+        for (/**/ ; was_gone; --was_gone)
+        {
+            // better now than spurious later
+            res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+            assert(res ==  WAIT_OBJECT_0);
+        }
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
         assert(res);
     }
 
-    void condition::do_wait()
-    {
-        int res = WaitForSingleObject(reinterpret_cast<HANDLE>(_queue), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-        
-        unsigned was_waiting=0;
-        unsigned was_gone=0;
-
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(_mutex), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-        was_waiting = _waiting;
-        was_gone = _gone;
-        if (was_waiting != 0)
-        {
-            if (--_waiting == 0)
-            {
-                if (_blocked != 0)
-                {
-                    res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0); // open _gate
-                    assert(res);
-                    was_waiting = 0;
-                }
-                else if (_gone != 0)
-                    _gone = 0;
-            }
-        }
-        else if (++_gone == (std::numeric_limits<unsigned>::max() / 2))
-        {
-            // timeout occured, normalize the _gone count
-            // this may occur if many calls to wait with a timeout are made and
-            // no call to notify_* is made
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(_gate), INFINITE);
-            assert(res == WAIT_OBJECT_0);
-            _blocked -= _gone;
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
-            assert(res);
-            _gone = 0;
-        }
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-        assert(res);
-
-        if (was_waiting == 1)
-        {
-            for (/**/ ; was_gone; --was_gone)
-            {
-                // better now than spurious later
-                res = WaitForSingleObject(reinterpret_cast<HANDLE>(_queue), INFINITE);
-                assert(res == WAIT_OBJECT_0);
-            }
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
-            assert(res);
-        }
-    }
-
-    bool condition::do_timed_wait(const xtime& xt)
-    {
-        unsigned milliseconds;
-        to_duration(xt, milliseconds);
-
-        int res = WaitForSingleObject(reinterpret_cast<HANDLE>(_queue), milliseconds);
-        assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-
-        bool ret = (res == WAIT_OBJECT_0);
-        
-        unsigned was_waiting=0;
-        unsigned was_gone=0;
-
-        res = WaitForSingleObject(reinterpret_cast<HANDLE>(_mutex), INFINITE);
-        assert(res == WAIT_OBJECT_0);
-        was_waiting = _waiting;
-        was_gone = _gone;
-        if (was_waiting != 0)
-        {
-            if (!ret) // timeout
-            {
-                if (_blocked != 0)
-                    --_blocked;
-                else
-                    ++_gone; // count spurious wakeups
-            }
-            if (--_waiting == 0)
-            {
-                if (_blocked != 0)
-                {
-                    res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0); // open _gate
-                    assert(res);
-                    was_waiting = 0;
-                }
-                else if (_gone != 0)
-                    _gone = 0;
-            }
-        }
-        else if (++_gone == (std::numeric_limits<unsigned>::max() / 2))
-        {
-            // timeout occured, normalize the _gone count
-            // this may occur if many calls to wait with a timeout are made and
-            // no call to notify_* is made
-            res = WaitForSingleObject(reinterpret_cast<HANDLE>(_gate), INFINITE);
-            assert(res == WAIT_OBJECT_0);
-            _blocked -= _gone;
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
-            assert(res);
-            _gone = 0;
-        }
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(_mutex));
-        assert(res);
-
-        if (was_waiting == 1)
-        {
-            for (/**/ ; was_gone; --was_gone)
-            {
-                // better now than spurious later
-                res = WaitForSingleObject(reinterpret_cast<HANDLE>(_queue), INFINITE);
-                assert(res ==  WAIT_OBJECT_0);
-            }
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(_gate), 1, 0);
-            assert(res);
-        }
-
-        return ret;
-    }
+    return ret;
+}
 #elif defined(BOOST_HAS_PTHREADS)
-    condition::condition()
-    {
-        int res = pthread_cond_init(&_cond, 0);
-        assert(res == 0);
+condition::condition()
+{
+    int res = pthread_cond_init(&m_condition, 0);
+    assert(res == 0);
 
-        if (res != 0)
-            throw std::runtime_error("boost::condition : failure to construct");
-    }
-    
-    condition::~condition()
-    {
-        int res = pthread_cond_destroy(&_cond);
-        assert(res == 0);
-    }
+    if (res != 0)
+        throw std::runtime_error("boost::condition : failure to construct");
+}
 
-    void condition::notify_one()
-    {
-        int res = pthread_cond_signal(&_cond);
-        assert(res == 0);
-    }
+condition::~condition()
+{
+    int res = pthread_cond_destroy(&m_condition);
+    assert(res == 0);
+}
 
-    void condition::notify_all()
-    {
-        int res = pthread_cond_broadcast(&_cond);
-        assert(res == 0);
-    }
+void condition::notify_one()
+{
+    int res = pthread_cond_signal(&m_condition);
+    assert(res == 0);
+}
 
-    void condition::do_wait(pthread_mutex_t* pmutex)
-    {
-        int res = pthread_cond_wait(&_cond, pmutex);
-        assert(res == 0);
-    }
+void condition::notify_all()
+{
+    int res = pthread_cond_broadcast(&m_condition);
+    assert(res == 0);
+}
 
-    bool condition::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
-    {
-        timespec ts;
-        to_timespec(xt, ts);
+void condition::do_wait(pthread_mutex_t* pmutex)
+{
+    int res = pthread_cond_wait(&m_condition, pmutex);
+    assert(res == 0);
+}
 
-        int res = pthread_cond_timedwait(&_cond, pmutex, &ts);
-        assert(res == 0 || res == ETIMEDOUT);
+bool condition::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
+{
+    timespec ts;
+    to_timespec(xt, ts);
 
-        return res != ETIMEDOUT;
-    }
+    int res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
+    assert(res == 0 || res == ETIMEDOUT);
+
+    return res != ETIMEDOUT;
+}
 #endif
+
 } // namespace boost
+
+// Change Log:
+//    8 Feb 01  WEKEMPF Initial version.
+//   22 May 01  WEKEMPF Modified to use xtime for time outs.

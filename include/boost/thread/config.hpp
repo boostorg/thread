@@ -1,3 +1,14 @@
+// Copyright (C) 2001
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.  
+// It is provided "as is" without express or implied warranty.
+
 // This file is used to configure Boost.Threads during development
 // in order to decouple dependency on any Boost release.  Once
 // accepted into Boost these contents will be moved to <boost/config>
@@ -5,8 +16,8 @@
 // #include <boost/thread/config.hpp> statements will be changed
 // accordingly.
 
-#ifndef BOOST_THREAD_CONFIG_HPP
-#define BOOST_THREAD_CONFIG_HPP
+#ifndef BOOST_THREAD_CONFIG_WEK070601_HPP
+#define BOOST_THREAD_CONFIG_WEK070601_HPP
 
 #include <boost/config.hpp>
 
@@ -52,7 +63,7 @@
 #   if defined(_MT)
 #       define BOOST_HAS_THREADS
 #   endif
-#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
+//#   define BOOST_HAS_WINTHREADS // comment out this to test pthreads-win32.
 #   if !defined(BOOST_HAS_WINTHREADS)
 #       define BOOST_HAS_PTHREADS
 #       define BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
@@ -62,4 +73,4 @@
 #   define BOOST_HAS_FTIME
 #endif
 
-#endif
+#endif // BOOST_THREAD_CONFIG_WEK070601_HPP
