@@ -13,282 +13,258 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
-#ifndef BOOST_XRWLOCK_JDM031002_HPP
-#define BOOST_XRWLOCK_JDM031002_HPP
+#ifndef BOOST_READ_WRITE_LOCK_JDM031002_HPP
+#define BOOST_READ_WRITE_LOCK_JDM031002_HPP
 
 #include <boost/utility.hpp>
 #include <boost/thread/exceptions.hpp>
 
 namespace boost {
 
-class condition;
 struct xtime;
 
 typedef enum
 {
     NO_LOCK=0,
-    SHARED_LOCK=1,
-    EXCL_LOCK=2
-} rw_lock_state;
+    READ_LOCK=1,
+    WRITE_LOCK=2
+} read_write_lock_state; //:Move out of global scope? And rename to lock_state?
 
 namespace detail {
 namespace thread {
 
 template <typename Mutex>
 
-class rw_lock_ops : private noncopyable
+class read_write_lock_ops : private noncopyable
 {
 private:
-    rw_lock_ops() { }
+    read_write_lock_ops() { }
+    ~read_write_lock_ops() { }
 
 public:
 
-    static void wrlock(Mutex& m)
+    typedef Mutex mutex_type;
+
+    static void write_lock(Mutex& m)
     {
-        m.do_wrlock();
+        m.do_write_lock();
     }
-    static void rdlock(Mutex& m)
+    static void read_lock(Mutex& m)
     {
-        m.do_rdlock();
+        m.do_read_lock();
     }
-    static void wrunlock(Mutex& m)
+    static void write_unlock(Mutex& m)
     {
-        m.do_wrunlock();
+        m.do_write_unlock();
     }
-    static void rdunlock(Mutex &m)
+    static void read_unlock(Mutex &m)
     {
-        m.do_rdunlock();
+        m.do_read_unlock();
     }
-    static bool try_wrlock(Mutex &m)
+    static bool try_write_lock(Mutex &m)
     {
-        return m.do_try_wrlock();
+        return m.do_try_write_lock();
     }
-    static bool try_rdlock(Mutex &m)
+    static bool try_read_lock(Mutex &m)
     {
-        return m.do_try_rdlock();
+        return m.do_try_read_lock();
     }
 
-    static bool timed_wrlock(Mutex &m,const xtime &xt)
+    static bool timed_write_lock(Mutex &m,const xtime &xt)
     {
-        return m.do_timed_wrlock(xt);
+        return m.do_timed_write_lock(xt);
     }
-    static bool timed_rdlock(Mutex &m,const xtime &xt)
+    static bool timed_read_lock(Mutex &m,const xtime &xt)
     {
-        return m.do_timed_rdlock(xt);
+        return m.do_timed_read_lock(xt);
+    }
+
+    static void demote(Mutex & m)
+    {
+        m.do_demote_to_read_lock();
+    }
+    static bool try_demote(Mutex & m)
+    {
+        return m.do_try_demote_to_read_lock();
+    }
+    static bool timed_demote(Mutex & m,const xtime &xt)
+    {
+        return m.do_timed_demote_to_read_lock(xt);
+    }
+
+    static bool try_promote(Mutex & m)
+    {
+        return m.do_try_promote_to_write_lock();
+    }
+    static bool timed_promote(Mutex & m,const xtime &xt)
+    {
+        return m.do_timed_promote_to_write_lock(xt);
     }
 };
 
-
-template <typename RWMutex>
-class scoped_rw_lock : private noncopyable
+template <typename ReadWriteMutex>
+class scoped_read_write_lock : private noncopyable
 {
 public:
-    typedef RWMutex mutex_type;
+    typedef ReadWriteMutex mutex_type;
 
-    explicit scoped_rw_lock(RWMutex& mx,
-        rw_lock_state initial_state=SHARED_LOCK)
-        : m_mutex(mx), m_locked(NO_LOCK)
+    explicit scoped_read_write_lock(ReadWriteMutex& mx,
+        read_write_lock_state initial_state=READ_LOCK)
+        : m_mutex(mx), m_state(NO_LOCK)
     {
-        if (initial_state == SHARED_LOCK)
-            rdlock();
-        else if (initial_state == EXCL_LOCK)
-            wrlock();
+        if (initial_state == READ_LOCK)
+            read_lock();
+        else if (initial_state == WRITE_LOCK)
+            write_lock();
     }
-    ~scoped_rw_lock()
+
+    ~scoped_read_write_lock()
     {
-        if (m_locked != NO_LOCK)
+        if (m_state != NO_LOCK)
             unlock();
-
     }
 
-    void rdlock()
+    void read_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<RWMutex>::rdlock(m_mutex);
-        m_locked = SHARED_LOCK;
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<ReadWriteMutex>::read_lock(m_mutex);
+        m_state = READ_LOCK;
     }
-    void wrlock()
+
+    void write_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<RWMutex>::wrlock(m_mutex);
-        m_locked = EXCL_LOCK;
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<ReadWriteMutex>::write_lock(m_mutex);
+        m_state = WRITE_LOCK;
     }
 
     void unlock()
     {
-        if (m_locked == NO_LOCK) throw lock_error();
-        if (m_locked == SHARED_LOCK)
-            rw_lock_ops<RWMutex>::rdunlock(m_mutex);
-        else
-            rw_lock_ops<RWMutex>::wrunlock(m_mutex);
+        if (m_state == NO_LOCK) throw lock_error();
+        if (m_state == READ_LOCK)
+            read_write_lock_ops<ReadWriteMutex>::read_unlock(m_mutex);
+        else //(m_state == WRITE_LOCK)
+            read_write_lock_ops<ReadWriteMutex>::write_unlock(m_mutex);
 
-        m_locked = NO_LOCK;
+        m_state = NO_LOCK;
     }
 
+    void demote(void)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        read_write_lock_ops<ReadWriteMutex>::demote(m_mutex);
+        m_state = READ_LOCK;
+    }
+
+    void set_lock(read_write_lock_state ls)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    read_lock();
+                else //(ls == WRITE_LOCK)
+                    write_lock();
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    demote();
+                else if (ls == WRITE_LOCK)
+                {
+                    unlock();
+                    write_lock();
+                }
+                else //(ls == NO_LOCK)
+                    unlock();
+            }
+        }
+    }
+  
     bool locked() const
     {
-        return m_locked != NO_LOCK;
+        return m_state != NO_LOCK;
     }
+
     operator const void*() const
     {
-        return (m_locked != NO_LOCK) ? this : 0;
-    }
-    rw_lock_state state() const
-    {
-        return m_locked;
+        return (m_state != NO_LOCK) ? this : 0; 
     }
 
+    read_write_lock_state state() const
+    {
+        return m_state;
+    }
+    
 private:
-    RWMutex& m_mutex;
-    rw_lock_state m_locked;
+    ReadWriteMutex& m_mutex;
+    read_write_lock_state m_state;
 };
 
-
-template <typename TryRWMutex>
-class scoped_try_rw_lock : private noncopyable
+template <typename TryReadWriteMutex>
+class scoped_try_read_write_lock : private noncopyable
 {
 public:
-    typedef TryRWMutex mutex_type;
+    typedef TryReadWriteMutex mutex_type;
+    
+    explicit scoped_try_read_write_lock(TryReadWriteMutex& mx,
+        read_write_lock_state initial_state=READ_LOCK, bool allow_blocking = true)
+        : m_mutex(mx), m_state(NO_LOCK)
+    {
+        if (allow_blocking)
+        {
+            if (initial_state == READ_LOCK)
+                read_lock();
+            else if (initial_state == WRITE_LOCK)
+                write_lock();
+        }
+        else
+        {
+            if (initial_state == READ_LOCK)
+                try_read_lock();
+            else if (initial_state == WRITE_LOCK)
+                try_write_lock();
+        }
+    }
 
-    explicit scoped_try_rw_lock(TryRWMutex& mx)
-        : m_mutex(mx), m_locked(NO_LOCK)
+    ~scoped_try_read_write_lock()
     {
-        try_rdlock();
-    }
-    scoped_try_rw_lock(TryRWMutex& mx, rw_lock_state initial_state)
-        : m_mutex(mx), m_locked(NO_LOCK)
-    {
-        if (initial_state == SHARED_LOCK)
-            rdlock();
-        else if (initial_state == EXCL_LOCK)
-            wrlock();
-    }
-    ~scoped_try_rw_lock()
-    {
-        if (m_locked != NO_LOCK)
+        if (m_state != NO_LOCK)
             unlock();
     }
 
-    void rdlock()
+    void read_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<TryRWMutex>::rdlock(m_mutex);
-        m_locked = SHARED_LOCK;
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<TryReadWriteMutex>::read_lock(m_mutex);
+        m_state = READ_LOCK;
     }
 
-    bool try_rdlock()
+    bool try_read_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        if (rw_lock_ops<TryRWMutex>::try_rdlock(m_mutex))
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TryReadWriteMutex>::try_read_lock(m_mutex))
         {
-            m_locked = SHARED_LOCK;
+            m_state = READ_LOCK;
             return true;
         }
         return false;
     }
-
-    void wrlock()
+   
+    void write_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<TryRWMutex>::wrlock(m_mutex);
-        m_locked = EXCL_LOCK;
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<TryReadWriteMutex>::write_lock(m_mutex);
+        m_state = WRITE_LOCK;
     }
 
-    bool try_wrlock()
+    bool try_write_lock()
     {
-        if (m_locked != NO_LOCK) throw lock_error();
-        if (rw_lock_ops<TryRWMutex>::try_wrlock(m_mutex))
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TryReadWriteMutex>::try_write_lock(m_mutex))
         {
-            m_locked = EXCL_LOCK;
-            return true;
-        }
-        return false;
-    }
-
-    void unlock()
-    {
-        if (m_locked == NO_LOCK) throw lock_error();
-        if (m_locked == SHARED_LOCK)
-            rw_lock_ops<TryRWMutex>::rdunlock(m_mutex);
-        else
-            rw_lock_ops<TryRWMutex>::wrunlock(m_mutex);
-
-        m_locked = NO_LOCK;
-    }
-
-    bool locked() const
-    {
-        return m_locked != NO_LOCK;
-    }
-    operator const void*() const
-    {
-        return (m_locked != NO_LOCK) ? this : 0;
-    }
-    rw_lock_state state() const
-    {
-        return m_locked;
-    }
-private:
-    TryRWMutex& m_mutex;
-    rw_lock_state m_locked;
-};
-
-template <typename TimedRWMutex>
-class scoped_timed_rw_lock : private noncopyable
-{
-public:
-    typedef TimedRWMutex mutex_type;
-
-    explicit scoped_timed_rw_lock(TimedRWMutex& mx, const xtime &xt)
-        : m_mutex(mx), m_locked(NO_LOCK)
-    {
-        timed_sharedlock(xt);
-    }
-    scoped_timed_rw_lock(TimedRWMutex& mx, rw_lock_state initial_state)
-        : m_mutex(mx), m_locked(NO_LOCK)
-    {
-        if (initial_state == SHARED_LOCK)
-            rdlock();
-        else if (initial_state == EXCL_LOCK)
-            wrlock();
-    }
-    ~scoped_timed_rw_lock()
-    {
-        if (m_locked != NO_LOCK)
-            unlock();
-    }
-
-    void rdlock()
-    {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<TimedRWMutex>::rdlock(m_mutex);
-        m_locked = SHARED_LOCK;
-    }
-
-    bool timed_rdlock(const xtime &xt)
-    {
-        if (m_locked != NO_LOCK) throw lock_error();
-        if (rw_lock_ops<TimedRWMutex>::timed_rdlock(m_mutex,xt))
-        {
-            m_locked = SHARED_LOCK;
-            return true;
-        }
-        return false;
-    }
-
-    void wrlock()
-    {
-        if (m_locked != NO_LOCK) throw lock_error();
-        rw_lock_ops<TimedRWMutex>::wrlock(m_mutex);
-        m_locked = EXCL_LOCK;
-    }
-
-    bool timed_wrlock(const xtime &xt)
-    {
-        if (m_locked != NO_LOCK) throw lock_error();
-        if (rw_lock_ops<TimedRWMutex>::timed_wrlock(m_mutex,xt))
-        {
-            m_locked = EXCL_LOCK;
+            m_state = WRITE_LOCK;
             return true;
         }
         return false;
@@ -296,30 +272,347 @@ public:
 
     void unlock()
     {
-        if (m_locked == NO_LOCK) throw lock_error();
-        if (m_locked == SHARED_LOCK)
-            rw_lock_ops<TimedRWMutex>::rdunlock(m_mutex);
-        else
-            rw_lock_ops<TimedRWMutex>::wrunlock(m_mutex);
+        if (m_state == NO_LOCK) throw lock_error();
+        if (m_state == READ_LOCK)
+            read_write_lock_ops<TryReadWriteMutex>::read_unlock(m_mutex);
+        else //(m_state == WRITE_LOCK)
+            read_write_lock_ops<TryReadWriteMutex>::write_unlock(m_mutex);
 
-        m_locked = NO_LOCK;
+        m_state = NO_LOCK;
     }
 
+    void demote(void)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        read_write_lock_ops<TryReadWriteMutex>::demote(m_mutex);
+        m_state = READ_LOCK;
+    }
+
+    bool try_demote(void)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        return read_write_lock_ops<TryReadWriteMutex>::try_demote(m_mutex) ? (m_state = READ_LOCK, true) : false;
+    }
+
+    bool try_promote(void)
+    {
+        if (m_state != READ_LOCK) throw lock_error();
+        return read_write_lock_ops<TryReadWriteMutex>::try_promote(m_mutex) ? (m_state = WRITE_LOCK, true) : false;
+    }
+
+    void set_lock(read_write_lock_state ls)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    read_lock();
+                else //(ls == WRITE_LOCK)
+                    write_lock();
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    demote();
+                else if (ls == WRITE_LOCK)
+                {
+                    if (!try_promote())
+                    {
+                        unlock();
+                        write_lock();
+                    }
+                }
+                else //(ls == NO_LOCK)
+                    unlock();
+            }
+        }
+    }
+
+    bool try_set_lock(read_write_lock_state ls)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return try_read_lock();
+                else // (ls == WRITE_LOCK)
+                    return try_write_lock();
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return try_demote();
+                else if (ls == WRITE_LOCK)
+                    return try_promote();
+                else //(ls == NO_LOCK)
+                    return unlock(), true;
+            }
+        }
+        else //(m_state == ls) 
+            return true;
+    }
+  
     bool locked() const
     {
-        return m_locked != NO_LOCK;
+        return m_state != NO_LOCK;
     }
+
     operator const void*() const
     {
-        return (m_locked != NO_LOCK) ? this : 0;
+        return (m_state != NO_LOCK) ? this : 0; 
     }
-    rw_lock_state state() const
+
+    read_write_lock_state state() const
     {
-        return m_locked;
+        return m_state;
     }
+
 private:
-    TimedRWMutex& m_mutex;
-    rw_lock_state m_locked;
+    TryReadWriteMutex& m_mutex;
+    read_write_lock_state m_state;
+};
+
+template <typename TimedReadWriteMutex>
+class scoped_timed_read_write_lock : private noncopyable
+{
+public:
+    typedef TimedReadWriteMutex mutex_type;
+
+    explicit scoped_timed_read_write_lock(TimedReadWriteMutex& mx,
+        read_write_lock_state initial_state, const xtime &xt)
+        : m_mutex(mx), m_state(NO_LOCK)
+    {
+        if (initial_state == READ_LOCK)
+            timed_read_lock(xt);
+        else if (initial_state == WRITE_LOCK)
+            timed_write_lock(xt);
+    }
+
+    explicit scoped_timed_read_write_lock(TimedReadWriteMutex& mx,
+        read_write_lock_state initial_state=READ_LOCK, bool allow_blocking = true)
+        : m_mutex(mx), m_state(NO_LOCK)
+    {
+        if (allow_blocking)
+        {
+            if (initial_state == READ_LOCK)
+                read_lock();
+            else if (initial_state == WRITE_LOCK)
+                write_lock();
+        }
+        else
+        {
+            if (initial_state == READ_LOCK)
+                try_read_lock();
+            else if (initial_state == WRITE_LOCK)
+                try_write_lock();
+        }
+    }
+
+    ~scoped_timed_read_write_lock()
+    {
+        if (m_state != NO_LOCK)
+            unlock();
+    }
+
+    void read_lock()
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<TimedReadWriteMutex>::read_lock(m_mutex);
+        m_state = READ_LOCK;
+    }
+
+    bool try_read_lock()
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TimedReadWriteMutex>::try_read_lock(m_mutex))
+        {
+            m_state = READ_LOCK;
+            return true;
+        }
+        return false;
+    }
+
+    bool timed_read_lock(const xtime &xt)
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TimedReadWriteMutex>::timed_read_lock(m_mutex,xt))
+        {
+            m_state = READ_LOCK;
+            return true;
+        }
+        return false;
+    }
+
+    void write_lock()
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        read_write_lock_ops<TimedReadWriteMutex>::write_lock(m_mutex);
+        m_state = WRITE_LOCK;
+    }
+
+    bool try_write_lock()
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TimedReadWriteMutex>::try_write_lock(m_mutex))
+        {
+            m_state = WRITE_LOCK;
+            return true;
+        }
+        return false;
+    }
+
+    bool timed_write_lock(const xtime &xt)
+    {
+        if (m_state != NO_LOCK) throw lock_error();
+        if(read_write_lock_ops<TimedReadWriteMutex>::timed_write_lock(m_mutex,xt))
+        {
+            m_state = WRITE_LOCK;
+            return true;
+        }
+        return false;
+    }
+
+    void unlock()
+    {
+        if (m_state == NO_LOCK) throw lock_error();
+        if (m_state == READ_LOCK)
+            read_write_lock_ops<TimedReadWriteMutex>::read_unlock(m_mutex);
+        else //(m_state == WRITE_LOCK)
+            read_write_lock_ops<TimedReadWriteMutex>::write_unlock(m_mutex);
+
+        m_state = NO_LOCK;
+    }
+
+    void demote(void)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        read_write_lock_ops<TimedReadWriteMutex>::demote(m_mutex);
+        m_state = READ_LOCK;
+    }
+
+    bool try_demote(void)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        return read_write_lock_ops<TimedReadWriteMutex>::try_demote(m_mutex) ? (m_state = READ_LOCK, true) : false;
+    }
+
+    bool timed_demote(const xtime &xt)
+    {
+        if (m_state != WRITE_LOCK) throw lock_error();
+        return read_write_lock_ops<TimedReadWriteMutex>::timed_demote(m_mutex, xt) ? (m_state = READ_LOCK, true) : false;
+    }
+
+    bool try_promote(void)
+    {
+        if (m_state != READ_LOCK) throw lock_error();
+        return read_write_lock_ops<TimedReadWriteMutex>::try_promote(m_mutex) ? (m_state = WRITE_LOCK, true) : false;
+    }
+
+    bool timed_promote(const xtime &xt)
+    {
+        if (m_state != READ_LOCK) throw lock_error();
+        return read_write_lock_ops<TimedReadWriteMutex>::timed_promote(m_mutex, xt) ? (m_state = WRITE_LOCK, true) : false;
+    }
+
+    void set_lock(read_write_lock_state ls)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    read_lock();
+                else //(ls == WRITE_LOCK)
+                    write_lock();
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    demote();
+                else if (ls == WRITE_LOCK)
+                {
+                    if (!try_promote())
+                    {
+                        unlock();
+                        write_lock();
+                    }
+                }
+                else //(ls == NO_LOCK)
+                    unlock();
+            }
+        }
+    }
+
+    bool try_set_lock(read_write_lock_state ls)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return try_read_lock();
+                else // (ls == WRITE_LOCK)
+                    return try_write_lock();
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return try_demote();
+                else if (ls == WRITE_LOCK)
+                    return try_promote();
+                else //(ls == NO_LOCK)
+                    return unlock(), true;
+            }
+        }
+        else //(m_state == ls) 
+            return true;
+    }
+
+    bool timed_set_lock(read_write_lock_state ls, const xtime &xt)
+    {
+        if (m_state != ls)
+        {
+            if (m_state == NO_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return timed_read_lock(xt);
+                else // (ls == WRITE_LOCK)
+                    return timed_write_lock(xt);
+            }
+            else //(m_state == READ_LOCK || m_state == WRITE_LOCK)
+            {
+                if (ls == READ_LOCK)
+                    return timed_demote(xt);
+                else if (ls == WRITE_LOCK)
+                    return timed_promote(xt);
+                else //(ls == NO_LOCK)
+                    return unlock(), true;
+            }
+        }
+        else //(m_state == ls)
+            return true;
+    }
+  
+    bool locked() const
+    {
+        return m_state != NO_LOCK;
+    }
+
+    operator const void*() const
+    {
+        return (m_state != NO_LOCK) ? this : 0; 
+    }
+
+    read_write_lock_state state() const
+    {
+        return m_state;
+    }
+
+private:
+    TimedReadWriteMutex& m_mutex;
+    read_write_lock_state m_state;
 };
 
 } // namespace thread
@@ -329,4 +622,15 @@ private:
 #endif
 
 // Change Log:
-//  03/10/02    Initial version
+//  10 Mar 02 
+//      Original version.
+//   4 May 04 GlassfordM 
+//      Implement lock promotion and demotion (add member functions demote(),
+//         try_demote(), timed_demote(), try_promote(), timed_promote(); note 
+//         that there is intentionally no promote() member function).
+//      Add set_lock() member function.
+//      Change try lock & timed lock constructor parameters for consistency.
+//      Rename to improve consistency and eliminate abbreviations:
+//          Use "read" and "write" instead of "shared" and "exclusive".
+//          Change "rd" to "read", "wr" to "write", "rw" to "read_write".
+//      Add mutex_type typdef.
