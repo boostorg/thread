@@ -199,7 +199,7 @@ void mutex::do_unlock()
     assert(res == 0);
 }
 
-void mutex::do_lock(cv_state& state)
+void mutex::do_lock(cv_state&)
 {
 }
 
@@ -248,7 +248,7 @@ void try_mutex::do_unlock()
     assert(res == 0);
 }
 
-void try_mutex::do_lock(cv_state& state)
+void try_mutex::do_lock(cv_state&)
 {
 }
 
@@ -367,7 +367,7 @@ void timed_mutex::do_unlock()
     assert(res == 0);
 }
 
-void timed_mutex::do_lock(cv_state& state)
+void timed_mutex::do_lock(cv_state&)
 {
     int res = 0;
     while (m_locked)

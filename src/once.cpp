@@ -38,8 +38,8 @@ static void key_init()
 
 static void do_once()
 {
-    once_callback cb = reinterpret_cast<once_callback>(pthread_getspecific(key));
-    (*cb)();
+    once_callback* cb = reinterpret_cast<once_callback>(pthread_getspecific(key));
+    (**cb)();
 }
 
 }
@@ -85,8 +85,8 @@ void call_once(void (*func)(), once_flag& flag)
 	}
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_once(&once, &key_init);
-    pthread_setspecific(key, func);
-	pthread_once(&flag, do_once);
+    pthread_setspecific(key, &func);
+    pthread_once(&flag, do_once);
 #endif
 }
 

@@ -23,7 +23,7 @@ namespace {
         xt.sec += (milliseconds / MILLISECONDS_PER_SECOND);
         xt.nsec += ((milliseconds % MILLISECONDS_PER_SECOND) * NANOSECONDS_PER_MILLISECOND);
 
-        if (xt.nsec > NANOSECONDS_PER_SECOND)
+        if (xt.nsec > static_cast<const int>(NANOSECONDS_PER_SECOND))
         {
             ++xt.sec;
             xt.nsec -= NANOSECONDS_PER_SECOND;
