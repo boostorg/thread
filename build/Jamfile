@@ -23,10 +23,18 @@ subproject libs/thread/build ;
 # TSS destruction.
 if $(NT)
 {
-    dll libboost_threadmon : ../src/threadmon.cpp
-        # requirements
-        : <threading>multi
-        : debug release ;
+    if $(PTW32)
+    {
+        PTW32_REQUIREMENTS = <define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn ;
+    }
+    else
+    {
+        dll libboost_threadmon : ../src/threadmon.cpp
+            # requirements
+            : <include>$(BOOST_ROOT)
+            <threading>multi
+            : debug release ;
+    }
 }
 
 # Base names of the source files for libboost_thread
@@ -36,7 +44,6 @@ CPP_SOURCES =
 lib libboost_thread : ../src/$(CPP_SOURCES).cpp
     # requirements
     : <include>$(BOOST_ROOT)
-    #<include>c:/pthreads/dll/
-    #<define>BOOST_HAS_PTHREADS <define>PtW32NoCatchWarn
+    $(PTW32_REQUIREMENTS)
     <threading>multi
     : debug release ;
