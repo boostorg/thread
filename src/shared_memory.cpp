@@ -59,7 +59,7 @@ shared_memory::~shared_memory()
 	CloseHandle(reinterpret_cast<HANDLE>(m_hmap));
 #elif defined(BOOST_HAS_PTHREADS)
 	close(m_hmap);
-	shm_unlink(m_name);
+	shm_unlink(m_name.c_str());
 #endif
 }
 
@@ -76,8 +76,8 @@ void shared_memory::init(const char *name, size_t len, int flags,
     m_hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, protect,
 		0, len, name);
 #elif defined(BOOST_HAS_PTHREADS)
-	sem_t sem = sem_open(mxname.c_str(), O_CREAT);
-	sem_wait(&sem);
+	sem_t* sem = sem_open(mxname.c_str(), O_CREAT);
+	sem_wait(sem);
 
 	int oflag = (flags & read_write) ? O_RDWR : O_RDONLY;
 	if (flags & create)
@@ -96,9 +96,9 @@ void shared_memory::init(const char *name, size_t len, int flags,
 	ReleaseMutex(mutex);
 	CloseHandle(mutex);
 #elif defined(BOOST_HAS_PTHREADS)
-	sem_post(&sem);
-	sem_close(&sem);
-	sem_unlink(&sem);
+	sem_post(sem);
+	sem_close(sem);
+	sem_unlink(mxname.c_str());
 #endif 
 }
 
