@@ -147,7 +147,7 @@
 				<postcondition><code>*this</code> is non-joinable.</postcondition>
 				
 				<notes>If <code>*this == thread()</code> the result is 
-				implementation defined. If the implementation doesn't
+				implementation-defined. If the implementation doesn't
 				detect this the result will be 
 				<link linkend="threads.glossary.deadlock">deadlock</link>.
 				</notes>

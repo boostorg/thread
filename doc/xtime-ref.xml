@@ -7,7 +7,7 @@
 <header name="boost/thread/xtime.hpp"
   last-revision="$Date$">
   <namespace name="boost">
-    <enum name="xtime_clock_type">
+    <enum name="xtime_clock_types">
 		<enumvalue name="TIME_UTC" />
 
 		<purpose>

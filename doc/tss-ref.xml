@@ -17,7 +17,8 @@
 				<para>Thread specific storage is data associated with 
 				individual threads and is often used to make operations
 				that rely on global data 
-				<xref linkend="threads.glossary.thread-safe" />.</para>
+				<link linkend="threads.glossary.thread-safe">thread-safe</link>.
+				</para>
 				
 				<para>Template <classname>thread_specific_ptr</classname> 
 				stores a pointer to an object obtained on a thread-by-thread
@@ -118,8 +119,6 @@
 				 specialized cleanup methods, or to register no cleanup method
 				 at all (done by passing <code>NULL</code> to this constructor.
 				 </rationale>
-								
-				<notes>??? IS THE PARAMETER TYPE CORRECT?</notes>
 			</constructor>
 			
 			<destructor>

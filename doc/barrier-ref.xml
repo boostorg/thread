@@ -68,7 +68,7 @@
           <returns>Exactly one of the N threads will receive a return value
 		  of <code>true</code>, the others will receive a value of <code>false</code>. 
 		  Precisely which thread receives the return value of <code>true</code> will 
-		  be implementation defined. Applications can use this value to designate one 
+		  be implementation-defined. Applications can use this value to designate one 
 		  thread as a leader that will take a certain action, and the other threads 
 		  emerging from the barrier can wait for that action to take place.</returns>
         </method>		
