@@ -42,18 +42,17 @@ private:
         void* _param;
 };
 
-void chatty_worker(void *arg)
+void chatty_worker()
 {
-    int id = reinterpret_cast<int>(arg);
     work_counts[CHATTY_WORKER]++;
 }
 
-void fast_worker(void *)
+void fast_worker()
 {
     work_counts[FAST_WORKER]++;
 }
 
-void slow_worker(void *)
+void slow_worker()
 {
     boost::xtime xt;
     boost::xtime_get(&xt,boost::TIME_UTC);
@@ -65,7 +64,7 @@ void slow_worker(void *)
     work_counts[SLOW_WORKER]++;
 }
 
-void cpubound_worker(void *)
+void cpubound_worker()
 {
     double d;
     double limit = SQRT_PER_SECOND/2.0;
@@ -117,10 +116,10 @@ void test_heterogeneous()
 
     for(int i = 0; i < ITERATIONS; i++)
     {
-        tp.add(job_adapter(chatty_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(fast_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(slow_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(cpubound_worker,reinterpret_cast<void *>(i)));
+        tp.add(&chatty_worker);
+        tp.add(&fast_worker);
+        tp.add(&slow_worker);
+        tp.add(&cpubound_worker);
     }
 
     tp.join();
@@ -175,10 +174,10 @@ void test_cancel()
     memcpy(wc_after_cancel,work_counts,sizeof(wc_after_cancel));
 
     // Do a bit more work to prove we can continue after a cancel
-    tp.add(job_adapter(chatty_worker,reinterpret_cast<void *>(i)));
-    tp.add(job_adapter(fast_worker,reinterpret_cast<void *>(i)));
-    tp.add(job_adapter(slow_worker,reinterpret_cast<void *>(i)));
-    tp.add(job_adapter(cpubound_worker,reinterpret_cast<void *>(i)));
+    tp.add(&chatty_worker);
+    tp.add(&fast_worker);
+    tp.add(&slow_worker);
+    tp.add(&cpubound_worker);
 
     tp.join();
 
