@@ -1,0 +1,9 @@
+
+project boost/thread
+    : source-location ../src 
+    : use-requirements <find-library>pthread
+    ;
+
+CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once exceptions ;
+
+lib boost_thread : $(CPP_SOURCES).cpp ;
