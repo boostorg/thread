@@ -24,27 +24,49 @@
 			<title>Static-link build option added</title>
 
 			<para>The option to link &Boost.Threads; as a static
-			library has been added back with some limitations.
+			library has been added back (with some limitations
+			on Win32 platforms).
 			This feature was originally removed because
 			<classname>boost::thread_specific_ptr</classname> required
 			that &Boost.Threads; be dynamically linked in order for its
 			cleanup functionality to work on Win32 platforms.
 			Several options are currently being explored to resolve
 			this issue. In the meantime, the ability to link 
-			&Boost.Threads; statically has been added back in
-			such a way that, on Win32 platforms only, the user is
-			required to call the cleanup functions on_thread_exit() 
-			and on_process_exit() at appropriate times. If these
-			functions are not properly called cleanup will not
-			work and leaks will result. In addition, in cases where
-			&Boost.Threads; doesn't call the cleanup functions itself,
-			the user is required to implement the (probably empty) function
-			tss_cleanup_implemented() in order to eliminate linker errors.
-			This function's only purpose is to serve as a flag: the linker
-			error stating that the function is missing warns the
+			&Boost.Threads; statically has been added back
+			and (on Win32 platforms only) functions on_thread_exit() and 
+			on_process_exit() have been added which, called at the
+			appropriate times, cause tss cleanup to occur.
+			Currently, &Boost.Threads; calls these functions
+			automatically under the following circumstances:
+			1) When &Boost.Threads; is linked dynamically;
+			2) When &Boost.Threads; is statically linked and 
+			VC++ 7.1 is used to build the &Boost.Threads;
+			static library.
+			Also note that, regardless of whether &Boost.Threads;
+			is linked statically or dynamically, it 
+			always calls on_thread_exit() immediately after the
+			thread function of a joinable  thread 
+			(i.e. when that was created by &Boost.Threads;)
+			finishes.
+			Also note that tss cleanup happens automatically
+			on all non-Win32 platforms without the need for these
+			functions to be called.
+			The plan is for &Boost.Threads; to call	the on_thread_exit()
+			and on_process_exit() functions automatically in
+			more and more cases as methods
+			for doing so are worked out. In the meantime, in
+			cases where &Boost.Threads; does not yet call them, 
+			the user is required to call them. If these functions are
+			not properly called cleanup will not work and memory leaks
+			and possibly other program errors will result. In addition, 
+			in cases where &Boost.Threads; doesn't call the cleanup functions 
+			itself, the user is required to implement the (probably empty)
+			function tss_cleanup_implemented() in order to eliminate linker 
+			errors. This function's only purpose is to serve as a flag: the
+			linker error stating that the function is missing warns the
 			the user of the necessity of calling the cleanup functions.
-			In addition, if &Boost.Threads; later implements tss cleanup
-			where it currently not implemented, the linker's
+			In addition, if &Boost.Threads; later implements automatic
+			tss cleanup where it currently not implemented, the linker's
 			duplicate symbol error should warn the user that their custom
 			implementation is no longer needed.</para>
 			
