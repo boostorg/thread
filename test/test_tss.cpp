@@ -92,7 +92,7 @@ void test_tss_thread()
         BOOST_CHECK(res == WAIT_OBJECT_0);
 
         res = CloseHandle(thread);
-        BOOST_CHECK(res == S_OK);
+        BOOST_CHECK(SUCCEEDED(res));
     }
 #endif
 
