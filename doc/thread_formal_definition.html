@@ -17,21 +17,22 @@
     </td>
     <td valign="top">
       <h1 align="center">Boost.Threads</h1>
-      <h2 align="center">Formal Definition of &quot;Thread&quot;</h2>
+      <h2 align="center">Formal Definitions</h2>
     </td>
   </tr>
 </table>
 <h2>Introduction</h2>
-<p>The definition is given in terms of the <a href="bibliography.html#ISO-98"> C++ Standard</a>.&nbsp; References to the standard
+<p>The definitions are given in terms of the <a href="bibliography.html#ISO-98"> C++ Standard</a>.&nbsp; References to the standard
 are in the form [1.2.3/4], which
 represents the section number and following the &quot;/&quot;, the paragraph
 number.</p>
-<p>Because the definition is written in something akin to
-&quot;standardese&quot;, it can be difficult to understand.&nbsp; The intent
+<p>Because the definitions are written in something akin to
+&quot;standardese&quot;, they can be difficult to understand.&nbsp; The intent
 isn't to confuse, but rather to clarify the additional requirements
 Boost.Threads places on a C++ implementation as defined by the C++ Standard.</p>
-<h2>Definition of &quot;Thread&quot;</h2>
-<p>A thread is an execution environment [1.9/7] within the execution environment
+<h2>Definitions</h2>
+<h3>Thread</h3>
+<p>Thread is short for &quot;thread of execution&quot;. A thread of execution is an execution environment [1.9/7] within the execution environment
 of a C++ program [1.9]. The main() function [3.6.1] of the program is the
 initial function of the initial thread; a program in a multi-threading
 environment always has at least one initial thread even if the program makes no thread
@@ -54,9 +55,6 @@ other threads in the program:</p>
 </ul>
 <p>Each thread has its own:</p>
 <ul>
-  <li>Unique thread identifier.</li>
-</ul>
-<ul>
   <li>Priority and other specified thread attributes.&nbsp;</li>
 </ul>
 <ul>
@@ -65,7 +63,18 @@ other threads in the program:</p>
 <ul>
   <li>Automatic storage duration (stack) objects [3.7.2].</li>
 </ul>
-<h2>Thread <a name="State">State</a></h2>
+<h3><a name="Thread-safe">Thread-safe</a></h3>
+<p>A function is thread-safe if the observable
+behavior of the abstract machine [1.9/6] during the execution of the function is the same
+regardless of whether it is invoked solely from a single thread or simultaneously
+from multiple threads.</p>
+<p>A class is thread-safe if all of its member functions are thread-safe, and
+there is no possibility of simultaneous access to any of its data members from
+multiple threads. Simultaneous access can be prevented by serializing access
+using the tools provided by the thread library.</p>
+<p>Note that thread-safety does not necessarily imply
+efficiency.</p>
+<h3>Thread <a name="State">State</a></h3>
 <p>During the lifetime of a thread, it shall be in one of the following
 states:</p>
 <table border="1" cellpadding="5">
@@ -146,6 +155,17 @@ states:</p>
 </table>
 <p>[Note: if a suspend() function is added to the threading library, additional
 transitions to the blocked state will have to be added to the above table.]</p>
+<h3><a name="Race condition">Race condition</a></h3>
+<p>A race condition is the behavior which occurs when multiple threads read and
+write to the same memory without proper synchronization, resulting in an
+incorrect value being read or written.&nbsp; The result of a race condition may
+be a bit pattern which isn't even a valid value for the data type. A race
+condition results in undefined behavior [1.3.12].&nbsp;</p>
+<h3><a name="Deadlock">Deadlock</a></h3>
+<p>Deadlock is an execution state where for some set of threads, each thread in
+the set is blocked waiting for some action by one of the other threads in the
+set. Since each is waiting on the others, none will ever become ready again.</p>
+<h2>Additions to the C++ Standard</h2>
 <p>An address [1.7] shall always point to the same memory byte, regardless of the
 thread or processor dereferencing the address.</p>
 <p>An object [1.8, 1.9] can be accessed from two or more threads if it is of
@@ -211,7 +231,7 @@ William Kempf.</p>
 97]</a>.&nbsp;</p>
 <hr>
 <p>© Copyright Beman Dawes, 2001</p>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->17 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14995" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->19 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14999" -->
 </p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
