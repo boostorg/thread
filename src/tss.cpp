@@ -114,7 +114,7 @@ tss_slots* get_slots(bool alloc)
         std::auto_ptr<tss_slots> temp(new tss_slots);
 
 #if defined(BOOST_HAS_WINTHREADS)
-        if (add_thread_exit(&tss_thread_exit) == -1)
+        if (at_thread_exit(&tss_thread_exit) == -1)
             return 0;
         if (!TlsSetValue(tss_data->native_key, temp.get()))
             return 0;
