@@ -29,68 +29,90 @@
 namespace boost {
 
 shared_memory::shared_memory(const char *name, size_t len, int flags)
-    : m_ptr(NULL)
-#if defined(BOOST_HAS_WINTHREADS)
-	, m_hmap(INVALID_HANDLE_VALUE)
-#elif defined(BOOST_HAS_PTHREADS)
-    , m_hmap(0), m_len(len), m_flags(flags), m_name(name)
-#endif 
 {
     init(name, len, flags, 0);
 }
 
 shared_memory::shared_memory(const char *name, size_t len, int flags,
     const boost::function1<void, void *>& initfunc)
-    : m_ptr(NULL)
-#if defined(BOOST_HAS_WINTHREADS)
-	, m_hmap(INVALID_HANDLE_VALUE)
-#elif defined(BOOST_HAS_PTHREADS) 
-    , m_hmap(0), m_len(len), m_flags(flags), m_name(name)
-#endif 
 {
 	init(name, len, flags & create, &initfunc);
 }
 
 shared_memory::~shared_memory()
 {
-	unmap();
-
+	if (m_ptr)
+	{
 #if defined(BOOST_HAS_WINTHREADS)
-	CloseHandle(reinterpret_cast<HANDLE>(m_hmap));
+        UnmapViewOfFile(m_ptr);
+		CloseHandle(reinterpret_cast<HANDLE>(m_hmap));
 #elif defined(BOOST_HAS_PTHREADS)
-	close(m_hmap);
-	shm_unlink(m_name.c_str());
-#endif
+		munmap(reinterpret_cast<char*>(m_ptr), m_len);
+		close(m_hmap);
+		shm_unlink(m_name.c_str());
+#endif 
+	}
 }
 
 void shared_memory::init(const char *name, size_t len, int flags,
 	const boost::function1<void,void *>* initfunc)
 {
-	std::string mxname = std::string(name) +
-		"mx94543CBD1523443dB128451E51B5103E";
+	m_name = name;
+	m_len = len;
+	std::string mxname = m_name + "mx94543CBD1523443dB128451E51B5103E";
+	bool should_init = false;
 #if defined(BOOST_HAS_WINTHREADS)
 	HANDLE mutex = CreateMutexA(0, FALSE, mxname.c_str());
 	WaitForSingleObject(mutex, INFINITE);
 
-	DWORD protect = (flags & read_write) ? PAGE_READWRITE : PAGE_READONLY;
-    m_hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, protect,
-		0, len, name);
+	if (flags & create)
+	{
+		DWORD protect = (flags & write) ? PAGE_READWRITE : PAGE_READONLY;
+		m_hmap = CreateFileMapping(INVALID_HANDLE_VALUE, NULL, protect,
+			0, len, name);
+		if (m_hmap == INVALID_HANDLE_VALUE)
+			; // Do error handling
+		if ((flags & exclusive) && GetLastError() == ERROR_ALREADY_EXISTS)
+			; // Do error handling
+		should_init = GetLastError() != ERROR_ALREADY_EXISTS;
+	}
+	else
+	{
+		DWORD protect = (flags & write) ? FILE_MAP_WRITE : FILE_MAP_READ;
+		m_hmap = OpenFileMapping(protect, FALSE, name);
+	}
+    m_ptr = static_cast<char*>(
+		MapViewOfFile(m_hmap, FILE_MAP_WRITE, 0, 0, 0));
 #elif defined(BOOST_HAS_PTHREADS)
 	sem_t* sem = sem_open(mxname.c_str(), O_CREAT);
 	sem_wait(sem);
 
-	int oflag = (flags & read_write) ? O_RDWR : O_RDONLY;
-	if (flags & create)
-		oflag |= O_CREAT|O_TRUNC;
-	m_hmap = shm_open(name, oflag, 0);
+	int oflag = (flags & write) ? O_RDWR : O_RDONLY;
+	int cflag = (flags & create) ? O_CREAT|O_TRUNC|O_EXL : 0;
+	for (;;)
+	{
+		m_hmap = shm_open(name, oflag|cflag, 0);
+		if (m_hmap == -1 && errno == EEXIST)
+		{
+			if (flags & exclusive)
+				; // Do error handling
+			m_hmap = shm_open(name, oflag, 0);
+			if (m_hmap == -1 && errno == ENOENT)
+				continue;
+		}
+		else
+			should_init = true;
+		// Do erro handling
+		break;
+	}
+		
 	ftruncate(m_hmap, len);
+	int prot = (m_flags & read_write) ? PROT_READ|PROT_WRITE : PROT_READ;
+	m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
 #endif
 
-	if (initfunc)
-	{
-		(*initfunc)(map());
-		unmap();
-	}
+	if (should_init)
+		(*initfunc)(m_ptr);
 
 #if defined(BOOST_HAS_WINTHREADS)
 	ReleaseMutex(mutex);
@@ -100,33 +122,6 @@ void shared_memory::init(const char *name, size_t len, int flags,
 	sem_close(sem);
 	sem_unlink(mxname.c_str());
 #endif 
-}
-
-void* shared_memory::map()
-{
-	if (!m_ptr)
-	{
-#if defined(BOOST_HAS_WINTHREADS)
-        m_ptr = static_cast<char*>(
-            MapViewOfFile(m_hmap, FILE_MAP_WRITE, 0, 0, 0));
-#elif defined(BOOST_HAS_PTHREADS)
-		int prot = (m_flags & read_write) ? PROT_READ|PROT_WRITE : PROT_READ;
-		m_ptr = mmap(0, m_len, prot, MAP_SHARED, m_hmap, 0);
-#endif 
-	}
-	return m_ptr;
-}
-
-void shared_memory::unmap()
-{
-	if (m_ptr)
-	{
-#if defined(BOOST_HAS_WINTHREADS)
-        UnmapViewOfFile(m_ptr);
-#elif defined(BOOST_HAS_PTHREADS)
-		munmap(reinterpret_cast<char*>(m_ptr), m_len);
-#endif 
-	}
 }
 
 }   // namespace boost
