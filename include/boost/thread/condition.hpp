@@ -17,7 +17,7 @@
 #   error	Thread support is unavailable!
 #endif
 
-#include <boost/thread/exceptions.h>
+#include <boost/thread/exceptions.hpp>
 #include <boost/utility.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)

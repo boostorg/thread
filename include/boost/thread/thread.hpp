@@ -17,7 +17,7 @@
 #   error	Thread support is unavailable!
 #endif
 
-#include <boost/thread/exceptions.h>
+#include <boost/thread/exceptions.hpp>
 
 #include <boost/function.hpp>
 #include <boost/utility.hpp>
