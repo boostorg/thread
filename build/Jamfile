@@ -101,7 +101,8 @@ import ./threads ;
               <template>boost_thread_lib_base
             : ## requirements ##
               <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name_ptw32)
-              $(pthreads-win32)
+              $(boost_thread_lib_settings_ptw32)
+            : ## default build ##
         ;
 
         dll $(boost_thread_lib_name_ptw32)
@@ -109,7 +110,8 @@ import ./threads ;
               <template>boost_thread_dll_base
             : ## requirements ##
               <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name_ptw32)
-              $(pthreads-win32)
+              $(boost_thread_lib_settings_ptw32)
+            : ## default build ##
         ;
 
         stage bin-stage
