@@ -10,10 +10,15 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/once.hpp>
+#include <cstdio>
 #include <cassert>
 
 #if defined(BOOST_HAS_WINTHREADS)
 #   include <windows.h>
+#endif
+
+#ifdef BOOST_NO_STDC_NAMESPACE
+    namespace std { using ::sprintf; }
 #endif
 
 #if defined(BOOST_HAS_PTHREADS)
@@ -53,7 +58,7 @@ void call_once(void (*func)(), once_flag& flag)
 	if (!tmp)
 	{
         char name[41];
-        sprintf(name, "2AC1A572DB6944B0A65C38C4140AF2F4%X%X", GetCurrentProcessId(), &flag);
+        std::sprintf(name, "2AC1A572DB6944B0A65C38C4140AF2F4%X%X", GetCurrentProcessId(), &flag);
 		HANDLE mutex = CreateMutex(NULL, FALSE, name);
         assert(mutex != NULL);
 
