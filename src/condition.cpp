@@ -18,6 +18,7 @@
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
+#   define NOMINMAX
 #   include <windows.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
@@ -35,12 +36,22 @@ condition::condition()
 
     if (!m_gate || !m_queue || !m_mutex)
     {
-        int res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
-        assert(res);
-        res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
-        assert(res);
-        res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-        assert(res);
+        int res;
+		if (m_gate)
+		{
+			res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
+			assert(res);
+		}
+		if (m_queue)
+		{
+			res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
+			assert(res);
+		}
+		if (m_mutex)
+		{
+			res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+			assert(res);
+		}
 
         throw thread_resource_error();
     }

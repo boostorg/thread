@@ -12,7 +12,6 @@
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/exceptions.hpp>
-#include "threadmon.hpp"
 #include <stdexcept>
 #include <cassert>
 
@@ -21,18 +20,11 @@
 #endif
 
 #if defined(BOOST_HAS_WINTHREADS)
-#include <set>
+#include "threadmon.hpp"
+#include <map>
 namespace {
     typedef std::pair<void(*)(void*), void*> cleanup_info;
-    typedef std::pair<int, cleanup_info> cleanup_node;
-    struct cleanup_info_less
-    {
-		bool operator()(const cleanup_node& x, const cleanup_node& y) const
-		{
-			return x.first < y.first;
-		}
-    };
-    typedef std::set<cleanup_node, cleanup_info_less> cleanup_handlers;
+    typedef std::map<int, cleanup_info> cleanup_handlers;
 
     DWORD key;
     boost::once_flag once = boost::once_init;
@@ -48,8 +40,7 @@ namespace {
         cleanup_handlers* handlers = static_cast<cleanup_handlers*>(TlsGetValue(key));
         for (cleanup_handlers::iterator it = handlers->begin(); it != handlers->end(); ++it)
         {
-            cleanup_node node = *it;
-            cleanup_info info = node.second;
+            cleanup_info info = it->second;
             if (info.second)
                 info.first(info.second);
         }
@@ -115,16 +106,8 @@ bool tss::set(void* value)
         assert(handlers);
         if (!handlers)
             return false;
-        cleanup_info info(m_cleanup, value);
-        cleanup_node node(m_key, info);
-        cleanup_handlers::iterator it = handlers->lower_bound(node);
-        if (it == handlers->end())
-        {
-            if (!handlers->insert(node).second)
-                return false;
-        }
-        else
-            (*it).second = info;
+		cleanup_info info(m_cleanup, value);
+		(*handlers)[m_key] = info;
     }
     return TlsSetValue(m_key, value);
 }
