@@ -35,7 +35,7 @@ lib boost_thread : ../src/$(CPP_SOURCES).cpp
     #<runtime-link>static/dynamic
     : debug release ;
 
-stage bin-stage : <lib>boost_thread <dll>boost_threadmon
+stage bin-stage : <lib>boost_thread $(BOOST_THREADMON_DLL)
     :
 	<tag><runtime-link-static>"s"
         <tag><debug>"d"
