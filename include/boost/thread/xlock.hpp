@@ -20,144 +20,153 @@ namespace boost {
 class condition;
 struct xtime;
 
-template <typename M>
-class basic_lock : private noncopyable
-{
-public:
-    friend class condition;
-    
-    typedef M mutex_type;
-    
-    explicit basic_lock(M& mx, bool lock_it=true)
-        : m_mutex(mx), m_locked(false)
-    {
-        if (lock_it) lock();
-    }
-    ~basic_lock()
-    {
-        if (m_locked) unlock();
-    }
-    
-    void lock()
-    {
-        if (m_locked) throw lock_error();
-        m_mutex.do_lock();
-        m_locked = true;
-    }
-    void unlock()
-    {
-        if (!m_locked) throw lock_error();
-        m_mutex.do_unlock();
-        m_locked = false;
-    }
-    
-    operator const void*() const { return m_locked ? this : 0; }
-    
-private:
-    M& m_mutex;
-    bool m_locked;
-};
+    namespace detail { namespace thread {
 
-template <typename M>
-class basic_trylock : private noncopyable
-{
-public:
-    friend class condition;
+    template <typename Mutex>
+    class scoped_lock : private noncopyable
+    {
+    public:
+        friend class boost::condition;
     
-    typedef M mutex_type;
+        typedef Mutex mutex_type;
     
-    explicit basic_trylock(M& mx)
-        : m_mutex(mx), m_locked(false)
-    {
-        try_lock();
-    }
-    basic_trylock(M& mx, bool lock_it)
-        : m_mutex(mx), m_locked(false)
-    {
-        if (lock_it) lock();
-    }
-    ~basic_trylock()
-    {
-        if (m_locked) unlock();
-    }
+        explicit scoped_lock(Mutex& mx, bool lock_it=true)
+            : m_mutex(mx), m_locked(false)
+        {
+            if (lock_it) lock();
+        }
+        ~scoped_lock()
+        {
+            if (m_locked) unlock();
+        }
     
-    void lock()
-    {
-        if (m_locked) throw lock_error();
-        m_mutex.do_lock();
-        m_locked = true;
-    }
-    bool try_lock()
-    {
-        if (m_locked) throw lock_error();
-        return (m_locked = m_mutex.do_trylock());
-    }
-    void unlock()
-    {
-        if (!m_locked) throw lock_error();
-        m_mutex.do_unlock();
-        m_locked = false;
-    }
-    
-    operator const void*() const { return m_locked ? this : 0; }
-    
-private:
-    M& m_mutex;
-    bool m_locked;
-};
+        void lock()
+        {
+            if (m_locked) throw lock_error();
+            m_mutex.do_lock();
+            m_locked = true;
+        }
+        void unlock()
+        {
+            if (!m_locked) throw lock_error();
+            m_mutex.do_unlock();
+            m_locked = false;
+        }
 
-template <typename M>
-class basic_timedlock : private noncopyable
-{
-public:
-    friend class condition;
+        bool locked() const { return m_locked; }    
+        operator const void*() const { return m_locked ? this : 0; }
     
-    typedef M mutex_type;
-    
-    basic_timedlock(M& mx, const xtime& xt)
-        : m_mutex(mx), m_locked(false)
-    {
-        timed_lock(xt);
-    }
-    basic_timedlock(M& mx, bool lock_it)
-        : m_mutex(mx), m_locked(false)
-    {
-        if (lock_it) lock();
-    }
-    ~basic_timedlock()
-    {
-        if (m_locked) unlock();
-    }
-    
-    void lock()
-    {
-        if (m_locked) throw lock_error();
-        m_mutex.do_lock();
-        m_locked = true;
-    }
-    bool timed_lock(const xtime& xt)
-    {
-        if (m_locked) throw lock_error();
-        return (m_locked = m_mutex.do_timedlock(xt));
-    }
-    void unlock()
-    {
-        if (!m_locked) throw lock_error();
-        m_mutex.do_unlock();
-        m_locked = false;
-    }
-    
-    operator const void*() const { return m_locked ? this : 0; }
-    
-private:
-    M& m_mutex;
-    bool m_locked;
-};
+    private:
+        Mutex& m_mutex;
+        bool m_locked;
+    };
 
+    template <typename TryMutex>
+    class scoped_try_lock : private noncopyable
+    {
+    public:
+        friend class boost::condition;
+    
+        typedef TryMutex mutex_type;
+    
+        explicit scoped_try_lock(TryMutex& mx)
+            : m_mutex(mx), m_locked(false)
+        {
+            try_lock();
+        }
+        scoped_try_lock(TryMutex& mx, bool lock_it)
+            : m_mutex(mx), m_locked(false)
+        {
+            if (lock_it) lock();
+        }
+        ~scoped_try_lock()
+        {
+            if (m_locked) unlock();
+        }
+    
+        void lock()
+        {
+            if (m_locked) throw lock_error();
+            m_mutex.do_lock();
+            m_locked = true;
+        }
+        bool try_lock()
+        {
+            if (m_locked) throw lock_error();
+            return (m_locked = m_mutex.do_trylock());
+        }
+        void unlock()
+        {
+            if (!m_locked) throw lock_error();
+            m_mutex.do_unlock();
+            m_locked = false;
+        }
+    
+        bool locked() const { return m_locked; }    
+        operator const void*() const { return m_locked ? this : 0; }
+    
+    private:
+        TryMutex& m_mutex;
+        bool m_locked;
+    };
+
+    template <typename TimedMutex>
+    class scoped_timed_lock : private noncopyable
+    {
+    public:
+        friend class boost::condition;
+    
+        typedef TimedMutex mutex_type;
+    
+        scoped_timed_lock(TimedMutex& mx, const xtime& xt)
+            : m_mutex(mx), m_locked(false)
+        {
+            timed_lock(xt);
+        }
+        scoped_timed_lock(TimedMutex& mx, bool lock_it)
+            : m_mutex(mx), m_locked(false)
+        {
+            if (lock_it) lock();
+        }
+        ~scoped_timed_lock()
+        {
+            if (m_locked) unlock();
+        }
+    
+        void lock()
+        {
+            if (m_locked) throw lock_error();
+            m_mutex.do_lock();
+            m_locked = true;
+        }
+        bool timed_lock(const xtime& xt)
+        {
+            if (m_locked) throw lock_error();
+            return (m_locked = m_mutex.do_timedlock(xt));
+        }
+        void unlock()
+        {
+            if (!m_locked) throw lock_error();
+            m_mutex.do_unlock();
+            m_locked = false;
+        }
+    
+        bool locked() const { return m_locked; }    
+        operator const void*() const { return m_locked ? this : 0; }
+    
+    private:
+        TimedMutex& m_mutex;
+        bool m_locked;
+    };
+
+    } // namespace thread
+    } // namespace detail
 } // namespace boost
 
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
+//   30 Jul 01  WEKEMPF Moved lock types into boost::detail::thread. Renamed some types.
+//                      Added locked() methods.
 
 #endif // BOOST_XLOCK_WEK070601_HPP

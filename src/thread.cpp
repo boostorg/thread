@@ -32,10 +32,10 @@ public:
     thread_list() { }
     ~thread_list()
     {
-        mutex::lock lock(m_mutex);
+        mutex::scoped_lock scoped_lock(m_mutex);
         for (std::list<thread*>::iterator it = m_thread_objects.begin(); it != m_thread_objects.end(); ++it)
         {
-            mutex::lock lock((*it)->m_mutex);
+            mutex::scoped_lock scoped_lock((*it)->m_mutex);
             (*it)->m_state_manager = 0;
             (*it)->m_condition.notify_all();
         }
@@ -43,13 +43,13 @@ public:
 
     void add(thread* thrd)
     {
-        mutex::lock lock(m_mutex);
+        mutex::scoped_lock scoped_lock(m_mutex);
         m_thread_objects.push_back(thrd);
     }
 
     void remove(thread* thrd)
     {
-        mutex::lock lock(m_mutex);
+        mutex::scoped_lock scoped_lock(m_mutex);
         std::list<thread*>::iterator it = std::find(m_thread_objects.begin(), m_thread_objects.end(), thrd);
         if (it != m_thread_objects.end())
             m_thread_objects.erase(it);
@@ -107,13 +107,13 @@ public:
     thread_param(const boost::function0<void>& threadfunc) : m_threadfunc(threadfunc), m_started(false) { }
     void wait()
     {
-        boost::mutex::lock lock(m_mutex);
+        boost::mutex::scoped_lock scoped_lock(m_mutex);
         while (!m_started)
-            m_condition.wait(lock);
+            m_condition.wait(scoped_lock);
     }
     void started()
     {
-        boost::mutex::lock lock(m_mutex);
+        boost::mutex::scoped_lock scoped_lock(m_mutex);
         m_started = true;
         m_condition.notify_one();
     }
@@ -147,7 +147,7 @@ void* thread_proxy(void* param)
 
 namespace boost {
 
-lock_error::lock_error() : std::runtime_error("thread lock error")
+lock_error::lock_error() : std::runtime_error("thread scoped_lock error")
 {
 }
 
@@ -192,7 +192,7 @@ thread::~thread()
     assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
     {
-        mutex::lock lock(m_mutex);
+        mutex::scoped_lock scoped_lock(m_mutex);
         if (m_state_manager)
             m_state_manager->remove(this);
     }
@@ -223,9 +223,9 @@ void thread::join()
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), INFINITE);
     assert(res == WAIT_OBJECT_0);
 #elif defined(BOOST_HAS_PTHREADS)
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
     while (m_state_manager)
-        m_condition.wait(lock);
+        m_condition.wait(scoped_lock);
 #endif
 }
 
@@ -234,7 +234,7 @@ bool thread::try_join()
 #if defined(BOOST_HAS_WINTHREADS)
     return WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), 0) == WAIT_OBJECT_0;
 #elif defined(BOOST_HAS_PTHREADS)
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
     bool ret = (m_state_manager == 0);
     return ret;
 #endif
@@ -247,10 +247,10 @@ bool thread::timed_join(const xtime& xt)
     to_duration(xt, milliseconds);
     return WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), 0) == WAIT_OBJECT_0;
 #elif defined(BOOST_HAS_PTHREADS)
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
     while (m_state_manager)
     {
-        if (!m_condition.timed_wait(lock, xt))
+        if (!m_condition.timed_wait(scoped_lock, xt))
             break;
     }
     bool ret = (m_state_manager == 0);
@@ -309,7 +309,7 @@ thread_group::thread_group()
 
 thread_group::~thread_group()
 {
-    // We shouldn't have to lock here, since referencing this object from another thread
+    // We shouldn't have to scoped_lock here, since referencing this object from another thread
     // while we're deleting it in the current thread is going to lead to undefined behavior
     // any way.
     for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
@@ -318,8 +318,8 @@ thread_group::~thread_group()
 
 thread* thread_group::create_thread(const function0<void>& threadfunc)
 {
-    // No lock required here since the only "shared data" that's modified here occurs
-    // inside add_thread which does lock.
+    // No scoped_lock required here since the only "shared data" that's modified here occurs
+    // inside add_thread which does scoped_lock.
     std::auto_ptr<thread> thrd(new thread(threadfunc));
     add_thread(thrd.get());
     return thrd.release();
@@ -327,7 +327,7 @@ thread* thread_group::create_thread(const function0<void>& threadfunc)
 
 void thread_group::add_thread(thread* thrd)
 {
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
 
     // For now we'll simply ignore requests to add a thread object multiple times.
     // Should we consider this an error and either throw or return an error value?
@@ -339,7 +339,7 @@ void thread_group::add_thread(thread* thrd)
 
 void thread_group::remove_thread(thread* thrd)
 {
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
 
     // For now we'll simply ignore requests to remove a thread object that's not in the group.
     // Should we consider this an error and either throw or return an error value?
@@ -351,7 +351,7 @@ void thread_group::remove_thread(thread* thrd)
 
 void thread_group::join_all()
 {
-    mutex::lock lock(m_mutex);
+    mutex::scoped_lock scoped_lock(m_mutex);
     for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
         (*it)->join();
 }

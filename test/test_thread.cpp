@@ -19,7 +19,7 @@ template <typename M>
 void test_lock(M* dummy=0)
 {
 	typedef M mutex_type;
-	typedef typename M::lock lock_type;
+	typedef typename M::scoped_lock lock_type;
 
 	mutex_type mutex;
 	boost::condition condition;
@@ -54,21 +54,21 @@ template <typename M>
 void test_trylock(M* dummy=0)
 {
 	typedef M mutex_type;
-	typedef typename M::trylock trylock_type;
+	typedef typename M::scoped_try_lock try_lock_type;
 
 	mutex_type mutex;
 	boost::condition condition;
 
     // Test the lock's constructors.
     {
-        trylock_type lock(mutex);
+        try_lock_type lock(mutex);
         BOOST_TEST(lock);
     }
     {
-        trylock_type lock(mutex, false);
+        try_lock_type lock(mutex, false);
         BOOST_TEST(!lock);
     }
-	trylock_type lock(mutex, true);
+	try_lock_type lock(mutex, true);
 	BOOST_TEST(lock);
 
     // Construct and initialize an xtime for a fast time out.
@@ -97,7 +97,7 @@ template <typename M>
 void test_timedlock(M* dummy=0)
 {
 	typedef M mutex_type;
-	typedef typename M::timedlock timedlock_type;
+	typedef typename M::scoped_timed_lock timed_lock_type;
 
 	mutex_type mutex;
 	boost::condition condition;
@@ -109,14 +109,14 @@ void test_timedlock(M* dummy=0)
         BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
         xt.nsec += 100000000;
 
-        timedlock_type lock(mutex, xt);
+        timed_lock_type lock(mutex, xt);
         BOOST_TEST(lock);
     }
     {
-        timedlock_type lock(mutex, false);
+        timed_lock_type lock(mutex, false);
         BOOST_TEST(!lock);
     }
-	timedlock_type lock(mutex, true);
+	timed_lock_type lock(mutex, true);
 	BOOST_TEST(lock);
 
     // Construct and initialize an xtime for a fast time out.
@@ -168,8 +168,8 @@ void test_recursive_mutex()
     typedef boost::recursive_mutex mutex;
     test_lock<mutex>();
     mutex mx;
-    mutex::lock lock1(mx);
-    mutex::lock lock2(mx);
+    mutex::scoped_lock lock1(mx);
+    mutex::scoped_lock lock2(mx);
 }
 
 void test_recursive_try_mutex()
@@ -178,8 +178,8 @@ void test_recursive_try_mutex()
     test_lock<mutex>();
     test_trylock<mutex>();
     mutex mx;
-    mutex::lock lock1(mx);
-    mutex::lock lock2(mx);
+    mutex::scoped_lock lock1(mx);
+    mutex::scoped_lock lock2(mx);
 }
 
 void test_recursive_timed_mutex()
@@ -189,8 +189,8 @@ void test_recursive_timed_mutex()
     test_trylock<mutex>();
     test_timedlock<mutex>();
     mutex mx;
-    mutex::lock lock1(mx);
-    mutex::lock lock2(mx);
+    mutex::scoped_lock lock1(mx);
+    mutex::scoped_lock lock2(mx);
 }
 
 struct condition_test_data
@@ -206,7 +206,7 @@ struct condition_test_data
 void condition_test_thread(void* param)
 {
     condition_test_data* data = static_cast<condition_test_data*>(param);
-	boost::mutex::lock lock(data->mutex);
+	boost::mutex::scoped_lock lock(data->mutex);
 	BOOST_TEST(lock);
 	while (!(data->notified > 0))
 		data->condition.wait(lock);
@@ -231,7 +231,7 @@ void test_condition_notify_one()
     boost::thread thread(thread_adapter(&condition_test_thread, &data));
 
 	{
-		boost::mutex::lock lock(data.mutex);
+		boost::mutex::scoped_lock lock(data.mutex);
 		BOOST_TEST(lock);
 		data.notified++;
 		data.condition.notify_one();
@@ -251,7 +251,7 @@ void test_condition_notify_all()
         threads.create_thread(thread_adapter(&condition_test_thread, &data));
 
 	{
-		boost::mutex::lock lock(data.mutex);
+		boost::mutex::scoped_lock lock(data.mutex);
 		BOOST_TEST(lock);
 		data.notified++;
 		data.condition.notify_all();
@@ -275,7 +275,7 @@ void condition_test_waits(void* param)
 {
     condition_test_data* data = static_cast<condition_test_data*>(param);
 
-    boost::mutex::lock lock(data->mutex);
+    boost::mutex::scoped_lock lock(data->mutex);
     BOOST_TEST(lock);
 
     // Test wait.
@@ -322,7 +322,7 @@ void test_condition_waits()
     boost::xtime xt;
 
     {
-        boost::mutex::lock lock(data.mutex);
+        boost::mutex::scoped_lock lock(data.mutex);
         BOOST_TEST(lock);
 
         BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);

@@ -36,7 +36,7 @@ char* player_name(int state)
 
 void player(void* param)
 {
-    boost::mutex::lock lock(mutex);
+    boost::mutex::scoped_lock lock(mutex);
 
     int active = (int)param;
     int other = active == PLAYER_A ? PLAYER_B : PLAYER_A;
@@ -94,7 +94,7 @@ int main(int argc, char* argv[])
     xt.sec += 1;
     boost::thread::sleep(xt);
     {
-        boost::mutex::lock lock(mutex);
+        boost::mutex::scoped_lock lock(mutex);
         std::cout << "---Noise ON..." << std::endl;
     }
 
@@ -102,7 +102,7 @@ int main(int argc, char* argv[])
         cond.notify_all();
 
     {
-        boost::mutex::lock lock(mutex);
+        boost::mutex::scoped_lock lock(mutex);
         std::cout << "---Noise OFF..." << std::endl;
         state = GAME_OVER;
         cond.notify_all();

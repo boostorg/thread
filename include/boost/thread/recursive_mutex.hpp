@@ -32,10 +32,10 @@ struct xtime;
 class recursive_mutex : private noncopyable
 {
 public:
-    friend class basic_lock<recursive_mutex>;
+    friend class detail::thread::scoped_lock<recursive_mutex>;
     friend class condition;
     
-    typedef basic_lock<recursive_mutex> lock;
+    typedef detail::thread::scoped_lock<recursive_mutex> scoped_lock;
     
     recursive_mutex();
     ~recursive_mutex();
@@ -72,12 +72,12 @@ private:
 class recursive_try_mutex : private noncopyable
 {
 public:
-    friend class basic_lock<recursive_try_mutex>;
-    friend class basic_trylock<recursive_try_mutex>;
+    friend class detail::thread::scoped_lock<recursive_try_mutex>;
+    friend class detail::thread::scoped_try_lock<recursive_try_mutex>;
     friend class condition;
     
-    typedef basic_lock<recursive_try_mutex> lock;
-    typedef basic_trylock<recursive_try_mutex> trylock;
+    typedef detail::thread::scoped_lock<recursive_try_mutex> scoped_lock;
+    typedef detail::thread::scoped_try_lock<recursive_try_mutex> scoped_try_lock;
     
     recursive_try_mutex();
     ~recursive_try_mutex();
@@ -115,14 +115,14 @@ private:
 class recursive_timed_mutex : private noncopyable
 {
 public:
-    friend class basic_lock<recursive_timed_mutex>;
-    friend class basic_trylock<recursive_timed_mutex>;
-    friend class basic_timedlock<recursive_timed_mutex>;
+    friend class detail::thread::scoped_lock<recursive_timed_mutex>;
+    friend class detail::thread::scoped_try_lock<recursive_timed_mutex>;
+    friend class detail::thread::scoped_timed_lock<recursive_timed_mutex>;
     friend class condition;
     
-    typedef basic_lock<recursive_timed_mutex> lock;
-    typedef basic_trylock<recursive_timed_mutex> trylock;
-    typedef basic_timedlock<recursive_timed_mutex> timedlock;
+    typedef detail::thread::scoped_lock<recursive_timed_mutex> scoped_lock;
+    typedef detail::thread::scoped_try_lock<recursive_timed_mutex> scoped_try_lock;
+    typedef detail::thread::scoped_timed_lock<recursive_timed_mutex> scoped_timed_lock;
     
     recursive_timed_mutex();
     ~recursive_timed_mutex();

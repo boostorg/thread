@@ -32,10 +32,10 @@ struct xtime;
 class mutex : private noncopyable
 {
 public:
-    friend class basic_lock<mutex>;
+    friend class detail::thread::scoped_lock<mutex>;
     friend class condition;
     
-    typedef basic_lock<mutex> lock;
+    typedef detail::thread::scoped_lock<mutex> scoped_lock;
     
     mutex();
     ~mutex();
@@ -64,12 +64,12 @@ private:
 class try_mutex : private noncopyable
 {
 public:
-    friend class basic_lock<try_mutex>;
-    friend class basic_trylock<try_mutex>;
+    friend class detail::thread::scoped_lock<try_mutex>;
+    friend class detail::thread::scoped_try_lock<try_mutex>;
     friend class condition;
     
-    typedef basic_lock<try_mutex> lock;
-    typedef basic_trylock<try_mutex> trylock;
+    typedef detail::thread::scoped_lock<try_mutex> scoped_lock;
+    typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
     
     try_mutex();
     ~try_mutex();
@@ -99,14 +99,14 @@ private:
 class timed_mutex : private noncopyable
 {
 public:
-    friend class basic_lock<timed_mutex>;
-    friend class basic_trylock<timed_mutex>;
-    friend class basic_timedlock<timed_mutex>;
+    friend class detail::thread::scoped_lock<timed_mutex>;
+    friend class detail::thread::scoped_try_lock<timed_mutex>;
+    friend class detail::thread::scoped_timed_lock<timed_mutex>;
     friend class condition;
     
-    typedef basic_lock<timed_mutex> lock;
-    typedef basic_trylock<timed_mutex> trylock;
-    typedef basic_timedlock<timed_mutex> timedlock;
+    typedef detail::thread::scoped_lock<timed_mutex> scoped_lock;
+    typedef detail::thread::scoped_try_lock<timed_mutex> scoped_try_lock;
+    typedef detail::thread::scoped_timed_lock<timed_mutex> scoped_timed_lock;
     
     timed_mutex();
     ~timed_mutex();

@@ -11,10 +11,10 @@ namespace {
 };
 
 template <typename M>
-class buffer_t : public M, public boost::condition
+class buffer_t
 {
 public:
-    typedef typename M::lock lock;
+    typedef typename M::scoped_lock scoped_lock;
     
     buffer_t(int n)
         : p(0), c(0), full(0), buf(n)
@@ -23,23 +23,23 @@ public:
     
     void send(int m)
     {
-        lock lk(*this);
+        scoped_lock lk(mutex);
         while (full == buf.size())
-            wait(lk);
+            cond.wait(lk);
         buf[p] = m;
         p = (p+1) % buf.size();
         ++full;
-        notify_all();
+        cond.notify_all();
     }
     int receive()
     {
-        lock lk(*this);
+        scoped_lock lk(mutex);
         while (full == 0)
-            wait(lk);
+            cond.wait(lk);
         int i = buf[c];
         c = (c+1) % buf.size();
         --full;
-        notify_all();
+        cond.notify_all();
         return i;
     }
     
@@ -55,7 +55,7 @@ public:
         {
             get_buffer().send(n);
             {
-                volatile boost::mutex::lock lock(io_mutex);
+                boost::mutex::scoped_lock lock(io_mutex);
                 std::cout << "sent: " << n << std::endl;
             }
         }
@@ -68,13 +68,15 @@ public:
         {
             n = get_buffer().receive();
             {
-                volatile boost::mutex::lock lock(io_mutex);
+                boost::mutex::scoped_lock lock(io_mutex);
                 std::cout << "received: " << n << std::endl;
             }
         } while (n < ITERS - 1);
     }
     
 private:
+    M mutex;
+    boost::condition cond;
     unsigned int p, c, full;
     std::vector<int> buf;
 };
