@@ -34,15 +34,16 @@ namespace boost {
 
 struct xtime;
 
-class BOOST_THREAD_DECL mutex : private noncopyable,
-								public boost::detail::named_object
+class BOOST_THREAD_DECL mutex
+    : private noncopyable
+    , public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<mutex>;
 
     typedef detail::thread::scoped_lock<mutex> scoped_lock;
 
-	mutex(const char* name=0);
+    mutex(const char* name=0);
     ~mutex();
 
 private:
@@ -65,7 +66,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
-	bool m_critsect;
+    bool m_critical_section;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -74,8 +75,9 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL try_mutex : private noncopyable,
-									public boost::detail::named_object
+class BOOST_THREAD_DECL try_mutex
+    : private noncopyable
+    , public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<try_mutex>;
@@ -83,7 +85,7 @@ public:
     typedef detail::thread::scoped_lock<try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
 
-	try_mutex(const char* name=0);
+    try_mutex(const char* name=0);
     ~try_mutex();
 
 private:
@@ -107,7 +109,7 @@ private:
 
 #if defined(BOOST_HAS_WINTHREADS)
     void* m_mutex;
-//	bool m_critsect;
+    bool m_critical_section;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -116,8 +118,9 @@ private:
 #endif
 };
 
-class BOOST_THREAD_DECL timed_mutex : private noncopyable,
-									  public boost::detail::named_object
+class BOOST_THREAD_DECL timed_mutex
+    : private noncopyable
+    , public boost::detail::named_object
 {
 public:
     friend class detail::thread::lock_ops<timed_mutex>;
@@ -126,7 +129,7 @@ public:
     typedef detail::thread::scoped_try_lock<timed_mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<timed_mutex> scoped_timed_lock;
 
-	timed_mutex(const char* name=0);
+    timed_mutex(const char* name=0);
     ~timed_mutex();
 
 private:
@@ -163,10 +166,10 @@ private:
 
 } // namespace boost
 
-#endif // BOOST_MUTEX_WEK070601_HPP
-
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.  Factored out
 //                      to three classes, mutex, try_mutex and timed_mutex.
 //    3 Jan 03  WEKEMPF Modified for DLL implementation.
+
+#endif // BOOST_MUTEX_WEK070601_HPP

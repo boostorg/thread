@@ -16,59 +16,21 @@
 #include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
-#include <new>
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
+#   include <new>
+#   include <boost/thread/once.hpp>
 #   include <windows.h>
 #   include <time.h>
+#   include "mutex.inl"
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
 #    include <MacErrors.h>
-
 #    include "mac/init.hpp"
 #    include "mac/safe.hpp"
 #endif
-
-namespace {
-
-#if defined(BOOST_HAS_WINTHREADS)
-
-HANDLE mutex_cast(void* p)
-{
-    return reinterpret_cast<HANDLE>(p);
-}
-
-LPCRITICAL_SECTION critsect_cast(void* p)
-{
-    return reinterpret_cast<LPCRITICAL_SECTION>(p);
-}
-
-inline void close(void* mutex)
-{
-    int res = 0;
-    res = CloseHandle(mutex_cast(mutex));
-    assert(res);
-}
-
-inline int wait(void* mutex, int time)
-{
-    unsigned int res = 0;
-    res = WaitForSingleObject(mutex_cast(mutex), time);
-//    assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
-    return res;
-}
-
-inline void release(void* mutex)
-{
-    BOOL res = FALSE;
-    res = ReleaseMutex(mutex_cast(mutex));
-    assert(res);
-}
-#endif
-
-} // namesapce
 
 namespace boost {
 
@@ -76,47 +38,38 @@ namespace boost {
 
 mutex::mutex(const char* name)
     : boost::detail::named_object(name)
+    , m_mutex(0)
+    , m_critical_section(false)
 {
-    if (name)
-    {
-        HANDLE mutex = CreateMutex(0, 0, effective_name());
-        if (mutex == INVALID_HANDLE_VALUE)
-            throw thread_resource_error();
-        m_mutex = reinterpret_cast<void*>(mutex);
-        m_critsect = false;
-    }
+    m_critical_section = !name;
+    if (m_critical_section)
+        m_mutex = new_critical_section();
     else
-    {
-        LPCRITICAL_SECTION cs = new CRITICAL_SECTION;
-        if (cs == 0) throw std::bad_alloc();
-        InitializeCriticalSection(cs);
-        m_mutex = reinterpret_cast<void*>(cs);
-        m_critsect = true;
-    }
+        m_mutex = new_mutex(effective_name()); //:add special name that creates a mutex instead of a critical section, but doesn't name the mutex?
 }
 
 mutex::~mutex()
 {
-    if (m_critsect)
-        delete critsect_cast(m_mutex);
+    if (m_critical_section)
+        delete_critical_section(m_mutex);
     else
-        close(m_mutex);
+        delete_mutex(m_mutex);
 }
 
 void mutex::do_lock()
 {
-    if (m_critsect)
-        EnterCriticalSection(critsect_cast(m_mutex));
+    if (m_critical_section)
+        wait_critical_section_infinite(m_mutex);
     else
-        wait(m_mutex, INFINITE);
+        wait_mutex(m_mutex, INFINITE);
 }
 
 void mutex::do_unlock()
 {
-    if (m_critsect)
-        LeaveCriticalSection(critsect_cast(m_mutex));
+    if (m_critical_section)
+        release_critical_section(m_mutex);
     else
-        release(m_mutex);
+        release_mutex(m_mutex);
 }
 
 void mutex::do_lock(cv_state&)
@@ -131,31 +84,46 @@ void mutex::do_unlock(cv_state&)
 
 try_mutex::try_mutex(const char* name)
     : boost::detail::named_object(name)
+    , m_mutex(0)
+    , m_critical_section(false)
 {
-    HANDLE mutex = CreateMutex(0, 0, effective_name());
-    if (mutex == INVALID_HANDLE_VALUE)
-        throw thread_resource_error();
-    m_mutex = reinterpret_cast<void*>(mutex);
+    m_critical_section = !name && has_TryEnterCriticalSection();
+    if (m_critical_section)
+        m_mutex = new_critical_section();
+    else
+        m_mutex = new_mutex(effective_name());
 }
 
 try_mutex::~try_mutex()
 {
-    close(m_mutex);
+    if (m_critical_section)
+        delete_critical_section(m_mutex);
+    else
+        delete_mutex(m_mutex);
 }
 
 void try_mutex::do_lock()
 {
-    wait(m_mutex, INFINITE);
+    if (m_critical_section)
+        wait_critical_section_infinite(m_mutex);
+    else
+        wait_mutex(m_mutex, INFINITE);
 }
 
 bool try_mutex::do_trylock()
 {
-    return wait(m_mutex, 0) == WAIT_OBJECT_0;
+    if (m_critical_section)
+        return wait_critical_section_try(m_mutex);
+    else
+        return wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 void try_mutex::do_unlock()
 {
-    release(m_mutex);
+    if (m_critical_section)
+        release_critical_section(m_mutex);
+    else
+        release_mutex(m_mutex);
 }
 
 void try_mutex::do_lock(cv_state&)
@@ -170,26 +138,24 @@ void try_mutex::do_unlock(cv_state&)
 
 timed_mutex::timed_mutex(const char* name)
     : boost::detail::named_object(name)
+    , m_mutex(0)
 {
-    HANDLE mutex = CreateMutex(0, 0, effective_name());
-    if (mutex == INVALID_HANDLE_VALUE)
-        throw thread_resource_error();
-    m_mutex = reinterpret_cast<void*>(mutex);
+    m_mutex = new_mutex(effective_name());
 }
 
 timed_mutex::~timed_mutex()
 {
-    close(m_mutex);
+    delete_mutex(m_mutex);
 }
 
 void timed_mutex::do_lock()
 {
-    wait(m_mutex, INFINITE);
+    wait_mutex(m_mutex, INFINITE);
 }
 
 bool timed_mutex::do_trylock()
 {
-    return wait(m_mutex, 0) == WAIT_OBJECT_0;
+    return wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
 }
 
 bool timed_mutex::do_timedlock(const xtime& xt)
@@ -199,7 +165,7 @@ bool timed_mutex::do_timedlock(const xtime& xt)
         int milliseconds;
         to_duration(xt, milliseconds);
 
-        int res = wait(m_mutex, milliseconds);
+        int res = wait_mutex(m_mutex, milliseconds);
 
         if (res == WAIT_TIMEOUT)
         {
@@ -215,7 +181,7 @@ bool timed_mutex::do_timedlock(const xtime& xt)
 
 void timed_mutex::do_unlock()
 {
-    release(m_mutex);
+    release_mutex(m_mutex);
 }
 
 void timed_mutex::do_lock(cv_state&)
@@ -227,9 +193,13 @@ void timed_mutex::do_unlock(cv_state&)
 {
     do_unlock();
 }
+
 #elif defined(BOOST_HAS_PTHREADS)
-mutex::mutex()
+
+mutex::mutex(const char* name)
 {
+    //:Use name parameter
+
     int res = 0;
     res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
@@ -268,8 +238,10 @@ void mutex::do_unlock(cv_state& state)
     state.pmutex = &m_mutex;
 }
 
-try_mutex::try_mutex()
+try_mutex::try_mutex(const char* name)
 {
+    //:Use name parameter
+
     int res = 0;
     res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
@@ -317,9 +289,11 @@ void try_mutex::do_unlock(cv_state& state)
     state.pmutex = &m_mutex;
 }
 
-timed_mutex::timed_mutex()
+timed_mutex::timed_mutex(const char* name)
     : m_locked(false)
 {
+    //:Use name parameter
+
     int res = 0;
     res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
@@ -457,12 +431,14 @@ void timed_mutex::do_unlock(cv_state& state)
 
     state.pmutex = &m_mutex;
 }
+
 #elif defined(BOOST_HAS_MPTASKS)
 
 using threads::mac::detail::safe_enter_critical_region;
 
-mutex::mutex()
+mutex::mutex(const char* name)
 {
+    //:Use name parameter
 }
 
 mutex::~mutex()
@@ -494,8 +470,9 @@ void mutex::do_unlock(cv_state& /*state*/)
     do_unlock();
 }
 
-try_mutex::try_mutex()
+try_mutex::try_mutex(const char* name)
 {
+    //:Use name parameter
 }
 
 try_mutex::~try_mutex()
@@ -535,8 +512,9 @@ void try_mutex::do_unlock(cv_state& /*state*/)
     do_unlock();
 }
 
-timed_mutex::timed_mutex()
+timed_mutex::timed_mutex(const char* name)
 {
+    //:Use name parameter
 }
 
 timed_mutex::~timed_mutex()
@@ -588,6 +566,7 @@ void timed_mutex::do_unlock(cv_state& /*state*/)
 {
     do_unlock();
 }
+
 #endif
 
 } // namespace boost
