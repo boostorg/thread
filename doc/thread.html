@@ -38,24 +38,21 @@ is.</p>
 <hr width="50%" align="left">
 
 <pre>
-    class thread
+    class thread : boost::noncopyable
     {
     public:
         thread();
-        thread(const thread&amp; other);
+        thread(const boost::function0&lt;void&gt;&amp; threadfunc);
         ~thread();
 
-        thread&amp; operator=(const thread&amp; other);
-        thread&amp; swap(thread&amp; other);
-        bool operator==(const thread&amp; other);
-        bool operator!=(const thread&amp; other);
-        bool is_alive() const;
-        void join();
+        bool operator==(const thread&amp; other) const;
+        bool operator!=(const thread&amp; other) const;
 
-        static thread create(void (*threadfunc)(void*), void* param);
-        static thread self();
-        static void join_all();
-        static void sleep(const xtime&amp; xt);
+        void join();
+        bool try_join();
+        bool timed_join(const xtime& xt);
+
+        static void sleep(const xtime& xt);
         static void yield();
     };
 </pre>    
@@ -68,13 +65,15 @@ is.</p>
     thread();
 </pre>
 
-<p>Constructs a <tt>thread</tt> object that's not associated with any running thread.</p>
+<p>Constructs a <tt>thread</tt> object that's associated with the currently running thread
+of execution.</p>
 
 <pre>
-    thread(const thread&amp; other);
+    thread(const boost::function0&lt;void&gt;&amp; threadfunc);
 </pre>
 
-<p>Copy constructs a <tt>thread</tt> object, adding a reference to the associated running thread.</p>
+<p>Starts a new thread of execution that calls <tt>threadfunc</tt> and constructs a <tt>thread</tt>
+object that's associated with it.</p>
 
 <h3>Destructor</h3>
 
@@ -82,24 +81,9 @@ is.</p>
     ~thread();
 </pre>
 
-<p>Destructs a <tt>thread</tt>, removing a reference to the associated running thread.</p>
-
-<h3>Assignment</h3>
-
-<pre>
-    thread&amp; operator=(const thread&amp; other);
-</pre>
-
-<p>Assigns the <tt>thread</tt> to reference the same running thread associated with <tt>other</tt>.</p>
-
-<h3>swap</h3>
-
-<pre>
-    thread&amp; swap(thread&amp; other);
-</pre>
-
-<p>Swaps the <tt>thread</tt> with <tt>other</tt>, exchanging the references to the respective
-associated running threads.</p>
+<p>Destructs a <tt>thread</tt> object.  The actual thread of execution may continue to run after
+the <tt>thread</tt> object has been destroyed.  If you need to insure a thread of execution
+runs to completion before the <tt>thread</tt> object is destroyed you should call join().</p>
 
 <h3>Comparison Operators</h3>
 
@@ -108,55 +92,37 @@ associated running threads.</p>
     bool operator!=(const thread&amp; other);
 </pre>
 
-<p>Compares the <tt>thread</tt> to <tt>other</tt> to see if they refer to the same associated
-running threads.</p>
-
-<h3>is_alive</h3>
-
-<pre>
-    bool is_alive() const;
-</pre>
-
-<p>Determines if the associated running thread is still executing.  This operation is only really
-useful to perform "busy waits" on the thread since any other use is likely to result in a race
-condition.</p>
+<p>Compares a <tt>thread</tt> object to <tt>other</tt> to see if they are associated with the same
+running thread of execution.</p>
 
 <h3>join</h3>
 
 <pre>
    void join();
 </pre>
-<pre>
 
-</pre>
+<p>Causes the current thread to "join" the associated running thread of execution.  In other words,
+the current thread will block until the associated running thread of execution finishes.</p>
 
-<p>Causes the current thread to "join" the associated running thread.  In other words, the current
-thread will block until the associated running thread finishes its execution.</p>
-
-<h3>create</h3>
+<h3>try_join</h3>
 
 <pre>
-    static thread create(void (*threadfunc)(void*), void* param);
+   bool try_join();
 </pre>
 
-<p>Creates a running thread which calls <tt>threadfunc</tt> passing it a value of <tt>param</tt>.</p>
+<p>Attempts to "join" a thread with out blocking when the thread of execution is still running.
+If the thread of execution has finished the return value shall be <tt>true</tt>, otherwise it shall
+be <tt>false</tt>.</p>
 
-<h3>self</h3>
+<h3>timed_join</h3>
 
 <pre>
-    static thread self();
+   bool timed_join(const xtime& xt);
 </pre>
 
-<p>Returns a <tt>thread</tt> referencing the currently running thread.</p>
-
-<h3>join_all</h3>
-
-<pre>
-    static void join_all();
-</pre>
-
-<p>Causes the current thread to "join" all the other currently running threads.  In other words, the
-current thread will block until all the other running threads finish their execution.</p>
+<p>Attempts to "join" a thread, blocking until either the thread of execution finishes or
+until <tt>xt</tt>.  If the thread of execution has finished or finishes before <tt>xt</tt>
+the return value shall be <tt>true</tt>, otherwise it shall be <tt>false</tt>.</p>
 
 <h3>sleep</h3>
 
@@ -172,8 +138,8 @@ current thread will block until all the other running threads finish their execu
     static void yield();
 </pre>
 
-<p>Causes the current thread to give up the rest of its time to any other thread that may be waiting
-on CPU time.</p>
+<p>Causes the current thread to give up the rest of its time slice to any other thread that may be waiting
+on CPU time.  This method may also used to allow for a non-preemptive implementation.</p>
 
 <h2>Example Usage</h2>
 
@@ -181,25 +147,29 @@ on CPU time.</p>
 #include &lt;boost/thread/thread.hpp&gt;
 #include &lt;iostram&gt;
 
-void alarm(void* p)
+struct thread_alarm
 {
-    int* pn = static_cast<int*>(p);
+   thread_alarm(int* secs) : m_secs(secs) { }
+   void operator()()
+   {
+       boost::xtime xt;
+       boost::xtime_get(&amp;xt, boost::TIME_UTC);
+       xt.sec += m_secs;
    
-    boost::xtime xt;
-    boost::xtime_get(&amp;xt, boost::TIME_UTC);
-    xt.sec += *pn;
+       boost::thread::sleep(xt);
    
-    boost::thread::sleep(xt);
+       std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
+   }
    
-    std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
-}
+   int m_secs;
+};
 
 int main(int argc, char* argv[])
 {
-    int secs = 5;
-    std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
-    boost::thread::create(&amp;alarm, &amp;secs);
-    boost::thread::join_all();
+   int secs = 5;
+   std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
+   boost::thread thrd(thread_alarm(5));
+   thrd.join();
 }
 </pre>
 
