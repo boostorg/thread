@@ -72,7 +72,7 @@ OSStatus safe_enter_critical_region(MPCriticalRegionID pCriticalRegionID, Durati
             if(lDuration != kDurationImmediate && lDuration != kDurationForever)
             {
                 sExpiration = AddDurationToAbsolute(lDuration, UpTime());
-            }            
+            }
             lStatus = MPEnterCriticalRegion(pCriticalRegionCriticalRegionID, lDuration);
             assert(lStatus == noErr || lStatus == kMPTimeoutErr);
             if(lStatus == noErr)
@@ -92,7 +92,7 @@ OSStatus safe_enter_critical_region(MPCriticalRegionID pCriticalRegionID, Durati
                     // no time left
                         lDuration = kDurationImmediate;
                     }
-                }            
+                }
             // if we entered the critical region, exit it again
                 lStatus = MPExitCriticalRegion(pCriticalRegionCriticalRegionID);
                 assert(lStatus == noErr);
