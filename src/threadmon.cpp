@@ -44,7 +44,7 @@ registered_handlers registry;
 #endif
 
 extern "C"
-BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
+BOOL WINAPI DllMain(HANDLE /*module*/, DWORD reason, LPVOID)
 {
     switch (reason)
     {

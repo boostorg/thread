@@ -36,11 +36,11 @@ mutex::mutex() : m_mutex(0)
 {
     try
     {
-       m_mutex = reinterpret_cast<void*>(new CRITICAL_SECTION);
-	}
-	catch (...)
-	{
-	}
+        m_mutex = reinterpret_cast<void*>(new CRITICAL_SECTION);
+    }
+    catch (...)
+    {
+    }
     if (!m_mutex)
         throw thread_resource_error();
     InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
