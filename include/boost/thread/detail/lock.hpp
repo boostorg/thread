@@ -177,7 +177,7 @@ public:
     bool try_lock()
     {
         if (m_locked) throw lock_error();
-        return (m_locked = lock_ops<TryMutex>::trylock(m_mutex));
+        return (m_locked = lock_ops<TimedMutex>::trylock(m_mutex));
     }
     bool timed_lock(const xtime& xt)
     {

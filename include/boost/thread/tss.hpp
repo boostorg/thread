@@ -107,7 +107,7 @@ private:
 
 } // namespace boost
 
-#endif BOOST_THREAD_NO_TSS_CLEANUP
+#endif // BOOST_THREAD_NO_TSS_CLEANUP
 #endif // BOOST_TSS_WEK070601_HPP
 
 // Change Log:
