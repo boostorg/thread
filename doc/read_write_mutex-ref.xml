@@ -45,9 +45,9 @@
 			<para>For classes that model related mutex concepts, see 
 			<classname>try_read_write_mutex</classname> and <classname>timed_read_write_mutex</classname>.</para>
 			
-			<para>The <classname>read_write_mutex</classname> class supplies the following typedef,
-			which <link linkend="threads.concepts.read-write-lock-models">models</link>
-			the specified locking strategy:
+			<para>The <classname>read_write_mutex</classname> class supplies the following typedefs,
+			which <link linkend="threads.concepts.read-write-lock-models">model</link>
+			the specified locking strategies:
 
 			<informaltable>
 				<tgroup cols="2" align="left">
@@ -59,8 +59,16 @@
 					</thead>
 					<tbody>
 						<row>
-							<entry>scoped_lock</entry>
+							<entry>scoped_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
 						</row>
 					</tbody>
 				</tgroup>
@@ -109,7 +117,15 @@
 			<purpose>Exposition only</purpose>
 		</inherit>
 		
-		<typedef name="scoped_lock">
+		<typedef name="scoped_read_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
@@ -154,7 +170,7 @@
 			
 			<para>The <classname>try_read_write_mutex</classname> class supplies the following typedefs,
 			which <link linkend="threads.concepts.read-write-lock-models">model</link>
-			the specified locking strategy:
+			the specified locking strategies:
 
 			<informaltable>
 				<tgroup cols="2" align="left">
@@ -166,12 +182,28 @@
 					</thead>
 					<tbody>
 						<row>
-							<entry>scoped_lock</entry>
+							<entry>scoped_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
 						</row>
 						<row>
-							<entry>scoped_try_lock</entry>
+							<entry>scoped_try_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
 						</row>
 					</tbody>
 				</tgroup>
@@ -215,11 +247,27 @@
 			<purpose>Exposition only</purpose>
 		</inherit>
 		
-		<typedef name="scoped_lock">
+		<typedef name="scoped_read_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
-		<typedef name="scoped_try_lock">
+		<typedef name="scoped_try_read_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
@@ -264,7 +312,7 @@
 			
 			<para>The <classname>timed_read_write_mutex</classname> class supplies the following typedefs,
 			which <link linkend="threads.concepts.read-write-lock-models">model</link>
-			the specified locking strategy:
+			the specified locking strategies:
 
 			<informaltable>
 				<tgroup cols="2" align="left">
@@ -276,16 +324,40 @@
 					</thead>
 					<tbody>
 						<row>
-							<entry>scoped_lock</entry>
+							<entry>scoped_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
 						</row>
 						<row>
-							<entry>scoped_try_lock</entry>
+							<entry>scoped_try_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
 						</row>
 						<row>
-							<entry>scoped_timed_lock</entry>
+							<entry>scoped_timed_read_write_lock</entry>
 							<entry><link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_timed_read_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_timed_write_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
 						</row>
 					</tbody>
 				</tgroup>
@@ -324,15 +396,39 @@
 			unless all locks are read-locks (but see below)</note>
 		</description>
 		
-		<typedef name="scoped_lock">
+		<typedef name="scoped_read_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
-		<typedef name="scoped_try_lock">
+		<typedef name="scoped_try_read_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
-		<typedef name="scoped_timed_lock">
+		<typedef name="scoped_timed_read_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_timed_read_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_write_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_timed_write_lock">
 			<type><emphasis>implementation-defined</emphasis></type>
 		</typedef>
 		
