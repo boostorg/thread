@@ -31,7 +31,7 @@
 
 #include "timeconv.inl"
 
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)
+#if defined(BOOST_HAS_WINTHREADS)
 #   include "boost/thread/detail/threadmon.hpp"
 #endif
 
@@ -111,13 +111,13 @@ extern "C" {
             boost::function0<void> threadfunc = p->m_threadfunc;
             p->started();
             threadfunc();
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)
+#if defined(BOOST_HAS_WINTHREADS)
             on_thread_exit();
 #endif
         }
         catch (...)
         {
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)
+#if defined(BOOST_HAS_WINTHREADS)
             on_thread_exit();
 #endif
         }
