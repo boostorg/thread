@@ -54,6 +54,7 @@ struct read_write_mutex_impl
     read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy_enum sp)
         : m_num_waiting_writers(0),
           m_num_waiting_readers(0),
+          m_num_readers_to_wake(0),
           m_state_waiting_promotion(false),
           m_state(0),
           m_sp(sp),
@@ -64,6 +65,7 @@ struct read_write_mutex_impl
     boost::condition m_waiting_readers;
     int m_num_waiting_writers;
     int m_num_waiting_readers;
+    int m_num_readers_to_wake;
     boost::condition m_waiting_promotion;
     bool m_state_waiting_promotion;
     int m_state;    // -1 = excl locked
@@ -95,6 +97,8 @@ struct read_write_mutex_impl
 private:
 
     void do_unlock_scheduling_impl();
+    void do_demote_scheduling_impl();
+    void do_scheduling_impl();
     bool do_demote_to_read_lock_impl();
 };
 
