@@ -10,8 +10,9 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/detail/config.hpp>
-
 #include <boost/thread/barrier.hpp>
+#include <string> // see http://article.gmane.org/gmane.comp.lib.boost.devel/106981
+
 namespace boost {
 
 barrier::barrier(unsigned int count)
