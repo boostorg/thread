@@ -29,7 +29,7 @@ import ./threads ;
         ## sources ##
         : <template>thread_base
         ## requirements ##
-        :
+        : <sysinclude>$(BOOST_ROOT)
         ## default build ##
         : debug release
     ;
