@@ -22,10 +22,10 @@
   </tr>
 </table>
 <h2>Introduction</h2>
-<p>The definition is given in terms of the <a href="#C++"> C++ Standard</a>.&nbsp; References to the standard
+<p>The definition is given in terms of the <a href="bibliography.html#ISO-98"> C++ Standard</a>.&nbsp; References to the standard
 are in the form [1.2.3/4], which
 represents the section number and following the &quot;/&quot;, the paragraph
-number.&nbsp; A short <a href="#Bibliography">bibliography</a> is also supplied.</p>
+number.</p>
 <p>Because the definition is written in something akin to
 &quot;standardese&quot;, it can be difficult to understand.&nbsp; The intent
 isn't to confuse, but rather to clarify the additional requirements
@@ -65,7 +65,7 @@ other threads in the program:</p>
 <ul>
   <li>Automatic storage duration (stack) objects [3.7.2].</li>
 </ul>
-<p>During the lifetime of a thread, it shall always be in one of the following
+<p>During the lifetime of a thread, it shall be in one of the following
 states:</p>
 <table border="1" cellpadding="5">
   <tr>
@@ -205,37 +205,11 @@ whether or not the stack is unwound.</p>
 <h2><a name="Acknowledgements">Acknowledgements</a></h2>
 <p>This document has been much improved by the incorporation of comments from
 William Kempf.</p>
-<h2><a name="Bibliography">Bibliography</a></h2>
-<p>ISO/IEC 14882:1998(E) Programming Language <a name="C++"> C++</a></p>
-<blockquote>
-<p>This is the official C++ Standard
-document. Available from <a href="http://www.ansi.org">ANSI</a> (American
-National Standards Institute) Electronic Standards Store.&nbsp;</p>
-</blockquote>
-<p><a href="http://cseng.aw.com/book/0,3828,0201633922,00.html">Programming with
-POSIX Threads</a>, David R. Butenhof, Addison-Wesley 1997, ISBN 0-201-63392-2</p>
-<blockquote>
-  <p>This is a superior explanation of threads and how to use them.&nbsp; Many
-  of the insights apply to all multi-threaded programming, not just POSIX
-  Threads.</p>
-</blockquote>
-<p><a href="http://www.acm.org/classics/feb96/&nbsp;">Monitors: An Operating System Structuring Concept</a>,
-C.A.R Hoare, <cite>Communications of the ACM</cite>, Vol. 17, No. 10. October
-1974, pp. 549-557</p>
-<blockquote>
-  <p>Hoare and Brinch Hansen's work on Monitors is the basis for reliable
-  multi-threading patterns.</p>
-</blockquote>
-<p><a href="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html">Strategies for
-Implementing POSIX Condition Variables on Win32</a>, Douglas C. Schmidt and Irfan Pyarali,
-Department of Computer Science, Washington University, St. Louis, Missouri.</p>
-<blockquote>
-  <p>Rationale for understanding Boost.Threads condition variables. Note that Alexander Terekhov found some bugs in
-  the implementation used in this article, so what pthreads-win32 and Boost.Threads use is more complicated yet.</p>
-</blockquote>
+<p>The visibility rules are based on <a href="bibliography.html#Butenhof-97">[Butenhof
+97]</a>.&nbsp;</p>
 <hr>
 <p>© Copyright Beman Dawes, 2001</p>
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->06 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14992" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %b %Y" startspan -->16 Jul 2001<!--webbot bot="Timestamp" endspan i-checksum="14993" -->
 </p>
 <p>&nbsp;</p>
 <p>&nbsp;</p>
