@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/once.hpp>
@@ -68,8 +68,8 @@ void call_once(void (*func)(), once_flag& flag)
     // Memory barrier would be needed here to prevent race conditions on some platforms with
     // partial ordering.
 
-	if (!tmp)
-	{
+    if (!tmp)
+    {
 #if defined(BOOST_NO_STRINGSTREAM)
         std::ostrstream strm;
         strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex << GetCurrentProcessId() << &flag << std::ends;
@@ -78,7 +78,7 @@ void call_once(void (*func)(), once_flag& flag)
 #else
         std::ostringstream strm;
         strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex << GetCurrentProcessId() << &flag << std::ends;
-		HANDLE mutex = CreateMutex(NULL, FALSE, strm.str().c_str());
+        HANDLE mutex = CreateMutex(NULL, FALSE, strm.str().c_str());
 #endif
         assert(mutex != NULL);
 
@@ -87,22 +87,22 @@ void call_once(void (*func)(), once_flag& flag)
         assert(res == WAIT_OBJECT_0);
 
         tmp = flag;
-		if (!tmp)
-		{
-			func();
+        if (!tmp)
+        {
+            func();
             tmp = true;
 
             // Memory barrier would be needed here to prevent race conditions on some platforms
             // with partial ordering.
 
-			flag = tmp;
-		}
+            flag = tmp;
+        }
 
-		res = ReleaseMutex(mutex);
+        res = ReleaseMutex(mutex);
         assert(res);
         res = CloseHandle(mutex);
         assert(res);
-	}
+    }
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_once(&once, &key_init);
     pthread_setspecific(key, &func);

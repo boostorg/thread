@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/thread/xtime.hpp>
@@ -14,7 +14,7 @@
 #if defined(BOOST_HAS_FTIME)
 #   include <windows.h>
 #elif defined(BOOST_HAS_GETTIMEOFDAY)
-#	include <sys/time.h>
+#   include <sys/time.h>
 #endif
 
 namespace boost {

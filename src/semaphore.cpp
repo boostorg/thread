@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #define NOMINMAX
@@ -110,21 +110,21 @@ bool semaphore::up(unsigned count, unsigned* prev)
 
     if (prev)
         *prev = m_available;
-    
+
     if (m_available + count > m_max)
     {
         res = pthread_mutex_unlock(&m_mutex);
         assert(res == 0);
         return false;
     }
-    
+
     m_available += count;
 
     res = pthread_cond_broadcast(&m_condition);
     assert(res == 0);
 
     res = pthread_mutex_unlock(&m_mutex);
-    assert(res == 0);        
+    assert(res == 0);
     return true;
 }
 

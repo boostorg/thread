@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #ifndef BOOST_MUTEX_WEK070601_HPP
@@ -14,7 +14,7 @@
 
 #include <boost/config.hpp>
 #ifndef BOOST_HAS_THREADS
-#   error	Thread support is unavailable!
+#   error   Thread support is unavailable!
 #endif
 
 #include <boost/utility.hpp>
@@ -34,12 +34,12 @@ class mutex : private noncopyable
 public:
     friend class detail::thread::scoped_lock<mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<mutex> scoped_lock;
-    
+
     mutex();
     ~mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef void* cv_state;
@@ -67,13 +67,13 @@ public:
     friend class detail::thread::scoped_lock<try_mutex>;
     friend class detail::thread::scoped_try_lock<try_mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
-    
+
     try_mutex();
     ~try_mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef void* cv_state;
@@ -103,14 +103,14 @@ public:
     friend class detail::thread::scoped_try_lock<timed_mutex>;
     friend class detail::thread::scoped_timed_lock<timed_mutex>;
     friend class condition;
-    
+
     typedef detail::thread::scoped_lock<timed_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<timed_mutex> scoped_try_lock;
     typedef detail::thread::scoped_timed_lock<timed_mutex> scoped_timed_lock;
-    
+
     timed_mutex();
     ~timed_mutex();
-    
+
 private:
 #if defined(BOOST_HAS_WINTHREADS)
     typedef void* cv_state;
@@ -126,7 +126,7 @@ private:
     void do_unlock();
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
-    
+
 #if defined(BOOST_HAS_WINTHREADS)
     unsigned long m_mutex;
 #elif defined(BOOST_HAS_PTHREADS)

@@ -6,7 +6,7 @@
 // provided that the above copyright notice appear in all copies and
 // that both that copyright notice and this permission notice appear
 // in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.  
+// about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
 #ifndef BOOST_CONDITION_WEK070601_HPP
@@ -14,7 +14,7 @@
 
 #include <boost/config.hpp>
 #ifndef BOOST_HAS_THREADS
-#   error	Thread support is unavailable!
+#   error   Thread support is unavailable!
 #endif
 
 #include <boost/thread/exceptions.hpp>
@@ -33,7 +33,7 @@ class condition : private noncopyable
 public:
     condition();
     ~condition();
-    
+
     void notify_one();
     void notify_all();
 
@@ -42,7 +42,7 @@ public:
     {
         if (!lock)
             throw lock_error();
-        
+
         do_wait(lock.m_mutex);
     }
 
@@ -51,7 +51,7 @@ public:
     {
         if (!lock)
             throw lock_error();
-        
+
         while (!pred())
             do_wait(lock.m_mutex);
     }
@@ -61,7 +61,7 @@ public:
     {
         if (!lock)
             throw lock_error();
-        
+
         return do_timed_wait(lock.m_mutex, xt);
     }
 
@@ -70,7 +70,7 @@ public:
     {
         if (!lock)
             throw lock_error();
-        
+
         while (!pred())
         {
             if (!do_timed_wait(lock.m_mutex, xt))

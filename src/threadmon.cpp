@@ -4,7 +4,7 @@
 #define BOOST_THREADMON_EXPORTS
 #include "threadmon.hpp"
 
-#define WIN32_LEAN_AND_MEAN		// Exclude rarely-used stuff from Windows headers
+#define WIN32_LEAN_AND_MEAN     // Exclude rarely-used stuff from Windows headers
 #include <windows.h>
 
 #ifdef BOOST_MSVC
@@ -33,14 +33,14 @@ namespace
 BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
 {
     switch (reason)
-	{
-		case DLL_PROCESS_ATTACH:
+    {
+        case DLL_PROCESS_ATTACH:
             InitializeCriticalSection(&cs);
             key = TlsAlloc();
             break;
-		case DLL_THREAD_ATTACH:
+        case DLL_THREAD_ATTACH:
             break;
-		case DLL_THREAD_DETACH:
+        case DLL_THREAD_DETACH:
             {
                 // Call the thread's exit handlers.
                 exit_handlers* handlers = static_cast<exit_handlers*>(TlsGetValue(key));
@@ -57,7 +57,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
                 }
             }
             break;
-		case DLL_PROCESS_DETACH:
+        case DLL_PROCESS_DETACH:
             {
                 // Assume the main thread is ending (call its handlers) and all other threads
                 // have already ended.  If this DLL is loaded and unloaded dynamically at run time
@@ -79,7 +79,7 @@ BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
                 DeleteCriticalSection(&cs);
                 TlsFree(key);
             }
-			break;
+            break;
     }
     return TRUE;
 }
