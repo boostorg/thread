@@ -104,7 +104,7 @@ rw_mutex_impl<Mutex>::
 do_rdlock()
 {
     // Lock our exclusive access.  This protects internal state
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     
     // Wait until no exclusive lock is held.
     //
@@ -129,7 +129,7 @@ rw_mutex_impl<Mutex>::
 do_wrlock()
 {
     // Lock our exclusive access.  This protects internal state
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
 
     // Wait until no exclusive lock is held.
     //
@@ -155,7 +155,7 @@ do_try_rdlock()
     bool ret;
     // Lock our exclusive access.  This protects internal state
 
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     if(!l.locked())
         return false;
 
@@ -250,7 +250,7 @@ do_try_wrlock()
 {
     bool ret;
 
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     if(!l.locked())
         return false;
 
@@ -279,7 +279,7 @@ rw_mutex_impl<Mutex>::
 do_timed_rdlock(const boost::xtime &xt)
 {
      // Lock our exclusive access.  This protects internal state
-    Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot,xt);
     if(!l.locked())
         return false;
 
@@ -313,7 +313,7 @@ bool
 rw_mutex_impl<Mutex>::
 do_timed_wrlock(const boost::xtime &xt)
 {
-    Mutex::scoped_timed_lock l(m_prot,xt);
+    typename Mutex::scoped_timed_lock l(m_prot,xt);
 
     if(!l.locked())
         return false;
@@ -343,7 +343,7 @@ rw_mutex_impl<Mutex>::
 do_rdunlock()
 {
     // Protect internal state.
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
     if(m_state > 0)        // Release a reader.
         m_state--;
     else
@@ -420,7 +420,7 @@ rw_mutex_impl<Mutex>::
 do_wrunlock()
 {
     // Protect internal state.
-    Mutex::scoped_lock l(m_prot);
+    typename Mutex::scoped_lock l(m_prot);
   
     if(m_state == -1)
         m_state = 0;
