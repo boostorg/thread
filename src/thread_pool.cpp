@@ -267,9 +267,9 @@ void thread_pool::impl::worker_harness()
 
 				// We aren't in a JOINING or CANCELLING state, so trim
 				//   down our resource usage and clean ourselves up.
-				thread* thrd = m_workers.find(me);
-				m_workers.remove_thread(thrd);
-				delete thrd;
+//				thread* thrd = m_workers.find(me);
+				m_workers.remove_thread(me);
+//				delete thrd;
 				return;
 			}
 		}

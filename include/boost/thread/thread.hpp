@@ -112,7 +112,8 @@ public:
 	};
 
     thread();
-    explicit thread(const function0<void>& threadfunc, attributes attr=attributes());
+    explicit thread(const function0<void>& threadfunc,
+		const attributes& attr=attributes());
 	thread(const thread& other);
     ~thread();
 
@@ -150,7 +151,8 @@ private:
 };
 
 template <typename charT, typename Traits>
-std::basic_ostream<charT, Traits>& operator<<(std::basic_ostream<charT, Traits>& os, const thread& thrd)
+std::basic_ostream<charT, Traits>& operator<<(
+	std::basic_ostream<charT, Traits>& os, const thread& thrd)
 {
 	if (!os.good()) return os;
 
@@ -168,14 +170,14 @@ public:
     thread_group();
     ~thread_group();
 
-    thread* create_thread(const function0<void>& threadfunc);
-    void add_thread(thread* thrd);
-    void remove_thread(thread* thrd);
-	thread* thread_group::find(thread& thrd);
+    thread create_thread(const function0<void>& threadfunc);
+    void add_thread(thread thrd);
+    void remove_thread(thread thrd);
+//	thread* thread_group::find(thread& thrd);
     void join_all();
 
 private:
-    std::list<thread*> m_threads;
+    std::list<thread> m_threads;
     mutex m_mutex;
 };
 

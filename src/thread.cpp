@@ -635,7 +635,8 @@ thread::thread()
 	m_handle = tdata;
 }
 
-thread::thread(const function0<void>& threadfunc, attributes attr)
+thread::thread(const function0<void>& threadfunc,
+	const thread::attributes& attr)
     : m_handle(0)
 {
 	std::auto_ptr<thread_data> param(new thread_data(threadfunc));
@@ -857,65 +858,54 @@ thread_group::thread_group()
 
 thread_group::~thread_group()
 {
-    // We shouldn't have to scoped_lock here, since referencing this object from another thread
-    // while we're deleting it in the current thread is going to lead to undefined behavior
-    // any way.
-    for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
-        delete (*it);
 }
 
-thread* thread_group::create_thread(const function0<void>& threadfunc)
+thread thread_group::create_thread(const function0<void>& threadfunc)
 {
-    // No scoped_lock required here since the only "shared data" that's modified here occurs
-    // inside add_thread which does scoped_lock.
-    std::auto_ptr<thread> thrd(new thread(threadfunc));
-    add_thread(thrd.get());
-    return thrd.release();
+    // No scoped_lock required here since the only "shared data" that's
+	// modified here occurs inside add_thread which does scoped_lock.
+    thread thrd(threadfunc);
+    add_thread(thrd);
+    return thrd;
 }
 
-void thread_group::add_thread(thread* thrd)
+void thread_group::add_thread(thread thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
-    // For now we'll simply ignore requests to add a thread object multiple times.
-    // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+    // For now we'll simply ignore requests to add a thread object multiple
+	// times. Should we consider this an error and either throw or return an
+	// error value?
+    std::list<thread>::iterator it = std::find(m_threads.begin(),
+		m_threads.end(), thrd);
     assert(it == m_threads.end());
     if (it == m_threads.end())
         m_threads.push_back(thrd);
 }
 
-void thread_group::remove_thread(thread* thrd)
+void thread_group::remove_thread(thread thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
-    // For now we'll simply ignore requests to remove a thread object that's not in the group.
-    // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+    // For now we'll simply ignore requests to remove a thread object that's
+	// not in the group. Should we consider this an error and either throw or
+	// return an error value?
+    std::list<thread>::iterator it = std::find(m_threads.begin(),
+		m_threads.end(), thrd);
 
     assert(it != m_threads.end());
     if (it != m_threads.end())
         m_threads.erase(it);
 }
 
-thread* thread_group::find(thread& thrd)
-{
-    mutex::scoped_lock scoped_lock(m_mutex);
-
-    // For now we'll simply ignore requests to remove a thread object that's not in the group.
-    // Should we consider this an error and either throw or return an error value?
-	std::list<thread*>::iterator it = std::find_if(m_threads.begin(), m_threads.end(), thread_equals(thrd));
-    if (it != m_threads.end())
-		return *it;
-
-	return 0;
-}
-
 void thread_group::join_all()
 {
     mutex::scoped_lock scoped_lock(m_mutex);
-    for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
-        (*it)->join();
+    for (std::list<thread>::iterator it = m_threads.begin();
+		 it != m_threads.end(); ++it)
+	{
+        it->join();
+	}
 }
 
 } // namespace boost

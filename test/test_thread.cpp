@@ -87,7 +87,7 @@ void do_test_creation()
 
 void test_creation()
 {
-	timed_test(&do_test_creation, 1);
+	timed_test(&do_test_creation, 3);
 }
 
 void do_test_join()
@@ -100,7 +100,7 @@ void do_test_join()
 
 void test_join()
 {
-	timed_test(&do_test_join, 1);
+	timed_test(&do_test_join, 3);
 }
 
 void do_test_comparison()
@@ -119,7 +119,7 @@ void do_test_comparison()
 
 void test_comparison()
 {
-	timed_test(&do_test_comparison, 1);
+	timed_test(&do_test_comparison, 2);
 }
 
 void do_test_cancel()
@@ -133,7 +133,7 @@ void do_test_cancel()
 
 void test_cancel()
 {
-	timed_test(&do_test_cancel, 1);
+	timed_test(&do_test_cancel, 4);
 }
 
 void test_thread_attributes()
