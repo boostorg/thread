@@ -18,7 +18,7 @@
 
 namespace boost {
 
-typedef enum
+enum xtime_clock_types
 {
     TIME_UTC=1
 //    TIME_TAI,
@@ -28,7 +28,7 @@ typedef enum
 //    TIME_LOCAL,
 //    TIME_SYNC,
 //    TIME_RESOLUTION
-} xtime_clock_types;
+};
 
 struct xtime
 {
@@ -55,4 +55,3 @@ inline int xtime_cmp(const xtime& xt1, const xtime& xt2)
 //   8 Feb 01  WEKEMPF Initial version.
 
 #endif // BOOST_XTIME_WEK070601_HPP
-
