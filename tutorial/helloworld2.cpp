@@ -14,12 +14,16 @@
 
 struct helloworld
 {
-    helloworld() { }
-    void operator()() { std::cout << "Hello World." << std::endl; }
+    helloworld(const char* who) : m_who(who) { }
+    void operator()()
+    {
+        std::cout << m_who << "says, \"Hello World.\"" << std::endl;
+    }
+    const char* m_who;
 };
 
 int main()
 {
-    boost::thread thrd(helloworld());
+    boost::thread thrd(helloworld("Bob"));
     thrd.join();
 }
