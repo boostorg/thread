@@ -22,9 +22,12 @@
 #       define BOOST_THREAD_DECL __declspec(dllexport)
 #   elif defined(BOOST_THREAD_BUILD_LIB) //Build lib
 #       define BOOST_THREAD_DECL
+#   elif defined(BOOST_THREAD_USE_DLL) //Use dll
+#       define BOOST_THREAD_DECL __declspec(dllimport)
+#       define BOOST_DYN_LINK
 #   elif defined(BOOST_THREAD_USE_LIB) //Use lib
 #       define BOOST_THREAD_DECL
-#   else //Use dll
+#   else //Use default (currently dll)
 #       define BOOST_THREAD_DECL __declspec(dllimport)
 #       define BOOST_DYN_LINK
 #   endif
