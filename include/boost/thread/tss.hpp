@@ -16,10 +16,11 @@
 #ifndef BOOST_HAS_THREADS
 #   error   Thread support is unavailable!
 #endif
+#include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
-#include <boost/thread/detail/config.hpp>
 #include <boost/function.hpp>
+#include <boost/thread/exceptions.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -31,29 +32,21 @@ namespace boost {
 
 namespace detail {
 
-class BOOST_THREAD_DECL tss_ref
-{
-public:
-    tss_ref();
-};
-
 class BOOST_THREAD_DECL tss : private noncopyable
 {
 public:
-	template <typename F>
-		tss(const F& cleanup) {
-			boost::function1<void, void*>* pcleanup = 0;
-			try
-			{
-				pcleanup = new boost::function1<void, void*>(cleanup);
-				init(pcleanup);
-			}
-			catch (...)
-			{
-				delete pcleanup;
-				throw boost::thread_resource_error();
-			}
+	tss(boost::function1<void, void*>* pcleanup) {
+		if (pcleanup == 0) throw boost::thread_resource_error();
+		try
+		{
+			init(pcleanup);
 		}
+		catch (...)
+		{
+			delete pcleanup;
+			throw boost::thread_resource_error();
+		}
+	}
 
     void* get() const;
     void set(void* value);
@@ -69,12 +62,14 @@ private:
     void thread_cleanup();
 #endif
 
-/*struct tss_adapter
+template <typename T>
+struct tss_adapter
 {
-    tss_adapter(boost::function1<void, void*> cleanup) : m_cleanup(cleanup) { }
-    void operator()(void* p) { m_cleanup(p); }
-    boost::function1<void, void*> m_cleanup;
-};*/
+	template <typename F>
+		tss_adapter(const F& cleanup) : m_cleanup(cleanup) { }
+    void operator()(void* p) { m_cleanup(static_cast<T*>(p)); }
+    boost::function1<void, T*> m_cleanup;
+};
 
 } // namespace detail
 
@@ -83,9 +78,9 @@ class thread_specific_ptr : private noncopyable
 {
 public:
     thread_specific_ptr()
-        : m_tss(&thread_specific_ptr<T>::cleanup) { }
-    thread_specific_ptr(void (*clean)(void*))
-        : m_tss(clean) { }
+		: m_tss(new(std::nothrow) boost::function1<void, void*>(boost::detail::tss_adapter<T>(&thread_specific_ptr<T>::cleanup))) { }
+    thread_specific_ptr(void (*clean)(T*))
+		: m_tss(new(std::nothrow) boost::function1<void, void*>(boost::detail::tss_adapter<T>(clean))) { }
     ~thread_specific_ptr() { reset(); }
 
     T* get() const { return static_cast<T*>(m_tss.get()); }
@@ -101,17 +96,11 @@ public:
     }
 
 private:
-    static void cleanup(void* p) { delete static_cast<T*>(p); }
+    static void cleanup(T* p) { delete p; }
     detail::tss m_tss;
 };
 
 } // namespace boost
-
-namespace {
-    // This injects a tss_ref into every namespace and helps to insure we
-    // get a proper value for the "main" thread
-    boost::detail::tss_ref _tss_ref__7BAFF4714CFC42ae9C425F60CE3714D8;
-}
 
 // Change Log:
 //   6 Jun 01  WEKEMPF Initial version.

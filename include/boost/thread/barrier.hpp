@@ -12,12 +12,18 @@
 #ifndef BOOST_BARRIER_JDM030602_HPP
 #define BOOST_BARRIER_JDM030602_HPP
 
+#include <boost/config.hpp>
+#ifndef BOOST_HAS_THREADS
+#   error   Thread support is unavailable!
+#endif
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 
 namespace boost { 
 
-class barrier
+class BOOST_THREAD_DECL barrier
 {
 public:
     barrier(unsigned int count);
