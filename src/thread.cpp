@@ -50,7 +50,7 @@ public:
 #if defined(BOOST_HAS_WINTHREADS)
 unsigned __stdcall thread_proxy(void* param)
 #elif defined(BOOST_HAS_PTHREADS)
-static extern "C" void* thread_proxy(void* param)
+static void* thread_proxy(void* param)
 #endif
 {
     try
