@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
@@ -115,6 +117,11 @@ void release_tss_data(thread_data* data)
 }
 
 boost::thread_specific_ptr<thread_data> tss_thread_data(&release_tss_data);
+//:There are problems with this being a global static:
+//:If the user creates a thread object before global statics
+//:have been initialized--e.g. in dllmain--then this
+//:won't have been initialized; BANG!
+//:Perhaps use Boost.Threads once instead?
 
 thread_data::thread_data(const boost::function0<void>& threadfunc)
     : m_threadfunc(threadfunc), m_refcount(2), m_state(creating),
