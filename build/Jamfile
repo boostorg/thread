@@ -46,7 +46,6 @@ import ./threads ;
         : ## requirements ##
           <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
           <define>BOOST_THREAD_BUILD_LIB=1
-          <runtime-link>static
           # the common names rule ensures that the library will
           # be named according to the rules used by the install
           # and auto-link features:
