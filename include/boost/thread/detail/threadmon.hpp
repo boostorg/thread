@@ -16,7 +16,19 @@
 
 #ifdef BOOST_HAS_WINTHREADS
 
-extern "C" BOOST_THREAD_DECL int on_thread_exit(void (__cdecl * func)(void));
+extern "C" BOOST_THREAD_DECL int add_thread_exit(void (__cdecl * func)(void));
+    //Add a function to the list of thread-exit functions
+
+extern "C" BOOST_THREAD_DECL void on_process_enter(void);
+    //To be called when the process starts, when the dll is loaded, etc.
+    //Called automatically by Boost.Thread when possible
+extern "C" BOOST_THREAD_DECL void on_thread_exit(void);
+    //To be called for each thread when it exits
+    //Must be called in the context of the thread that is exiting
+    //Called automatically by Boost.Thread when possible
+extern "C" BOOST_THREAD_DECL void on_process_exit(void);
+    //To be called when the process exits, when the dll is unloaded, etc.
+    //Called automatically by Boost.Thread when possible
 
 #endif // BOOST_HAS_WINTHREADS
 
