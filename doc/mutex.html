@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, mutex</title>
 </head>
 
@@ -21,6 +22,18 @@
 </table>
 
 <hr>
+
+<p><a href="#Introduction">Introduction</a><br>
+<a href="#Header">Header</a><br>
+<a href="#mutex Synopsis">Class mutex Synopsis</a><br>
+<a href="#mutex Members">Class mutex Members</a><br>
+<a href="#try_mutex Synopsis">Class try_mutex Synopsis</a><br>
+<a href="#try_mutex Members">Class try_mutex Members</a><br>
+<a href="#timed_mutex Synopsis">Class timed_mutex Synopsis</a><br>
+<a href="#timed_mutex Members">Class timed_mutex Members</a><br>
+<a href="#Example">Example</a></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
 
 <p>The <tt>mutex</tt>, <tt>try_mutex</tt> and <tt>timed_mutex</tt> classes define full featured
 <A href="mutex_concept.html">mutex models</a>. These type should be used to synchronize access to
@@ -43,18 +56,16 @@ not defined.</p>
 Programmers should assume that threads waiting for a lock on these <tt>mutex types</tt> shall acquire
 the lock in a random order, though the specific behavior for a given platform may be different.</p>
 
-<h2>Header</h2>
+<h2><a name="Header">Header</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
-
-<hr width="50%" align="left">
+<h2>Class <a name="mutex Synopsis"> mutex Synopsis</a></h2>
 
 <pre>
-    class mutex : private boost::noncopyable
+    class mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
     {
     public:
         typedef boost::basic_lock&lt;mutex&gt; lock;
@@ -64,7 +75,11 @@ the lock in a random order, though the specific behavior for a given platform ma
     };
 </pre>
 
-<hr width="50%" align="left">
+<h2>
+    Class <a name="mutex Members">mutex Members</a>
+</h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -74,15 +89,21 @@ the lock in a random order, though the specific behavior for a given platform ma
 
 <p>Constructs a <tt>mutex</tt>.</p>
 
+<hr>
+
 <h3>Destructor</h3>
 
 <pre>
     ~mutex();
 </pre>
 
-<p>Destructs a <tt>mutex</tt>.</p>
+<p>Destroys <code>*this</code>.</p>
 
-<hr width="50%" align="left">
+<hr>
+
+<h2>
+    Class <a name="try_mutex Synopsis">try_mutex Synopsis</a>
+</h2>
 
 <pre>
     class try_mutex : private boost::noncopyable
@@ -96,7 +117,9 @@ the lock in a random order, though the specific behavior for a given platform ma
     };
 </pre>
 
-<hr width="50%" align="left">
+<h2>Class <a name="try_mutex Members">try_mutex Members</a></h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -106,15 +129,21 @@ the lock in a random order, though the specific behavior for a given platform ma
 
 <p>Constructs a <tt>try_mutex</tt>.</p>
 
+<hr>
+
 <h3>Destructor</h3>
 
 <pre>
     ~try_mutex();
 </pre>
 
-<p>Destructs a <tt>try_mutex</tt>.</p>
+<p>Destroys <code>*this</code>.</p>
 
-<hr width="50%" align="left">
+<hr>
+
+<h2>
+    Class <a name="timed_mutex Synopsis">timed_mutex Synopsis</a>
+</h2>
 
 <pre>
     class timed_mutex : private boost::noncopyable
@@ -129,7 +158,9 @@ the lock in a random order, though the specific behavior for a given platform ma
     };
 </pre>
 
-<hr width="50%" align="left">
+<h2>Class <a name="timed_mutex Members">timed_mutex Members</a></h2>
+
+<hr>
 
 <h3>Constructor</h3>
 
@@ -139,15 +170,19 @@ the lock in a random order, though the specific behavior for a given platform ma
 
 <p>Constructs a <tt>timed_mutex</tt>.</p>
 
+<hr>
+
 <h3>Destructor</h3>
 
 <pre>
     ~timed_mutex();
 </pre>
 
-<p>Destructs a <tt>mutex</tt>.</p>
+<p>Destroys <code>*this</code>.</p>
 
-<h2>Example Usage</h2>
+<hr>
+
+<h2><a name="Example">Example</a> Usage</h2>
 
 <pre>
 #include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
@@ -202,6 +237,9 @@ count == 4
 </pre>
 
 <hr>
+
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->25 July, 2001<!--webbot bot="Timestamp" endspan i-checksum="21072" -->
+</p>
 
 <p><i>Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
 2001 all rights reserved.</i></p>
