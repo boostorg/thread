@@ -1,0 +1,66 @@
+#  (C) Copyright William E. Kempf 2001. Permission to copy, use, modify, sell and
+#  distribute this software is granted provided this copyright notice appears
+#  in all copies. This software is provided "as is" without express or implied
+#  warranty, and with no claim as to its suitability for any purpose.
+#
+# Boost.Threads build and test Jamfile
+#
+# Declares the following targets:
+#   1. monitor, an example program.
+#   2. starvephil, an example program.
+#   3. tennis, an example program.
+
+# declare the location of this subproject relative to the root
+subproject libs/thread/example ;
+
+# Do some OS-specific setup
+if $(NT)
+{
+    BOOST_THREADMON_LIB = <lib>../build/libboost_threadmon ;
+}
+else
+{
+    BOOST_THREADMON_LIB = ;
+}
+
+#######################
+
+#
+# Declare the Boost.Threads monitor example program.
+#
+
+exe monitor : monitor/monitor.cpp
+    <lib>../build/libboost_thread
+	$(BOOST_THREADMON_LIB)
+    # requirements
+    : <include>$(BOOST_ROOT)
+    <threading>multi
+    : debug release ;
+
+#######################
+
+#
+# Declare the Boost.Threads starvephil example program.
+#
+
+exe starvephil : starvephil/starvephil.cpp
+    <lib>../build/libboost_thread
+	$(BOOST_THREADMON_LIB)
+    # requirements
+    : <include>$(BOOST_ROOT)
+    <threading>multi
+    : debug release ;
+
+#######################
+
+#
+# Declare the Boost.Threads tennis example program.
+#
+
+exe tennis : tennis/tennis.cpp
+    <lib>../build/libboost_thread
+	$(BOOST_THREADMON_LIB)
+    # requirements
+    : <include>$(BOOST_ROOT)
+    <threading>multi
+    : debug release ;
