@@ -519,7 +519,7 @@ bool recursive_try_mutex::do_trylock()
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     int res = 0;
     res = pthread_mutex_trylock(&m_mutex);
-    assert(res == 0);
+    assert(res == 0 || res == EBUSY);
 
     if (res == 0)
     {
