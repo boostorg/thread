@@ -19,7 +19,7 @@ project boost/thread
     ;
 
 CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
-                  exceptions threadmon ;
+                  exceptions barrier threadmon ;
 
 lib boost_thread
    : $(CPP_SOURCES).cpp
