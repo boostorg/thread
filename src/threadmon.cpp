@@ -41,7 +41,7 @@
     }
 
     extern "C" 
-    BOOST_THREAD_DECL int add_thread_exit(void (__cdecl * func)(void))
+    BOOST_THREAD_DECL int at_thread_exit(void (__cdecl * func)(void))
     {
         //Get the exit handlers for the current thread,
         //creating and registering one if it doesn't exist.
