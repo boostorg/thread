@@ -37,28 +37,31 @@ mutex::mutex()
 
 mutex::~mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 }
 
 void mutex::do_unlock()
 {
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
-void mutex::do_lock(cv_state& state)
+void mutex::do_lock(cv_state&)
 {
     do_lock();
 }
 
-void mutex::do_unlock(cv_state& state)
+void mutex::do_unlock(cv_state&)
 {
     do_unlock();
 }
@@ -72,35 +75,39 @@ try_mutex::try_mutex()
 
 try_mutex::~try_mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void try_mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 }
 
 bool try_mutex::do_trylock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
     return res == WAIT_OBJECT_0;
 }
 
 void try_mutex::do_unlock()
 {
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
-void try_mutex::do_lock(cv_state& state)
+void try_mutex::do_lock(cv_state&)
 {
     do_lock();
 }
 
-void try_mutex::do_unlock(cv_state& state)
+void try_mutex::do_unlock(cv_state&)
 {
     do_unlock();
 }
@@ -114,19 +121,22 @@ timed_mutex::timed_mutex()
 
 timed_mutex::~timed_mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void timed_mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 }
 
 bool timed_mutex::do_trylock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
     return res == WAIT_OBJECT_0;
 }
@@ -143,43 +153,48 @@ bool timed_mutex::do_timedlock(const xtime& xt)
 
 void timed_mutex::do_unlock()
 {
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
-void timed_mutex::do_lock(cv_state& state)
+void timed_mutex::do_lock(cv_state&)
 {
     do_lock();
 }
 
-void timed_mutex::do_unlock(cv_state& state)
+void timed_mutex::do_unlock(cv_state&)
 {
     do_unlock();
 }
 #elif defined(BOOST_HAS_PTHREADS)
 mutex::mutex()
 {
-    int res = pthread_mutex_init(&m_mutex, 0);
+    int res = 0;
+    res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
 }
 
 mutex::~mutex()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 }
 
 void mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     if (res == EDEADLK) throw lock_error();
     assert(res == 0);
 }
 
 void mutex::do_unlock()
 {
-    int res = pthread_mutex_unlock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_unlock(&m_mutex);
     if (res == EPERM) throw lock_error();
     assert(res == 0);
 }
@@ -195,27 +210,31 @@ void mutex::do_unlock(cv_state& state)
 
 try_mutex::try_mutex()
 {
-    int res = pthread_mutex_init(&m_mutex, 0);
+    int res = 0;
+    res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
 }
 
 try_mutex::~try_mutex()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 }
 
 void try_mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     if (res == EDEADLK) throw lock_error();
     assert(res == 0);
 }
 
 bool try_mutex::do_trylock()
 {
-    int res = pthread_mutex_trylock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_trylock(&m_mutex);
     if (res == EDEADLK) throw lock_error();
     assert(res == 0 || res == EBUSY);
     return res == 0;
@@ -223,7 +242,8 @@ bool try_mutex::do_trylock()
 
 void try_mutex::do_unlock()
 {
-    int res = pthread_mutex_unlock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_unlock(&m_mutex);
     if (res == EPERM) throw lock_error();
     assert(res == 0);
 }
@@ -240,7 +260,8 @@ void try_mutex::do_unlock(cv_state& state)
 timed_mutex::timed_mutex()
     : m_locked(false)
 {
-    int res = pthread_mutex_init(&m_mutex, 0);
+    int res = 0;
+    res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
 
@@ -255,7 +276,8 @@ timed_mutex::timed_mutex()
 timed_mutex::~timed_mutex()
 {
     assert(!m_locked);
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 
     res = pthread_cond_destroy(&m_condition);
@@ -264,7 +286,8 @@ timed_mutex::~timed_mutex()
 
 void timed_mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     while (m_locked)
@@ -282,7 +305,8 @@ void timed_mutex::do_lock()
 
 bool timed_mutex::do_trylock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     bool ret = false;
@@ -299,7 +323,8 @@ bool timed_mutex::do_trylock()
 
 bool timed_mutex::do_timedlock(const xtime& xt)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     timespec ts;
@@ -328,7 +353,8 @@ bool timed_mutex::do_timedlock(const xtime& xt)
 
 void timed_mutex::do_unlock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     assert(m_locked);
@@ -343,7 +369,7 @@ void timed_mutex::do_unlock()
 
 void timed_mutex::do_lock(cv_state& state)
 {
-    int res;
+    int res = 0;
     while (m_locked)
     {
         res = pthread_cond_wait(&m_condition, &m_mutex);
@@ -359,7 +385,8 @@ void timed_mutex::do_lock(cv_state& state)
 
 void timed_mutex::do_unlock(cv_state& state)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     assert(m_locked);

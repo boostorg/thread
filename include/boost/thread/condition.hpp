@@ -137,7 +137,7 @@ private:
     unsigned long m_queue;
     unsigned long m_mutex;
     unsigned m_gone; // # threads that timed out and never made it to the m_queue
-    long m_blocked; // # threads m_blocked m_waiting for the condition
+    unsigned long m_blocked; // # threads m_blocked m_waiting for the condition
     unsigned m_waiting; // # threads m_waiting no longer m_waiting for the condition but still
                       //   m_waiting to be removed from the m_queue
 #elif defined(BOOST_HAS_PTHREADS)

@@ -65,7 +65,7 @@ public:
     ~thread_group();
 
     thread* create_thread(const function0<void>& threadfunc);
-    void add_thread(std::auto_ptr<thread> thrd);
+    void add_thread(thread* thrd);
     void remove_thread(thread* thrd);
     void join_all();
 

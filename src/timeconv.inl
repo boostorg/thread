@@ -16,7 +16,8 @@ namespace {
 
     inline void to_time(unsigned milliseconds, boost::xtime& xt)
     {
-        int res = boost::xtime_get(&xt, boost::TIME_UTC);
+        int res = 0;
+        res = boost::xtime_get(&xt, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
         xt.sec += (milliseconds / MILLISECONDS_PER_SECOND);
@@ -46,7 +47,8 @@ namespace {
     inline void to_timespec_duration(const boost::xtime& xt, timespec& ts)
     {
         boost::xtime cur;
-        int res = boost::xtime_get(&cur, boost::TIME_UTC);
+        int res = 0;
+        res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
         if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
@@ -71,7 +73,8 @@ namespace {
     inline void to_duration(const boost::xtime& xt, unsigned& milliseconds)
     {
         boost::xtime cur;
-        int res = boost::xtime_get(&cur, boost::TIME_UTC);
+        int res = 0;
+        res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
         if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))

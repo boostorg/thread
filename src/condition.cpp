@@ -36,7 +36,7 @@ condition::condition()
 
     if (!m_gate || !m_queue || !m_mutex)
     {
-        int res;
+        int res = 0;
 		if (m_gate)
 		{
 			res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
@@ -59,7 +59,8 @@ condition::condition()
 
 condition::~condition()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_gate));
     assert(res);
     res = CloseHandle(reinterpret_cast<HANDLE>(m_queue));
     assert(res);
@@ -71,7 +72,8 @@ void condition::notify_one()
 {
     unsigned signals = 0;
 
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     if (m_waiting != 0) // the m_gate is already closed
@@ -121,7 +123,8 @@ void condition::notify_all()
 {
     unsigned signals = 0;
 
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     if (m_waiting != 0) // the m_gate is already closed
@@ -169,7 +172,8 @@ void condition::notify_all()
 
 void condition::enter_wait()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_gate), INFINITE);
     assert(res == WAIT_OBJECT_0);
     ++m_blocked;
     res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
@@ -178,7 +182,8 @@ void condition::enter_wait()
 
 void condition::do_wait()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), INFINITE);
     assert(res == WAIT_OBJECT_0);
     
     unsigned was_waiting=0;
@@ -235,7 +240,8 @@ bool condition::do_timed_wait(const xtime& xt)
     unsigned milliseconds;
     to_duration(xt, milliseconds);
 
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_queue), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
     bool ret = (res == WAIT_OBJECT_0);
@@ -300,32 +306,37 @@ bool condition::do_timed_wait(const xtime& xt)
 #elif defined(BOOST_HAS_PTHREADS)
 condition::condition()
 {
-    int res = pthread_cond_init(&m_condition, 0);
+    int res = 0;
+    res = pthread_cond_init(&m_condition, 0);
     if (res != 0)
         throw thread_resource_error();
 }
 
 condition::~condition()
 {
-    int res = pthread_cond_destroy(&m_condition);
+    int res = 0;
+    res = pthread_cond_destroy(&m_condition);
     assert(res == 0);
 }
 
 void condition::notify_one()
 {
-    int res = pthread_cond_signal(&m_condition);
+    int res = 0;
+    res = pthread_cond_signal(&m_condition);
     assert(res == 0);
 }
 
 void condition::notify_all()
 {
-    int res = pthread_cond_broadcast(&m_condition);
+    int res = 0;
+    res = pthread_cond_broadcast(&m_condition);
     assert(res == 0);
 }
 
 void condition::do_wait(pthread_mutex_t* pmutex)
 {
-    int res = pthread_cond_wait(&m_condition, pmutex);
+    int res = 0;
+    res = pthread_cond_wait(&m_condition, pmutex);
     assert(res == 0);
 }
 
@@ -334,7 +345,8 @@ bool condition::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
     timespec ts;
     to_timespec(xt, ts);
 
-    int res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
+    int res = 0;
+    res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
     assert(res == 0 || res == ETIMEDOUT);
 
     return res != ETIMEDOUT;

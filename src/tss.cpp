@@ -62,7 +62,8 @@ namespace {
             {
                 return 0;
             }
-            int res = TlsSetValue(key, handlers);
+            int res = 0;
+            res = TlsSetValue(key, handlers);
             assert(res);
             res = on_thread_exit(&cleanup);
             assert(res == 0);
@@ -87,7 +88,8 @@ tss::tss(void (*cleanup)(void*))
 
 tss::~tss()
 {
-    int res = TlsFree(m_key);
+    int res = 0;
+    res = TlsFree(m_key);
     assert(res);
 }
 
@@ -107,19 +109,21 @@ bool tss::set(void* value)
 		cleanup_info info(m_cleanup, value);
 		(*handlers)[m_key] = info;
     }
-    return TlsSetValue(m_key, value);
+    return !!TlsSetValue(m_key, value);
 }
 #elif defined(BOOST_HAS_PTHREADS)
 tss::tss(void (*cleanup)(void*))
 {
-    int res = pthread_key_create(&m_key, cleanup);
+    int res = 0;
+    res = pthread_key_create(&m_key, cleanup);
     if (res != 0)
         throw thread_resource_error();
 }
 
 tss::~tss()
 {
-    int res = pthread_key_delete(m_key);
+    int res = 0;
+    res = pthread_key_delete(m_key);
     assert(res == 0);
 }
 

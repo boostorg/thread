@@ -41,7 +41,8 @@ semaphore::semaphore(unsigned count, unsigned max)
 
 semaphore::~semaphore()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_sema));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_sema));
     assert(res);
 }
 
@@ -59,7 +60,8 @@ bool semaphore::up(unsigned count, unsigned* prev)
 
 void semaphore::down()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_sema), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_sema), INFINITE);
     assert(res == WAIT_OBJECT_0);
 }
 
@@ -67,7 +69,8 @@ bool semaphore::down(const xtime& xt)
 {
     unsigned milliseconds;
     to_duration(xt, milliseconds);
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_sema), milliseconds);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_sema), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
     return res == WAIT_OBJECT_0;
 }
@@ -75,7 +78,8 @@ bool semaphore::down(const xtime& xt)
 semaphore::semaphore(unsigned count, unsigned max)
     : m_available(count), m_max(max ? max : std::numeric_limits<unsigned>::max())
 {
-    int res = pthread_mutex_init(&m_mutex, 0);
+    int res = 0;
+    res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
 
@@ -89,7 +93,8 @@ semaphore::semaphore(unsigned count, unsigned max)
 
 semaphore::~semaphore()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 
     res = pthread_cond_destroy(&m_condition);
@@ -98,7 +103,8 @@ semaphore::~semaphore()
 
 bool semaphore::up(unsigned count, unsigned* prev)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     if (prev)
@@ -123,7 +129,8 @@ bool semaphore::up(unsigned count, unsigned* prev)
 
 void semaphore::down()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     while (m_available == 0)
@@ -139,7 +146,8 @@ void semaphore::down()
 
 bool semaphore::down(const xtime& xt)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     timespec ts;

@@ -90,7 +90,8 @@ thread::thread(const function0<void>& threadfunc)
     if (!m_thread)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)
-    int res = pthread_create(&m_thread, 0, &thread_proxy, &param);
+    int res = 0;
+    res = pthread_create(&m_thread, 0, &thread_proxy, &param);
     if (res != 0)
         throw thread_resource_error();
 #endif
@@ -102,7 +103,8 @@ thread::~thread()
     if (m_joinable)
     {
 #if defined(BOOST_HAS_WINTHREADS)
-        int res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
+        int res = 0;
+        res = CloseHandle(reinterpret_cast<HANDLE>(m_thread));
         assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
         pthread_detach(m_thread);
@@ -126,7 +128,7 @@ bool thread::operator!=(const thread& other) const
 
 void thread::join()
 {
-    int res;
+    int res = 0;
 #if defined(BOOST_HAS_WINTHREADS)
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_thread), INFINITE);
     assert(res == WAIT_OBJECT_0);
@@ -151,7 +153,8 @@ void thread::sleep(const xtime& xt)
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
     timespec ts;
     to_timespec(xt, ts);
-    int res = pthread_delay_np(&ts);
+    int res = 0;
+    res = pthread_delay_np(&ts);
     assert(res == 0);
 #   elif defined(BOOST_HAS_NANOSLEEP)
     timespec ts;
@@ -173,10 +176,12 @@ void thread::yield()
     Sleep(0);
 #elif defined(BOOST_HAS_PTHREADS)
 #   if defined(BOOST_HAS_SCHED_YIELD)
-    int res = sched_yield();
+    int res = 0;
+    res = sched_yield();
     assert(res == 0);
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
-    int res = pthread_yield();
+    int res = 0;
+    res = pthread_yield();
     assert(res == 0);
 #   else
     xtime xt;
@@ -208,16 +213,16 @@ thread* thread_group::create_thread(const function0<void>& threadfunc)
     return thrd.release();
 }
 
-void thread_group::add_thread(std::auto_ptr<thread> thrd)
+void thread_group::add_thread(thread* thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
     // For now we'll simply ignore requests to add a thread object multiple times.
     // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd.get());
+    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
     assert(it == m_threads.end());
     if (it == m_threads.end())
-        m_threads.push_back(thrd.release());
+        m_threads.push_back(thrd);
 }
 
 void thread_group::remove_thread(thread* thrd)

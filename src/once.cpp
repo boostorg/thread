@@ -27,7 +27,9 @@ void call_once(void (*func)(), once_flag& flag)
         sprintf(name, "2AC1A572DB6944B0A65C38C4140AF2F4%X%X", GetCurrentProcessId(), &flag);
 		HANDLE mutex = CreateMutex(NULL, FALSE, name);
         assert(mutex != NULL);
-        int res = WaitForSingleObject(mutex, INFINITE);
+
+        int res = 0;
+        res = WaitForSingleObject(mutex, INFINITE);
         assert(res == WAIT_OBJECT_0);
 
 		if (!flag)

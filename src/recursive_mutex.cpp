@@ -37,13 +37,15 @@ recursive_mutex::recursive_mutex()
 
 recursive_mutex::~recursive_mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void recursive_mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     if (++m_count > 1)
@@ -57,14 +59,16 @@ void recursive_mutex::do_unlock()
 {
     if (--m_count == 0)
     {
-        int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        int res = 0;
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
         assert(res);
     }
 }
 
 void recursive_mutex::do_lock(cv_state& state)
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     m_count = state;
@@ -75,7 +79,8 @@ void recursive_mutex::do_unlock(cv_state& state)
     state = m_count;
     m_count = 0;
 
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
@@ -89,13 +94,15 @@ recursive_try_mutex::recursive_try_mutex()
 
 recursive_try_mutex::~recursive_try_mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void recursive_try_mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     if (++m_count > 1)
@@ -107,7 +114,8 @@ void recursive_try_mutex::do_lock()
 
 bool recursive_try_mutex::do_trylock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
     if (res == WAIT_OBJECT_0)
@@ -126,14 +134,16 @@ void recursive_try_mutex::do_unlock()
 {
     if (--m_count == 0)
     {
-        int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        int res = 0;
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
         assert(res);
     }
 }
 
 void recursive_try_mutex::do_lock(cv_state& state)
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     m_count = state;
@@ -144,7 +154,8 @@ void recursive_try_mutex::do_unlock(cv_state& state)
     state = m_count;
     m_count = 0;
 
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
@@ -158,25 +169,28 @@ recursive_timed_mutex::recursive_timed_mutex()
 
 recursive_timed_mutex::~recursive_timed_mutex()
 {
-    int res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 
 void recursive_timed_mutex::do_lock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     if (++m_count > 1)
     {
-        int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
         assert(res);
     }
 }
 
 bool recursive_timed_mutex::do_trylock()
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
     if (res == WAIT_OBJECT_0)
@@ -196,7 +210,8 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
     unsigned milliseconds;
     to_duration(xt, milliseconds);
 
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
     if (res == WAIT_OBJECT_0)
@@ -215,14 +230,16 @@ void recursive_timed_mutex::do_unlock()
 {
     if (--m_count == 0)
     {
-        int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+        int res = 0;
+        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
         assert(res);
     }
 }
 
 void recursive_timed_mutex::do_lock(cv_state& state)
 {
-    int res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
+    int res = 0;
+    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
     assert(res == WAIT_OBJECT_0);
 
     m_count = state;
@@ -233,7 +250,8 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
     state = m_count;
     m_count = 0;
     
-    int res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+    int res = 0;
+    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
     assert(res);
 }
 #elif defined(BOOST_HAS_PTHREADS)
@@ -244,7 +262,8 @@ recursive_mutex::recursive_mutex()
 #   endif
 {
     pthread_mutexattr_t attr;
-    int res = pthread_mutexattr_init(&attr);
+    int res = 0;
+    res = pthread_mutexattr_init(&attr);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -268,7 +287,8 @@ recursive_mutex::recursive_mutex()
 
 recursive_mutex::~recursive_mutex()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -279,7 +299,8 @@ recursive_mutex::~recursive_mutex()
 
 void recursive_mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -315,11 +336,13 @@ void recursive_mutex::do_unlock()
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     if (--m_count == 0)
     {
-        int res = pthread_mutex_unlock(&m_mutex);
+        int res = 0;
+        res = pthread_mutex_unlock(&m_mutex);
         assert(res == 0);
     }
 #   else
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     pthread_t tid = pthread_self();
@@ -349,7 +372,7 @@ void recursive_mutex::do_lock(cv_state& state)
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     m_count = state.count;
 #   else
-    int res;
+    int res = 0;
 
     while (m_valid_id)
     {
@@ -369,7 +392,8 @@ void recursive_mutex::do_lock(cv_state& state)
 void recursive_mutex::do_unlock(cv_state& state)
 {
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     assert(m_valid_id);
@@ -390,7 +414,8 @@ recursive_try_mutex::recursive_try_mutex()
 #   endif
 {
     pthread_mutexattr_t attr;
-    int res = pthread_mutexattr_init(&attr);
+    int res = 0;
+    res = pthread_mutexattr_init(&attr);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -414,7 +439,8 @@ recursive_try_mutex::recursive_try_mutex()
 
 recursive_try_mutex::~recursive_try_mutex()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -425,7 +451,8 @@ recursive_try_mutex::~recursive_try_mutex()
 
 void recursive_try_mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -459,7 +486,8 @@ void recursive_try_mutex::do_lock()
 bool recursive_try_mutex::do_trylock()
 {
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
-    int res = pthread_mutex_trylock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_trylock(&m_mutex);
     assert(res == 0);
 
     if (res == 0)
@@ -474,7 +502,8 @@ bool recursive_try_mutex::do_trylock()
 
     return false;
 #   else
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     bool ret = false;
@@ -503,11 +532,13 @@ void recursive_try_mutex::do_unlock()
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     if (--m_count == 0)
     {
-        int res = pthread_mutex_unlock(&m_mutex);
+        int res = 0;
+        res = pthread_mutex_unlock(&m_mutex);
         assert(res == 0);
     }
 #   else
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     pthread_t tid = pthread_self();
@@ -537,7 +568,7 @@ void recursive_try_mutex::do_lock(cv_state& state)
 #   if defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     m_count = state.count;
 #   else
-    int res;
+    int res = 0;
 
     while (m_valid_id)
     {
@@ -557,7 +588,8 @@ void recursive_try_mutex::do_lock(cv_state& state)
 void recursive_try_mutex::do_unlock(cv_state& state)
 {
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     assert(m_valid_id);
@@ -574,7 +606,8 @@ void recursive_try_mutex::do_unlock(cv_state& state)
 recursive_timed_mutex::recursive_timed_mutex()
     : m_valid_id(false), m_count(0)
 {
-    int res = pthread_mutex_init(&m_mutex, 0);
+    int res = 0;
+    res = pthread_mutex_init(&m_mutex, 0);
     if (res != 0)
         throw thread_resource_error();
     
@@ -588,7 +621,8 @@ recursive_timed_mutex::recursive_timed_mutex()
 
 recursive_timed_mutex::~recursive_timed_mutex()
 {
-    int res = pthread_mutex_destroy(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_destroy(&m_mutex);
     assert(res == 0);
 
     res = pthread_cond_destroy(&m_unlocked);
@@ -597,7 +631,8 @@ recursive_timed_mutex::~recursive_timed_mutex()
 
 void recursive_timed_mutex::do_lock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     pthread_t tid = pthread_self();
@@ -622,7 +657,8 @@ void recursive_timed_mutex::do_lock()
 
 bool recursive_timed_mutex::do_trylock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     bool ret = false;
@@ -647,7 +683,8 @@ bool recursive_timed_mutex::do_trylock()
 
 bool recursive_timed_mutex::do_timedlock(const xtime& xt)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     bool ret = false;
@@ -686,7 +723,8 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
 
 void recursive_timed_mutex::do_unlock()
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     pthread_t tid = pthread_self();
@@ -712,7 +750,7 @@ void recursive_timed_mutex::do_unlock()
 
 void recursive_timed_mutex::do_lock(cv_state& state)
 {
-    int res;
+    int res = 0;
 
     while (m_valid_id)
     {
@@ -730,7 +768,8 @@ void recursive_timed_mutex::do_lock(cv_state& state)
 
 void recursive_timed_mutex::do_unlock(cv_state& state)
 {
-    int res = pthread_mutex_lock(&m_mutex);
+    int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
     assert(m_valid_id);
