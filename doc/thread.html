@@ -34,8 +34,8 @@
 <p>The <code>thread</code> class represents threads of execution, and provides
 the functionality to create and manage threads within the <b>Boost.Threads</b>
 library. See <A href="definitions.html"> Definitions</A>
-for a precise description of "thread of execution", and definitions of threading
-related terms, and of thread states
+for a precise description of "thread of execution", and for definitions of threading
+related terms and of thread states
 such as "blocked".</p>
 
 <p>A thread of execution has an initial function. For the program's
@@ -44,12 +44,25 @@ threads, the initial function is <code>operator()</code> of the function object
 passed to the class <code>thread</code> constructor.</p>
 
 <p>A thread of execution is said to be "finished" or "finished
-execution" when its initial function returns or is terminated, and any
-associated implementation resources have been released.</p>
+execution" when its initial function returns or is terminated.&nbsp; This
+includes completion of all thread cleanup handlers, and completion of the normal
+C++ function return behaviors, such as destruction of automatic storage (stack)
+objects and releasing any
+associated implementation resources.</p>
 
 <p>Except as described below, the policy used by an implementation of
 <b>Boost.Threads</b> to schedule transitions between thread states is
 unspecified.</p>
+
+<p><b>Note: </b>Just as the lifetime of a file may be different from the
+lifetime of an iostream object which represents the file, the lifetime of a
+thread of execution may be different from the <code>thread</code> object which
+represents the thread of execution.&nbsp; In particular, after a call to <code>join()</code>,
+the thread of execution will no longer exist even though the <code>thread</code>
+object continues to exist until the end of its normal lifetime.&nbsp; The
+converse is also possible; if a <code>thread</code> object is destroyed without <code>join()</code>
+having been first been called, the thread of execution continues until its
+initial function completes.</p>
 
 <h2><a name="Header">Header</a></h2>
 
@@ -140,9 +153,12 @@ represent the same the same thread of execution.</p>
 
 <p><b>Requires:</b> <code>*this != thread()</code></p>
 
-<p><b>Effects:</b> The current thread of execution blocks until the thread of execution
-represented by <code>*this</code> finishes. In other words, causes the currently
-executing thread of execution to "join" the associated running thread of execution.</p>
+<p><b>Effects:</b> The current thread of execution blocks until the initial
+function of the thread of execution
+represented by <code>*this</code>  finishes.</p>
+
+<p><b>Notes:</b> <code>join()</code> has no effect if called for a thread object
+whose initial function has already finished.</p>
 
 <hr>
 <h3>try_join</h3>
@@ -169,7 +185,7 @@ has finished execution.</p>
 
 <p><b>Effects:</b> The current thread of execution blocks until either the thread of execution
 represented by <code>*this</code> finishes or the time specified by <code>xt</code>
-expires.</p>
+ is reached.</p>
 
 <p><b>Returns:</b> <code>true</code> if the thread of execution represented by <code>*this</code>
 finished execution.</p>
@@ -196,7 +212,7 @@ only blocks for a specified time.</p>
 <p><b>Effects:</b> The current thread of execution is placed in the "ready" state.</p>
 
 <p><b>Notes:</b> Allow the current thread to give up the rest of its time slice
-(or other scheduling quota) to another thread. Also useful in non-preemptive
+(or other scheduling quota) to another thread. Particularly useful in non-preemptive
 implementations.</p>
 
 <hr>
@@ -241,7 +257,7 @@ alarm sounded...
 
 <hr>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->03 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34346" -->
+<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->10 August, 2001<!--webbot bot="Timestamp" endspan i-checksum="34341" -->
 </p>
 
 <p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
