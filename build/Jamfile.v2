@@ -1,11 +1,20 @@
+import os ;
 
-# Declare the uses system library
-lib pthread : : <name>pthread ;
+if [ os.name ] = NT
+{
+    reqts = <link>shared:<define>BOOST_THREAD_BUILD_DLL=1 ;
+}
+else
+{
+    # Declare the uses system library
+    lib pthread : : <name>pthread ;
+    usage = <library>pthread ;
+}
 
 project boost/thread
     : source-location ../src 
-    : usage-requirements <library>pthread
-    : requirements <link>shared:<define>BOOST_THREAD_BUILD_DLL=1  <threading>multi 
+    : usage-requirements $(usage)
+    : requirements $(reqts)  <threading>multi 
     : default-build <threading>multi
     ;
 
