@@ -70,7 +70,7 @@ void cpubound_worker()
     double limit = SQRT_PER_SECOND/2.0;
     for(d = 1.0; d < limit; d+=1.0)
     {
-        double root = sqrt(d);
+        sqrt(d);
     }
 
     work_counts[CPUBOUND_WORKER]++;
@@ -104,7 +104,7 @@ void detach_worker(void *arg)
         detached.wait(l);
 
     // Call slow worker to do a bit of work after this...
-    slow_worker(arg);
+    slow_worker();
 }
 
 // Test a thread_pool with all different sorts of workers
@@ -162,10 +162,10 @@ void test_cancel()
 
     for(int i = 0; i < ITERATIONS; i++)
     {
-        tp.add(job_adapter(chatty_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(fast_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(slow_worker,reinterpret_cast<void *>(i)));
-        tp.add(job_adapter(cpubound_worker,reinterpret_cast<void *>(i)));
+        tp.add(&chatty_worker);
+        tp.add(&fast_worker);
+        tp.add(&slow_worker);
+        tp.add(&cpubound_worker);
     }
 
     tp.cancel();
