@@ -218,51 +218,7 @@ recursive_timed_mutex();
     resulting in undefined behavior such as a program crash.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/recursive_mutex.hpp">&lt;boost/thread/recursive_mutex.hpp&gt;</a>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include &lt;iostream&gt;
-
-class counter
-{
-public:
-    counter() : count(0) { }
-
-    int add(int val) {
-        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
-        count += val;
-        return count;
-    }   
-    int increment() {
-        boost::recursive_mutex::scoped_lock scoped_lock(mutex);
-        return add(1);
-    }
-
-private:
-    boost::recursive_mutex mutex;
-    int count;
-};
-
-counter c;
-
-void change_count(void*)
-{
-    std::cout &lt;&lt; &quot;count == &quot; &lt;&lt; c.increment() &lt;&lt; std::endl;
-}
-
-int main(int, char*[])
-{
-    const int num_threads=4;
-
-    boost::thread_group threads;   
-    for (int i=0; i &lt; num_threads; ++i)
-        threads.create_thread(&amp;change_count, 0);
-      
-    threads.join_all();
-   
-    return 0;
-}
-</pre>
+<p><a href="../example/recursive_mutex.cpp">libs/thread/example/recursive_mutex.cpp</a></p>
 <p>The output is:</p>
 <pre>
 count == 1

@@ -284,63 +284,14 @@ Void join_all();
 <p><a name="object-spec"></a>{{Object specifications}}</p>
 <h2><a name="examples"></a>Example(s)</h2>
 <h3><a name="example-thread"></a>Simple usage of <code>boost::thread</code></h3>
-<pre>
-#include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostream&gt;
-
-struct thread_alarm
-{
-   thread_alarm(int secs) : m_secs(secs) { }
-   void operator()()
-   {
-       boost::xtime XT;
-       boost::xtime_get(&amp;XT, boost::TIME_UTC);
-       xt.sec += m_secs;
-
-       boost::thread::sleep(XT);
-
-       std::cout &lt;&lt; &quot;alarm sounded...&quot; &lt;&lt; std::endl;
-   }
-
-   int m_secs;
-};
-
-int main(int argc, char* argv[])
-{
-   int secs = 5;
-   std::cout &lt;&lt; &quot;setting alarm for 5 seconds...&quot; &lt;&lt; std::endl;
-   thread_alarm alarm(secs);
-   boost::thread thrd(alarm);
-   thrd.join();
-}
-</pre>
+<p><a href="../example/thread.cpp">libs/thread/example/thread.cpp</a></p>
 <p>The output is:</p>
 <pre>
 setting alarm for 5 seconds...
 alarm sounded...
 </pre>
 <h3><a name="example-thread_group"></a>Simple usage of <code>boost::thread_group</code></h3>
-<pre>
-#include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostream&gt;
-
-int count = 0;
-boost::mutex mutex;
-
-void increment_count()
-{
-   boost::mutex::lock lock(mutex);
-   std::cout &lt;&lt; &quot;count = &quot; &lt;&lt; ++count &lt;&lt; std::endl;
-}
-
-int main(int argc, char* argv[])
-{
-   boost::thread_group threads;
-   for (int i = 0; i &lt; 10; ++i)
-      threads.create_thread(&amp;increment_count);
-   threads.join_all();
-}
-</pre>
+<p><a href="../example/thread_group.cpp">libs/thread/example/thread_group.cpp</a></p>
 <p>The output is:</p>
 <pre>
 count = 1

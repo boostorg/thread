@@ -71,33 +71,7 @@ if (flag == BOOST_ONCE_INIT)
   <dt><b>Postconditions:</b> <code>flag != BOOST_ONCE_INIT</code></dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/once.hpp&gt;</a>
-#include &lt;cassert&gt;
-
-int value=0;
-boost::once_flag once = BOOST_ONCE_INIT;
-
-void init()
-{
-    ++value;
-}
-
-void thread_proc()
-{
-   boost::call_once(&amp;init, once);
-}
-
-int main(int argc, char* argv[])
-{
-   boost::thread_group threads;
-   for (int i=0; i&lt;5; ++i)
-      threads.create_thread(&amp;thread_proc);
-   threads.join_all();
-   assert(value == 1);
-}
-</pre>
+<p><a href="../example/once.cpp">libs/thread/example/once.cpp</a></p>
 <hr>
 <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
