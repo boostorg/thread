@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -198,10 +198,10 @@ private:
 } // namespace detail
 } // namespace boost
 
+#endif // BOOST_XLOCK_WEK070601_HPP
+
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
-//   30 Jul 01  WEKEMPF Moved lock types into boost::detail::thread. Renamed some types.
-//                      Added locked() methods.
-
-#endif // BOOST_XLOCK_WEK070601_HPP
+//   30 Jul 01  WEKEMPF Moved lock types into boost::detail::thread. Renamed
+//                      some types. Added locked() methods.
