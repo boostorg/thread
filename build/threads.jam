@@ -24,7 +24,7 @@ if $(NT)
         }
         else
         {
-            BOOST_THREADMON_DLL = <dll>../build/boost_threadmon ;
+            BOOST_THREADMON_DLL = <dll>boost_threadmon ;
         }
     }
 }
