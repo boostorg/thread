@@ -158,7 +158,7 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 {
-    Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -220,7 +220,7 @@ bool read_write_mutex_impl<Mutex>::do_try_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_lock(m_state));
 
     if (!l.locked())
@@ -421,7 +421,7 @@ void read_write_mutex_impl<Mutex>::do_demote_to_read_lock()
 template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_demote_to_read_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_write_lock(m_state));
 
     if (!l.locked())
@@ -443,9 +443,53 @@ bool read_write_mutex_impl<Mutex>::do_timed_demote_to_read_lock(const boost::xti
 }
 
 template<typename Mutex>
+void read_write_mutex_impl<Mutex>::do_promote_to_write_lock()
+{
+    typename Mutex::scoped_lock l(m_prot);
+    BOOST_ASSERT(valid_read_lock(m_state));
+
+    if (m_state == 1)
+    {
+        //Convert from read lock to write lock
+        m_state = -1;
+
+        //Lock promoted
+        BOOST_ASSERT(valid_write_lock(m_state));
+    }
+    else if (m_state <= 0)
+    {
+        //Lock is write-locked or unlocked can't be promoted
+        throw lock_error();
+    }
+    else if (m_state_waiting_promotion)
+    {
+        //Someone else is already trying to promote. Avoid deadlock by throwing exception.
+        throw lock_error();
+    }
+    else BOOST_ASSERT_ELSE(m_state > 1 && !m_state_waiting_promotion)
+    {
+        ++m_num_waiting_writers;
+        m_state_waiting_promotion = true;
+        while (m_state > 1)
+            m_waiting_promotion.wait(l);
+        m_state_waiting_promotion = false;
+        --m_num_waiting_writers;
+        
+        BOOST_ASSERT(m_num_waiting_writers >= 0);
+        BOOST_ASSERT(m_state == 1);
+
+        //Convert from read lock to write lock
+        m_state = -1;
+        
+        //Lock promoted
+        BOOST_ASSERT(valid_write_lock(m_state));
+    }
+}
+
+template<typename Mutex>
 bool read_write_mutex_impl<Mutex>::do_try_promote_to_write_lock()
 {
-    typename Mutex::scoped_try_lock l(m_prot, blocking_mode::non_blocking);
+    typename Mutex::scoped_try_lock l(m_prot);
     BOOST_ASSERT(valid_read_lock(m_state));
 
     if (!l.locked())
@@ -641,6 +685,11 @@ void read_write_mutex::do_demote_to_read_lock()
     m_impl.do_demote_to_read_lock();
 }
 
+void read_write_mutex::do_promote_to_write_lock()
+{
+    m_impl.do_promote_to_write_lock();
+}
+
 bool read_write_mutex::locked()
 {
     return m_impl.locked();
@@ -690,6 +739,11 @@ void try_read_write_mutex::do_demote_to_read_lock()
 bool try_read_write_mutex::do_try_demote_to_read_lock()
 {
     return m_impl.do_try_demote_to_read_lock();
+}
+
+void try_read_write_mutex::do_promote_to_write_lock()
+{
+    m_impl.do_promote_to_write_lock();
 }
 
 bool try_read_write_mutex::do_try_promote_to_write_lock()
@@ -763,6 +817,11 @@ bool timed_read_write_mutex::do_timed_demote_to_read_lock(const xtime &xt)
     return m_impl.do_timed_demote_to_read_lock(xt);
 }
 
+void timed_read_write_mutex::do_promote_to_write_lock()
+{
+    m_impl.do_promote_to_write_lock();
+}
+
 bool timed_read_write_mutex::do_try_promote_to_write_lock()
 {
     return m_impl.do_try_promote_to_write_lock();
@@ -783,7 +842,7 @@ read_write_lock_state::read_write_lock_state timed_read_write_mutex::state()
     return m_impl.state();
 }
 
-//Explicit instantiations to catch syntax errors in templates
+//Explicit instantiations of read/write locks to catch syntax errors in templates
 
 template class boost::detail::thread::scoped_read_write_lock<read_write_mutex>;
 template class boost::detail::thread::scoped_read_write_lock<try_read_write_mutex>;
@@ -795,6 +854,34 @@ template class boost::detail::thread::scoped_try_read_write_lock<timed_read_writ
 
 //template class boost::detail::thread::scoped_timed_read_write_lock<read_write_mutex>;
 //template class boost::detail::thread::scoped_timed_read_write_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
+
+//Explicit instantiations of read locks to catch syntax errors in templates
+
+template class boost::detail::thread::scoped_read_lock<read_write_mutex>;
+template class boost::detail::thread::scoped_read_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_read_lock<timed_read_write_mutex>;
+
+//template class boost::detail::thread::scoped_try_read_lock<read_write_mutex>;
+template class boost::detail::thread::scoped_try_read_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_try_read_lock<timed_read_write_mutex>;
+
+//template class boost::detail::thread::scoped_timed_read_lock<read_write_mutex>;
+//template class boost::detail::thread::scoped_timed_read_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_timed_read_lock<timed_read_write_mutex>;
+
+//Explicit instantiations of write locks to catch syntax errors in templates
+
+template class boost::detail::thread::scoped_write_lock<read_write_mutex>;
+template class boost::detail::thread::scoped_write_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_write_lock<timed_read_write_mutex>;
+
+//template class boost::detail::thread::scoped_try_write_lock<read_write_mutex>;
+template class boost::detail::thread::scoped_try_write_lock<try_read_write_mutex>;
+template class boost::detail::thread::scoped_try_write_lock<timed_read_write_mutex>;
+
+//template class boost::detail::thread::scoped_timed_write_lock<read_write_mutex>;
+//template class boost::detail::thread::scoped_timed_write_lock<try_read_write_mutex>;
 template class boost::detail::thread::scoped_timed_read_write_lock<timed_read_write_mutex>;
 } // namespace boost
 
