@@ -1,9 +1,9 @@
-#include <iostream>
-
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/rw_mutex.hpp>
 #include <boost/test/test_tools.hpp>
+
+#include <iostream>
 
 namespace {
 
