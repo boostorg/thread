@@ -79,7 +79,8 @@ was <b>V</b> (short for the Dutch &quot;vrygeven&quot;, &quot;to release&quot;).
 <pre>
 namespace boost
 {
-    class semaphore : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
+    class semaphore : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+        // Class semaphore meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         explicit semaphore(unsigned count=0, unsigned max=0);
@@ -181,7 +182,7 @@ or <code>xt</code> is reached. Finally, <code>--m_count</code>.<code>&nbsp;</cod
 #include &lt;iostream&gt;
 
 int global_data = 0;
-boost::semaphore global_semaphore;
+boost::semaphore global_semaphore(1);
 
 void change_global_data(void*)
 {

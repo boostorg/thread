@@ -21,6 +21,7 @@
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
+#include <memory>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
@@ -64,7 +65,7 @@ public:
     ~thread_group();
 
     thread* create_thread(const function0<void>& threadfunc);
-    void add_thread(thread* thrd);
+    void add_thread(std::auto_ptr<thread> thrd);
     void remove_thread(thread* thrd);
     void join_all();
 

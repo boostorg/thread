@@ -26,14 +26,12 @@ struct xtime;
     class scoped_lock : private noncopyable
     {
     public:
-        friend class boost::condition;
-    
         typedef Mutex mutex_type;
     
-        explicit scoped_lock(Mutex& mx, bool lock_it=true)
+        explicit scoped_lock(Mutex& mx, bool initially_locked=true)
             : m_mutex(mx), m_locked(false)
         {
-            if (lock_it) lock();
+            if (initially_locked) lock();
         }
         ~scoped_lock()
         {
@@ -57,6 +55,8 @@ struct xtime;
         operator const void*() const { return m_locked ? this : 0; }
     
     private:
+        friend class boost::condition;
+    
         Mutex& m_mutex;
         bool m_locked;
     };
@@ -65,8 +65,6 @@ struct xtime;
     class scoped_try_lock : private noncopyable
     {
     public:
-        friend class boost::condition;
-    
         typedef TryMutex mutex_type;
     
         explicit scoped_try_lock(TryMutex& mx)
@@ -74,10 +72,10 @@ struct xtime;
         {
             try_lock();
         }
-        scoped_try_lock(TryMutex& mx, bool lock_it)
+        scoped_try_lock(TryMutex& mx, bool initially_locked)
             : m_mutex(mx), m_locked(false)
         {
-            if (lock_it) lock();
+            if (initially_locked) lock();
         }
         ~scoped_try_lock()
         {
@@ -106,6 +104,8 @@ struct xtime;
         operator const void*() const { return m_locked ? this : 0; }
     
     private:
+        friend class boost::condition;
+    
         TryMutex& m_mutex;
         bool m_locked;
     };
@@ -114,8 +114,6 @@ struct xtime;
     class scoped_timed_lock : private noncopyable
     {
     public:
-        friend class boost::condition;
-    
         typedef TimedMutex mutex_type;
     
         scoped_timed_lock(TimedMutex& mx, const xtime& xt)
@@ -123,10 +121,10 @@ struct xtime;
         {
             timed_lock(xt);
         }
-        scoped_timed_lock(TimedMutex& mx, bool lock_it)
+        scoped_timed_lock(TimedMutex& mx, bool initially_locked)
             : m_mutex(mx), m_locked(false)
         {
-            if (lock_it) lock();
+            if (initially_locked) lock();
         }
         ~scoped_timed_lock()
         {
@@ -155,6 +153,8 @@ struct xtime;
         operator const void*() const { return m_locked ? this : 0; }
     
     private:
+        friend class boost::condition;
+    
         TimedMutex& m_mutex;
         bool m_locked;
     };

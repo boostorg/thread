@@ -45,7 +45,7 @@ int xtime_get(struct xtime* xtp, int clock_type)
         xtp->nsec = ts.tv_nsec;
         return clock_type;
 #else
-        return 0;
+#   error "xtime_get implementation undefined"
 #endif
     }
     return 0;

@@ -23,6 +23,10 @@ namespace
     registered_handlers registry;
 }
 
+#if defined(__BORLANDC__)
+#define DllMain DllEntryPoint
+#endif
+
 BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
 {
     switch (reason)

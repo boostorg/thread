@@ -52,12 +52,15 @@ the end of the enclosing scope. The lock() and unlock() members are usually not
 explicitly called, but are provided to allow for complex overlapping locks of multiple
 mutexes.</p>
 
+<p>Although this class is an implementation detail, it is publicly documented here because
+of its importance.</p>
+
 <p>The type used to instantiate the class must meet the <a href="mutex_concept.html#TryMutex">TryMutex</a> requirements.</p>
 
 <h2><a name="Header">Header</a></h2>
 
 <pre>
-#include <a href="../../../boost/thread/xlock.hpp">&lt;boost/thread/xlock.hpp&gt;</a>
+#include <a href="../../../boost/thread/detail/lock.hpp">&lt;boost/thread/detail/lock.hpp&gt;</a>
     <i>This header is usually not included directly by programmers
     because it is supplied by <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a> or
     <a href="../../../boost/thread/recursive_mutex.hpp">&lt;boost/thread/recursive_mutex.hpp&gt;</a></i>
@@ -68,13 +71,14 @@ mutexes.</p>
 <pre>
 namespace boost { namespace detail { namespace thread {
     template &lt;typename TryMutex&gt;
-    class scoped_try_lock : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
+    class scoped_try_lock : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+        // Class scoped_try_lock meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         typedef TryMutex mutex_type;
         
         explicit scoped_try_lock(TryMutex&amp; mx);
-        scoped_try_lock(TryMutex&amp; mx, bool lock_it);
+        scoped_try_lock(TryMutex&amp; mx, bool initially_locked);
         ~scoped_try_lock();
         
         void lock();
@@ -103,11 +107,11 @@ Calls <code>try_lock()</code>.</p>
 
 <hr>
 <pre>
-    scoped_try_lock(TryMutex&amp; mx, bool lock_it);
+    scoped_try_lock(TryMutex&amp; mx, bool initially_locked);
 </pre>
 
 <p><b>Effects:</b> Associates mutex <code>mx</code> with <code>*this</code>.
-If <code>lock_it</code> is <code>true,</code> calls <code>lock()</code>.</p>
+If <code>initially_locked</code> is <code>true,</code> calls <code>lock()</code>.</p>
 <hr>
 
 <h3>Destructor</h3>
@@ -147,7 +151,7 @@ shown in the following table:</p>
     <td height="19">Throws <a href="lock_error.html">lock_error</a>.</td>
   </tr>
   <tr>
-    <td height="19">Unspecified</td>
+    <td height="19">Unchecked</td>
     <td height="19">Undefined behavior [<a href="bibliography.html#ISO">ISO</a> 1.3.12] (but
       typically, <a href="definitions.html#Deadlock">deadlock</a>.)</td>
   </tr>

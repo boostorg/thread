@@ -75,7 +75,8 @@ its initial function completes.</p>
 <pre>
 namespace boost {
 
-class thread : <a href="../../utility/utility.htm#noncopyable">boost::noncopyable</a>
+class thread : <a href="../../utility/utility.htm#noncopyable">boost::noncopyable</a> // Exposition only.
+   // Class thread meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
 {
 public:
     thread();
@@ -166,13 +167,17 @@ represent the same thread of execution.</p>
     void join();
 </pre>
 
-<p><b>Requires:</b> <code>*this != thread()</code> and <code>*this</code> is joinable.</p>
+<p><b>Requires:</b> <code>*this</code> is joinable.</p>
 
 <p><b>Effects:</b> The current thread of execution blocks until the initial function of
 the thread of execution represented by <code>*this</code> finishes and all resources
 are reclaimed.</p>
 
 <p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
+
+<p><b>Note:</b></p> If <code>*this == thread()</code> the result is implementation defined.
+If the implementation doesn't detect this the result will be
+<a href="definitions.html#Deadlock">deadlock</a>.</p>
 
 <hr>
 <h3>sleep</h3>
@@ -202,7 +207,7 @@ implementations.</p>
 
 <pre>
 #include &lt;boost/thread/thread.hpp&gt;
-#include &lt;iostram&gt;
+#include &lt;iostream&gt;
 
 struct thread_alarm
 {

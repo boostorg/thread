@@ -65,7 +65,8 @@ for blocked.</p>
 <pre>
 namespace boost { 
 
-class condition : private <A href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a>
+class condition : private <A href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+   // Class condition meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
 {
 public:
    condition();
@@ -73,14 +74,14 @@ public:
 
    void notify_one();
    void notify_all();
-   template &lt;typename ScopedLock&gt;
-      void wait(ScopedLock&amp; lock);
-   template &lt;typename ScopedLock, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
-      void wait(ScopedLock&amp; lock, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
-   template &lt;typename ScopedTimedLock&gt;
-      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt);
-   template &lt;typename ScopedTimedLock, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
-      bool timed_wait(ScopedTimedLock&amp; lock, const xtime&amp; xt, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
+      void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
+      void wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>&gt;
+      bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt);
+   template &lt;typename <a href="scoped_lock.html">ScopedLock</a>, typename <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A>&gt;
+      bool timed_wait(<a href="scoped_lock.html">ScopedLock</a>&amp; lock, const xtime&amp; xt, <A href="http://www.sgi.com/tech/stl/Predicate.html">Predicate</A> pred);
 };
 
 } // namespace boost
@@ -147,7 +148,7 @@ template &lt;typename ScopedLock&gt;
 
 <p><b>Effects:</b> Releases the lock on the <A href="mutex_concept.html">mutex model</a>
 associated with <code>lock</code>, blocks the current thread of execution until readied
-by a call to <code>*this-&gt;notify_one()</code> or <code>*this-&gt;notify_all()</code>,
+by a call to <code>this-&gt;notify_one()</code> or <code>this-&gt;notify_all()</code>,
 and then reacquires the lock. All effects occur in an atomic fashion.</p>
 
 <p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code>
@@ -190,8 +191,8 @@ template &lt;typename ScopedTimedLock&gt;
 
 <p><b>Effects:</b> Releases the lock on the <A href="mutex_concept.html">mutex model</a>
 associated with the <code>lock</code>, blocks the current thread of execution until
-readied by a call to <code>*this-&gt;notify_one()</code> or
-<code>*this-&gt;notify_all()</code>, or until <code>xt</code>, and then reacquires the
+readied by a call to <code>this-&gt;notify_one()</code> or
+<code>this-&gt;notify_all()</code>, or until <code>xt</code>, and then reacquires the
 lock. All effects occur in an atomic fashion.</p>
 
 <p><b>Throws:</b> <code><A href="lock_error.html">lock_error</a></code> if
@@ -205,7 +206,6 @@ encapsulates this loop idiom internally and is generally the preferred method.</
 <p><b>Returns:</b> <code>false</code> if <code>xt</code> is reached, otherwise
 <code>true</code>.</p>
 
-<hr>
 <pre>
 template &lt;typename ScopedTimedLock, typename Pr&gt;
    bool timed_wait(ScopedTimedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; xt, Pr pred);
@@ -244,16 +244,10 @@ return from <code>pred()</code> convertible to bool.</p>
 
 class bounded_buffer : private boost::noncopyable
 {
-private:
-    int begin, end, buffered;
-    std::vector&lt;int&gt; circular_buf;
-    boost::condition buffer_not_full, buffer_not_empty;
-    boost::mutex monitor;
-
-    typedef boost::mutex::lock lock;
-
 public:
-    buffer(int n) : begin(0), end(0), buffered(0), circular_buf(n) { }
+    typedef boost::mutex::scoped_lock lock;
+
+    bounded_buffer(int n) : begin(0), end(0), buffered(0), circular_buf(n) { }
 
     void send (int m) {
         lock lk(monitor);
@@ -266,7 +260,7 @@ public:
     }
     int receive() {
         lock lk(monitor);
-        while (buffered == 0 &amp;&amp; !finished)
+        while (buffered == 0)
             buffer_not_empty.wait(lk);
         int i = circular_buf[begin];
         begin = (begin+1) % circular_buf.size();
@@ -274,11 +268,17 @@ public:
         buffer_not_full.notify_one();
         return i;
     }
+
+private:
+    int begin, end, buffered;
+    std::vector&lt;int&gt; circular_buf;
+    boost::condition buffer_not_full, buffer_not_empty;
+    boost::mutex monitor;
 };
 
 bounded_buffer buf(2);
 
-void sender(void*) {
+void sender() {
     int n = 0;
     while (n &lt; 100) {
        buf.send(n);
@@ -288,7 +288,7 @@ void sender(void*) {
     buf.send(-1);
 }
 
-void receiver(void*) {
+void receiver() {
     int n;
     do {
        n = buf.receive();
@@ -298,8 +298,8 @@ void receiver(void*) {
 
 int main(int, char*[])
 {
-    boost::thread thrd1(&amp;sender, 0);
-    boost::thread thrd2(&amp;receiver, 0);
+    boost::thread thrd1(&amp;sender);
+    boost::thread thrd2(&amp;receiver);
     thrd1.join();
     thrd2.join();
     return 0;

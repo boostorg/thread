@@ -50,7 +50,7 @@ public:
 #if defined(BOOST_HAS_WINTHREADS)
 unsigned __stdcall thread_proxy(void* param)
 #elif defined(BOOST_HAS_PTHREADS)
-void* thread_proxy(void* param)
+static extern "C" void* thread_proxy(void* param)
 #endif
 {
     try
@@ -87,14 +87,10 @@ thread::thread(const function0<void>& threadfunc)
     thread_param param(threadfunc);
 #if defined(BOOST_HAS_WINTHREADS)
     m_thread = _beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id);
-    assert(m_thread);
-
     if (!m_thread)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)
     int res = pthread_create(&m_thread, 0, &thread_proxy, &param);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 #endif
@@ -212,16 +208,16 @@ thread* thread_group::create_thread(const function0<void>& threadfunc)
     return thrd.release();
 }
 
-void thread_group::add_thread(thread* thrd)
+void thread_group::add_thread(std::auto_ptr<thread> thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
     // For now we'll simply ignore requests to add a thread object multiple times.
     // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd.get());
     assert(it == m_threads.end());
     if (it == m_threads.end())
-        m_threads.push_back(thrd);
+        m_threads.push_back(thrd.release());
 }
 
 void thread_group::remove_thread(thread* thrd)

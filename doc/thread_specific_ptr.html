@@ -63,7 +63,8 @@ when the thread terminates. Each thread initially stores the null pointer in eac
 namespace boost {
 
 template &lt;typename T&gt;
-class thread_specific_ptr : private boost::noncopyable
+class thread_specific_ptr : private boost::noncopyable // Exposition only.
+    // Class thread_specific_ptr meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
 {
 public:
     thread_specific_ptr();
@@ -183,7 +184,7 @@ void increment()
 
 void thread_proc()
 {
-   value.set(new int(0)); // initialize the thread's storage
+   value.reset(new int(0)); // initialize the thread's storage
    for (int i=0; i&lt;10; ++i)
    {
        increment();

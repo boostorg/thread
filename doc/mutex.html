@@ -110,7 +110,8 @@ the lock in a random order, even though the specific behavior for a given platfo
 <pre>
 namespace boost
 {
-    class mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
+    class mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a> // Exposition only.
+        // Class mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -148,7 +149,7 @@ namespace boost
 <p><b>Effects:</b> Destroys <code>*this</code>.</p>
 
 <p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
-resulting in undefined behavior such as a program crash..</p>
+resulting in undefined behavior such as a program crash.</p>
 
 <hr>
 
@@ -159,7 +160,8 @@ resulting in undefined behavior such as a program crash..</p>
 <pre>
 namespace boost
 {
-    class try_mutex : private boost::noncopyable
+    class try_mutex : private boost::noncopyable // Exposition only.
+        // Class try_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -196,7 +198,7 @@ namespace boost
 <p><b>Effects:</b> Destroys <code>*this</code>.</p>
 
 <p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
-resulting in undefined behavior such as a program crash..</p>
+resulting in undefined behavior such as a program crash.</p>
 
 <hr>
 
@@ -207,7 +209,8 @@ resulting in undefined behavior such as a program crash..</p>
 <pre>
 namespace boost
 {
-    class timed_mutex : private boost::noncopyable
+    class timed_mutex : private boost::noncopyable // Exposition only.
+        // Class timed_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
         typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -245,7 +248,7 @@ namespace boost
 <p><b>Effects:</b> Destroys <code>*this</code>.</p>
 
 <p><b>Dangers:</b> Destruction of a locked mutex is a serious programming error
-resulting in undefined behavior such as a program crash..</p>
+resulting in undefined behavior such as a program crash.</p>
 
 <hr>
 
@@ -260,10 +263,6 @@ boost::mutex io_mutex; // The iostreams are not guaranteed to be <a href="file:/
 
 class counter
 {
-private:
-    boost::mutex mutex;
-    int count;
-   
 public:
     counter() : count(0) { }
    
@@ -271,6 +270,10 @@ public:
         boost::mutex::scoped_lock scoped_lock(mutex);
         return ++count;
     }
+
+private:
+    boost::mutex mutex;
+    int count;
 };
 
 counter c;

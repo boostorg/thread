@@ -10,12 +10,12 @@
 // It is provided "as is" without express or implied warranty.
  
 namespace {
-	const unsigned MILLISECONDS_PER_SECOND = 1000;
-	const unsigned NANOSECONDS_PER_SECOND = 1000000000;
-	const unsigned NANOSECONDS_PER_MILLISECOND = 1000000;
+    const unsigned MILLISECONDS_PER_SECOND = 1000;
+    const unsigned NANOSECONDS_PER_SECOND = 1000000000;
+    const unsigned NANOSECONDS_PER_MILLISECOND = 1000000;
 
-	inline void to_time(unsigned milliseconds, boost::xtime& xt)
-	{
+    inline void to_time(unsigned milliseconds, boost::xtime& xt)
+    {
         int res = boost::xtime_get(&xt, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
@@ -27,7 +27,7 @@ namespace {
             ++xt.sec;
             xt.nsec -= NANOSECONDS_PER_SECOND;
         }
-	}
+    }
 
 #if defined(BOOST_HAS_PTHREADS)
     inline void to_timespec(const boost::xtime& xt, timespec& ts)
@@ -43,46 +43,46 @@ namespace {
         to_timespec(xt, ts);
     }
 
-	inline void to_timespec_duration(const boost::xtime& xt, timespec& ts)
-	{
+    inline void to_timespec_duration(const boost::xtime& xt, timespec& ts)
+    {
         boost::xtime cur;
         int res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
         if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
-		{
+        {
             ts.tv_sec = 0;
             ts.tv_nsec = 0;
-		}
-		else
-		{
-			ts.tv_sec = xt.sec - cur.sec;
-			ts.tv_nsec = xt.nsec - cur.nsec;
+        }
+        else
+        {
+            ts.tv_sec = xt.sec - cur.sec;
+            ts.tv_nsec = xt.nsec - cur.nsec;
 
-			if( ts.tv_nsec < 0 )
-			{
-				ts.tv_sec -= 1;
-				ts.tv_nsec += NANOSECONDS_PER_SECOND;
-			}
-		}
-	}
+            if( ts.tv_nsec < 0 )
+            {
+                ts.tv_sec -= 1;
+                ts.tv_nsec += NANOSECONDS_PER_SECOND;
+            }
+        }
+    }
 #endif
 
-	inline void to_duration(const boost::xtime& xt, unsigned& milliseconds)
-	{
+    inline void to_duration(const boost::xtime& xt, unsigned& milliseconds)
+    {
         boost::xtime cur;
         int res = boost::xtime_get(&cur, boost::TIME_UTC);
         assert(res == boost::TIME_UTC);
 
         if (xt.sec < cur.sec || (xt.sec == cur.sec && xt.nsec < cur.nsec))
             milliseconds = 0;
-		else
-		{
-			milliseconds = ((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
-				(((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MILLISECOND/2))
-				/ NANOSECONDS_PER_MILLISECOND);
-		}
-	}
+        else
+        {
+            milliseconds = static_cast<unsigned>(((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
+                (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MILLISECOND/2)) /
+                NANOSECONDS_PER_MILLISECOND));
+        }
+    }
 }
 
 // Change Log:

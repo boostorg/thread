@@ -31,8 +31,6 @@ namespace boost {
 mutex::mutex()
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -68,8 +66,6 @@ void mutex::do_unlock(cv_state& state)
 try_mutex::try_mutex()
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -112,8 +108,6 @@ void try_mutex::do_unlock(cv_state& state)
 timed_mutex::timed_mutex()
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -166,8 +160,6 @@ void timed_mutex::do_unlock(cv_state& state)
 mutex::mutex()
 {
     int res = pthread_mutex_init(&m_mutex, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 }
@@ -204,8 +196,6 @@ void mutex::do_unlock(cv_state& state)
 try_mutex::try_mutex()
 {
     int res = pthread_mutex_init(&m_mutex, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 }
@@ -251,14 +241,10 @@ timed_mutex::timed_mutex()
     : m_locked(false)
 {
     int res = pthread_mutex_init(&m_mutex, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 
     res = pthread_cond_init(&m_condition, 0);
-    assert(res == 0);
-
     if (res != 0)
     {
         pthread_mutex_destroy(&m_mutex);

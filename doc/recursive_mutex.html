@@ -116,7 +116,8 @@ behavior for a given platform may be different.</p>
 <pre>
 namespace boost
 {
-   class recursive_mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a>
+   class recursive_mutex : private <a href="../../utility/utility.htm">boost::noncopyable</a> // Exposition only.
+        // Class recursive_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
    {
    public:
       typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -163,7 +164,8 @@ Class <a name="recursive_try_mutex Synopsis">recursive_try_mutex Synopsis</a>
 <pre>
 namespace boost
 {
-    class recursive_try_mutex : private boost::noncopyable
+    class recursive_try_mutex : private boost::noncopyable // Exposition only.
+        // Class recursive_try_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -211,7 +213,8 @@ Class <a name="recursive_timed_mutex Synopsis">recursive_timed_mutex Synopsis</a
 <pre>
 namespace boost
 {
-    class recursive_timed_mutex : private boost::noncopyable
+    class recursive_timed_mutex : private boost::noncopyable // Exposition only.
+        // Class recursive_timed_mutex meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
     {
     public:
        typedef <i>[implementation defined; see <a href="#Introduction">Introduction</a>]</i> scoped_lock;
@@ -264,10 +267,6 @@ resulting in undefined behavior such as a program crash..</p>
 
 class counter
 {
-private:
-    boost::recursive_mutex mutex;
-    int count;
-   
 public:
     counter() : count(0) { }
 
@@ -280,6 +279,10 @@ public:
         boost::recursive_mutex::scoped_lock scoped_lock(mutex);
         return add(1);
     }
+
+private:
+    boost::recursive_mutex mutex;
+    int count;
 };
 
 counter c;

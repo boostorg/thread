@@ -74,6 +74,8 @@ to indicate that the logically associated routine has not been run yet.</p>
    void call_once(void (*func)(), once_flag&amp; flag);
 </pre>
 
+<p><b>Requires:</b> The function <code>func</code> shall not throw exceptions.</p>
+
 <p><b>Effects:</b> As if (in an atomic fashion)</p>
 
 <code>

@@ -79,8 +79,6 @@ namespace boost { namespace detail {
 tss::tss(void (*cleanup)(void*))
 {
     m_key = TlsAlloc();
-    assert(m_key != 0xFFFFFFFF);
-
     if (m_key == 0xFFFFFFFF)
         throw thread_resource_error();
 
@@ -115,8 +113,6 @@ bool tss::set(void* value)
 tss::tss(void (*cleanup)(void*))
 {
     int res = pthread_key_create(&m_key, cleanup);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 }

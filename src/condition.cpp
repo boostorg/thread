@@ -301,8 +301,6 @@ bool condition::do_timed_wait(const xtime& xt)
 condition::condition()
 {
     int res = pthread_cond_init(&m_condition, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 }

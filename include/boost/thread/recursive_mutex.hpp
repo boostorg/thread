@@ -18,7 +18,7 @@
 #endif
 
 #include <boost/utility.hpp>
-#include <boost/thread/xlock.hpp>
+#include <boost/thread/detail/lock.hpp>
 
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>

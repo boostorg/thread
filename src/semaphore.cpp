@@ -35,8 +35,6 @@ semaphore::semaphore(unsigned count, unsigned max)
         max = std::numeric_limits<long>::max();
 
     m_sema = reinterpret_cast<unsigned long>(CreateSemaphore(0, count, max, 0));
-    assert(m_sema != 0);
-
     if (!m_sema)
         throw thread_resource_error();
 }
@@ -78,14 +76,10 @@ semaphore::semaphore(unsigned count, unsigned max)
     : m_available(count), m_max(max ? max : std::numeric_limits<unsigned>::max())
 {
     int res = pthread_mutex_init(&m_mutex, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 
     res = pthread_cond_init(&m_condition, 0);
-    assert(res == 0);
-
     if (res != 0)
     {
         pthread_mutex_destroy(&m_mutex);

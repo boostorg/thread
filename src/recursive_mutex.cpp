@@ -31,8 +31,6 @@ recursive_mutex::recursive_mutex()
     : m_count(0)
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -85,8 +83,6 @@ recursive_try_mutex::recursive_try_mutex()
     : m_count(0)
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -156,8 +152,6 @@ recursive_timed_mutex::recursive_timed_mutex()
     : m_count(0)
 {
     m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
-    assert(m_mutex);
-
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -259,15 +253,11 @@ recursive_mutex::recursive_mutex()
 #   endif
 
     res = pthread_mutex_init(&m_mutex, &attr);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     res = pthread_cond_init(&m_unlocked, 0);
-    assert(res == 0);
-
     if (res != 0)
     {
         pthread_mutex_destroy(&m_mutex);
@@ -409,15 +399,11 @@ recursive_try_mutex::recursive_try_mutex()
 #   endif
 
     res = pthread_mutex_init(&m_mutex, &attr);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
 
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
     res = pthread_cond_init(&m_unlocked, 0);
-    assert(res == 0);
-
     if (res != 0)
     {
         pthread_mutex_destroy(&m_mutex);
@@ -589,14 +575,10 @@ recursive_timed_mutex::recursive_timed_mutex()
     : m_valid_id(false), m_count(0)
 {
     int res = pthread_mutex_init(&m_mutex, 0);
-    assert(res == 0);
-
     if (res != 0)
         throw thread_resource_error();
     
     res = pthread_cond_init(&m_unlocked, 0);
-    assert(res == 0);
-
     if (res != 0)
     {
         pthread_mutex_destroy(&m_mutex);
