@@ -26,14 +26,12 @@
 
 namespace boost {
 
-class condition;
 struct xtime;
 
 class recursive_mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<recursive_mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<recursive_mutex>;
 
     typedef detail::thread::scoped_lock<recursive_mutex> scoped_lock;
 
@@ -72,9 +70,7 @@ private:
 class recursive_try_mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<recursive_try_mutex>;
-    friend class detail::thread::scoped_try_lock<recursive_try_mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<recursive_try_mutex>;
 
     typedef detail::thread::scoped_lock<recursive_try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<recursive_try_mutex> scoped_try_lock;
@@ -115,10 +111,7 @@ private:
 class recursive_timed_mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<recursive_timed_mutex>;
-    friend class detail::thread::scoped_try_lock<recursive_timed_mutex>;
-    friend class detail::thread::scoped_timed_lock<recursive_timed_mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<recursive_timed_mutex>;
 
     typedef detail::thread::scoped_lock<recursive_timed_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<recursive_timed_mutex> scoped_try_lock;

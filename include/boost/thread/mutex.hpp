@@ -26,14 +26,12 @@
 
 namespace boost {
 
-class condition;
 struct xtime;
 
 class mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<mutex>;
 
     typedef detail::thread::scoped_lock<mutex> scoped_lock;
 
@@ -64,9 +62,7 @@ private:
 class try_mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<try_mutex>;
-    friend class detail::thread::scoped_try_lock<try_mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<try_mutex>;
 
     typedef detail::thread::scoped_lock<try_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<try_mutex> scoped_try_lock;
@@ -99,10 +95,7 @@ private:
 class timed_mutex : private noncopyable
 {
 public:
-    friend class detail::thread::scoped_lock<timed_mutex>;
-    friend class detail::thread::scoped_try_lock<timed_mutex>;
-    friend class detail::thread::scoped_timed_lock<timed_mutex>;
-    friend class condition;
+    friend class detail::thread::lock_ops<timed_mutex>;
 
     typedef detail::thread::scoped_lock<timed_mutex> scoped_lock;
     typedef detail::thread::scoped_try_lock<timed_mutex> scoped_try_lock;
