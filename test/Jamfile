@@ -3,37 +3,39 @@
 #  in all copies. This software is provided "as is" without express or implied
 #  warranty, and with no claim as to its suitability for any purpose.
 #
-# Boost.Threads build and test Jamfile
+# Boost.Threads test Jamfile
 #
 # Declares the following targets:
 #   1. test_thread, a unit test executable.
-#
-# Invoke with:
-#   Jam [-sPTW32=lib]
-#     Where: lib == name of pthreads-win32 link library
-#     Note: Not currently working completely
+# Additional configuration variables used:
+#   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
+#      library should be used instead of "native" threads. This feature is
+#      mostly used for testing and it's generally recommended you use the
+#      native threading libraries instead. PTW32 should be set to be a list
+#      of two strings, the first specifying the installation path of the
+#      pthreads-win32 library and the second specifying which library
+#      variant to link against (see the pthreads-win32 documentation).
+#      Example: jam -sPTW32="c:\pthreads-win32 pthreadVCE.lib"
 
-# declare the location of this subproject relative to the root
+# Declare the location of this subproject relative to the root.
 subproject libs/thread/test ;
 
-# declare BUILD_THREADMON to 0 (just in case the user defined it) so that threads.jam
-# knows what to do with <dll>boost_threadmon
-BUILD_THREADMON = 0 ;
-
-# include threads.jam for Boost.Threads global build information
+# Include threads.jam for Boost.Threads global build information.
+# This greatly simplifies the Jam code needed to configure the build
+# for the various Win32 build types.
 SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include <module@>threads.jam ;
 
 #######################
-# Declare the Boost.Threads unit test program.
+# Declare the Boost.Threads unit test program test_thread.
 
-unit-test test_thread : test_thread.cpp
-    <lib>../build/boost_thread
-    $(BOOST_THREADMON_DLL) # if on Win32 and not using pthreads-win32
-    # requirements
+unit-test test_thread
+    : test_thread.cpp
+      <lib>../build/boost_thread
+      $(threadmon)
     : <include>$(BOOST_ROOT)
-    $(PTW32_REQUIREMENTS) # if using pthreads-win32
-    <library-file>c:/home/pthreads/pre-built/lib/pthreadVCE.lib
-    <threading>multi
-    <runtime-link>static/dynamic
-    : debug release ;
+      $(pthreads-win32)
+      <threading>multi
+      <runtime-link>static/dynamic
+    : debug release
+;
