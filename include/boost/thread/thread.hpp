@@ -12,10 +12,6 @@
 #ifndef BOOST_THREAD_WEK070601_HPP
 #define BOOST_THREAD_WEK070601_HPP
 
-#include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
@@ -48,6 +44,37 @@ public:
 	~thread_cancel();
 };
 
+#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
+#   if defined(BOOST_HAS_WINTHREADS)
+
+struct sched_param
+{
+	int priority;
+};
+
+enum { sched_fifo, sched_rr, sched_other };
+enum { scope_process, scope_system };
+
+#   elif defined(BOOST_HAS_PTHREADS)
+
+using ::sched_param;
+
+enum
+{
+	sched_fifo = SCHED_FIFO,
+	sched_rr = SCHED_RR,
+	sched_other = SCHED_OTHER
+};
+
+enum
+{
+	scope_process = PTHREAD_SCOPE_PROCESS,
+	scope_system = PTHREAD_SCOPE_SYSTEM
+};
+
+#   endif
+#endif // BOOST_THREAD_PRIORITY_SCHEDULING
+
 class BOOST_THREAD_DECL thread : private noncopyable
 {
 public:
@@ -60,16 +87,14 @@ public:
 #if defined(BOOST_THREAD_ATTRIBUTES_STACKSIZE)
 		attributes& stack_size(size_t size);
 		size_t stack_size() const;
-#endif
+#endif // BOOST_THREAD_ATTRIBUTES_STACKSIZE
 
 #if defined(BOOST_THREAD_ATTRIBUTES_STACKADDR)
 		attributes& stack_address(void* addr);
 		void* stack_address() const;
-#endif
+#endif // BOOST_THREAD_ATTRIBUTES_STACKADDR
 
 #if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
-		struct sched_param { int priority; }
-
 		attributes& inherit_scheduling(bool inherit);
 		bool inherit_scheduling() const;
 		attributes& scheduling_parameter(const sched_param& param);
@@ -78,6 +103,17 @@ public:
 		int scheduling_policy() const;
 		attributes& scope(int scope);
 		int scope() const;
+#endif // BOOST_THREAD_PRIORITY_SCHEDULING
+
+	private:
+		friend class thread;
+
+#if defined(BOOST_HAS_WINTHREADS)
+		size_t m_stacksize;
+		bool m_schedinherit;
+		sched_param m_schedparam;
+#elif defined(BOOST_HAS_PTHREADS)
+		pthread_attr_t m_attr;
 #endif
 	};
 
@@ -90,6 +126,14 @@ public:
 
     void join();
     void cancel();
+
+#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
+	void set_scheduling_parameter(int policy, const sched_param& param);
+	void get_scheduling_parameter(int& policy, sched_param& param) const;
+
+	static int max_priority(int policy);
+	static int min_priority(int policy);
+#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
     static void test_cancel();
     static void sleep(const xtime& xt);
