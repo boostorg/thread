@@ -16,7 +16,7 @@
 
 #ifdef BOOST_HAS_WINTHREADS
 
-extern "C" BOOST_THREAD_DECL int add_thread_exit(void (__cdecl * func)(void));
+extern "C" BOOST_THREAD_DECL int at_thread_exit(void (__cdecl * func)(void));
     //Add a function to the list of thread-exit functions
 
 extern "C" BOOST_THREAD_DECL void on_process_enter(void);
