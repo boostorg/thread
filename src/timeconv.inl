@@ -83,7 +83,7 @@ namespace {
     }
 #endif
 
-    inline void to_duration(const boost::xtime& xt, int& milliseconds)
+    inline void to_duration(boost::xtime xt, int& milliseconds)
     {
         boost::xtime cur;
         int res = 0;
@@ -94,6 +94,11 @@ namespace {
             milliseconds = 0;
         else
         {
+            if (cur.nsec > xt.nsec)
+            {
+                xt.nsec += NANOSECONDS_PER_SECOND;
+                --xt.sec;
+            }
             milliseconds = ((xt.sec - cur.sec) * MILLISECONDS_PER_SECOND) +
                 (((xt.nsec - cur.nsec) + (NANOSECONDS_PER_MILLISECOND/2)) /
                 NANOSECONDS_PER_MILLISECOND);
