@@ -32,7 +32,7 @@ import testing ;
           <dll>../build/boost_thread
           <lib>../../test/build/boost_unit_test_framework
         ## requirements ##
-        :
+        : <define>BOOST_ALL_NO_LIB=1
         ## default build ##
         :
     ;
