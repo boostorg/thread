@@ -103,7 +103,7 @@ private:
 
 } // namespace thread
 
-class read_write_mutex : private noncopyable
+class BOOST_THREAD_DECL read_write_mutex : private noncopyable
 {
 public:
     read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
@@ -130,7 +130,7 @@ private:
     detail::thread::read_write_mutex_impl<mutex> m_impl; 
 };
 
-class try_read_write_mutex : private noncopyable
+class BOOST_THREAD_DECL try_read_write_mutex : private noncopyable
 {
 public:
     try_read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
@@ -165,7 +165,7 @@ private:
     detail::thread::read_write_mutex_impl<try_mutex> m_impl; 
 };
 
-class timed_read_write_mutex : private noncopyable
+class BOOST_THREAD_DECL timed_read_write_mutex : private noncopyable
 {
 public:
     timed_read_write_mutex(read_write_scheduling_policy sp) : m_impl(sp) { }
