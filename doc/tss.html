@@ -3,6 +3,7 @@
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
 <meta name="keywords" content="threads, BTL, thread library, C++">
+<link rel="stylesheet" type="text/css" href="styles.css">
 <title>Boost.Threads, tss</title>
 </head>
 
@@ -22,67 +23,87 @@
 
 <hr>
 
-<p>The <tt>tss</tt> class defines an interface for using thread specific storage.  Thread
+<p><A href="#Introduction">Introduction</A><br>
+<A href="#Header">Header</A><br>
+<A href="#Synopsis">Synopsis</A><br>
+<A href="#Members">Members</A><br>
+<A href="#Example">Example</A></p>
+
+<h2><a name="Introduction">Introduction</a></h2>
+
+<p>The <code>tss</code> class defines an interface for using thread specific storage.  Thread
 specific storage is data associated with individual threads and is often used to make
 operations that rely on global data thread safe.</p>
 
-<h2>Header</h2>
+<h2><a name="Header">Header</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
 </pre>
 
-<h2>Public Interface</h2>
-
-<hr width="50%" align="left">
+<h2><a name="Synopsis">Synopsis</a></h2>
 
 <pre>
-    class tss
-    {
-    public:
-        tss();
-        ~tss();
+class tss
+{
+public:
+    tss();
+    ~tss();
 
-        void* get() const;
-        bool set(void* value);
-    };
+    void* get() const;
+    bool set(void* value);
+};
 </pre>    
 
-<hr width="50%" align="left">
+<h2><a name="Members">Members</a></h2>
 
+<hr>
 <h3>Constructor</h3>
 
 <pre>
-    tss();
+tss();
 </pre>
 
-<p>Constructs a <tt>tss</tt> object for accessing thread specific storage.</p>
+<p><b>Effects:</b> Constructs a <code>tss</code> object for accessing thread specific storage.</p>
 
+<hr>
 <h3>Destructor</h3>
 
 <pre>
-    ~tss();
+~tss();
 </pre>
 
-<p>Destructs a <tt>tss</tt>.</p>
+<p><b>Effects:</b> Destroys the <code>tss</code> object.</p>
 
+<p><b>Notes:</b> This does not destroy any data that may be stored in the thread specific storage.</p>
+
+<hr>
 <h3>get</h3>
 
 <pre>
-    void* get() const;
+void* get() const;
 </pre>
 
-<p>Retrieves the thread specific storage for the current thread.</p>
+<p><b>Effects:</b> Retrieves the thread specific storage for the current thread.</p>
 
+<p><b>Notes:</b> If the current thread has not previously called <code>set()</code> the value
+returned is <code>0</code>.</p>
+
+<hr>
 <h3>set</h3>
 
 <pre>
-    bool set(void* value);
+bool set(void* value);
 </pre>
 
-<p>Sets the thread specific storage for the current thread. Returns <tt>false</tt> on failure.</p>
+<p><b>Effects:</b> Sets the thread specific storage for the current thread. Returns
+<code>false</code> on failure.</p>
 
-<h2>Example Usage</h2>
+<p><b>Notes:</b> Any previous value is simply overwritten and any data that may have been
+pointed to by the previous value is not destroyed.</p>
+
+<hr>
+<h2><a name="Example">Example Usage</a></h2>
 
 <pre>
 #include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
@@ -97,7 +118,7 @@ void increment()
    ++*p;
 }
 
-void thread_proc(void*)
+void thread_proc()
 {
    value.set(new int(0)); // initialize the thread's storage
    for (int i=0; i&lt;10; ++i)
@@ -106,13 +127,15 @@ void thread_proc(void*)
        int* p = static_cast<int*>(value.get());
        assert(*p == i+1);
    }
+   delete value.get();
 }
 
 int main(int argc, char* argv[])
 {
+   boost::thread::thread_group threads;
    for (int i=0; i&lt;5; ++i)
-      boost::thread::create(&amp;thread_proc, 0);
-   boost::thread::join_all();
+      threads.create(&amp;thread_proc);
+   threads.join_all();
 }
 </pre>
 
