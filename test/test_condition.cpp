@@ -72,7 +72,7 @@ namespace
 		// Test timed_wait.
 		boost::xtime xt;
 		BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
-		xt.nsec += 100000000;
+		xt.sec += 10;
 		while (data->notified != 3)
 			data->condition.timed_wait(lock, xt);
 		BOOST_CHECK(lock);
@@ -82,11 +82,14 @@ namespace
 
 		// Test predicate timed_wait.
 		BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
-		xt.sec += 2;
-		BOOST_CHECK(data->condition.timed_wait(lock, xt, cond_predicate(data->notified, 4)));
+		xt.sec += 10;
+		cond_predicate pred(data->notified, 4);
+		BOOST_CHECK(data->condition.timed_wait(lock, xt, pred));
 		BOOST_CHECK(lock);
+		BOOST_CHECK(pred());
 		BOOST_CHECK_EQUAL(data->notified, 4);
 		data->awoken++;
+		data->condition.notify_one();
 	}
 }
 
@@ -165,13 +168,17 @@ void test_condition_waits()
         while (data.awoken != 3)
             data.condition.wait(lock);
         BOOST_CHECK_EQUAL(data.awoken, 3);
-    }
 
-    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
-    xt.sec += 1;
-    boost::thread::sleep(xt);
-    data.notified++;
-    data.condition.notify_one();
+		BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+		xt.sec += 1;
+		boost::thread::sleep(xt);
+		data.notified++;
+		data.condition.notify_one();
+		while (data.awoken != 4)
+			data.condition.wait(lock);
+		BOOST_CHECK_EQUAL(data.awoken, 4);
+	}
+
     BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
     xt.sec += 1;
     boost::thread::sleep(xt);
