@@ -27,7 +27,7 @@ namespace boost {
 struct xtime;
 
 namespace read_write_lock_state {
-    enum read_write_lock_state
+    enum read_write_lock_state_enum
     {
         unlocked=0,
         read_locked=1,
@@ -120,7 +120,7 @@ public:
 
     scoped_read_write_lock(
         ReadWriteMutex& mx,
-        read_write_lock_state::read_write_lock_state initial_state)
+        read_write_lock_state::read_write_lock_state_enum initial_state)
         : m_mutex(mx), m_state(read_write_lock_state::unlocked)
     {
         if (initial_state == read_write_lock_state::read_locked)
@@ -178,7 +178,7 @@ public:
     //the function result indicates whether an unlock was required.
     //If allow_unlock = false, set_lock may fail;
     //the function result indicates whether it succeeded.
-    bool set_lock(read_write_lock_state::read_write_lock_state ls, bool allow_unlock = true)
+    bool set_lock(read_write_lock_state::read_write_lock_state_enum ls, bool allow_unlock = true)
     {
         bool result = !allow_unlock;
 
@@ -234,7 +234,7 @@ public:
         return (m_state != read_write_lock_state::unlocked) ? this : 0; 
     }
 
-    read_write_lock_state::read_write_lock_state state() const
+    read_write_lock_state::read_write_lock_state_enum state() const
     {
         return m_state;
     }
@@ -242,7 +242,7 @@ public:
 private:
 
     ReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename ReadWriteMutex>
@@ -295,7 +295,7 @@ public:
 private:
 
     ReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename ReadWriteMutex>
@@ -348,7 +348,7 @@ public:
 private:
 
     ReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TryReadWriteMutex>
@@ -360,7 +360,7 @@ public:
     
     scoped_try_read_write_lock(
         TryReadWriteMutex& mx,
-        read_write_lock_state::read_write_lock_state initial_state)
+        read_write_lock_state::read_write_lock_state_enum initial_state)
         : m_mutex(mx), m_state(read_write_lock_state::unlocked)
     {
         if (initial_state == read_write_lock_state::read_locked)
@@ -452,7 +452,7 @@ public:
     //the function result indicates whether an unlock was required.
     //If allow_unlock = false, set_lock may fail;
     //the function result indicates whether it succeeded.
-    bool set_lock(read_write_lock_state::read_write_lock_state ls, bool allow_unlock = true)
+    bool set_lock(read_write_lock_state::read_write_lock_state_enum ls, bool allow_unlock = true)
     {
         bool result = !allow_unlock;
 
@@ -491,7 +491,7 @@ public:
         return result;
     }
 
-    bool try_set_lock(read_write_lock_state::read_write_lock_state ls)
+    bool try_set_lock(read_write_lock_state::read_write_lock_state_enum ls)
     {
         if (m_state != ls)
         {
@@ -536,7 +536,7 @@ public:
         return (m_state != read_write_lock_state::unlocked) ? this : 0; 
     }
 
-    read_write_lock_state::read_write_lock_state state() const
+    read_write_lock_state::read_write_lock_state_enum state() const
     {
         return m_state;
     }
@@ -544,7 +544,7 @@ public:
 private:
 
     TryReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TryReadWriteMutex>
@@ -608,7 +608,7 @@ public:
 private:
 
     TryReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TryReadWriteMutex>
@@ -672,7 +672,7 @@ public:
 private:
 
     TryReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TimedReadWriteMutex>
@@ -684,7 +684,7 @@ public:
 
     scoped_timed_read_write_lock(
         TimedReadWriteMutex& mx,
-        read_write_lock_state::read_write_lock_state initial_state)
+        read_write_lock_state::read_write_lock_state_enum initial_state)
         : m_mutex(mx), m_state(read_write_lock_state::unlocked)
     {
         if (initial_state == read_write_lock_state::read_locked)
@@ -810,7 +810,7 @@ public:
     //the function result indicates whether an unlock was required.
     //If allow_unlock = false, set_lock may fail;
     //the function result indicates whether it succeeded.
-    bool set_lock(read_write_lock_state::read_write_lock_state ls, bool allow_unlock = true)
+    bool set_lock(read_write_lock_state::read_write_lock_state_enum ls, bool allow_unlock = true)
     {
         bool result = !allow_unlock;
 
@@ -849,7 +849,7 @@ public:
         return result;
     }
 
-    bool try_set_lock(read_write_lock_state::read_write_lock_state ls)
+    bool try_set_lock(read_write_lock_state::read_write_lock_state_enum ls)
     {
         if (m_state != ls)
         {
@@ -874,7 +874,7 @@ public:
             return true;
     }
 
-    bool timed_set_lock(read_write_lock_state::read_write_lock_state ls, const xtime &xt)
+    bool timed_set_lock(read_write_lock_state::read_write_lock_state_enum ls, const xtime &xt)
     {
         if (m_state != ls)
         {
@@ -919,7 +919,7 @@ public:
         return (m_state != read_write_lock_state::unlocked) ? this : 0; 
     }
 
-    read_write_lock_state::read_write_lock_state state() const
+    read_write_lock_state::read_write_lock_state_enum state() const
     {
         return m_state;
     }
@@ -927,7 +927,7 @@ public:
 private:
 
     TimedReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TimedReadWriteMutex>
@@ -999,7 +999,7 @@ public:
         return (m_state != read_write_lock_state::unlocked) ? this : 0; 
     }
 
-    read_write_lock_state::read_write_lock_state state() const
+    read_write_lock_state::read_write_lock_state_enum state() const
     {
         return m_state;
     }
@@ -1007,7 +1007,7 @@ public:
 private:
 
     TimedReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 template <typename TimedReadWriteMutex>
@@ -1079,7 +1079,7 @@ public:
         return (m_state != read_write_lock_state::unlocked) ? this : 0; 
     }
 
-    read_write_lock_state::read_write_lock_state state() const
+    read_write_lock_state::read_write_lock_state_enum state() const
     {
         return m_state;
     }
@@ -1087,7 +1087,7 @@ public:
 private:
 
     TimedReadWriteMutex& m_mutex;
-    read_write_lock_state::read_write_lock_state m_state;
+    read_write_lock_state::read_write_lock_state_enum m_state;
 };
 
 } // namespace thread

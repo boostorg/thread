@@ -591,7 +591,7 @@ bool read_write_mutex_impl<Mutex>::locked()
 }
 
 template<typename Mutex>
-read_write_lock_state::read_write_lock_state read_write_mutex_impl<Mutex>::state()
+read_write_lock_state::read_write_lock_state_enum read_write_mutex_impl<Mutex>::state()
 {
     int state = m_state;
     BOOST_ASSERT(valid_lock(state));
@@ -695,7 +695,7 @@ bool read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -756,7 +756,7 @@ bool try_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state try_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum try_read_write_mutex::state()
 {
     return m_impl.state();
 }
@@ -837,7 +837,7 @@ bool timed_read_write_mutex::locked()
     return m_impl.locked();
 }
 
-read_write_lock_state::read_write_lock_state timed_read_write_mutex::state()
+read_write_lock_state::read_write_lock_state_enum timed_read_write_mutex::state()
 {
     return m_impl.state();
 }
