@@ -8,7 +8,7 @@
   <title>Concepts</title>
   <section id="threads.concepts.mutexes">
     <title>Mutexes</title>
-    <para>A mutex (short for mutual-exclusion) object is used to serializes
+    <para>A mutex (short for mutual-exclusion) object is used to serialize
 	access to a resource shared between multiple threads. The
     <link linkend="threads.concepts.Mutex">Mutex</link> concept, with
     <link linkend="threads.concepts.TryMutex">TryMutex</link> and
@@ -16,7 +16,7 @@
     formalize the requirements. A model that implements Mutex and its
 	refinements has two states: <emphasis role="bold">locked</emphasis> and
 	<emphasis role="bold">unlocked</emphasis>. Before using a shared resource, a
-	thread locks a <emphasis role="bold">Boost.Threads</emphasis> mutex object
+	thread locks a &Boost.Threads; mutex object
 	(an object whose type is a model of
 	<link linkend="threads.concepts.Mutex">Mutex</link> or one of it's
 	refinements), ensuring
@@ -28,7 +28,7 @@
 	APIs, expose functions to lock and unlock a mutex object. This is dangerous
 	since it's easy to forget to unlock a locked mutex. When the flow of control
 	is complex, with multiple return points, the likelihood of forgetting to
-	unlock a mutex object would become even greater. When exceptions are thrown,
+	unlock a mutex object becomes even greater. When exceptions are thrown,
 	it becomes nearly impossible to ensure that the mutex object is unlocked
 	properly when using these traditional API's. The result is
     <link linkend="threads.glossary.deadlock">deadlock</link>.</para>
@@ -38,10 +38,10 @@
 	<link linkend="threads.concepts.locks">Lock</link> concept is employed where
 	the lock object's constructor locks the associated mutex object and the
 	destructor automatically does the unlocking. The
-	<emphasis role="bold">Boost.Threads</emphasis> library takes this pattern to
+	&Boost.Threads; library takes this pattern to
 	the extreme in that Lock concepts are the only way to lock and unlock a
 	mutex object: lock and unlock functions are not exposed by any
-	<emphasis role="bold">Boost.Threads</emphasis> mutex objects. This helps to
+	&Boost.Threads; mutex objects. This helps to
 	ensure safe usage patterns, especially when code throws exceptions.</para>
   </section>
   <section id="threads.concepts.locking-strategies">
@@ -51,16 +51,16 @@
 	thread already owns a lock on the mutex object.</para>
 	<section id="threads.concepts.recursive-locking-strategy">
 	  <title>Recursive Locking Strategy</title>
-      <para>With a recursive locking strategy when a thread attempts to acquire
+      <para>With a recursive locking strategy, when a thread attempts to acquire
 	  a lock on the mutex object for which it already owns a lock, the operation
 	  is successful. Note the distinction between a thread, which may have
 	  multiple locks outstanding on a recursive mutex object, and a lock object,
 	  which even for a recursive mutex object cannot have any of its lock
 	  functions called multiple times without first calling unlock.</para>
       <para>Internally a lock count is maintained and the owning thread must
-	  unlock the mutex model the same number of times that it's locked it before
+	  unlock the mutex model the same number of times that it locked it before
 	  the mutex object's state returns to unlocked. Since mutex objects in
-	  <emphasis role="bold">Boost.Threads</emphasis> expose locking
+	  &Boost.Threads; expose locking
 	  functionality only through lock concepts, a thread will always unlock a
 	  mutex object the same number of times that it locked it. This helps to
 	  eliminate a whole set of errors typically found in traditional C style
@@ -72,25 +72,25 @@
 	</section>
 	<section id="threads.concepts.checked-locking-strategy">
 	  <title>Checked Locking Strategy</title>
-      <para>With a checked locking strategy when a thread attempts to acquire a
+      <para>With a checked locking strategy, when a thread attempts to acquire a
 	  lock on the mutex object for which the thread already owns a lock, the
 	  operation will fail with some sort of error indication. Further, attempts
 	  by a thread to unlock a mutex object that was not locked by the thread
 	  will also return some sort of error indication. In
-	  <emphasis role="bold">Boost.Threads</emphasis>, an exception of type
+	  &Boost.Threads;, an exception of type
 	  <classname>boost::lock_error</classname> would be thrown in these cases.</para>
-      <para><emphasis role="bold">Boost.Threads</emphasis> does not currently
+      <para>&Boost.Threads; does not currently
 	  provide any mutex objects that use this strategy.</para>
 	</section>
 	<section id="threads.concepts.unchecked-locking-strategy">
 	  <title>Unchecked Locking Strategy</title>
-      <para>With an unchecked locking strategy when a thread attempts to acquire
+      <para>With an unchecked locking strategy, when a thread attempts to acquire
 	  a lock on a mutex object for which the thread already owns a lock the
 	  operation will
 	  <link linkend="threads.glossary.deadlock">deadlock</link>. In general
 	  this locking strategy is less safe than a checked or recursive strategy,
 	  but it's also a faster strategy and so is employed by many libraries.</para>
-      <para><emphasis role="bold">Boost.Threads</emphasis> does not currently
+      <para>&Boost.Threads; does not currently
 	  provide any mutex objects that use this strategy.</para>
 	</section>
 	<section id="threads.concepts.unspecified-locking-strategy">
@@ -119,9 +119,9 @@
 	defines which waiting thread shall acquire the lock.</para>
 	<section id="threads.concepts.FIFO-scheduling-policy">
 	  <title>FIFO Scheduling Policy</title>
-      <para>With a FIFO scheduling policy, threads waiting for the lock will
-	  acquire it in a first come first serve order (or First In First Out). This
-	  can help prevent a high priority thread from starving lower priority
+      <para>With a FIFO ("First In First Out") scheduling policy, threads waiting 
+      for the lock will acquire it in a first-come-first-served order.
+	  This can help prevent a high priority thread from starving lower priority
 	  threads that are also waiting on the mutex object's lock.</para>
 	</section>
 	<section id="threads.concepts.priority-driven-policy">
@@ -137,7 +137,7 @@
 	<section id="threads.concepts.unspecified-policy">
 	  <title>Unspecified Policy</title>
       <para>The mutex object does not specify a scheduling policy. In order to
-	  ensure portability, all <emphasis role="bold">Boost.Threads</emphasis>
+	  ensure portability, all &Boost.Threads;
 	  mutex models use an unspecified scheduling policy.</para>
 	</section>
   </section>
@@ -169,7 +169,7 @@
               unlocked.</entry>
             </row>
 			<row>
-			  <entry>(&amp;-&gt;~M();</entry>
+			  <entry>(&amp;m)-&gt;~M();</entry>
 			  <entry>Precondition: m is unlocked. Destroys a mutex object
 			  m.</entry>
 			</row>
@@ -237,41 +237,42 @@
   </section>
   <section id="threads.concepts.mutex-models">
     <title>Mutex Models</title>
-    <para><emphasis role="bold">Boost.Threads</emphasis> currently supplies six
+    <para>&Boost.Threads; currently supplies six
 	models of Mutex.</para>
 	<table>
-	  <title>Mutex Models</title>
-	  <tgroup cols="3"/>
-	  <thead>
-	    <row>
-		  <entry>Concept</entry>
-		  <entry>Refines</entry>
-		  <entry>Models</entry>
-		</row>
-	  </thead>
-	  <tbody>
-	    <row>
-		  <entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
-		  <entry></entry>
-		  <entry><classname>boost::mutex</classname>
-		  <classname>boost::recursive_mutex</classname></entry>
-		</row>
-		<row>
-		  <entry><link
-		  linkend="threads.concepts.TryMutex">TryMutex</link></entry>
-		  <entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
-		  <entry><classname>boost::try_mutex</classname>
-		  <classname>boost::recursive_try_mutex</classname></entry>
-		</row>
-		<row>
-		  <entry><link
-		  linkend="threads.concepts.TimedMutex">TimedMutex</link></entry>
-		  <entry><link
-		  linkend="threads.concepts.TryMutex">TryMutex</link></entry>
-		  <entry><classname>boost::timed_mutex</classname>
-		  <classname>boost::recursive_timed_mutex</classname></entry>
-		</row>
-	  </tbody>
+		<title>Mutex Models</title>
+		<tgroup cols="3">
+			<thead>
+				<row>
+					<entry>Concept</entry>
+					<entry>Refines</entry>
+					<entry>Models</entry>
+				</row>
+			</thead>
+			<tbody>
+				<row>
+					<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+					<entry></entry>
+					<entry><classname>boost::mutex</classname>
+					<classname>boost::recursive_mutex</classname></entry>
+				</row>
+				<row>
+					<entry><link
+					linkend="threads.concepts.TryMutex">TryMutex</link></entry>
+					<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+					<entry><classname>boost::try_mutex</classname>
+					<classname>boost::recursive_try_mutex</classname></entry>
+				</row>
+				<row>
+					<entry><link
+					linkend="threads.concepts.TimedMutex">TimedMutex</link></entry>
+					<entry><link
+					linkend="threads.concepts.TryMutex">TryMutex</link></entry>
+					<entry><classname>boost::timed_mutex</classname>
+					<classname>boost::recursive_timed_mutex</classname></entry>
+				</row>
+			</tbody>
+		</tgroup>
 	</table>
   </section>
   <section id="threads.concepts.locks">
