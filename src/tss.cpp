@@ -198,7 +198,7 @@ void tss::cleanup(void* value)
 } // namespace detail
 } // namespace boost
 
-#endif BOOST_THREAD_NO_TSS_CLEANUP
+#endif // BOOST_THREAD_NO_TSS_CLEANUP
 
 // Change Log:
 //   6 Jun 01  
