@@ -29,7 +29,7 @@ public:
         buf[p] = m;
         p = (p+1) % buf.size();
         ++full;
-        cond.notify_all();
+        cond.notify_one();
     }
     int receive()
     {
@@ -39,7 +39,7 @@ public:
         int i = buf[c];
         c = (c+1) % buf.size();
         --full;
-        cond.notify_all();
+        cond.notify_one();
         return i;
     }
     
@@ -53,25 +53,24 @@ public:
     {
         for (int n = 0; n < ITERS; ++n)
         {
-            get_buffer().send(n);
             {
                 boost::mutex::scoped_lock lock(io_mutex);
-                std::cout << "sent: " << n << std::endl;
+                std::cout << "sending: " << n << std::endl;
             }
+            get_buffer().send(n);
         }
     }
     
     static void do_receiver_thread()
     {
-        int n;
-        do
-        {
-            n = get_buffer().receive();
+		for (int x=0; x < (ITERS/2); ++x)
+		{
+            int n = get_buffer().receive();
             {
                 boost::mutex::scoped_lock lock(io_mutex);
                 std::cout << "received: " << n << std::endl;
             }
-        } while (n < ITERS - 1);
+        }
     }
     
 private:
@@ -86,10 +85,12 @@ void do_test(M* dummy=0)
 {
     typedef buffer_t<M> buffer_type;
     buffer_type::get_buffer();
-    boost::thread thrd1(&buffer_type::do_sender_thread);
-    boost::thread thrd2(&buffer_type::do_receiver_thread);
+    boost::thread thrd1(&buffer_type::do_receiver_thread);
+	boost::thread thrd2(&buffer_type::do_receiver_thread);
+    boost::thread thrd3(&buffer_type::do_sender_thread);
     thrd1.join();
     thrd2.join();
+	thrd3.join();
 }
 
 void test_buffer()

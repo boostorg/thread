@@ -89,6 +89,7 @@ void condition::notify_one()
 
         ++m_waiting;
         --m_blocked;
+		signals = 1;
     }
     else
     {
@@ -109,15 +110,15 @@ void condition::notify_one()
             res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_gate), 1, 0);
             assert(res);
         }
+    }
 
-        res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+	res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
+	assert(res);
+
+    if (signals)
+    {
+        res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
         assert(res);
-
-        if (signals)
-        {
-            res = ReleaseSemaphore(reinterpret_cast<HANDLE>(m_queue), signals, 0);
-            assert(res);
-        }
     }
 }
 
