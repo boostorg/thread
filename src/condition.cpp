@@ -244,7 +244,7 @@ void condition::do_wait()
 
 bool condition::do_timed_wait(const xtime& xt)
 {
-    unsigned milliseconds;
+    int milliseconds;
     to_duration(xt, milliseconds);
 
     unsigned int res = 0;
@@ -571,7 +571,7 @@ void condition::do_wait()
 
 bool condition::do_timed_wait(const xtime& xt)
 {
-    unsigned milliseconds;
+    int milliseconds;
     to_duration(xt, milliseconds);
 
     OSStatus lStatus = noErr;
