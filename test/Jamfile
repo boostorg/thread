@@ -38,11 +38,10 @@ include testing.jam ;
         : <template>thread_base
           <dll>../build/boost_thread
           <lib>../../test/build/boost_unit_test_framework
-#          $(threadmon)
         ## requirements ##
         :
         ## default build ##
-        : # debug release <runtime-link>static/dynamic
+        :
     ;
 
     test-suite "threads"

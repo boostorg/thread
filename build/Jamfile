@@ -32,7 +32,7 @@ include <module@>threads.jam ;
         ## requirements ##
         :
         ## default build ##
-        : debug release
+        :
     ;
 
     # Base names of the source files for libboost_thread.
