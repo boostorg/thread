@@ -5,6 +5,7 @@
 #include <boost/thread/semaphore.hpp>
 //#include <boost/thread/atomic.hpp>
 #include <boost/thread/tss.hpp>
+#include <boost/thread/thread.hpp>
 
 #define BOOST_INCLUDE_MAIN
 #include <boost/test/test_tools.hpp>
@@ -224,7 +225,7 @@ void test_condition_notify_one()
 {
 	condition_test_data data;
 
-    boost::thread::create(thread_adapter(&condition_test_thread, &data));
+    boost::thread thread(thread_adapter(&condition_test_thread, &data));
 
 	{
 		boost::mutex::lock lock(data.mutex);
@@ -233,17 +234,18 @@ void test_condition_notify_one()
 		data.condition.notify_one();
 	}
 
-    boost::thread::join_all();
+    thread.join();
 	BOOST_TEST(data.awoken == 1);
 }
 
 void test_condition_notify_all()
 {
 	const int NUMTHREADS = 5;
+    boost::thread_group threads;
 	condition_test_data data;
 
 	for (int i = 0; i < NUMTHREADS; ++i)
-        boost::thread::create(thread_adapter(&condition_test_thread, &data));
+        threads.create_thread(thread_adapter(&condition_test_thread, &data));
 
 	{
 		boost::mutex::lock lock(data.mutex);
@@ -252,7 +254,7 @@ void test_condition_notify_all()
 		data.condition.notify_all();
 	}
 
-    boost::thread::join_all();
+    threads.join_all();
 	BOOST_TEST(data.awoken == NUMTHREADS);
 }
 
@@ -312,7 +314,7 @@ void test_condition_waits()
 {
     condition_test_data data;
 
-    boost::thread::create(thread_adapter(&condition_test_waits, &data));
+    boost::thread thread(thread_adapter(&condition_test_waits, &data));
 
     boost::xtime xt;
 
@@ -356,7 +358,7 @@ void test_condition_waits()
     BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
     xt.sec += 1;
     boost::thread::sleep(xt);
-    boost::thread::join_all();
+    thread.join();
     BOOST_TEST(data.awoken == 4);
 }
 
@@ -416,9 +418,11 @@ void test_tss_thread()
 
 void test_tss()
 {
+    const int NUMTHREADS=5;
+    boost::thread_group threads;
     for (int i=0; i<5; ++i)
-        boost::thread::create(&test_tss_thread);
-    boost::thread::join_all();
+        threads.create_thread(&test_tss_thread);
+    threads.join_all();
 }
 
 int test_main(int, char*[])

@@ -151,13 +151,20 @@ private:
 
 int main(int argc, char* argv[])
 {
-    boost::thread::create(&chef);
+    boost::thread thrd_chef(&chef);
     phil p[] = { phil(0), phil(1), phil(2), phil(3), phil(4) };
-    boost::thread::create(thread_adapter(&phil::do_thread, &p[0]));
-    boost::thread::create(thread_adapter(&phil::do_thread, &p[1]));
-    boost::thread::create(thread_adapter(&phil::do_thread, &p[2]));
-    boost::thread::create(thread_adapter(&phil::do_thread, &p[3]));
-    boost::thread::create(thread_adapter(&phil::do_thread, &p[4]));
-    boost::thread::join_all();
+    boost::thread thrd_phil0(thread_adapter(&phil::do_thread, &p[0]));
+    boost::thread thrd_phil1(thread_adapter(&phil::do_thread, &p[1]));
+    boost::thread thrd_phil2(thread_adapter(&phil::do_thread, &p[2]));
+    boost::thread thrd_phil3(thread_adapter(&phil::do_thread, &p[3]));
+    boost::thread thrd_phil4(thread_adapter(&phil::do_thread, &p[4]));
+
+    thrd_chef.join();
+    thrd_phil0.join();
+    thrd_phil1.join();
+    thrd_phil2.join();
+    thrd_phil3.join();
+    thrd_phil4.join();
+
     return 0;
 }

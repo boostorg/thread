@@ -3,6 +3,7 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/thread.hpp>
 
 namespace {
     const int ITERS = 100;
@@ -83,9 +84,10 @@ void do_test(M* dummy=0)
 {
     typedef buffer_t<M> buffer_type;
     buffer_type::get_buffer();
-    boost::thread::create(&buffer_type::do_sender_thread);
-    boost::thread::create(&buffer_type::do_receiver_thread);
-    boost::thread::join_all();
+    boost::thread thrd1(&buffer_type::do_sender_thread);
+    boost::thread thrd2(&buffer_type::do_receiver_thread);
+    thrd1.join();
+    thrd2.join();
 }
 
 void test_buffer()

@@ -1,6 +1,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/semaphore.hpp>
+#include <boost/thread/thread.hpp>
 #include <iostream>
 #include <windows.h>
 #include <process.h>
@@ -81,8 +82,8 @@ int main(int argc, char* argv[])
 {
     state = START;
 
-    boost::thread::create(thread_adapter(&player, (void*)PLAYER_A));
-    boost::thread::create(thread_adapter(&player, (void*)PLAYER_B));
+    boost::thread thrda(thread_adapter(&player, (void*)PLAYER_A));
+    boost::thread thrdb(thread_adapter(&player, (void*)PLAYER_B));
 
     boost::xtime xt;
     boost::xtime_get(&xt, boost::TIME_UTC);
@@ -109,7 +110,8 @@ int main(int argc, char* argv[])
 
     std::cout << "GAME OVER" << std::endl;
 
-    boost::thread::join_all();
+    thrda.join();
+    thrdb.join();
 
     return 0;
 }
