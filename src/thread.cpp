@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -18,11 +18,11 @@
 #   include <windows.h>
 #   include <process.h>
 #elif defined(BOOST_HAS_MPTASKS)
-#    include <DriverServices.h>
+#   include <DriverServices.h>
 
-#    include "init.hpp"
-#    include "safe.hpp"
-#    include <boost/thread/tss.hpp>
+#   include "init.hpp"
+#   include "safe.hpp"
+#   include <boost/thread/tss.hpp>
 #endif
 
 #include "timeconv.inl"
@@ -32,7 +32,10 @@ namespace {
 class thread_param
 {
 public:
-    thread_param(const boost::function0<void>& threadfunc) : m_threadfunc(threadfunc), m_started(false) { }
+    thread_param(const boost::function0<void>& threadfunc)
+        : m_threadfunc(threadfunc), m_started(false)
+    {
+    }
     void wait()
     {
         boost::mutex::scoped_lock scoped_lock(m_mutex);
@@ -56,28 +59,28 @@ public:
 
 extern "C" {
 #if defined(BOOST_HAS_WINTHREADS)
-unsigned __stdcall thread_proxy(void* param)
+    unsigned __stdcall thread_proxy(void* param)
 #elif defined(BOOST_HAS_PTHREADS)
-static void* thread_proxy(void* param)
+        static void* thread_proxy(void* param)
 #elif defined(BOOST_HAS_MPTASKS)
-static OSStatus thread_proxy(void* param)
+        static OSStatus thread_proxy(void* param)
 #endif
-{
-    try
     {
-        thread_param* p = static_cast<thread_param*>(param);
-        boost::function0<void> threadfunc = p->m_threadfunc;
-        p->started();
-        threadfunc();
-    }
-    catch (...)
-    {
-    }
+        try
+        {
+            thread_param* p = static_cast<thread_param*>(param);
+            boost::function0<void> threadfunc = p->m_threadfunc;
+            p->started();
+            threadfunc();
+        }
+        catch (...)
+        {
+        }
 #if defined(BOOST_HAS_MPTASKS)
-    ::boost::detail::thread_cleanup();
+        ::boost::detail::thread_cleanup();
 #endif
-    return 0;
-}
+        return 0;
+    }
 
 }
 
@@ -104,7 +107,8 @@ thread::thread(const function0<void>& threadfunc)
 {
     thread_param param(threadfunc);
 #if defined(BOOST_HAS_WINTHREADS)
-    m_thread = reinterpret_cast<void*>(_beginthreadex(0, 0, &thread_proxy, &param, 0, &m_id));
+    m_thread = reinterpret_cast<void*>(_beginthreadex(0, 0, &thread_proxy,
+                                           &param, 0, &m_id));
     if (!m_thread)
         throw thread_resource_error();
 #elif defined(BOOST_HAS_PTHREADS)
@@ -121,11 +125,11 @@ thread::thread(const function0<void>& threadfunc)
     m_pTaskID = kInvalidID;
 
     lStatus = MPCreateQueue(&m_pJoinQueueID);
-    if(lStatus != noErr) throw thread_resource_error();
+    if (lStatus != noErr) throw thread_resource_error();
 
-    lStatus = MPCreateTask(&thread_proxy, &param, 0UL, m_pJoinQueueID, NULL, NULL,
-                            0UL, &m_pTaskID);
-    if(lStatus != noErr)
+    lStatus = MPCreateTask(&thread_proxy, &param, 0UL, m_pJoinQueueID, NULL,
+        NULL, 0UL, &m_pTaskID);
+    if (lStatus != noErr)
     {
         lStatus = MPDeleteQueue(m_pJoinQueueID);
         assert(lStatus == noErr);
@@ -181,7 +185,8 @@ void thread::join()
     res = pthread_join(m_thread, 0);
     assert(res == 0);
 #elif defined(BOOST_HAS_MPTASKS)
-    OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
+    OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(
+        m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
     assert(lStatus == noErr);
 #endif
     // This isn't a race condition since any race that could occur would
@@ -260,17 +265,20 @@ thread_group::thread_group()
 
 thread_group::~thread_group()
 {
-    // We shouldn't have to scoped_lock here, since referencing this object from another thread
-    // while we're deleting it in the current thread is going to lead to undefined behavior
-    // any way.
-    for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
+    // We shouldn't have to scoped_lock here, since referencing this object
+    // from another thread while we're deleting it in the current thread is
+    // going to lead to undefined behavior any way.
+    for (std::list<thread*>::iterator it = m_threads.begin();
+         it != m_threads.end(); ++it)
+    {
         delete (*it);
+    }
 }
 
 thread* thread_group::create_thread(const function0<void>& threadfunc)
 {
-    // No scoped_lock required here since the only "shared data" that's modified here occurs
-    // inside add_thread which does scoped_lock.
+    // No scoped_lock required here since the only "shared data" that's
+    // modified here occurs inside add_thread which does scoped_lock.
     std::auto_ptr<thread> thrd(new thread(threadfunc));
     add_thread(thrd.get());
     return thrd.release();
@@ -280,9 +288,11 @@ void thread_group::add_thread(thread* thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
-    // For now we'll simply ignore requests to add a thread object multiple times.
-    // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+    // For now we'll simply ignore requests to add a thread object multiple
+    // times. Should we consider this an error and either throw or return an
+    // error value?
+    std::list<thread*>::iterator it = std::find(m_threads.begin(),
+        m_threads.end(), thrd);
     assert(it == m_threads.end());
     if (it == m_threads.end())
         m_threads.push_back(thrd);
@@ -292,9 +302,11 @@ void thread_group::remove_thread(thread* thrd)
 {
     mutex::scoped_lock scoped_lock(m_mutex);
 
-    // For now we'll simply ignore requests to remove a thread object that's not in the group.
-    // Should we consider this an error and either throw or return an error value?
-    std::list<thread*>::iterator it = std::find(m_threads.begin(), m_threads.end(), thrd);
+    // For now we'll simply ignore requests to remove a thread object that's
+    // not in the group. Should we consider this an error and either throw or
+    // return an error value?
+    std::list<thread*>::iterator it = std::find(m_threads.begin(),
+        m_threads.end(), thrd);
     assert(it != m_threads.end());
     if (it != m_threads.end())
         m_threads.erase(it);
@@ -303,8 +315,11 @@ void thread_group::remove_thread(thread* thrd)
 void thread_group::join_all()
 {
     mutex::scoped_lock scoped_lock(m_mutex);
-    for (std::list<thread*>::iterator it = m_threads.begin(); it != m_threads.end(); ++it)
+    for (std::list<thread*>::iterator it = m_threads.begin();
+         it != m_threads.end(); ++it)
+    {
         (*it)->join();
+    }
 }
 
 } // namespace boost

@@ -1,4 +1,4 @@
-// Copyright (C) 2001
+// Copyright (C) 2001-2003
 // William E. Kempf
 //
 // Permission to use, copy, modify, distribute and sell this software
@@ -14,11 +14,13 @@
 
 namespace boost {
 
-lock_error::lock_error() : std::logic_error("thread lock error")
+lock_error::lock_error()
+    : std::logic_error("thread lock error")
 {
 }
 
-thread_resource_error::thread_resource_error() : std::runtime_error("thread resource error")
+thread_resource_error::thread_resource_error()
+    : std::runtime_error("thread resource error")
 {
 }
 

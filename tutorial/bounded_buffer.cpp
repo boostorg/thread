@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -39,9 +50,9 @@ bounded_buffer buf(2);
 void sender() {
     int n = 0;
     while (n < 100) {
-       buf.send(n);
-       std::cout << "sent: " << n << std::endl;
-       ++n;
+        buf.send(n);
+        std::cout << "sent: " << n << std::endl;
+        ++n;
     }
     buf.send(-1);
 }
@@ -49,8 +60,8 @@ void sender() {
 void receiver() {
     int n;
     do {
-       n = buf.receive();
-       std::cout << "received: " << n << std::endl;
+        n = buf.receive();
+        std::cout << "received: " << n << std::endl;
     } while (n != -1); // -1 indicates end of buffer
 }
 

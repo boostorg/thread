@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp>
@@ -132,7 +143,7 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
         lock.unlock();
         BOOST_CHECK(!lock);
-		xt = delay(0, 100);
+        xt = delay(0, 100);
         BOOST_CHECK(lock.timed_lock(xt));
         BOOST_CHECK(lock ? true : false);
     }
@@ -159,7 +170,7 @@ void do_test_mutex()
 
 void test_mutex()
 {
-	timed_test(&do_test_mutex, 3);
+    timed_test(&do_test_mutex, 3);
 }
 
 void do_test_try_mutex()
@@ -170,7 +181,7 @@ void do_test_try_mutex()
 
 void test_try_mutex()
 {
-	timed_test(&do_test_try_mutex, 3);
+    timed_test(&do_test_try_mutex, 3);
 }
 
 void do_test_timed_mutex()
@@ -182,7 +193,7 @@ void do_test_timed_mutex()
 
 void test_timed_mutex()
 {
-	timed_test(&do_test_timed_mutex, 3);
+    timed_test(&do_test_timed_mutex, 3);
 }
 
 void do_test_recursive_mutex()
@@ -193,7 +204,7 @@ void do_test_recursive_mutex()
 
 void test_recursive_mutex()
 {
-	timed_test(&do_test_recursive_mutex, 3);
+    timed_test(&do_test_recursive_mutex, 3);
 }
 
 void do_test_recursive_try_mutex()
@@ -205,7 +216,7 @@ void do_test_recursive_try_mutex()
 
 void test_recursive_try_mutex()
 {
-	timed_test(&do_test_recursive_try_mutex, 3);
+    timed_test(&do_test_recursive_try_mutex, 3);
 }
 
 void do_test_recursive_timed_mutex()
@@ -218,12 +229,13 @@ void do_test_recursive_timed_mutex()
 
 void test_recursive_timed_mutex()
 {
-	timed_test(&do_test_recursive_timed_mutex, 3);
+    timed_test(&do_test_recursive_timed_mutex, 3);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: mutex test suite");
+    boost::unit_test_framework::test_suite* test =
+        BOOST_TEST_SUITE("Boost.Threads: mutex test suite");
 
     test->add(BOOST_TEST_CASE(&test_mutex));
     test->add(BOOST_TEST_CASE(&test_try_mutex));

@@ -1,3 +1,14 @@
+// Copyright (C) 2001-2003
+// William E. Kempf
+//
+// Permission to use, copy, modify, distribute and sell this software
+// and its documentation for any purpose is hereby granted without fee,
+// provided that the above copyright notice appear in all copies and
+// that both that copyright notice and this permission notice appear
+// in supporting documentation.  William E. Kempf makes no representations
+// about the suitability of this software for any purpose.
+// It is provided "as is" without express or implied warranty.
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 
@@ -25,7 +36,8 @@ void test_sleep()
     boost::xtime xt = delay(3);
     boost::thread::sleep(xt);
 
-    // Insure it's in a range instead of checking actual equality due to time lapse
+    // Ensure it's in a range instead of checking actual equality due to time
+    // lapse
     BOOST_CHECK(in_range(xt));
 }
 
@@ -39,7 +51,7 @@ void do_test_creation()
 
 void test_creation()
 {
-	timed_test(&do_test_creation, 1);
+    timed_test(&do_test_creation, 1);
 }
 
 void do_test_comparison()
@@ -51,12 +63,13 @@ void do_test_comparison()
 
 void test_comparison()
 {
-	timed_test(&do_test_comparison, 1);
+    timed_test(&do_test_comparison, 1);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread test suite");
+    boost::unit_test_framework::test_suite* test =
+        BOOST_TEST_SUITE("Boost.Threads: thread test suite");
 
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
