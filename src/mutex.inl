@@ -65,7 +65,7 @@ inline void* new_critical_section()
 
 inline void* new_mutex(const char* name)
 {
-    HANDLE mutex = CreateMutex(0, 0, name);
+    HANDLE mutex = CreateMutexA(0, 0, name);
     if (mutex == 0 || mutex == INVALID_HANDLE_VALUE) //:xxx (check for both values?)
         throw boost::thread_resource_error();
     return reinterpret_cast<void*>(mutex);
