@@ -39,7 +39,7 @@ if $(NT)
 
 # Base names of the source files for libboost_thread
 CPP_SOURCES =
-    condition mutex recursive_mutex semaphore thread tss xtime once ;
+    condition mutex recursive_mutex thread tss xtime once exceptions ;
 
 lib libboost_thread : ../src/$(CPP_SOURCES).cpp
     # requirements

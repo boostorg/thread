@@ -2,8 +2,6 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <boost/thread/semaphore.hpp>
-//#include <boost/thread/atomic.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/thread.hpp>
@@ -373,39 +371,6 @@ void test_condition()
     test_condition_waits();
 }
 
-void test_semaphore()
-{
-    boost::xtime xt;
-    unsigned val;
-    boost::semaphore sema(0, 1);
-
-    BOOST_TEST(sema.up(1, &val));
-    BOOST_TEST(val == 0);
-    BOOST_TEST(!sema.up());
-
-    sema.down();
-    BOOST_TEST(sema.up());
-
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
-    xt.nsec += 100000000;
-    BOOST_TEST(sema.down(xt));
-    BOOST_TEST(boost::xtime_get(&xt, boost::TIME_UTC) == boost::TIME_UTC);
-    xt.nsec += 100000000;
-    BOOST_TEST(!sema.down(xt));
-}
-
-/*void test_atomic_t()
-{
-    boost::atomic_t atomic;
-    BOOST_TEST(boost::increment(atomic) > 0);
-    BOOST_TEST(boost::decrement(atomic) == 0);
-    BOOST_TEST(boost::swap(atomic, 10) == 0);
-    BOOST_TEST(boost::swap(atomic, 0) == 10);
-    BOOST_TEST(boost::compare_swap(atomic, 20, 10) == 0);
-    BOOST_TEST(boost::compare_swap(atomic, 20, 0) == 0);
-    BOOST_TEST(boost::read(atomic) == 20);
-}*/
-
 boost::mutex tss_mutex;
 int tss_instances = 0;
 
@@ -480,7 +445,6 @@ int test_main(int, char*[])
     test_recursive_try_mutex();
     test_recursive_timed_mutex();
     test_condition();
-    test_semaphore();
     test_tss();
     test_once();
     return 0;

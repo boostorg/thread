@@ -16,6 +16,7 @@
 #include <boost/limits.hpp>
 #include <stdexcept>
 #include <cassert>
+#include <new>
 #include "timeconv.inl"
 
 #if defined(BOOST_HAS_WINTHREADS)
@@ -30,30 +31,26 @@ namespace boost {
 #if defined(BOOST_HAS_WINTHREADS)
 mutex::mutex()
 {
-    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(new(std::nothrow) CRITICAL_SECTION);
     if (!m_mutex)
         throw thread_resource_error();
+    InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 mutex::~mutex()
 {
-    int res = 0;
-    res = CloseHandle(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    DeleteCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
+    delete reinterpret_cast<LPCRITICAL_SECTION>(m_mutex);
 }
 
 void mutex::do_lock()
 {
-    int res = 0;
-    res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), INFINITE);
-    assert(res == WAIT_OBJECT_0);
+    EnterCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 void mutex::do_unlock()
 {
-    int res = 0;
-    res = ReleaseMutex(reinterpret_cast<HANDLE>(m_mutex));
-    assert(res);
+    LeaveCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
 }
 
 void mutex::do_lock(cv_state&)
