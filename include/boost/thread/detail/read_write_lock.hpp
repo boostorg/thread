@@ -48,7 +48,7 @@ private:
 
 public:
 
-    typedef typename Mutex mutex_type;
+    typedef Mutex mutex_type;
 
     static void write_lock(Mutex& m)
     {
@@ -116,7 +116,7 @@ class scoped_read_write_lock : private noncopyable
 {
 public:
 
-    typedef typename ReadWriteMutex mutex_type;
+    typedef ReadWriteMutex mutex_type;
 
     scoped_read_write_lock(
         ReadWriteMutex& mx,
@@ -250,7 +250,7 @@ class scoped_read_lock : private noncopyable
 {
 public:
 
-    typedef typename ReadWriteMutex mutex_type;
+    typedef ReadWriteMutex mutex_type;
 
     explicit scoped_read_lock(
         ReadWriteMutex& mx,
@@ -303,7 +303,7 @@ class scoped_write_lock : private noncopyable
 {
 public:
 
-    typedef typename ReadWriteMutex mutex_type;
+    typedef ReadWriteMutex mutex_type;
 
     explicit scoped_write_lock(
         ReadWriteMutex& mx,
@@ -356,7 +356,7 @@ class scoped_try_read_write_lock : private noncopyable
 {
 public:
 
-    typedef typename TryReadWriteMutex mutex_type;
+    typedef TryReadWriteMutex mutex_type;
     
     scoped_try_read_write_lock(
         TryReadWriteMutex& mx,
@@ -552,7 +552,7 @@ class scoped_try_read_lock : private noncopyable
 {
 public:
 
-    typedef typename TryReadWriteMutex mutex_type;
+    typedef TryReadWriteMutex mutex_type;
     
     explicit scoped_try_read_lock(
         TryReadWriteMutex& mx,
@@ -616,7 +616,7 @@ class scoped_try_write_lock : private noncopyable
 {
 public:
 
-    typedef typename TryReadWriteMutex mutex_type;
+    typedef TryReadWriteMutex mutex_type;
     
     explicit scoped_try_write_lock(
         TryReadWriteMutex& mx,
@@ -680,7 +680,7 @@ class scoped_timed_read_write_lock : private noncopyable
 {
 public:
 
-    typedef typename TimedReadWriteMutex mutex_type;
+    typedef TimedReadWriteMutex mutex_type;
 
     scoped_timed_read_write_lock(
         TimedReadWriteMutex& mx,
@@ -935,7 +935,7 @@ class scoped_timed_read_lock : private noncopyable
 {
 public:
 
-    typedef typename TimedReadWriteMutex mutex_type;
+    typedef TimedReadWriteMutex mutex_type;
 
     explicit scoped_timed_read_lock(
         TimedReadWriteMutex& mx,
@@ -1015,7 +1015,7 @@ class scoped_timed_write_lock : private noncopyable
 {
 public:
 
-    typedef typename TimedReadWriteMutex mutex_type;
+    typedef TimedReadWriteMutex mutex_type;
 
     explicit scoped_timed_write_lock(
         TimedReadWriteMutex& mx,
