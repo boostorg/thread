@@ -1,0 +1,302 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/recursive_mutex.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="recursive_mutex">
+		<purpose>
+			<para>The <classname>recursive_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.Mutex">Mutex</link> concept.</para>
+		</purpose>
+		
+		<description>
+			<para>The <classname>recursive_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.Mutex">Mutex</link> concept. 
+			It should be used to synchronize access to shared resources using
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking mechanics.</para>
+
+			<para>For classes that model related mutex concepts, see 
+			<classname>recursive_try_mutex</classname> and <classname>recursive_timed_mutex</classname>.</para>
+
+			<para>For <link linkend="threads.concepts.unspecified-locking-strategy">Unspecified</link>
+			locking mechanics, see <classname>mutex</classname>,
+			<classname>try_mutex</classname>, and <classname>timed_mutex</classname>.
+			</para>
+			
+			<para>The <classname>recursive_mutex</classname> class supplies the following typedef,
+			which models the specified locking strategy:
+
+			<table>
+				<title>Supported Lock Types</title>
+				<tgroup cols="2" align="left">
+					<thead>
+						<row>
+							<entry>Lock Name</entry>
+							<entry>Lock Concept</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>scoped_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>			
+			</para>
+
+			<para>The <classname>recursive_mutex</classname> class uses a
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking strategy, so attempts to recursively lock a 
+			<classname>recursive_mutex</classname> object
+			succeed and an internal "lock count" is maintained. 
+			Attempts to unlock a <classname>recursive_mutex</classname> object
+			by threads that don't own a lock on it result in
+			<emphasis role="bold">undefined behavior</emphasis>.</para>
+			
+			<para>Like all
+			<link linkend="threads.concepts.mutex-models">mutex models</link>
+			in &Boost.Threads;, <classname>recursive_mutex</classname> leaves the 
+			<link linkend="threads.concepts.sheduling-policies">scheduling policy</link>
+			as <link linkend="threads.concepts.unspecified-scheduling-policy">Unspecified</link>. 
+			Programmers should make no assumptions about the order in which
+			waiting threads acquire a lock.</para>
+		</description>
+		
+		<inherit access="private">
+			<type><classname>boost::noncopyable</classname></type>
+			<purpose>Exposition only</purpose>
+		</inherit>
+		
+		<typedef name="scoped_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<constructor>
+			<effects>Constructs a <classname>recursive_mutex</classname> object.
+			</effects>
+			
+			<postconditions><code>*this</code> is in an unlocked state.
+			</postconditions>
+		</constructor>
+
+		<destructor>
+			<effects>Destroys a <classname>recursive_mutex</classname> object.</effects>
+			
+			<requires><code>*this</code> is in an unlocked state.</requires>
+			
+			<notes><emphasis role="bold">Danger:</emphasis> Destruction of a
+			locked mutex is a serious programming error resulting in undefined
+			behavior such as a program crash.</notes>
+		</destructor>
+	</class>
+	
+	<class name="recursive_try_mutex">
+		<purpose>
+			<para>The <classname>recursive_try_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.TryMutex">TryMutex</link> concept.</para>
+		</purpose>
+		
+		<description>
+			<para>The <classname>recursive_try_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.TryMutex">TryMutex</link> concept. 
+			It should be used to synchronize access to shared resources using
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking mechanics.</para>
+
+			<para>For classes that model related mutex concepts, see 
+			<classname>recursive_mutex</classname> and <classname>recursive_timed_mutex</classname>.</para>
+
+			<para>For <link linkend="threads.concepts.unspecified-locking-strategy">Unspecified</link>
+			locking mechanics, see <classname>mutex</classname>,
+			<classname>try_mutex</classname>, and <classname>timed_mutex</classname>.
+			</para>
+			
+			<para>The <classname>recursive_try_mutex</classname> class supplies the following typedefs,
+			which model the specified locking strategies:
+
+			<table>
+				<title>Supported Lock Types</title>
+				<tgroup cols="2" align="left">
+					<thead>
+						<row>
+							<entry>Lock Name</entry>
+							<entry>Lock Concept</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>scoped_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			</para>
+
+			<para>The <classname>recursive_try_mutex</classname> class uses a
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking strategy, so attempts to recursively lock a 
+			<classname>recursive_try_mutex</classname> object
+			succeed and an internal "lock count" is maintained. 
+			Attempts to unlock a <classname>recursive_mutex</classname> object
+			by threads that don't own a lock on it result in
+			<emphasis role="bold">undefined behavior</emphasis>.</para>
+			
+			<para>Like all
+			<link linkend="threads.concepts.mutex-models">mutex models</link>
+			in &Boost.Threads;, <classname>recursive_try_mutex</classname> leaves the 
+			<link linkend="threads.concepts.sheduling-policies">scheduling policy</link>
+			as <link linkend="threads.concepts.unspecified-scheduling-policy">Unspecified</link>. 
+			Programmers should make no assumptions about the order in which
+			waiting threads acquire a lock.</para>
+		</description>
+		
+		<inherit access="private">
+			<type><classname>boost::noncopyable</classname></type>
+			<purpose>Exposition only</purpose>
+		</inherit>
+		
+		<typedef name="scoped_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<constructor>
+			<effects>Constructs a <classname>recursive_try_mutex</classname> object.
+			</effects>
+			
+			<postconditions><code>*this</code> is in an unlocked state.
+			</postconditions>
+		</constructor>
+
+		<destructor>
+			<effects>Destroys a <classname>recursive_try_mutex</classname> object.
+			</effects>
+			
+			<requires><code>*this</code> is in an unlocked state.</requires>
+			
+			<notes><emphasis role="bold">Danger:</emphasis> Destruction of a
+			locked mutex is a serious programming error resulting in undefined
+			behavior such as a program crash.</notes>
+		</destructor>
+	</class>
+	
+	<class name="recursive_timed_mutex">
+		<purpose>
+			<para>The <classname>recursive_timed_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.TimedMutex">TimedMutex</link> concept.</para>
+		</purpose>
+		
+		<description>
+			<para>The <classname>recursive_timed_mutex</classname> class is a model of the 
+			<link linkend="threads.concepts.TimedMutex">TimedMutex</link> concept. 
+			It should be used to synchronize access to shared resources using
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking mechanics.</para>
+
+			<para>For classes that model related mutex concepts, see 
+			<classname>recursive_mutex</classname> and <classname>recursive_try_mutex</classname>.</para>
+
+			<para>For <link linkend="threads.concepts.unspecified-locking-strategy">Unspecified</link>
+			locking mechanics, see <classname>mutex</classname>,
+			<classname>try_mutex</classname>, and <classname>timed_mutex</classname>.
+			</para>
+			
+			<para>The <classname>recursive_timed_mutex</classname> class supplies the following typedefs,
+			which model the specified locking strategies:
+
+			<table>
+				<title>Supported Lock Types</title>
+				<tgroup cols="2" align="left">
+					<thead>
+						<row>
+							<entry>Lock Name</entry>
+							<entry>Lock Concept</entry>
+						</row>
+					</thead>
+					<tbody>
+						<row>
+							<entry>scoped_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_try_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+						</row>
+						<row>
+							<entry>scoped_timed_lock</entry>
+							<entry><link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+			</para>
+
+			<para>The <classname>recursive_timed_mutex</classname> class uses a
+			<link linkend="threads.concepts.recursive-locking-strategy">Recursive</link>
+			locking strategy, so attempts to recursively lock a 
+			<classname>recursive_timed_mutex</classname> object
+			succeed and an internal "lock count" is maintained. 
+			Attempts to unlock a <classname>recursive_mutex</classname> object
+			by threads that don't own a lock on it result in
+			<emphasis role="bold">undefined behavior</emphasis>.</para>
+			
+			<para>Like all 
+			<link linkend="threads.concepts.mutex-models">mutex models</link>
+			in  &Boost.Threads;, <classname>recursive_timed_mutex</classname> leaves the 
+			<link linkend="threads.concepts.sheduling-policies">scheduling policy</link>
+			as <link linkend="threads.concepts.unspecified-scheduling-policy">Unspecified</link>. 
+			Programmers should make no assumptions about the order in which
+			waiting threads acquire a lock.</para>
+		</description>
+		
+		<inherit access="private">
+			<type><classname>boost::noncopyable</classname></type>
+			<purpose>Exposition only</purpose>
+		</inherit>
+		
+		<typedef name="scoped_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_try_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<typedef name="scoped_timed_lock">
+			<type><emphasis>implementation-defined</emphasis></type>
+		</typedef>
+		
+		<constructor>
+			<effects>Constructs a <classname>recursive_timed_mutex</classname> object.
+			</effects>
+			
+			<postconditions><code>*this</code> is in an unlocked state.
+			</postconditions>
+		</constructor>
+
+		<destructor>
+			<effects>Destroys a <classname>recursive_timed_mutex</classname> object.</effects>
+			
+			<requires><code>*this</code> is in an unlocked state.</requires>
+			
+			<notes><emphasis role="bold">Danger:</emphasis> Destruction of a
+			locked mutex is a serious programming error resulting in undefined
+			behavior such as a program crash.</notes>
+		</destructor>
+	</class>
+  </namespace>
+</header>

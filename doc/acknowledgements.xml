@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="thread.acknowledgements"
+last-revision="$Date$">
+  <title>Acknowledgements</title>
+  <para>William E. Kempf was the architect, designer, and implementor of 
+  &Boost.Threads;.</para>
+  <para>Mac OS Carbon implementation written by Mac Murrett.</para>
+  <para>Dave Moore provided initial submissions and further comments on the 
+  <code>barrier</code>
+  , 
+  <code>thread_pool</code>
+  , 
+  <code>read_write_mutex</code>
+  , 
+  <code>read_write_try_mutex</code>
+  and 
+  <code>read_write_timed_mutex</code>
+  classes.</para>
+  <para>Important contributions were also made by Jeremy Siek (lots of input
+  on the design and on the implementation), Alexander Terekhov (lots of input
+  on the Win32 implementation, especially in regards to boost::condition, as
+  well as a lot of explanation of POSIX behavior), Greg Colvin (lots of input
+  on the design), Paul Mclachlan, Thomas Matelich and Iain Hanson (for help
+  in trying to get the build to work on other platforms), and Kevin S. Van
+  Horn (for several updates/corrections to the documentation).</para>
+  <para>Mike Glassford finished changes to &Boost.Threads; that were begun
+  by William Kempf and moved them into the main CVS branch.
+  He also addressed a number of issues that were brought up on the Boost
+  developer's mailing list and provided some additions and changes to the 
+  read_write_mutex and related classes.</para>
+  <para>The documentation was written by William E. Kempf. Beman Dawes
+  provided additional documentation material and editing.
+  Mike Glassford finished William Kempf's conversion of the documentation to 
+  BoostBook format and added a number of new sections.</para>
+  <para>Discussions on the boost.org mailing list were essential in the
+  development of &Boost.Threads;
+  . As of August 1, 2001, participants included Alan Griffiths, Albrecht
+  Fritzsche, Aleksey Gurtovoy, Alexander Terekhov, Andrew Green, Andy Sawyer,
+  Asger Alstrup Nielsen, Beman Dawes, Bill Klein, Bill Rutiser, Bill Wade,
+  Branko &egrave;ibej, Brent Verner, Craig Henderson, Csaba Szepesvari,
+  Dale Peakall, Damian Dixon, Dan Nuffer, Darryl Green, Daryle Walker, David
+  Abrahams, David Allan Finch, Dejan Jelovic, Dietmar Kuehl, Douglas Gregor,
+  Duncan Harris, Ed Brey, Eric Swanson, Eugene Karpachov, Fabrice Truillot,
+  Frank Gerlach, Gary Powell, Gernot Neppert, Geurt Vos, Ghazi Ramadan, Greg
+  Colvin, Gregory Seidman, HYS, Iain Hanson, Ian Bruntlett, J Panzer, Jeff
+  Garland, Jeff Paquette, Jens Maurer, Jeremy Siek, Jesse Jones, Joe Gottman,
+  John (EBo) David, John Bandela, John Maddock, John Max Skaller, John
+  Panzer, Jon Jagger , Karl Nelson, Kevlin Henney, KG Chandrasekhar, Levente
+  Farkas, Lie-Quan Lee, Lois Goldthwaite, Luis Pedro Coelho, Marc Girod, Mark
+  A. Borgerding, Mark Rodgers, Marshall Clow, Matthew Austern, Matthew Hurd,
+  Michael D. Crawford, Michael H. Cox , Mike Haller, Miki Jovanovic, Nathan
+  Myers, Paul Moore, Pavel Cisler, Peter Dimov, Petr Kocmid, Philip Nash,
+  Rainer Deyke, Reid Sweatman, Ross Smith, Scott McCaskill, Shalom Reich,
+  Steve Cleary, Steven Kirk, Thomas Holenstein, Thomas Matelich, Trevor
+  Perrin, Valentin Bonnard, Vesa Karvonen, Wayne Miller, and William
+  Kempf.</para>
+  <para>Apologies for anyone inadvertently missed.</para>
+</section>
+

@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<section id="threads.implementation_notes" last-revision="$Date$">
+	<title>Implementation Notes</title>
+	<section id="threads.implementation_notes.win32">
+		<title>Win32</title>
+		<para>
+			In the current Win32 implementation, creating a boost::thread object
+			during dll initialization will result in deadlock because the thread 
+			class constructor causes the current thread to wait on the thread that 
+			is being created until it signals that it has finished its initialization, 
+			and, as stated in the
+			<ulink url="http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/dllmain.asp">MSDN Library, "DllMain" article, "Remarks" section</ulink>,
+			"Because DLL notifications are serialized, entry-point functions should not
+			attempt to communicate with other threads or processes. Deadlocks may occur as a result."
+			(Also see <ulink url="http://www.microsoft.com/msj/archive/S220.aspx">"Under the Hood", January 1996</ulink> 
+			for a more detailed discussion of this issue).
+		</para>
+		<para>
+			The following non-exhaustive list details some of the situations that
+			should be avoided until this issue can be addressed:
+			<itemizedlist>
+				<listitem>Creating a boost::thread object in DllMain() or in any function called by it.</listitem>
+				<listitem>Creating a boost::thread object in the constructor of a global static object or in any function called by one.</listitem>
+				<listitem>Creating a boost::thread object in MFC's CWinApp::InitInstance() function or in any function called by it.</listitem>
+				<listitem>Creating a boost::thread object in the function pointed to by MFC's _pRawDllMain function pointer or in any function called by it.</listitem>
+			</itemizedlist>
+		</para>
+	</section>
+</section>

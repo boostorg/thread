@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<library-reference id="threads.reference"
+  last-revision="$Date$"
+  xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="barrier-ref.xml"/>
+  <xi:include href="condition-ref.xml"/>
+  <xi:include href="exceptions-ref.xml"/>
+  <xi:include href="mutex-ref.xml"/>
+  <xi:include href="once-ref.xml"/>
+  <xi:include href="recursive_mutex-ref.xml"/>
+  <xi:include href="read_write_mutex-ref.xml"/>
+  <xi:include href="thread-ref.xml"/>
+  <xi:include href="tss-ref.xml"/>
+  <xi:include href="xtime-ref.xml"/>
+</library-reference>

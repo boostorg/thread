@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/exceptions.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="lock_error">
+		<purpose>
+			<simpara>The lock_error class defines an exception type thrown
+			to indicate a locking related error has been detected.</simpara>
+		</purpose>
+
+		<description>
+			<simpara>Examples of errors indicated by a lock_error exception 
+			include a lock operation which can be determined to result in a 
+			deadlock, or unlock operations attempted by a thread that does 
+			not own the lock.</simpara>
+		</description>
+
+		<inherit access="public">
+			<type><classname>std::logical_error</classname></type>
+		</inherit>
+
+		<constructor>
+			<effects><simpara>Constructs a <code>lock_error</code> object.
+			</simpara></effects>
+		</constructor>
+	</class>
+
+	<class name="thread_resource_error">
+		<purpose>
+			<simpara>The <classname>thread_resource_error</classname> class
+			defines an exception type that is thrown by constructors in the
+			&Boost.Threads; library when thread-related resources can not be 
+			acquired.</simpara>
+		</purpose>
+
+		<description>
+			<simpara><classname>thread_resource_error</classname> is used
+			only when thread-related resources cannot be acquired; memory
+			allocation failures are indicated by 
+			<classname>std::bad_alloc</classname>.</simpara>
+		</description>
+
+		<inherit access="public">
+			<type><classname>std::runtime_error</classname></type>
+		</inherit>
+
+		<constructor>
+			<effects><simpara>Constructs a <code>thread_resource_error</code>
+			object.</simpara></effects>
+		</constructor>
+	</class>
+  </namespace>
+</header>

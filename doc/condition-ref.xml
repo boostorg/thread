@@ -1,0 +1,188 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/condition.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <class name="condition">
+      <inherit access="private">
+        <type><classname>boost::noncopyable</classname></type>
+        <purpose>Exposition only</purpose>
+      </inherit>
+
+      <purpose>
+        <para>An object of class <classname>condition</classname> is a
+          synchronization primitive used to cause a thread to wait until a
+          particular shared-data condition (or time) is met.</para>
+      </purpose>
+
+      <description>
+        <para>A <classname>condition</classname> object is always used in
+          conjunction with a <link linkend="threads.concepts.mutexes">mutex</link>
+          object (an object whose type is a model of a <link
+            linkend="threads.concepts.Mutex">Mutex</link> or one of its
+          refinements). The mutex object must be locked prior to waiting on the
+          condition, which is verified by passing a lock object (an object whose
+          type is a model of <link linkend="threads.concepts.Lock">Lock</link> or
+          one of its refinements) to the <classname>condition</classname> object's
+          wait functions. Upon blocking on the <classname>condition</classname>
+          object, the thread unlocks the mutex object. When the thread returns
+          from a call to one of the <classname>condition</classname> object's wait
+          functions the mutex object is again locked. The tricky unlock/lock
+          sequence is performed automatically by the
+          <classname>condition</classname> object's wait functions.</para>
+        <para>The <classname>condition</classname> type is often used to
+          implement the Monitor Object and other important patterns (see
+          &cite.SchmidtStalRohnertBuschmann; and &cite.Hoare74;). Monitors are one
+          of the most important patterns for creating reliable multithreaded
+          programs.</para>
+        <para>See <xref linkend="threads.glossary"/> for definitions of <link
+            linkend="threads.glossary.thread-state">thread states</link>
+          blocked and ready. Note that "waiting" is a synonym for blocked.</para>
+      </description>
+
+      <constructor>
+        <effects><simpara>Constructs a <classname>condition</classname>
+            object.</simpara></effects>
+      </constructor>
+
+      <destructor>
+        <effects><simpara>Destroys <code>*this</code>.</simpara></effects>
+      </destructor>
+
+      <method-group name="notification">
+        <method name="notify_one">
+          <type>void</type>
+          <effects><simpara>If there is a thread waiting on <code>*this</code>,
+              change that thread's state to ready. Otherwise there is no
+              effect.</simpara></effects>
+          <notes><simpara>If more than one thread is waiting on <code>*this</code>,
+              it is unspecified which is made ready. After returning to a ready
+              state the notified thread must still acquire the mutex again (which
+              occurs within the call to one of the <classname>condition</classname>
+              object's wait functions.)</simpara></notes>
+        </method>
+
+        <method name="notify_all">
+          <type>void</type>
+          <effects><simpara>Change the state of all threads waiting on
+              <code>*this</code> to ready. If there are no waiting threads,
+              <code>notify_all()</code> has no effect.</simpara></effects>
+        </method>
+      </method-group>
+
+      <method-group name="waiting">
+        <method name="wait">
+          <template>
+            <template-type-parameter name="ScopedLock"/>
+          </template>
+
+          <type>void</type>
+
+          <parameter name="lock">
+            <paramtype>ScopedLock&amp;</paramtype>
+          </parameter>
+
+          <requires><simpara><code>ScopedLock</code> meets the <link
+                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+              requirements.</simpara></requires>
+          <effects><simpara>Releases the lock on the <link
+                linkend="threads.concepts.mutexes">mutex object</link>
+              associated with <code>lock</code>, blocks the current thread of execution
+              until readied by a call to <code>this->notify_one()</code>
+              or<code> this->notify_all()</code>, and then reacquires the
+              lock.</simpara></effects>
+          <throws><simpara><classname>lock_error</classname> if
+              <code>!lock.locked()</code></simpara></throws>
+        </method>
+
+        <method name="wait">
+          <template>
+            <template-type-parameter name="ScopedLock"/>
+            <template-type-parameter name="Pred"/>
+          </template>
+
+          <type>void</type>
+
+          <parameter name="lock">
+            <paramtype>ScopedLock&amp;</paramtype>
+          </parameter>
+
+          <parameter name="pred">
+            <paramtype>Pred</paramtype>
+          </parameter>
+
+          <requires><simpara><code>ScopedLock</code> meets the <link
+                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+              requirements and the return from <code>pred()</code> is
+              convertible to <code>bool</code>.</simpara></requires>
+          <effects><simpara>As if: <code>while (!pred())
+                wait(lock)</code></simpara></effects>
+          <throws><simpara><classname>lock_error</classname> if
+              <code>!lock.locked()</code></simpara></throws>
+        </method>
+
+        <method name="timed_wait">
+          <template>
+            <template-type-parameter name="ScopedLock"/>
+          </template>
+
+          <type>bool</type>
+
+          <parameter name="lock">
+            <paramtype>ScopedLock&amp;</paramtype>
+          </parameter>
+
+          <parameter name="xt">
+            <paramtype>const <classname>boost::xtime</classname>&amp;</paramtype>
+          </parameter>
+
+          <requires><simpara><code>ScopedLock</code> meets the <link
+                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+              requirements.</simpara></requires>
+          <effects><simpara>Releases the lock on the <link
+                linkend="threads.concepts.mutexes">mutex object</link>
+              associated with <code>lock</code>, blocks the current thread of execution
+              until readied by a call to <code>this->notify_one()</code>
+              or<code> this->notify_all()</code>, or until time <code>xt</code> 
+              is reached, and then reacquires the lock.</simpara></effects>
+          <returns><simpara><code>false</code> if time <code>xt</code> is reached,
+              otherwise <code>true</code>.</simpara></returns>
+          <throws><simpara><classname>lock_error</classname> if
+              <code>!lock.locked()</code></simpara></throws>
+        </method>
+
+        <method name="timed_wait">
+          <template>
+            <template-type-parameter name="ScopedLock"/>
+            <template-type-parameter name="Pred"/>
+          </template>
+
+          <type>bool</type>
+
+          <parameter name="lock">
+            <paramtype>ScopedLock&amp;</paramtype>
+          </parameter>
+
+          <parameter name="pred">
+            <paramtype>Pred</paramtype>
+          </parameter>
+
+          <requires><simpara><code>ScopedLock</code> meets the <link
+                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+              requirements and the return from <code>pred()</code> is
+              convertible to <code>bool</code>.</simpara></requires>
+          <effects><simpara>As if: <code>while (!pred()) { if (!timed_wait(lock,
+                xt)) return false; } return true;</code></simpara></effects>
+          <returns><simpara><code>false</code> if <code>xt</code> is reached,
+              otherwise <code>true</code>.</simpara></returns>
+          <throws><simpara><classname>lock_error</classname> if
+              <code>!lock.locked()</code></simpara></throws>
+        </method>
+      </method-group>
+    </class>
+  </namespace>
+</header>
