@@ -126,15 +126,34 @@ void call_once(void (*func)(), once_flag& flag)
     {
 #if defined(BOOST_NO_STRINGSTREAM)
         std::ostrstream strm;
-        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex
-             << GetCurrentProcessId() << &flag << std::ends;
+        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" 
+             << std::hex
+             << GetCurrentProcessId() 
+             << &flag 
+             << std::ends;
         unfreezer unfreeze(strm);
+#   if defined (BOOST_NO_ANSI_APIS)
+        USES_CONVERSION;
+        HANDLE mutex = CreateMutexW(NULL, FALSE, A2CW(strm.str()));
+#   else
         HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str());
+#   endif
 #else
+#   if defined (BOOST_NO_ANSI_APIS)
+        std::wostringstream strm;
+        strm << L"2AC1A572DB6944B0A65C38C4140AF2F4" 
+             << std::hex
+             << GetCurrentProcessId() 
+             << &flag;
+        HANDLE mutex = CreateMutexW(NULL, FALSE, strm.str().c_str());
+#   else
         std::ostringstream strm;
-        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex
-             << GetCurrentProcessId() << &flag;
+        strm << "2AC1A572DB6944B0A65C38C4140AF2F4" 
+             << std::hex
+             << GetCurrentProcessId() 
+             << &flag;
         HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str().c_str());
+#   endif
 #endif
         assert(mutex != NULL);
 
