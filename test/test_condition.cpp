@@ -4,7 +4,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#include <util.inl>
+#include "util.inl"
 
 namespace
 {
