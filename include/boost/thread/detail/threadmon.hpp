@@ -10,9 +10,8 @@
 // It is provided "as is" without express or implied warranty.
 
 #include <boost/config.hpp>
-#ifndef BOOST_HAS_THREADS
-#   error   Thread support is unavailable!
-#endif
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
 
 #include <boost/thread/detail/config.hpp>
 
