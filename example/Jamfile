@@ -28,41 +28,23 @@ subproject libs/thread/example ;
 SEARCH on <module@>threads.jam = $(BOOST_ROOT)/libs/thread/build ;
 include <module@>threads.jam ;
 
-#######################
-# Declare the Boost.Threads example program monitor.
-
-exe monitor
-    : monitor/monitor.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <sysinclude>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
+template example_base
+    ## sources ##
+    : <template>thread_base <lib>../build/boost_thread <lib>../../test/build/unit_test_framework $(threadmon)
+    ## requirements ##
+    :
+    ## default build ##
+    :
 ;
 
-#######################
-# Declare the Boost.Threads example program starvephil.
-
-exe starvephil
-    : starvephil/starvephil.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <sysinclude>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
-
-#######################
-# Declare the Boost.Threads example program tennis.
-
-exe tennis
-    : tennis/tennis.cpp
-      <lib>../build/boost_thread
-      $(threadmon)
-    : <sysinclude>$(BOOST_ROOT)
-      $(pthreads-win32)
-      <threading>multi
-    : debug release <runtime-link>static/dynamic
-;
+exe monitor : <template>example_base monitor.cpp ;
+exe starvephil : <template>example_base starvephil.cpp ;
+exe tennis : <template>example_base tennis.cpp ;
+exe condition : <template>example_base condition.cpp ;
+exe mutex : <template>example_base mutex.cpp ;
+exe once : <template>example_base once.cpp ;
+exe recursive_mutex : <template>example_base recursive_mutex.cpp ;
+exe thread : <template>example_base thread.cpp ;
+exe thread_group : <template>example_base thread_group.cpp ;
+exe tss : <template>example_base tss.cpp ;
+exe xtime : <template>example_base xtime.cpp ;
