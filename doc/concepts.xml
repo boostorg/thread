@@ -5,504 +5,727 @@
   %threads.entities;
 ]>
 <section id="threads.concepts" last-revision="$Date$">
-  <title>Concepts</title>
-  
-  <para>&Boost.Threads; currently supports two types of mutex concepts:
-  ordinary <link linkend="threads.concepts.mutexes">Mutexes</link>,
-  which allow only one thread at a time to access a resource, and
-  <link linkend="threads.concepts.read-write-mutexes">Read/Write Mutexes</link>,
-  which allow only one thread at a time to access a resource when it is
-  being modified (the "Write" part of Read/Write), but allows multiple threads
-  to access a resource when it is only being referenced (the "Read" part of
-  Read/Write).</para>
+	<title>Concepts</title>
 
-  <section id="threads.concepts.mutexes">
-    <title>Mutexes</title>
-    <para>A mutex (short for mutual-exclusion) object is used to serialize
-	access to a resource shared between multiple threads. The
-    <link linkend="threads.concepts.Mutex">Mutex</link> concept, with
-    <link linkend="threads.concepts.TryMutex">TryMutex</link> and
-    <link linkend="threads.concepts.TimedMutex">TimedMutex</link>  refinements,
-    formalize the requirements. A model that implements Mutex and its
-	refinements has two states: <emphasis role="bold">locked</emphasis> and
-	<emphasis role="bold">unlocked</emphasis>. Before using a shared resource, a
-	thread locks a &Boost.Threads; mutex object
-	(an object whose type is a model of
-	<link linkend="threads.concepts.Mutex">Mutex</link> or one of it's
-	refinements), ensuring
-	<link linkend="threads.glossary.thread-safe">thread-safe</link> access to
-	the shared resource. When use of the shared resource is complete, the thread
-	unlocks the mutex object, allowing another thread to acquire the lock and
-	use the shared resource.</para>
-    <para>Traditional C thread APIs, like POSIX threads or the Windows thread
-	APIs, expose functions to lock and unlock a mutex object. This is dangerous
-	since it's easy to forget to unlock a locked mutex. When the flow of control
-	is complex, with multiple return points, the likelihood of forgetting to
-	unlock a mutex object becomes even greater. When exceptions are thrown,
-	it becomes nearly impossible to ensure that the mutex object is unlocked
-	properly when using these traditional API's. The result is
-    <link linkend="threads.glossary.deadlock">deadlock</link>.</para>
-    <para>Many C++ threading libraries use a pattern known as <emphasis>Scoped
-	Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; to free the programmer from
-	the need to explicitly lock and unlock mutex objects. With this pattern, a
-	<link linkend="threads.concepts.lock-concepts">Lock</link> concept is employed where
-	the lock object's constructor locks the associated mutex object and the
-	destructor automatically does the unlocking. The
-	&Boost.Threads; library takes this pattern to
-	the extreme in that Lock concepts are the only way to lock and unlock a
-	mutex object: lock and unlock functions are not exposed by any
-	&Boost.Threads; mutex objects. This helps to
-	ensure safe usage patterns, especially when code throws exceptions.</para>
+	<para>&Boost.Threads; currently supports two types of mutex concepts:
+	ordinary <link linkend="threads.concepts.mutexes">Mutexes</link>,
+	which allow only one thread at a time to access a resource, and
+	<link linkend="threads.concepts.read-write-mutexes">Read/Write Mutexes</link>,
+	which allow only one thread at a time to access a resource when it is
+	being modified (the "Write" part of Read/Write), but allows multiple threads
+	to access a resource when it is only being referenced (the "Read" part of
+	Read/Write).</para>
 
-  <section id="threads.concepts.locking-strategies">
-    <title>Locking Strategies</title>
-    <para>Every mutex object follows one of several locking strategies. These
-	strategies define the semantics for the locking operation when the calling
-	thread already owns a lock on the mutex object.</para>
-	<section id="threads.concepts.recursive-locking-strategy">
-	  <title>Recursive Locking Strategy</title>
-      <para>With a recursive locking strategy, when a thread attempts to acquire
-	  a lock on the mutex object for which it already owns a lock, the operation
-	  is successful. Note the distinction between a thread, which may have
-	  multiple locks outstanding on a recursive mutex object, and a lock object,
-	  which even for a recursive mutex object cannot have any of its lock
-	  functions called multiple times without first calling unlock.</para>
-      <para>Internally a lock count is maintained and the owning thread must
-	  unlock the mutex object the same number of times that it locked it before
-	  the mutex object's state returns to unlocked. Since mutex objects in
-	  &Boost.Threads; expose locking
-	  functionality only through lock concepts, a thread will always unlock a
-	  mutex object the same number of times that it locked it. This helps to
-	  eliminate a whole set of errors typically found in traditional C style
-	  thread APIs.</para>
-      <para>Classes <classname>boost::recursive_mutex</classname>,
-	  <classname>boost::recursive_try_mutex</classname> and
-	  <classname>boost::recursive_timed_mutex</classname> use this locking
-	  strategy.</para>
-	</section>
-	<section id="threads.concepts.checked-locking-strategy">
-	  <title>Checked Locking Strategy</title>
-      <para>With a checked locking strategy, when a thread attempts to acquire a
-	  lock on the mutex object for which the thread already owns a lock, the
-	  operation will fail with some sort of error indication. Further, attempts
-	  by a thread to unlock a mutex object that was not locked by the thread
-	  will also return some sort of error indication. In
-	  &Boost.Threads;, an exception of type
-	  <classname>boost::lock_error</classname> would be thrown in these cases.</para>
-      <para>&Boost.Threads; does not currently
-	  provide any mutex objects that use this strategy.</para>
-	</section>
-	<section id="threads.concepts.unchecked-locking-strategy">
-	  <title>Unchecked Locking Strategy</title>
-      <para>With an unchecked locking strategy, when a thread attempts to acquire
-	  a lock on a mutex object for which the thread already owns a lock the
-	  operation will
-	  <link linkend="threads.glossary.deadlock">deadlock</link>. In general
-	  this locking strategy is less safe than a checked or recursive strategy,
-	  but it's also a faster strategy and so is employed by many libraries.</para>
-      <para>&Boost.Threads; does not currently
-	  provide any mutex objects that use this strategy.</para>
-	</section>
-	<section id="threads.concepts.unspecified-locking-strategy">
-	  <title>Unspecified Locking Strategy</title>
-      <para>With an unspecified locking strategy, when a thread attempts to
-	  acquire a lock on a mutex object for which the thread already owns a lock
-	  the operation results in 
-	  <link linkend="threads.glossary.undefined-behavior">undefined behavior</link>.
-	  </para>
-      <para>In general a mutex object with an unspecified locking strategy is
-	  unsafe, and it requires programmer discipline to use the mutex object
-	  properly. However, this strategy allows an implementation to be as fast as
-	  possible with no restrictions on its implementation. This is especially
-	  true for portable implementations that wrap the native threading support
-	  of a platform. For this reason, the classes
-	  <classname>boost::mutex</classname>,
-	  <classname>boost::try_mutex</classname> and
-	  <classname>boost::timed_mutex</classname> use this locking strategy
-	  despite the lack of safety.</para>
-	</section>
-  </section>
-  <section id="threads.concepts.sheduling-policies">
-    <title>Scheduling Policies</title>
-    <para>Every mutex object follows one of several scheduling policies. These
-	policies define the semantics when the mutex object is unlocked and there is
-	more than one thread waiting to acquire a lock. In other words, the policy
-	defines which waiting thread shall acquire the lock.</para>
-	<section id="threads.concepts.FIFO-scheduling-policy">
-	  <title>FIFO Scheduling Policy</title>
-      <para>With a FIFO ("First In First Out") scheduling policy, threads waiting 
-      for the lock will acquire it in a first-come-first-served order.
-	  This can help prevent a high priority thread from starving lower priority
-	  threads that are also waiting on the mutex object's lock.</para>
-	</section>
-	<section id="threads.concepts.priority-driven-scheduling-policy">
-	  <title>Priority Driven Policy</title>
-      <para>With a Priority Driven scheduling policy, the thread with the
-	  highest priority acquires the lock. Note that this means that low-priority
-	  threads may never acquire the lock if the mutex object has high contention
-	  and there is always at least one high-priority thread waiting. This is
-	  known as thread starvation. When multiple threads of the same priority are
-	  waiting on the mutex object's lock one of the other scheduling priorities
-	  will determine which thread shall acquire the lock.</para>
-	</section>
-	<section id="threads.concepts.unspecified-scheduling-policy">
-	  <title>Unspecified Policy</title>
-      <para>The mutex object does not specify a scheduling policy. In order to
-	  ensure portability, all &Boost.Threads;
-	  mutex objects use an unspecified scheduling policy.</para>
-	</section>
-  </section>
-  <section id="threads.concepts.mutex-concepts">
-    <title>Mutex Concept Requirements</title>
-	<section id="threads.concepts.Mutex">
-	  <title>Mutex Concept</title>
-      <para>A Mutex object has two states: locked and unlocked. Mutex object
-	  state can only be determined by an object meeting the
-	  <link linkend="threads.concepts.ScopedLock">ScopedLock</link> requirements
-	  and constructed for the Mutex object.</para>
-      <para>A Mutex is
-	  <ulink url="../../utility/utility.htm#Class%20noncopyable">
-	  NonCopyable</ulink>.</para>
-	  <para>For a Mutex type M and an object m of that type, the following
-	  expressions must be well-formed and have the indicated effects.</para>
-	  <table>
-		<title>Mutex Expressions</title>
-	    <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Expression</entry>
-		      <entry>Effects</entry>
-            </row>
-          </thead>
-          <tbody>
-            <row>
-              <entry>M m;</entry>
-              <entry><para>Constructs a mutex object m.</para>
-              <para>Postcondition: m is unlocked.</para></entry>
-            </row>
-			<row>
-			  <entry>(&amp;m)-&gt;~M();</entry>
-			  <entry>Precondition: m is unlocked. Destroys a mutex object
-			  m.</entry>
-			</row>
-			<row>
-		      <entry>M::scoped_lock</entry>
-			  <entry>A model of
-			    <link linkend="threads.concepts.ScopedLock">ScopedLock</link>
-			  </entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table>
-	</section>
-	<section id="threads.concepts.TryMutex">
-	  <title>TryMutex Concept</title>
-      <para>A TryMutex is a refinement of
-	  <link linkend="threads.concepts.Mutex">Mutex</link>. For a TryMutex type M
-	  and an object m of that type, the following expressions must be
-	  well-formed and have the indicated effects.</para>
-	  <table>
-		<title>TryMutex Expressions</title>
-	    <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Expression</entry>
-			  <entry>Effects</entry>
-			</row>
-		  </thead>
-		  <tbody>
-		    <row>
-		      <entry>M::scoped_try_lock</entry>
-			  <entry>A model of
-			    <link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
-			  </entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table>
-	</section>
-	<section id="threads.concepts.TimedMutex">
-	  <title>TimedMutex Concept</title>
-      <para>A TimedMutex is a refinement of
-	  <link linkend="threads.concepts.TryMutex">TryMutex</link>. For a TimedMutex
-	  type M and an object m of that type, the following expressions must be
-	  well-formed and have the indicated effects.</para>
-	  <table>
-		<title>TimedMutex Expressions</title>
-	    <tgroup cols="2">
-          <thead>
-            <row>
-              <entry>Expression</entry>
-			  <entry>Effects</entry>
-		    </row>
-		  </thead>
-		  <tbody>
-		    <row>
-		      <entry>M::scoped_timed_lock</entry>
-			  <entry>A model of
-			  <link
-			  linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
-			  </entry>
-		    </row>
-		  </tbody>
-        </tgroup>
-	  </table>
-	</section>
-  </section>
-  <section id="threads.concepts.mutex-models">
-    <title>Mutex Models</title>
-    <para>&Boost.Threads; currently supplies six models of
-    <link linkend="threads.concepts.Mutex">Mutex</link>
-	and its refinements.</para>
-	<table>
-		<title>Mutex Models</title>
-		<tgroup cols="3">
-			<thead>
-				<row>
-					<entry>Concept</entry>
-					<entry>Refines</entry>
-					<entry>Models</entry>
-				</row>
-			</thead>
-			<tbody>
-				<row>
-					<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
-					<entry></entry>
-					<entry>
-						<para><classname>boost::mutex</classname></para>
-						<para><classname>boost::recursive_mutex</classname></para>
-					</entry>
-				</row>
-				<row>
-					<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
-					<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
-					<entry>
-						<para><classname>boost::try_mutex</classname></para>
-						<para><classname>boost::recursive_try_mutex</classname></para>
-					</entry>
-				</row>
-				<row>
-					<entry><link linkend="threads.concepts.TimedMutex">TimedMutex</link></entry>
-					<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
-					<entry>
-						<para><classname>boost::timed_mutex</classname></para>
-						<para><classname>boost::recursive_timed_mutex</classname></para>
-					</entry>
-				</row>
-			</tbody>
-		</tgroup>
-	</table>
-  </section>
-  <section id="threads.concepts.lock-concepts">
-    <title>Lock Concept Requirements</title>
+	<section id="threads.concepts.mutexes">
+		<title>Mutexes</title>
+		
+		<para>A mutex (short for mutual-exclusion) object is used to serialize
+		access to a resource shared between multiple threads. The
+		<link linkend="threads.concepts.Mutex">Mutex</link> concept, with
+		<link linkend="threads.concepts.TryMutex">TryMutex</link> and
+		<link linkend="threads.concepts.TimedMutex">TimedMutex</link> refinements,
+		formalize the requirements. A model that implements Mutex and its
+		refinements has two states: <emphasis role="bold">locked</emphasis> and
+		<emphasis role="bold">unlocked</emphasis>. Before using a shared resource, a
+		thread locks a &Boost.Threads; mutex object
+		(an object whose type is a model of
+		<link linkend="threads.concepts.Mutex">Mutex</link> or one of it's
+		refinements), ensuring
+		<link linkend="threads.glossary.thread-safe">thread-safe</link> access to
+		the shared resource. When use of the shared resource is complete, the thread
+		unlocks the mutex object, allowing another thread to acquire the lock and
+		use the shared resource.</para>
+		<para>Traditional C thread APIs, like POSIX threads or the Windows thread
+		APIs, expose functions to lock and unlock a mutex object. This is dangerous
+		since it's easy to forget to unlock a locked mutex. When the flow of control
+		is complex, with multiple return points, the likelihood of forgetting to
+		unlock a mutex object becomes even greater. When exceptions are thrown,
+		it becomes nearly impossible to ensure that the mutex object is unlocked
+		properly when using these traditional API's. The result is
+		<link linkend="threads.glossary.deadlock">deadlock</link>.</para>
+		<para>Many C++ threading libraries use a pattern known as <emphasis>Scoped
+		Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; to free the programmer from
+		the need to explicitly lock and unlock mutex objects. With this pattern, a
+		<link linkend="threads.concepts.lock-concepts">Lock</link> concept is employed where
+		the lock object's constructor locks the associated mutex object and the
+		destructor automatically does the unlocking. The
+		&Boost.Threads; library takes this pattern to
+		the extreme in that Lock concepts are the only way to lock and unlock a
+		mutex object: lock and unlock functions are not exposed by any
+		&Boost.Threads; mutex objects. This helps to
+		ensure safe usage patterns, especially when code throws exceptions.</para>
 
-    <para>A lock object provides a safe means for locking and unlocking a mutex
-	object (an object whose type is a model of <link
-	linkend="threads.concepts.Mutex">Mutex</link> or one of its refinements). In
-	other words they are an implementation of the <emphasis>Scoped
-	Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; pattern. The <link
-	linkend="threads.concepts.ScopedLock">ScopedLock</link> concept, with <link
-	linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link> and <link
-	linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
-	refinements, formalize the requirements.</para>
-    <para>Lock objects are constructed with a reference to a mutex object and
-	typically acquire ownership of the mutex object by setting its state to
-	locked. They also ensure ownership is relinquished in the destructor. Lock
-	objects also expose functions to query the lock status and to manually lock
-	and unlock the mutex object.</para>
-    <para>Lock objects are meant to be short lived, expected to be used at block
-	scope only. The lock objects are not <link
-	linkend="threads.glossary.thread-safe">thread-safe</link>. Lock objects must
-	maintain state to indicate whether or not they've been locked and this state
-	is not protected by any synchronization concepts. For this reason a lock
-	object should never be shared between multiple threads.</para>
+		<section id="threads.concepts.locking-strategies">
+			<title>Locking Strategies</title>
+			
+			<para>Every mutex object follows one of several locking strategies. These
+			strategies define the semantics for the locking operation when the calling
+			thread already owns a lock on the mutex object.</para>
+			
+			<section id="threads.concepts.recursive-locking-strategy">
+				<title>Recursive Locking Strategy</title>
+			
+				<para>With a recursive locking strategy, when a thread attempts to acquire
+				a lock on the mutex object for which it already owns a lock, the operation
+				is successful. Note the distinction between a thread, which may have
+				multiple locks outstanding on a recursive mutex object, and a lock object,
+				which even for a recursive mutex object cannot have any of its lock
+				functions called multiple times without first calling unlock.</para>
+				
+				<para>Internally a lock count is maintained and the owning thread must
+				unlock the mutex object the same number of times that it locked it before
+				the mutex object's state returns to unlocked. Since mutex objects in
+				&Boost.Threads; expose locking
+				functionality only through lock concepts, a thread will always unlock a
+				mutex object the same number of times that it locked it. This helps to
+				eliminate a whole set of errors typically found in traditional C style
+				thread APIs.</para>
+				
+				<para>Classes <classname>boost::recursive_mutex</classname>,
+				<classname>boost::recursive_try_mutex</classname> and
+				<classname>boost::recursive_timed_mutex</classname> use this locking
+				strategy.</para>
+			</section>
+			
+			<section id="threads.concepts.checked-locking-strategy">
+				<title>Checked Locking Strategy</title>
+				
+				<para>With a checked locking strategy, when a thread attempts to acquire a
+				lock on the mutex object for which the thread already owns a lock, the
+				operation will fail with some sort of error indication. Further, attempts
+				by a thread to unlock a mutex object that was not locked by the thread
+				will also return some sort of error indication. In
+				&Boost.Threads;, an exception of type
+				<classname>boost::lock_error</classname> 
+				would be thrown in these cases.</para>
+				
+				<para>&Boost.Threads; does not currently
+				provide any mutex objects that use this strategy.</para>
+			</section>
+			
+			<section id="threads.concepts.unchecked-locking-strategy">
+				<title>Unchecked Locking Strategy</title>
+				
+				<para>With an unchecked locking strategy, when a thread attempts to acquire
+				a lock on a mutex object for which the thread already owns a lock the
+				operation will
+				<link linkend="threads.glossary.deadlock">deadlock</link>. In general
+				this locking strategy is less safe than a checked or recursive strategy,
+				but it's also a faster strategy and so is employed by many libraries.</para>
+				
+				<para>&Boost.Threads; does not currently
+				provide any mutex objects that use this strategy.</para>
+			</section>
+			
+			<section id="threads.concepts.unspecified-locking-strategy">
+				<title>Unspecified Locking Strategy</title>
+				
+				<para>With an unspecified locking strategy, when a thread attempts to
+				acquire a lock on a mutex object for which the thread already owns a lock
+				the operation results in 
+				<link linkend="threads.glossary.undefined-behavior">undefined behavior</link>.
+				</para>
+				
+				<para>In general a mutex object with an unspecified locking strategy is
+				unsafe, and it requires programmer discipline to use the mutex object
+				properly. However, this strategy allows an implementation to be as fast as
+				possible with no restrictions on its implementation. This is especially
+				true for portable implementations that wrap the native threading support
+				of a platform. For this reason, the classes
+				<classname>boost::mutex</classname>,
+				<classname>boost::try_mutex</classname> and
+				<classname>boost::timed_mutex</classname> use this locking strategy
+				despite the lack of safety.</para>
+			</section>
+		</section>
+		
+		<section id="threads.concepts.sheduling-policies">
+			<title>Scheduling Policies</title>
+			
+			<para>Every mutex object follows one of several scheduling policies. These
+			policies define the semantics when the mutex object is unlocked and there is
+			more than one thread waiting to acquire a lock. In other words, the policy
+			defines which waiting thread shall acquire the lock.</para>
+			
+			<section id="threads.concepts.FIFO-scheduling-policy">
+				<title>FIFO Scheduling Policy</title>
+				
+				<para>With a FIFO ("First In First Out") scheduling policy, threads waiting 
+				for the lock will acquire it in a first-come-first-served order.
+				This can help prevent a high priority thread from starving lower priority
+				threads that are also waiting on the mutex object's lock.</para>
+			</section>
+			
+			<section id="threads.concepts.priority-driven-scheduling-policy">
+				<title>Priority Driven Policy</title>
+				
+				<para>With a Priority Driven scheduling policy, the thread with the
+				highest priority acquires the lock. Note that this means that low-priority
+				threads may never acquire the lock if the mutex object has high contention
+				and there is always at least one high-priority thread waiting. This is
+				known as thread starvation. When multiple threads of the same priority are
+				waiting on the mutex object's lock one of the other scheduling priorities
+				will determine which thread shall acquire the lock.</para>
+			</section>
+			
+			<section id="threads.concepts.unspecified-scheduling-policy">
+				<title>Unspecified Policy</title>
+				
+				<para>The mutex object does not specify a scheduling policy. In order to
+				ensure portability, all &Boost.Threads;
+				mutex objects use an unspecified scheduling policy.</para>
+			</section>
+		</section>
+		
+		<section id="threads.concepts.mutex-concepts">
+			<title>Mutex Concepts</title>
+			
+			<section id="threads.concepts.Mutex">
+				<title>Mutex Concept</title>
+				
+				<para>A Mutex object has two states: locked and unlocked. Mutex object
+				state can only be determined by a lock object meeting the
+				appropriate lock concept requirements
+				and constructed for the Mutex object.</para>
+				
+				<para>A Mutex is
+				<ulink url="../../utility/utility.htm#Class%20noncopyable">
+				NonCopyable</ulink>.</para>
+				<para>For a Mutex type <code>M</code>
+				and an object <code>m</code> of that type, 
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>Mutex Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry>M m;</entry>
+								<entry><para>Constructs a mutex object m.</para>
+								<para>Postcondition: m is unlocked.</para></entry>
+							</row>
+							<row>
+								<entry>(&amp;m)-&gt;~M();</entry>
+								<entry>Precondition: m is unlocked. Destroys a mutex object
+								m.</entry>
+							</row>
+							<row>
+								<entry>M::scoped_lock</entry>
+								<entry>A model of
+								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.TryMutex">
+				<title>TryMutex Concept</title>
+				
+				<para>A TryMutex is a refinement of
+				<link linkend="threads.concepts.Mutex">Mutex</link>. 
+				For a TryMutex type <code>M</code>
+				and an object <code>m</code> of that type, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TryMutex Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry>M::scoped_try_lock</entry>
+								<entry>A model of
+								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.TimedMutex">
+				<title>TimedMutex Concept</title>
+				
+				<para>A TimedMutex is a refinement of
+				<link linkend="threads.concepts.TryMutex">TryMutex</link>. 
+				For a TimedMutex type <code>M</code>
+				and an object <code>m</code> of that type, 
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TimedMutex Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry>M::scoped_timed_lock</entry>
+								<entry>A model of
+								<link
+								linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		</section>
+		
+		<section id="threads.concepts.mutex-models">
+			<title>Mutex Models</title>
+			
+			<para>&Boost.Threads; currently supplies six models of
+			<link linkend="threads.concepts.Mutex">Mutex</link>
+			and its refinements.</para>
+			
+			<table>
+				<title>Mutex Models</title>
+				
+				<tgroup cols="3">
+					<thead>
+						<row>
+							<entry>Concept</entry>
+							<entry>Refines</entry>
+							<entry>Models</entry>
+						</row>
+					</thead>
+					
+					<tbody>
+						<row>
+							<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+							<entry></entry>
+							<entry>
+							<para><classname>boost::mutex</classname></para>
+							<para><classname>boost::recursive_mutex</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
+							<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+							<entry>
+								<para><classname>boost::try_mutex</classname></para>
+								<para><classname>boost::recursive_try_mutex</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TimedMutex">TimedMutex</link></entry>
+							<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
+							<entry>
+								<para><classname>boost::timed_mutex</classname></para>
+								<para><classname>boost::recursive_timed_mutex</classname></para>
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
+		
+		<section id="threads.concepts.lock-concepts">
+			<title>Lock Concepts</title>
 
-	<section id="threads.concepts.Lock">
-	  <title>Lock Concept</title>
-      <para>For a Lock type <code>L</code> and an object <code>lk</code> and
-	  const object <code>clk</code> of that type, the following expressions must
-	  be well-formed and have the indicated effects.
-	  <table>
-		<title>Lock Expressions</title>
-	    <tgroup cols="2">
-		  <thead>
-		    <row>
-			  <entry>Expression</entry>
-			  <entry>Effects</entry>
-			</row>
-		  </thead>
-		  <tbody>
-		    <row>
-		      <entry><code>(&amp;lk)-&gt;~L();</code></entry>
-			  <entry><code>if (locked()) unlock();</code></entry>
-			</row>
-			<row>
-			  <entry><code>(&amp;clk)-&gt;operator const void*()</code></entry>
-			  <entry>Returns type void*, non-zero if the associated mutex
-			  object has been locked by <code>clk</code>, otherwise 0.</entry>
-			</row>
-			<row>
-			  <entry><code>clk.locked()</code></entry>
-			  <entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;operator
-			  const void*() != 0</code></entry>
-			</row>
-			<row>
-			  <entry><code>lk.lock()</code></entry>
-			  <entry><para>Throws <classname>boost::lock_error</classname>
-			  if <code>locked()</code>. If the associated mutex object is
-			  already locked by some other thread, places the current thread in the 
-			  <link linkend="threads.glossary.thread-state">Blocked</link> state until
-			  the associated mutex is unlocked, after which the current thread
-			  is placed in the <link
-			  linkend="threads.glossary.thread-state">Ready</link> state,
-			  eventually to be returned to the <link
-			  linkend="threads.glossary.thread-state">Running</link> state. If
-			  the associated mutex object is already locked by the same thread
-			  the behavior is dependent on the <link
-			  linkend="threads.concepts.locking-strategies">locking
-			  strategy</link> of the associated mutex object.</para>
-			  <para>Postcondition: <code>locked() == true</code></para></entry>
-			</row>
-			<row>
-			  <entry><code>lk.unlock()</code></entry>
-			  <entry><para>If <code>!locked()</code>, throws
-			  <classname>boost::lock_error</classname>, otherwise unlocks the associated
-			  mutex.</para>
-			  <para>Postcondition: <code>!locked()</code></para></entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table></para>
+			<para>A lock object provides a safe means for locking and unlocking a mutex
+			object (an object whose type is a model of <link
+			linkend="threads.concepts.Mutex">Mutex</link> or one of its refinements). In
+			other words they are an implementation of the <emphasis>Scoped
+			Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; pattern. The <link
+			linkend="threads.concepts.ScopedLock">ScopedLock</link>,
+			<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>, and 
+			<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
+			concepts formalize the requirements.</para>
+			<para>Lock objects are constructed with a reference to a mutex object and
+			typically acquire ownership of the mutex object by setting its state to
+			locked. They also ensure ownership is relinquished in the destructor. Lock
+			objects also expose functions to query the lock status and to manually lock
+			and unlock the mutex object.</para>
+			<para>Lock objects are meant to be short lived, expected to be used at block
+			scope only. The lock objects are not <link
+			linkend="threads.glossary.thread-safe">thread-safe</link>. Lock objects must
+			maintain state to indicate whether or not they've been locked and this state
+			is not protected by any synchronization concepts. For this reason a lock
+			object should never be shared between multiple threads.</para>
+
+			<section id="threads.concepts.Lock">
+				<title>Lock Concept</title>
+				
+				<para>For a Lock type <code>L</code> 
+				and an object <code>lk</code> 
+				and const object <code>clk</code> of that type, 
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>Lock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>(&amp;lk)-&gt;~L();</code></entry>
+								<entry><code>if (locked()) unlock();</code></entry>
+							</row>
+							<row>
+								<entry><code>(&amp;clk)-&gt;operator const void*()</code></entry>
+								<entry>Returns type void*, non-zero if the associated mutex
+								object has been locked by <code>clk</code>, otherwise 0.</entry>
+							</row>
+							<row>
+								<entry><code>clk.locked()</code></entry>
+								<entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;operator
+								const void*() != 0</code></entry>
+							</row>
+							<row>
+								<entry><code>lk.lock()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>locked()</code>.</para>
+									
+									<para>If the associated mutex object is
+									already locked by some other thread, places the current thread in the 
+									<link linkend="threads.glossary.thread-state">Blocked</link> state until
+									the associated mutex is unlocked, after which the current thread
+									is placed in the <link
+									linkend="threads.glossary.thread-state">Ready</link> state,
+									eventually to be returned to the <link
+									linkend="threads.glossary.thread-state">Running</link> state. If
+									the associated mutex object is already locked by the same thread
+									the behavior is dependent on the <link
+									linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated mutex object.</para>
+									
+									<para>Postcondition: <code>locked() == true</code></para>
+								</entry>
+							</row>
+							<row>
+								<entry><code>lk.unlock()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>!locked()</code>.</para>
+									
+									<para>Unlocks the associated mutex.</para>
+									
+									<para>Postcondition: <code>!locked()</code></para></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.ScopedLock">
+				<title>ScopedLock Concept</title>
+				
+				<para>A ScopedLock is a refinement of <link
+				linkend="threads.concepts.Lock">Lock</link>. 
+				For a ScopedLock type <code>L</code> 
+				and an object <code>lk</code> of that type, 
+				and an object <code>m</code> of a type meeting the 
+				<link linkend="threads.concepts.Mutex">Mutex</link> requirements, 
+				and an object <code>b</code> of type <code>bool</code>, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>ScopedLock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>L lk(m);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then calls
+								<code>lock()</code></entry>
+							</row>
+							<row>
+								<entry><code>L lk(m,b);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then if <code>b</code>, calls
+								<code>lock()</code></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.TryLock">
+				<title>TryLock Concept</title>
+				
+				<para>A TryLock is a refinement of <link
+				linkend="threads.concepts.Lock">Lock</link>. 
+				For a TryLock type <code>L</code> 
+				and an object <code>lk</code> of that type, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TryLock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>lk.try_lock()</code></entry>
+								<entry>
+									<para>Throws  <classname>boost::lock_error</classname>
+									if locked().</para>
+									
+									<para>Makes a
+									non-blocking attempt to lock the associated mutex object,
+									returning <code>true</code> if the lock attempt is successful,
+									otherwise <code>false</code>. If the associated mutex object is
+									already locked by the same thread the behavior is dependent on the
+									<link linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated mutex object.</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.ScopedTryLock">
+				<title>ScopedTryLock Concept</title>
+				
+				<para>A ScopedTryLock is a refinement of <link
+				linkend="threads.concepts.TryLock">TryLock</link>. 
+				For a ScopedTryLock type <code>L</code> 
+				and an object <code>lk</code> of that type, 
+				and an object <code>m</code> of a type meeting the 
+				<link linkend="threads.concepts.TryMutex">TryMutex</link> requirements, 
+				and an object <code>b</code> of type <code>bool</code>, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>ScopedTryLock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>L lk(m);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then calls
+								<code>try_lock()</code></entry>
+							</row>
+							<row>
+								<entry><code>L lk(m,b);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then if <code>b</code>, calls
+								<code>lock()</code></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.TimedLock">
+				<title>TimedLock Concept</title>
+				
+				<para>A TimedLock is a refinement of <link
+				linkend="threads.concepts.TryLock">TryLock</link>. 
+				For a TimedLock type <code>L</code> 
+				and an object <code>lk</code> of that type, 
+				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TimedLock Expressions</title>
+					<tgroup cols="2">
+						<thead>
+							<row>
+							<entry>Expression</entry>
+							<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>lk.timed_lock(t)</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if locked().</para>
+									
+									<para>Makes a blocking attempt
+									to lock the associated mutex object, and returns <code>true</code>
+									if successful within the specified time <code>t</code>, otherwise
+									<code>false</code>. If the associated mutex object is already
+									locked by the same thread the behavior is dependent on the <link
+									linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated mutex object.</para>
+								</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		
+			<section id="threads.concepts.ScopedTimedLock">
+				<title>ScopedTimedLock Concept</title>
+				
+				<para>A ScopedTimedLock is a refinement of <link
+				linkend="threads.concepts.TimedLock">TimedLock</link>. 
+				For a ScopedTimedLock type <code>L</code> 
+				and an object <code>lk</code> of that type, 
+				and an object <code>m</code> of a type meeting the 
+				<link linkend="threads.concepts.TimedMutex">TimedMutex</link> requirements, 
+				and an object <code>b</code> of type <code>bool</code>, 
+				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>ScopedTimedLock Expressions</title>
+					<tgroup cols="2">
+						<thead>
+							<row>
+							<entry>Expression</entry>
+							<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>L lk(m,t);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then calls
+								<code>timed_lock(t)</code></entry>
+							</row>
+							<row>
+								<entry><code>L lk(m,b);</code></entry>
+								<entry>Constructs an object <code>lk</code>, and associates mutex
+								object <code>m</code> with it, then if <code>b</code>, calls
+								<code>lock()</code></entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+		</section>
+
+		<section id="threads.concepts.lock-models">
+			<title>Lock Models</title>
+			
+			<para>&Boost.Threads; currently supplies twelve models of
+			<link linkend="threads.concepts.Lock">Lock</link>
+			and its refinements.</para>
+			
+			<table>
+				<title>Lock Models</title>
+				
+				<tgroup cols="3">
+					<thead>
+						<row>
+							<entry>Concept</entry>
+							<entry>Refines</entry>
+							<entry>Models</entry>
+						</row>
+					</thead>
+					
+					<tbody>
+						<row>
+							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
+							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry>
+								<para><classname>boost::mutex::scoped_lock</classname></para>
+								<para><classname>boost::recursive_mutex::scoped_lock</classname></para>
+								
+								<para><classname>boost::try_mutex::scoped_lock</classname></para>
+								<para><classname>boost::recursive_try_mutex::scoped_lock</classname></para>
+								
+								<para><classname>boost::timed_mutex::scoped_lock</classname></para>
+								<para><classname>boost::recursive_timed_mutex::scoped_lock</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
+							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
+							<entry>
+								<para><classname>boost::try_mutex::scoped_try_lock</classname></para>
+								<para><classname>boost::recursive_try_mutex::scoped_try_lock</classname></para>
+								
+								<para><classname>boost::timed_mutex::scoped_try_lock</classname></para>
+								<para><classname>boost::recursive_timed_mutex::scoped_try_lock</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TimedLock">TimedLock</link></entry>
+							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
+							<entry><link linkend="threads.concepts.TimedLock">TimedLock</link></entry>
+							<entry>
+								<para><classname>boost::timed_mutex::scoped_timed_lock</classname></para>
+								<para><classname>boost::recursive_timed_mutex::scoped_timed_lock</classname></para>
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
+		</section>
 	</section>
-	<section id="threads.concepts.ScopedLock">
-	  <title>ScopedLock Concept</title>
-      <para>A ScopedLock is a refinement of <link
-	  linkend="threads.concepts.Lock">Lock</link>. For a ScopedLock type
-	  <code>L</code> and an object <code>lk</code> of that type, and an object
-	  <code>m</code> of a type meeting the <link
-	  linkend="threads.concepts.Mutex">Mutex</link> requirements, and an object
-	  <code>b</code> of type <code>bool</code>, the following expressions must
-	  be well-formed and have the indicated effects.
-	  <table>
-		<title>ScopedLock Expressions</title>
-	    <tgroup cols="2">
-		  <thead>
-		    <row>
-			  <entry>Expression</entry>
-			  <entry>Effects</entry>
-			</row>
-		  </thead>
-		  <tbody>
-			<row>
-			  <entry><code>L lk(m);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then calls
-			  <code>lock()</code></entry>
-			</row>
-			<row>
-			  <entry><code>L lk(m,b);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then if <code>b</code>, calls
-			  <code>lock()</code></entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table></para>
-	</section>
-	<section id="threads.concepts.ScopedTryLock">
-	  <title>ScopedTryLock Expressions</title>
-      <para>A ScopedTryLock is a refinement of <link
-	  linkend="threads.concepts.Lock">Lock</link>. For a ScopedTryLock type
-	  <code>L</code> and an object <code>lk</code> of that type, and an object
-	  <code>m</code> of a type meeting the <link
-	  linkend="threads.concepts.TryMutex">TryMutex</link> requirements, and an
-	  object <code>b</code> of type <code>bool</code>, the following expressions
-	  must be well-formed and have the indicated effects.
-	  <table>
-		<title>ScopedTryLock Expressions</title>
-	    <tgroup cols="2">
-		  <thead>
-		    <row>
-			  <entry>Expression</entry>
-			  <entry>Effects</entry>
-			</row>
-		  </thead>
-		  <tbody>
-		    <row>
-			  <entry><code>L lk(m);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then calls
-			  <code>try_lock()</code></entry>
-			</row>
-			<row>
-			  <entry><code>L lk(m,b);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then if <code>b</code>, calls
-			  <code>lock()</code></entry>
-			</row>
-			<row>
-			  <entry><code>lk.try_lock()</code></entry>
-			  <entry>If locked(), throws <classname>boost::lock_error</classname>. Makes a
-			  non-blocking attempt to lock the associated mutex object,
-			  returning <code>true</code> if the lock attempt is successful,
-			  otherwise <code>false</code>. If the associated mutex object is
-			  already locked by the same thread the behavior is dependent on the
-			  <link linkend="threads.concepts.locking-strategies">locking
-			  strategy</link> of the associated mutex object.</entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table></para>
-	</section>
-	<section id="threads.concepts.ScopedTimedLock">
-	  <title>ScopedTimedLock Expressions</title>
-	  <para>A ScopedTimedLock is a refinement of <link
-	  linkend="threads.concepts.Lock">Lock</link>. For a ScopedTimedLock type
-	  <code>L</code> and an object <code>lk</code> of that type, and an object
-	  <code>m</code> of a type meeting the <link
-	  linkend="threads.concepts.TimedMutex">TimedMutex</link> requirements, and
-	  an object <code>b</code> of type <code>bool</code>, and an object
-	  <code>t</code> of type <classname>boost::xtime</classname>, the following
-	  expressions must be well-formed and have the indicated effects.
-	  <table>
-		<title>ScopedTimedLock Concept</title>
-	    <tgroup cols="2">
-		  <thead>
-		    <row>
-			  <entry>Expression</entry>
-			  <entry>Effects</entry>
-			</row>
-		  </thead>
-		  <tbody>
-		    <row>
-			  <entry><code>L lk(m,t);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then calls
-			  <code>timed_lock(t)</code></entry>
-			</row>
-			<row>
-			  <entry><code>L lk(m,b);</code></entry>
-			  <entry>Constructs an object <code>lk</code>, and associates mutex
-			  object <code>m</code> with it, then if <code>b</code>, calls
-			  <code>lock()</code></entry>
-			</row>
-			<row>
-			  <entry><code>lk.timed_lock(t)</code></entry>
-			  <entry>If locked(), throws
-			  <classname>boost::lock_error</classname>. Makes a blocking attempt
-			  to lock the associated mutex object, and returns <code>true</code>
-			  if successful within the specified time <code>t</code>, otherwise
-			  <code>false</code>. If the associated mutex object is already
-			  locked by the same thread the behavior is dependent on the <link
-			  linkend="threads.concepts.locking-strategies">locking
-			  strategy</link> of the associated mutex object.</entry>
-			</row>
-		  </tbody>
-		</tgroup>
-	  </table></para>
-	</section>
-  </section>
-  </section>
 
 	<section id="threads.concepts.read-write-mutexes">
 	<title>Read/Write Mutexes</title>
@@ -1311,24 +1534,24 @@
 		</section>
 
 		<section id="threads.concepts.read-write-mutex-concepts">
-			<title>Read/Write Mutex Concept Requirements</title>
+			<title>Mutex Concepts</title>
 			
 			<section id="threads.concepts.ReadWriteMutex">
 				<title>ReadWriteMutex Concept</title>
 				
 				<para>A ReadWriteMutex object has three states: read-locked,
 				write-locked, and unlocked. ReadWriteMutex object state can
-				only be determined by an object meeting the
-				<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>
+				only be determined by a lock object meeting the appropriate lock concept
 				requirements and constructed for the ReadWriteMutex object.</para>
 				
 				<para>A ReadWriteMutex is 
 				<ulink url="../../utility/utility.htm#Class%20noncopyable">NonCopyable</ulink>.
 				</para>
 				
-				<para>For a ReadWriteMutex type <code>M</code>, and an object 
-				<code>m</code> of that type, the following expressions
-				must be well-formed and have the indicated effects.</para>
+				<para>For a ReadWriteMutex type <code>M</code>, 
+				and an object <code>m</code> of that type, 
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>ReadWriteMutex Expressions</title>
@@ -1354,7 +1577,7 @@
 								</entry>
 							</row>
 							<row> 
-								<entry><code>M::scoped_read_write_lock</code></entry>
+								<entry><code>M::scoped_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedReadWriteLock</link>
 								requirements. </entry>
@@ -1367,12 +1590,12 @@
 			<section id="threads.concepts.TryReadWriteMutex">
 				<title>TryReadWriteMutex Concept</title>
 				
-				<para>A TryReadWriteMutex must meet the
-				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>
-				requirements. In addition, for a TryReadWriteMutex type
-				<code>M</code> and an object <code>m</code> of that type,
-				the following expressions must be well-formed and have the
-				indicated effects.</para>
+				<para>A TryReadWriteMutex is a refinement of
+				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>.
+				For a TryReadWriteMutex type <code>M</code> 
+				and an object <code>m</code> of that type,
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>TryReadWriteMutex Expressions</title>
@@ -1387,7 +1610,7 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_try_read_write_lock</code></entry>
+								<entry><code>M::scoped_try_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTryReadWriteLock</link>
 								requirements.</entry>
@@ -1400,12 +1623,12 @@
 			<section id="threads.concepts.TimedReadWriteMutex">
 				<title>TimedReadWriteMutex Concept</title>
 				
-				<para>A TimedReadWriteMutex must meet the 
-				<link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link> 
-				requirements. In addition, for a TimedReadWriteMutex type
-				<code>M</code> and an object <code>m</code> of that type
-				the following expressions must be well-formed and have the
-				indicated effects.</para>
+				<para>A TimedReadWriteMutex is a refinement of
+				<link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link>.
+				For a TimedReadWriteMutex type <code>M</code> 
+				and an object <code>m</code> of that type
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>TimedReadWriteMutex Expressions</title>
@@ -1420,7 +1643,7 @@
 
 						<tbody>
 							<row> 
-								<entry><code>M::scoped_timed_read_write_lock</code></entry>
+								<entry><code>M::scoped_timed_lock</code></entry>
 								<entry>A type meeting the 
 								<link linkend="threads.concepts.ScopedReadWriteMutex">ScopedTimedReadWriteLock</link> 
 								requirements.</entry>
@@ -1439,7 +1662,7 @@
 			and its refinements.</para>
 			
 			<table>
-				<title>Read/Write Mutex Models</title>
+				<title>Mutex Models</title>
 				
 				<tgroup cols="3">
 					<thead>
@@ -1459,12 +1682,12 @@
 						<row> 
 							<entry><link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
 							<entry><link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link></entry>
-							<entry><classname>try_read_write_mutex</classname></entry>
+							<entry><classname>boost::try_read_write_mutex</classname></entry>
 						</row>
 						<row> 
 							<entry><link linkend="threads.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link></entry>
 							<entry><link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
-							<entry><classname>timed_read_write_mutex</classname></entry>
+							<entry><classname>boost::timed_read_write_mutex</classname></entry>
 						</row>
 					</tbody>
 				</tgroup>
@@ -1472,7 +1695,7 @@
 		</section>
 				
 		<section id="threads.concepts.read-write-lock-concepts">
-			<title>Read/Write Lock Concept Requirements</title>
+			<title>Lock Concepts</title>
 
 			<para>A read/write lock object provides a safe means for locking
 			and unlocking a read/write mutex object (an object whose type is
@@ -1481,10 +1704,10 @@
 			or one of its refinements). In other words they are an
 			implementation of the <emphasis>Scoped Locking</emphasis>
 			&cite.SchmidtStalRohnertBuschmann; pattern. The 
-			<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link> concept, with 
-			<link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link> and 
+			<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>, 
+			<link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>, and 
 			<link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link>
-			refinements, formalize the requirements.</para>
+			concepts formalize the requirements.</para>
 			
 			<para>Read/write lock objects are constructed with a reference to a
 			read/write mutex object and typically acquire ownership of the 
@@ -1507,8 +1730,8 @@
 				<para>For a read/write lock type <code>L</code>
 				and an object <code>lk</code> 
 				and const object <code>clk</code> of that type,
-				the following expressions must be well-formed and have the
-				indicated effects.</para>
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>ReadWriteLock Expressions</title>
@@ -1540,23 +1763,24 @@
 							<row>
 								<entry><code>clk.state()</code></entry>
 								<entry>Returns an enumeration constant of type <code>read_write_lock_state</code>:
-								<code>READ_LOCK</code> if the associated read/write mutex object has been
-								read-locked by <code>clk</code>, <code>WRITE_LOCK</code> if it
-								has been write-locked by <code>clk</code>, and <code>NO_LOCK</code>
+								<code>read_write_lock_state::read_locked</code> if the associated read/write mutex object has been
+								read-locked by <code>clk</code>, <code>read_write_lock_state::write_locked</code> if it
+								has been write-locked by <code>clk</code>, and <code>read_write_lock_state::unlocked</code>
 								if has not been locked by <code>clk</code>.</entry>
 							</row>
 							<row>
 								<entry><code>clk.read_locked()</code></entry>
-								<entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;state() == READ_LOCK</code>.</entry>
+								<entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;state() == read_write_lock_state::read_locked</code>.</entry>
 							</row>
 							<row>
 								<entry><code>clk.write_locked()</code></entry>
-								<entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;state() == WRITE_LOCK</code>.</entry>
+								<entry>Returns a <code>bool</code>, <code>(&amp;clk)-&gt;state() == read_write_lock_state::write_locked</code>.</entry>
 							</row>
 							<row>
 								<entry><code>lk.read_lock()</code></entry>
 								<entry>
-									<para>Throws <classname>boost::lock_error</classname> if <code>locked()</code>.</para>
+									<para>Throws <classname>boost::lock_error</classname> 
+									if <code>locked()</code>.</para>
 									
 									<para>If the associated read/write mutex
 									object is already read-locked by some other
@@ -1594,14 +1818,15 @@
 									of the associated read/write mutex object.
 									</para>
 									
-									<para>Postcondition: <code>state() == READ_LOCK</code></para>
+									<para>Postcondition: <code>state() == read_write_lock_state::read_locked</code></para>
 								</entry>
 							</row>
 							<row>
 								<entry><code>lk.write_lock()</code></entry>
 
 								<entry>
-									<para>Throws <classname>boost::lock_error</classname> if <code>locked()</code>.</para>
+									<para>Throws <classname>boost::lock_error</classname> 
+									if <code>locked()</code>.</para>
 									
 									<para>If the associated read/write mutex
 									object is already locked by some other
@@ -1622,24 +1847,32 @@
 									of the associated read/write mutex object.
 									</para>
 									
-									<para>Postcondition: <code>state() == WRITE_LOCK</code></para>
+									<para>Postcondition: <code>state() == read_write_lock_state::write_locked</code></para>
 								</entry>
 							</row>
 							<row>
 								<entry><code>lk.demote()</code></entry>
-								<entry><para>If <code>state() != WRITE_LOCK</code>, throws
-								<classname>boost::lock_error</classname>, otherwise 
-								converts the lock held on the associated read/write mutex
-								object from a write-lock to a read-lock without releasing
-								the lock.</para>
-								<para>Postcondition: <code>state() == READ_LOCK</code></para></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::write_locked</code>.</para>
+									
+									<para>Converts the lock held on the associated read/write mutex
+									object from a write-lock to a read-lock without releasing
+									the lock.</para>
+									
+									<para>Postcondition: <code>state() == read_write_lock_state::read_locked</code></para>
+								</entry>
 							</row>
 							<row>
 								<entry><code>lk.unlock()</code></entry>
-								<entry><para>If <code>!locked()</code>, throws
-								<classname>boost::lock_error</classname>, otherwise unlocks the associated
-								read/write mutex.</para>
-								<para>Postcondition: <code>!locked()</code></para></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>!locked()</code>.</para>
+									
+									<para>Unlocks the associated read/write mutex.</para>
+									
+									<para>Postcondition: <code>!locked()</code></para>
+								</entry>
 							</row>
 						</tbody>
 					</tgroup>
@@ -1654,11 +1887,10 @@
 				For a ScopedReadWriteLock type <code>L</code> 
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>
-				requirements,
+				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link> requirements,
 				and an object <code>s</code> of type <code>read_write_lock_state</code>,
-				the following expressions must be well-formed and have the
-				indicated effects.</para>
+				the following expressions must be well-formed 
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>ScopedReadWriteLock Expressions</title>
@@ -1673,17 +1905,90 @@
 						
 						<tbody>
 							<row>
-								<entry><code>L lk(m);</code></entry>
-								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then calls
-								<code>read_lock()</code>.</entry>
-							</row>
-							<row>
 								<entry><code>L lk(m,s);</code></entry>
 								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then: if <code>s == READ_LOCK</code>, calls
-								<code>read_lock()</code>; if <code>s==WRITE_LOCK</code>,
+								object <code>m</code> with it, then: if <code>s == read_write_lock_state::read_locked</code>, calls
+								<code>read_lock()</code>; if <code>s==read_write_lock_state::write_locked</code>,
 								calls <code>write_lock()</code>.</entry>
+							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+			
+			<section id="threads.concepts.TryReadWriteLock">
+				<title>TryReadWriteLock Expressions</title>
+				
+				<para>A TryReadWriteLock is a refinement of 
+				<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>.
+				For a TryReadWriteLock type <code>L</code>
+				and an object <code>lk</code> of that type,
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TryReadWriteLock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
+							<row>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>lk.try_read_lock()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if locked().</para>
+								
+									<para>Makes a non-blocking attempt to read-lock the associated read/write
+									mutex object, returning <code>true</code> if the attempt is successful,
+									otherwise <code>false</code>. If the associated read/write mutex object is
+									already locked by the same thread the behavior is dependent on the
+									<link linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated read/write mutex object.</para>
+								</entry>
+							</row>
+							<row>
+								<entry><code>lk.try_write_lock()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if locked().</para>
+									
+									<para>Makes a non-blocking attempt to write-lock the associated read/write
+									mutex object, returning <code>true</code> if the attempt is successful,
+									otherwise <code>false</code>. If the associated read/write mutex object is
+									already locked by the same thread the behavior is dependent on the
+									<link linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated read/write mutex object.</para>
+								</entry>
+							</row>
+							<row>
+								<entry><code>lk.try_demote()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::write_locked</code>.</para> 
+									
+									<para>Makes a non-blocking attempt to convert the lock held on the associated
+									read/write mutex object from a write-lock to a read-lock without releasing
+									the lock, returning <code>true</code> if the attempt is successful,
+									otherwise <code>false</code>.</para>
+								</entry>
+							</row>
+							<row>
+								<entry><code>lk.try_promote()</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::read_locked</code>.</para>
+									
+									<para>Makes a non-blocking attempt to convert the lock held on the associated
+									read/write mutex object from a read-lock to a write-lock without releasing
+									the lock, returning <code>true</code> if the attempt is successful,
+									otherwise <code>false</code>.</para>
+								</entry>
 							</row>
 						</tbody>
 					</tgroup>
@@ -1694,16 +1999,15 @@
 				<title>ScopedTryReadWriteLock Expressions</title>
 				
 				<para>A ScopedTryReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>.
+				<link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link>.
 				For a ScopedTryReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the
-				<link linkend="threads.concepts.TryMutex">TryReadWriteMutex</link>
-				requirements,
-				an object <code>s</code> of type <code>read_write_lock_state</code>,
-				and an object <code>b</code> of type <code>bool</code>, 
-				the following expressions must be well-formed and have the
-				indicated effects.</para>
+				<link linkend="threads.concepts.TryMutex">TryReadWriteMutex</link> requirements,
+				and an object <code>s</code> of type <code>read_write_lock_state</code>,
+				and an object <code>b</code> of type <code>blocking_mode</code>, 
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
 				
 				<table>
 					<title>ScopedTryReadWriteLock Expressions</title>
@@ -1718,64 +2022,92 @@
 						
 						<tbody>
 							<row>
-								<entry><code>L lk(m);</code></entry>
-								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then calls
-								<code>try_read_lock()</code></entry>
-							</row>
-							<row>
-								<entry><code>L lk(m,s);</code></entry>
-								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then: if <code>s == READ_LOCK</code>, calls
-								<code>try_read_lock()</code>; if <code>s==WRITE_LOCK</code>,
-								calls <code>try_write_lock()</code>.</entry>
-							</row>
-							<row>
 								<entry><code>L lk(m,s,b);</code></entry>
 								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then: if <code>s == READ_LOCK</code>, calls
+								object <code>m</code> with it, then: if <code>s == read_write_lock_state::read_locked</code>, calls
 								<code>read_lock()</code> if <code>b</code>, otherwise <code>try_read_lock()</code>;
-								if <code>s==WRITE_LOCK</code>, calls <code>write_lock()</code> if <code>b</code>,
+								if <code>s==read_write_lock_state::write_locked</code>, calls <code>write_lock()</code> if <code>b</code>,
 								otherwise <code>try_write_lock</code>.</entry>
 							</row>
+						</tbody>
+					</tgroup>
+				</table>
+			</section>
+			
+			<section id="threads.concepts.TimedReadWriteLock">
+				<title>TimedReadWriteLock Concept</title>
+				
+				<para>A TimedReadWriteLock is a refinement of 
+				<link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link>. 
+				For a TimedReadWriteLock type <code>L</code>
+				and an object <code>lk</code> of that type,
+				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
+				the following expressions must be well-formed
+				and have the indicated effects.</para>
+				
+				<table>
+					<title>TimedReadWriteLock Expressions</title>
+					
+					<tgroup cols="2">
+						<thead>
 							<row>
-								<entry><code>lk.try_read_lock()</code></entry>
+								<entry>Expression</entry>
+								<entry>Effects</entry>
+							</row>
+						</thead>
+						
+						<tbody>
+							<row>
+								<entry><code>lk.timed_read_lock(t)</code></entry>
 								<entry>
-								<para>If locked(), throws <classname>boost::lock_error</classname>.</para>
-								<para>Makes a non-blocking attempt to read-lock the associated read/write
-								mutex object, returning <code>true</code> if the attempt is successful,
-								otherwise <code>false</code>. If the associated read/write mutex object is
-								already locked by the same thread the behavior is dependent on the
-								<link linkend="threads.concepts.locking-strategies">locking
-								strategy</link> of the associated read/write mutex object.</para></entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if locked().</para>
+									
+									<para>Makes a blocking attempt to read-lock the associated read/write mutex object,
+									and returns <code>true</code> if successful within the specified time <code>t</code>,
+									otherwise <code>false</code>. If the associated read/write mutex object is already
+									locked by the same thread the behavior is dependent on the <link
+									linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated read/write mutex object.</para>
+								</entry>
 							</row>
 							<row>
-								<entry><code>lk.try_write_lock()</code></entry>
-								<entry><para>If locked(), throws <classname>boost::lock_error</classname>.</para>
-								<para>Makes a non-blocking attempt to write-lock the associated read/write
-								mutex object, returning <code>true</code> if the attempt is successful,
-								otherwise <code>false</code>. If the associated read/write mutex object is
-								already locked by the same thread the behavior is dependent on the
-								<link linkend="threads.concepts.locking-strategies">locking
-								strategy</link> of the associated read/write mutex object.</para></entry>
+								<entry><code>lk.timed_write_lock(t)</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if locked().</para>
+									
+									<para>Makes a blocking attempt to write-lock the associated read/write mutex object, 
+									and returns <code>true</code> if successful within the specified time <code>t</code>,
+									otherwise <code>false</code>. If the associated read/write mutex object is already
+									locked by the same thread the behavior is dependent on the <link
+									linkend="threads.concepts.locking-strategies">locking
+									strategy</link> of the associated read/write mutex object.</para>
+								</entry>
 							</row>
 							<row>
-								<entry><code>lk.try_demote()</code></entry>
-								<entry><para>If <code>state() != WRITE_LOCK</code>, throws
-								<classname>boost::lock_error</classname>.</para> 
-								<para>Makes a non-blocking attempt to convert the lock held on the associated
-								read/write mutex object from a write-lock to a read-lock without releasing
-								the lock, returning <code>true</code> if the attempt is successful,
-								otherwise <code>false</code>.</para></entry>
+								<entry><code>lk.timed_demote(t)</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::write_locked</code>.</para> 
+									
+									<para>Makes a blocking attempt to convert the lock held on the associated
+									read/write mutex object from a write-lock to a read-lock without releasing
+									the lock, returning <code>true</code> if the attempt is successful
+									in the specified time <code>t</code>, otherwise <code>false</code>.</para>
+								</entry>
 							</row>
 							<row>
-								<entry><code>lk.try_promote()</code></entry>
-								<entry><para>If <code>state() != READ_LOCK</code>, throws
-								<classname>boost::lock_error</classname>.</para> 
-								<para>Makes a non-blocking attempt to convert the lock held on the associated
-								read/write mutex object from a read-lock to a write-lock without releasing
-								the lock, returning <code>true</code> if the attempt is successful,
-								otherwise <code>false</code>.</para></entry>
+								<entry><code>lk.timed_promote(t)</code></entry>
+								<entry>
+									<para>Throws <classname>boost::lock_error</classname>
+									if <code>state() != read_write_lock_state::read_locked</code>.</para>
+									
+									<para>Makes a blocking attempt to convert the lock held on the associated
+									read/write mutex object from a read-lock to a write-lock without releasing
+									the lock, returning <code>true</code> if the attempt is successful
+									in the specified time <code>t</code>, otherwise <code>false</code>.</para>
+								</entry>
 							</row>
 						</tbody>
 					</tgroup>
@@ -1786,14 +2118,14 @@
 				<title>ScopedTimedReadWriteLock Concept</title>
 				
 				<para>A ScopedTimedReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>. 
+				<link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link>. 
 				For a ScopedTimedReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link>
-				requirements,
-				an object <code>s</code> of type <code>read_write_lock_state</code>,
+				<link linkend="threads.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link> requirements,
+				and an object <code>s</code> of type <code>read_write_lock_state</code>,
 				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
+				and an object <code>b</code> of type <code>blocking_mode</code>, 
 				the following expressions must be well-formed and have the
 				indicated effects.</para>
 				
@@ -1810,73 +2142,88 @@
 						
 						<tbody>
 							<row>
-								<entry><code>L lk(m);</code></entry>
+								<entry><code>L lk(m,s,b);</code></entry>
 								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then calls
-								<code>read_lock()</code></entry>
-							</row>
-							<row>
-								<entry><code>L lk(m,t);</code></entry>
-								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then calls
-								<code>timed_read_lock(t)</code></entry>
-							</row>
-							<row>
-								<entry><code>L lk(m,s);</code></entry>
-								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then: if <code>s == READ_LOCK</code>, calls
-								<code>read_lock()</code>; if <code>s==WRITE_LOCK</code>,
-								calls <code>write_lock()</code>.</entry>
+								object <code>m</code> with it, then: if <code>s == read_write_lock_state::read_locked</code>, calls
+								<code>read_lock()</code> if <code>b</code>, otherwise <code>try_read_lock()</code>;
+								if <code>s==read_write_lock_state::write_locked</code>, calls <code>write_lock()</code> if <code>b</code>,
+								otherwise <code>try_write_lock</code>.</entry>
 							</row>
 							<row>
 								<entry><code>L lk(m,s,t);</code></entry>
 								<entry>Constructs an object <code>lk</code> and associates read/write mutex
-								object <code>m</code> with it, then: if <code>s == READ_LOCK</code>, calls
-								<code>timed_read_lock(t)</code>; if <code>s==WRITE_LOCK</code>,
+								object <code>m</code> with it, then: if <code>s == read_write_lock_state::read_locked</code>, calls
+								<code>timed_read_lock(t)</code>; if <code>s==read_write_lock_state::write_locked</code>,
 								calls <code>timed_write_lock(t)</code>.</entry>
-							</row>
-							<row>
-								<entry><code>lk.timed_read_lock(t)</code></entry>
-								<entry><para>If locked(), throws <classname>boost::lock_error</classname>.</para>
-								<para>Makes a blocking attempt to read-lock the associated read/write mutex object,
-								and returns <code>true</code> if successful within the specified time <code>t</code>,
-								otherwise <code>false</code>. If the associated read/write mutex object is already
-								locked by the same thread the behavior is dependent on the <link
-								linkend="threads.concepts.locking-strategies">locking
-								strategy</link> of the associated read/write mutex object.</para></entry>
-							</row>
-							<row>
-								<entry><code>lk.timed_write_lock(t)</code></entry>
-								<entry><para>If locked(), throws <classname>boost::lock_error</classname>.</para>
-								<para>Makes a blocking attempt to write-lock the associated read/write mutex object, 
-								and returns <code>true</code> if successful within the specified time <code>t</code>,
-								otherwise <code>false</code>. If the associated read/write mutex object is already
-								locked by the same thread the behavior is dependent on the <link
-								linkend="threads.concepts.locking-strategies">locking
-								strategy</link> of the associated read/write mutex object.</para></entry>
-							</row>
-							<row>
-								<entry><code>lk.timed_demote(t)</code></entry>
-								<entry><para>If <code>state() != WRITE_LOCK</code>, throws
-								<classname>boost::lock_error</classname>.</para> 
-								<para>Makes a blocking attempt to convert the lock held on the associated
-								read/write mutex object from a write-lock to a read-lock without releasing
-								the lock, returning <code>true</code> if the attempt is successful
-								in the specified time <code>t</code>, otherwise <code>false</code>.</para></entry>
-							</row>
-							<row>
-								<entry><code>lk.timed_promote(t)</code></entry>
-								<entry><para>If <code>state() != READ_LOCK</code>, throws
-								<classname>boost::lock_error</classname>.</para>
-								<para>Makes a blocking attempt to convert the lock held on the associated
-								read/write mutex object from a read-lock to a write-lock without releasing
-								the lock, returning <code>true</code> if the attempt is successful
-								in the specified time <code>t</code>, otherwise <code>false</code>.</para></entry>
 							</row>
 						</tbody>
 					</tgroup>
 				</table>
 			</section>
+		</section>
+
+		<section id="threads.concepts.read-write-lock-models">
+			<title>Lock Models</title>
+			
+			<para>&Boost.Threads; currently supplies six models of
+			<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>
+			and its refinements.</para>
+			
+			<table>
+				<title>Lock Models</title>
+				
+				<tgroup cols="3">
+					<thead>
+						<row>
+							<entry>Concept</entry>
+							<entry>Refines</entry>
+							<entry>Models</entry>
+						</row>
+					</thead>
+					
+					<tbody>
+						<row>
+							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
+							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry>
+								<para><classname>boost::read_write_mutex::scoped_lock</classname></para>
+								<para><classname>boost::try_read_write_mutex::scoped_lock</classname></para>
+								<para><classname>boost::timed_read_write_mutex::scoped_lock</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
+							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry>
+								<para><classname>boost::try_read_write_mutex::scoped_try_lock</classname></para>
+								<para><classname>boost::timed_read_write_mutex::scoped_try_lock</classname></para>
+							</entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
+							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry></entry>
+						</row>
+						<row>
+							<entry><link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link></entry>
+							<entry><link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
+							<entry>
+								<para><classname>boost::timed_read_write_mutex::scoped_timed_lock</classname></para>
+							</entry>
+						</row>
+					</tbody>
+				</tgroup>
+			</table>
 		</section>
 	</section>
 </section>

@@ -29,9 +29,10 @@
 			</para>
 			
 			<para>The <classname>mutex</classname> class supplies the following typedef,
-			which models the specified locking strategy:
+			which <link linkend="threads.concepts.lock-models">models</link>
+			the specified locking strategy:
 
-			<table>
+			<informaltable>
 				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
@@ -47,7 +48,7 @@
 						</row>
 					</tbody>
 				</tgroup>
-			</table>			
+			</informaltable>			
 			</para>
 
 			<para>The <classname>mutex</classname> class uses an 
@@ -119,9 +120,10 @@
 			</para>
 			
 			<para>The <classname>try_mutex</classname> class supplies the following typedefs,
-			which model the specified locking strategies:
+			which <link linkend="threads.concepts.lock-models">model</link>
+			the specified locking strategies:
 
-			<table>
+			<informaltable>
 				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
@@ -141,7 +143,7 @@
 						</row>
 					</tbody>
 				</tgroup>
-			</table>
+			</informaltable>
 			</para>
 
 			<para>The <classname>try_mutex</classname> class uses an 
@@ -218,9 +220,10 @@
 			</para>
 			
 			<para>The <classname>timed_mutex</classname> class supplies the following typedefs,
-			which model the specified locking strategies:
+			which <link linkend="threads.concepts.lock-models">model</link>
+			the specified locking strategies:
 
-			<table>
+			<informaltable>
 				<title>Supported Lock Types</title>
 				<tgroup cols="2" align="left">
 					<thead>
@@ -244,7 +247,7 @@
 						</row>
 					</tbody>
 				</tgroup>
-			</table>
+			</informaltable>
 			</para>
 
 			<para>The <classname>timed_mutex</classname> class uses an 
