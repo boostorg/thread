@@ -34,6 +34,8 @@ struct tss_data_t
     DWORD native_key;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_key_t native_key;
+#elif defined(BOOST_HAS_MPTASKS)
+    TaskStorageIndex native_key;
 #endif
 };
 
@@ -60,9 +62,12 @@ void init_tss_data()
     if (temp->native_key == 0xFFFFFFFF)
         return;
 #elif defined(BOOST_HAS_PTHREADS)
-    int res = 0;
-    res = pthread_key_create(&temp->native_key, &cleanup_slots);
+    int res = pthread_key_create(&temp->native_key, &cleanup_slots);
     if (res != 0)
+        return;
+#elif defined(BOOST_HAS_MPTASKS)
+    OSStatus status = MPAllocateTaskStorageIndex(&temp->native_key);
+    if (status != noErr)
         return;
 #endif
 
@@ -75,10 +80,11 @@ void init_tss_data()
 }
 
 #if defined(BOOST_HAS_WINTHREADS)
+tss_slots* get_slots(bool alloc);
+
 void __cdecl tss_thread_exit()
 {
-    tss_slots* slots = static_cast<tss_slots*>(
-        TlsGetValue(tss_data->native_key));
+    tss_slots* slots = get_slots(false);
     if (slots)
         cleanup_slots(slots);
 }
@@ -89,10 +95,14 @@ tss_slots* get_slots(bool alloc)
     tss_slots* slots = 0;
 
 #if defined(BOOST_HAS_WINTHREADS)
-    slots = static_cast<tss_slots*>(TlsGetValue(tss_data->native_key));
+    slots = static_cast<tss_slots*>(
+        TlsGetValue(tss_data->native_key));
 #elif defined(BOOST_HAS_PTHREADS)
     slots = static_cast<tss_slots*>(
         pthread_getspecific(tss_data->native_key));
+#elif defined(BOOST_HAS_MPTASKS)
+    slots = static_cast<tss_slots*>(
+        MPGetTaskStorageValue(tss_data->native_key));
 #endif
 
     if (slots == 0 && alloc)
@@ -106,6 +116,9 @@ tss_slots* get_slots(bool alloc)
             return 0;
 #elif defined(BOOST_HAS_PTHREADS)
         if (pthread_setspecific(tss_data->native_key, temp.get()) != 0)
+            return 0;
+#elif defined(BOOST_HAS_MPTASKS)
+        if (MPSetTaskStorageValue(tss_data->native_key, temp.get()) != noErr)
             return 0;
 #endif
 
@@ -182,6 +195,14 @@ void tss::cleanup(void* value)
 } // namespace boost
 
 // Change Log:
-//   6 Jun 01  WEKEMPF Initial version.
-//  30 May 02  WEKEMPF Added interface to set specific cleanup handlers.
-//                     Removed TLS slot limits from most implementations.
+//   6 Jun 01  
+//      WEKEMPF Initial version.
+//  30 May 02  WEKEMPF 
+//      Added interface to set specific cleanup handlers.
+//      Removed TLS slot limits from most implementations.
+//  22 Mar 04 GlassfordM for WEKEMPF
+//      Fixed: thread_specific_ptr::reset() doesn't check error returned
+//          by tss::set(); tss::set() now throws if it fails.
+//      Fixed: calling thread_specific_ptr::reset() or 
+//          thread_specific_ptr::release() causes double-delete: once on
+//          reset()/release() and once on ~thread_specific_ptr().

@@ -54,7 +54,7 @@ public:
     void cleanup(void* p);
 
 private:
-    unsigned int m_slot;
+    unsigned int m_slot; //This is a "pseudo-slot", not a native slot
 
     void init(boost::function1<void, void*>* pcleanup);
 };
@@ -113,6 +113,14 @@ private:
 #endif // BOOST_TSS_WEK070601_HPP
 
 // Change Log:
-//   6 Jun 01  WEKEMPF Initial version.
-//  30 May 02  WEKEMPF Added interface to set specific cleanup handlers.
-//                     Removed TLS slot limits from most implementations.
+//   6 Jun 01  
+//      WEKEMPF Initial version.
+//  30 May 02  WEKEMPF 
+//      Added interface to set specific cleanup handlers.
+//      Removed TLS slot limits from most implementations.
+//  22 Mar 04 GlassfordM for WEKEMPF
+//      Fixed: thread_specific_ptr::reset() doesn't check error returned
+//          by tss::set(); tss::set() now throws if it fails.
+//      Fixed: calling thread_specific_ptr::reset() or 
+//          thread_specific_ptr::release() causes double-delete: once on
+//          reset()/release() and once on ~thread_specific_ptr().
