@@ -49,4 +49,8 @@ import ./threads ;
           <tag><debug>"d"
         : debug release
     ;
+
+    install thread lib
+        : <dll>boost_thread
+    ;
 }
