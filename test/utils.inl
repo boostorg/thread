@@ -1,3 +1,6 @@
+#if !defined(BOOST_UTILS_INL_WEK01212003)
+#define BOOST_UTILS_INL_WEK01212003
+
 #include <boost/thread/xtime.hpp>
 
 namespace {
@@ -9,29 +12,40 @@ typedef boost::int_fast64_t sec_type;
 #endif
 typedef boost::int_fast32_t nsec_type;
 
-static void xtime_get(boost::xtime& xt, sec_type secs, nsec_type nsecs=0)
+inline boost::xtime xtime_get_future(sec_type secs, nsec_type nsecs=0)
+{
+	boost::xtime xt;
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC),
+        static_cast<int>(boost::TIME_UTC));
+	xt.sec += secs;
+	xt.nsec += nsecs;
+	return xt;
+}
+
+inline void xtime_get(boost::xtime& xt, sec_type secs, nsec_type nsecs=0)
 {
 	boost::xtime_get(&xt, boost::TIME_UTC);
 	xt.sec += secs;
 	xt.nsec += nsecs;
 }
 
-static int xtime_cmp(const boost::xtime& xt1, const boost::xtime& xt2)
+inline bool xtime_in_range(const boost::xtime& xt, sec_type less_secs,
+    sec_type greater_secs)
 {
-	int cmp = (int)(xt1.sec - xt2.sec);
-	if (cmp == 0)
-		cmp = (int)(xt1.nsec - xt2.nsec);
-	return cmp;
-}
+    boost::xtime cur;
+    BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC),
+        static_cast<int>(boost::TIME_UTC));
 
-static bool xtime_in_range(const boost::xtime& xt, sec_type min, sec_type max)
-{
-	boost::xtime xt_min, xt_max;
-	boost::xtime_get(&xt_min, boost::TIME_UTC);
-	xt_max = xt_min;
-	xt_min.sec += min;
-	xt_max.sec += max;
-	return (xtime_cmp(xt, xt_min) >= 0) && (xtime_cmp(xt, xt_max) <= 0);
+    boost::xtime less = cur;
+    less.sec += less_secs;
+
+    boost::xtime greater = cur;
+    greater.sec += greater_secs;
+
+    return (boost::xtime_cmp(xt, less) >= 0) &&
+        (boost::xtime_cmp(xt, greater) <= 0);
 }
 
 } // namespace
+
+#endif

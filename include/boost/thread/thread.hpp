@@ -137,16 +137,15 @@ public:
 
 	static const int stack_min;
 
-private:
-	template <typename charT, typename Traits>
-		friend std::basic_ostream<charT, Traits>& operator<<(std::basic_ostream<charT, Traits>&, const thread&);
-	
 #if defined(BOOST_HAS_WINTHREADS)
-	long id() const;
+	typedef unsigned int id_type;
 #else
-	const void* id() const;
+	typedef void* id_type;
 #endif
+	
+	id_type id() const;
 
+private:
 	void* m_handle;
 };
 
