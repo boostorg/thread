@@ -14,6 +14,8 @@
 #ifndef BOOST_SINGLETON_MJM012402_HPP
 #define BOOST_SINGLETON_MJM012402_HPP
 
+#include <boost/thread/detail/config.hpp>
+
 namespace boost {
 namespace detail {
 namespace thread {
