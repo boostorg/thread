@@ -48,7 +48,7 @@ void test_barrier()
 
     g.join_all();
 
-    BOOST_TEST(global_parameter == 5);
+    BOOST_CHECK(global_parameter == 5);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])

@@ -29,9 +29,9 @@ void simple_thread()
 void comparison_thread(boost::thread* parent)
 {
     boost::thread thrd;
-    BOOST_TEST(thrd != *parent);
+    BOOST_CHECK(thrd != *parent);
     boost::thread thrd2;
-    BOOST_TEST(thrd == thrd2);
+    BOOST_CHECK(thrd == thrd2);
 }
 
 void test_sleep()
