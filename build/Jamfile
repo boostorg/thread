@@ -6,13 +6,6 @@
 #
 # Boost.Threads build Jamfile
 #
-# Declares the following targets:
-#   1. libboost_thread, a static link library.
-#      1a. On Win32 (when PTW32 is not defined), a dynamic link library
-#          boost_threadmon, which must be used in conjunction with
-#          libboost_thread. Note that this DLL *must* be used through static
-#          linking to the import library.  Dynamic loading will cause undefined
-#          behavior.
 # Additional configuration variables used:
 #   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
 #      library should be used instead of "native" threads. This feature is
@@ -32,43 +25,29 @@ subproject libs/thread/build ;
 SEARCH on <module@>threads.jam = $(SUBDIR) ;
 include <module@>threads.jam ;
 
-template thread_libs
-    ## sources ##
-    : <template>thread_base
-    ## requirements ##
-    :
-    ## default build ##
-    : debug release <runtime-link>static/dynamic
-;
+{
+    template thread_libs
+        ## sources ##
+        : <template>thread_base
+        ## requirements ##
+        :
+        ## default build ##
+        : debug release
+    ;
 
-#######################
-# Declare the Boost.Threads static link library libboost_thread.
+    # Base names of the source files for libboost_thread.
+    CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
+                  exceptions thread_pool barrier rw_mutex threadmon ;
 
-# Base names of the source files for libboost_thread.
-
-CPP_SOURCES = condition mutex recursive_mutex thread tss xtime once
-              exceptions thread_pool barrier rw_mutex threadmon ;
-
-#if $(NT) && ! $(PTW32)
-#{
     dll boost_thread
         : <template>thread_libs ../src/$(CPP_SOURCES).cpp
         : <define>BOOST_THREAD_BUILD_DLL=1
     ;
-#}
-#else
-#{
-#    lib boost_thread
-#        : <template>thread_libs ../src/$(CPP_SOURCES).cpp
-#    ;
-#}
 
-#######################
-# Stage the generated targets.
-
-#stage bin-stage
-#    : <lib>boost_thread $(threadmon)
-#    : <tag><runtime-link-static>"s"
-#      <tag><debug>"d"
-#    : debug release <runtime-link>static/dynamic
-#;
+    stage bin-stage
+        : <dll>boost_thread
+        : #<tag><runtime-link-static>"s"
+          <tag><debug>"d"
+        : debug release
+    ;
+}
