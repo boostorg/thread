@@ -611,7 +611,7 @@ bool condition_impl::do_timed_wait(const xtime& xt)
     unsigned was_gone=0;
 
     lStatus = safe_enter_critical_region(m_mutex, kDurationForever,
-                                         m_mutex_mutex);
+        m_mutex_mutex);
     assert(lStatus == noErr);
     was_waiting = m_waiting;
     was_gone = m_gone;
