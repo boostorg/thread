@@ -37,7 +37,45 @@
     namespace
     {
         const DWORD invalid_key = TLS_OUT_OF_INDEXES;
-        static DWORD key = invalid_key;
+        DWORD key = invalid_key;
+
+        bool on_thread_enter_being_called = false;
+        LONG attached_thread_count = 0;
+
+        //See comments on InterlockedCompareExchange() in once.cpp
+        //for an explanation of the following:
+
+        inline LONG interlocked_inc_dec_wrapper(LONG (__stdcall *ice)(LONG*),
+            volatile LONG* arg)
+        {
+            return (*ice)(const_cast<LONG*>(arg));
+        }
+
+        inline LONG interlocked_inc_dec_wrapper(LONG (__stdcall *ice)(volatile LONG*),
+            volatile LONG* arg)
+        {
+            return (*ice)(arg);
+        }
+
+        inline LONG interlocked_inc_dec_wrapper(LPVOID (__stdcall *ice)(LPVOID*),
+            volatile LONG* arg)
+        {
+            return (LONG)(*ice)((LPVOID*)arg);
+        }
+
+        // The friendly form of InterlockedIncrement that defers
+        // according to the above function type wrappers.
+        inline LONG interlocked_increment(volatile LPLONG arg)
+        {
+            return interlocked_inc_dec_wrapper(&InterlockedIncrement, arg);
+        }
+
+        // The friendly form of InterlockedDecrement that defers
+        // according to the above function type wrappers.
+        inline LONG interlocked_decrement(volatile LPLONG arg)
+        {
+            return interlocked_inc_dec_wrapper(&InterlockedDecrement, arg);
+        }
     }
 
     extern "C" 
@@ -72,7 +110,11 @@
             }
 
             //Attempt to set a TLS value for the new handlers.
-            if (!TlsSetValue(key, handlers))
+            if (TlsSetValue(key, handlers))
+            {
+                interlocked_increment(&attached_thread_count);
+            }
+            else
             {
                 delete handlers;
                 return -1;
@@ -96,7 +138,29 @@
     {
         if (key == invalid_key)
             key = TlsAlloc();
+
+        if (key != invalid_key)
+        {
+            //Since the on_process_*() functions are working,
+            //don't let TlsFree() be called until on_process_exit().
+            interlocked_increment(&attached_thread_count);
+        }
     }
+
+    extern "C" BOOST_THREAD_DECL void on_process_exit(void)
+    {
+        if (key != invalid_key)
+        {
+            if (interlocked_decrement(&attached_thread_count) == 0)
+            {
+                TlsFree(key);
+                key = invalid_key;
+            }
+        }
+    }
+
+    extern "C" BOOST_THREAD_DECL void on_thread_enter(void)
+    {}
 
     extern "C" BOOST_THREAD_DECL void on_thread_exit(void)
     {
@@ -118,16 +182,15 @@
 
             //Destroy the exit handlers
             if (TlsSetValue(key, 0))
-                delete handlers;
-        }
-    }
+            {
+                if (interlocked_decrement(&attached_thread_count) == 0)
+                {
+                    TlsFree(key);
+                    key = invalid_key;
+                }
 
-    extern "C" BOOST_THREAD_DECL void on_process_exit(void)
-    {
-        if (key != invalid_key)
-        {
-            TlsFree(key);
-            key = invalid_key;
+                delete handlers;
+            }
         }
     }
 
@@ -154,25 +217,27 @@
             switch (reason)
             {
                 case DLL_PROCESS_ATTACH:
-                    {
+                {
                     on_process_enter();
+                    on_thread_enter();
                     break;
-                    }
+                }
                 case DLL_THREAD_ATTACH:
-                    {
-                        break;
-                    }
+                {
+                    on_thread_enter();
+                    break;
+                }
                 case DLL_THREAD_DETACH:
-                    {
-                        on_thread_exit();
-                        break;
-                    }
+                {
+                    on_thread_exit();
+                    break;
+                }
                 case DLL_PROCESS_DETACH:
-                    {
-                        on_thread_exit();
-                        on_process_exit();
-                        break;
-                    }
+                {
+                    on_thread_exit();
+                    on_process_exit();
+                    break;
+                }
             }
             return TRUE;
         }
