@@ -41,7 +41,7 @@
 //
 // Automatically link to the correct build variant where possible. 
 // 
-#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL)
+#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL) && !defined(BOOST_THREAD_BUILD_LIB)
 //
 // Set the name of our library, this will get undef'ed by auto_link.hpp
 // once it's done with it:
