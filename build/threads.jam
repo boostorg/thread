@@ -11,30 +11,35 @@
 
 # Do some OS-specific setup
 {
-    pthreads-win32 = ;
-
+    #thread library name
+    boost_thread_lib_name = boost_thread ; 
+    
+    #thread library name with "pthreads-win32" library
+    boost_thread_lib_name_ptw32 = boost_thread_ptw32 ;
+    
     if $(NT)
     {
-        if $(PTW32)
+        if $(PTW32_DIR)
         {
-            local install-path = $(PTW32[1]) ;
-            local lib = $(PTW32[2]) ;
-            pthreads-win32 =
-                  <define>BOOST_HAS_PTHREADS
-                  <define>PtW32NoCatchWarn
-                  <include>$(install-path)/pre-built/include
-                  <library-file>$(install-path)/pre-built/lib/$(lib)
-            ;
+            if $(PTW32_LIB)
+            {
+                boost_thread_lib_settings_ptw32 =
+                    <define>BOOST_HAS_PTHREADS
+                    <define>PtW32NoCatchWarn
+                    <include>$(PTW32_DIR)/pre-built/include
+                    <library-file>$(PTW32_DIR)/pre-built/lib/$(PTW32_LIB)
+                ;
+            }
         }
     }
 
     template thread_base
-        ## sources ##
-        :
-        ## requirements ##
-        : <sysinclude>$(BOOST_ROOT) <threading>multi $(pthreads-win32)
-		<borland><*><cxxflags>-w-8004 <borland><*><cxxflags>-w-8057
-        ## default build ##
-        :
+        : ## sources ##
+        : ## requirements ##
+          <sysinclude>$(BOOST_ROOT)
+          <threading>multi
+          <borland><*><cxxflags>-w-8004
+          <borland><*><cxxflags>-w-8057
+        : ## default build ##
     ;
 }
