@@ -40,6 +40,17 @@ struct tss_data_t
 tss_data_t* tss_data = 0;
 boost::once_flag tss_data_once = BOOST_ONCE_INIT;
 
+extern "C" void cleanup_slots(void* p)
+{
+    tss_slots* slots = static_cast<tss_slots*>(p);
+	for (tss_slots::size_type i = 0; i < slots->size(); ++i)
+    {
+	    boost::mutex::scoped_lock lock(tss_data->mutex);
+		(*tss_data->cleanup_handlers[i])((*slots)[i]);
+		(*slots)[i] = 0;
+    }
+}
+
 void init_tss_data()
 {
 	std::auto_ptr<tss_data_t> temp(new tss_data_t);
@@ -61,17 +72,6 @@ void init_tss_data()
     // execution order of cleanup handlers is unspecified on any platform
     // with regards to C++ destructor ordering rules.
 	tss_data = temp.release();
-}
-
-extern "C" void cleanup_slots(void* p)
-{
-    tss_slots* slots = static_cast<tss_slots*>(p);
-	for (tss_slots::size_type i = 0; i < slots->size(); ++i)
-    {
-	    boost::mutex::scoped_lock lock(tss_data->mutex);
-		(*tss_data->cleanup_handlers[i])((*slots)[i]);
-		(*slots)[i] = 0;
-    }
 }
 
 #if defined(BOOST_HAS_WINTHREADS)
