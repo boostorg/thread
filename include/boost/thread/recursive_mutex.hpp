@@ -42,7 +42,7 @@ public:
     
 private:
 #if defined(BOOST_HAS_WINTHREADS)
-    typedef size_t cv_state;
+    typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
     {
@@ -84,7 +84,7 @@ public:
     
 private:
 #if defined(BOOST_HAS_WINTHREADS)
-    typedef size_t cv_state;
+    typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
     {
@@ -129,7 +129,7 @@ public:
     
 private:
 #if defined(BOOST_HAS_WINTHREADS)
-    typedef size_t cv_state;
+    typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
     {
