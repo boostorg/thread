@@ -18,7 +18,7 @@
 
 namespace boost {
 
-typedef enum
+enum xtime_clock_types
 {
     TIME_UTC=1
 //    TIME_TAI,
@@ -28,7 +28,7 @@ typedef enum
 //    TIME_LOCAL,
 //    TIME_SYNC,
 //    TIME_RESOLUTION
-} xtime_clock_types;
+};
 
 struct xtime
 {
