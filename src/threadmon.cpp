@@ -32,7 +32,8 @@ namespace
 #define DllMain DllEntryPoint
 #endif
 
-BOOL APIENTRY DllMain(HANDLE module, DWORD reason, LPVOID)
+extern "C"
+BOOL WINAPI DllMain(HANDLE module, DWORD reason, LPVOID)
 {
     switch (reason)
     {
