@@ -78,7 +78,7 @@ template<typename RW>
 void plain_reader(void *arg,RW &rw)
 {
     data<RW> *pdata = (data<RW> *) arg;
-	typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
+    typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
 
     pdata->m_value = shared_val;
 }
@@ -307,10 +307,10 @@ void test_read_write_mutex()
 {
     int i;
     for(i = (int) boost::read_write_scheduling_policy::writer_priority;
-		i <= (int) boost::read_write_scheduling_policy::alternating_single_read;
+        i <= (int) boost::read_write_scheduling_policy::alternating_single_read;
         i++)
     {
-		boost::read_write_mutex plain_rw(static_cast<boost::read_write_scheduling_policy::read_write_scheduling_policy_enum>(i));
+        boost::read_write_mutex plain_rw(static_cast<boost::read_write_scheduling_policy::read_write_scheduling_policy_enum>(i));
         boost::try_read_write_mutex try_rw(static_cast<boost::read_write_scheduling_policy::read_write_scheduling_policy_enum>(i));
         boost::timed_read_write_mutex timed_rw(static_cast<boost::read_write_scheduling_policy::read_write_scheduling_policy_enum>(i));
 
