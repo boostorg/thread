@@ -49,7 +49,7 @@ public:
 
 private:
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_thread;
+    void* m_thread;
     unsigned int m_id;
 #elif defined(BOOST_HAS_PTHREADS)
 private:

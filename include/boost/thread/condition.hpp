@@ -133,9 +133,9 @@ private:
 #endif
 
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_gate;
-    unsigned long m_queue;
-    unsigned long m_mutex;
+    void* m_gate;
+    void* m_queue;
+    void* m_mutex;
     unsigned m_gone; // # threads that timed out and never made it to the m_queue
     unsigned long m_blocked; // # threads m_blocked m_waiting for the condition
     unsigned m_waiting; // # threads m_waiting no longer m_waiting for the condition but still

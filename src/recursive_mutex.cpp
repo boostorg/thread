@@ -30,7 +30,7 @@ namespace boost {
 recursive_mutex::recursive_mutex()
     : m_count(0)
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -87,7 +87,7 @@ void recursive_mutex::do_unlock(cv_state& state)
 recursive_try_mutex::recursive_try_mutex()
     : m_count(0)
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }
@@ -162,7 +162,7 @@ void recursive_try_mutex::do_unlock(cv_state& state)
 recursive_timed_mutex::recursive_timed_mutex()
     : m_count(0)
 {
-    m_mutex = reinterpret_cast<unsigned long>(CreateMutex(0, 0, 0));
+    m_mutex = reinterpret_cast<void*>(CreateMutex(0, 0, 0));
     if (!m_mutex)
         throw thread_resource_error();
 }

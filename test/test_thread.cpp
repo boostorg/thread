@@ -449,7 +449,7 @@ void test_tss()
 }
 
 int once_value = 0;
-boost::once_flag once = boost::once_init;
+boost::once_flag once = BOOST_ONCE_INIT;
 
 void init_once_value()
 {

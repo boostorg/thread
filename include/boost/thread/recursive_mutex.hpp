@@ -56,7 +56,7 @@ private:
     void do_unlock(cv_state& state);
 
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_mutex;
+    void* m_mutex;
     unsigned long m_count;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
@@ -99,7 +99,7 @@ private:
     void do_unlock(cv_state& state);
 
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_mutex;
+    void* m_mutex;
     unsigned long m_count;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
@@ -145,7 +145,7 @@ private:
     void do_unlock(cv_state& state);
 
 #if defined(BOOST_HAS_WINTHREADS)
-    unsigned long m_mutex;
+    void* m_mutex;
     unsigned long m_count;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;

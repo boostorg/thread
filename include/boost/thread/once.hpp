@@ -26,12 +26,12 @@ namespace boost {
 #if defined(BOOST_HAS_PTHREADS)
 
 typedef pthread_once_t once_flag;
-const once_flag once_init = PTHREAD_ONCE_INIT;
+#define BOOST_ONCE_INIT PTHREAD_ONCE_INIT
 
 #elif defined(BOOST_HAS_WINTHREADS)
 
 typedef bool once_flag;
-const once_flag once_init = false;
+#define BOOST_ONCE_INIT false
 
 #endif
 
