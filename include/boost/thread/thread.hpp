@@ -13,6 +13,7 @@
  * Revision History (excluding minor changes for specific compilers)
  *    8 Feb 01  Initial version.
  *    1 Jun 01  Added boost::thread initial implementation.
+ *    3 Jul 01  Redesigned boost::thread to be noncopyable.
  */
  
 #ifndef BOOST_THREAD_HPP
@@ -23,65 +24,73 @@
 #   error	Thread support is unavailable!
 #endif
 
-#include <boost/thread/xtime.hpp>
 #include <boost/function.hpp>
+#include <boost/utility.hpp>
+#include <boost/thread/xtime.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 #include <stdexcept>
+#include <list>
 
 #if defined(BOOST_HAS_PTHREADS)
-    struct timespec;
+#   include <pthread.h>
 #endif
 
 namespace boost
 {
-    namespace detail
-    {
-        class thread_state;
-//        typedef function<int> threadfunc;
-        typedef void (*threadfunc)(void* param);
-    }
-
     class lock_error : public std::runtime_error
     {
     public:
         lock_error();
     };
 
-    class thread
+    class thread : boost::noncopyable
     {
     public:
-        thread() : _state(0) { }
-        thread(const thread& other);
+        thread();
+        thread(const boost::function0<void>& threadfunc);
         ~thread();
 
-        thread& operator=(const thread& other)
-        {
-            thread temp(other);
-            swap(temp);
-            return *this;
-        }
-        thread& swap(thread& other)
-        {
-            detail::thread_state* temp = other._state;
-            other._state = _state;
-            _state = temp;
-            return *this;
-        }
+        bool operator==(const thread& other);
+        bool operator!=(const thread& other);
 
-        bool operator==(const thread& other) { return _state == other._state; }
-        bool operator!=(const thread& other) { return _state != other._state; }
-
-        bool is_alive() const;
         void join();
+        bool try_join();
+        bool timed_join(const xtime& xt);
 
-        static thread create(const detail::threadfunc& func, void* param=0);
-        static thread self();
-
-        static void join_all();
         static void sleep(const xtime& xt);
         static void yield();
 
     private:
-        detail::thread_state* _state;
+#if defined(BOOST_HAS_WINTHREADS)
+        unsigned long m_thread;
+        unsigned int m_id;
+#elif defined(BOOST_HAS_PTHREADS)
+        class thread_list;
+        friend class thread_list;
+
+        pthread_t m_thread;
+        mutex m_mutex;
+        condition m_cond;
+        bool m_alive;
+        thread_list* m_list;
+#endif
+    };
+
+    class thread_group : boost::noncopyable
+    {
+    public:
+        thread_group();
+        ~thread_group();
+
+        thread* create_thread(const boost::function0<void>& threadfunc);
+        void add_thread(thread* thrd);
+        void remove_thread(thread* thrd);
+        void join_all();
+
+    private:
+        std::list<thread*> m_threads;
+        mutex m_mutex;
     };
 } // namespace boost
 

@@ -19,7 +19,6 @@
 #define BOOST_XLOCK_HPP
 
 #include <boost/thread/xtime.hpp>
-#include <boost/thread/thread.hpp>
 #include <boost/utility.hpp>
 
 namespace boost {
