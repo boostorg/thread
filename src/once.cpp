@@ -122,7 +122,7 @@ void call_once(void (*func)(), once_flag& flag)
 #else
         std::ostringstream strm;
         strm << "2AC1A572DB6944B0A65C38C4140AF2F4" << std::hex << GetCurrentProcessId() << &flag;
-        HANDLE mutex = CreateMutex(NULL, FALSE, strm.str().c_str());
+        HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str().c_str());
 #endif
         assert(mutex != NULL);
 
