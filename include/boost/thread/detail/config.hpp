@@ -22,10 +22,8 @@
 #       define BOOST_THREAD_DECL __declspec(dllexport)
 #   elif defined(BOOST_THREAD_BUILD_LIB) //Build lib
 #       define BOOST_THREAD_DECL
-#       define BOOST_THREAD_NO_TSS_CLEANUP
 #   elif defined(BOOST_THREAD_USE_LIB) //Use lib
 #       define BOOST_THREAD_DECL
-#       define BOOST_THREAD_NO_TSS_CLEANUP
 #   else //Use dll
 #       define BOOST_THREAD_DECL __declspec(dllimport)
 #       define BOOST_DYN_LINK
@@ -41,7 +39,7 @@
 //
 // Automatically link to the correct build variant where possible. 
 // 
-#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL)
+#if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL) && !defined(BOOST_THREAD_BUILD_LIB)
 //
 // Set the name of our library, this will get undef'ed by auto_link.hpp
 // once it's done with it:
