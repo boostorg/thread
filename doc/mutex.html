@@ -217,52 +217,7 @@ timed_mutex();
     resulting in undefined behavior such as a program crash.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href=
-"../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
-#include <a href=
-"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include &lt;iostream&gt;
-
-boost::mutex io_mutex; // The iostreams are not guaranteed to be <a href=
-"definitions.html#Thread-safe">thread-safe</a>!
-
-class counter
-{
-public:
-    counter() : count(0) { }
-   
-    int increment() {
-        boost::mutex::scoped_lock scoped_lock(mutex);
-        return ++count;
-    }
-
-private:
-    boost::mutex mutex;
-    int count;
-};
-
-counter c;
-
-void change_count()
-{
-    int i = c.increment();
-    boost::mutex::scoped_lock scoped_lock(io_mutex);
-    std::cout &lt;&lt; &quot;count == &quot; &lt;&lt; i &lt;&lt; std::endl;
-}
-
-int main(int, char*[])
-{
-    const int num_threads = 4;
-    boost::thread_group thrds;
-    for (int i=0; i &lt; num_threads; ++i)
-        thrds.create_thread(&amp;change_count);
-      
-    thrds.join_all();
-   
-    return 0;
-}
-</pre>
+<p><a href="../example/mutex.cpp">libs/thread/example/mutex.cpp</a></p>
 <p>The output is:</p>
 <pre>
 count == 1

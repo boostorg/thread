@@ -91,18 +91,7 @@ namespace boost
     one second.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/xtime.hpp&gt;</a>
-
-int main(int argc, char* argv[])
-{
-   boost::xtime xt;
-   boost::xtime_get(&amp;XT, boost::TIME_UTC);
-   xt.sec += 1;
-   boost::thread::sleep(XT); // Sleep for 1 second
-}
-</pre>
+<p><a href="../example/xtime.cpp">libs/thread/example/xtime.cpp</a></p>
 <hr>
 <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->

@@ -150,38 +150,7 @@ T& operator*() const;
   <dt><b>Returns:</b> <code>this-&lt;get()</code>.</dt>
 </dl>
 <h2><a name="examples"></a>Example(s)</h2>
-<pre>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
-#include <a href="../../../boost/thread/tss.hpp">&lt;boost/thread/tss.hpp&gt;</a>
-#include &lt;cassert&gt;
-
-boost::thread_specific_ptr&lt;int&gt; value;
-
-void increment()
-{
-   int* p = value.get();
-   ++*p;
-}
-
-void thread_proc()
-{
-   value.reset(new int(0)); // initialize the thread&#39;s storage
-   for (int i=0; i&lt;10; ++i)
-   {
-       increment();
-       int* p = value.get();
-       assert(*p == i+1);
-   }
-}
-
-int main(int argc, char* argv[])
-{
-   boost::thread_group threads;
-   for (int i=0; i&lt;5; ++i)
-      threads.create_thread(&amp;thread_proc);
-   threads.join_all();
-}
-</pre>
+<p><a href="../example/tss.cpp">libs/thread/example/tss.cpp</a></p>
 <hr>
 <p>Revised 
   <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
