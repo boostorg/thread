@@ -422,10 +422,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
     }
     else
     {
-        BOOST_ASSERT(valid_write_lock(m_state) || m_num_waiting_writers > 0);
-            //Should be write-locked or
-            //writer should be waiting
-
         //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
     }
 
@@ -522,10 +518,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
     }
     else
     {
-        BOOST_ASSERT(valid_read_write_lock(m_state) || m_num_readers_to_wake > 0);
-            //Should be read-locked or write-locked, or
-            //reader should be waking
-
         //:Call do_xxx_scheduling_impl() in case we were the scheduled thread and we timed out?
     }
 
