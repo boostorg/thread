@@ -33,11 +33,15 @@ enum xtime_clock_types
 struct xtime
 {
 #if defined(BOOST_NO_INT64_T)
-    int_fast32_t sec; //INT_FAST32_MIN <= sec <= INT_FAST32_MAX
+    typedef int_fast32_t xtime_sec_t; //INT_FAST32_MIN <= sec <= INT_FAST32_MAX
 #else
-    int_fast64_t sec; //INT_FAST64_MIN <= sec <= INT_FAST64_MAX
+    typedef int_fast64_t xtime_sec_t; //INT_FAST64_MIN <= sec <= INT_FAST64_MAX
 #endif
-    int_fast32_t nsec; //0 <= xtime.nsec < NANOSECONDS_PER_SECOND
+
+    typedef int_fast32_t xtime_nsec_t; //0 <= xtime.nsec < NANOSECONDS_PER_SECOND
+
+    xtime_sec_t sec;
+    xtime_nsec_t nsec;
 };
 
 int BOOST_THREAD_DECL xtime_get(struct xtime* xtp, int clock_type);
