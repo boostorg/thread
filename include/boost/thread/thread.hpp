@@ -14,7 +14,6 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#include <boost/utility.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
 #include <iostream>
@@ -28,12 +27,6 @@
 #   include <Multiprocessing.h>
 #endif
 
-// Config macros
-// BOOST_THREAD_ATTRIBUTES_STACKSIZE
-// BOOST_THREAD_ATTRIBUTES_STACKADDR
-// BOOST_THREAD_PRIORITY_SCHEDULING
-// 
-
 namespace boost {
 
 struct xtime;
@@ -45,25 +38,24 @@ public:
 	~thread_cancel();
 };
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
-#   if defined(BOOST_HAS_WINTHREADS)
+#if defined(BOOST_HAS_WINTHREADS)
 
 struct sched_param
 {
 	int priority;
 };
 
-enum { sched_fifo, sched_rr, sched_other };
+enum { sched_fifo, sched_round_robin, sched_other };
 enum { scope_process, scope_system };
 
-#   elif defined(BOOST_HAS_PTHREADS)
+#elif defined(BOOST_HAS_PTHREADS)
 
 using ::sched_param;
 
 enum
 {
 	sched_fifo = SCHED_FIFO,
-	sched_rr = SCHED_RR,
+	sched_round_robin = SCHED_RR,
 	sched_other = SCHED_OTHER
 };
 
@@ -73,10 +65,9 @@ enum
 	scope_system = PTHREAD_SCOPE_SYSTEM
 };
 
-#   endif
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
+#endif
 
-class BOOST_THREAD_DECL thread : private noncopyable
+class BOOST_THREAD_DECL thread
 {
 public:
 	class BOOST_THREAD_DECL attributes
@@ -85,26 +76,18 @@ public:
 		attributes();
 		~attributes();
 
-#if defined(BOOST_THREAD_ATTRIBUTES_STACKSIZE)
-		attributes& stack_size(size_t size);
-		size_t stack_size() const;
-#endif // BOOST_THREAD_ATTRIBUTES_STACKSIZE
+		attributes& set_stack_size(size_t size);
+		size_t get_stack_size() const;
 
-#if defined(BOOST_THREAD_ATTRIBUTES_STACKADDR)
-		attributes& stack_address(void* addr);
-		void* stack_address() const;
-#endif // BOOST_THREAD_ATTRIBUTES_STACKADDR
+		attributes& set_stack_address(void* addr);
+		void* get_stack_address() const;
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 		attributes& inherit_scheduling(bool inherit);
 		bool inherit_scheduling() const;
-		attributes& scheduling_parameter(const sched_param& param);
-		sched_param scheduling_parameter() const;
-		attributes& scheduling_policy(int policy);
-		int scheduling_policy() const;
+		attributes& set_schedule(int policy, const sched_param& param);
+		void get_schedule(int& policy, sched_param& param);
 		attributes& scope(int scope);
 		int scope() const;
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
 	private:
 		friend class thread;
@@ -132,17 +115,17 @@ public:
     void join();
     void cancel();
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 	void set_scheduling_parameter(int policy, const sched_param& param);
 	void get_scheduling_parameter(int& policy, sched_param& param) const;
 
 	static int max_priority(int policy);
 	static int min_priority(int policy);
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
     static void test_cancel();
     static void sleep(const xtime& xt);
     static void yield();
+
+	static const int stack_min;
 
 	// This is an implementation detail and should be private,
 	// but we need it to be public to access the type in some

@@ -61,10 +61,8 @@ public:
 	const void* id() const;
 #endif
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 	void set_scheduling_parameter(int policy, const sched_param& param);
 	void get_scheduling_parameter(int& policy, sched_param& param) const;
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
 private:
     mutable boost::mutex m_mutex;
@@ -82,6 +80,7 @@ private:
     MPTaskID m_pTaskID;
 #endif
 	bool m_canceled;
+	bool m_native;
 };
 
 } // namespace boost
@@ -158,12 +157,12 @@ static OSStatus thread_proxy(void* param)
 namespace boost {
 
 thread::data::data(const boost::function0<void>& threadfunc)
-	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_canceled(false)
+	: m_threadfunc(threadfunc), m_refcount(2), m_state(creating), m_canceled(false), m_native(false)
 {
 }
 
 thread::data::data()
-	: m_refcount(2), m_state(running), m_canceled(false)
+	: m_refcount(2), m_state(running), m_canceled(false), m_native(true)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	DuplicateHandle(GetCurrentProcess(), GetCurrentThread(), GetCurrentProcess(),
@@ -187,8 +186,11 @@ thread::data::~data()
 		res = CloseHandle(m_thread);
 		assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
-		res = pthread_detach(m_thread);
-		assert(res == 0);
+		if (!m_native)
+		{
+			res = pthread_detach(m_thread);
+			assert(res == 0);
+		}
 #elif defined(BOOST_HAS_MPTASKS)
 		OSStatus lStatus = threads::mac::detail::safe_wait_on_queue(m_pJoinQueueID, NULL, NULL, NULL, kDurationForever);
 		assert(lStatus == noErr);
@@ -297,27 +299,33 @@ const void* thread::data::id() const
 }
 #endif
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
-
 void thread::data::set_scheduling_parameter(int policy, const sched_param& param)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	if (policy != sched_other)
-		throw std::invalid_argument("policy");
+		throw boost::invalid_thread_argument();
 	if (param.priority < THREAD_PRIORITY_LOWEST || param.priority > THREAD_PRIORITY_HIGHEST)
-		throw std::invalid_argument("param");
+		throw boost::invalid_thread_argument();
 	boost::mutex::scoped_lock lock(m_mutex);
 	BOOL res = FALSE;
 	res = SetThreadPriority(m_thread, param.priority);
+	if (res == ERROR_ACCESS_DENIED)  // guessing about possible return value
+		throw boost::thread_permission_error(res);
 	assert(res);
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	res = pthread_setschedparam(m_thread, policy, &param);
-	if (res == EINVAL || res == ENOTSUP)
-		throw std::invalid_argument("policy/param");
+	if (res == EINVAL)
+		throw boost::invalid_thread_argument(res);
+	if (res == ENOTSUP)
+		throw unsupported_thread_option(res);
 	if (res == EPERM)
-		throw std::runtime_error("permission denied");
+		throw boost::thread_permission_error(res);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
 
@@ -328,14 +336,16 @@ void thread::data::get_scheduling_parameter(int& policy, sched_param& param) con
 	boost::mutex::scoped_lock lock(m_mutex);
 	param.priority = GetThreadPriority(m_thread);
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	boost::mutex::scoped_lock lock(m_mutex);
 	res = pthread_getschedparam(m_thread, &policy, &param);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
-
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
 thread_cancel::thread_cancel()
 {
@@ -354,7 +364,7 @@ thread::attributes::attributes()
 #elif defined(BOOST_HAS_PTHREADS)
 	int res = pthread_attr_init(&m_attr);
 	if (res == ENOMEM)
-		throw thread_resource_error();
+		throw thread_resource_error(res);
 	assert(res == 0);
 #endif
 }
@@ -366,74 +376,88 @@ thread::attributes::~attributes()
 #endif
 }
 
-#if defined(BOOST_THREAD_ATTRIBUTES_STACKSIZE)
-
-thread::attributes& thread::attributes::stack_size(size_t size)
+thread::attributes& thread::attributes::set_stack_size(size_t size)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	m_stacksize = size;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_ATTR_STACKSIZE)
 	int res = 0;
 	res = pthread_attr_setstacksize(&m_attr, size);
 	if (res == EINVAL)
-		throw std::invalid_argument("size");
+		throw invalid_thread_argument(res);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 	return *this;
 }
 
-size_t thread::attributes::stack_size() const
+size_t thread::attributes::get_stack_size() const
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	return m_stacksize;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_ATTR_STACKSIZE)
 	size_t size;
 	int res = 0;
 	res = pthread_attr_getstacksize(&m_attr, &size);
 	assert(res == 0);
 	return size;
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif 
 #endif
 }
 
-#endif // BOOST_THREAD_ATTRIBUTES_STACKSIZE
-
-#if defined(BOOST_THREAD_ATTRIBUTES_STACKADDR)
-
-thread::attributes& thread::attributes::stack_address(void* addr)
+thread::attributes& thread::attributes::set_stack_address(void* addr)
 {
-#if defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_WINTHREADS)
+	throw unsupported_thread_option();
+#elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_ATTR_STACKADDR)
 	int res = 0;
 	res = pthread_attr_setstackaddr(&m_attr, addr);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 	return *this;
 }
 
-void* thread::attributes::stack_address() const
+void* thread::attributes::get_stack_address() const
 {
-#if defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_WINTHREADS)
+	throw unsupported_thread_option();
+#elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_ATTR_STACKADDR)
 	void* addr;
 	int res = 0;
 	res = pthread_attr_getstackaddr(&m_attr, &addr);
 	assert(res == 0);
 	return addr;
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
-
-#endif // BOOST_THREAD_ATTRIBUTES_STACKADDR
-
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
 
 thread::attributes& thread::attributes::inherit_scheduling(bool inherit)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	m_schedinherit = inherit;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	res = pthread_attr_setinheritsched(&m_attr, inherit ? PTHREAD_INHERIT_SCHED : PTHREAD_EXPLICIT_SCHED);
 	if (res == ENOTSUP)
-		throw std::invalid_argument("inherit");
+		throw invalid_thread_argument(res);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 	return *this;
 }
@@ -443,65 +467,70 @@ bool thread::attributes::inherit_scheduling() const
 #if defined(BOOST_HAS_WINTHREADS)
 	return m_schedinherit;
 #elif defined (BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int inherit = 0;
 	int res = 0;
 	res = pthread_attr_getinheritsched(&m_attr, &inherit);
 	assert(res == 0);
 	return inherit == PTHREAD_INHERIT_SCHED;
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
 
-thread::attributes& thread::attributes::scheduling_parameter(const sched_param& param)
-{
-#if defined(BOOST_HAS_WINTHREADS)
-	m_schedparam = param;
-#elif defined(BOOST_HAS_PTHREADS)
-	int res = 0;
-	res = pthread_attr_setschedparam(&m_attr, &param);
-	if (res == EINVAL || res == ENOTSUP)
-		throw std::invalid_argument("param");
-#endif
-	return *this;
-}
-
-sched_param thread::attributes::scheduling_parameter() const
-{
-#if defined(BOOST_HAS_WINTHREADS)
-	return m_schedparam;
-#elif defined(BOOST_HAS_PTHREADS)
-	sched_param param;
-	int res = 0;
-	res = pthread_attr_getschedparam(&m_attr, &param);
-	assert(res == 0);
-	return param;
-#endif
-}
-
-thread::attributes& thread::attributes::scheduling_policy(int policy)
+thread::attributes& thread::attributes::set_schedule(int policy, const sched_param& param)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	if (policy != sched_other)
-		throw std::invalid_argument("policy");
+		throw unsupported_thread_option();
+	if (param.priority < THREAD_PRIORITY_LOWEST || param.priority > THREAD_PRIORITY_HIGHEST)
+		throw invalid_thread_argument();
+	m_schedparam = param;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	res = pthread_attr_setschedpolicy(&m_attr, policy);
+	if (res == EINVAL)
+		throw invalid_thread_argument(res);
 	if (res == ENOTSUP)
-		throw std::invalid_argument("policy");
+		throw unsupported_thread_option(res);
 	assert(res);
+	res = pthread_attr_setschedparam(&m_attr, &param);
+	// This one leaves me puzzled.  POSIX clearly indicates this can return EINVAL
+	// if the sched_param supplied is invalid.  But you don't know if it's invalid
+	// unless you know what policy it's meant for.  This leaves us with a chicken
+	// and the egg dillema, but I'm going to assume we should set the policy first
+	// (which won't return EINVAL based on current parameter), then we set the
+	// parameter, which may return EINVAL if the current policy indicates so.
+	// Big assumption... does anyone know the definative answer?
+	if (res == EINVAL)
+		throw invalid_thread_argument(res);
+	if (res == ENOTSUP)
+		throw unsupported_thread_option(res);
+	assert(res);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 	return *this;
 }
 
-int thread::attributes::scheduling_policy() const
+void thread::attributes::get_schedule(int& policy, sched_param& param)
 {
 #if defined(BOOST_HAS_WINTHREADS)
-	return sched_other;
+	policy = sched_other;
+	param = m_schedparam;
 #elif defined(BOOST_HAS_PTHREADS)
-	int policy = 0;
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	res = pthread_attr_getschedpolicy(&m_attr, &policy);
 	assert(res == 0);
-	return policy;
+	res = pthread_attr_getschedparam(&m_attr, &param);
+	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
 
@@ -509,13 +538,19 @@ thread::attributes& thread::attributes::scope(int scope)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	if (scope != scope_system)
-		throw std::invalid_argument("scope");
+		throw invalid_thread_argument();
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int res = 0;
 	res = pthread_attr_setscope(&m_attr, scope);
-	if (res == EINVAL || res == ENOTSUP)
-		throw std::invalid_argument("scope");
+	if (res == EINVAL)
+		throw invalid_thread_argument(res);
+	if (res == ENOTSUP)
+		throw unsupported_thread_option(res);
 	assert(res == 0);
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 	return *this;
 }
@@ -525,14 +560,16 @@ int thread::attributes::scope() const
 #if defined(BOOST_HAS_WINTHREADS)
 	return scope_system;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
 	int scope = 0;
 	int res = 0;
 	res = pthread_attr_getscope(&m_attr, &scope);
 	return scope;
+#   else
+	throw unsupported_thread_option(ENOTSUP);
+#   endif
 #endif
 }
-
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
 thread::thread()
     : m_handle(0)
@@ -575,7 +612,7 @@ thread::thread(const function0<void>& threadfunc, attributes attr)
 	pthread_t t;
     res = pthread_create(&t, &attr.m_attr, &thread_proxy, param.get());
     if (res != 0)
-        throw thread_resource_error();
+        throw thread_resource_error(res);
 #elif defined(BOOST_HAS_MPTASKS)
     threads::mac::detail::thread_init();
     threads::mac::detail::create_singletons();
@@ -585,7 +622,8 @@ thread::thread(const function0<void>& threadfunc, attributes attr)
     m_pTaskID = kInvalidID;
 
     lStatus = MPCreateQueue(&m_pJoinQueueID);
-    if(lStatus != noErr) throw thread_resource_error();
+    if (lStatus != noErr)
+		throw thread_resource_error();
 
     lStatus = MPCreateTask(&thread_proxy, param.get(), 0UL, m_pJoinQueueID, NULL, NULL,
                             0UL, &m_pTaskID);
@@ -651,8 +689,6 @@ void thread::test_cancel()
 	self.m_handle->test_cancel();
 }
 
-#if defined(BOOST_THREAD_PRIORITY_SCHEDULING)
-
 void thread::set_scheduling_parameter(int policy, const sched_param& param)
 {
 	m_handle->set_scheduling_parameter(policy, param);
@@ -667,9 +703,11 @@ int thread::max_priority(int policy)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	if (policy != sched_other)
-		throw std::invalid_argument("policy");
+		throw invalid_thread_argument();
 	return THREAD_PRIORITY_HIGHEST;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
+#   endif
 #endif
 	return 0;
 }
@@ -678,14 +716,14 @@ int thread::min_priority(int policy)
 {
 #if defined(BOOST_HAS_WINTHREADS)
 	if (policy != sched_other)
-		throw std::invalid_argument("policy");
+		throw invalid_thread_argument();
 	return THREAD_PRIORITY_LOWEST;
 #elif defined(BOOST_HAS_PTHREADS)
+#   if defined(_POSIX_THREAD_PRIORITY_SCHEDULING)
+#   endif
 #endif
 	return 0;
 }
-
-#endif // BOOST_THREAD_PRIORITY_SCHEDULING
 
 void thread::sleep(const xtime& xt)
 {
@@ -764,6 +802,16 @@ const void* thread::id() const
 	std::cout << *this;
 	return m_handle->id();
 }
+
+#if defined(BOOST_HAS_WINTHREADS)
+const int thread::stack_min = 0;
+#elif defined(BOOST_HAS_PTHREADS)
+#   if defined(PTHREAD_STACK_MIN)
+const int thread::stack_min = PTHREAD_STACK_MIN;
+#   else
+const int thread::stack_min = 0;
+#   endif
+#endif
 
 thread_group::thread_group()
 {
