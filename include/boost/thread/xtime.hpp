@@ -18,16 +18,16 @@
 
 namespace boost {
 
-enum
+enum xtime_clock_types
 {
-    TIME_UTC=1,
-    TIME_TAI,
-    TIME_MONOTONIC,
-    TIME_PROCESS,
-    TIME_THREAD,
-    TIME_LOCAL,
-    TIME_SYNC,
-    TIME_RESOLUTION
+    TIME_UTC=1
+//    TIME_TAI,
+//    TIME_MONOTONIC,
+//    TIME_PROCESS,
+//    TIME_THREAD,
+//    TIME_LOCAL,
+//    TIME_SYNC,
+//    TIME_RESOLUTION
 };
 
 struct xtime
