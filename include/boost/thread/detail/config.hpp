@@ -12,6 +12,11 @@
 #ifndef BOOST_THREAD_CONFIG_WEK01032003_HPP
 #define BOOST_THREAD_CONFIG_WEK01032003_HPP
 
+#include <boost/config.hpp>
+
+// insist on threading support being available:
+#include <boost/config/requires_threads.hpp>
+
 #if defined(BOOST_HAS_WINTHREADS)
 #   if defined(BOOST_THREAD_BUILD_DLL)
 #       define BOOST_THREAD_DECL __declspec(dllexport)

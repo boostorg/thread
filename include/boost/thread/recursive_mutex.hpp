@@ -13,6 +13,7 @@
 #define BOOST_RECURSIVE_MUTEX_WEK070601_HPP
 
 #include <boost/config.hpp>
+
 // insist on threading support being available:
 #include <boost/config/requires_threads.hpp>
 
@@ -168,12 +169,11 @@ private:
 
 } // namespace boost
 
+#endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
+
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //    1 Jun 01  WEKEMPF Modified to use xtime for time outs.  Factored out
 //                      to three classes, mutex, try_mutex and timed_mutex.
 //   11 Jun 01  WEKEMPF Modified to use PTHREAD_MUTEX_RECURSIVE if available.
 //    3 Jan 03  WEKEMPF Modified for DLL implementation.
-
-
-#endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
