@@ -32,7 +32,7 @@ public:
 	enum {
 		write=0x1,
 		create=0x2,
-		exclusive=0x4
+		exclusive=0x4,
 	};
 	
     shared_memory(const char *name, std::size_t len, int flags);
@@ -41,21 +41,18 @@ public:
     ~shared_memory();
 
 	void* get() const { return m_ptr; }
-	const char* name() const { return m_name.c_str(); }
-	size_t len() const { return m_len; }
     
 private:
     void init(const char *name, std::size_t len, int flags,
 			  const boost::function1<void, void*>* initfunc);
 
-	std::string m_name;
-	std::size_t m_len;
     void *m_ptr;        // Pointer to shared memory block
 #if defined(BOOST_HAS_WINTHREADS)
 	void* m_hmap;
 #elif defined(BOOST_HAS_PTHREADS)
+	std::string m_name;
+	std::size_t m_len;
 	int m_hmap;
-	int m_flags;
 #endif
 };
 
