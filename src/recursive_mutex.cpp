@@ -34,12 +34,12 @@ recursive_mutex::recursive_mutex()
     : m_mutex(0), m_count(0)
 {
     try
-	{
+    {
        m_mutex = reinterpret_cast<void*>(new CRITICAL_SECTION);
-	}
-	catch (...)
-	{
-	}
+    }
+    catch (...)
+    {
+    }
     if (!m_mutex)
         throw thread_resource_error();
     InitializeCriticalSection(reinterpret_cast<LPCRITICAL_SECTION>(m_mutex));
