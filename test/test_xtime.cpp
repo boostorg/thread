@@ -5,7 +5,7 @@
 void test_xtime_cmp()
 {
     boost::xtime xt1, xt2, cur;
-    BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
 
     xt1 = xt2 = cur;
     xt1.nsec -= 1;
@@ -27,12 +27,12 @@ void test_xtime_cmp()
 void test_xtime_get()
 {
     boost::xtime orig, cur, old;
-    BOOST_CHECK_EQUAL(boost::xtime_get(&orig, boost::TIME_UTC), boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&orig, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
     old = orig;
 
     for (int x=0; x < 100; ++x)
     {
-        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         BOOST_CHECK(boost::xtime_cmp(cur, orig) >= 0);
         BOOST_CHECK(boost::xtime_cmp(cur, old) >= 0);
         old = cur;

@@ -8,7 +8,7 @@ namespace
     inline bool xtime_in_range(boost::xtime& xt, int less_seconds, int greater_seconds)
     {
         boost::xtime cur;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&cur, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
 
         boost::xtime less = cur;
         less.sec += less_seconds;
@@ -53,7 +53,7 @@ namespace
 void test_sleep()
 {
     boost::xtime xt;
-    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
     xt.sec += 3;
 
     boost::thread::sleep(xt);

@@ -71,7 +71,7 @@ namespace
 
         // Test timed_wait.
         boost::xtime xt;
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 10;
         while (data->notified != 3)
             data->condition.timed_wait(lock, xt);
@@ -81,7 +81,7 @@ namespace
         data->condition.notify_one();
 
         // Test predicate timed_wait.
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 10;
         cond_predicate pred(data->notified, 4);
         BOOST_CHECK(data->condition.timed_wait(lock, xt, pred));
@@ -142,7 +142,7 @@ void test_condition_waits()
         boost::mutex::scoped_lock lock(data.mutex);
         BOOST_CHECK(lock ? true : false);
 
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
@@ -152,7 +152,7 @@ void test_condition_waits()
         BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 1);
 
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
@@ -162,7 +162,7 @@ void test_condition_waits()
         BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 2);
 
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
@@ -172,7 +172,7 @@ void test_condition_waits()
         BOOST_CHECK(lock ? true : false);
         BOOST_CHECK_EQUAL(data.awoken, 3);
 
-        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+        BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
         xt.sec += 1;
         boost::thread::sleep(xt);
         data.notified++;
@@ -183,7 +183,7 @@ void test_condition_waits()
         BOOST_CHECK_EQUAL(data.awoken, 4);
     }
 
-    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), boost::TIME_UTC);
+    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC), static_cast<int>(boost::TIME_UTC));
     xt.sec += 1;
     boost::thread::sleep(xt);
     thread.join();
