@@ -1,82 +1,92 @@
 <html>
+    <head>
+        <meta http-equiv="Content-Type" content=
+        "text/html; charset=iso-8859-1">
+        <meta name="keywords" content=
+        "threads, Boost.Threads, thread library, C++">
+        <link rel="stylesheet" type="text/css" href="styles.css">
 
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, Boost.Threads, thread library, C++">
-<link rel="stylesheet" type="text/css" href="styles.css">
-<title>Boost.Threads, thread</title>
-</head>
+        <title>Boost.Threads, thread</title>
+    </head>
 
-<body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+    <body bgcolor="#ffffff" link="#0000ff" vlink="#800080">
+        <table summary="header" border="0" cellpadding="7" cellspacing="0"
+        width="100%">
+            <tr>
+                <td valign="top" width="300">
+                    <h3><img height="86" alt="C++ Boost" src=
+                    "../../../c++boost.gif" width="277"></h3>
+                </td>
 
-<table border="0" cellpadding="7" cellspacing="0" width="100%">
-    <tr>
-        <td valign="top" width="300">
-			<h3><IMG height=86 alt="C++ Boost" src="../../../c++boost.gif" width=277></h3>
-        </td>
-        <td valign="top">
-			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">Class thread</h2>
-        </td>
-    </tr>
-</table>
+                <td valign="top">
+                    <h1 align="center">Boost.Threads</h1>
 
-<hr>
+                    <h2 align="center">Class thread</h2>
+                </td>
+            </tr>
+        </table>
+        <hr>
 
-<p><A href="#Introduction">Introduction</A><br>
-<A href="#Header">Header</A><br>
-<A href="#Synopsis">Synopsis</A><br>
-<A href="#Members">Members</A><br>
-<A href="#Example">Example</A></p>
+        <p><a href="#Introduction">Introduction</a><br>
+         <a href="#Header">Header</a><br>
+         <a href="#Synopsis">Synopsis</a><br>
+         <a href="#Members">Members</a><br>
+         <a href="#Example">Example</a></p>
 
-<h2><a name="Introduction">Introduction</a></h2>
+        <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <code>thread</code> class represents threads of execution, and provides
-the functionality to create and manage threads within the <b>Boost.Threads</b>
-library. See <A href="definitions.html">Definitions</A> for a precise description of
-"thread of execution", and for definitions of threading related terms and of thread
-states such as "blocked".</p>
+        <p>The <code>thread</code> class represents threads of execution, and
+        provides the functionality to create and manage threads within the <b>
+        Boost.Threads</b> library. See <a href="definitions.html">
+        Definitions</a> for a precise description of &quot;thread of
+        execution&quot;, and for definitions of threading related terms and of
+        thread states such as &quot;blocked&quot;.</p>
 
-<p>A thread of execution has an initial function. For the program's
-initial thread, the initial function is <code>main()</code>. For other
-threads, the initial function is <code>operator()</code> of the function object
-passed to the class <code>thread</code> constructor.</p>
+        <p>A thread of execution has an initial function. For the program&#39;s
+        initial thread, the initial function is <code>main()</code>. For other
+        threads, the initial function is <code>operator()</code> of the
+        function object passed to the class <code>thread</code>
+        constructor.</p>
 
-<p>A thread of execution is said to be "finished" or "finished execution" when its
-initial function returns or is terminated. This includes completion of all thread
-cleanup handlers, and completion of the normal C++ function return behaviors, such
-as destruction of automatic storage (stack) objects and releasing any associated
-implementation resources.</p>
+        <p>A thread of execution is said to be &quot;finished&quot; or
+        &quot;finished execution&quot; when its initial function returns or is
+        terminated. This includes completion of all thread cleanup handlers,
+        and completion of the normal C++ function return behaviors, such as
+        destruction of automatic storage (stack) objects and releasing any
+        associated implementation resources.</p>
 
-<p>A thread object has an associated state which is either "joinable" or
-"non-joinable".</p>
+        <p>A thread object has an associated state which is either
+        &quot;joinable&quot; or &quot;non-joinable&quot;.</p>
 
-<p>Except as described below, the policy used by an implementation of
-<b>Boost.Threads</b> to schedule transitions between thread states is unspecified.</p>
+        <p>Except as described below, the policy used by an implementation of
+        <b>Boost.Threads</b> to schedule transitions between thread states is
+        unspecified.</p>
 
-<p><b>Note: </b>Just as the lifetime of a file may be different from the
-lifetime of an iostream object which represents the file, the lifetime of a
-thread of execution may be different from the <code>thread</code> object which
-represents the thread of execution. In particular, after a call to <code>join()</code>,
-the thread of execution will no longer exist even though the <code>thread</code>
-object continues to exist until the end of its normal lifetime. The
-converse is also possible; if a <code>thread</code> object is destroyed without
-<code>join()</code> having first been called, the thread of execution continues until
-its initial function completes.</p>
+        <p><b>Note:</b> Just as the lifetime of a file may be different from
+        the lifetime of an iostream object which represents the file, the
+        lifetime of a thread of execution may be different from the <code>
+        thread</code> object which represents the thread of execution. In
+        particular, after a call to <code>join()</code>, the thread of
+        execution will no longer exist even though the <code>thread</code>
+        object continues to exist until the end of its normal lifetime. The
+        converse is also possible; if a <code>thread</code> object is destroyed
+        without <code>join()</code> having first been called, the thread of
+        execution continues until its initial function completes.</p>
 
-<h2><a name="Header">Header</a></h2>
-
+        <h2><a name="Header">Header</a></h2>
 <pre>
-#include <A href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</A>
+#include <a href=
+"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 </pre>
 
-<h2><a name="Synopsis">Synopsis</a></h2>
-
+        <h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
 namespace boost {
 
-class thread : <a href="../../utility/utility.htm#noncopyable">boost::noncopyable</a> // Exposition only.
-   // Class thread meets the <a href="overview.html#NonCopyable">NonCopyable</a> requirement.
+class thread : <a href=
+"../../utility/utility.htm#noncopyable">boost::noncopyable</a> // Exposition only.
+   // Class thread meets the <a href=
+"overview.html#NonCopyable">NonCopyable</a> requirement.
 {
 public:
     thread();
@@ -95,116 +105,115 @@ public:
 } // namespace boost
 </pre>
 
-<h2><a name="Members">Members</a></h2>
+        <h2><a name="Members">Members</a></h2>
+        <hr>
 
-<hr>
-<h3>Constructors</h3>
-
+        <h3>Constructors</h3>
 <pre>
     thread();
 </pre>
 
-<p><b>Effects:</b> Constructs a <code>thread</code> object representing the current thread
-of execution.</p>
+        <p><b>Effects:</b> Constructs a <code>thread</code> object representing
+        the current thread of execution.</p>
 
-<p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
+        <p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
 
-<p><b>Danger:</b> <code>*this</code> is valid only within the current thread.</p>
-
+        <p><b>Danger:</b> <code>*this</code> is valid only within the current
+        thread.</p>
 <pre>
-    thread(const <A href="../../function/index.html">boost::function0</A>&lt;void&gt;&amp; threadfunc);
+    thread(const <a href=
+"../../function/index.html">boost::function0</a>&lt;void&gt;&amp; threadfunc);
 </pre>
 
-<p><b>Effects:</b> Starts a new thread of execution and constructs a <code>thread</code> object
-representing it.  Copies <code>threadfunc</code>
-(which in turn copies the function object wrapped by <code>threadfunc</code>) to an
-internal location which persists for the lifetime of the new thread of execution.  Calls
-<code>operator()</code> on the copy of the <code>threadfunc</code> function object in
-the new thread of execution.</p>
+        <p><b>Effects:</b> Starts a new thread of execution and constructs a
+        <code>thread</code> object representing it. Copies <code>
+        threadfunc</code> (which in turn copies the function object wrapped by
+        <code>threadfunc</code>) to an internal location which persists for the
+        lifetime of the new thread of execution. Calls <code>operator()</code>
+        on the copy of the <code>threadfunc</code> function object in the new
+        thread of execution.</p>
 
-<p><b>Postcondition:</b> <code>*this</code> is joinable.</p>
+        <p><b>Postcondition:</b> <code>*this</code> is joinable.</p>
 
-<p><b>Throws:</b> <code>boost::thread_resource_error</code> if a new thread of execution
-cannot be started.</p>
+        <p><b>Throws:</b> <code>boost::thread_resource_error</code> if a new
+        thread of execution cannot be started.</p>
+        <hr>
 
-<hr>
-<h3>Destructor</h3>
-
+        <h3>Destructor</h3>
 <pre>
     ~thread();
 </pre>
 
-<p><b>Effects:</b> Destroys <code>*this</code>. The actual thread of execution may
-continue to execute after the <code>thread</code> object has been destroyed.</p>
+        <p><b>Effects:</b> Destroys <code>*this</code>. The actual thread of
+        execution may continue to execute after the <code>thread</code> object
+        has been destroyed.</p>
 
-<p><b>Notes:</b> If <code>*this</code> is joinable the actual thread of execution
-becomes "detached".  Any resources used by the thread will be reclaimed when the
-thread of execution completes. To ensure such a thread of execution runs to completion
-before the <code>thread</code> object is destroyed, call <code>join()</code>.</p>
+        <p><b>Notes:</b> If <code>*this</code> is joinable the actual thread of
+        execution becomes &quot;detached&quot;. Any resources used by the
+        thread will be reclaimed when the thread of execution completes. To
+        ensure such a thread of execution runs to completion before the <code>
+        thread</code> object is destroyed, call <code>join()</code>.</p>
+        <hr>
 
-<hr>
-<h3>Comparison Operators</h3>
-
+        <h3>Comparison Operators</h3>
 <pre>
     bool operator==(const thread&amp; rhs);
 </pre>
 
-<p><b>Requires:</b> The thread is non-terminated or <code>*this</code> is joinable.</p>
+        <p><b>Requires:</b> The thread is non-terminated or <code>*this</code>
+        is joinable.</p>
 
-<p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>rhs</code>
-represent the same thread of execution.</p>
-
+        <p><b>Returns:</b> <code>true</code> if <code>*this</code> and <code>
+        rhs</code> represent the same thread of execution.</p>
 <pre>
     bool operator!=(const thread&amp; rhs);
 </pre>
 
-<p><b>Returns:</b>  <code>!(*this==rhs)</code>.</p>
+        <p><b>Returns:</b> <code>!(*this==rhs)</code>.</p>
+        <hr>
 
-<hr>
-<h3>join</h3>
-
+        <h3>join</h3>
 <pre>
     void join();
 </pre>
 
-<p><b>Requires:</b> <code>*this</code> is joinable.</p>
+        <p><b>Requires:</b> <code>*this</code> is joinable.</p>
 
-<p><b>Effects:</b> The current thread of execution blocks until the initial function of
-the thread of execution represented by <code>*this</code> finishes and all resources
-are reclaimed.</p>
+        <p><b>Effects:</b> The current thread of execution blocks until the
+        initial function of the thread of execution represented by <code>
+        *this</code> finishes and all resources are reclaimed.</p>
 
-<p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
+        <p><b>Postcondition:</b> <code>*this</code> is non-joinable.</p>
 
-<p><b>Note:</b></p> If <code>*this == thread()</code> the result is implementation defined.
-If the implementation doesn't detect this the result will be
-<a href="definitions.html#Deadlock">deadlock</a>.</p>
+        <p><b>Note:</b> If <code>*this == thread()</code> the result is
+        implementation defined. If the implementation doesn&#39;t detect this
+        the result will be <a href="definitions.html#Deadlock">
+        deadlock</a>.</p>
+        <hr>
 
-<hr>
-<h3>sleep</h3>
-
+        <h3>sleep</h3>
 <pre>
     static void sleep(const <a href="xtime.html">xtime</a>&amp; xt);
 </pre>
 
-<p><b>Effects:</b> The current thread of execution blocks until <code>xt</code> is
-reached.</p>
+        <p><b>Effects:</b> The current thread of execution blocks until <code>
+        xt</code> is reached.</p>
+        <hr>
 
-<hr>
-<h3>yield</h3>
-
+        <h3>yield</h3>
 <pre>
     static void yield();
 </pre>
 
-<p><b>Effects:</b> The current thread of execution is placed in the "ready" state.</p>
+        <p><b>Effects:</b> The current thread of execution is placed in the
+        &quot;ready&quot; state.</p>
 
-<p><b>Notes:</b> Allow the current thread to give up the rest of its time slice
-(or other scheduling quota) to another thread. Particularly useful in non-preemptive
-implementations.</p>
+        <p><b>Notes:</b> Allow the current thread to give up the rest of its
+        time slice (or other scheduling quota) to another thread. Particularly
+        useful in non-preemptive implementations.</p>
+        <hr>
 
-<hr>
-<h2><a name="Example">Example Usage</a></h2>
-
+        <h2><a name="Example">Example Usage</a></h2>
 <pre>
 #include &lt;boost/thread/thread.hpp&gt;
 #include &lt;iostream&gt;
@@ -235,20 +244,20 @@ int main(int argc, char* argv[])
 }
 </pre>
 
-<p>The output is:</p>
-
+        <p>The output is:</p>
 <pre>
 setting alarm for 5 seconds...
 alarm sounded...
 </pre>
+        <hr>
 
-<hr>
+        <p>Revised 
+        <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01
+        October, 2001 
+        <!--webbot bot="Timestamp" endspan i-checksum="38291" --></p>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 October, 2001<!--webbot bot="Timestamp" endspan i-checksum="38291" -->
-</p>
-
-<p><i>© Copyright <A href="mailto:williamkempf@hotmail.com">William E. Kempf</A>
-2001 all rights reserved.</i></p>
-
-</body>
+        <p><i>&copy; Copyright <a href="mailto:williamkempf@hotmail.com">
+        William E. Kempf</a> 2001 all rights reserved.</i></p>
+    </body>
 </html>
+

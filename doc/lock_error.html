@@ -1,49 +1,52 @@
 <html>
+    <head>
+        <meta http-equiv="Content-Type" content=
+        "text/html; charset=iso-8859-1">
+        <meta name="keywords" content="threads, BTL, thread library, C++">
+        <link rel="stylesheet" type="text/css" href="styles.css">
 
-<head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<meta name="keywords" content="threads, BTL, thread library, C++">
-<link rel="stylesheet" type="text/css" href="styles.css">
-<title>Boost.Threads, lock_error</title>
-</head>
+        <title>Boost.Threads, lock_error</title>
+    </head>
 
-<body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+    <body bgcolor="#FFFFFF" link="#0000FF" vlink="#800080">
+        <table summary="header" border="0" cellpadding="7" cellspacing="0"
+        width="100%">
+            <tr>
+                <td valign="top" width="300">
+                    <h3><img src="../../../c++boost.gif" alt="C++ Boost" width=
+                    "277" height="86"></h3>
+                </td>
 
-<table border="0" cellpadding="7" cellspacing="0" width="100%">
-    <tr>
-        <td valign="top" width="300">
-			<h3><img src="../../../c++boost.gif" alt="C++ Boost" width="277" height="86"></h3>
-        </td>
-        <td valign="top">
-			<h1 align="center">Boost.Threads</h1>
-			<h2 align="center">lock_error</h2>
-        </td>
-    </tr>
-</table>
+                <td valign="top">
+                    <h1 align="center">Boost.Threads</h1>
 
-<hr>
+                    <h2 align="center">lock_error</h2>
+                </td>
+            </tr>
+        </table>
+        <hr>
 
-<p><a href="#Introduction">Introduction</a><br>
-<a href="#Header">Header</a><br>
-<a href="#Synopsis">Synopsis</a><br>
-<a href="#Members">Members</a><br>
-<a href="#Example">Example</a></p>
+        <p><a href="#Introduction">Introduction</a><br>
+         <a href="#Header">Header</a><br>
+         <a href="#Synopsis">Synopsis</a><br>
+         <a href="#Members">Members</a><br>
+         <a href="#Example">Example</a></p>
 
-<h2><a name="Introduction">Introduction</a></h2>
+        <h2><a name="Introduction">Introduction</a></h2>
 
-<p>The <tt>lock_error</tt> class defines an exception type thrown to indicate a
-locking related error has been detected. Examples of such errors include a lock
-operation which can be determined to result in a deadlock, or unlock operations
-attempted by a thread that does not own the lock.</p>
+        <p>The <tt>lock_error</tt> class defines an exception type thrown to
+        indicate a locking related error has been detected. Examples of such
+        errors include a lock operation which can be determined to result in a
+        deadlock, or unlock operations attempted by a thread that does not own
+        the lock.</p>
 
-<h2><a name="Header">Header</a></h2>
-
+        <h2><a name="Header">Header</a></h2>
 <pre>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 </pre>
 
-<h2><a name="Synopsis">Synopsis</a></h2>
-
+        <h2><a name="Synopsis">Synopsis</a></h2>
 <pre>
 namespace boost
     
@@ -55,25 +58,23 @@ namespace boost
 }
 </pre>
 
-<h2><a name="Members">Members</a></h2>
+        <h2><a name="Members">Members</a></h2>
+        <hr>
 
-<hr>
-
-<h3>Constructor</h3>
-
+        <h3>Constructor</h3>
 <pre>
     lock_error();
 </pre>
 
-<p>Constructs a <tt>lock_error</tt> object.</p>
+        <p>Constructs a <tt>lock_error</tt> object.</p>
+        <hr>
 
-<hr>
-
-<h2><a name="Example">Example</a> Usage</h2>
-
+        <h2><a name="Example">Example</a> Usage</h2>
 <pre>
-#include <a href="../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
-#include <a href="../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/mutex.hpp">&lt;boost/thread/mutex.hpp&gt;</a>
+#include <a href=
+"../../../boost/thread/thread.hpp">&lt;boost/thread/thread.hpp&gt;</a>
 #include &lt;iostream&gt;
 
 int main(int, char*[])
@@ -93,19 +94,19 @@ int main(int, char*[])
 }
 </pre>
 
-<p>The output is:</p>
-
+        <p>The output is:</p>
 <pre>
 thread lock error - deadlock occurred.
 </pre>
+        <hr>
 
-<hr>
+        <p>Revised 
+        <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01
+        October, 2001 
+        <!--webbot bot="Timestamp" endspan i-checksum="38291" --></p>
 
-<p>Revised <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->01 October, 2001<!--webbot bot="Timestamp" endspan i-checksum="38291" -->
-</p>
-
-<p><i>© Copyright <a href="mailto:williamkempf@hotmail.com">William E. Kempf</a>
-2001 all rights reserved.</i></p>
-
-</body>
+        <p><i>&copy; Copyright <a href="mailto:williamkempf@hotmail.com">
+        William E. Kempf</a> 2001 all rights reserved.</i></p>
+    </body>
 </html>
+
