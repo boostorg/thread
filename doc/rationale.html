@@ -144,31 +144,27 @@
   appear to bear them out. To illustrate the analysis we&#39;ll first provide
   pseudo-code illustrating the six typical usage patterns of a thread object.</p>
 <h3>1. Simple creation of a thread.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    create_thread(&amp;bar);
 }
 </pre>
 <h3>2. Creation of a thread that's later joined.</h3>
-<pre>
-Void foo()
+<pre>Void foo()
 {
    thread = create_thread(&amp;bar);
    join(thread);
 }
 </pre>
 <h3>3. Simple creation of several threads in a loop.</h3>
-<pre>
-Void foo()
+<pre>Void foo()
 {
    for (int i=0; i&lt;NUM_THREADS; ++i)
       create_thread(&amp;bar);
 }
 </pre>
 <h3>4. Creation of several threads in a loop which are later joined.</h3>
-<pre>
-Void foo()
+<pre>Void foo()
 {
    for (int i=0; i&lt;NUM_THREADS; ++i)
       threads[i] = create_thread(&amp;bar);
@@ -177,16 +173,14 @@ Void foo()
 }
 </pre>
 <h3>5. Creation of a thread whose ownership is passed to another object/method.</h3>
-<pre>
-Void foo()
+<pre>Void foo()
 {
    thread = create_thread(&amp;bar);
    manager.owns(thread);
 }
 </pre>
 <h3>6. Creation of a thread whose ownership is shared between multiple objects.</h3>
-<pre>
-Void foo()
+<pre>Void foo()
 {
    thread = create_thread(&amp;bar);
    manager1.add(thread);
@@ -211,8 +205,7 @@ Void foo()
   for any of the usage patterns there would be a good argument for choosing the
   other design. So we&#39;ll code all six usage patterns using both designs.</p>
 <h3>1.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    thread thrd(&amp;bar);
 }
@@ -223,8 +216,7 @@ void foo()
 }
 </pre>
 <h3>2.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    thread thrd(&amp;bar);
    thrd.join();
@@ -237,8 +229,7 @@ void foo()
 }
 </pre>
 <h3>3.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    for (int i=0; i&lt;NUM_THREADS; ++i)
       thread thrd(&amp;bar);
@@ -251,8 +242,7 @@ void foo()
 }
 </pre>
 <h3>4.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    std::auto_ptr&lt;thread&gt; threads[NUM_THREADS];
    for (int i=0; i&lt;NUM_THREADS; ++i)
@@ -271,8 +261,7 @@ void foo()
 }
 </pre>
 <h3>5.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    thread thrd* = new thread(&amp;bar);
    manager.owns(thread);
@@ -285,8 +274,7 @@ void foo()
 }
 </pre>
 <h3>6.</h3>
-<pre>
-void foo()
+<pre>void foo()
 {
    boost::shared_ptr&lt;thread&gt; thrd(new thread(&amp;bar));
    manager1.add(thrd);
@@ -308,8 +296,7 @@ void foo()
   the presence of operator new in user code, but this can be eliminated by proper
   design of higher level concepts, such as the boost::thread_group class that
   simplifies example (4) down to:</p>
-<pre>
-void foo()
+<pre>void foo()
 {
    thread_group threads;
    for (int i=0; i&lt;NUM_THREADS; ++i)
@@ -366,8 +353,7 @@ void foo()
   variables are a continuing source of errors, even after previous bad experiences
   caused them to be very careful in their use of event variables. Overt problems
   can be avoided, for example, by teaming the event variable with a mutex, but
-  that may just convert a <a href=
-        "definitions.html#Race condition">race condition</a> into another problem,
+  that may just convert a <a href="definitions.html#definition-race-condition">race condition</a> into another problem,
   such as excessive resource use. One of the most distressing aspects of the experience
   reports is the claim that many defects are latent. That is, the programs appear
   to work correctly, but contain hidden timing dependencies which will cause them
@@ -383,9 +369,7 @@ void foo()
 <p>[Rationale provided by Beman Dawes]</p>
 <hr>
 <p>Revised
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001
-  <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->09 January, 2003<!--webbot bot="Timestamp" endspan i-checksum="38582" -->
 </p>
 <p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>

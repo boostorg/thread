@@ -61,10 +61,9 @@
   states <a href="definitions.html#state"> blocked</a> and <a href="definitions.html#state">ready</a>.
   Note that &quot;waiting&quot; is a synonym for blocked.</p>
 <h4><a name="class-condition-synopsis"></a>Class <code>condition</code> synopsis</h4>
-<pre>
-namespace boost
+<pre>namespace boost
 {
-    class condition : private <a href="../../utility/utility.htm#Class noncopyable">boost::noncopyable</a> // Exposition only.
+    class condition : private <a href="../../utility/utility.htm#Class_noncopyable">boost::noncopyable</a> // Exposition only.
        // Class condition meets the <a href="overview.html#non-copyable">NonCopyable</a> requirement.
     {
     public:
@@ -86,22 +85,19 @@ namespace boost
 </pre>
 <h4><a name="class-condition-ctors"></a>Class <code>condition</code> constructors
   and destructor</h4>
-<pre>
-condition();
+<pre>condition();
 </pre>
 <dl class="function-semantics">
   <dt><b>Effects:</b> Constructs a <code>condition</code> object.</dt>
 </dl>
-<pre>
-~condition();
+<pre>~condition();
 </pre>
 <dl class="function-semantics">
   <dt><b>Effects:</b> Destroys <code>*this</code>.</dt>
 </dl>
 <h4><a name="class-condition-modifiers"></a>Class <code>condition</code> modifier
   functions</h4>
-<pre>
-void notify_one();
+<pre>void notify_one();
 </pre>
 <dl class="function-semantics">
   <dt><b>Effects:</b> If there is a thread waiting on <code>*this</code>, change
@@ -111,16 +107,14 @@ void notify_one();
     thread must still acquire the mutex again (which occurs within the call to
     one of the <code>condition</code> object's wait functions).</dt>
 </dl>
-<pre>
-void notify_all();
+<pre>void notify_all();
 </pre>
 <dl class="function-semantics">
   <dt><b>Effects:</b> Change the state of all threads waiting on <code> *this</code>
     to ready. If there are no waiting threads, <code> notify_all()</code> has
     no effect.</dt>
 </dl>
-<pre>
-template &lt;typename ScopedLock&gt;
+<pre>template &lt;typename ScopedLock&gt;
     void wait(ScopedLock&amp; lock);
 </pre>
 <dl class="function-semantics">
@@ -138,8 +132,7 @@ template &lt;typename ScopedLock&gt;
     wake ups&quot;. The second version encapsulates this loop idiom internally
     and is generally the preferred method.</dt>
 </dl>
-<pre>
-Template&lt;typename ScopedLock, typename Pr&gt;
+<pre>Template&lt;typename ScopedLock, typename Pr&gt;
     void wait(ScopedLock&amp; lock, Pr pred);
 </pre>
 <dl class="function-semantics">
@@ -149,8 +142,7 @@ Template&lt;typename ScopedLock, typename Pr&gt;
   <dt><b>Throws:</b> <code><a href="exceptions.html#class-lock_error">lock_error</a></code>
     if <code>!lock.locked()</code></dt>
 </dl>
-<pre>
-template &lt;typename ScopedLock&gt;
+<pre>template &lt;typename ScopedLock&gt;
     bool timed_wait(ScopedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; XT);
 </pre>
 <dl class="function-semantics">
@@ -171,16 +163,14 @@ template &lt;typename ScopedLock&gt;
     ups&quot;. The second version encapsulates this loop idiom internally and
     is generally the preferred method.</dt>
 </dl>
-<pre>
-Template&lt;typename ScopedLock, typename Pr&gt;
+<pre>Template&lt;typename ScopedLock, typename Pr&gt;
     bool timed_wait(ScopedLock&amp; lock, const <a href="xtime.html">xtime</a>&amp; XT, Pr pred);
 </pre>
 <dl class="function-semantics">
   <dt><b>Requires:</b> <code>ScopedLock</code> meets the <a href="lock_concept.html#ScopedLock">ScopedLock</a>
     requirements, return from <code>pred()</code> convertible to bool.</dt>
   <dt><b>Effects:</b> As if:<br>
-    <pre>
-while (!pred())
+    <pre>while (!pred())
 {
     if (!timed_wait(lock, XT))
         return false;
@@ -196,8 +186,7 @@ return true;
 <h2><a name="examples"></a>Example(s)</h2>
 <p><a href="../example/condition.cpp">libs/thread/example/condition.cpp</a></p>
 <p>Typical output (dependent on scheduling policies) is:</p>
-<pre>
-sent: 0
+<pre>sent: 0
 sent: 1
 received: 0
 received: 1
@@ -209,9 +198,7 @@ sent: 4
 received: 4
 </pre>
 <p>Revised
-  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->
-  05 November, 2001
-  <!--webbot bot="Timestamp" endspan i-checksum="39359" -->
+  <!--webbot bot="Timestamp" S-Type="EDITED" S-Format="%d %B, %Y" startspan -->09 January, 2003<!--webbot bot="Timestamp" endspan i-checksum="38582" -->
 </p>
 <p><i>&copy; Copyright <a href="mailto:wekempf@cox.net">William E. Kempf</a> 2001-2002.
   All Rights Reserved.</i></p>
