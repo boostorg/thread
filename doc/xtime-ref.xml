@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
+  "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
+  <!ENTITY % threads.entities SYSTEM "entities.xml">
+  %threads.entities;
+]>
+<header name="boost/thread/xtime.hpp"
+  last-revision="$Date$">
+  <namespace name="boost">
+    <enum name="xtime_clock_types">
+		<enumvalue name="TIME_UTC" />
+
+		<purpose>
+			<para>Specifies the clock type to use when creating
+			an object of type <classname>xtime</classname>.</para>
+		</purpose>
+
+		<description>
+			<para>The only clock type supported by &Boost.Threads; is 
+			<code>TIME_UTC</code>. The epoch for <code>TIME_UTC</code>
+			is 1970-01-01 00:00:00.</para>
+		</description>
+	</enum>
+
+    <struct name="xtime">
+		<purpose>
+			<simpara>An object of type <classname>xtime</classname>
+			defines a time that is used to perform high-resolution time operations.
+			This is a temporary solution that will be replaced by a more robust time 
+			library once available in Boost.</simpara>
+		</purpose>
+
+		<description>
+			<simpara>The <classname>xtime</classname> type is used to represent a point on 
+			some time scale or a duration in time. This type may be proposed for the C standard by 
+			Markus Kuhn. &Boost.Threads; provides only a very minimal implementation of this
+			proposal; it is expected that a full implementation (or some other time
+			library) will be provided in Boost as a separate library, at which time &Boost.Threads;
+			will deprecate its own implementation.</simpara>
+			
+			<simpara><emphasis role="bold">Note</emphasis> that the resolution is 
+			implementation specific. For many implementations the best resolution 
+			of time is far more than one nanosecond, and even when the resolution 
+			is reasonably good, the latency of a call to <code>xtime_get()</code>
+			may be significant. For maximum portability, avoid durations of less than
+			one second.</simpara>
+		</description>
+
+		<free-function-group name="creation">
+			<function name="xtime_get">
+				<type>int</type>
+				
+				<parameter name="xtp">
+					<paramtype><classname>xtime</classname>*</paramtype>
+				</parameter>
+
+				<parameter name="clock_type">
+					<paramtype>int</paramtype>
+				</parameter>
+				
+				<postconditions>
+					<simpara><code>xtp</code> represents the current point in
+					time as a duration since the epoch specified by
+					<code>clock_type</code>.</simpara>
+				</postconditions>
+				
+				<returns>
+					<simpara><code>clock_type</code> if successful, otherwise 0.</simpara>
+				</returns>
+			</function>
+		</free-function-group>
+
+		<data-member name="sec">
+			<type><emphasis>platform-specific-type</emphasis></type>
+		</data-member>
+	</struct>
+  </namespace>
+</header>
