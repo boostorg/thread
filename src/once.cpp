@@ -38,7 +38,7 @@ static void key_init()
 
 static void do_once()
 {
-    once_callback* cb = reinterpret_cast<once_callback>(pthread_getspecific(key));
+    once_callback* cb = reinterpret_cast<once_callback*>(pthread_getspecific(key));
     (**cb)();
 }
 

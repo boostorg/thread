@@ -114,7 +114,7 @@ void recursive_try_mutex::do_lock()
 
 bool recursive_try_mutex::do_trylock()
 {
-    int res = 0;
+    unsigned int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
@@ -189,7 +189,7 @@ void recursive_timed_mutex::do_lock()
 
 bool recursive_timed_mutex::do_trylock()
 {
-    int res = 0;
+    unsigned int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), 0);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
@@ -210,7 +210,7 @@ bool recursive_timed_mutex::do_timedlock(const xtime& xt)
     unsigned milliseconds;
     to_duration(xt, milliseconds);
 
-    int res = 0;
+    unsigned int res = 0;
     res = WaitForSingleObject(reinterpret_cast<HANDLE>(m_mutex), milliseconds);
     assert(res != WAIT_FAILED && res != WAIT_ABANDONED);
 
