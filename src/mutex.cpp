@@ -24,6 +24,11 @@
 #   include <time.h>
 #elif defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
+#elif defined(BOOST_HAS_MPTASKS)
+#    include <MacErrors.h>
+
+#    include "mac/init.hpp"
+#    include "mac/safe.hpp"
 #endif
 
 namespace boost {
@@ -393,6 +398,134 @@ void timed_mutex::do_unlock(cv_state& state)
     assert(res == 0);
 
     state.pmutex = &m_mutex;
+}
+#elif defined(BOOST_HAS_MPTASKS)
+
+using threads::mac::detail::safe_enter_critical_region;
+
+mutex::mutex()
+{
+}
+
+mutex::~mutex()
+{
+}
+
+void mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+}
+
+void mutex::do_unlock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
+}
+
+void mutex::do_lock(cv_state& /*state*/)
+{
+    do_lock();
+}
+
+void mutex::do_unlock(cv_state& /*state*/)
+{
+    do_unlock();
+}
+
+try_mutex::try_mutex()
+{
+}
+
+try_mutex::~try_mutex()
+{
+}
+
+void try_mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+}
+
+bool try_mutex::do_trylock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPEnterCriticalRegion(m_mutex, kDurationImmediate);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+    return lStatus == noErr;
+}
+
+void try_mutex::do_unlock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
+}
+
+void try_mutex::do_lock(cv_state& /*state*/)
+{
+    do_lock();
+}
+
+void try_mutex::do_unlock(cv_state& /*state*/)
+{
+    do_unlock();
+}
+
+timed_mutex::timed_mutex()
+{
+}
+
+timed_mutex::~timed_mutex()
+{
+}
+
+void timed_mutex::do_lock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, kDurationForever, m_mutex_mutex);
+    assert(lStatus == noErr);
+}
+
+bool timed_mutex::do_trylock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPEnterCriticalRegion(m_mutex, kDurationImmediate);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+    return(lStatus == noErr);
+}
+
+bool timed_mutex::do_timedlock(const xtime& xt)
+{
+    unsigned microseconds;
+    to_microduration(xt, microseconds);
+    Duration lDuration = kDurationMicrosecond * microseconds;
+
+    OSStatus lStatus = noErr;
+    lStatus = safe_enter_critical_region(m_mutex, lDuration, m_mutex_mutex);
+    assert(lStatus == noErr || lStatus == kMPTimeoutErr);
+
+    return(lStatus == noErr);
+}
+
+void timed_mutex::do_unlock()
+{
+    OSStatus lStatus = noErr;
+    lStatus = MPExitCriticalRegion(m_mutex);
+    assert(lStatus == noErr);
+}
+
+void timed_mutex::do_lock(cv_state& /*state*/)
+{
+    do_lock();
+}
+
+void timed_mutex::do_unlock(cv_state& /*state*/)
+{
+    do_unlock();
 }
 #endif
 

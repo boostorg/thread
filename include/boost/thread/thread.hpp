@@ -26,6 +26,8 @@
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
 #   include <boost/thread/condition.hpp>
+#elif defined(BOOST_HAS_MPTASKS)
+#   include <Multiprocessing.h>
 #endif
 
 namespace boost {
@@ -54,6 +56,9 @@ private:
 #elif defined(BOOST_HAS_PTHREADS)
 private:
     pthread_t m_thread;
+#elif defined(BOOST_HAS_MPTASKS)
+    MPQueueID m_pJoinQueueID;
+    MPTaskID m_pTaskID;
 #endif
     bool m_joinable;
 };
