@@ -9,12 +9,14 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/once.hpp>
 #include <boost/thread/thread.hpp>
 
 #include <boost/test/unit_test.hpp>
 
-#include "util.inl"
+#include <libs/thread/test/util.inl>
 
 int once_value = 0;
 boost::once_flag once = BOOST_ONCE_INIT;

@@ -9,13 +9,15 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 
 #include <boost/test/unit_test.hpp>
 
 #define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_sleep_only
-#include "util.inl"
+#include <libs/thread/test/util.inl>
 
 int test_value;
 
