@@ -3,6 +3,8 @@
 #include <boost/thread/tss.hpp>
 #include <boost/test/test_tools.hpp>
 
+#include <iostream>
+
 namespace {
 
 boost::mutex tss_mutex;

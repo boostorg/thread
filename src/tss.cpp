@@ -23,64 +23,44 @@
 #endif
 
 namespace {
-	typedef std::vector<void*> tss_slots;
+	typedef std::vector<std::pair<int, void*> > tss_slots;
 
 	struct tss_slot_info
 	{
 		boost::function1<void, void*> cleanup;
-		void* main_data;
-		int next;
-		int prev;
+		int generation;
+		int next_free;
 	};
-	typedef std::vector<tss_slot_info> tss_slot_vector;
+	typedef std::vector<tss_slot_info> tss_slot_info_vector;
 
 	struct tss_data_t
 	{
 		boost::mutex mutex;
-		tss_slot_vector slots;
+		tss_slot_info_vector slot_info;
 #if defined(BOOST_HAS_WINTHREADS)
-		DWORD main_thread;
 		DWORD native_key;
+#elif defined(BOOST_HAS_PTHREADS)
+		pthread_key_t native_key;
 #endif
 		int next_free;
-		int next_in_use;
 	};
 
 	tss_data_t* tss_data = 0;
 	boost::once_flag tss_once = BOOST_ONCE_INIT;
 
-	void init_tss_data()
-	{
-		static tss_data_t instance;
-		tss_data = &instance;
-#if defined(BOOST_HAS_WINTHREADS)
-		instance.main_thread = GetCurrentThreadId();
-		instance.native_key = TlsAlloc();
-#endif
-		instance.next_free = instance.next_in_use = -1;
-	}
-
-	bool is_main_thread()
-	{
-#if defined(BOOST_HAS_WINTHREADS)
-		return GetCurrentThreadId() == tss_data->main_thread;
-#endif
-		return false;
-	}
-
 	void cleanup_slots(void* p)
 	{
 		tss_slots* slots = static_cast<tss_slots*>(p);
 		boost::mutex::scoped_lock lock(tss_data->mutex);
-		int i = tss_data->next_in_use;
-		while (i != -1)
+		for (int i = 0; i < tss_data->slot_info.size(); ++i)
 		{
-			if (i < slots->size() && (*slots)[i] != 0)
+			int generation = (*slots)[i].first;
+			void *& data = (*slots)[i].second;
+			if (generation == tss_data->slot_info[i].generation && data != 0)
 			{
-				tss_data->slots[i].cleanup((*slots)[i]);
-				(*slots)[i] = 0;
+				tss_data->slot_info[i].cleanup(data);
+				data = 0;
 			}
-			i = tss_data->slots[i].next;
 		}
 	}
 
@@ -88,9 +68,30 @@ namespace {
 	void __cdecl tss_thread_exit()
 	{
 		tss_slots* slots = static_cast<tss_slots*>(TlsGetValue(tss_data->native_key));
-		cleanup_slots(slots);
+		if (slots)
+			cleanup_slots(slots);
 	}
 #endif
+
+	void init_tss_data()
+	{
+		// Intentional memory "leak"
+		// This is the only way to insure the mutex in the global data structure
+		// is available when cleanup handlers are run, since the execution order
+		// of cleanup handlers is unspecified on any platform with regards to
+		// C++ destructor ordering rules.
+		tss_data = new tss_data_t;
+#if defined(BOOST_HAS_WINTHREADS)
+		tss_data->native_key = TlsAlloc();
+		assert(tss_data->native_key != 0xFFFFFFFF);
+#elif defined(BOOST_HAS_PTHREADS)
+		tss_data->native_key 
+		int res = 0;
+		res = pthread_key_create(&tss_data->native_key, &cleanup_slots);
+		assert(res == 0);
+#endif
+		tss_data->next_free = -1;
+	}
 
 	tss_slots* get_slots(bool alloc)
 	{
@@ -98,6 +99,8 @@ namespace {
 
 #if defined(BOOST_HAS_WINTHREADS)
 		slots = static_cast<tss_slots*>(TlsGetValue(tss_data->native_key));
+#elif defined(BOOST_HAS_PTHREADS)
+		slots = static_cast<tss_slots*>(pthread_getspecific(tss_data->native_key));
 #endif
 
 		if (slots == 0 && alloc)
@@ -108,6 +111,9 @@ namespace {
 			if (!TlsSetValue(tss_data->native_key, temp.get()))
 				return 0;
 			on_thread_exit(&tss_thread_exit);
+#elif defined(BOOST_HAS_PTHREADS)
+			if (pthread_setspecific(tss_data->native_key, temp.get()) != 0);
+				return 0;
 #else
 			return 0;
 #endif
@@ -134,49 +140,33 @@ namespace boost {
 			if (m_slot == -1)
 			{
 				tss_slot_info info;
-				info.next = -1;
-				info.prev = -1;
+				info.generation = 0;
+				info.next_free = -1;
 				try
 				{
-					tss_data->slots.push_back(info);
+					tss_data->slot_info.push_back(info);
 				}
 				catch (...)
 				{
 					throw boost::thread_resource_error();
 				}
-				m_slot = tss_data->slots.size() - 1;
+				m_slot = tss_data->slot_info.size() - 1;
 			}
-			tss_data->next_free = tss_data->slots[m_slot].next;
-			tss_data->slots[m_slot].next = tss_data->next_in_use;
-			if (tss_data->next_in_use != -1)
-				tss_data->slots[tss_data->next_in_use].prev = m_slot;
-			tss_data->next_in_use = m_slot;
-			tss_data->slots[m_slot].prev = -1;
-			tss_data->slots[m_slot].cleanup = cleanup;
-			tss_data->slots[m_slot].main_data = 0;
+			tss_data->next_free = tss_data->slot_info[m_slot].next_free;
+			tss_data->slot_info[m_slot].next_free = -1;
+			tss_data->slot_info[m_slot].cleanup = cleanup;
 		}
 
 		tss::~tss()
 		{
 			boost::mutex::scoped_lock lock(tss_data->mutex);
-			if (tss_data->slots[m_slot].main_data)
-				tss_data->slots[m_slot].cleanup(tss_data->slots[m_slot].main_data);
-			if (tss_data->slots[m_slot].prev != -1)
-				tss_data->slots[tss_data->slots[m_slot].prev].next = tss_data->slots[m_slot].next;
-			if (tss_data->slots[m_slot].next != -1)
-				tss_data->slots[tss_data->slots[m_slot].next].prev = tss_data->slots[m_slot].prev;
-			tss_data->slots[m_slot].next = tss_data->next_free;
+			tss_data->slot_info[m_slot].generation++;
+			tss_data->slot_info[m_slot].next_free = tss_data->next_free;
 			tss_data->next_free = m_slot;
 		}
 
 		void* tss::get() const
 		{
-			if (is_main_thread())
-			{
-				boost::mutex::scoped_lock lock(tss_data->mutex);
-				return tss_data->slots[m_slot].main_data;
-			}
-
 			tss_slots* slots = get_slots(false);
 
 			if (!slots)
@@ -185,45 +175,38 @@ namespace boost {
 			if (m_slot >= slots->size())
 				return 0;
 
-			return (*slots)[m_slot];
+			return (*slots)[m_slot].second;
 		}
 		
 		void tss::set(void* value)
 		{
-			if (is_main_thread())
-			{
-				boost::mutex::scoped_lock lock(tss_data->mutex);
-				tss_data->slots[m_slot].main_data = value;
-			}
-			else
-			{
-				tss_slots* slots = get_slots(true);
+			tss_slots* slots = get_slots(true);
 
-				if (!slots)
-					throw boost::thread_resource_error();
+			if (!slots)
+				throw boost::thread_resource_error();
 
-				if (m_slot >= slots->size())
+			if (m_slot >= slots->size())
+			{
+				try
 				{
-					try
-					{
-						slots->resize(m_slot + 1);
-					}
-					catch (...)
-					{
-						throw boost::thread_resource_error();
-					}
+					slots->resize(m_slot + 1);
 				}
-
-				(*slots)[m_slot] = value;
+				catch (...)
+				{
+					throw boost::thread_resource_error();
+				}
 			}
+
+			boost::mutex::scoped_lock lock(tss_data->mutex);
+			(*slots)[m_slot].first = tss_data->slot_info[m_slot].generation;
+			(*slots)[m_slot].second = value;
 		}
 
 		void tss::cleanup(void* value)
 		{
 			boost::mutex::scoped_lock lock(tss_data->mutex);
-			tss_data->slots[m_slot].cleanup(value);
+			tss_data->slot_info[m_slot].cleanup(value);
 		}
-
 	} // namespace detail
 
 } // namespace boost
