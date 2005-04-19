@@ -93,150 +93,198 @@ struct data
 template<typename RW>
 void plain_writer(void* arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*) arg;
-    BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
-
-    typename RW::scoped_read_write_lock l(
-        rw, 
-        pdata->test_promotion_and_demotion_ 
-            ? boost::read_write_lock_state::read_locked 
-            : boost::read_write_lock_state::write_locked
-        );
-
-    bool succeeded = true;
-
-    if (pdata->test_promotion_and_demotion_)
+    try
     {
-        try
-        {
-            l.promote();
-        }
-        catch(const boost::lock_error&)
-        {
-            succeeded = false;
-        }
-    }
+        data<RW>* pdata = (data<RW>*) arg;
+        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
-    if (succeeded)
-    {
-        if (pdata->sleep_with_lock_secs_ > 0)
-            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        typename RW::scoped_read_write_lock l(
+            rw, 
+            pdata->test_promotion_and_demotion_ 
+                ? boost::read_write_lock_state::read_locked 
+                : boost::read_write_lock_state::write_locked
+            );
 
-        shared_val += 10;
+        bool succeeded = true;
 
         if (pdata->test_promotion_and_demotion_)
-            l.demote();
+        {
+            try
+            {
+                l.promote();
+            }
+            catch(const boost::lock_error&)
+            {
+                succeeded = false;
+            }
+        }
 
-        pdata->value_ = shared_val;
+        if (succeeded)
+        {
+            if (pdata->sleep_with_lock_secs_ > 0)
+                boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+
+            shared_val += 10;
+
+            if (pdata->test_promotion_and_demotion_)
+                l.demote();
+
+            pdata->value_ = shared_val;
+        }
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "plain_writer() exception!");
+        throw;
     }
 }
 
 template<typename RW>
 void plain_reader(void* arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*)arg;
-    BOOST_CHECK(!pdata->test_promotion_and_demotion_);
-    BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
+    try
+    {
+        data<RW>* pdata = (data<RW>*)arg;
+        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
+        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
-    typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
+        typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
 
-    if (pdata->sleep_with_lock_secs_ > 0)
-        boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        if (pdata->sleep_with_lock_secs_ > 0)
+            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
 
-    pdata->value_ = shared_val;
+        pdata->value_ = shared_val;
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "plain_reader() exception!");
+        throw;
+    }
 }
 
 template<typename RW>
 void try_writer(void* arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*) arg;
-    BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
-
-    typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
-
-    bool succeeded = false;
-
-    if (pdata->test_promotion_and_demotion_)
-        succeeded = l.try_read_lock() && l.try_promote();
-    else
-        succeeded = l.try_write_lock();
-
-    if (succeeded)
+    try
     {
-        if (pdata->sleep_with_lock_secs_ > 0)
-            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        data<RW>* pdata = (data<RW>*) arg;
+        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
-        shared_val += 10;
+        typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
+
+        bool succeeded = false;
 
         if (pdata->test_promotion_and_demotion_)
-            l.demote();
+            succeeded = l.try_read_lock() && l.try_promote();
+        else
+            succeeded = l.try_write_lock();
 
-        pdata->value_ = shared_val;
+        if (succeeded)
+        {
+            if (pdata->sleep_with_lock_secs_ > 0)
+                boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+
+            shared_val += 10;
+
+            if (pdata->test_promotion_and_demotion_)
+                l.demote();
+
+            pdata->value_ = shared_val;
+        }
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "try_writer() exception!");
+        throw;
     }
 }
 
 template<typename RW>
 void try_reader(void*arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*)arg;
-    BOOST_CHECK(!pdata->test_promotion_and_demotion_);
-    BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
-
-    typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
-
-    if (l.try_read_lock())
+    try
     {
-        if (pdata->sleep_with_lock_secs_ > 0)
-            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        data<RW>* pdata = (data<RW>*)arg;
+        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
+        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
-        pdata->value_ = shared_val;
+        typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
+
+        if (l.try_read_lock())
+        {
+            if (pdata->sleep_with_lock_secs_ > 0)
+                boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+
+            pdata->value_ = shared_val;
+        }
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "try_reader() exception!");
+        throw;
     }
 }
 
 template<typename RW>
 void timed_writer(void* arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*)arg;
-
-    typename RW::scoped_timed_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
-
-    bool succeeded = false;
-
-    boost::xtime xt = xsecs(pdata->wait_for_lock_secs_);
-    if (pdata->test_promotion_and_demotion_)
-        succeeded = l.timed_read_lock(xt) && l.timed_promote(xt);
-    else
-        succeeded = l.timed_write_lock(xt);
-
-    if (succeeded)
+    try
     {
-        if (pdata->sleep_with_lock_secs_ > 0)
-            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        data<RW>* pdata = (data<RW>*)arg;
 
-        shared_val += 10;
+        typename RW::scoped_timed_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
 
+        bool succeeded = false;
+
+        boost::xtime xt = xsecs(pdata->wait_for_lock_secs_);
         if (pdata->test_promotion_and_demotion_)
-            l.demote();
+            succeeded = l.timed_read_lock(xt) && l.timed_promote(xt);
+        else
+            succeeded = l.timed_write_lock(xt);
 
-        pdata->value_ = shared_val;
+        if (succeeded)
+        {
+            if (pdata->sleep_with_lock_secs_ > 0)
+                boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+
+            shared_val += 10;
+
+            if (pdata->test_promotion_and_demotion_)
+                l.demote();
+
+            pdata->value_ = shared_val;
+        }
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "timed_writer() exception!");
+        throw;
     }
 }
 
 template<typename RW>
 void timed_reader(void* arg, RW& rw)
 {
-    data<RW>* pdata = (data<RW>*)arg;
-    BOOST_CHECK(!pdata->test_promotion_and_demotion_);
-
-    typename RW::scoped_timed_read_write_lock l(rw,boost::read_write_lock_state::unlocked);
-
-    boost::xtime xt = xsecs(pdata->wait_for_lock_secs_);
-    if (l.timed_read_lock(xt))
+    try
     {
-        if (pdata->sleep_with_lock_secs_ > 0)
-            boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+        data<RW>* pdata = (data<RW>*)arg;
+        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
 
-        pdata->value_ = shared_val;
+        typename RW::scoped_timed_read_write_lock l(rw,boost::read_write_lock_state::unlocked);
+
+        boost::xtime xt = xsecs(pdata->wait_for_lock_secs_);
+        if (l.timed_read_lock(xt))
+        {
+            if (pdata->sleep_with_lock_secs_ > 0)
+                boost::thread::sleep(xsecs(pdata->sleep_with_lock_secs_));
+
+            pdata->value_ = shared_val;
+        }
+    }
+    catch(...)
+    {
+        BOOST_CHECK_MESSAGE(false, "timed_reader() exception!");
+        throw;
     }
 }
 
@@ -250,698 +298,145 @@ void clear_data(data<RW>& data1, data<RW>& data2, data<RW>& data3, data<RW>& dat
     data4.value_ = k_data_init;
 }
 
+bool shared_test_writelocked = false;
+bool shared_test_readlocked = false;
+bool shared_test_unlocked = false;
+
 template<typename RW>
-void test_read_write_mutex(RW& rw, void (*reader_func)(void*, RW&), void (*writer_func)(void*, RW&), bool test_promotion_and_demotion, int sleep_seconds, bool can_timeout)
+void run_try_tests(void* arg, RW& rw)
 {
-    //Test for an ordering of threads that causes a
-    //scheduling problem (deadlock, etc.)
-
-    data<RW> r1(1, rw, 0, 1);
-    data<RW> r2(2, rw, 0, 1);
-    data<RW> w1(3, rw, 0, 1, test_promotion_and_demotion);
-    data<RW> w2(4, rw, 0, 1, test_promotion_and_demotion);
-
+    try
     {
-        //One writer
+        BOOST_CHECK(shared_test_writelocked || shared_test_readlocked || shared_test_unlocked);
 
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
+        typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
 
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << "\n";
-        std::cout.flush();
-
-        BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-    }
-
-    {
-        //One reader
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-
-        tr1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " r1=" << r1.value_ 
-            << "\n";
-        std::cout.flush();
-
-        BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-    }
-
-    {
-        //Two writers
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-
-        tw2.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
+        if (shared_test_writelocked)
         {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
+            //Verify that write lock blocks other write locks
+            BOOST_CHECK(!l.try_write_lock());
+
+            //Verify that write lock blocks read locks
+            BOOST_CHECK(!l.try_read_lock());
         }
-        else if (!can_timeout && !test_promotion_and_demotion)
+        else if (shared_test_readlocked)
         {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
+            //Verify that read lock blocks write locks
+            BOOST_CHECK(!l.try_write_lock());
+
+            //Verify that read lock does not block other read locks
+            BOOST_CHECK(l.try_read_lock());
+
+            //Verify that read lock blocks promotion
+            BOOST_CHECK(!l.try_promote());
         }
-        else
+        else if (shared_test_unlocked)
         {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
+            //Verify that unlocked does not blocks write locks
+            BOOST_CHECK(l.try_write_lock());
+
+            //Verify that unlocked does not block demotion
+            BOOST_CHECK(l.try_demote());
+
+            l.unlock();
+
+            //Verify that unlocked does not block read locks
+            BOOST_CHECK(l.try_read_lock());
+
+            //Verify that unlocked does not block promotion
+            BOOST_CHECK(l.try_promote());
+            
+            l.unlock();
         }
     }
-
+    catch(...)
     {
-        //Two readers
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-
-        tr2.join();
-        tr1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //One of each, writer first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-
-        tr1.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " r1=" << r1.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 10, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10, MESSAGE);
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(r1.value_ == k_data_init && w1.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //One of each, reader first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-
-        tw1.join();
-        tr1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " r1=" << r1.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10, MESSAGE);
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(r1.value_ == k_data_init && w1.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, writers first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-
-        tr2.join();
-        tr1.join();
-        tw2.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 20, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, readers first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-
-        tw2.join();
-        tw1.join();
-        tr2.join();
-        tr1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, alternating, writers first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-
-        tr2.join();
-        tw2.join();
-        tr1.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 20, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, alternating, readers first
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-
-        tw2.join();
-        tr2.join();
-        tw1.join();
-        tr1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 10, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, readers in the middle
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-
-        tw2.join();
-        tr2.join();
-        tr1.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 10, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
-    }
-
-    {
-        //Two of each, writers in the middle
-
-        clear_data(r1, r2, w1, w2);
-        boost::thread tr1(thread_adapter<RW>(reader_func, &r1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw1(thread_adapter<RW>(writer_func, &w1, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tw2(thread_adapter<RW>(writer_func, &w2, rw));
-        if (sleep_seconds > 0) boost::thread::sleep(xsecs(sleep_seconds));
-        boost::thread tr2(thread_adapter<RW>(reader_func, &r2, rw));
-
-        tw2.join();
-        tr2.join();
-        tr1.join();
-        tw1.join();
-
-        std::cout << "test"
-            << (test_promotion_and_demotion ? " with" : " without") << " promotion" 
-            << "," << (can_timeout ? " can" : " cannot") << " timeout" 
-            << ", sleep=" << sleep_seconds << " seconds:"
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (sleep_seconds > 0 && !can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 20, MESSAGE);
-        }
-        else if (!can_timeout && !test_promotion_and_demotion)
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            //r1 may == r2
-        }
-        else
-        {
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE((w1.value_ != w2.value_) || (w1.value_ == k_data_init && w2.value_ == k_data_init), MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            BOOST_CHECK_MESSAGE(!(w1.value_ == k_data_init && w2.value_ == k_data_init && r1.value_ == k_data_init && r2.value_ == k_data_init), MESSAGE);
-        }
+        BOOST_CHECK_MESSAGE(false, "run_try_tests() exception!");
+        throw;
     }
 }
 
 template<typename RW>
 void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
 {
-    test_read_write_mutex<RW>(rw, plain_reader, plain_writer, test_promotion_and_demotion, 0, false);
-    test_read_write_mutex<RW>(rw, plain_reader, plain_writer, test_promotion_and_demotion, 1, false);
-
-    //Test read lock vs write lock ordering
+    //Verify that a write lock prevents both readers and writers from obtaining a lock
     {
         shared_val = 0;
         data<RW> r1(1, rw, 0, 0);
         data<RW> r2(2, rw, 0, 0);
-        data<RW> w1(1, rw, 0, 3, test_promotion_and_demotion);
-        data<RW> w2(2, rw, 0, 3, test_promotion_and_demotion);
-
-        //Writer one launches, acquires the lock, and holds it for 3 seconds.
-
-        boost::thread tw1(thread_adapter<RW>(plain_writer, &w1, rw));
-
-        //Sleep for one second
-
-        boost::thread::sleep(xsecs(1));
-
-        //Writer two launches and tries to acquire the lock "clearly"
-        //after writer one has acquired it and before it has released it.
-        //It holds the lock for three seconds after it gets it.
-
-        boost::thread tw2(thread_adapter<RW>(plain_writer, &w2, rw));
-
-        //Sleep for one second
-
-        boost::thread::sleep(xsecs(1));
-
-        //Readers launch and try to acquire the lock "clearly" after writer
-        //two has tried to acquire it and while writer one still holds it.
-
-        boost::thread tr1(thread_adapter<RW>(plain_reader, &r1, rw));
-        boost::thread tr2(thread_adapter<RW>(plain_reader, &r2, rw));
-
-        //Wait until all threads finish, then check results
-
-        tr2.join();
-        tr1.join();
-        tw2.join();
-        tw1.join();
-
-        std::cout << "plain:" 
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
-
-        if (rw.policy() == boost::read_write_scheduling_policy::writer_priority)
-        {
-            if (!test_promotion_and_demotion)
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 20, MESSAGE);    //Readers get in after 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 20, MESSAGE);
-            }
-            else
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);    //w2 is also a reader at first, and may or may not convert to a writer before r1 and r2 run
-                BOOST_CHECK_MESSAGE(r1.value_ == 10 || r1.value_ == 20, MESSAGE);    //Readers get in after 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            }
-        }
-        else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
-        {
-            if (!test_promotion_and_demotion)
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 10, MESSAGE);    //Readers get in before 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 10, MESSAGE);
-            }
-            else
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);    //w2 is also a reader at first, and may or may not convert to a writer before r1 and r2 run
-                BOOST_CHECK_MESSAGE(r1.value_ == 10 || r1.value_ == 20, MESSAGE);    //Readers get in after 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            }
-        }
-        else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
-        {
-            if (!test_promotion_and_demotion)
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 10, MESSAGE);    //Readers get in before 2nd writer //:xxxxxx == 10, sp=2, -p&d, 0 sleep
-                BOOST_CHECK_MESSAGE(r2.value_ == 10, MESSAGE);
-            }
-            else
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);    //w2 is also a reader at first, and may or may not convert to a writer before r1 and r2 run
-                BOOST_CHECK_MESSAGE(r1.value_ == 10 || r1.value_ == 20, MESSAGE);    //Readers get in after 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            }
-        }
-        else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
-        {
-            if (!test_promotion_and_demotion)
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ != r2.value_, MESSAGE);
-            }
-            else
-            {
-                BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);    //w2 is also a reader at first, and may or may not convert to a writer before r1 and r2 run
-                BOOST_CHECK_MESSAGE(r1.value_ == 10 || r1.value_ == 20, MESSAGE);    //Readers get in after 2nd writer
-                BOOST_CHECK_MESSAGE(r2.value_ == 10 || r2.value_ == 20, MESSAGE);
-            }
-        }
-    }
-
-    //A different ordering test (not as timing-dependent as most of the others)
-    {
-        shared_val = 0;
-        data<RW> r1(1, rw, 0, 0);
-        data<RW> r2(2, rw, 0, 0);
-        data<RW> w1(1, rw, 0, 0);
-        data<RW> w2(2, rw, 0, 0);
+        data<RW> w1(3, rw, 0, 0);
+        data<RW> w2(4, rw, 0, 0);
 
         //Write-lock the mutex and queue up other readers and writers
 
         typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::write_locked);
 
-        boost::thread tw1(thread_adapter<RW>(plain_writer, &w1, rw));
-        boost::thread tw2(thread_adapter<RW>(plain_writer, &w2, rw));
         boost::thread tr1(thread_adapter<RW>(plain_reader, &r1, rw));
         boost::thread tr2(thread_adapter<RW>(plain_reader, &r2, rw));
+        boost::thread tw1(thread_adapter<RW>(plain_writer, &w1, rw));
+        boost::thread tw2(thread_adapter<RW>(plain_writer, &w2, rw));
 
-        boost::thread::sleep(xsecs(5));
+        boost::thread::sleep(xsecs(1));
 
+        //At this point, neither queued readers nor queued writers should have obtained access
+
+        BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+        BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
+        BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+
+        if (test_promotion_and_demotion)
+        {
+            l.demote();
+            boost::thread::sleep(xsecs(1));
+            //:boost::thread tr3(thread_adapter<RW>(plain_reader, &r3, rw));
+
+            if (rw.policy() == boost::read_write_scheduling_policy::writer_priority)
+            {
+                //Expected result:
+                //Since writers have priority, demotion doesn't release any readers.
+                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+            }
+            else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
+            {
+                //Expected result:
+                //Since readers have priority, demotion releases all readers.
+                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
+                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+            }
+            else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
+            {
+                //Expected result:
+                //Since readers can be released many at a time, demotion releases all queued readers.
+                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
+                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                //:BOOST_CHECK_MESSAGE(r3.value_ == k_data_init, MESSAGE);
+            }
+            else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
+            {
+                //Expected result:
+                //Since readers can be released only one at a time, demotion releases one queued reader.
+                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+                BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0, MESSAGE);
+                BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0, MESSAGE);
+                BOOST_CHECK_MESSAGE(r1.value_ != r2.value_, MESSAGE);
+            }
+        }
+        
         l.unlock();
-
-        //Release them all at once and make sure they get the lock in the correct order
 
         tr2.join();
         tr1.join();
         tw2.join();
         tw1.join();
-
-        std::cout << "plain:" 
-            << " w1=" << w1.value_ 
-            << " w2=" << w2.value_ 
-            << " r1=" << r1.value_ 
-            << " r2=" << r2.value_ 
-            << "\n";
-        std::cout.flush();
 
         if (rw.policy() == boost::read_write_scheduling_policy::writer_priority)
         {
@@ -963,7 +458,7 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //The same, except that either w1 or w2 (but not both) may
                 //fail to promote to a write lock,
                 //and r1, r2, or both may "sneak in" ahead of w1 and/or w2
-                //by obtaining a read lock before they can promote
+                //by obtaining a read lock before w1 or w2 can promote
                 //their initial read lock to a write lock.
                 BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
                 BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
@@ -1009,7 +504,7 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
                 BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
                 BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE); //:xxxxx r1.value_ == 10, plain test, sp=3, -p&d, 0 sleep; sp=2, -p&d, -timeout, 1 sleep
+                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
                 BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
             }
             else
@@ -1020,8 +515,8 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
                 BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
                 BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE); //:xxxxx == 10, with promotion, cannot timeout, sp=2
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE); //:xxxxx == 10, with promotion, cannot timeout, sp=2
+                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
+                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
             }
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
@@ -1061,127 +556,175 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
             }
         }
     }
+
+    //Verify that a read lock prevents readers but not writers from obtaining a lock
+    {
+        shared_val = 0;
+        data<RW> r1(1, rw, 0, 0);
+        data<RW> r2(2, rw, 0, 0);
+        data<RW> w1(3, rw, 0, 0);
+        data<RW> w2(4, rw, 0, 0);
+
+        //Read-lock the mutex and queue up other readers and writers
+
+        typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
+
+        boost::thread tr1(thread_adapter<RW>(plain_reader, &r1, rw));
+        boost::thread tr2(thread_adapter<RW>(plain_reader, &r2, rw));
+
+        boost::thread::sleep(xsecs(1));
+
+        boost::thread tw1(thread_adapter<RW>(plain_writer, &w1, rw));
+        boost::thread tw2(thread_adapter<RW>(plain_writer, &w2, rw));
+
+        boost::thread::sleep(xsecs(1));
+
+        //Expected result: all readers passed through before the writers entered
+        BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+        BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
+        BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+
+        if (test_promotion_and_demotion)
+        {
+            l.promote();
+        }
+        
+        l.unlock();
+
+        tr2.join();
+        tr1.join();
+        tw2.join();
+        tw1.join();
+    }
+
+    //Verify that a read lock prevents readers but not writers from obtaining a lock
+    {
+        shared_val = 0;
+        data<RW> r1(1, rw, 0, 0);
+        data<RW> r2(2, rw, 0, 0);
+        data<RW> w1(3, rw, 0, 0);
+        data<RW> w2(4, rw, 0, 0);
+
+        //Read-lock the mutex and queue up other readers and writers
+
+        typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
+
+        boost::thread tw1(thread_adapter<RW>(plain_writer, &w1, rw));
+        boost::thread tw2(thread_adapter<RW>(plain_writer, &w2, rw));
+
+        boost::thread::sleep(xsecs(1));
+
+        boost::thread tr1(thread_adapter<RW>(plain_reader, &r1, rw));
+        boost::thread tr2(thread_adapter<RW>(plain_reader, &r2, rw));
+
+        boost::thread::sleep(xsecs(1));
+
+        if (rw.policy() == boost::read_write_scheduling_policy::writer_priority)
+        {
+            //Expected result: 
+            //Writers have priority, so no readers have been released
+            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+        }
+        else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
+        {
+            //Expected result: 
+            //Readers have priority, so all readers have been released
+            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
+            BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+        }
+        else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
+        {
+            //Expected result: 
+            //It's the writers' turn, so no readers have been released
+            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+        }
+        else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
+        {
+            //Expected result: 
+            //It's the writers' turn, so no readers have been released
+            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
+            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+        }
+
+        if (test_promotion_and_demotion)
+        {
+            l.promote();
+        }
+        
+        l.unlock();
+
+        tr2.join();
+        tr1.join();
+        tw2.join();
+        tw1.join();
+    }
 }
 
 template<typename RW>
 void test_try_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
 {
-    test_read_write_mutex<RW>(rw, try_reader, try_writer, test_promotion_and_demotion, 0, true);
-    test_read_write_mutex<RW>(rw, try_reader, try_writer, test_promotion_and_demotion, 1, true);
-
-    shared_val = 0;
-
-    data<RW> r1(1, rw, 0, 0);
-    data<RW> r2(2, rw, 0, 0);
-    data<RW> w1(3, rw, 0, 3, test_promotion_and_demotion);
-    data<RW> w2(4, rw, 0, 3, test_promotion_and_demotion);
-
-    //Writer one launches, acquires the lock, and holds it for 3 seconds.
-
-    boost::thread tw1(thread_adapter<RW>(try_writer, &w1, rw));
-
-    //Sleep for one second
-
-    boost::thread::sleep(xsecs(1));
-
-    //Reader one launches and tries to acquire the lock "clearly" 
-    //after writer one has acquired it and before it has released it.
-
-    boost::thread tr1(thread_adapter<RW>(try_reader, &r1, rw));
-
-    //Writer two launches in the same timeframe.
-
-    boost::thread tw2(thread_adapter<RW>(try_writer, &w2, rw));
-
-    //Wait until all threads finish, then check results
-
-    tw2.join();
-    tr1.join();
-    tw1.join();
-
-    std::cout << "try:" 
-        << " w1=" << w1.value_ 
-        << " w2=" << w2.value_ 
-        << " r1=" << r1.value_ 
-        << "\n";
-    std::cout.flush();
-
-    if (!test_promotion_and_demotion || test_promotion_and_demotion)
-    {
-        BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-        BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);    //Try returns w/o waiting
-        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);    //Try returns w/o waiting
-    }
-
-    //Finish by repeating the plain tests with the try lock.
+    //Repeat the plain tests with the try lock.
     //This is important to verify that try locks are proper
     //read_write_mutexes as well.
 
     test_plain_read_write_mutex(rw, test_promotion_and_demotion);
+
+    //Verify try_* operations with write-locked mutex
+    {
+        typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::write_locked);
+
+        shared_test_writelocked = true;
+        shared_test_readlocked = false;
+        shared_test_unlocked = false;
+        
+        boost::thread test_thread(thread_adapter<RW>(run_try_tests, NULL, rw));
+        test_thread.join();
+    }
+
+    //Verify try_* operations with read-locked mutex
+    {
+        typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
+        
+        shared_test_writelocked = false;
+        shared_test_readlocked = true;
+        shared_test_unlocked = false;
+        
+        boost::thread test_thread(thread_adapter<RW>(run_try_tests, NULL, rw));
+        test_thread.join();
+    }
+
+    //Verify try_* operations with unlocked mutex
+    {
+        shared_test_writelocked = false;
+        shared_test_readlocked = false;
+        shared_test_unlocked = true;
+        
+        boost::thread test_thread(thread_adapter<RW>(run_try_tests, NULL, rw));
+        test_thread.join();
+    }
 }
 
 template<typename RW>
 void test_timed_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
 {
-    test_read_write_mutex<RW>(rw, timed_reader, timed_writer, test_promotion_and_demotion, 0, true);
-    test_read_write_mutex<RW>(rw, timed_reader, timed_writer, test_promotion_and_demotion, 1, true);
-
-    shared_val = 0;
-    data<RW> r1(1, rw, 1, 0);
-    data<RW> r2(2, rw, 3, 0);
-    data<RW> w1(3, rw, 3, 3, test_promotion_and_demotion);
-    data<RW> w2(4, rw, 1, 0, test_promotion_and_demotion);
-
-    //Writer one launches, acquires the lock, and holds it for 3 seconds.
-
-    boost::thread tw1(thread_adapter<RW>(timed_writer, &w1, rw));
-
-    //Sleep for one second
-
-    boost::thread::sleep(xsecs(1));
-
-    //Writer two will try to acquire the lock "clearly" after 
-    //writer one has acquired it and before it has released it.  
-    //It will wait 1 second for the lock, then fail.
-
-    boost::thread tw2(thread_adapter<RW>(timed_writer, &w2, rw));
-
-    //Readers one and two will launch and try to acquire the lock "clearly" 
-    //after writer one has acquired it and before it has released it.
-    //Reader one will wait 1 second and then fail.
-    //Reader 2 will wait 3 seconds and then succeed.
-
-    boost::thread tr1(thread_adapter<RW>(timed_reader, &r1, rw));
-    boost::thread tr2(thread_adapter<RW>(timed_reader, &r2, rw));
-
-    //Wait until all threads finish, then check results
-
-    tw1.join();
-    tr1.join();
-    tr2.join();
-    tw2.join();
-
-    std::cout << "timed:" 
-        << " w1=" << w1.value_ 
-        << " w2=" << w2.value_ 
-        << " r1=" << r1.value_ 
-        << " r2=" << r2.value_ 
-        << "\n";
-    std::cout.flush();
-
-    if (!test_promotion_and_demotion || test_promotion_and_demotion)
-    {
-        BOOST_CHECK_MESSAGE(w1.value_ == 10, MESSAGE);
-        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);    //Times out
-        BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);    //Times out
-        BOOST_CHECK_MESSAGE(r2.value_ == 10, MESSAGE);
-    }
-
-    //Finish by repeating the try tests with the timed lock.
+    //Repeat the try tests with the timed lock.
     //This is important to verify that timed locks are proper
     //try locks as well.
 
     test_try_read_write_mutex(rw, test_promotion_and_demotion);
+
+    //:More tests here
 }
 
 } // namespace
