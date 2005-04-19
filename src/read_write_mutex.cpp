@@ -411,7 +411,6 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
             adjust_count adjust_waiting(m_num_waiting_readers);
             adjust_waking.set_adjust(true);
             m_waiting_readers.wait(l);
-            adjust_waking.adjust_now();
         };
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
@@ -429,7 +428,6 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
             adjust_count adjust_waiting(m_num_waiting_readers);
             adjust_waking.set_adjust(true);
             m_waiting_readers.wait(l);
-            adjust_waking.adjust_now();
         }
     }
     else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
@@ -445,7 +443,6 @@ void read_write_mutex_impl<Mutex>::do_read_lock()
             adjust_count adjust_waiting(m_num_waiting_readers);
             adjust_waking.set_adjust(true);
             m_waiting_readers.wait(l);
-            adjust_waking.adjust_now();
         }
     }
 
@@ -492,7 +489,6 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
             adjust_count adjust_waiting(m_num_waiting_writers);
             adjust_waking.set_adjust(true);
             m_waiting_writers.wait(l);
-            adjust_waking.adjust_now();
         }
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
@@ -508,7 +504,6 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
             adjust_count adjust_waiting(m_num_waiting_writers);
             adjust_waking.set_adjust(true);
             m_waiting_writers.wait(l);
-            adjust_waking.adjust_now();
         }
     }
     else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
@@ -529,7 +524,6 @@ void read_write_mutex_impl<Mutex>::do_write_lock()
             adjust_count adjust_waiting(m_num_waiting_writers);
             adjust_waking.set_adjust(true);
             m_waiting_writers.wait(l);
-            adjust_waking.adjust_now();
         }
     }
 
@@ -694,7 +688,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
                 fail = true; 
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
@@ -717,7 +710,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
                 fail = true; 
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
     else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
@@ -738,7 +730,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_read_lock(const boost::xtime &xt)
                 fail = true; 
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
 
@@ -803,7 +794,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
                 fail = true;
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
     else if (m_sp == read_write_scheduling_policy::writer_priority)
@@ -824,7 +814,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
                 fail = true;
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
     else BOOST_ASSERT_ELSE(m_sp == read_write_scheduling_policy::alternating_single_read || m_sp == read_write_scheduling_policy::alternating_many_reads)
@@ -850,7 +839,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_write_lock(const boost::xtime &xt)
                 fail = true;
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
 
@@ -1015,7 +1003,6 @@ void read_write_mutex_impl<Mutex>::do_promote_to_write_lock()
             adjust_state adjust_waiting_promotion(m_state_waiting_promotion);
             adjust_waking.set_adjust(true);
             m_waiting_promotion.wait(l);
-            adjust_waking.adjust_now();
         }
 
         BOOST_ASSERT(m_num_waiting_writers >= 0);
@@ -1119,7 +1106,6 @@ bool read_write_mutex_impl<Mutex>::do_timed_promote_to_write_lock(const boost::x
                 fail = true;
                 break;
             }
-            adjust_waking.adjust_now();
         }
     }
 
