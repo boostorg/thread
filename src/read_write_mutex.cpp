@@ -106,9 +106,9 @@ bad things happen.
 #endif
 
 #if defined(BOOST_ASSERT)
-#   define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), false) {} else
+#   define BOOST_ASSERT_ELSE(expr) if ((BOOST_ASSERT(expr)), true)
 #else
-#   define BOOST_ASSERT_ELSE(expr) if (false) {} else
+#   define BOOST_ASSERT_ELSE(expr) if (true)
 #endif
 
 //The following macro checks for invalid loop conditions
@@ -1244,13 +1244,15 @@ void read_write_mutex_impl<Mutex>::do_scheduling_impl(const scheduling_reason re
         if (m_sp == read_write_scheduling_policy::reader_priority)
         {
             BOOST_READ_WRITE_MUTEX_TRACE("do_scheduling_impl() 1: writers & readers, reader_priority");
-            if (woken = do_wake_all_readers())
+            woken = do_wake_all_readers();
+            if (woken)
                 m_num_waking_writers = m_num_max_waking_writers = 0; //shut down any waking writers
         }
         else if (m_sp == read_write_scheduling_policy::writer_priority)
         {
             BOOST_READ_WRITE_MUTEX_TRACE("do_scheduling_impl(): writers & readers, writer_priority");
-            if (woken = do_wake_writer())
+            woken = do_wake_writer();
+            if (woken)
                 m_num_waking_readers  = m_num_max_waking_readers = 0; //shut down any waking readers
         }
         else if (m_sp == read_write_scheduling_policy::alternating_single_read)
