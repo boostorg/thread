@@ -19,6 +19,11 @@
 
 #include <iostream>
 
+#define TS_CHECK(pred) \
+    do { if (!(pred)) BOOST_ERROR (#pred); } while (0)
+#define TS_CHECK_MSG(pred, msg) \
+    do { if (!(pred)) BOOST_ERROR (msg); } while (0)
+
 namespace {
 
 int shared_val = 0;
@@ -27,7 +32,7 @@ boost::xtime xsecs(int secs)
 {
     //Create an xtime that is secs seconds from now
     boost::xtime ret;
-    BOOST_CHECK(boost::TIME_UTC == boost::xtime_get(&ret, boost::TIME_UTC));
+    TS_CHECK (boost::TIME_UTC == boost::xtime_get(&ret, boost::TIME_UTC));
     ret.sec += secs;
     return ret;
 }
@@ -96,7 +101,7 @@ void plain_writer(void* arg, RW& rw)
     try
     {
         data<RW>* pdata = (data<RW>*) arg;
-        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
+        TS_CHECK_MSG(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
         typename RW::scoped_read_write_lock l(
             rw, 
@@ -134,7 +139,7 @@ void plain_writer(void* arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "plain_writer() exception!");
+        TS_CHECK_MSG(false, "plain_writer() exception!");
         throw;
     }
 }
@@ -145,8 +150,8 @@ void plain_reader(void* arg, RW& rw)
     try
     {
         data<RW>* pdata = (data<RW>*)arg;
-        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
-        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
+        TS_CHECK(!pdata->test_promotion_and_demotion_);
+        TS_CHECK_MSG(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
         typename RW::scoped_read_write_lock l(rw, boost::read_write_lock_state::read_locked);
 
@@ -157,7 +162,7 @@ void plain_reader(void* arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "plain_reader() exception!");
+        TS_CHECK_MSG(false, "plain_reader() exception!");
         throw;
     }
 }
@@ -168,7 +173,7 @@ void try_writer(void* arg, RW& rw)
     try
     {
         data<RW>* pdata = (data<RW>*) arg;
-        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
+        TS_CHECK_MSG(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
         typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
 
@@ -194,7 +199,7 @@ void try_writer(void* arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "try_writer() exception!");
+        TS_CHECK_MSG(false, "try_writer() exception!");
         throw;
     }
 }
@@ -205,8 +210,8 @@ void try_reader(void*arg, RW& rw)
     try
     {
         data<RW>* pdata = (data<RW>*)arg;
-        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
-        BOOST_CHECK_MESSAGE(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
+        TS_CHECK(!pdata->test_promotion_and_demotion_);
+        TS_CHECK_MSG(pdata->wait_for_lock_secs_ == 0, "pdata->wait_for_lock_secs_: " << pdata->wait_for_lock_secs_);
 
         typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
 
@@ -220,7 +225,7 @@ void try_reader(void*arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "try_reader() exception!");
+        TS_CHECK_MSG(false, "try_reader() exception!");
         throw;
     }
 }
@@ -257,7 +262,7 @@ void timed_writer(void* arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "timed_writer() exception!");
+        TS_CHECK_MSG(false, "timed_writer() exception!");
         throw;
     }
 }
@@ -268,7 +273,7 @@ void timed_reader(void* arg, RW& rw)
     try
     {
         data<RW>* pdata = (data<RW>*)arg;
-        BOOST_CHECK(!pdata->test_promotion_and_demotion_);
+        TS_CHECK(!pdata->test_promotion_and_demotion_);
 
         typename RW::scoped_timed_read_write_lock l(rw,boost::read_write_lock_state::unlocked);
 
@@ -283,7 +288,7 @@ void timed_reader(void* arg, RW& rw)
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "timed_reader() exception!");
+        TS_CHECK_MSG(false, "timed_reader() exception!");
         throw;
     }
 }
@@ -307,51 +312,51 @@ void run_try_tests(void* arg, RW& rw)
 {
     try
     {
-        BOOST_CHECK(shared_test_writelocked || shared_test_readlocked || shared_test_unlocked);
+        TS_CHECK(shared_test_writelocked || shared_test_readlocked || shared_test_unlocked);
 
         typename RW::scoped_try_read_write_lock l(rw, boost::read_write_lock_state::unlocked);
 
         if (shared_test_writelocked)
         {
             //Verify that write lock blocks other write locks
-            BOOST_CHECK(!l.try_write_lock());
+            TS_CHECK(!l.try_write_lock());
 
             //Verify that write lock blocks read locks
-            BOOST_CHECK(!l.try_read_lock());
+            TS_CHECK(!l.try_read_lock());
         }
         else if (shared_test_readlocked)
         {
             //Verify that read lock blocks write locks
-            BOOST_CHECK(!l.try_write_lock());
+            TS_CHECK(!l.try_write_lock());
 
             //Verify that read lock does not block other read locks
-            BOOST_CHECK(l.try_read_lock());
+            TS_CHECK(l.try_read_lock());
 
             //Verify that read lock blocks promotion
-            BOOST_CHECK(!l.try_promote());
+            TS_CHECK(!l.try_promote());
         }
         else if (shared_test_unlocked)
         {
             //Verify that unlocked does not blocks write locks
-            BOOST_CHECK(l.try_write_lock());
+            TS_CHECK(l.try_write_lock());
 
             //Verify that unlocked does not block demotion
-            BOOST_CHECK(l.try_demote());
+            TS_CHECK(l.try_demote());
 
             l.unlock();
 
             //Verify that unlocked does not block read locks
-            BOOST_CHECK(l.try_read_lock());
+            TS_CHECK(l.try_read_lock());
 
             //Verify that unlocked does not block promotion
-            BOOST_CHECK(l.try_promote());
+            TS_CHECK(l.try_promote());
             
             l.unlock();
         }
     }
     catch(...)
     {
-        BOOST_CHECK_MESSAGE(false, "run_try_tests() exception!");
+        TS_CHECK_MSG(false, "run_try_tests() exception!");
         throw;
     }
 }
@@ -380,10 +385,10 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
 
         //At this point, neither queued readers nor queued writers should have obtained access
 
-        BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-        BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
-        BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(r1.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(r2.value_ == k_data_init, MESSAGE);
 
         if (test_promotion_and_demotion)
         {
@@ -395,39 +400,39 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
             {
                 //Expected result:
                 //Since writers have priority, demotion doesn't release any readers.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == k_data_init, MESSAGE);
             }
             else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
             {
                 //Expected result:
                 //Since readers have priority, demotion releases all readers.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
             }
             else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
             {
                 //Expected result:
                 //Since readers can be released many at a time, demotion releases all queued readers.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
-                //:BOOST_CHECK_MESSAGE(r3.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
+                //:TS_CHECK_MSG(r3.value_ == k_data_init, MESSAGE);
             }
             else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
             {
                 //Expected result:
                 //Since readers can be released only one at a time, demotion releases one queued reader.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ != r2.value_, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == k_data_init || r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == k_data_init || r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r1.value_ != r2.value_, MESSAGE);
             }
         }
         
@@ -446,11 +451,11 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //1) either w1 or w2 obtains and releases the lock
                 //2) the other of w1 and w2 obtains and releases the lock
                 //3) r1 and r2 obtain and release the lock "simultaneously"
-                BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 20, MESSAGE);
             }
             else
             {
@@ -460,11 +465,11 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //and r1, r2, or both may "sneak in" ahead of w1 and/or w2
                 //by obtaining a read lock before w1 or w2 can promote
                 //their initial read lock to a write lock.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == k_data_init || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == k_data_init || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == k_data_init || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == k_data_init || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
             }
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
@@ -475,22 +480,22 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //1) r1 and r2 obtain and release the lock "simultaneously"
                 //2) either w1 or w2 obtains and releases the lock
                 //3) the other of w1 and w2 obtains and releases the lock
-                BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
             }
             else
             {
                 //Expected result: 
                 //The same, except that either w1 or w2 (but not both) may
                 //fail to promote to a write lock.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
             }
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
@@ -501,22 +506,22 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //1) r1 and r2 obtain and release the lock "simultaneously"
                 //2) either w1 or w2 obtains and releases the lock
                 //3) the other of w1 and w2 obtains and releases the lock
-                BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
             }
             else
             {
                 //Expected result: 
                 //The same, except that either w1 or w2 (but not both) may
                 //fail to promote to a write lock.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
             }
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
@@ -528,12 +533,12 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //2) either w1 or w2 obtains and releases the lock
                 //3) the other of r1 and r2 obtains and releases the lock
                 //4) the other of w1 and w2 obtains and release the lock
-                BOOST_CHECK_MESSAGE(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ != r2.value_, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0 || r1.value_ == 10, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0 || r2.value_ == 10, MESSAGE);
+                TS_CHECK_MSG(r1.value_ != r2.value_, MESSAGE);
             }
             else
             {
@@ -548,11 +553,11 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
                 //In other words, any ordering is possible, and either
                 //w1 or w2 (but not both) may fail to obtain the lock
                 //altogether.
-                BOOST_CHECK_MESSAGE(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(w1.value_ != w2.value_, MESSAGE);
-                BOOST_CHECK_MESSAGE(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
-                BOOST_CHECK_MESSAGE(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ == k_data_init || w1.value_ == 10 || w1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w2.value_ == k_data_init || w2.value_ == 10 || w2.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(w1.value_ != w2.value_, MESSAGE);
+                TS_CHECK_MSG(r1.value_ == 0 || r1.value_ == 10 || r1.value_ == 20, MESSAGE);
+                TS_CHECK_MSG(r2.value_ == 0 || r2.value_ == 10 || r2.value_ == 20, MESSAGE);
             }
         }
     }
@@ -580,10 +585,10 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
         boost::thread::sleep(xsecs(1));
 
         //Expected result: all readers passed through before the writers entered
-        BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-        BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-        BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-        BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+        TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+        TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+        TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
 
         if (test_promotion_and_demotion)
         {
@@ -624,37 +629,37 @@ void test_plain_read_write_mutex(RW& rw, bool test_promotion_and_demotion)
         {
             //Expected result: 
             //Writers have priority, so no readers have been released
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r2.value_ == k_data_init, MESSAGE);
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::reader_priority)
         {
             //Expected result: 
             //Readers have priority, so all readers have been released
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == 0, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == 0, MESSAGE);
+            TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r1.value_ == 0, MESSAGE);
+            TS_CHECK_MSG(r2.value_ == 0, MESSAGE);
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::alternating_many_reads)
         {
             //Expected result: 
             //It's the writers' turn, so no readers have been released
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r2.value_ == k_data_init, MESSAGE);
         }
         else if (rw.policy() == boost::read_write_scheduling_policy::alternating_single_read)
         {
             //Expected result: 
             //It's the writers' turn, so no readers have been released
-            BOOST_CHECK_MESSAGE(w1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(w2.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r1.value_ == k_data_init, MESSAGE);
-            BOOST_CHECK_MESSAGE(r2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(w2.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r1.value_ == k_data_init, MESSAGE);
+            TS_CHECK_MSG(r2.value_ == k_data_init, MESSAGE);
         }
 
         if (test_promotion_and_demotion)

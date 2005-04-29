@@ -30,8 +30,8 @@ inline boost::xtime delay(int secs, int msecs=0, int nsecs=0)
     const int NANOSECONDS_PER_MILLISECOND = 1000000;
 
     boost::xtime xt;
-    BOOST_CHECK_EQUAL(boost::xtime_get(&xt, boost::TIME_UTC),
-        static_cast<int>(boost::TIME_UTC));
+    if (boost::TIME_UTC != boost::xtime_get (&xt, boost::TIME_UTC))
+        BOOST_ERROR ("boost::xtime_get != boost::TIME_UTC");
 
     nsecs += xt.nsec;
     msecs += nsecs / NANOSECONDS_PER_MILLISECOND;
