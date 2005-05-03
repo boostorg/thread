@@ -931,6 +931,7 @@ bool read_write_mutex_impl<Mutex>::do_demote_to_read_lock_impl()
         throw lock_error();
         return false;
     }
+    return false; //Eliminate warnings on some compilers
 }
 
 template<typename Mutex>
@@ -1160,6 +1161,7 @@ read_write_lock_state::read_write_lock_state_enum read_write_mutex_impl<Mutex>::
     }
     else BOOST_ASSERT_ELSE(state == 0)
         return read_write_lock_state::unlocked;
+    return read_write_lock_state::unlocked; //Eliminate warnings on some compilers
 }
 
 template<typename Mutex>
