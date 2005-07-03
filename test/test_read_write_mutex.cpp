@@ -79,11 +79,11 @@ struct data
         bool demote_after_write = false
         )
         : id_(id)
-        , rw_(m)
         , wait_for_lock_secs_(wait_for_lock_secs)
         , sleep_with_lock_secs_(sleep_with_lock_secs)
         , test_promotion_and_demotion_(demote_after_write)
         , value_(k_data_init)
+        , rw_(m)
     {}
 
     int id_;
