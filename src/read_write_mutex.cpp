@@ -364,15 +364,15 @@ private:
 
 template<typename Mutex>
 read_write_mutex_impl<Mutex>::read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy_enum sp)
-    : m_num_waiting_writers(0)
-    , m_num_waiting_readers(0)
-    , m_num_waking_writers(0)
-    , m_num_max_waking_writers(0)
-    , m_num_waking_readers(0)
-    , m_num_max_waking_readers(0)
-    , m_state_waiting_promotion(false)
+    : m_sp(sp)
     , m_state(0)
-    , m_sp(sp)
+    , m_num_waiting_writers(0)
+    , m_num_waiting_readers(0)
+    , m_state_waiting_promotion(false)
+    , m_num_waking_writers(0)
+    , m_num_waking_readers(0)
+    , m_num_max_waking_writers(0)
+    , m_num_max_waking_readers(0)
     , m_readers_next(true) 
 {}
 
