@@ -32,7 +32,7 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
     <librarycategory name="category:concurrent" />
     <title>Boost.Threads</title>
   </libraryinfo>
-  <title>&Boost.Threads;</title>
+  <title>Boost.Threads</title>
   <xi:include href="overview.xml"/>
   <xi:include href="design.xml"/>
   <xi:include href="concepts.xml"/>
