@@ -11,11 +11,17 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#include <boost/detail/workaround.hpp>
+
 #include <boost/thread/once.hpp>
 #include <cstdio>
 #include <cassert>
 
+
 #if defined(BOOST_HAS_WINTHREADS)
+#   if BOOST_WORKAROUND(__BORLANDC__,<= 0x551)
+      using std::size_t;
+#   endif
 #   include <windows.h>
 #   if defined(BOOST_NO_STRINGSTREAM)
 #       include <strstream>

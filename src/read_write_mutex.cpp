@@ -27,6 +27,8 @@ bad things happen.
 #include <boost/thread/read_write_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 
+#include <boost/detail/workaround.hpp>
+
 #if !defined(BOOST_NO_STRINGSTREAM)
 #   include <sstream>
 #endif
@@ -376,6 +378,7 @@ read_write_mutex_impl<Mutex>::read_write_mutex_impl(read_write_scheduling_policy
     , m_readers_next(true) 
 {}
 
+#if !BOOST_WORKAROUND(__BORLANDC__, <= 0x564)
 template<typename Mutex>
 read_write_mutex_impl<Mutex>::~read_write_mutex_impl()
 {
@@ -390,6 +393,7 @@ read_write_mutex_impl<Mutex>::~read_write_mutex_impl()
     BOOST_ASSERT(m_num_waking_readers == 0);
     BOOST_ASSERT(m_num_max_waking_readers == 0);
 }
+#endif
 
 template<typename Mutex>
 void read_write_mutex_impl<Mutex>::do_read_lock()
