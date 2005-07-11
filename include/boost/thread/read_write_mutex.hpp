@@ -19,6 +19,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
+#include <boost/detail/workaround.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/detail/lock.hpp>
@@ -52,7 +53,9 @@ struct read_write_mutex_impl
     typedef detail::thread::scoped_timed_lock<Mutex> scoped_timed_lock;
 
     read_write_mutex_impl(read_write_scheduling_policy::read_write_scheduling_policy_enum sp);
+#if !BOOST_WORKAROUND(__BORLANDC__,<= 0x564)
     ~read_write_mutex_impl();
+#endif
 
     Mutex m_prot;
 
