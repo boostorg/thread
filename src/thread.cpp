@@ -370,7 +370,7 @@ void thread_group::join_all()
 
 int thread_group::size()
 {
-	return m_threads.size();
+        return m_threads.size();
 }
 
 } // namespace boost
