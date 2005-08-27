@@ -36,6 +36,7 @@ bad things happen.
 #ifdef BOOST_HAS_WINTHREADS
 #   include <windows.h>
 #   include <tchar.h>
+#   include <stdio.h>
 
 #   if !((_WIN32_WINNT >= 0x0400) || (_WIN32_WINDOWS > 0x0400))
         inline bool IsDebuggerPresent(void)
