@@ -36,6 +36,7 @@ bad things happen.
 #ifdef BOOST_HAS_WINTHREADS
 #   include <windows.h>
 #   include <tchar.h>
+#   include <stdio.h>
 
 #   if !((_WIN32_WINNT >= 0x0400) || (_WIN32_WINDOWS > 0x0400))
         inline bool IsDebuggerPresent(void)
@@ -1734,3 +1735,4 @@ read_write_lock_state::read_write_lock_state_enum timed_read_write_mutex::state(
 //         demotion.
 //      Add explicit template instantiations to catch syntax errors 
 //         in templates.
+
