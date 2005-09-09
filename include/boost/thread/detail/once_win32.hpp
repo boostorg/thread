@@ -87,7 +87,7 @@ namespace boost
             unsigned i=0;
             for(; i < sizeof(I)*2; ++i)
             {
-                buf[i] = 'A' + static_cast<char>((p >> (i*4)) & 0x7f);
+                buf[i] = 'A' + static_cast<char>((p >> (i*4)) & 0x0f);
             }
             buf[i] = 0;
         }
