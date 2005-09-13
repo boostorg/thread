@@ -18,6 +18,8 @@
 # define BOOST_CREATE_MUTEX ::CreateMutexA
 # define BOOST_GET_PROCESS_ID ::GetCurrentProcessId
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::WaitForSingleObject
+# define BOOST_CREATE_SEMAPHORE ::CreateSemaphoreA
+# define BOOST_RELEASE_SEMAPHORE ::ReleaseSemaphore
 # define BOOST_INFINITE INFINITE
 #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ )
 namespace boost
@@ -30,6 +32,8 @@ namespace boost
         extern "C" __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
         extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
         extern "C" __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
+        extern "C" __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
+        extern "C" __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
     }
 }
 # define BOOST_CLOSE_HANDLE ::boost::detail::CloseHandle
@@ -37,6 +41,8 @@ namespace boost
 # define BOOST_CREATE_MUTEX ::boost::detail::CreateMutexA
 # define BOOST_GET_PROCESS_ID ::boost::detail::GetCurrentProcessId
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::boost::detail::WaitForSingleObject
+# define BOOST_CREATE_SEMAPHORE ::boost::detail::CreateSemaphoreA
+# define BOOST_RELEASE_SEMAPHORE ::boost::detail::ReleaseSemaphore
 # define BOOST_INFINITE 0xffffffff
 #else
 # error "Win32 functions not available"
