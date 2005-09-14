@@ -21,13 +21,7 @@
 #include <cassert>
 #include "timeconv.inl"
 
-#if defined(BOOST_HAS_WINTHREADS)
-#   include <new>
-#   include <boost/thread/once.hpp>
-#   include <windows.h>
-#   include <time.h>
-#   include "mutex.inl"
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
 #    include <MacErrors.h>
@@ -37,66 +31,7 @@
 
 namespace boost {
 
-#if defined(BOOST_HAS_WINTHREADS)
-
-timed_mutex::timed_mutex()
-    : m_mutex(0)
-{
-    m_mutex = new_mutex(0);
-}
-
-timed_mutex::~timed_mutex()
-{
-    delete_mutex(m_mutex);
-}
-
-void timed_mutex::do_lock()
-{
-    wait_mutex(m_mutex, INFINITE);
-}
-
-bool timed_mutex::do_trylock()
-{
-    return wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
-}
-
-bool timed_mutex::do_timedlock(const xtime& xt)
-{
-    for (;;)
-    {
-        int milliseconds;
-        to_duration(xt, milliseconds);
-
-        int res = wait_mutex(m_mutex, milliseconds);
-
-        if (res == WAIT_TIMEOUT)
-        {
-            boost::xtime cur;
-            boost::xtime_get(&cur, boost::TIME_UTC);
-            if (boost::xtime_cmp(xt, cur) > 0)
-                continue;
-        }
-
-        return res == WAIT_OBJECT_0;
-    }
-}
-
-void timed_mutex::do_unlock()
-{
-    release_mutex(m_mutex);
-}
-
-void timed_mutex::do_lock(cv_state&)
-{
-    do_lock();
-}
-
-void timed_mutex::do_unlock(cv_state&)
-{
-    do_unlock();
-}
-
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 
 mutex::mutex()
 {
