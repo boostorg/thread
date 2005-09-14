@@ -17,6 +17,13 @@
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 
+#ifdef BOOST_NO_STDC_NAMESPACE
+namespace std
+{
+    using ::strlen;
+}
+#endif
+
 namespace boost
 {
     typedef long once_flag;
