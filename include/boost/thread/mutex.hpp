@@ -16,7 +16,9 @@
 
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
-
+#ifdef BOOST_HAS_WINTHREADS
+#include <boost/thread/detail/mutex_win32.hpp>
+#else
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
 #endif
@@ -24,11 +26,13 @@
 #if defined(BOOST_HAS_MPTASKS)
 #   include "scoped_critical_region.hpp"
 #endif
+#endif
 
 namespace boost {
 
 struct xtime;
 
+#ifndef BOOST_HAS_WINTHREADS
 class BOOST_THREAD_DECL mutex
     : private noncopyable
 {
@@ -110,6 +114,7 @@ private:
     threads::mac::detail::scoped_critical_region m_mutex_mutex;
 #endif
 };
+#endif
 
 class BOOST_THREAD_DECL timed_mutex
     : private noncopyable

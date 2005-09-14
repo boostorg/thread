@@ -18,6 +18,9 @@
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
 
+#if defined(BOOST_HAS_WINTHREADS)
+# include <boost/thread/detail/condition_win32.hpp>
+#else
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
 #elif defined(BOOST_HAS_MPTASKS)
@@ -187,6 +190,7 @@ private:
 };
 
 } // namespace boost
+#endif
 
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.

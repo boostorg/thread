@@ -23,6 +23,8 @@ bad things happen.
 
 #include <boost/thread/detail/config.hpp>
 
+#ifndef BOOST_HAS_WINTHREADS
+
 #include <boost/assert.hpp>
 #include <boost/thread/read_write_mutex.hpp>
 #include <boost/thread/xtime.hpp>
@@ -33,76 +35,6 @@ bad things happen.
 #   include <sstream>
 #endif
 
-#ifdef BOOST_HAS_WINTHREADS
-#   include <windows.h>
-#   include <tchar.h>
-#   include <stdio.h>
-
-#   if !((_WIN32_WINNT >= 0x0400) || (_WIN32_WINDOWS > 0x0400))
-        inline bool IsDebuggerPresent(void)
-        {
-            return false;
-        }
-#   endif
-#   if !defined(OutputDebugString)
-        inline void OutputDebugStringA(LPCSTR)
-        {}
-        inline void OutputDebugStringW(LPCWSTR)
-        {}
-        #define OutputDebugString(str)
-#   endif
-
-#   if defined(BOOST_READ_WRITE_MUTEX_USE_TRACE) && !defined(BOOST_NO_STRINGSTREAM)
-        inline void DoTrace(
-            const char* message,
-            int state,
-            int num_waiting_writers,
-            int num_waiting_readers,
-            bool state_waiting_promotion,
-            int num_waking_writers,
-            int num_waking_readers,
-            int num_max_waking_writers,
-            int num_max_waking_readers,
-            bool readers_next
-            )
-        {
-            std::ostringstream stream;
-            stream
-                << std::endl
-                << "***** "
-                << std::hex << GetCurrentThreadId() << std::dec << " "
-                << message << " "
-                << state << " "
-                << "["
-                << num_waiting_writers << " "
-                << num_waking_writers << " "
-                << num_max_waking_writers
-                << "] ["
-                << num_waiting_readers << " "
-                << num_waking_readers << " "
-                << num_max_waking_readers
-                << "]" << " "
-                << state_waiting_promotion << " "
-                << readers_next
-                << std::endl;
-            ::OutputDebugStringA(stream.str().c_str());
-        }
-
-#       define BOOST_READ_WRITE_MUTEX_TRACE(message) \
-            DoTrace(                                 \
-                message,                             \
-                m_state,                             \
-                m_num_waiting_writers,               \
-                m_num_waiting_readers,               \
-                m_state_waiting_promotion,           \
-                m_num_waking_writers,                \
-                m_num_waking_readers,                \
-                m_num_max_waking_writers,            \
-                m_num_max_waking_readers,            \
-                m_readers_next                       \
-                )
-#   endif
-#endif
 
 #if !defined(BOOST_READ_WRITE_MUTEX_TRACE)
 #   define BOOST_READ_WRITE_MUTEX_TRACE(message)
@@ -1724,6 +1656,7 @@ read_write_lock_state::read_write_lock_state_enum timed_read_write_mutex::state(
     template class boost::detail::thread::scoped_timed_write_lock<timed_read_write_mutex>;
 #endif
 } // namespace boost
+#endif
 
 // Change Log:
 //  10 Mar 02 
