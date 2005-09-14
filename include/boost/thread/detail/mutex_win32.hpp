@@ -1,6 +1,15 @@
 #ifndef BOOST_MUTEX_WIN32_HPP
 #define BOOST_MUTEX_WIN32_HPP
 
+//  mutex_win32.hpp
+//
+//  (C) Copyright 2005 Anthony Williams 
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+
+
 #include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
