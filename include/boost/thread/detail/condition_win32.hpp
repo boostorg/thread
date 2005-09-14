@@ -37,7 +37,7 @@ namespace boost
             {
                 long const count_to_unlock=release_all?waiters:1;
                 BOOST_INTERLOCKED_EXCHANGE(&notify_count,count_to_unlock);
-                BOOST_RELEASE_SEMAPHORE(notification_sem,count_to_unlock,NULL);
+                BOOST_RELEASE_SEMAPHORE(notification_sem,count_to_unlock,0);
             }
             else
             {
@@ -89,7 +89,7 @@ namespace boost
 
     public:
         condition():
-            notification_sem(BOOST_CREATE_SEMAPHORE(NULL,0,LONG_MAX,NULL)),
+            notification_sem(BOOST_CREATE_SEMAPHORE(0,0,LONG_MAX,0)),
             waiting_count(0),
             notify_count(0)
         {

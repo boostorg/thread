@@ -14,11 +14,11 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#include <boost/utility.hpp>
-#include <boost/thread/detail/lock.hpp>
 #ifdef BOOST_HAS_WINTHREADS
 # include <boost/thread/detail/mutex_win32.hpp>
 #else
+#include <boost/utility.hpp>
+#include <boost/thread/detail/lock.hpp>
 #if defined(BOOST_HAS_PTHREADS)
 #   include <pthread.h>
 #endif
