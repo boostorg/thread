@@ -26,13 +26,11 @@
 #if defined(BOOST_HAS_MPTASKS)
 #   include "scoped_critical_region.hpp"
 #endif
-#endif
 
 namespace boost {
 
 struct xtime;
 
-#ifndef BOOST_HAS_WINTHREADS
 class BOOST_THREAD_DECL mutex
     : private noncopyable
 {
@@ -104,7 +102,6 @@ private:
     threads::mac::detail::scoped_critical_region m_mutex_mutex;
 #endif
 };
-#endif
 
 class BOOST_THREAD_DECL timed_mutex
     : private noncopyable
@@ -152,6 +149,7 @@ private:
 };
 
 } // namespace boost
+#endif
 
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.

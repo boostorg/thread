@@ -11,6 +11,8 @@
 
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
+#include <boost/thread/xtime.hpp>
+#include <boost/thread/detail/xtime_utils.hpp>
 
 namespace boost
 {
@@ -49,6 +51,18 @@ namespace boost
             bool try_lock()
             {
                 return !BOOST_INTERLOCKED_COMPARE_EXCHANGE(&lock_flag,1,0);
+            }
+
+            bool timed_lock(boost::xtime target)
+            {
+                while(BOOST_INTERLOCKED_COMPARE_EXCHANGE(&lock_flag,1,0))
+                {
+                    if(BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),::boost::detail::get_milliseconds_until_time(target)))
+                    {
+                        return false;
+                    }
+                }
+                return true;
             }
 
             void unlock()

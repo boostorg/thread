@@ -13,41 +13,10 @@
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 #include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/thread/xtime.hpp>
+#include <boost/thread/detail/xtime_utils.hpp>
 
 namespace boost
 {
-    namespace detail
-    {
-        inline int get_milliseconds_until_time(boost::xtime target)
-        {
-            boost::xtime now;
-            boost::xtime_get(&now, boost::TIME_UTC);
-
-            if(boost::xtime_cmp(target,now)<=0)
-            {
-                return 0;
-            }
-            else
-            {
-                long const nanoseconds_per_second=1000000000;
-                long const milliseconds_per_second=1000;
-                long const nanoseconds_per_millisecond=nanoseconds_per_second/milliseconds_per_second;
-                
-                if(target.nsec<now.nsec)
-                {
-                    target.nsec+=nanoseconds_per_second;
-                    --target.sec;
-                }
-                target.sec-=now.sec;
-                target.nsec-=now.nsec;
-                
-                return static_cast<int>(target.sec*milliseconds_per_second)+
-                    static_cast<int>((target.nsec+(nanoseconds_per_millisecond/2))/nanoseconds_per_millisecond);
-            }
-        }
-    }
-    
-
     class condition
     {
     public:
