@@ -21,19 +21,11 @@
 #include <boost/utility.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/detail/lock.hpp>
+#include <boost/thread/detail/read_write_lock_state.hpp>
 
 namespace boost {
 
 struct xtime;
-
-namespace read_write_lock_state {
-    enum read_write_lock_state_enum
-    {
-        unlocked=0,
-        read_locked=1,
-        write_locked=2
-    };
-} //namespace read_write_lock_state
 
 namespace detail {
 namespace thread {

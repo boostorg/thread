@@ -18,6 +18,10 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#ifdef BOOST_HAS_WINTHREADS
+#include <boost/thread/detail/read_write_mutex_win32.hpp>
+#else
+
 #include <boost/utility.hpp>
 #include <boost/detail/workaround.hpp>
 
@@ -25,18 +29,9 @@
 #include <boost/thread/detail/lock.hpp>
 #include <boost/thread/detail/read_write_lock.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/thread/detail/read_write_scheduling_policy.hpp>
 
 namespace boost {
-
-namespace read_write_scheduling_policy {
-    enum read_write_scheduling_policy_enum
-    {
-        writer_priority,               //Prefer writers; can starve readers
-        reader_priority,               //Prefer readers; can starve writers
-        alternating_many_reads,        //Alternate readers and writers; before a writer, release all queued readers 
-        alternating_single_read        //Alternate readers and writers; before a writer, release only one queued reader
-    };
-} // namespace read_write_scheduling_policy
 
 namespace detail {
 
@@ -267,6 +262,8 @@ private:
 };
 
 }    // namespace boost
+
+#endif
 
 #endif
 
