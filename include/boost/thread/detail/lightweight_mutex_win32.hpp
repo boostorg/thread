@@ -32,7 +32,11 @@ namespace boost
             
             ~lightweight_mutex()
             {
-                BOOST_CLOSE_HANDLE(lock_sem);
+                void* const old_handle=BOOST_INTERLOCKED_EXCHANGE_POINTER(&lock_sem,0);
+                if(old_handle)
+                {
+                    BOOST_CLOSE_HANDLE(old_handle);
+                }
             }
 
             bool locked()
