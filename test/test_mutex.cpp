@@ -15,6 +15,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/thread.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -233,6 +234,57 @@ void test_recursive_timed_mutex()
     timed_test(&do_test_recursive_timed_mutex, 3);
 }
 
+namespace
+{
+    template<typename Mutex>
+    class loop_on_mutex
+    {
+        Mutex& m;
+        unsigned loop_count;
+        unsigned& counter;
+    public:
+        loop_on_mutex(Mutex& m_,unsigned loop_count_,unsigned& counter_):
+            m(m_),loop_count(loop_count_),counter(counter_)
+        {}
+        void operator()()
+        {
+            for(unsigned i=0;i<loop_count;++i)
+            {
+                typename Mutex::scoped_lock lock(m);
+                ++counter;
+            }
+        }
+    };
+    
+    template<typename Mutex>
+    void test_loop_threads()
+    {
+        Mutex m;
+
+        unsigned const number_of_threads=100;
+        unsigned const loop_count=100;
+        unsigned count=0;
+    
+        boost::thread_group pool;
+
+        for (unsigned i=0; i < number_of_threads; ++i)
+        {
+            pool.create_thread( loop_on_mutex<Mutex>(m,loop_count,count) );
+        }
+    
+        pool.join_all();
+    
+        BOOST_CHECK(count==number_of_threads*loop_count);
+    }
+}
+
+void test_loop_threads_on_mutex()
+{
+    test_loop_threads<boost::mutex>();
+    test_loop_threads<boost::try_mutex>();
+    test_loop_threads<boost::timed_mutex>();
+}
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -244,6 +296,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_recursive_mutex));
     test->add(BOOST_TEST_CASE(&test_recursive_try_mutex));
     test->add(BOOST_TEST_CASE(&test_recursive_timed_mutex));
+    test->add(BOOST_TEST_CASE(&test_loop_threads_on_mutex));
 
     return test;
 }
