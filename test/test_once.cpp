@@ -28,12 +28,16 @@ void init_once_value()
 
 void test_once_thread()
 {
-    boost::call_once(init_once_value, once);
+    unsigned const loop_count=100;
+    for(unsigned i=0;i<loop_count;++i)
+    {
+        boost::call_once(init_once_value, once);
+    }
 }
 
 void do_test_once()
 {
-    const int NUMTHREADS=5;
+    const int NUMTHREADS=100;
     boost::thread_group threads;
     for (int i=0; i<NUMTHREADS; ++i)
         threads.create_thread(&test_once_thread);
