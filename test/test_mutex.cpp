@@ -8,6 +8,9 @@
 // in supporting documentation.  William E. Kempf makes no representations
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
+//
+// (C) Copyright 2005 Anthony Williams
+
 
 #include <boost/thread/detail/config.hpp>
 
@@ -285,6 +288,95 @@ void test_loop_threads_on_mutex()
     test_loop_threads<boost::timed_mutex>();
 }
 
+namespace
+{
+    template<typename Mutex>
+    class block_on_mutex
+    {
+        Mutex& mutex;
+        unsigned& unblocked_count;
+        boost::mutex& unblocked_count_mutex;
+        boost::mutex& finish_mutex;
+
+        void increment_unblocked_count()
+        {
+            boost::mutex::scoped_lock lock(unblocked_count_mutex);
+            ++unblocked_count;
+        }
+    public:
+        block_on_mutex(Mutex& mutex_,
+                       unsigned& unblocked_count_,
+                       boost::mutex& unblocked_count_mutex_,
+                       boost::mutex& finish_mutex_):
+            mutex(mutex_),
+            unblocked_count(unblocked_count_),
+            unblocked_count_mutex(unblocked_count_mutex_),
+            finish_mutex(finish_mutex_)
+        {}
+        
+        void operator()()
+        {
+            typename Mutex::scoped_lock lock(mutex);
+            
+            // we get here when unblocked
+            increment_unblocked_count();
+            // wait until we're allowed to finish
+            boost::mutex::scoped_lock finish_lock(finish_mutex);
+        }
+    };
+
+    unsigned read_sync_value(unsigned& value,boost::mutex& m)
+    {
+        boost::mutex::scoped_lock lock(m);
+        return value;
+    }
+    
+    template<typename Mutex>
+    void test_threads_block_on_mutex()
+    {
+        unsigned unblocked_count=0;
+        boost::mutex unblocked_count_mutex;
+        boost::mutex finish_mutex;
+        boost::mutex::scoped_lock finish_lock(finish_mutex);
+        
+        Mutex blocking_mutex;
+        typename Mutex::scoped_lock blocking_lock(blocking_mutex);
+        
+        unsigned const number_of_threads=100;
+        boost::thread_group pool;
+
+        for (unsigned i=0; i < number_of_threads; ++i)
+        {
+            pool.create_thread( block_on_mutex<Mutex>(blocking_mutex,unblocked_count,unblocked_count_mutex,finish_mutex) );
+        }
+
+        boost::thread::sleep(delay(1));
+
+        BOOST_CHECK(!read_sync_value(unblocked_count,unblocked_count_mutex));
+
+        blocking_lock.unlock();
+
+        boost::thread::sleep(delay(1));
+
+        BOOST_CHECK(read_sync_value(unblocked_count,unblocked_count_mutex)==1);
+        
+        finish_lock.unlock();
+    
+        pool.join_all();
+    
+        BOOST_CHECK(read_sync_value(unblocked_count,unblocked_count_mutex)==number_of_threads);
+    }
+}
+
+
+void test_lock_blocks_other_threads()
+{
+    test_threads_block_on_mutex<boost::mutex>();
+    test_threads_block_on_mutex<boost::try_mutex>();
+    test_threads_block_on_mutex<boost::timed_mutex>();
+}
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -297,6 +389,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_recursive_try_mutex));
     test->add(BOOST_TEST_CASE(&test_recursive_timed_mutex));
     test->add(BOOST_TEST_CASE(&test_loop_threads_on_mutex));
+    test->add(BOOST_TEST_CASE(&test_lock_blocks_other_threads));
 
     return test;
 }
