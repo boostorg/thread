@@ -9,27 +9,16 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#define _WIN32_WINNT 0x400
-
 #include <boost/thread/once.hpp>
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 #include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/thread/detail/read_write_scheduling_policy.hpp>
 #include <boost/thread/detail/read_write_lock_state.hpp>
-#include <boost/assert.hpp>
-#include <windows.h>
 
 namespace boost
 {
 #define BOOST_RW_MUTEX_INIT {BOOST_ONCE_INIT}
-
-    namespace detail
-    {
-        void __stdcall wakeup_apc(unsigned long)
-        {}
-    }
-    
 
     class read_write_mutex_static
     {
@@ -43,39 +32,8 @@ namespace boost
             releasing_reading_state,
             releasing_reading_with_upgradable_state
         };
-
+        
     public:
-        struct waiting_thread_node
-        {
-            long released;
-            void* thread_handle;
-            waiting_thread_node* self;
-            waiting_thread_node* next;
-
-            waiting_thread_node():
-                self(this),
-                released(false),
-                next(NULL)
-            {
-                bool const res=DuplicateHandle(GetCurrentProcess(),GetCurrentThread(),
-                                               GetCurrentProcess(),&thread_handle,
-                                               THREAD_SET_CONTEXT,false,0)!=0;
-                
-                BOOST_ASSERT(res);
-            }
-
-            void release()
-            {
-                BOOST_INTERLOCKED_EXCHANGE(&released,true);
-                QueueUserAPC(&::boost::detail::wakeup_apc,thread_handle,0);
-            }
-
-            ~waiting_thread_node()
-            {
-                CloseHandle(thread_handle);
-            }
-        };
-
         ::boost::once_flag flag;
         typedef ::boost::detail::lightweight_mutex gate_type;
         gate_type active_pending;
@@ -84,7 +42,7 @@ namespace boost
         long mutex_state_flag;
         void* mutex_state_sem;
         long reader_count;
-        waiting_thread_node* waiting_queue;
+        long waiting_count;
 
     private:
         
@@ -99,10 +57,10 @@ namespace boost
             {
                 self->active_pending.initialize();
                 self->state_change_gate.initialize();
-                self->mutex_state_sem=BOOST_CREATE_SEMAPHORE(NULL,0,1,NULL);
+                self->mutex_state_sem=BOOST_CREATE_SEMAPHORE(NULL,0,LONG_MAX,NULL);
                 self->reader_count=0;
                 self->mutex_state_flag=unlocked_state;
-                self->waiting_queue=0;
+                self->waiting_count=0;
             }
         };
         
@@ -114,13 +72,14 @@ namespace boost
         void release_mutex_state_sem()
         {
             state_change_gate.lock();
-            waiting_thread_node* queue=waiting_queue;
-            waiting_queue=NULL;
-            state_change_gate.unlock();
-            while(queue)
+            long const count_to_unlock=BOOST_INTERLOCKED_READ(&waiting_count);
+            if(count_to_unlock)
             {
-                queue->self->release();
-                queue=queue->next;
+                BOOST_RELEASE_SEMAPHORE(mutex_state_sem,count_to_unlock,NULL);
+            }
+            else
+            {
+                state_change_gate.unlock();
             }
         }
 
@@ -136,19 +95,6 @@ namespace boost
             }
             return array_size;
         }
-
-        void add_waiting_node_to_queue(waiting_thread_node** queue,waiting_thread_node* node)
-        {
-            waiting_thread_node* const head=*queue;
-            if(head)
-            {
-                add_waiting_node_to_queue(&(head->next),node);
-            }
-            else
-            {
-                *queue=node;
-            }
-        }
         
 
         template<unsigned array_size>
@@ -162,8 +108,6 @@ namespace boost
             
             while(true)
             {
-                waiting_thread_node waiting_node;
-                
                 {
                     gate_scoped_lock lock(state_change_gate);
                     unsigned const old_state_index=try_enter_new_state(old_states,new_state);
@@ -171,12 +115,14 @@ namespace boost
                     {
                         return old_states[old_state_index];
                     }
-                    add_waiting_node_to_queue(&waiting_queue,&waiting_node);
+                    BOOST_INTERLOCKED_INCREMENT(&waiting_count);
                 }
             
-                while(!BOOST_INTERLOCKED_READ(&waiting_node.released))
+                BOOST_WAIT_FOR_SINGLE_OBJECT(mutex_state_sem,BOOST_INFINITE);
+                long const remaining_waiters=BOOST_INTERLOCKED_DECREMENT(&waiting_count);
+                if(!remaining_waiters)
                 {
-                    WaitForSingleObjectEx(mutex_state_sem,BOOST_INFINITE,true);
+                    state_change_gate.unlock();
                 }
             }
         }
