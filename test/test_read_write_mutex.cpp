@@ -783,17 +783,18 @@ void test_read_write_mutex()
 
 namespace
 {
-    class reader_thread
+    template<typename lock_type>
+    class locking_thread
     {
         boost::read_write_mutex& rw_mutex;
         unsigned& unblocked_count;
         boost::mutex& unblocked_count_mutex;
         boost::mutex& finish_mutex;
     public:
-        reader_thread(boost::read_write_mutex& rw_mutex_,
-                      unsigned& unblocked_count_,
-                      boost::mutex& unblocked_count_mutex_,
-                      boost::mutex& finish_mutex_):
+        locking_thread(boost::read_write_mutex& rw_mutex_,
+                       unsigned& unblocked_count_,
+                       boost::mutex& unblocked_count_mutex_,
+                       boost::mutex& finish_mutex_):
             rw_mutex(rw_mutex_),
             unblocked_count(unblocked_count_),
             unblocked_count_mutex(unblocked_count_mutex_),
@@ -802,8 +803,8 @@ namespace
         
         void operator()()
         {
-            // acquire read lock
-            boost::read_write_mutex::scoped_read_lock lock(rw_mutex);
+            // acquire lock
+            lock_type lock(rw_mutex);
             
             // increment count to show we're unblocked
             {
@@ -833,7 +834,7 @@ void test_multiple_readers()
     
     for(unsigned i=0;i<number_of_threads;++i)
     {
-        pool.create_thread(reader_thread(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
+        pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     }
 
     boost::thread::sleep(delay(1));
@@ -845,43 +846,6 @@ void test_multiple_readers()
     pool.join_all();
 }
 
-namespace
-{
-    class writer_thread
-    {
-        boost::read_write_mutex& rw_mutex;
-        unsigned& unblocked_count;
-        boost::mutex& unblocked_count_mutex;
-        boost::mutex& finish_mutex;
-    public:
-        writer_thread(boost::read_write_mutex& rw_mutex_,
-                      unsigned& unblocked_count_,
-                      boost::mutex& unblocked_count_mutex_,
-                      boost::mutex& finish_mutex_):
-            rw_mutex(rw_mutex_),
-            unblocked_count(unblocked_count_),
-            unblocked_count_mutex(unblocked_count_mutex_),
-            finish_mutex(finish_mutex_)
-        {}
-        
-        void operator()()
-        {
-            // acquire read lock
-            boost::read_write_mutex::scoped_write_lock lock(rw_mutex);
-            
-            // increment count to show we're unblocked
-            {
-                boost::mutex::scoped_lock ublock(unblocked_count_mutex);
-                ++unblocked_count;
-            }
-            
-            // wait to finish
-            boost::mutex::scoped_lock finish_lock(finish_mutex);
-        }
-    };
-}
-
-
 void test_reader_blocks_writer()
 {
     boost::thread_group pool;
@@ -892,10 +856,10 @@ void test_reader_blocks_writer()
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     
-    pool.create_thread(reader_thread(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
+    pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     boost::thread::sleep(delay(1));
     BOOST_CHECK_EQUAL(unblocked_count,1U);
-    pool.create_thread(writer_thread(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
+    pool.create_thread(locking_thread<boost::read_write_mutex::scoped_write_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     boost::thread::sleep(delay(1));
     BOOST_CHECK_EQUAL(unblocked_count,1U);
 
