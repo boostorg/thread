@@ -14,6 +14,7 @@
 #include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/xtime_utils.hpp>
+#include <boost/thread/detail/interlocked_read_win32.hpp>
 
 namespace boost
 {
@@ -32,7 +33,7 @@ namespace boost
         void release_notification_sem(bool release_all)
         {
             state_change_gate.lock();
-            long const waiters=BOOST_INTERLOCKED_READ(&waiting_count);
+            long const waiters=::boost::detail::interlocked_read(&waiting_count);
             if(waiters)
             {
                 long const count_to_unlock=release_all?waiters:1;

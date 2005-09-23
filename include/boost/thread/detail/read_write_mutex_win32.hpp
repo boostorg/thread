@@ -15,6 +15,7 @@
 #include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/thread/detail/read_write_scheduling_policy.hpp>
 #include <boost/thread/detail/read_write_lock_state.hpp>
+#include <boost/thread/detail/interlocked_read_win32.hpp>
 
 namespace boost
 {
@@ -72,7 +73,7 @@ namespace boost
         void release_mutex_state_sem()
         {
             state_change_gate.lock();
-            long const count_to_unlock=BOOST_INTERLOCKED_READ(&waiting_count);
+            long const count_to_unlock=::boost::detail::interlocked_read(&waiting_count);
             if(count_to_unlock)
             {
                 BOOST_RELEASE_SEMAPHORE(mutex_state_sem,count_to_unlock,NULL);
@@ -199,7 +200,7 @@ namespace boost
         void release_upgradable_lock()
         {
             enter_new_state(reading_with_upgradable_state,releasing_reading_with_upgradable_state);
-            long const new_state=BOOST_INTERLOCKED_READ(&reader_count)?reading_state:unlocked_state;
+            long const new_state=::boost::detail::interlocked_read(&reader_count)?reading_state:unlocked_state;
             BOOST_INTERLOCKED_EXCHANGE(&mutex_state_flag,new_state);
             release_mutex_state_sem();
         }
@@ -210,7 +211,7 @@ namespace boost
             while(!acquired)
             {
                 enter_new_state(reading_with_upgradable_state,upgrading_state);
-                acquired=!BOOST_INTERLOCKED_READ(&reader_count);
+                acquired=!::boost::detail::interlocked_read(&reader_count);
                 long const new_state=acquired?writing_state:reading_with_upgradable_state;
                 BOOST_INTERLOCKED_EXCHANGE(&mutex_state_flag,new_state);
                 if(!acquired)

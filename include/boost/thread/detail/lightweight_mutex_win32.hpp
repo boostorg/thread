@@ -13,6 +13,7 @@
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/xtime_utils.hpp>
+#include <boost/thread/detail/interlocked_read_win32.hpp>
 
 namespace boost
 {
@@ -41,7 +42,7 @@ namespace boost
 
             bool locked()
             {
-                return BOOST_INTERLOCKED_READ(&lock_flag);
+                return ::boost::detail::interlocked_read(&lock_flag);
             }
             
             void lock()
@@ -72,7 +73,7 @@ namespace boost
             void unlock()
             {
                 BOOST_INTERLOCKED_EXCHANGE(&lock_flag,0);
-                void* const current_sem=BOOST_INTERLOCKED_READ_POINTER(&lock_sem);
+                void* const current_sem=::boost::detail::interlocked_read_pointer(&lock_sem);
                 if(current_sem)
                 {
                     BOOST_RELEASE_SEMAPHORE(current_sem,1,0);
@@ -98,7 +99,7 @@ namespace boost
         private:
             void* get_semaphore()
             {
-                void* current_semaphore=BOOST_INTERLOCKED_READ_POINTER(&lock_sem);
+                void* current_semaphore=::boost::detail::interlocked_read_pointer(&lock_sem);
                 if(!current_semaphore)
                 {
                     void* const new_sem=BOOST_CREATE_SEMAPHORE(0,1,1,0);
