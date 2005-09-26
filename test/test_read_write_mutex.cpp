@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+// (C) Copyright 2005 Anthony Williams
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread.hpp>
@@ -898,6 +900,35 @@ void test_only_one_writer_permitted()
     BOOST_CHECK_EQUAL(unblocked_count,number_of_threads);
 }
 
+void test_unlocking_writer_unblocks_all_readers()
+{
+    boost::thread_group pool;
+
+    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex::scoped_write_lock write_lock(rw_mutex);
+    unsigned unblocked_count=0;
+    boost::mutex unblocked_count_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+
+    unsigned const reader_count=100;
+
+    for(unsigned i=0;i<reader_count;++i)
+    {
+        pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
+    }
+    boost::thread::sleep(delay(1));
+    BOOST_CHECK_EQUAL(unblocked_count,0U);
+
+    write_lock.unlock();
+    
+    boost::thread::sleep(delay(1));
+    BOOST_CHECK_EQUAL(unblocked_count,reader_count);
+
+    finish_lock.unlock();
+    pool.join_all();
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -908,6 +939,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_multiple_readers));
     test->add(BOOST_TEST_CASE(&test_reader_blocks_writer));
     test->add(BOOST_TEST_CASE(&test_only_one_writer_permitted));
+    test->add(BOOST_TEST_CASE(&test_unlocking_writer_unblocks_all_readers));
 
     return test;
 }

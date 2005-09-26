@@ -273,11 +273,13 @@ namespace boost
         class scoped_write_lock
         {
             read_write_mutex_static& mutex;
+            bool is_locked;
         public:
             scoped_write_lock(read_write_mutex_static& mutex_):
-                mutex(mutex_)
+                mutex(mutex_),is_locked(false)
             {
                 mutex.acquire_write_lock();
+                is_locked=true;
             }
             scoped_write_lock(scoped_upgradable_lock& upgradable):
                 mutex(upgradable.mutex)
@@ -285,9 +287,21 @@ namespace boost
                 mutex.upgrade_upgradable_lock();
                 upgradable.upgraded=true;
             }
-            ~scoped_write_lock()
+            bool locked() const
+            {
+                return is_locked;
+            }
+            void unlock()
             {
                 mutex.release_write_lock();
+                is_locked=false;
+            }
+            ~scoped_write_lock()
+            {
+                if(locked())
+                {
+                    unlock();
+                }
             }
         };
 
