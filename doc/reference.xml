@@ -13,7 +13,6 @@
   <xi:include href="mutex-ref.xml"/>
   <xi:include href="once-ref.xml"/>
   <xi:include href="recursive_mutex-ref.xml"/>
-  <xi:include href="read_write_mutex-ref.xml"/>
   <xi:include href="thread-ref.xml"/>
   <xi:include href="tss-ref.xml"/>
   <xi:include href="xtime-ref.xml"/>

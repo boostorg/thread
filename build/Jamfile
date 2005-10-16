@@ -30,7 +30,6 @@ import ./threads ;
         mutex
         once
         recursive_mutex
-        read_write_mutex
         thread
         tss_hooks
         tss_dll

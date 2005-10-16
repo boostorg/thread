@@ -69,7 +69,6 @@ import testing ;
            [ run test_once.cpp <template>boost_thread_test_dll ]
            [ run test_xtime.cpp <template>boost_thread_test_dll ]
            [ run test_barrier.cpp <template>boost_thread_test_dll ]
-           [ run test_read_write_mutex.cpp <template>boost_thread_test_dll ]
            
            [ run test_thread.cpp <template>boost_thread_test_lib           : : : : test_thread_lib ]
            [ run test_mutex.cpp <template>boost_thread_test_lib            : : : : test_mutex_lib  ]
@@ -78,6 +77,5 @@ import testing ;
            [ run test_once.cpp <template>boost_thread_test_lib             : : : : test_once_lib  ]
            [ run test_xtime.cpp <template>boost_thread_test_lib            : : : : test_xtime_lib  ]
            [ run test_barrier.cpp <template>boost_thread_test_lib          : : : : test_barrier_lib  ]
-           [ run test_read_write_mutex.cpp <template>boost_thread_test_lib : : : : test_read_write_mutex_lib  ]
      ;
 }

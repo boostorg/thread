@@ -12,14 +12,8 @@ last-revision="$Date$">
   <para>Mac OS Carbon implementation written by Mac Murrett.</para>
   <para>Dave Moore provided initial submissions and further comments on the 
   <code>barrier</code>
-  , 
-  <code>thread_pool</code>
-  , 
-  <code>read_write_mutex</code>
-  , 
-  <code>read_write_try_mutex</code>
   and 
-  <code>read_write_timed_mutex</code>
+  <code>thread_pool</code>
   classes.</para>
   <para>Important contributions were also made by Jeremy Siek (lots of input
   on the design and on the implementation), Alexander Terekhov (lots of input
