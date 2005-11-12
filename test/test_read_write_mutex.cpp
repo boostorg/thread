@@ -27,6 +27,12 @@
 #define TS_CHECK_MSG(pred, msg) \
     do { if (!(pred)) BOOST_ERROR (msg); } while (0)
 
+#define CHECK_LOCKED_VALUE_EQUAL(mutex_name,value,expected_value)    \
+    {                                                                \
+        boost::mutex::scoped_lock lock(mutex_name);                  \
+        BOOST_CHECK_EQUAL(value,expected_value);                     \
+    }
+
 namespace {
 
 int shared_val = 0;
@@ -841,7 +847,7 @@ void test_multiple_readers()
 
     boost::thread::sleep(delay(1));
 
-    BOOST_CHECK_EQUAL(unblocked_count,number_of_threads);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
 
     finish_lock.unlock();
 
@@ -860,16 +866,16 @@ void test_reader_blocks_writer()
     
     pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     boost::thread::sleep(delay(1));
-    BOOST_CHECK_EQUAL(unblocked_count,1U);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
     pool.create_thread(locking_thread<boost::read_write_mutex::scoped_write_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     boost::thread::sleep(delay(1));
-    BOOST_CHECK_EQUAL(unblocked_count,1U);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
 
     finish_lock.unlock();
 
     pool.join_all();
 
-    BOOST_CHECK_EQUAL(unblocked_count,2U);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,2U);
 }
 
 void test_only_one_writer_permitted()
@@ -891,13 +897,13 @@ void test_only_one_writer_permitted()
 
     boost::thread::sleep(delay(1));
 
-    BOOST_CHECK_EQUAL(unblocked_count,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1);
 
     finish_lock.unlock();
 
     pool.join_all();
 
-    BOOST_CHECK_EQUAL(unblocked_count,number_of_threads);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
 }
 
 void test_unlocking_writer_unblocks_all_readers()
@@ -918,15 +924,51 @@ void test_unlocking_writer_unblocks_all_readers()
         pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
     }
     boost::thread::sleep(delay(1));
-    BOOST_CHECK_EQUAL(unblocked_count,0U);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,0U);
 
     write_lock.unlock();
     
     boost::thread::sleep(delay(1));
-    BOOST_CHECK_EQUAL(unblocked_count,reader_count);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count);
 
     finish_lock.unlock();
     pool.join_all();
+}
+
+void test_unlocking_last_reader_only_unblocks_one_writer()
+{
+    boost::thread_group pool;
+
+    boost::read_write_mutex rw_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex unblocked_count_mutex;
+    boost::mutex finish_reading_mutex;
+    boost::mutex::scoped_lock finish_reading_lock(finish_reading_mutex);
+    boost::mutex finish_writing_mutex;
+    boost::mutex::scoped_lock finish_writing_lock(finish_writing_mutex);
+
+    unsigned const reader_count=100;
+    unsigned const writer_count=100;
+
+    for(unsigned i=0;i<reader_count;++i)
+    {
+        pool.create_thread(locking_thread<boost::read_write_mutex::scoped_read_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_reading_mutex));
+    }
+    for(unsigned i=0;i<writer_count;++i)
+    {
+        pool.create_thread(locking_thread<boost::read_write_mutex::scoped_write_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_writing_mutex));
+    }
+    boost::thread::sleep(delay(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count);
+
+    finish_reading_lock.unlock();
+
+    boost::thread::sleep(delay(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+1);
+
+    finish_writing_lock.unlock();
+    pool.join_all();
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+writer_count);
 }
 
 
@@ -940,6 +982,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_reader_blocks_writer));
     test->add(BOOST_TEST_CASE(&test_only_one_writer_permitted));
     test->add(BOOST_TEST_CASE(&test_unlocking_writer_unblocks_all_readers));
+    test->add(BOOST_TEST_CASE(&test_unlocking_last_reader_only_unblocks_one_writer));
 
     return test;
 }
