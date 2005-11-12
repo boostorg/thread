@@ -17,6 +17,12 @@
 // insist on threading support being available:
 #include <boost/config/requires_threads.hpp>
 
+// compatibility with the rest of Boost's auto-linking code:
+#if defined(BOOST_THREAD_DYN_DLL) || defined(BOOST_ALL_DYN_LINK)
+# undef  BOOST_THREAD_USE_LIB
+# define BOOST_THREAD_USE_DLL
+#endif
+
 #if defined(BOOST_THREAD_BUILD_DLL)   //Build dll
 #elif defined(BOOST_THREAD_BUILD_LIB) //Build lib
 #elif defined(BOOST_THREAD_USE_DLL)   //Use dll
