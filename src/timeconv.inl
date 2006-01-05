@@ -113,7 +113,7 @@ inline void to_microduration(const boost::xtime& xt, int& microseconds)
     res = boost::xtime_get(&cur, boost::TIME_UTC);
     assert(res == boost::TIME_UTC);
 
-    if (boost::xtime_get(&cur, boost::TIME_UTC) <= 0)
+    if (boost::xtime_cmp(xt, cur) <= 0)
         microseconds = 0;
     else
     {
