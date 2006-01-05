@@ -167,6 +167,10 @@
             <paramtype>ScopedLock&amp;</paramtype>
           </parameter>
 
+          <parameter name="xt">
+            <paramtype>const <classname>boost::xtime</classname>&amp;</paramtype>
+          </parameter>
+
           <parameter name="pred">
             <paramtype>Pred</paramtype>
           </parameter>
