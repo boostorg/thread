@@ -1,5 +1,18 @@
 
-exe starvephil 
-    : starvephil.cpp ../build/boost_thread  ../../test/build/unit_test_framework 
+project boost/thread/example 
+    : requirements <library>../build//boost_thread <threading>multi
     ;
+       
+
+exe monitor : monitor.cpp ;
+exe starvephil : starvephil.cpp ;
+exe tennis : tennis.cpp ;
+exe condition : condition.cpp ;
+exe mutex : mutex.cpp ;
+exe once : once.cpp ;
+exe recursive_mutex : recursive_mutex.cpp ;
+exe thread : thread.cpp ;
+exe thread_group : thread_group.cpp ;
+exe tss : tss.cpp ;
+exe xtime : xtime.cpp ;
 
