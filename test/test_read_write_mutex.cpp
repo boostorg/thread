@@ -897,7 +897,7 @@ void test_only_one_writer_permitted()
 
     boost::thread::sleep(delay(1));
 
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
 
     finish_lock.unlock();
 

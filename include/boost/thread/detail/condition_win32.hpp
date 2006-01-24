@@ -15,6 +15,7 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/xtime_utils.hpp>
 #include <boost/thread/detail/interlocked_read_win32.hpp>
+#include <limits.h>
 
 namespace boost
 {
@@ -64,17 +65,13 @@ namespace boost
             }
         };
         
-        template<typename scoped_lock_type,typename predicate_type>
-        bool do_wait(scoped_lock_type& m,predicate_type& pred,unsigned time_to_wait_in_milliseconds=BOOST_INFINITE)
+        template<typename scoped_lock_type>
+        bool do_wait(scoped_lock_type& m,unsigned time_to_wait_in_milliseconds=BOOST_INFINITE)
         {
             {
                 gate_scoped_lock lock(state_change_gate);
-                if(pred())
-                {
-                    return true;
-                }
-                m.unlock();
                 BOOST_INTERLOCKED_INCREMENT(&waiting_count);
+                m.unlock();
             }
             
             bool const notified=BOOST_WAIT_FOR_SINGLE_OBJECT(notification_sem,time_to_wait_in_milliseconds)==0;
@@ -84,7 +81,7 @@ namespace boost
                 state_change_gate.unlock();
             }
             m.lock();
-            return notified && pred();
+            return notified;
         }
         
 
@@ -106,40 +103,27 @@ namespace boost
         template<typename scoped_lock_type>
         void wait(scoped_lock_type& m)
         {
-            once_predicate p;
-            do_wait(m,p);
+            do_wait(m);
         }
 
         template<typename scoped_lock_type,typename predicate_type>
         void wait(scoped_lock_type& m,predicate_type pred)
         {
-            if(pred())
-            {
-                return;
-            }
-            while(!do_wait(m,pred));
+            while(!pred()) do_wait(m);
         }
 
         template<typename scoped_lock_type>
         bool timed_wait(scoped_lock_type& m,const xtime& xt)
         {
-            once_predicate p;
-            return do_wait(m,p,detail::get_milliseconds_until_time(xt));
+            return do_wait(m,detail::get_milliseconds_until_time(xt));
         }
 
         template<typename scoped_lock_type,typename predicate_type>
         bool timed_wait(scoped_lock_type& m,const xtime& xt,predicate_type pred)
         {
-            if(pred())
+            while (!pred()) 
             {
-                return true;
-            }
-            while(!do_wait(m,pred,detail::get_milliseconds_until_time(xt)))
-            {
-                if(!detail::get_milliseconds_until_time(xt))
-                {
-                    return false;
-                }
+                if (!timed_wait(m, xt)) return false;
             }
             return true;
         }
