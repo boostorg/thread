@@ -41,5 +41,6 @@ rule thread-run ( sources )
           [ thread-run test_once.cpp ]
           [ thread-run test_xtime.cpp ]
           [ thread-run test_barrier.cpp ]		   
+          [ thread-run test_read_write_mutex.cpp ]
     ;
 }
