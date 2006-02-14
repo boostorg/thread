@@ -18,9 +18,24 @@ project boost/thread
     : default-build <threading>multi
     ;
 
-CPP_SOURCES = condition mutex recursive_mutex thread xtime once
-                  exceptions barrier tss tss_hooks tss_dll tss_pe read_write_mutex ;
+CPP_SOURCES =  
+        barrier
+        condition
+        exceptions
+        mutex
+        once
+        recursive_mutex
+        read_write_mutex
+        thread
+        tss_hooks
+        tss_dll
+        tss_pe
+        tss
+        xtime
+    ;
 
 lib boost_thread
    : $(CPP_SOURCES).cpp
+   : <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+     <link>static:<define>BOOST_THREAD_BUILD_LIB=1
    ;
