@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#ifndef BOOST_HAS_WINTHREADS
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/recursive_mutex.hpp>
@@ -20,13 +22,7 @@
 #include <cassert>
 #include "timeconv.inl"
 
-#if defined(BOOST_HAS_WINTHREADS)
-#   include <new>
-#   include <boost/thread/once.hpp>
-#   include <windows.h>
-#   include <time.h>
-#   include "mutex.inl"
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
 #   include <MacErrors.h>
@@ -35,249 +31,7 @@
 
 namespace boost {
 
-#if defined(BOOST_HAS_WINTHREADS)
-
-recursive_mutex::recursive_mutex()
-    : m_mutex(0)
-    , m_critical_section(false)
-    , m_count(0)
-{
-    m_critical_section = true;
-    if (m_critical_section)
-        m_mutex = new_critical_section();
-    else
-        m_mutex = new_mutex(0);
-}
-
-recursive_mutex::~recursive_mutex()
-{
-    if (m_critical_section)
-        delete_critical_section(m_mutex);
-    else
-        delete_mutex(m_mutex);
-}
-
-void recursive_mutex::do_lock()
-{
-    if (m_critical_section)
-        wait_critical_section_infinite(m_mutex);
-    else
-        wait_mutex(m_mutex, INFINITE);
-
-    if (++m_count > 1)
-    {
-        if (m_critical_section)
-            release_critical_section(m_mutex);
-        else
-            release_mutex(m_mutex);
-    }
-}
-
-void recursive_mutex::do_unlock()
-{
-    if (--m_count == 0)
-    {
-        if (m_critical_section)
-            release_critical_section(m_mutex);
-        else
-            release_mutex(m_mutex);
-    }
-}
-
-void recursive_mutex::do_lock(cv_state& state)
-{
-    if (m_critical_section)
-        wait_critical_section_infinite(m_mutex);
-    else
-        wait_mutex(m_mutex, INFINITE);
-
-    m_count = state;
-}
-
-void recursive_mutex::do_unlock(cv_state& state)
-{
-    state = m_count;
-    m_count = 0;
-
-    if (m_critical_section)
-        release_critical_section(m_mutex);
-    else
-        release_mutex(m_mutex);
-}
-
-recursive_try_mutex::recursive_try_mutex()
-    : m_mutex(0)
-    , m_critical_section(false)
-    , m_count(0)
-{
-    m_critical_section = has_TryEnterCriticalSection();
-    if (m_critical_section)
-        m_mutex = new_critical_section();
-    else
-        m_mutex = new_mutex(0);
-}
-
-recursive_try_mutex::~recursive_try_mutex()
-{
-    if (m_critical_section)
-        delete_critical_section(m_mutex);
-    else
-        delete_mutex(m_mutex);
-}
-
-void recursive_try_mutex::do_lock()
-{
-    if (m_critical_section)
-        wait_critical_section_infinite(m_mutex);
-    else
-        wait_mutex(m_mutex, INFINITE);
-
-    if (++m_count > 1)
-    {
-        if (m_critical_section)
-            release_critical_section(m_mutex);
-        else
-            release_mutex(m_mutex);
-    }
-}
-
-bool recursive_try_mutex::do_trylock()
-{
-    bool res = false;
-    if (m_critical_section)
-        res = wait_critical_section_try(m_mutex);
-    else
-        res = wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
-
-    if (res)
-    {
-        if (++m_count > 1)
-        {
-            if (m_critical_section)
-                release_critical_section(m_mutex);
-            else
-                release_mutex(m_mutex);
-        }
-        return true;
-    }
-    return false;
-}
-
-void recursive_try_mutex::do_unlock()
-{
-    if (--m_count == 0)
-    {
-        if (m_critical_section)
-            release_critical_section(m_mutex);
-        else
-            release_mutex(m_mutex);
-    }
-}
-
-void recursive_try_mutex::do_lock(cv_state& state)
-{
-    if (m_critical_section)
-        wait_critical_section_infinite(m_mutex);
-    else
-        wait_mutex(m_mutex, INFINITE);
-
-    m_count = state;
-}
-
-void recursive_try_mutex::do_unlock(cv_state& state)
-{
-    state = m_count;
-    m_count = 0;
-
-    if (m_critical_section)
-        release_critical_section(m_mutex);
-    else
-        release_mutex(m_mutex);
-}
-
-recursive_timed_mutex::recursive_timed_mutex()
-    : m_mutex(0)
-    , m_count(0)
-{
-    m_mutex = new_mutex(0);
-}
-
-recursive_timed_mutex::~recursive_timed_mutex()
-{
-    delete_mutex(m_mutex);
-}
-
-void recursive_timed_mutex::do_lock()
-{
-    wait_mutex(m_mutex, INFINITE);
-
-    if (++m_count > 1)
-        release_mutex(m_mutex);
-}
-
-bool recursive_timed_mutex::do_trylock()
-{
-    bool res = wait_mutex(m_mutex, 0) == WAIT_OBJECT_0;
-
-    if (res)
-    {
-        if (++m_count > 1)
-            release_mutex(m_mutex);
-        return true;
-    }
-    return false;
-}
-
-bool recursive_timed_mutex::do_timedlock(const xtime& xt)
-{
-    for (;;)
-    {
-        int milliseconds;
-        to_duration(xt, milliseconds);
-
-        unsigned int res = wait_mutex(m_mutex, milliseconds);
-
-        if (res == WAIT_TIMEOUT)
-        {
-            xtime cur;
-            xtime_get(&cur, TIME_UTC);
-            if (xtime_cmp(xt, cur) > 0)
-                continue;
-        }
-
-        if (res == WAIT_OBJECT_0)
-        {
-            if (++m_count > 1)
-                release_mutex(m_mutex);
-            return true;
-        }
-
-        return false;
-    }
-}
-
-void recursive_timed_mutex::do_unlock()
-{
-    if (--m_count == 0)
-        release_mutex(m_mutex);
-}
-
-void recursive_timed_mutex::do_lock(cv_state& state)
-{
-    wait_mutex(m_mutex, INFINITE);
-
-    m_count = state;
-}
-
-void recursive_timed_mutex::do_unlock(cv_state& state)
-{
-    state = m_count;
-    m_count = 0;
-
-    release_mutex(m_mutex);
-}
-
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 
 recursive_mutex::recursive_mutex()
     : m_count(0)
@@ -1038,6 +792,8 @@ void recursive_timed_mutex::do_unlock(cv_state& state)
 #endif
 
 } // namespace boost
+
+#endif
 
 // Change Log:
 //   8 Feb 01  WEKEMPF Initial version.

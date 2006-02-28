@@ -1,49 +1,50 @@
-#ifndef BOOST_MUTEX_WIN32_HPP
-#define BOOST_MUTEX_WIN32_HPP
+#ifndef BOOST_RECURSIVE_MUTEX_WIN32_HPP
+#define BOOST_RECURSIVE_MUTEX_WIN32_HPP
 
-//  mutex_win32.hpp
+//  recursive_mutex_win32.hpp
 //
-//  (C) Copyright 2005 Anthony Williams 
+//  (C) Copyright 2006 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include <boost/thread/detail/basic_mutex_win32.hpp>
+#include <boost/thread/detail/basic_recursive_mutex_win32.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
 #include <boost/thread/xtime.hpp>
 
 namespace boost
 {
-    class mutex:
+    class recursive_mutex:
         noncopyable,
-        protected ::boost::detail::basic_mutex
+        protected ::boost::detail::basic_recursive_mutex
     {
     public:
-        mutex()
+        recursive_mutex()
         {
-            basic_mutex::initialize();
+            basic_recursive_mutex::initialize();
         }
-        ~mutex()
+        ~recursive_mutex()
         {
-            basic_mutex::destroy();
+            basic_recursive_mutex::destroy();
         }
-        using ::boost::detail::basic_mutex::get_active_count;
+
+        using ::boost::detail::basic_recursive_mutex::get_active_count;
 
         class scoped_lock
         {
         protected:
-            mutex& m;
+            recursive_mutex& m;
             bool is_locked;
         public:
-            scoped_lock(mutex& m_):
+            scoped_lock(recursive_mutex& m_):
                 m(m_),is_locked(false)
             {
                 lock();
             }
-            scoped_lock(mutex& m_,bool do_lock):
+            scoped_lock(recursive_mutex& m_,bool do_lock):
                 m(m_),is_locked(false)
             {
                 if(do_lock)
@@ -80,33 +81,33 @@ namespace boost
         };
     };
 
-    class try_mutex:
+    class recursive_try_mutex:
         noncopyable,
-        protected ::boost::detail::basic_mutex
+        protected ::boost::detail::basic_recursive_mutex
     {
     public:
-        try_mutex()
+        recursive_try_mutex()
         {
-            basic_mutex::initialize();
+            basic_recursive_mutex::initialize();
         }
-        ~try_mutex()
+        ~recursive_try_mutex()
         {
-            basic_mutex::destroy();
+            basic_recursive_mutex::destroy();
         }
-        using ::boost::detail::basic_mutex::get_active_count;
+        using ::boost::detail::basic_recursive_mutex::get_active_count;
 
         class scoped_try_lock
         {
         protected:
-            try_mutex& m;
+            recursive_try_mutex& m;
             bool is_locked;
         public:
-            scoped_try_lock(try_mutex& m_):
+            scoped_try_lock(recursive_try_mutex& m_):
                 m(m_),is_locked(false)
             {
                 lock();
             }
-            scoped_try_lock(try_mutex& m_,bool do_lock):
+            scoped_try_lock(recursive_try_mutex& m_,bool do_lock):
                 m(m_),is_locked(false)
             {
                 if(do_lock)
@@ -151,33 +152,33 @@ namespace boost
         typedef scoped_try_lock scoped_lock;
     };
 
-//     class timed_mutex:
+//     class timed_recursive_mutex:
 //         noncopyable,
-//         protected ::boost::detail::basic_mutex
+//         protected ::boost::detail::basic_recursive_mutex
 //     {
 //     public:
-//         timed_mutex()
+//         timed_recursive_mutex()
 //         {
-//             basic_mutex::initialize();
+//             basic_recursive_mutex::initialize();
 //         }
 
 //         class scoped_timed_lock
 //         {
 //         protected:
-//             timed_mutex& m;
+//             timed_recursive_mutex& m;
 //             bool is_locked;
 //         public:
-//             scoped_timed_lock(timed_mutex& m_):
+//             scoped_timed_lock(timed_recursive_mutex& m_):
 //                 m(m_),is_locked(false)
 //             {
 //                 lock();
 //             }
-//             scoped_timed_lock(timed_mutex& m_,::boost::xtime const& target):
+//             scoped_timed_lock(timed_recursive_mutex& m_,::boost::xtime const& target):
 //                 m(m_),is_locked(false)
 //             {
 //                 timed_lock(target);
 //             }
-//             scoped_timed_lock(timed_mutex& m_,bool do_lock):
+//             scoped_timed_lock(timed_recursive_mutex& m_,bool do_lock):
 //                 m(m_),is_locked(false)
 //             {
 //                 if(do_lock)

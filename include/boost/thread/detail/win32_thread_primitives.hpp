@@ -17,6 +17,7 @@
 # define BOOST_RELEASE_MUTEX ::ReleaseMutex
 # define BOOST_CREATE_MUTEX ::CreateMutexA
 # define BOOST_GET_PROCESS_ID ::GetCurrentProcessId
+# define BOOST_GET_CURRENT_THREAD_ID ::GetCurrentThreadId
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::WaitForSingleObject
 # define BOOST_CREATE_SEMAPHORE ::CreateSemaphoreA
 # define BOOST_RELEASE_SEMAPHORE ::ReleaseSemaphore
@@ -31,6 +32,7 @@ namespace boost
         extern "C" struct _SECURITY_ATTRIBUTES;
         extern "C" __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
         extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
+        extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
         extern "C" __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
         extern "C" __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
         extern "C" __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
@@ -40,6 +42,7 @@ namespace boost
 # define BOOST_RELEASE_MUTEX ::boost::detail::ReleaseMutex
 # define BOOST_CREATE_MUTEX ::boost::detail::CreateMutexA
 # define BOOST_GET_PROCESS_ID ::boost::detail::GetCurrentProcessId
+# define BOOST_GET_CURRENT_THREAD_ID ::boost::detail::GetCurrentThreadId
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::boost::detail::WaitForSingleObject
 # define BOOST_CREATE_SEMAPHORE ::boost::detail::CreateSemaphoreA
 # define BOOST_RELEASE_SEMAPHORE ::boost::detail::ReleaseSemaphore

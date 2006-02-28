@@ -14,6 +14,9 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#ifdef BOOST_HAS_WINTHREADS
+# include <boost/thread/detail/recursive_mutex_win32.hpp>
+#else
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
 
@@ -41,7 +44,7 @@ public:
     ~recursive_mutex();
 
 private:
-#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
+#if defined(BOOST_HAS_MPTASKS)
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -55,11 +58,7 @@ private:
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
 
-#if defined(BOOST_HAS_WINTHREADS)
-    void* m_mutex;
-    bool m_critical_section;
-    unsigned long m_count;
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
     unsigned m_count;
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -88,7 +87,7 @@ public:
     ~recursive_try_mutex();
 
 private:
-#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
+#if defined(BOOST_HAS_MPTASKS)
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -103,11 +102,7 @@ private:
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
 
-#if defined(BOOST_HAS_WINTHREADS)
-    void* m_mutex;
-    bool m_critical_section;
-    unsigned long m_count;
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
     unsigned m_count;
 #   if !defined(BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE)
@@ -138,7 +133,7 @@ public:
     ~recursive_timed_mutex();
 
 private:
-#if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
+#if defined(BOOST_HAS_MPTASKS)
     typedef std::size_t cv_state;
 #elif defined(BOOST_HAS_PTHREADS)
     struct cv_state
@@ -154,10 +149,7 @@ private:
     void do_lock(cv_state& state);
     void do_unlock(cv_state& state);
 
-#if defined(BOOST_HAS_WINTHREADS)
-    void* m_mutex;
-    unsigned long m_count;
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
     pthread_mutex_t m_mutex;
     pthread_cond_t m_unlocked;
     pthread_t m_thread_id;
@@ -171,6 +163,8 @@ private:
 };
 
 } // namespace boost
+
+#endif
 
 #endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
 

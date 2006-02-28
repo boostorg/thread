@@ -11,7 +11,6 @@
 //
 // (C) Copyright 2005 Anthony Williams
 
-
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/mutex.hpp>
@@ -191,9 +190,9 @@ void test_try_mutex()
 
 void do_test_timed_mutex()
 {
-    test_lock<boost::timed_mutex>()();
-    test_trylock<boost::timed_mutex>()();
-    test_timedlock<boost::timed_mutex>()();
+//     test_lock<boost::timed_mutex>()();
+//     test_trylock<boost::timed_mutex>()();
+//     test_timedlock<boost::timed_mutex>()();
 }
 
 void test_timed_mutex()
@@ -226,10 +225,10 @@ void test_recursive_try_mutex()
 
 void do_test_recursive_timed_mutex()
 {
-    test_lock<boost::recursive_timed_mutex>()();
-    test_trylock<boost::recursive_timed_mutex>()();
-    test_timedlock<boost::recursive_timed_mutex>()();
-    test_recursive_lock<boost::recursive_timed_mutex>()();
+//     test_lock<boost::recursive_timed_mutex>()();
+//     test_trylock<boost::recursive_timed_mutex>()();
+//     test_timedlock<boost::recursive_timed_mutex>()();
+//     test_recursive_lock<boost::recursive_timed_mutex>()();
 }
 
 void test_recursive_timed_mutex()
@@ -274,7 +273,7 @@ namespace
         {
             pool.create_thread( loop_on_mutex<Mutex>(m,loop_count,count) );
         }
-    
+
         pool.join_all();
     
         BOOST_CHECK(count==number_of_threads*loop_count);
@@ -285,7 +284,9 @@ void test_loop_threads_on_mutex()
 {
     test_loop_threads<boost::mutex>();
     test_loop_threads<boost::try_mutex>();
-    test_loop_threads<boost::timed_mutex>();
+    test_loop_threads<boost::recursive_mutex>();
+    test_loop_threads<boost::recursive_try_mutex>();
+//     test_loop_threads<boost::timed_mutex>();
 }
 
 namespace
@@ -373,7 +374,9 @@ void test_lock_blocks_other_threads()
 {
     test_threads_block_on_mutex<boost::mutex>();
     test_threads_block_on_mutex<boost::try_mutex>();
-    test_threads_block_on_mutex<boost::timed_mutex>();
+    test_threads_block_on_mutex<boost::recursive_mutex>();
+    test_threads_block_on_mutex<boost::recursive_try_mutex>();
+//     test_threads_block_on_mutex<boost::timed_mutex>();
 }
 
 

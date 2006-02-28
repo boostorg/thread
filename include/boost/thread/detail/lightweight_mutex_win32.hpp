@@ -73,7 +73,7 @@ namespace boost
             void unlock()
             {
                 BOOST_INTERLOCKED_EXCHANGE(&lock_flag,0);
-                void* const current_sem=::boost::detail::interlocked_read_pointer(&lock_sem);
+                void* const current_sem=::boost::detail::interlocked_read(&lock_sem);
                 if(current_sem)
                 {
                     BOOST_RELEASE_SEMAPHORE(current_sem,1,0);
@@ -99,7 +99,7 @@ namespace boost
         private:
             void* get_semaphore()
             {
-                void* current_semaphore=::boost::detail::interlocked_read_pointer(&lock_sem);
+                void* current_semaphore=::boost::detail::interlocked_read(&lock_sem);
                 if(!current_semaphore)
                 {
                     void* const new_sem=BOOST_CREATE_SEMAPHORE(0,1,1,0);

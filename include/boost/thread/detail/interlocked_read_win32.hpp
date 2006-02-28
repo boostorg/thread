@@ -20,7 +20,7 @@ namespace boost
             return BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,0,0);
         }
         
-        inline void* interlocked_read_pointer(void** x)
+        inline void* interlocked_read(void** x)
         {
             return BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(x,0,0);
         }
