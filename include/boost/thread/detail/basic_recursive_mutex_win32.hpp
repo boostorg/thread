@@ -12,7 +12,11 @@
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 #include <boost/thread/detail/interlocked_read_win32.hpp>
+#ifdef BOOST_USE_CHECKED_MUTEX
+#include <boost/thread/detail/basic_checked_mutex_win32.hpp>
+#else
 #include <boost/thread/detail/basic_mutex_win32.hpp>
+#endif
 
 namespace boost
 {
@@ -22,7 +26,11 @@ namespace boost
         {
             long recursion_count;
             long locking_thread_id;
+#ifdef BOOST_USE_CHECKED_MUTEX
+            ::boost::detail::basic_checked_mutex mutex;
+#else
             ::boost::detail::basic_mutex mutex;
+#endif
 
             void initialize()
             {

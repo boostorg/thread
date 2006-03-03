@@ -9,28 +9,40 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-
+#ifdef BOOST_USE_CHECKED_MUTEX
+#include <boost/thread/detail/basic_checked_mutex_win32.hpp>
+#else
 #include <boost/thread/detail/basic_mutex_win32.hpp>
+#endif
 #include <boost/utility.hpp>
 #include <boost/thread/detail/lock.hpp>
 #include <boost/thread/xtime.hpp>
 
 namespace boost
 {
+    namespace detail
+    {
+#ifdef BOOST_USE_CHECKED_MUTEX
+        typedef ::boost::detail::basic_checked_mutex underlying_mutex;
+#else
+        typedef ::boost::detail::basic_mutex underlying_mutex;
+#endif
+    }
+
     class mutex:
         noncopyable,
-        protected ::boost::detail::basic_mutex
+        protected ::boost::detail::underlying_mutex
     {
     public:
         mutex()
         {
-            basic_mutex::initialize();
+            ::boost::detail::underlying_mutex::initialize();
         }
         ~mutex()
         {
-            basic_mutex::destroy();
+            ::boost::detail::underlying_mutex::destroy();
         }
-        using ::boost::detail::basic_mutex::get_active_count;
+        using ::boost::detail::underlying_mutex::get_active_count;
 
         class scoped_lock
         {
@@ -82,18 +94,18 @@ namespace boost
 
     class try_mutex:
         noncopyable,
-        protected ::boost::detail::basic_mutex
+        protected ::boost::detail::underlying_mutex
     {
     public:
         try_mutex()
         {
-            basic_mutex::initialize();
+            ::boost::detail::underlying_mutex::initialize();
         }
         ~try_mutex()
         {
-            basic_mutex::destroy();
+            ::boost::detail::underlying_mutex::destroy();
         }
-        using ::boost::detail::basic_mutex::get_active_count;
+        using ::boost::detail::underlying_mutex::get_active_count;
 
         class scoped_try_lock
         {
@@ -153,12 +165,12 @@ namespace boost
 
 //     class timed_mutex:
 //         noncopyable,
-//         protected ::boost::detail::basic_mutex
+//         protected ::boost::detail::underlying_mutex
 //     {
 //     public:
 //         timed_mutex()
 //         {
-//             basic_mutex::initialize();
+//             underlying_mutex::initialize();
 //         }
 
 //         class scoped_timed_lock
