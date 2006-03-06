@@ -12,54 +12,12 @@
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
 #include <boost/thread/detail/interlocked_read_win32.hpp>
+#include <boost/assert.hpp>
 
 namespace boost
 {
     namespace detail
     {
-        class mutex_error
-        {};
-            
-        class mutex_deadlock:
-            public mutex_error
-        {};
-
-        class mutex_recursion_error:
-            public mutex_error
-        {};
-
-        class mutex_ownership_error:
-            public mutex_error
-        {};
-
-        class mutex_unlock_error:
-            public mutex_ownership_error
-        {};
-            
-        class mutex_lifetime_error:
-            public mutex_error
-        {};
-
-        class mutex_sync_object_error:
-            public mutex_error
-        {};
-
-        class mutex_wait_error:
-            public mutex_sync_object_error
-        {};
-
-        class mutex_close_error:
-            public mutex_sync_object_error
-        {};
-
-        class mutex_release_error:
-            public mutex_sync_object_error
-        {};
-
-        class mutex_create_error:
-            public mutex_sync_object_error
-        {};
-
         struct basic_checked_mutex
         {
             long locking_thread;
@@ -78,17 +36,12 @@ namespace boost
             void destroy()
             {
                 long const old_locking_thread=BOOST_INTERLOCKED_EXCHANGE(&locking_thread,destroyed_mutex_marker);
-                if(old_locking_thread)
-                {
-                    throw mutex_lifetime_error();
-                }
+                BOOST_ASSERT(!old_locking_thread);
                 void* const old_semaphore=BOOST_INTERLOCKED_EXCHANGE_POINTER(&semaphore,0);
                 if(old_semaphore)
                 {
-                    if(!BOOST_CLOSE_HANDLE(old_semaphore))
-                    {
-                        throw mutex_close_error();
-                    }
+                    bool const close_handle_succeeded=BOOST_CLOSE_HANDLE(old_semaphore)!=0;
+                    BOOST_ASSERT(close_handle_succeeded);
                 }
             }
           
@@ -109,10 +62,8 @@ namespace boost
                 check_mutex_lock();
                 if(BOOST_INTERLOCKED_INCREMENT(&active_count)!=1)
                 {
-                    if(BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE)!=0)
-                    {
-                        throw mutex_wait_error();
-                    }
+                    bool const wait_succeeded=BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE)==0;
+                    BOOST_ASSERT(wait_succeeded);
                 }
                 set_locking_thread();
             }
@@ -126,14 +77,8 @@ namespace boost
             {
                 long const current_thread=BOOST_GET_CURRENT_THREAD_ID();
                 long const old_locking_thread=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&locking_thread,0,current_thread);
-                if(old_locking_thread==destroyed_mutex_marker)
-                {
-                    throw mutex_lifetime_error();
-                }
-                else if(old_locking_thread!=current_thread)
-                {
-                    throw mutex_unlock_error();
-                }
+                BOOST_ASSERT(old_locking_thread!=destroyed_mutex_marker);
+                BOOST_ASSERT(old_locking_thread==current_thread);
 
                 long old_count=1;
                 long current_count=0;
@@ -144,10 +89,8 @@ namespace boost
                 
                 if(old_count!=1)
                 {
-                    if(!BOOST_RELEASE_SEMAPHORE(get_semaphore(),1,0))
-                    {
-                        throw mutex_release_error();
-                    }
+                    bool const release_succeeded=BOOST_RELEASE_SEMAPHORE(get_semaphore(),1,0)!=0;
+                    BOOST_ASSERT(release_succeeded);
                 }
             }
 
@@ -161,22 +104,14 @@ namespace boost
             {
                 long const current_thread=BOOST_GET_CURRENT_THREAD_ID();
                 long const current_locking_thread=::boost::detail::interlocked_read(&locking_thread);
-                if(current_locking_thread==current_thread)
-                {
-                    throw mutex_recursion_error();
-                }
-                else if(current_locking_thread==destroyed_mutex_marker)
-                {
-                    throw mutex_lifetime_error();
-                }
+                BOOST_ASSERT(current_locking_thread!=current_thread);
+                BOOST_ASSERT(current_locking_thread!=destroyed_mutex_marker);
             }
             
             void set_locking_thread()
             {
-                if(BOOST_INTERLOCKED_COMPARE_EXCHANGE(&locking_thread,BOOST_GET_CURRENT_THREAD_ID(),0)!=0)
-                {
-                    throw mutex_ownership_error();
-                }
+                long const old_owner=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&locking_thread,BOOST_GET_CURRENT_THREAD_ID(),0);
+                BOOST_ASSERT(old_owner==0);
             }
             
             void* get_semaphore()
@@ -186,17 +121,12 @@ namespace boost
                 if(!current_semaphore)
                 {
                     void* const new_semaphore=BOOST_CREATE_SEMAPHORE(0,0,1,0);
-                    if(!new_semaphore)
-                    {
-                        throw mutex_create_error();
-                    }
+                    BOOST_ASSERT(new_semaphore);
                     void* const old_semaphore=BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(&semaphore,new_semaphore,0);
                     if(old_semaphore!=0)
                     {
-                        if(!BOOST_CLOSE_HANDLE(new_semaphore))
-                        {
-                            throw mutex_close_error();
-                        }
+                        bool const close_succeeded=BOOST_CLOSE_HANDLE(new_semaphore)!=0;
+                        BOOST_ASSERT(close_succeeded);
                         return old_semaphore;
                     }
                     else
