@@ -15,7 +15,7 @@ namespace boost
 {
     namespace detail
     {
-        inline int get_milliseconds_until_time(boost::xtime target)
+        inline long get_milliseconds_until_time(::boost::xtime target)
         {
             boost::xtime now;
             boost::xtime_get(&now, boost::TIME_UTC);
@@ -38,8 +38,8 @@ namespace boost
                 target.sec-=now.sec;
                 target.nsec-=now.nsec;
                 
-                return static_cast<int>(target.sec*milliseconds_per_second)+
-                    static_cast<int>((target.nsec+(nanoseconds_per_millisecond/2))/nanoseconds_per_millisecond);
+                return target.sec*milliseconds_per_second+
+                    (target.nsec+(nanoseconds_per_millisecond/2))/nanoseconds_per_millisecond;
             }
         }
     }

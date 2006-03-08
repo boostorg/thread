@@ -80,14 +80,7 @@ namespace boost
                 BOOST_ASSERT(old_locking_thread!=destroyed_mutex_marker);
                 BOOST_ASSERT(old_locking_thread==current_thread);
 
-                long old_count=1;
-                long current_count=0;
-                while((current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,old_count-1,old_count))!=old_count)
-                {
-                    old_count=current_count;
-                }
-                
-                if(old_count!=1)
+                if(BOOST_INTERLOCKED_DECREMENT(&active_count)!=0)
                 {
                     bool const release_succeeded=BOOST_RELEASE_SEMAPHORE(get_semaphore(),1,0)!=0;
                     BOOST_ASSERT(release_succeeded);
