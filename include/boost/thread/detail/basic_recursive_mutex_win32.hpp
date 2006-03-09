@@ -17,20 +17,19 @@
 #else
 #include <boost/thread/detail/basic_mutex_win32.hpp>
 #endif
+#include <boost/thread/detail/basic_timed_mutex_win32.hpp>
+#include <boost/thread/xtime.hpp>
 
 namespace boost
 {
     namespace detail
     {
-        struct basic_recursive_mutex
+        template<typename underlying_mutex_type>
+        struct basic_recursive_mutex_impl
         {
             long recursion_count;
             long locking_thread_id;
-#ifdef BOOST_USE_CHECKED_MUTEX
-            ::boost::detail::basic_checked_mutex mutex;
-#else
-            ::boost::detail::basic_mutex mutex;
-#endif
+            underlying_mutex_type mutex;
 
             void initialize()
             {
@@ -59,6 +58,11 @@ namespace boost
                     BOOST_INTERLOCKED_EXCHANGE(&locking_thread_id,current_thread_id);
                     recursion_count=1;
                 }
+            }
+            bool timed_lock(::boost::xtime const& target)
+            {
+                long const current_thread_id=BOOST_GET_CURRENT_THREAD_ID();
+                return try_recursive_lock(current_thread_id) || try_timed_lock(current_thread_id,target);
             }
             long get_active_count()
             {
@@ -101,9 +105,26 @@ namespace boost
                 return false;
             }
             
+            bool try_timed_lock(long current_thread_id,::boost::xtime const& target)
+            {
+                if(mutex.timed_lock(target))
+                {
+                    BOOST_INTERLOCKED_EXCHANGE(&locking_thread_id,current_thread_id);
+                    recursion_count=1;
+                    return true;
+                }
+                return false;
+            }
             
         };
-        
+
+#ifdef BOOST_USE_CHECKED_MUTEX
+        typedef basic_recursive_mutex_impl<basic_checked_mutex> basic_recursive_mutex;
+#else
+        typedef basic_recursive_mutex_impl<basic_mutex> basic_recursive_mutex;
+#endif
+
+        typedef basic_recursive_mutex_impl<basic_timed_mutex> basic_recursive_timed_mutex;
     }
 }
 

@@ -225,10 +225,10 @@ void test_recursive_try_mutex()
 
 void do_test_recursive_timed_mutex()
 {
-//     test_lock<boost::recursive_timed_mutex>()();
-//     test_trylock<boost::recursive_timed_mutex>()();
-//     test_timedlock<boost::recursive_timed_mutex>()();
-//     test_recursive_lock<boost::recursive_timed_mutex>()();
+    test_lock<boost::recursive_timed_mutex>()();
+    test_trylock<boost::recursive_timed_mutex>()();
+    test_timedlock<boost::recursive_timed_mutex>()();
+    test_recursive_lock<boost::recursive_timed_mutex>()();
 }
 
 void test_recursive_timed_mutex()
@@ -287,6 +287,7 @@ void test_loop_threads_on_mutex()
     test_loop_threads<boost::recursive_mutex>();
     test_loop_threads<boost::recursive_try_mutex>();
     test_loop_threads<boost::timed_mutex>();
+    test_loop_threads<boost::recursive_timed_mutex>();
 }
 
 namespace
@@ -377,6 +378,7 @@ void test_lock_blocks_other_threads()
     test_threads_block_on_mutex<boost::recursive_mutex>();
     test_threads_block_on_mutex<boost::recursive_try_mutex>();
     test_threads_block_on_mutex<boost::timed_mutex>();
+    test_threads_block_on_mutex<boost::recursive_timed_mutex>();
 }
 
 
