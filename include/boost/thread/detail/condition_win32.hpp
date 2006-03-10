@@ -115,6 +115,18 @@ namespace boost
             }
         }
 
+        bool do_notify_one(waiting_list_entry& list)
+        {
+            gate_scoped_lock lock(state_change_gate);
+            if(list.previous==&list)
+            {
+                return false;
+            }
+            notify_entry(list.previous);
+            return true;
+        }
+        
+
     public:
         condition()
         {
@@ -153,12 +165,7 @@ namespace boost
 
         void notify_one()
         {
-            gate_scoped_lock lock(state_change_gate);
-            waiting_list_entry* const entry=waiting_list.previous;
-            if(entry!=&waiting_list)
-            {
-                notify_entry(entry);
-            }
+            do_notify_one(waiting_list);
         }
         
         void notify_all()
@@ -174,15 +181,7 @@ namespace boost
                 waiting_list.next=&waiting_list;
             }
 
-            while(true)
-            {
-                gate_scoped_lock lock(state_change_gate);
-                if(new_list.previous==&new_list)
-                {
-                    break;
-                }
-                notify_entry(new_list.previous);
-            }
+            while(do_notify_one(new_list));
         }
     };
 
