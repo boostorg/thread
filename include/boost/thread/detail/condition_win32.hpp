@@ -27,6 +27,14 @@ namespace boost
             waiting_list_entry* next;
             waiting_list_entry* previous;
             long notified;
+
+            void unlink()
+            {
+                next->previous=previous;
+                previous->next=next;
+                next=this;
+                previous=this;
+            }
         };
     public:
         typedef ::boost::mutex gate_type;
@@ -62,8 +70,7 @@ namespace boost
                     gate_scoped_lock lock(self->state_change_gate);
                         
                     thread_handle=entry.waiting_thread_handle;
-                    entry.next->previous=entry.previous->next;
-                    entry.previous->next=entry.next->previous;
+                    entry.unlink();
                     entry.waiting_thread_handle=0;
                 }
                 m.lock();
@@ -100,11 +107,10 @@ namespace boost
 
         void notify_entry(waiting_list_entry * entry)
         {
+            BOOST_INTERLOCKED_EXCHANGE(&entry->notified,true);
+            entry->unlink();
             if(entry->waiting_thread_handle)
             {
-                BOOST_INTERLOCKED_EXCHANGE(&entry->notified,true);
-                entry->next=entry;
-                entry->previous=entry;
                 BOOST_QUEUE_USER_APC(notify_function,entry->waiting_thread_handle,0);
             }
         }
@@ -151,8 +157,6 @@ namespace boost
             waiting_list_entry* const entry=waiting_list.previous;
             if(entry!=&waiting_list)
             {
-                waiting_list.previous=entry->previous;
-                entry->previous->next=&waiting_list;
                 notify_entry(entry);
             }
         }
@@ -160,21 +164,24 @@ namespace boost
         void notify_all()
         {
             waiting_list_entry new_list={0};
-            gate_scoped_lock lock(state_change_gate);
-            new_list.previous=waiting_list.previous;
-            new_list.next=waiting_list.next;
-            new_list.next->previous=&new_list;
-            new_list.previous->next=&new_list;
-            waiting_list.previous=&waiting_list;
-            waiting_list.next=&waiting_list;
-
-            waiting_list_entry* entry=new_list.previous;
-
-            while(entry!=&new_list)
             {
-                waiting_list_entry* const next=entry->previous;
-                notify_entry(entry);
-                entry=next;
+                gate_scoped_lock lock(state_change_gate);
+                new_list.previous=waiting_list.previous;
+                new_list.next=waiting_list.next;
+                new_list.next->previous=&new_list;
+                new_list.previous->next=&new_list;
+                waiting_list.previous=&waiting_list;
+                waiting_list.next=&waiting_list;
+            }
+
+            while(true)
+            {
+                gate_scoped_lock lock(state_change_gate);
+                if(new_list.previous==&new_list)
+                {
+                    break;
+                }
+                notify_entry(new_list.previous);
             }
         }
     };
