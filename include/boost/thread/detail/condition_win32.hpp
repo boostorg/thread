@@ -10,96 +10,112 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/detail/interlocked.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/detail/win32_thread_primitives.hpp>
-#include <boost/thread/detail/lightweight_mutex_win32.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/xtime_utils.hpp>
 #include <boost/thread/detail/interlocked_read_win32.hpp>
-#include <limits.h>
 
 namespace boost
 {
     class condition
     {
+    private:
+        struct waiting_list_entry
+        {
+            void* waiting_thread_handle;
+            waiting_list_entry* next;
+            waiting_list_entry* previous;
+            long notified;
+        };
     public:
-        typedef ::boost::detail::lightweight_mutex gate_type;
+        typedef ::boost::mutex gate_type;
         gate_type state_change_gate;
         typedef gate_type::scoped_lock gate_scoped_lock;
-        void* notification_sem;
-        long waiting_count;
-        long notify_count;
+        waiting_list_entry waiting_list;
 
     private:
-        
-        void release_notification_sem(bool release_all)
-        {
-            state_change_gate.lock();
-            long const waiters=::boost::detail::interlocked_read(&waiting_count);
-            if(waiters)
-            {
-                long const count_to_unlock=release_all?waiters:1;
-                BOOST_INTERLOCKED_EXCHANGE(&notify_count,count_to_unlock);
-                BOOST_RELEASE_SEMAPHORE(notification_sem,count_to_unlock,0);
-            }
-            else
-            {
-                state_change_gate.unlock();
-            }
-        }
 
-        struct once_predicate
-        {
-            bool called_before;
-            once_predicate():
-                called_before(false)
-            {}
-            
-            bool operator()()
-            {
-                if(!called_before)
-                {
-                    called_before=true;
-                    return false;
-                }
-                return true;
-            }
-        };
-        
         template<typename scoped_lock_type>
-        bool do_wait(scoped_lock_type& m,unsigned time_to_wait_in_milliseconds=BOOST_INFINITE)
+        struct add_entry_to_list
         {
+            condition* self;
+            waiting_list_entry& entry;
+            scoped_lock_type& m;
+
+            add_entry_to_list(condition* self_,waiting_list_entry& entry_,scoped_lock_type& m_):
+                self(self_),entry(entry_),m(m_)
             {
-                gate_scoped_lock lock(state_change_gate);
-                BOOST_INTERLOCKED_INCREMENT(&waiting_count);
+                gate_scoped_lock lock(self->state_change_gate);
+                    
+                entry.next=self->waiting_list.next;
+                self->waiting_list.next=&entry;
+                entry.next->previous=&entry;
+                    
                 m.unlock();
             }
-            
-            bool const notified=BOOST_WAIT_FOR_SINGLE_OBJECT(notification_sem,time_to_wait_in_milliseconds)==0;
-            BOOST_INTERLOCKED_DECREMENT(&waiting_count);
-            if(notified && !BOOST_INTERLOCKED_DECREMENT(&notify_count))
+            ~add_entry_to_list()
             {
-                state_change_gate.unlock();
+                void* thread_handle;
+                        
+                {
+                    gate_scoped_lock lock(self->state_change_gate);
+                        
+                    thread_handle=entry.waiting_thread_handle;
+                    entry.next->previous=entry.previous->next;
+                    entry.previous->next=entry.next->previous;
+                    entry.waiting_thread_handle=0;
+                }
+                m.lock();
+                BOOST_CLOSE_HANDLE(thread_handle);
             }
-            m.lock();
-            return notified;
-        }
-        
-
-    public:
-        condition():
-            notification_sem(BOOST_CREATE_SEMAPHORE(0,0,LONG_MAX,0)),
-            waiting_count(0),
-            notify_count(0)
-        {
-            state_change_gate.initialize();
         };
         
 
-        ~condition()
+        template<typename scoped_lock_type>
+        bool do_wait(scoped_lock_type& m,boost::xtime const& target=::boost::detail::get_xtime_sentinel())
         {
-            BOOST_CLOSE_HANDLE(notification_sem);
+            waiting_list_entry entry={0};
+            void* const currentProcess=BOOST_GET_CURRENT_PROCESS();
+            
+            long const same_access_flag=2;
+            BOOST_DUPLICATE_HANDLE(currentProcess,BOOST_GET_CURRENT_THREAD(),currentProcess,&entry.waiting_thread_handle,0,false,same_access_flag);
+            
+            entry.previous=&waiting_list;
+            
+            {
+                add_entry_to_list<scoped_lock_type> list_guard(this,entry,m);
+
+                unsigned const woken_due_to_apc=0xc0;
+                while(!::boost::detail::interlocked_read(&entry.notified) && 
+                      BOOST_SLEEP_EX(::boost::detail::get_milliseconds_until_time(target),true)==woken_due_to_apc);
+            }
+            
+            return ::boost::detail::interlocked_read(&entry.notified);
         }
 
+        static void __stdcall notify_function(::boost::detail::ulong_ptr)
+        {
+        }
+
+        void notify_entry(waiting_list_entry * entry)
+        {
+            if(entry->waiting_thread_handle)
+            {
+                BOOST_INTERLOCKED_EXCHANGE(&entry->notified,true);
+                entry->next=entry;
+                entry->previous=entry;
+                BOOST_QUEUE_USER_APC(notify_function,entry->waiting_thread_handle,0);
+            }
+        }
+
+    public:
+        condition()
+        {
+            waiting_list.next=&waiting_list;
+            waiting_list.previous=&waiting_list;
+        };
+        
         template<typename scoped_lock_type>
         void wait(scoped_lock_type& m)
         {
@@ -115,7 +131,7 @@ namespace boost
         template<typename scoped_lock_type>
         bool timed_wait(scoped_lock_type& m,const xtime& xt)
         {
-            return do_wait(m,detail::get_milliseconds_until_time(xt));
+            return do_wait(m,xt);
         }
 
         template<typename scoped_lock_type,typename predicate_type>
@@ -131,12 +147,35 @@ namespace boost
 
         void notify_one()
         {
-            release_notification_sem(false);
+            gate_scoped_lock lock(state_change_gate);
+            waiting_list_entry* const entry=waiting_list.previous;
+            if(entry!=&waiting_list)
+            {
+                waiting_list.previous=entry->previous;
+                entry->previous->next=&waiting_list;
+                notify_entry(entry);
+            }
         }
         
         void notify_all()
         {
-            release_notification_sem(true);
+            waiting_list_entry new_list={0};
+            gate_scoped_lock lock(state_change_gate);
+            new_list.previous=waiting_list.previous;
+            new_list.next=waiting_list.next;
+            new_list.next->previous=&new_list;
+            new_list.previous->next=&new_list;
+            waiting_list.previous=&waiting_list;
+            waiting_list.next=&waiting_list;
+
+            waiting_list_entry* entry=new_list.previous;
+
+            while(entry!=&new_list)
+            {
+                waiting_list_entry* const next=entry->previous;
+                notify_entry(entry);
+                entry=next;
+            }
         }
     };
 

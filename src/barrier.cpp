@@ -9,6 +9,8 @@
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
 
+#if 0
+
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/barrier.hpp>
 #include <string> // see http://article.gmane.org/gmane.comp.lib.boost.devel/106981
@@ -45,3 +47,4 @@ bool barrier::wait()
 }
 
 } // namespace boost
+#endif
