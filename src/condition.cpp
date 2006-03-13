@@ -11,6 +11,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#ifndef BOOST_HAS_WINTHREADS
 #include <boost/thread/condition.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/thread.hpp>
@@ -19,12 +20,7 @@
 #include <cassert>
 #include "timeconv.inl"
 
-#if defined(BOOST_HAS_WINTHREADS)
-#   ifndef NOMINMAX
-#      define NOMINMAX
-#   endif
-#   include <windows.h>
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 #   include <errno.h>
 #elif defined(BOOST_HAS_MPTASKS)
 #   include <MacErrors.h>
@@ -36,8 +32,7 @@ namespace boost {
 
 namespace detail {
 
-#if defined(BOOST_HAS_WINTHREADS)
-#elif defined(BOOST_HAS_PTHREADS)
+#if defined(BOOST_HAS_PTHREADS)
 condition_impl::condition_impl()
 {
     int res = 0;

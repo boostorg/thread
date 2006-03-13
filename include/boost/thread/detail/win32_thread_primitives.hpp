@@ -21,12 +21,30 @@
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::WaitForSingleObject
 # define BOOST_CREATE_SEMAPHORE ::CreateSemaphoreA
 # define BOOST_RELEASE_SEMAPHORE ::ReleaseSemaphore
+# define BOOST_GET_CURRENT_THREAD ::GetCurrentThread
+# define BOOST_GET_CURRENT_PROCESS ::GetCurrentProcess
+# define BOOST_DUPLICATE_HANDLE ::DuplicateHandle
+# define BOOST_SLEEP_EX ::SleepEx
+# define BOOST_QUEUE_USER_APC ::QueueUserAPC
 # define BOOST_INFINITE INFINITE
+namespace boost
+{
+    namespace detail
+    {
+        typedef ULONG_PTR ulong_ptr;
+    }
+}
 #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ )
 namespace boost
 {
     namespace detail
     {
+# ifdef _WIN64
+        typedef unsigned __int64 ulong_ptr;
+# else
+        typedef unsigned long ulong_ptr;
+# endif
+
         extern "C" __declspec(dllimport) int __stdcall CloseHandle(void*);
         extern "C" __declspec(dllimport) int __stdcall ReleaseMutex(void*);
         extern "C" struct _SECURITY_ATTRIBUTES;
@@ -36,6 +54,12 @@ namespace boost
         extern "C" __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
         extern "C" __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
         extern "C" __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
+        extern "C" __declspec(dllimport) void* __stdcall GetCurrentThread();
+        extern "C" __declspec(dllimport) void* __stdcall GetCurrentProcess();
+        extern "C" __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
+        extern "C" __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
+        extern "C" __declspec(dllimport) unsigned long __stdcall QueueUserAPC(void __stdcall(ulong_ptr),void*,ulong_ptr);
+
     }
 }
 # define BOOST_CLOSE_HANDLE ::boost::detail::CloseHandle
@@ -46,6 +70,11 @@ namespace boost
 # define BOOST_WAIT_FOR_SINGLE_OBJECT ::boost::detail::WaitForSingleObject
 # define BOOST_CREATE_SEMAPHORE ::boost::detail::CreateSemaphoreA
 # define BOOST_RELEASE_SEMAPHORE ::boost::detail::ReleaseSemaphore
+# define BOOST_GET_CURRENT_THREAD ::boost::detail::GetCurrentThread
+# define BOOST_GET_CURRENT_PROCESS ::boost::detail::GetCurrentProcess
+# define BOOST_DUPLICATE_HANDLE ::boost::detail::DuplicateHandle
+# define BOOST_SLEEP_EX ::boost::detail::SleepEx
+# define BOOST_QUEUE_USER_APC ::boost::detail::QueueUserAPC
 # define BOOST_INFINITE 0xffffffff
 #else
 # error "Win32 functions not available"
