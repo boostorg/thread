@@ -369,6 +369,8 @@ bool condition_impl::do_timed_wait(const xtime& xt)
 
 } // namespace boost
 
+#endif
+
 // Change Log:
 //    8 Feb 01  WEKEMPF Initial version.
 //   22 May 01  WEKEMPF Modified to use xtime for time outs.
