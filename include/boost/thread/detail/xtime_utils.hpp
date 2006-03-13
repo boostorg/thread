@@ -15,8 +15,23 @@ namespace boost
 {
     namespace detail
     {
+        inline ::boost::xtime get_xtime_sentinel()
+        {
+            boost::xtime sentinel={
+                0xffffffff,0xffffffff
+            };
+            return sentinel;
+            
+        }
+        
+
         inline long get_milliseconds_until_time(::boost::xtime target)
         {
+            if(!boost::xtime_cmp(target,get_xtime_sentinel()))
+            {
+                return 0xffffffff;
+            }
+            
             boost::xtime now;
             boost::xtime_get(&now, boost::TIME_UTC);
 
