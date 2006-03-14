@@ -36,13 +36,11 @@ namespace boost
                 previous=this;
             }
         };
-    public:
+
         typedef ::boost::mutex gate_type;
         gate_type state_change_gate;
         typedef gate_type::scoped_lock gate_scoped_lock;
         waiting_list_entry waiting_list;
-
-    private:
 
         template<typename scoped_lock_type>
         struct add_entry_to_list
