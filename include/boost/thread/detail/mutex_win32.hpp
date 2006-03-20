@@ -43,7 +43,6 @@ namespace boost
         {
             ::boost::detail::underlying_mutex::destroy();
         }
-        using ::boost::detail::underlying_mutex::get_active_count;
 
         class scoped_lock
         {
@@ -106,7 +105,6 @@ namespace boost
         {
             ::boost::detail::underlying_mutex::destroy();
         }
-        using ::boost::detail::underlying_mutex::get_active_count;
 
         class scoped_try_lock
         {
