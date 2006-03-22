@@ -38,4 +38,7 @@ lib boost_thread
    : $(CPP_SOURCES).cpp
    : <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+   : # default build
+   : <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+     <link>static:<define>BOOST_THREAD_BUILD_LIB=1
    ;
