@@ -44,15 +44,17 @@ namespace boost
             }
         };
 
-        struct mutex_releaser
+        struct win32_mutex_scoped_lock
         {
-            void* const mutex_to_release;
-            mutex_releaser(void* mutex_to_release_):
-                mutex_to_release(mutex_to_release_)
-            {}
-            ~mutex_releaser()
+            void* const mutex_handle;
+            win32_mutex_scoped_lock(void* mutex_handle_):
+                mutex_handle(mutex_handle_)
             {
-                BOOST_RELEASE_MUTEX(mutex_to_release);
+                BOOST_WAIT_FOR_SINGLE_OBJECT(mutex_handle,BOOST_INFINITE);
+            }
+            ~win32_mutex_scoped_lock()
+            {
+                BOOST_RELEASE_MUTEX(mutex_handle);
             }
         };
 
@@ -78,8 +80,8 @@ namespace boost
         //
         long const function_complete_flag_value=0xc15730e2;
 
-        if(!BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag,function_complete_flag_value,
-                                               function_complete_flag_value))
+        if(BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag,function_complete_flag_value,
+                                              function_complete_flag_value)!=function_complete_flag_value)
         {
             //
             // create a name for our mutex, it doesn't really matter what this name is
@@ -95,11 +97,10 @@ namespace boost
             void* const mutex_handle(BOOST_CREATE_MUTEX(NULL, 0, mutex_name));
             BOOST_ASSERT(mutex_handle);
             detail::handle_closer const closer(mutex_handle);
-            BOOST_WAIT_FOR_SINGLE_OBJECT(mutex_handle,BOOST_INFINITE);
-            detail::mutex_releaser const releaser(mutex_handle);
+            detail::win32_mutex_scoped_lock const lock(mutex_handle);
       
-            if(!BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag,function_complete_flag_value,
-                                                   function_complete_flag_value))
+            if(BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag,function_complete_flag_value,
+                                                  function_complete_flag_value)!=function_complete_flag_value)
             {
                 f();
                 BOOST_INTERLOCKED_EXCHANGE(&flag,function_complete_flag_value);
