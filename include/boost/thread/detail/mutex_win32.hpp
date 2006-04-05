@@ -3,7 +3,7 @@
 
 //  mutex_win32.hpp
 //
-//  (C) Copyright 2005 Anthony Williams 
+//  (C) Copyright 2005-6 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -37,11 +37,11 @@ namespace boost
     public:
         mutex()
         {
-            ::boost::detail::underlying_mutex::initialize();
+            initialize();
         }
         ~mutex()
         {
-            ::boost::detail::underlying_mutex::destroy();
+            destroy();
         }
 
         class scoped_lock
@@ -99,11 +99,11 @@ namespace boost
     public:
         try_mutex()
         {
-            ::boost::detail::underlying_mutex::initialize();
+            initialize();
         }
         ~try_mutex()
         {
-            ::boost::detail::underlying_mutex::destroy();
+            destroy();
         }
 
         class scoped_try_lock
@@ -169,7 +169,12 @@ namespace boost
     public:
         timed_mutex()
         {
-            basic_timed_mutex::initialize();
+            initialize();
+        }
+
+        ~timed_mutex()
+        {
+            destroy();
         }
 
         class scoped_timed_lock
