@@ -3,7 +3,7 @@
 
 //  interlocked_read_win32.hpp
 //
-//  (C) Copyright 2005 Anthony Williams 
+//  (C) Copyright 2005-6 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -17,9 +17,8 @@ namespace boost
     {
         inline long interlocked_read(long* x)
         {
-            return BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,0,0);
+            return BOOST_INTERLOCKED_EXCHANGE_ADD(x,0);
         }
-        
         inline void* interlocked_read(void** x)
         {
             return BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(x,0,0);
