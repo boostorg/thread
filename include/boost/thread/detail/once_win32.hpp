@@ -3,7 +3,7 @@
 
 //  once.hpp
 //
-//  (C) Copyright 2005 Anthony Williams 
+//  (C) Copyright 2005-6 Anthony Williams 
 //  (C) Copyright 2005 John Maddock
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
