@@ -18,7 +18,8 @@ namespace boost
             writer_priority,
             reader_priority,
             alternating_many_reads,
-            alternating_single_read
+            alternating_single_read,
+            unspecified=writer_priority
         };
     }
 }

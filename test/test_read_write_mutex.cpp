@@ -834,7 +834,7 @@ void test_multiple_readers()
     
     boost::thread_group pool;
 
-    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex rw_mutex(::boost::read_write_scheduling_policy::unspecified);
     unsigned unblocked_count=0;
     boost::mutex unblocked_count_mutex;
     boost::mutex finish_mutex;
@@ -858,7 +858,7 @@ void test_reader_blocks_writer()
 {
     boost::thread_group pool;
 
-    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex rw_mutex(::boost::read_write_scheduling_policy::unspecified);
     unsigned unblocked_count=0;
     boost::mutex unblocked_count_mutex;
     boost::mutex finish_mutex;
@@ -884,7 +884,7 @@ void test_only_one_writer_permitted()
     
     boost::thread_group pool;
 
-    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex rw_mutex(::boost::read_write_scheduling_policy::unspecified);
     unsigned unblocked_count=0;
     boost::mutex unblocked_count_mutex;
     boost::mutex finish_mutex;
@@ -910,7 +910,7 @@ void test_unlocking_writer_unblocks_all_readers()
 {
     boost::thread_group pool;
 
-    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex rw_mutex(::boost::read_write_scheduling_policy::unspecified);
     boost::read_write_mutex::scoped_write_lock write_lock(rw_mutex);
     unsigned unblocked_count=0;
     boost::mutex unblocked_count_mutex;
@@ -939,7 +939,7 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
 {
     boost::thread_group pool;
 
-    boost::read_write_mutex rw_mutex;
+    boost::read_write_mutex rw_mutex(::boost::read_write_scheduling_policy::unspecified);
     unsigned unblocked_count=0;
     boost::mutex unblocked_count_mutex;
     boost::mutex finish_reading_mutex;
