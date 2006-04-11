@@ -1,127 +1,73 @@
-# Copyright (C) 2001-2003
-# William E. Kempf
+# Copyright 2006 Roland Schwarz.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 #
-# Permission to use, copy, modify, distribute and sell this software
-# and its documentation for any purpose is hereby granted without fee,
-# provided that the above copyright notice appear in all copies and
-# that both that copyright notice and this permission notice appear
-# in supporting documentation.  William E. Kempf makes no representations
-# about the suitability of this software for any purpose.
-# It is provided "as is" without express or implied warranty.
-#
-# Boost.Threads build Jamfile
-#
-# Additional configuration variables used:
-#   See threads.jam.
+# This work is a reimplementation along the design and ideas
+# of William E. Kempf.
 
-# Declare the location of this subproject relative to the root.
 subproject libs/thread/build ;
 
-# Include threads.jam for Boost.Threads global build information.
-# This greatly simplifies the Jam code needed to configure the build
-# for the various Win32 build types.
 import ./threads ;
 
-{
-    CPP_SOURCES =
-        barrier
-        condition
-        exceptions
-        mutex
-        once
-        recursive_mutex
-        read_write_mutex
-        thread
-        tss_hooks
-        tss_dll
-        tss_pe
-        tss
-        xtime
-        ;
+#################
+# pthread library
+#################
 
-    template boost_thread_lib_base
-        : ## sources ##
-          <template>thread_base
-          ../src/$(CPP_SOURCES).cpp
-        : ## requirements ##
-          <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
-          <define>BOOST_THREAD_BUILD_LIB=1
-          # the common names rule ensures that the library will
-          # be named according to the rules used by the install
-          # and auto-link features:
-          common-variant-tag
-        : ## default build ##
-    ;
+CPP_SRC_PTHREAD =
+	thread
+	mutex
+	condition
+	exceptions
+	;
 
-    template boost_thread_dll_base
-        : ## sources ##
-          <template>thread_base
-          ../src/$(CPP_SOURCES).cpp
-        : ## requirements ##
-          <sysinclude>$(BOOST_ROOT) #:should be unnecessary (because already included in thread_base)
-          <define>BOOST_THREAD_BUILD_DLL=1
-          <runtime-link>dynamic
-          # the common names rule ensures that the library will
-          # be named according to the rules used by the install
-          # and auto-link features:
-          common-variant-tag
-        : ## default build ##
-    ;
+lib boost_thread_pthread
+	:  ../src/pthread/$(CPP_SRC_PTHREAD).cpp
+	: <sysinclude>$(BOOST_ROOT) 
+	  <threading>multi 
+	  common-variant-tag 
+	  <define>BOOST_THREAD_BUILD_LIB=1
+	  <define>BOOST_THREAD_POSIX
+	  <borland><*><cxxflags>-w-8004
+	  <borland><*><cxxflags>-w-8057
+	  thread::require-pthread
+	: 
+	;
 
-    lib $(boost_thread_lib_name)
-        : ## sources ##
-          <template>boost_thread_lib_base
-        : ## requirements ##
-          <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name)
-        : ## default build ##
-    ;
+stage bin-stage
+    : <lib>boost_thread_pthread
+	;
 
-    dll $(boost_thread_lib_name)
-        : ## sources ##
-          <template>boost_thread_dll_base
-        : ## requirements ##
-          <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name)
-        : ## default build ##
-    ;
+install thread_pthread lib
+    : <lib>boost_thread_pthread
+   	;
 
-    stage bin-stage
-        : <dll>$(boost_thread_lib_name)
-          <lib>$(boost_thread_lib_name)
-    ;
+###############
+# win32 library
+###############
 
-    install thread lib
-        : <dll>$(boost_thread_lib_name)
-          <lib>$(boost_thread_lib_name)
-    ;
+CPP_SRC_WIN32 =
+	thread
+	exceptions
+	;
 
-    if $(boost_thread_lib_settings_ptw32)
-    {
-        lib $(boost_thread_lib_name_ptw32)
-            : ## sources ##
-              <template>boost_thread_lib_base
-            : ## requirements ##
-              <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name_ptw32)
-              $(boost_thread_lib_settings_ptw32)
-            : ## default build ##
-        ;
+lib boost_thread_win32
+	:  ../src/win32/$(CPP_SRC_WIN32).cpp
+	: <sysinclude>$(BOOST_ROOT) 
+	  <threading>multi 
+	  common-variant-tag 
+	  <define>BOOST_THREAD_BUILD_LIB=1
+	  <borland><*><cxxflags>-w-8004
+	  <borland><*><cxxflags>-w-8057
+	  thread::require-win32
+	: 
+	;
 
-        dll $(boost_thread_lib_name_ptw32)
-            : ## sources ##
-              <template>boost_thread_dll_base
-            : ## requirements ##
-              <define>BOOST_THREAD_LIB_NAME=$(boost_thread_lib_name_ptw32)
-              $(boost_thread_lib_settings_ptw32)
-            : ## default build ##
-        ;
+stage bin-stage
+	: <lib>boost_thread_win32
+	;
 
-        stage bin-stage
-            : <dll>$(boost_thread_lib_name_ptw32)
-              <lib>$(boost_thread_lib_name_ptw32)
-        ;
+install thread_win32 lib
+	: <lib>boost_thread_win32
+   	;
 
-        install thread lib
-            : <dll>$(boost_thread_lib_name_ptw32)
-              <lib>$(boost_thread_lib_name_ptw32)
-        ;
-    }
-}
