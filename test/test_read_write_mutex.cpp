@@ -11,8 +11,6 @@
 
 // (C) Copyright 2005 Anthony Williams
 
-#include <boost/thread/detail/config.hpp>
-
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/read_write_mutex.hpp>

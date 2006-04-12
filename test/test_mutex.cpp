@@ -11,8 +11,6 @@
 //
 // (C) Copyright 2005 Anthony Williams
 
-#include <boost/thread/detail/config.hpp>
-
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/xtime.hpp>

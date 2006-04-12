@@ -34,12 +34,28 @@ lib boost_thread_pthread
 	: 
 	;
 
+dll boost_thread_pthread
+	:  ../src/pthread/$(CPP_SRC_PTHREAD).cpp
+	: <sysinclude>$(BOOST_ROOT) 
+	  <threading>multi 
+          <runtime-link>dynamic
+	  common-variant-tag 
+	  <define>BOOST_THREAD_BUILD_DLL=1
+	  <define>BOOST_THREAD_POSIX
+	  <borland><*><cxxflags>-w-8004
+	  <borland><*><cxxflags>-w-8057
+	  thread::require-pthread
+	: 
+	;
+
 stage bin-stage
-    : <lib>boost_thread_pthread
+    : <dll>boost_thread_pthread
+      <lib>boost_thread_pthread
 	;
 
 install thread_pthread lib
-    : <lib>boost_thread_pthread
+    : <dll>boost_thread_pthread
+      <lib>boost_thread_pthread
    	;
 
 ###############
@@ -49,6 +65,7 @@ install thread_pthread lib
 CPP_SRC_WIN32 =
 	thread
 	exceptions
+        xtime
 	;
 
 lib boost_thread_win32
@@ -63,11 +80,26 @@ lib boost_thread_win32
 	: 
 	;
 
+dll boost_thread_win32
+	:  ../src/win32/$(CPP_SRC_WIN32).cpp
+	: <sysinclude>$(BOOST_ROOT) 
+	  <threading>multi 
+          <runtime-link>dynamic
+	  common-variant-tag 
+	  <define>BOOST_THREAD_BUILD_DLL=1
+	  <borland><*><cxxflags>-w-8004
+	  <borland><*><cxxflags>-w-8057
+	  thread::require-win32
+	: 
+	;
+
 stage bin-stage
-	: <lib>boost_thread_win32
+	: <dll>boost_thread_win32
+          <lib>boost_thread_win32
 	;
 
 install thread_win32 lib
-	: <lib>boost_thread_win32
+	: <dll>boost_thread_win32
+          <lib>boost_thread_win32
    	;
 
