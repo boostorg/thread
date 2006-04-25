@@ -56,6 +56,7 @@ extern "C" void cleanup_slots(void* p)
         (*tss_data->cleanup_handlers[i])((*slots)[i]);
         (*slots)[i] = 0;
     }
+    delete slots;
 }
 
 void init_tss_data()
