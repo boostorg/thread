@@ -136,7 +136,8 @@ struct test_timedlock
         // time out.
         BOOST_CHECK(!condition.timed_wait(lock, xt));
         BOOST_CHECK(lock ? true : false);
-        BOOST_CHECK(in_range(xt));
+        // We should be less than 1 millisecond before the target time.
+        BOOST_CHECK(boost::xtime_cmp(xt, delay(0,1))<=0);
 
         // Test the lock, unlock and timedlock methods.
         lock.unlock();
