@@ -13,9 +13,9 @@
 #include <boost/thread/win32/config.hpp>
 
 #include <boost/detail/interlocked.hpp>
-#include <boost/thread/win32/mutex.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/xtime.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
-#include <boost/thread/win32/xtime.hpp>
 #include <boost/thread/win32/xtime_utils.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 
