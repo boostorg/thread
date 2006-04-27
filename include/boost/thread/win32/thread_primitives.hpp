@@ -45,21 +45,24 @@ namespace boost
         typedef unsigned long ulong_ptr;
 # endif
 
-        extern "C" __declspec(dllimport) int __stdcall CloseHandle(void*);
-        extern "C" __declspec(dllimport) int __stdcall ReleaseMutex(void*);
-        extern "C" struct _SECURITY_ATTRIBUTES;
-        extern "C" __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
-        extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
-        extern "C" __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
-        extern "C" __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
-        extern "C" __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
-        extern "C" __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
-        extern "C" __declspec(dllimport) void* __stdcall GetCurrentThread();
-        extern "C" __declspec(dllimport) void* __stdcall GetCurrentProcess();
-        extern "C" __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
-        extern "C" __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
-        extern "C" __declspec(dllimport) unsigned long __stdcall QueueUserAPC(void __stdcall(ulong_ptr),void*,ulong_ptr);
-
+        extern "C"
+        {
+            __declspec(dllimport) int __stdcall CloseHandle(void*);
+            __declspec(dllimport) int __stdcall ReleaseMutex(void*);
+            struct _SECURITY_ATTRIBUTES;
+            __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
+            __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
+            __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+            __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
+            __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
+            __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
+            __declspec(dllimport) void* __stdcall GetCurrentThread();
+            __declspec(dllimport) void* __stdcall GetCurrentProcess();
+            __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
+            __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
+            typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
+            __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+        }
     }
 }
 # define BOOST_CLOSE_HANDLE ::boost::detail::CloseHandle

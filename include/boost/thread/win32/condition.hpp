@@ -126,15 +126,35 @@ namespace boost
             notify_entry(list.previous);
             return true;
         }
-        
 
     public:
         condition()
         {
             waiting_list.next=&waiting_list;
             waiting_list.previous=&waiting_list;
-        };
+        }
+
+        void notify_one()
+        {
+            do_notify_one(waiting_list);
+        }
         
+        void notify_all()
+        {
+            waiting_list_entry new_list={0};
+            {
+                gate_scoped_lock lock(state_change_gate);
+                new_list.previous=waiting_list.previous;
+                new_list.next=waiting_list.next;
+                new_list.next->previous=&new_list;
+                new_list.previous->next=&new_list;
+                waiting_list.previous=&waiting_list;
+                waiting_list.next=&waiting_list;
+            }
+
+            while(do_notify_one(new_list));
+        }
+
         template<typename scoped_lock_type>
         void wait(scoped_lock_type& m)
         {
@@ -161,28 +181,6 @@ namespace boost
                 if (!timed_wait(m, xt)) return false;
             }
             return true;
-        }
-
-
-        void notify_one()
-        {
-            do_notify_one(waiting_list);
-        }
-        
-        void notify_all()
-        {
-            waiting_list_entry new_list={0};
-            {
-                gate_scoped_lock lock(state_change_gate);
-                new_list.previous=waiting_list.previous;
-                new_list.next=waiting_list.next;
-                new_list.next->previous=&new_list;
-                new_list.previous->next=&new_list;
-                waiting_list.previous=&waiting_list;
-                waiting_list.next=&waiting_list;
-            }
-
-            while(do_notify_one(new_list));
         }
     };
 
