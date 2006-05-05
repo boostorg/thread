@@ -379,7 +379,10 @@ read_write_mutex_impl<Mutex>::read_write_mutex_impl(read_write_scheduling_policy
     , m_readers_next(true) 
 {}
 
-#if !BOOST_WORKAROUND(__BORLANDC__, <= 0x564)
+// Borland requires base class destructors to be explicitly exported from DLL's
+// even if they're not explicitly called. As this only contains postconditions,
+// it's reasonably safe to comment it out - Nicola Musatti 5/5/2006
+#if !BOOST_WORKAROUND(__BORLANDC__, BOOST_TESTED_AT(582))
 template<typename Mutex>
 read_write_mutex_impl<Mutex>::~read_write_mutex_impl()
 {
