@@ -32,6 +32,15 @@ void test_mutex_scoped_lock_throws_if_lock_called_when_already_locked()
     BOOST_CHECK_THROW( lock.lock(), boost::lock_error );
 }
 
+void test_mutex_scoped_lock_throws_if_unlock_called_when_already_unlocked()
+{
+    boost::mutex m;
+    boost::mutex::scoped_lock lock(m);
+    lock.unlock();
+    
+    BOOST_CHECK_THROW( lock.unlock(), boost::lock_error );
+}
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -40,6 +49,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_initially_locked));
     test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_unlocked_after_unlock_called));
     test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_throws_if_lock_called_when_already_locked));
+    test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_throws_if_unlock_called_when_already_unlocked));
 
     return test;
 }

@@ -85,6 +85,10 @@ namespace boost
             }
             void unlock()
             {
+                if(!locked())
+                {
+                    throw boost::lock_error();
+                }
                 m.unlock();
                 is_locked=false;
             }
