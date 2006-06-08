@@ -60,14 +60,18 @@ struct test_unlocked_after_unlock_called
     }
 };
 
-void test_mutex_scoped_lock_locked_after_lock_called()
+template<typename Mutex,typename Lock>
+struct test_locked_after_lock_called
 {
-    boost::mutex m;
-    boost::mutex::scoped_lock lock(m,false);
-    lock.lock();
-    BOOST_CHECK(lock);
-    BOOST_CHECK(lock.locked());
-}
+    void operator()() const
+    {
+        Mutex m;
+        Lock lock(m,false);
+        lock.lock();
+        BOOST_CHECK(lock);
+        BOOST_CHECK(lock.locked());
+    }
+};
 
 void test_mutex_scoped_lock_throws_if_lock_called_when_already_locked()
 {
@@ -95,7 +99,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE((test_initially_locked_with_bool_parameter_true<boost::mutex,boost::mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<boost::mutex,boost::mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_unlocked_after_unlock_called<boost::mutex,boost::mutex::scoped_lock>())));
-    test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_locked_after_lock_called));
+    test->add(BOOST_TEST_CASE((test_locked_after_lock_called<boost::mutex,boost::mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_throws_if_lock_called_when_already_locked));
     test->add(BOOST_TEST_CASE(&test_mutex_scoped_lock_throws_if_unlock_called_when_already_unlocked));
 
@@ -103,10 +107,12 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE((test_initially_locked_with_bool_parameter_true<boost::try_mutex,boost::try_mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<boost::try_mutex,boost::try_mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_unlocked_after_unlock_called<boost::try_mutex,boost::try_mutex::scoped_lock>())));
+    test->add(BOOST_TEST_CASE((test_locked_after_lock_called<boost::try_mutex,boost::try_mutex::scoped_lock>())));
 
     test->add(BOOST_TEST_CASE((test_initially_locked_with_bool_parameter_true<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
     test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
     test->add(BOOST_TEST_CASE((test_unlocked_after_unlock_called<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
+    test->add(BOOST_TEST_CASE((test_locked_after_lock_called<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
 
     return test;
 }
