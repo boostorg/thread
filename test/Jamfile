@@ -88,6 +88,7 @@ import testing ;
            [ run test_xtime.cpp <template>boost_thread_test_dll ]
            [ run test_barrier.cpp <template>boost_thread_test_dll ]
            [ run test_read_write_mutex.cpp <template>boost_thread_test_dll ]
+           [ run test_lock_concept.cpp <template>boost_thread_test_dll ]
            
            [ run test_thread.cpp <template>boost_thread_test_lib           : : : : test_thread_lib ]
            [ run test_mutex.cpp <template>boost_thread_test_lib            : : : : test_mutex_lib  ]
@@ -97,6 +98,7 @@ import testing ;
            [ run test_xtime.cpp <template>boost_thread_test_lib            : : : : test_xtime_lib  ]
            [ run test_barrier.cpp <template>boost_thread_test_lib          : : : : test_barrier_lib  ]
            [ run test_read_write_mutex.cpp <template>boost_thread_test_lib : : : : test_read_write_mutex_lib  ]
+           [ run test_lock_concept.cpp <template>boost_thread_test_lib : : : : test_lock_concept_lib  ]
 
            [ run test_thread.cpp <template>boost_thread_test_dll_checked_mutex           : : : : test_thread_dll_checked_mutex ]
            [ run test_mutex.cpp <template>boost_thread_test_dll_checked_mutex            : : : : test_mutex_dll_checked_mutex  ]
@@ -106,5 +108,6 @@ import testing ;
            [ run test_xtime.cpp <template>boost_thread_test_dll_checked_mutex            : : : : test_xtime_dll_checked_mutex  ]
            [ run test_barrier.cpp <template>boost_thread_test_dll_checked_mutex          : : : : test_barrier_dll_checked_mutex  ]
            [ run test_read_write_mutex.cpp <template>boost_thread_test_dll_checked_mutex : : : : test_read_write_mutex_dll_checked_mutex  ]
+           [ run test_lock_concept.cpp <template>boost_thread_test_dll_checked_mutex : : : : test_lock_concept_dll_checked_mutex  ]
      ;
 }

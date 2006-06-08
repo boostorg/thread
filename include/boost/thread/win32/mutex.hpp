@@ -21,6 +21,7 @@
 #include <boost/utility.hpp>
 #include <boost/thread/win32/lock.hpp>
 #include <boost/thread/win32/xtime.hpp>
+#include <boost/thread/win32/exceptions.hpp>
 
 namespace boost
 {
@@ -75,6 +76,10 @@ namespace boost
             }
             void lock()
             {
+                if(locked())
+                {
+                    throw boost::lock_error();
+                }
                 m.lock();
                 is_locked=true;
             }
