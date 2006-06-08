@@ -32,7 +32,7 @@ namespace boost
             {
                 boost::mutex::scoped_lock lock(m.guard);
                 --m.reader_count;
-                cond.notify_one();
+                m.cond.notify_one();
             }
         };
 
