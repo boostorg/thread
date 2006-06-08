@@ -112,6 +112,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<boost::try_mutex,boost::try_mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_unlocked_after_unlock_called<boost::try_mutex,boost::try_mutex::scoped_lock>())));
     test->add(BOOST_TEST_CASE((test_locked_after_lock_called<boost::try_mutex,boost::try_mutex::scoped_lock>())));
+    test->add(BOOST_TEST_CASE((test_throws_if_lock_called_when_already_locked<boost::try_mutex,boost::try_mutex::scoped_lock>())));
 
     test->add(BOOST_TEST_CASE((test_initially_locked_with_bool_parameter_true<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
     test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<boost::try_mutex,boost::try_mutex::scoped_try_lock>())));
