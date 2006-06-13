@@ -135,8 +135,10 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     add_tests_for_scoped_lock_concept<boost::mutex>(test);
     add_tests_for_scoped_lock_concept<boost::try_mutex>(test);
     add_tests_for_scoped_lock_concept<boost::recursive_mutex>(test);
+    add_tests_for_scoped_lock_concept<boost::recursive_try_mutex>(test);
 
     add_tests_for_scoped_try_lock_concept<boost::try_mutex>(test);
+    add_tests_for_scoped_try_lock_concept<boost::recursive_try_mutex>(test);
 
     return test;
 }
