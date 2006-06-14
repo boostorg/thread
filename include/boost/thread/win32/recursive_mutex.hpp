@@ -211,6 +211,10 @@ namespace boost
             
             void lock()
             {
+                if(locked())
+                {
+                    throw boost::lock_error();
+                }
                 m.lock();
                 is_locked=true;
             }
@@ -227,6 +231,10 @@ namespace boost
             
             void unlock()
             {
+                if(!locked())
+                {
+                    throw boost::lock_error();
+                }
                 m.unlock();
                 is_locked=false;
             }
