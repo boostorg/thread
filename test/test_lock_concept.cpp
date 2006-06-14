@@ -114,18 +114,17 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_lock_concept,Mutex)
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
 }
 
-template<typename Mutex>
-void add_tests_for_scoped_try_lock_concept(boost::unit_test_framework::test_suite* test,Mutex* =0)
+BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
 {
     typedef typename Mutex::scoped_try_lock Lock;
     
-    test->add(BOOST_TEST_CASE((test_initially_locked<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_initially_locked_with_bool_parameter_true<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_initially_unlocked_with_bool_parameter_false<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_unlocked_after_unlock_called<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_locked_after_lock_called<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_throws_if_lock_called_when_already_locked<Mutex,Lock>())));
-    test->add(BOOST_TEST_CASE((test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>())));
+    test_initially_locked<Mutex,Lock>()();
+    test_initially_locked_with_bool_parameter_true<Mutex,Lock>()();
+    test_initially_unlocked_with_bool_parameter_false<Mutex,Lock>()();
+    test_unlocked_after_unlock_called<Mutex,Lock>()();
+    test_locked_after_lock_called<Mutex,Lock>()();
+    test_throws_if_lock_called_when_already_locked<Mutex,Lock>()();
+    test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
@@ -137,9 +136,10 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
         boost::recursive_mutex,boost::recursive_try_mutex,boost::recursive_timed_mutex> mutex_types;
     
     test->add(BOOST_TEST_CASE_TEMPLATE(test_scoped_lock_concept,mutex_types));
-    
-    add_tests_for_scoped_try_lock_concept<boost::try_mutex>(test);
-    add_tests_for_scoped_try_lock_concept<boost::recursive_try_mutex>(test);
+
+    typedef boost::mpl::vector<boost::try_mutex,boost::recursive_try_mutex> try_mutex_types;
+
+    test->add(BOOST_TEST_CASE_TEMPLATE(test_scoped_try_lock_concept,try_mutex_types));
 
     return test;
 }
