@@ -77,6 +77,19 @@ struct test_locked_after_lock_called
 };
 
 template<typename Mutex,typename Lock>
+struct test_locked_after_try_lock_called
+{
+    void operator()() const
+    {
+        Mutex m;
+        Lock lock(m,false);
+        lock.try_lock();
+        BOOST_CHECK(lock);
+        BOOST_CHECK(lock.locked());
+    }
+};
+
+template<typename Mutex,typename Lock>
 struct test_throws_if_lock_called_when_already_locked
 {
     void operator()() const
@@ -123,6 +136,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
     test_initially_unlocked_with_bool_parameter_false<Mutex,Lock>()();
     test_unlocked_after_unlock_called<Mutex,Lock>()();
     test_locked_after_lock_called<Mutex,Lock>()();
+    test_locked_after_try_lock_called<Mutex,Lock>()();
     test_throws_if_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
 }
