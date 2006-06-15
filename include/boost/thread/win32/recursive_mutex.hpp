@@ -137,6 +137,10 @@ namespace boost
             }
             bool try_lock()
             {
+                if(locked())
+                {
+                    throw boost::lock_error();
+                }
                 is_locked=m.try_lock();
                 return is_locked;
             }
