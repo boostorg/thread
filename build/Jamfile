@@ -19,6 +19,7 @@ CPP_SRC_PTHREAD =
 	mutex
 	condition
 	exceptions
+	xtime
 	;
 
 lib boost_thread_pthread
