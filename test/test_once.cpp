@@ -34,7 +34,9 @@ void test_once_thread()
     for(unsigned i=0;i<loop_count;++i)
     {
         boost::call_once(init_once_value, once);
-        BOOST_CHECK_EQUAL(once_value, 1);
+        int const my_once_value=once_value;
+        boost::mutex::scoped_lock lock(mutex);
+        BOOST_CHECK_EQUAL(my_once_value, 1);
     }
 }
 
