@@ -9,8 +9,11 @@
 #include <boost/thread/pthread/config.hpp>
 #include <boost/thread/pthread/xtime.hpp>
 
+// TODO: xtime possible should be replaced by boost date time
 #if defined(BOOST_HAS_GETTIMEOFDAY)
 #   include <sys/time.h>
+#elif ! defined (BOOST_HAS_CLOCK_GETTIME)
+#   include <time.h>
 #endif
  
 namespace boost {
@@ -32,7 +35,11 @@ int xtime_get(struct xtime* xtp, int clock_type)
         xtp->nsec = ts.tv_nsec;
         return clock_type;
 #else
-#   error "xtime_get implementation undefined"
+	time_t t;
+	time(&t);
+	xtp->sec  = t;
+	xtp->nsec = 0;
+	return clock_type;
 #endif
     }
     return 0;
