@@ -1,0 +1,51 @@
+# Copyright 2006 Roland Schwarz.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+#
+# This work is a reimplementation along the design and ideas
+# of William E. Kempf.
+
+project example ;
+
+# If you move this example from its place in the Boost tree, edit this
+# path to point at the root directory of your Boost installation (the
+# one containing a subdirectory called "boost/".
+path-global BOOST_ROOT : ../../.. ;
+# Makes a project id for boost so that other Boost.Build projects can
+# refer to it by name.
+#
+project boost : $(BOOST_ROOT) ;
+
+# Attn: path-global was broken in my version of bbv1, so I did not use it.
+# if you want to fix it, you'd need to fix the project rule in 
+# allyourbase.jam as shown below:
+#
+#rule project ( name : location ? )
+#{
+#    if ! $(location)
+#    {
+#	gPROJECT($(name)) = $(gPROJECT($(PROJECT))) ;
+#	PROJECT($(gPROJECT($(name)))) = $(name) ;
+#	PROJECT = $(name) ;
+#    }
+#    else
+#    {
+#        gPROJECT($(name)) = [ root-paths $(location) : [ root-paths $($(gTOP)) : [ PWD ] ] ] ;
+#        # speedsnail
+#        # Root the path globals to fix a bug which prevented to use them from an external
+#        # project. The fix is as as uninvasive as possible, as it will only trigger when
+#        # an external project is declared. So it will not interfere with the build of the
+#        # boost library. I took this route, as at the time of this fix, the bbv1 is expected
+#        # to be retired soon.
+#        # N.B.: The path-globals rule is expected to be invoked from Jamrules files only.
+#        local val ;
+#        for val in $(gPATH_GLOBALS) {
+#        gPATH_GLOBAL_VALUE($(val)) = [ root-paths $(gPATH_GLOBAL_VALUE($(val))) :
+#                                            [ root-paths $($(gTOP)) : [ PWD ]  ]
+#                                     ] ;
+#        }
+#        local [ protect-subproject ] ;
+#        enter-subproject @$(name) ;
+#     }
+#}

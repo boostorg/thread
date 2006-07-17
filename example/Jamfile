@@ -1,54 +1,45 @@
-# Copyright (C) 2001-2003
-# William E. Kempf
+# Copyright 2006 Roland Schwarz.
+# # Distributed under the Boost Software License, Version 1.0. (See
+# # accompanying file LICENSE_1_0.txt or copy at
+# # http://www.boost.org/LICENSE_1_0.txt)
+# #
+# # This work is a reimplementation along the design and ideas
+# # of William E. Kempf.
 #
-# Permission to use, copy, modify, distribute and sell this software
-# and its documentation for any purpose is hereby granted without fee,
-# provided that the above copyright notice appear in all copies and
-# that both that copyright notice and this permission notice appear
-# in supporting documentation.  William E. Kempf makes no representations
-# about the suitability of this software for any purpose.
-# It is provided "as is" without express or implied warranty.
-#
-# Boost.Threads example Jamfile
-#
-# Additional configuration variables used:
-#   1. PTW32 may be used on Win32 platforms to specify that the pthreads-win32
-#      library should be used instead of "native" threads. This feature is
-#      mostly used for testing and it's generally recommended you use the
-#      native threading libraries instead. PTW32 should be set to be a list
-#      of two strings, the first specifying the installation path of the
-#      pthreads-win32 library and the second specifying which library
-#      variant to link against (see the pthreads-win32 documentation).
-#      Example: jam -sPTW32="c:\pthreads-win32 pthreadVCE.lib"
 
-# Declare the location of this subproject relative to the root.
-subproject libs/thread/example ;
+# The threading library is available in two versions.
+# Native to the environment and based upon pthread.
+# To select which version to use you need to define
+# BOOST_THREAD_POSIX when compiling your sources.
+# If BOOST_THREAD_POSIX is defined this will choose
+# pthread implementation.
+# You also need to compile the correct library version by
+# specifying the the <lib> or <dll> tags.
+# <lib>@boost/libs/thread/build/boost_thread for static native and
+# <lib>@boost/libs/thread/build/boost_thread_pthread static pthread.
+# 
 
-# Include threads.jam for Boost.Threads global build information.
-# This greatly simplifies the Jam code needed to configure the build
-# for the various Win32 build types.
-import ../build/threads ;
+project-root ;
 
-{
-    template example
-        ## sources ##
-        : <template>thread_base
-          <dll>../build/boost_thread
-        ## requirements ##
-        :
-        ## default build ##
-        :
-    ;
+template example
+        : ## sources ##
+	  <template>@boost/libs/thread/build/includes
+	  #<lib>@boost/libs/thread/build/boost_thread
+	  <lib>@boost/libs/thread/build/boost_thread_pthread
+        : ## requirements ##
+	  <define>BOOST_THREAD_POSIX
+        : ## default build ##
+          <threading>multi
+    	;
 
-    exe monitor : <template>example monitor.cpp ;
-    exe starvephil : <template>example starvephil.cpp ;
-    exe tennis : <template>example tennis.cpp ;
-    exe condition : <template>example condition.cpp ;
-    exe mutex : <template>example mutex.cpp ;
-    exe once : <template>example once.cpp ;
-    exe recursive_mutex : <template>example recursive_mutex.cpp ;
-    exe thread : <template>example thread.cpp ;
-    exe thread_group : <template>example thread_group.cpp ;
-    exe tss : <template>example tss.cpp ;
-    exe xtime : <template>example xtime.cpp ;
-}
+#exe monitor : <template>example monitor.cpp ;
+#exe starvephil : <template>example starvephil.cpp ;
+#exe tennis : <template>example tennis.cpp ;
+#exe condition : <template>example condition.cpp ;
+#exe mutex : <template>example mutex.cpp ;
+#exe once : <template>example once.cpp ;
+#exe recursive_mutex : <template>example recursive_mutex.cpp ;
+exe thread : <template>example thread.cpp ;
+#exe thread_group : <template>example thread_group.cpp ;
+#exe tss : <template>example tss.cpp ;
+#exe xtime : <template>example xtime.cpp ;
