@@ -10,97 +10,110 @@ subproject libs/thread/build ;
 
 import ./threads ;
 
-#################
-# pthread library
-#################
+# The includes template can be used from an external project to work
+# around the broken path-global, thus avoiding reference to BOOST_ROOT.
+template includes : : <sysinclude>../../.. threads::lib-pthread ;
 
-CPP_SRC_PTHREAD =
-	thread
-	mutex
-	condition
-	exceptions
-	xtime
-	;
+# pthreads is compiled on all platforms when available
+if [ threads::is-pthread-available ] {
+	
+	template pthread_base
+		: ## sources ##
+		  [ threads::cpp_source ../src/pthread :
+		    thread
+		    mutex
+		    condition
+		    exceptions
+		    xtime 
+		  ]
+		: ## requirements ##
+		  threads::lib-pthread
+		  <sysinclude>../../..
+		  <threading>multi
+		  <define>BOOST_THREAD_POSIX
+		  common-variant-tag
+		  <borland><*><cxxflags>-w-8004
+		  <borland><*><cxxflags>-w-8057
+		;
 
-lib boost_thread_pthread
-	:  ../src/pthread/$(CPP_SRC_PTHREAD).cpp
-	: <sysinclude>$(BOOST_ROOT) 
-	  <threading>multi 
-	  common-variant-tag 
-	  <define>BOOST_THREAD_BUILD_LIB=1
-	  <define>BOOST_THREAD_POSIX
-	  <borland><*><cxxflags>-w-8004
-	  <borland><*><cxxflags>-w-8057
-	  thread::require-pthread
-	: 
-	;
+	lib boost_thread_pthread
+		: <template>pthread_base
+		: ## requirements ##	
+	  	  <define>BOOST_THREAD_BUILD_LIB=1
+		;
 
-dll boost_thread_pthread
-	:  ../src/pthread/$(CPP_SRC_PTHREAD).cpp
-	: <sysinclude>$(BOOST_ROOT) 
-	  <threading>multi 
-          <runtime-link>dynamic
-	  common-variant-tag 
-	  <define>BOOST_THREAD_BUILD_DLL=1
-	  <define>BOOST_THREAD_POSIX
-	  <borland><*><cxxflags>-w-8004
-	  <borland><*><cxxflags>-w-8057
-	  thread::require-pthread
-	: 
-	;
+	dll boost_thread_pthread
+		: <template>pthread_base
+		: ## requirements ##
+          	  <runtime-link>dynamic
+	  	  <define>BOOST_THREAD_BUILD_DLL=1
+		;
+
+	stage bin-stage
+    		: <dll>boost_thread_pthread
+      		  <lib>boost_thread_pthread
+		;
+
+	install thread_pthread lib
+    		: <dll>boost_thread_pthread
+      		  <lib>boost_thread_pthread
+   		;
+
+	# the next is true on platforms where pthreads is native threading lib
+	if [ threads::is-native-on-build-os pthread ] {
+	
+		lib boost_thread
+			: <template>pthread_base
+			: ## requirements ##	
+	  	  	  <define>BOOST_THREAD_BUILD_LIB=1
+			;
+
+		dll boost_thread
+			: <template>pthread_base
+			: ## requirements ##
+          	  	  <runtime-link>dynamic
+	  	  	  <define>BOOST_THREAD_BUILD_DLL=1
+			;
+	}
+}
+
+if [ threads::is-native-on-build-os win32 ] {
+
+	template win32_base
+		: ## sources ##
+		  [ threads::cpp_source ../src/win32 :
+		    thread
+		    exceptions
+		    xtime 
+		  ]
+		: ## requirements ##
+		  <sysinclude>../../..
+		  <threading>multi
+		  common-variant-tag
+		  <borland><*><cxxflags>-w-8004
+		  <borland><*><cxxflags>-w-8057
+		;
+
+	lib boost_thread
+		: <template>win32_base
+		: ## requirements ##	
+  	  	  <define>BOOST_THREAD_BUILD_LIB=1
+		;
+
+	dll boost_thread
+		: <template>win32_base
+		: ## requirements ##
+       	  	  <runtime-link>dynamic
+  	  	  <define>BOOST_THREAD_BUILD_DLL=1
+		;
+}
 
 stage bin-stage
-    : <dll>boost_thread_pthread
-      <lib>boost_thread_pthread
+	: <dll>boost_thread
+      	  <lib>boost_thread
 	;
 
-install thread_pthread lib
-    : <dll>boost_thread_pthread
-      <lib>boost_thread_pthread
-   	;
-
-###############
-# win32 library
-###############
-
-CPP_SRC_WIN32 =
-	thread
-	exceptions
-        xtime
+install thread lib
+	: <dll>boost_thread
+  	  <lib>boost_thread
 	;
-
-lib boost_thread_win32
-	:  ../src/win32/$(CPP_SRC_WIN32).cpp
-	: <sysinclude>$(BOOST_ROOT) 
-	  <threading>multi 
-	  common-variant-tag 
-	  <define>BOOST_THREAD_BUILD_LIB=1
-	  <borland><*><cxxflags>-w-8004
-	  <borland><*><cxxflags>-w-8057
-	  thread::require-win32
-	: 
-	;
-
-dll boost_thread_win32
-	:  ../src/win32/$(CPP_SRC_WIN32).cpp
-	: <sysinclude>$(BOOST_ROOT) 
-	  <threading>multi 
-          <runtime-link>dynamic
-	  common-variant-tag 
-	  <define>BOOST_THREAD_BUILD_DLL=1
-	  <borland><*><cxxflags>-w-8004
-	  <borland><*><cxxflags>-w-8057
-	  thread::require-win32
-	: 
-	;
-
-stage bin-stage
-	: <dll>boost_thread_win32
-          <lib>boost_thread_win32
-	;
-
-install thread_win32 lib
-	: <dll>boost_thread_win32
-          <lib>boost_thread_win32
-   	;
-

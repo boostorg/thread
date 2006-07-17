@@ -6,35 +6,60 @@
 # This work is a reimplementation along the design and ideas
 # of William E. Kempf.
 
-rule thread::require-pthread ( toolset variant : subvariant-path properties * )
+# find out if pthread is available on current build platform
+rule threads::is-pthread-available
 {
-# default is to assume pthread beeing available
-# platforms known not to support it are disabled
-# explicitely
-
-        local build = true ;
-
-        if $(OS) = "NT" {
-	        if $(PTW32_INCLUDE) && $(PTW32_LIB) {
-	                properties = [ impose-requirements $(properties) :
-                                                      <define>BOOST_HAS_PTHREADS
-                                                      <include>$(PTW32_INCLUDE)
-                                                      <library-file>$(PTW32_LIB)/pthreadVC2.lib ] ;
-                }
-                else build = false ;
-        }
-
-        if $(build) = false {
-            properties = [ impose-requirements $(properties) : <build>no ] ;
-        }
-
-        return $(subvariant-path) $(properties) ;
+	if $(OS) = "NT" {
+		if $(PTW32_INCLUDE) && $(PTW32_LIB) {
+			return true ;
+		}
+		else {
+			ECHO "******************************************************" ;
+			ECHO "Building Boost.Thread without pthread support" ;
+			ECHO "If you need pthread you should specify the paths." ;
+			ECHO "For example:" ;
+			ECHO "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include" ;
+			ECHO "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib\\pthreadVC2.lib" ;
+			ECHO "******************************************************" ;
+		}
+	}
+	else if $(OS) = "LINUX" {
+		return true ;
+	}
+	else { ## assume pthread is available on unknown os for now
+		return true ;
+	}
 }
 
-rule thread::require-win32 ( toolset variant : subvariant-path properties * )
+# find the native library variant for current build os
+rule threads::is-native-on-build-os ( libvariant )
 {
-        if $(OS) != "NT" {
-		properties = [ impose-requirements $(properties) : <build>no ] ;
+	if      $(OS) = "NT" {
+		if $(libvariant) = win32 { return true ; }
 	}
+	else if $(OS) = "LINUX" {
+		if $(libvariant) = pthread { return true ; }
+	}
+	else { ## assume pthread is native on others for now
+		if $(libvariant) = pthread { return true ; }
+	}
+}
+
+# utility to prepend the source path to the cpp sources
+rule threads::cpp_source ( path : sources * )
+{
+	return $(path)/$(sources).cpp ;
+}
+
+# impose the pthread library and include path on the requirements
+rule threads::lib-pthread ( toolset variant : subvariant-path properties * )
+{
+        if $(OS) = "NT" &&  $(PTW32_INCLUDE) && $(PTW32_LIB) {
+		properties = [ impose-requirements $(properties) :
+                	<define>BOOST_HAS_PTHREADS
+			<include>$(PTW32_INCLUDE)
+			<library-file>$(PTW32_LIB) ] ;
+        }
+        
 	return $(subvariant-path) $(properties) ;
 }
