@@ -69,7 +69,7 @@ private:
 };
 
 #ifdef BOOST_MSVC
-#	pragma waring(pop)
+#	pragma warning(pop)
 #endif
 
 } // namespace boost
