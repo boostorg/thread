@@ -27,7 +27,7 @@ struct xtime;
 // see: http://www.boost.org/more/separate_compilation.html#dlls
 #ifdef BOOST_MSVC
 #	pragma warning(push)
-#	pragma warning(disable: 4251 4231 4660)
+#	pragma warning(disable: 4251 4231 4660 4275)
 #endif
 
 class BOOST_THREAD_DECL thread : private noncopyable
