@@ -1,66 +1,60 @@
-// Copyright (C) 2001-2003
-// William E. Kempf
-//
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all copies and
-// that both that copyright notice and this permission notice appear
-// in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
-
-#include <boost/thread/once.hpp>
-#include <boost/thread/thread.hpp>
-#include <boost/thread/mutex.hpp>
+// (C) Copyright 2006 Anthony Williams
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/once.hpp>
 
-#include <libs/thread/test/util.inl>
+boost::once_flag flag=BOOST_ONCE_INIT;
+int var_to_init=0;
+boost::mutex m;
 
-int once_value = 0;
-boost::once_flag once = BOOST_ONCE_INIT;
-boost::mutex mutex;
-
-void init_once_value()
+void initialize_variable()
 {
-    boost::mutex::scoped_lock lock(mutex);
-    once_value++;
-    BOOST_CHECK_EQUAL(once_value, 1);
+    // ensure that if multiple threads get in here, they are serialized, so we can see the effect
+    boost::mutex::scoped_lock lock(m);
+    ++var_to_init;
 }
 
-void test_once_thread()
+void call_once_thread()
 {
     unsigned const loop_count=100;
+    int my_once_value=0;
     for(unsigned i=0;i<loop_count;++i)
     {
-        boost::call_once(init_once_value, once);
-        int const my_once_value=once_value;
-        boost::mutex::scoped_lock lock(mutex);
-        BOOST_CHECK_EQUAL(my_once_value, 1);
+        boost::call_once(initialize_variable, flag);
+        my_once_value=var_to_init;
+        if(my_once_value!=1)
+        {
+            break;
+        }
     }
+    BOOST_CHECK_EQUAL(my_once_value, 1);
 }
 
-void do_test_once()
+void test_call_once()
 {
-    const int NUMTHREADS=100;
-    boost::thread_group threads;
-    for (int i=0; i<NUMTHREADS; ++i)
-        threads.create_thread(&test_once_thread);
-    threads.join_all();
-    BOOST_CHECK_EQUAL(once_value, 1);
+    unsigned const num_threads=100;
+    boost::thread_group group;
+    
+    for(unsigned i=0;i<num_threads;++i)
+    {
+        group.create_thread(&call_once_thread);
+    }
+    group.join_all();
+    BOOST_CHECK_EQUAL(var_to_init,1);
 }
 
-void test_once()
-{
-    timed_test(&do_test_once, 2);
-}
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
-        BOOST_TEST_SUITE("Boost.Threads: once test suite");
+        BOOST_TEST_SUITE("Boost.Threads: call_once test suite");
 
-    test->add(BOOST_TEST_CASE(test_once));
+    test->add(BOOST_TEST_CASE(test_call_once));
 
     return test;
 }
