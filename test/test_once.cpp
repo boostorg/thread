@@ -32,6 +32,7 @@ void call_once_thread()
             break;
         }
     }
+    boost::mutex::scoped_lock lock(m);
     BOOST_CHECK_EQUAL(my_once_value, 1);
 }
 
