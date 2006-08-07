@@ -30,7 +30,7 @@ import testing ;
          : ## sources ##
              <template>thread_base
 #             ../src/tss_null.cpp
-             <lib>../build/boost_thread_win32
+             <lib>../build/boost_thread
              <lib>../../test/build/boost_unit_test_framework
              #<lib>../../test/build/boost_test_exec_monitor
          : ## requirements ##
@@ -47,7 +47,7 @@ import testing ;
          : ## sources ##
              <template>thread_base
 #             ../src/tss_null.cpp
-             <dll>../build/boost_thread_win32
+             <dll>../build/boost_thread
              <lib>../../test/build/boost_unit_test_framework
              #<lib>../../test/build/boost_test_exec_monitor
          : ## requirements ##
@@ -64,7 +64,7 @@ import testing ;
          : ## sources ##
              <template>thread_base
  #            ../src/tss_null.cpp
-             <dll>../build/boost_thread_win32
+             <dll>../build/boost_thread
              <lib>../../test/build/boost_unit_test_framework
              #<lib>../../test/build/boost_test_exec_monitor
          : ## requirements ##
