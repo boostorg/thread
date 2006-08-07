@@ -1,5 +1,6 @@
 // (C) Copyright Michael Glassford 2004.
 // Copyright (c) 2006 Peter Dimov
+// Copyright (c) 2006 Anthony Williams
 //
 // Use, modification and distribution are subject to the
 // Boost Software License, Version 1.0. (See accompanying file
@@ -105,6 +106,10 @@ extern "C" BOOST_THREAD_DECL void on_process_enter()
 
 extern "C" BOOST_THREAD_DECL void on_process_exit()
 {
+    if( tls_key != invalid_tls_key )
+    {
+        TlsFree(tls_key);
+    }
 }
 
 extern "C" BOOST_THREAD_DECL void on_thread_enter()
