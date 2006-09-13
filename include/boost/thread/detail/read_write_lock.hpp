@@ -12,6 +12,7 @@
 // in supporting documentation.  David Moore makes no representations
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
+// boostinspect:nolicense
 
 #ifndef BOOST_READ_WRITE_LOCK_JDM031002_HPP
 #define BOOST_READ_WRITE_LOCK_JDM031002_HPP

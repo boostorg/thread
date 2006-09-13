@@ -8,6 +8,7 @@
 // in supporting documentation.  David Moore makes no representations
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
+// boostinspect:nolicense
 
 // A Boost::threads implementation of a synchronization
 //   primitive which can allow multiple readers or a single

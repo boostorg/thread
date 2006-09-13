@@ -8,6 +8,7 @@
 // in supporting documentation.  William E. Kempf makes no representations
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
+// boostinspect:nolicense
 
 #ifndef BOOST_TSS_WEK070601_HPP
 #define BOOST_TSS_WEK070601_HPP
