@@ -8,6 +8,7 @@
 // in supporting documentation.  William E. Kempf makes no representations
 // about the suitability of this software for any purpose.
 // It is provided "as is" without express or implied warranty.
+// boostinspect:nolicense
 
 #include <boost/thread/condition.hpp>
 #include <boost/thread/mutex.hpp>
