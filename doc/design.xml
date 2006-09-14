@@ -4,6 +4,10 @@
   <!ENTITY % threads.entities SYSTEM "entities.xml">
   %threads.entities;
 ]>
+<!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
+     Subject to the Boost Software License, Version 1.0. 
+     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
+-->
 <section id="threads.design" last-revision="$Date$">
   <title>Design</title>
   <para>With client/server and three-tier architectures becoming common place
