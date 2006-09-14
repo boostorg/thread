@@ -4,6 +4,10 @@
   <!ENTITY % threads.entities SYSTEM "entities.xml">
   %threads.entities;
 ]>
+<!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
+     Subject to the Boost Software License, Version 1.0. 
+     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
+-->
 <library name="Threads" dirname="thread" id="threads"
 last-revision="$Date$"
 xmlns:xi="http://www.w3.org/2001/XInclude">
@@ -20,13 +24,8 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
       <holder>William E. Kempf</holder>
     </copyright>
     <legalnotice>
-      <para>Permission to use, copy, modify, distribute and sell this
-      software and its documentation for any purpose is hereby granted
-      without fee, provided that the above copyright notice appear in all
-      copies and that both that copyright notice and this permission notice
-      appear in supporting documentation. William E. Kempf makes no
-      representations about the suitability of this software for any purpose.
-      It is provided "as is" without express or implied warranty.</para>
+      <para>Subject to the Boost Software License, Version 1.0. 
+     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)</para>
     </legalnotice>
     <librarypurpose>Portable C++ multi-threading</librarypurpose>
     <librarycategory name="category:concurrent" />
