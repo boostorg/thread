@@ -6,6 +6,7 @@
 # This work is a reimplementation along the design and ideas
 # of William E. Kempf.
 
+import modules ;
 import os ;
 import feature ;
 import property ;
@@ -23,6 +24,8 @@ rule lib ( name  : sources * : requirements * : default-build * : usage-requirem
 	{
 		if [ os.name ] = "NT"
 		{
+			local PTW32_INCLUDE = [ modules.peek : PTW32_INCLUDE ] ;
+			local PTW32_LIB = [ modules.peek : PTW32_INCLUDE ] ;
 			if $(PTW32_INCLUDE) && $(PTW32_LIB) 
 			{
 				requirements = 
@@ -35,7 +38,8 @@ rule lib ( name  : sources * : requirements * : default-build * : usage-requirem
 			else 
 			{
 				requirements += <build>no ;
-
+				# it would be nice if this message appears only once ...
+				# but I cannot figure out how to detectd the second phase.
 				echo "******************************************************" ;
 				echo "Building Boost.Thread without pthread support" ;
 				echo "If you need pthread you should specify the paths." ;
