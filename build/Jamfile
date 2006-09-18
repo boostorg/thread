@@ -10,10 +10,6 @@ subproject libs/thread/build ;
 
 import ./threads ;
 
-# The includes template can be used from an external project to work
-# around the broken path-global, thus avoiding reference to BOOST_ROOT.
-template includes : : <sysinclude>../../.. threads::lib-pthread ;
-
 # pthreads is compiled on all platforms when available
 if [ threads::is-pthread-available ] {
 	
@@ -28,7 +24,7 @@ if [ threads::is-pthread-available ] {
 		  ]
 		: ## requirements ##
 		  threads::lib-pthread
-		  <sysinclude>../../..
+		  <sysinclude>$(BOOST_ROOT)
 		  <threading>multi
 		  <define>BOOST_THREAD_POSIX
 		  common-variant-tag
@@ -87,7 +83,7 @@ if [ threads::is-native-on-build-os win32 ] {
 		    xtime 
 		  ]
 		: ## requirements ##
-		  <sysinclude>../../..
+		  <sysinclude>$(BOOST_ROOT)
 		  <threading>multi
 		  common-variant-tag
 		  <borland><*><cxxflags>-w-8004
