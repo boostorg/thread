@@ -1,26 +1,53 @@
-import os ;
+# Copyright 2006 Roland Schwarz.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+#
+# This work is a reimplementation along the design and ideas
+# of William E. Kempf.
 
-if [ os.name ] = NT
-{
-    reqts = <link>shared:<define>BOOST_THREAD_BUILD_DLL=1 ;
-}
-else
-{
-    # Declare the uses system library
-    lib pthread : : <name>pthread ;
-    usage = <library>pthread ;
-}
+import thread ;
 
 project boost/thread
-    : source-location ../src 
-    : usage-requirements $(usage)
-    : requirements $(reqts)  <threading>multi 
-    : default-build <threading>multi
+    : source-location ../src
+    : requirements <threading>multi
+      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+    : default-build <threading>multi [ thread.default-api ]
     ;
 
-CPP_SOURCES = condition mutex recursive_mutex thread xtime once
-                  exceptions barrier tss tss_hooks tss_dll tss_pe ;
+# build the pthread based variant
+lib boost_thread_pthread
+	: ## sources ##
+	    pthread/thread.cpp
+	    pthread/mutex.cpp
+	    pthread/condition.cpp
+	    pthread/exceptions.cpp
+	    pthread/xtime.cpp
+	: ## requirements ##
+	    <define>BOOST_THREAD_POSIX
+	    <thrd-api>pthread
+	;
 
+# use pthread on platforms where pthread is considered native
+lib boost_thread 
+	: ## sources ##
+	    pthread/thread.cpp
+	    pthread/mutex.cpp
+	    pthread/condition.cpp
+	    pthread/exceptions.cpp
+	    pthread/xtime.cpp
+	: ## requirements ##
+	    <define>BOOST_THREAD_POSIX
+	    <thrd-api>pthread
+	;
+# the win32 native variant
 lib boost_thread
-   : $(CPP_SOURCES).cpp
-   ;
+	: ## sources ##
+	  win32/thread.cpp
+	  win32/exceptions.cpp
+	  win32/xtime.cpp
+	: ## requirements ##
+	  <thrd-api>win32
+	;
+

@@ -1,0 +1,66 @@
+# Copyright 2006 Roland Schwarz.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+#
+# This work is a reimplementation along the design and ideas
+# of William E. Kempf.
+
+import os ;
+import feature ;
+import property ;
+
+# supported threading api's
+feature.feature thrd-api : pthread win32 : symmetric ;
+
+# save a reference to the original lib rule
+IMPORT : lib : $(__name__) : type.lib ;
+
+# local override of the global lib rule
+rule lib ( name  : sources * : requirements * : default-build * : usage-requirements * )
+{
+	if <thrd-api>pthread in $(requirements) 
+	{
+		if [ os.name ] = "NT"
+		{
+			if $(PTW32_INCLUDE) && $(PTW32_LIB) 
+			{
+				requirements = 
+					[ property.refine $(requirements) : 
+						<define>BOOST_HAS_PTHREADS 
+						<include>$(PTW32_INCLUDE)
+						<library-file>$(PTW32_LIB)
+					] ;
+			}
+			else 
+			{
+				requirements += <build>no ;
+
+				echo "******************************************************" ;
+				echo "Building Boost.Thread without pthread support" ;
+				echo "If you need pthread you should specify the paths." ;
+				echo "For example:" ;
+				echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include" ;
+				echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib\\pthreadVC2.lib" ;
+				echo "******************************************************" ;
+			}	
+		}	
+	}
+
+	return [ type.lib $(name) : $(sources) : $(requirements) : $(default-build) : $(usage-requirements) ] ;
+}
+
+# auto export of rule lib to calling module only
+IMPORT $(__name__) : lib : [ CALLER_MODULE 1 ] : lib ;
+
+rule default-api
+{
+	if [ os.name ] = "NT"
+	{
+		return <thrd-api>win32 ;
+	}
+	else
+	{
+		return <thrd-api>pthread ;
+	}
+}
