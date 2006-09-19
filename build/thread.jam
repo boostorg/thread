@@ -25,7 +25,7 @@ rule lib ( name  : sources * : requirements * : default-build * : usage-requirem
 		if [ os.name ] = "NT"
 		{
 			local PTW32_INCLUDE = [ modules.peek : PTW32_INCLUDE ] ;
-			local PTW32_LIB = [ modules.peek : PTW32_INCLUDE ] ;
+			local PTW32_LIB = [ modules.peek : PTW32_LIB ] ;
 			if $(PTW32_INCLUDE) && $(PTW32_LIB) 
 			{
 				requirements = 
