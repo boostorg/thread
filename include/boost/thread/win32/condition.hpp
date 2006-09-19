@@ -118,7 +118,6 @@ namespace boost
 
         bool do_notify_one(waiting_list_entry& list)
         {
-            gate_scoped_lock lock(state_change_gate);
             if(list.previous==&list)
             {
                 return false;
@@ -136,6 +135,7 @@ namespace boost
 
         void notify_one()
         {
+            gate_scoped_lock lock(state_change_gate);
             do_notify_one(waiting_list);
         }
         
