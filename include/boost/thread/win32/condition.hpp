@@ -66,12 +66,16 @@ namespace boost
             ~add_entry_to_list()
             {
                 void* thread_handle;
-                        
+
+                if(!entry.notified)
                 {
                     gate_scoped_lock lock(self->state_change_gate);
                         
                     thread_handle=entry.waiting_thread_handle;
-                    entry.unlink();
+                    if(!entry.notified)
+                    {
+                        entry.unlink();
+                    }
                     entry.waiting_thread_handle=0;
                 }
                 m.lock();
@@ -109,21 +113,10 @@ namespace boost
         void notify_entry(waiting_list_entry * entry)
         {
             BOOST_INTERLOCKED_EXCHANGE(&entry->notified,true);
-            entry->unlink();
             if(entry->waiting_thread_handle)
             {
                 BOOST_QUEUE_USER_APC(notify_function,entry->waiting_thread_handle,0);
             }
-        }
-
-        bool do_notify_one(waiting_list_entry& list)
-        {
-            if(list.previous==&list)
-            {
-                return false;
-            }
-            notify_entry(list.previous);
-            return true;
         }
 
     public:
@@ -136,23 +129,24 @@ namespace boost
         void notify_one()
         {
             gate_scoped_lock lock(state_change_gate);
-            do_notify_one(waiting_list);
+            if(waiting_list.previous!=&waiting_list)
+            {
+                notify_entry(waiting_list.previous);
+                waiting_list.previous->unlink();
+            }
         }
         
         void notify_all()
         {
-            waiting_list_entry new_list={0};
+            gate_scoped_lock lock(state_change_gate);
+            waiting_list_entry* head=waiting_list.previous;
+            waiting_list.previous=&waiting_list;
+            waiting_list.next=&waiting_list;
+            while(head!=&waiting_list)
             {
-                gate_scoped_lock lock(state_change_gate);
-                new_list.previous=waiting_list.previous;
-                new_list.next=waiting_list.next;
-                new_list.next->previous=&new_list;
-                new_list.previous->next=&new_list;
-                waiting_list.previous=&waiting_list;
-                waiting_list.next=&waiting_list;
+                notify_entry(head);
+                head=head->previous;
             }
-
-            while(do_notify_one(new_list));
         }
 
         template<typename scoped_lock_type>
