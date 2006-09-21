@@ -32,7 +32,7 @@ rule lib ( name  : sources * : requirements * : default-build * : usage-requirem
 					[ property.refine $(requirements) : 
 						<define>BOOST_HAS_PTHREADS 
 						<include>$(PTW32_INCLUDE)
-						<library-file>$(PTW32_LIB)
+						<library>$(PTW32_LIB)
 					] ;
 			}
 			else 
