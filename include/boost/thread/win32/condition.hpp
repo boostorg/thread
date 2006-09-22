@@ -18,6 +18,7 @@
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/xtime_utils.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
+#include <boost/assert.hpp>
 
 namespace boost
 {
@@ -55,6 +56,7 @@ namespace boost
             add_entry_to_list(condition* self_,waiting_list_entry& entry_,scoped_lock_type& m_):
                 self(self_),entry(entry_),m(m_)
             {
+                entry.previous=&self->waiting_list;
                 gate_scoped_lock lock(self->state_change_gate);
                     
                 entry.next=self->waiting_list.next;
@@ -65,21 +67,17 @@ namespace boost
             }
             ~add_entry_to_list()
             {
-                void* thread_handle;
-
                 if(!entry.notified)
                 {
                     gate_scoped_lock lock(self->state_change_gate);
                         
-                    thread_handle=entry.waiting_thread_handle;
                     if(!entry.notified)
                     {
                         entry.unlink();
                     }
-                    entry.waiting_thread_handle=0;
                 }
+                BOOST_CLOSE_HANDLE(entry.waiting_thread_handle);
                 m.lock();
-                BOOST_CLOSE_HANDLE(thread_handle);
             }
         };
         
@@ -91,9 +89,8 @@ namespace boost
             void* const currentProcess=BOOST_GET_CURRENT_PROCESS();
             
             long const same_access_flag=2;
-            BOOST_DUPLICATE_HANDLE(currentProcess,BOOST_GET_CURRENT_THREAD(),currentProcess,&entry.waiting_thread_handle,0,false,same_access_flag);
-            
-            entry.previous=&waiting_list;
+            bool const success=BOOST_DUPLICATE_HANDLE(currentProcess,BOOST_GET_CURRENT_THREAD(),currentProcess,&entry.waiting_thread_handle,0,false,same_access_flag)!=0;
+            BOOST_ASSERT(success);
             
             {
                 add_entry_to_list<scoped_lock_type> list_guard(this,entry,m);
@@ -131,8 +128,9 @@ namespace boost
             gate_scoped_lock lock(state_change_gate);
             if(waiting_list.previous!=&waiting_list)
             {
-                notify_entry(waiting_list.previous);
-                waiting_list.previous->unlink();
+                waiting_list_entry* const entry=waiting_list.previous;
+                entry->unlink();
+                notify_entry(entry);
             }
         }
         
@@ -144,8 +142,9 @@ namespace boost
             waiting_list.next=&waiting_list;
             while(head!=&waiting_list)
             {
+                waiting_list_entry* const previous=head->previous;
                 notify_entry(head);
-                head=head->previous;
+                head=previous;
             }
         }
 
