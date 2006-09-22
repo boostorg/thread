@@ -13,8 +13,7 @@
 #include <boost/thread/pthread/xtime.hpp>
 #include <boost/thread/pthread/condition.hpp>
 #include <cassert>
-
-#include "timeconv.inl"
+#include <limits>
 
 namespace {
 
@@ -43,6 +42,65 @@ public:
     const boost::function0<void>& m_threadfunc;
     bool m_started;
 };
+
+// I am not using a constant for the following, to avoid
+// the need to specify a type, which might be to small
+// to hold the value.
+#ifndef NANOSECONDS_PER_SECOND
+#define NANOSECONDS_PER_SECOND 1000000000
+#endif
+
+inline void to_timespec_duration(const boost::xtime& xt, timespec& ts)
+{
+    boost::xtime cur, t;
+    int res = 0;
+    res = boost::xtime_get(&cur, boost::TIME_UTC);
+    assert(res == boost::TIME_UTC);
+
+    if (xt.sec < cur.sec)
+    {
+        ts.tv_sec = 0;
+	ts.tv_nsec = 0;
+	return;
+    }
+    else
+    {
+        if (xt.nsec < cur.nsec)
+	{
+	    if (xt.sec == cur.sec)
+	    {
+	        ts.tv_sec = 0;
+		ts.tv_nsec = 0;
+		return;
+	    }
+
+	    t.nsec = xt.nsec + NANOSECONDS_PER_SECOND - cur.nsec;
+	    t.sec = xt.sec - cur.sec + 1;
+	}
+	else
+	{
+	    t.nsec = xt.nsec - cur.nsec;
+	    t.sec = xt.sec - cur.sec;
+	    // guard against wrong user nsec spec.
+	    t.sec += t.nsec / NANOSECONDS_PER_SECOND;
+	    t.nsec %= NANOSECONDS_PER_SECOND;
+	}
+
+	if (t.sec < std::numeric_limits<time_t>::max())
+	{
+	    // the following casts are safe
+	    ts.tv_sec = static_cast<time_t>(t.sec);
+	    ts.tv_nsec = static_cast<long>(t.nsec);
+	}
+	else
+	{
+	    // on overflow return maximum possible
+	    // (very unlikely case though)
+	    ts.tv_sec = std::numeric_limits<time_t>::max();
+	    ts.tv_nsec = std::numeric_limits<long>::max();
+	}
+    }
+}
 
 } // unnamed namespace
 

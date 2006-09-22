@@ -16,7 +16,7 @@
 #include <string>
 #include <stdexcept>
 #include <cassert>
-#include "timeconv.inl"
+#include <limits>
 
 #include <errno.h>
 
@@ -181,8 +181,30 @@ bool timed_mutex::do_timedlock(const xtime& xt)
     res = pthread_mutex_lock(&m_mutex);
     assert(res == 0);
 
+    boost::xtime t;
+    // normalize, in case user has specified nsec only
+    if (xt.nsec > 999999999)
+    {
+        t.sec  = xt.nsec / 1000000000;
+	t.nsec = xt.nsec % 1000000000;
+    }
+    else
+    {
+        t.sec = t.nsec = 0;
+    }
+    
     timespec ts;
-    to_timespec(xt, ts);
+    if (xt.sec < std::numeric_limits<time_t>::max() - t.sec) // avoid overflow
+    {
+	ts.tv_sec = static_cast<time_t>(xt.sec + t.sec);
+	ts.tv_nsec = static_cast<long>(t.nsec);
+    }
+    else
+    {  // saturate to avoid overflow
+       ts.tv_sec = std::numeric_limits<time_t>::max();
+       ts.tv_nsec = 999999999; // this should not overflow, or tv_nsec is odd anyways...
+    }
+//    to_timespec(xt, ts);
 
     while (m_locked)
     {

@@ -15,7 +15,7 @@
 
 #include <boost/limits.hpp>
 #include <cassert>
-#include "timeconv.inl"
+#include <limits>
 
 #include <errno.h>
 
@@ -61,8 +61,30 @@ void condition_impl::do_wait(pthread_mutex_t* pmutex)
 
 bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 {
+    boost::xtime t;
+    // normalize, in case user has specified nsec only
+    if (xt.nsec > 999999999)
+    {
+        t.sec  = xt.nsec / 1000000000;
+	t.nsec = xt.nsec % 1000000000;
+    }
+    else
+    {
+        t.sec = t.nsec = 0;
+    }
+
     timespec ts;
-    to_timespec(xt, ts);
+    if (xt.sec < std::numeric_limits<time_t>::max() - t.sec) // avoid overflow
+    {
+        ts.tv_sec = static_cast<time_t>(xt.sec + t.sec);
+	ts.tv_nsec = static_cast<long>(t.nsec);
+    }
+    else
+    {   // saturate to avoid overflow
+        ts.tv_sec = std::numeric_limits<time_t>::max();
+	ts.tv_nsec = 999999999; // this should not overflow, or tv_nsec is odd anyways...
+    }
+//    to_timespec(xt, ts);
 
     int res = 0;
     res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
