@@ -100,7 +100,7 @@ namespace boost
                       BOOST_SLEEP_EX(::boost::detail::get_milliseconds_until_time(target),true)==woken_due_to_apc);
             }
             
-            return ::boost::detail::interlocked_read(&entry.notified);
+            return ::boost::detail::interlocked_read(&entry.notified)!=0;
         }
 
         static void __stdcall notify_function(::boost::detail::ulong_ptr)
