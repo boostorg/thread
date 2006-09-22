@@ -22,6 +22,13 @@ namespace boost {
 
 struct xtime;
 
+// disable warnings about non dll import
+// see: http://www.boost.org/more/separate_compilation.html#dlls
+#ifdef BOOST_MSVC
+#	pragma warning(push)
+#	pragma warning(disable: 4251 4231 4660 4275)
+#endif
+
 class BOOST_THREAD_DECL thread : private noncopyable
 {
 public:
@@ -58,6 +65,10 @@ private:
     std::list<thread*> m_threads;
     mutex m_mutex;
 };
+
+#ifdef BOOST_MSVC
+#	pragma warning(pop)
+#endif
 
 } // namespace boost
 
