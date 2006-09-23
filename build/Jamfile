@@ -18,9 +18,12 @@ if [ threads::is-pthread-available ] {
 		  [ threads::cpp_source ../src/pthread :
 		    thread
 		    mutex
+		    recursive_mutex
 		    condition
 		    exceptions
-		    xtime 
+		    xtime
+		    once
+		    tss
 		  ]
 		: ## requirements ##
 		  threads::lib-pthread
@@ -80,7 +83,11 @@ if [ threads::is-native-on-build-os win32 ] {
 		  [ threads::cpp_source ../src/win32 :
 		    thread
 		    exceptions
-		    xtime 
+		    xtime
+		    tss
+		    tss_hooks
+		    tss_dll
+                    tss_pe
 		  ]
 		: ## requirements ##
 		  <sysinclude>$(BOOST_ROOT)

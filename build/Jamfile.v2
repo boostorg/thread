@@ -21,9 +21,12 @@ lib boost_thread_pthread
 	: ## sources ##
 	    pthread/thread.cpp
 	    pthread/mutex.cpp
+	    pthread/recursive_mutex.cpp
 	    pthread/condition.cpp
 	    pthread/exceptions.cpp
 	    pthread/xtime.cpp
+	    pthread/once.cpp
+	    pthread/tss.cpp
 	: ## requirements ##
 	    <define>BOOST_THREAD_POSIX
 	    <thrd-api>pthread
@@ -34,9 +37,12 @@ lib boost_thread
 	: ## sources ##
 	    pthread/thread.cpp
 	    pthread/mutex.cpp
+	    pthread/recursive_mutex.cpp
 	    pthread/condition.cpp
 	    pthread/exceptions.cpp
 	    pthread/xtime.cpp
+	    pthread/once.cpp
+	    pthread/tss.cpp
 	: ## requirements ##
 	    <define>BOOST_THREAD_POSIX
 	    <thrd-api>pthread
@@ -47,6 +53,10 @@ lib boost_thread
 	  win32/thread.cpp
 	  win32/exceptions.cpp
 	  win32/xtime.cpp
+	  win32/tss.cpp
+	  win32/tss_hooks.cpp
+	  win32/tss_dll.cpp
+	  win32/tss_pe.cpp
 	: ## requirements ##
 	  <thrd-api>win32
 	;
