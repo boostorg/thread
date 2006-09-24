@@ -17,7 +17,9 @@
 # specifying the the <lib> or <dll> tags.
 # <lib>@boost/libs/thread/build/boost_thread for static native and
 # <lib>@boost/libs/thread/build/boost_thread_pthread static pthread.
-# 
+# If your compiler does not have the pthread lib in a standard
+# include path, you need to specify that too, with <include> and
+# <library-file>.
 
 project-root ;
 
@@ -29,7 +31,10 @@ template example
 	  #<dll>@boost/libs/thread/build/boost_thread_pthread
         : ## requirements ##
 	  <include>$(BOOST_ROOT)
+	  # uncomment below to get pthread on windows
 	  #<define>BOOST_THREAD_POSIX
+	  #<include>$(PTW32_INCLUDE)
+	  #<library-file>$(PTW32_LIB)
         : ## default build ##
           <threading>multi
     	;
