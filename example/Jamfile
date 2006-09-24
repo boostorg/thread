@@ -1,19 +1,19 @@
-# Copyright 2006 Roland Schwarz.
-# # Distributed under the Boost Software License, Version 1.0. (See
-# # accompanying file LICENSE_1_0.txt or copy at
-# # http://www.boost.org/LICENSE_1_0.txt)
-# #
-# # This work is a reimplementation along the design and ideas
-# # of William E. Kempf.
+# Copyright (C) 2006 Roland Schwarz.
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+#
+# This work is a reimplementation along the design and ideas
+# of William E. Kempf.
 #
 
 # The threading library is available in two versions.
-# Native to the environment and based upon pthread.
+# Native to the environment or based ontop pthread.
 # To select which version to use you need to define
 # BOOST_THREAD_POSIX when compiling your sources.
 # If BOOST_THREAD_POSIX is defined this will choose
 # pthread implementation.
-# You also need to compile the correct library version by
+# You also need to specify the correct library version by
 # specifying the the <lib> or <dll> tags.
 # <lib>@boost/libs/thread/build/boost_thread for static native and
 # <lib>@boost/libs/thread/build/boost_thread_pthread static pthread.
@@ -23,23 +23,25 @@ project-root ;
 
 template example
         : ## sources ##
-	  <template>@boost/libs/thread/build/includes
-	  #<lib>@boost/libs/thread/build/boost_thread
-	  <lib>@boost/libs/thread/build/boost_thread_pthread
+	  <lib>@boost/libs/thread/build/boost_thread
+	  #<lib>@boost/libs/thread/build/boost_thread_pthread
+	  #<dll>@boost/libs/thread/build/boost_thread
+	  #<dll>@boost/libs/thread/build/boost_thread_pthread
         : ## requirements ##
-	  <define>BOOST_THREAD_POSIX
+	  <include>$(BOOST_ROOT)
+	  #<define>BOOST_THREAD_POSIX
         : ## default build ##
           <threading>multi
     	;
 
-#exe monitor : <template>example monitor.cpp ;
-#exe starvephil : <template>example starvephil.cpp ;
-#exe tennis : <template>example tennis.cpp ;
-#exe condition : <template>example condition.cpp ;
-#exe mutex : <template>example mutex.cpp ;
-#exe once : <template>example once.cpp ;
-#exe recursive_mutex : <template>example recursive_mutex.cpp ;
+exe monitor : <template>example monitor.cpp ;
+exe starvephil : <template>example starvephil.cpp ;
+exe tennis : <template>example tennis.cpp ;
+exe condition : <template>example condition.cpp ;
+exe mutex : <template>example mutex.cpp ;
+exe once : <template>example once.cpp ;
+exe recursive_mutex : <template>example recursive_mutex.cpp ;
 exe thread : <template>example thread.cpp ;
-#exe thread_group : <template>example thread_group.cpp ;
-#exe tss : <template>example tss.cpp ;
-#exe xtime : <template>example xtime.cpp ;
+exe thread_group : <template>example thread_group.cpp ;
+exe tss : <template>example tss.cpp ;
+exe xtime : <template>example xtime.cpp ;

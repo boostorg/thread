@@ -1,4 +1,5 @@
-# Copyright 2006 Roland Schwarz.
+# Copyright 2003 William E. Kempf
+# Copyright 2006 Roland Schwarz
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -12,14 +13,15 @@ project example ;
 # path to point at the root directory of your Boost installation (the
 # one containing a subdirectory called "boost/".
 path-global BOOST_ROOT : ../../.. ;
+
 # Makes a project id for boost so that other Boost.Build projects can
 # refer to it by name.
 #
 project boost : $(BOOST_ROOT) ;
 
-# Attn: path-global was broken in my version of bbv1, so I did not use it.
-# if you want to fix it, you'd need to fix the project rule in 
-# allyourbase.jam as shown below:
+# Attn: path-global was broken in my version of bbv1, which prevented specifying
+# BOOST_ROOT as a relative path. So I needed to apply
+# the below fix in allyourbase.jam as shown below:
 #
 #rule project ( name : location ? )
 #{
