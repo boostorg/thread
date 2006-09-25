@@ -1,4 +1,5 @@
-// (C) Copyright Michael Glassford 2004.
+// Copyright (C) 2004 Michael Glassford
+// Copyright (C) 2006 Roland Schwarz
 // Use, modification and distribution are subject to the
 // Boost Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -10,7 +11,7 @@
     #include <boost/thread/detail/tss_hooks.hpp>
 
     #include <boost/assert.hpp>
-    #include <boost/thread/mutex.hpp>
+//    #include <boost/thread/mutex.hpp>
     #include <boost/thread/once.hpp>
 
     #include <list>
@@ -20,15 +21,37 @@
 
     namespace
     {
+        class CScopedCSLock
+        {
+        public:
+            CScopedCSLock(LPCRITICAL_SECTION cs) : cs(cs), lk(true) {
+                ::EnterCriticalSection(cs);
+            }
+            ~CScopedCSLock() {
+                if (lk) ::LeaveCriticalSection(cs);
+            }
+            void Unlock() {
+                lk = false;
+                ::LeaveCriticalSection(cs);
+            }
+        private:
+            bool lk;
+            LPCRITICAL_SECTION cs;
+        };
+
         typedef std::list<thread_exit_handler> thread_exit_handlers;
 
         boost::once_flag once_init_threadmon_mutex = BOOST_ONCE_INIT;
-        boost::mutex* threadmon_mutex;
+        //boost::mutex* threadmon_mutex;
+        // We don't use boost::mutex here, to avoid a memory leak report,
+        // because we cannot delete it again easily.
+        CRITICAL_SECTION threadmon_mutex;
         void init_threadmon_mutex(void)
         {
-            threadmon_mutex = new boost::mutex;
-            if (!threadmon_mutex)
-                throw boost::thread_resource_error();
+            //threadmon_mutex = new boost::mutex;
+            //if (!threadmon_mutex)
+            //    throw boost::thread_resource_error();
+            ::InitializeCriticalSection(&threadmon_mutex);
         }
 
         const DWORD invalid_tls_key = TLS_OUT_OF_INDEXES;
@@ -52,7 +75,8 @@
         )
     {
         boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
-        boost::mutex::scoped_lock lock(*threadmon_mutex);
+        //boost::mutex::scoped_lock lock(*threadmon_mutex);
+        CScopedCSLock lock(&threadmon_mutex);
 
         //Allocate a tls slot if necessary.
 
@@ -118,7 +142,8 @@
     extern "C" BOOST_THREAD_DECL void on_process_enter(void)
     {
         boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
-        boost::mutex::scoped_lock lock(*threadmon_mutex);
+//        boost::mutex::scoped_lock lock(*threadmon_mutex);
+        CScopedCSLock lock(&threadmon_mutex);
 
         BOOST_ASSERT(attached_thread_count == 0);
     }
@@ -126,7 +151,8 @@
     extern "C" BOOST_THREAD_DECL void on_process_exit(void)
     {
         boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
-        boost::mutex::scoped_lock lock(*threadmon_mutex);
+//        boost::mutex::scoped_lock lock(*threadmon_mutex);
+        CScopedCSLock lock(&threadmon_mutex);
 
         BOOST_ASSERT(attached_thread_count == 0);
 
@@ -148,7 +174,8 @@
     extern "C" BOOST_THREAD_DECL void on_thread_exit(void)
     {
         boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
-        boost::mutex::scoped_lock lock(*threadmon_mutex);
+//        boost::mutex::scoped_lock lock(*threadmon_mutex);
+        CScopedCSLock lock(&threadmon_mutex);
 
         //Get the exit handlers list for the current thread from tls.
 
@@ -165,7 +192,8 @@
             BOOST_ASSERT(attached_thread_count > 0);
             --attached_thread_count;
 
-            lock.unlock();
+            //lock.unlock();
+            lock.Unlock();
 
             //Call each handler and remove it from the list
 
