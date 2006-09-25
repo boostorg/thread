@@ -13,6 +13,7 @@
 #include <boost/thread/win32/basic_recursive_mutex.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/xtime.hpp>
+#include <boost/thread/exceptions.hpp>
 
 namespace boost
 {
