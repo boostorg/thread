@@ -100,8 +100,8 @@ extern "C" {
         static OSStatus thread_proxy(void* param)
 #endif
     {
-        try
-        {
+        //try
+        //{
             thread_param* p = static_cast<thread_param*>(param);
             boost::function0<void> threadfunc = p->m_threadfunc;
             p->started();
@@ -109,13 +109,13 @@ extern "C" {
 #if defined(BOOST_HAS_WINTHREADS)
             on_thread_exit();
 #endif
-        }
-        catch (...)
-        {
+        //}
+        //catch (...)
+        //{
 #if defined(BOOST_HAS_WINTHREADS)
-            on_thread_exit();
+        //    on_thread_exit();
 #endif
-        }
+        //}
 #if defined(BOOST_HAS_MPTASKS)
         ::boost::detail::thread_cleanup();
 #endif
