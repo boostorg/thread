@@ -113,7 +113,11 @@ inline LONG ice_wrapper(LPVOID (__stdcall *ice)(LPVOID*, LPVOID, LPVOID),
 // according to the above function type wrappers.
 inline LONG compare_exchange(volatile LPLONG dest, LONG exch, LONG cmp)
 {
+#ifdef _WIN64
+    return InterlockedCompareExchange(dest, exch, cmp);
+#else
     return ice_wrapper(&InterlockedCompareExchange, dest, exch, cmp);
+#endif
 }
 }
 #endif
