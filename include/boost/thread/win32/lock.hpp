@@ -16,7 +16,6 @@
 
 namespace boost {
 
-class condition;
 struct xtime;
 
 namespace detail { namespace thread {
@@ -89,7 +88,6 @@ public:
     operator const void*() const { return m_locked ? this : 0; }
 
 private:
-    friend class boost::condition;
 
     Mutex& m_mutex;
     bool m_locked;
@@ -138,7 +136,6 @@ public:
     operator const void*() const { return m_locked ? this : 0; }
 
 private:
-    friend class boost::condition;
 
     TryMutex& m_mutex;
     bool m_locked;
@@ -192,7 +189,6 @@ public:
     operator const void*() const { return m_locked ? this : 0; }
 
 private:
-    friend class boost::condition;
 
     TimedMutex& m_mutex;
     bool m_locked;
