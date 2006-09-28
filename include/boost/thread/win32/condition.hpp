@@ -19,10 +19,13 @@
 #include <boost/thread/win32/xtime_utils.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 #include <boost/assert.hpp>
+#include <boost/utility.hpp>
 
 namespace boost
 {
-    class condition
+    template<typename lockable_type>
+    class basic_condition:
+        noncopyable
     {
     private:
         struct waiting_list_entry
@@ -46,14 +49,13 @@ namespace boost
         typedef gate_type::scoped_lock gate_scoped_lock;
         waiting_list_entry waiting_list;
 
-        template<typename scoped_lock_type>
         struct add_entry_to_list
         {
-            condition* self;
+            basic_condition* self;
             waiting_list_entry& entry;
-            scoped_lock_type& m;
+            lockable_type& m;
 
-            add_entry_to_list(condition* self_,waiting_list_entry& entry_,scoped_lock_type& m_):
+            add_entry_to_list(basic_condition* self_,waiting_list_entry& entry_,lockable_type& m_):
                 self(self_),entry(entry_),m(m_)
             {
                 entry.previous=&self->waiting_list;
@@ -82,8 +84,7 @@ namespace boost
         };
         
 
-        template<typename scoped_lock_type>
-        bool do_wait(scoped_lock_type& m,boost::xtime const& target=::boost::detail::get_xtime_sentinel())
+        bool do_wait(lockable_type& m,boost::xtime const& target=::boost::detail::get_xtime_sentinel())
         {
             waiting_list_entry entry={0};
             void* const currentProcess=BOOST_GET_CURRENT_PROCESS();
@@ -93,7 +94,7 @@ namespace boost
             BOOST_ASSERT(success);
             
             {
-                add_entry_to_list<scoped_lock_type> list_guard(this,entry,m);
+                add_entry_to_list list_guard(this,entry,m);
 
                 unsigned const woken_due_to_apc=0xc0;
                 while(!::boost::detail::interlocked_read(&entry.notified) && 
@@ -117,7 +118,7 @@ namespace boost
         }
 
     public:
-        condition()
+        basic_condition()
         {
             waiting_list.next=&waiting_list;
             waiting_list.previous=&waiting_list;
@@ -148,26 +149,24 @@ namespace boost
             }
         }
 
-        template<typename scoped_lock_type>
-        void wait(scoped_lock_type& m)
+        void wait(lockable_type& m)
         {
             do_wait(m);
         }
 
-        template<typename scoped_lock_type,typename predicate_type>
-        void wait(scoped_lock_type& m,predicate_type pred)
+        template<typename predicate_type>
+        void wait(lockable_type& m,predicate_type pred)
         {
             while(!pred()) do_wait(m);
         }
 
-        template<typename scoped_lock_type>
-        bool timed_wait(scoped_lock_type& m,const xtime& xt)
+        bool timed_wait(lockable_type& m,const xtime& xt)
         {
             return do_wait(m,xt);
         }
 
-        template<typename scoped_lock_type,typename predicate_type>
-        bool timed_wait(scoped_lock_type& m,const xtime& xt,predicate_type pred)
+        template<typename predicate_type>
+        bool timed_wait(lockable_type& m,const xtime& xt,predicate_type pred)
         {
             while (!pred()) 
             {
@@ -177,6 +176,9 @@ namespace boost
         }
     };
 
+    class condition:
+        public basic_condition<boost::mutex::scoped_lock>
+    {};
 }
 
 #endif // BOOST_THREAD_RS06041001_HPP
