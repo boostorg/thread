@@ -38,7 +38,8 @@ public:
             throw boost::thread_resource_error();
         }
     }
-
+    
+    ~tss();
     void* get() const;
     void set(void* value);
     void cleanup(void* p);

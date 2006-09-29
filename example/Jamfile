@@ -28,7 +28,7 @@ import ../build/threads ;
     template example
         ## sources ##
         : <template>thread_base
-          <dll>../build/boost_thread
+          <lib>../build/boost_thread
         ## requirements ##
         :
         ## default build ##
