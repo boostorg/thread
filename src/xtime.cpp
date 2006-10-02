@@ -22,6 +22,8 @@
 #   include <boost/thread/detail/force_cast.hpp>
 #endif
 
+#include <cassert>
+
 namespace boost {
 
 #ifdef BOOST_HAS_MPTASKS
@@ -106,13 +108,23 @@ int xtime_get(struct xtime* xtp, int clock_type)
         return clock_type;
 #elif defined(BOOST_HAS_GETTIMEOFDAY)
         struct timeval tv;
+#       ifndef NDEBUG
+        int res =
+#endif            
         gettimeofday(&tv, 0);
+        assert(0 == res);
+        assert(tv.tv_sec >= 0);
+        assert(tv.tv_usec >= 0);
         xtp->sec = tv.tv_sec;
         xtp->nsec = tv.tv_usec * 1000;
         return clock_type;
 #elif defined(BOOST_HAS_CLOCK_GETTIME)
         timespec ts;
+#       ifndef NDEBUG
+        int res =
+#       endif            
         clock_gettime(CLOCK_REALTIME, &ts);
+        assert(0 == res);
         xtp->sec = ts.tv_sec;
         xtp->nsec = ts.tv_nsec;
         return clock_type;
