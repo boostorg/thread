@@ -19,12 +19,16 @@ namespace boost
     {
         struct basic_mutex
         {
-            long active_count;
+            long lock_flag;
             void* semaphore;
+
+            BOOST_STATIC_CONSTANT(long, unlocked = 0);
+            BOOST_STATIC_CONSTANT(long, just_me = 1);
+            BOOST_STATIC_CONSTANT(long, waiting_threads = 2);
 
             void initialize()
             {
-                active_count=0;
+                lock_flag=unlocked;
                 semaphore=0;
             }
 
@@ -40,25 +44,23 @@ namespace boost
           
             bool try_lock()
             {
-                return !BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,1,0);
+                return BOOST_INTERLOCKED_COMPARE_EXCHANGE(&lock_flag,just_me,unlocked)==unlocked;
             }
             
             void lock()
             {
-                if(BOOST_INTERLOCKED_INCREMENT(&active_count)!=1)
+                if(!try_lock())
                 {
-                    BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE);
+                    while(BOOST_INTERLOCKED_EXCHANGE(&lock_flag,waiting_threads)!=unlocked)
+                    {
+                        BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE);
+                    }
                 }
-            }
-
-            long get_active_count()
-            {
-                return ::boost::detail::interlocked_read(&active_count);
             }
 
             void unlock()
             {
-                if(BOOST_INTERLOCKED_DECREMENT(&active_count)>0)
+                if(BOOST_INTERLOCKED_EXCHANGE(&lock_flag,unlocked)==waiting_threads)
                 {
                     BOOST_RELEASE_SEMAPHORE(get_semaphore(),1,0);
                 }
@@ -66,7 +68,7 @@ namespace boost
 
             bool locked()
             {
-                return get_active_count()>0;
+                return ::boost::detail::interlocked_read(&lock_flag)!=unlocked;
             }
             
         private:
