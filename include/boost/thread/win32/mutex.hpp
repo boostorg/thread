@@ -27,11 +27,12 @@ namespace boost
 {
     namespace detail
     {
-#ifdef BOOST_USE_CHECKED_MUTEX
-        typedef ::boost::detail::basic_checked_mutex underlying_mutex;
-#else
-        typedef ::boost::detail::basic_mutex underlying_mutex;
-#endif
+// #ifdef BOOST_USE_CHECKED_MUTEX
+//         typedef ::boost::detail::basic_checked_mutex underlying_mutex;
+// #else
+//         typedef ::boost::detail::basic_mutex underlying_mutex;
+// #endif
+        typedef ::boost::detail::basic_timed_mutex underlying_mutex;
     }
 
     class mutex:

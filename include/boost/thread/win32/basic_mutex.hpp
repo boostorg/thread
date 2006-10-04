@@ -30,6 +30,7 @@ namespace boost
             {
                 lock_flag=unlocked;
                 semaphore=0;
+                get_semaphore();
             }
 
             void destroy()

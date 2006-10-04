@@ -43,36 +43,93 @@ namespace boost
           
             bool try_lock()
             {
-                return !BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,lock_flag_value+1,0);
+                long old_count=0;
+                while(!(old_count&lock_flag_value))
+                {
+                    long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,(old_count+1)|lock_flag_value,old_count);
+                    if(current_count==old_count)
+                    {
+                        return true;
+                    }
+                    old_count=current_count;
+                }
+                return false;
             }
             
             void lock()
             {
-                BOOST_INTERLOCKED_INCREMENT(&active_count);
+                long old_count=0;
                 while(true)
                 {
-                    if(try_set_lock_flag())
+                    long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,(old_count+1)|lock_flag_value,old_count);
+                    if(current_count==old_count)
                     {
-                        return;
+                        break;
                     }
-                    BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE);
+                    old_count=current_count;
+                }
+
+                if(old_count&lock_flag_value)
+                {
+                    bool lock_acquired=false;
+                    do
+                    {
+                        old_count-=lock_flag_value;
+                        BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),BOOST_INFINITE);
+                        do
+                        {
+                            long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,old_count|lock_flag_value,old_count);
+                            if(current_count==old_count)
+                            {
+                                break;
+                            }
+                            old_count=current_count;
+                        }
+                        while(!(old_count&lock_flag_value));
+                        lock_acquired=!(old_count&lock_flag_value);
+                    }
+                    while(!lock_acquired);
                 }
             }
             bool timed_lock(::boost::xtime const& target_time)
             {
-                BOOST_INTERLOCKED_INCREMENT(&active_count);
+                long old_count=0;
                 while(true)
                 {
-                    if(try_set_lock_flag())
+                    long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,(old_count+1)|lock_flag_value,old_count);
+                    if(current_count==old_count)
                     {
-                        return true;
+                        break;
                     }
-                    if(BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),::boost::detail::get_milliseconds_until_time(target_time))!=0)
-                    {
-                        BOOST_INTERLOCKED_DECREMENT(&active_count);
-                        return false;
-                    }
+                    old_count=current_count;
                 }
+
+                if(old_count&lock_flag_value)
+                {
+                    bool lock_acquired=false;
+                    do
+                    {
+                        old_count-=lock_flag_value;
+                        if(BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),::boost::detail::get_milliseconds_until_time(target_time))!=0)
+                        {
+                            BOOST_INTERLOCKED_DECREMENT(&active_count);
+                            return false;
+                        }
+                        do
+                        {
+                            long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,old_count|lock_flag_value,old_count);
+                            if(current_count==old_count)
+                            {
+                                break;
+                            }
+                            old_count=current_count;
+                        }
+                        while(!(old_count&lock_flag_value));
+                        lock_acquired=!(old_count&lock_flag_value);
+                    }
+                    while(!lock_acquired);
+                }
+                return true;
             }
 
             long get_active_count()
@@ -97,21 +154,6 @@ namespace boost
             }
             
         private:
-            bool try_set_lock_flag()
-            {
-                long new_count=0;
-                while(new_count<lock_flag_value)
-                {
-                    long const count_before_exchange=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,new_count+lock_flag_value,new_count);
-                    if(count_before_exchange==new_count)
-                    {
-                        return true;
-                    }
-                    new_count=count_before_exchange;
-                }
-                return false;
-            }
-            
             void* get_semaphore()
             {
                 void* current_semaphore=::boost::detail::interlocked_read(&semaphore);
