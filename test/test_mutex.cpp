@@ -31,7 +31,7 @@ struct test_lock
     void operator()()
     {
         mutex_type mutex;
-        boost::condition condition;
+        boost::basic_condition<lock_type> condition;
 
         // Test the lock's constructors.
         {
@@ -67,7 +67,7 @@ struct test_trylock
     void operator()()
     {
         mutex_type mutex;
-        boost::condition condition;
+        boost::basic_condition<try_lock_type> condition;
 
         // Test the lock's constructors.
         {
@@ -111,7 +111,7 @@ struct test_timedlock
     void operator()()
     {
         mutex_type mutex;
-        boost::condition condition;
+        boost::basic_condition<timed_lock_type> condition;
 
         // Test the lock's constructors.
         {
