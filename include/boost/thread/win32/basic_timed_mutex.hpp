@@ -107,9 +107,10 @@ namespace boost
                 if(old_count&lock_flag_value)
                 {
                     bool lock_acquired=false;
+                    ++old_count; // we're waiting, too
                     do
                     {
-                        old_count-=lock_flag_value;
+                        old_count-=(lock_flag_value+1); // there will be one less active thread on this mutex when it gets unlocked
                         if(BOOST_WAIT_FOR_SINGLE_OBJECT(get_semaphore(),::boost::detail::get_milliseconds_until_time(target_time))!=0)
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
