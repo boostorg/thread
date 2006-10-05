@@ -32,6 +32,57 @@ namespace boost
     namespace detail
     {
         typedef ULONG_PTR ulong_ptr;
+
+        extern "C"
+        {
+            inline BOOL CloseHandle(HANDLE h)
+            {
+                return ::CloseHandle(h);
+            }
+            inline int ReleaseMutex(HANDLE h)
+            {
+                return ::ReleaseMutex(h);
+            }
+            inline HANDLE CreateMutexA(::_SECURITY_ATTRIBUTES* sa,BOOL owner,char const* name)
+            {
+                return ::CreateMutexA(sa,owner,name);
+            }
+            inline HANDLE CreateEventA(LPSECURITY_ATTRIBUTES lpEventAttributes,BOOL bManualReset,
+                                                 BOOL bInitialState,LPCSTR lpName)
+            {
+                return ::CreateEventA(lpEventAttributes,bManualReset,bInitialState,lpName);
+            }
+
+            inline BOOL ReleaseSemaphore(HANDLE hSemaphore,LONG lReleaseCount,LPLONG lpPreviousCount)
+            {
+                return ::ReleaseSemaphore(hSemaphore,lReleaseCount,lpPreviousCount);
+            }
+
+            inline HANDLE CreateSemaphoreA(LPSECURITY_ATTRIBUTES lpSemaphoreAttributes,LONG lInitialCount,
+                                                     LONG lMaximumCount,LPCSTR lpName)
+            {
+                return ::CreateSemaphoreA(lpSemaphoreAttributes,lInitialCount,lMaximumCount,lpName);
+            }
+            inline BOOL SetEvent(HANDLE hEvent)
+            {
+                return ::SetEvent(hEvent);
+            }
+            inline BOOL ResetEvent(HANDLE hEvent)
+            {
+                return ::ResetEvent(hEvent);
+            }
+
+
+//             inline unsigned long GetCurrentProcessId();
+//             inline unsigned long GetCurrentThreadId();
+//             inline unsigned long WaitForSingleObject(HANDLE,unsigned long);
+//             inline HANDLE GetCurrentThread();
+//             inline HANDLE GetCurrentProcess();
+//             inline int DuplicateHandle(HANDLE,HANDLE,HANDLE,HANDLE*,unsigned long,int,unsigned long);
+//             inline unsigned long SleepEx(unsigned long,int);
+//             typedef void (*queue_user_apc_callback_function)(ulong_ptr);
+//             inline unsigned long QueueUserAPC(queue_user_apc_callback_function,HANDLE,ulong_ptr);
+        }
     }
 }
 #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ )
@@ -62,6 +113,9 @@ namespace boost
             __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
             typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
             __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+            __declspec(dllimport) void* CreateEventA(_SECURITY_ATTRIBUTES*,int,int,char const*);
+            __declspec(dllimport) int __stdcall SetEvent(void*);
+            __declspec(dllimport) int __stdcall ResetEvent(void*);
         }
     }
 }

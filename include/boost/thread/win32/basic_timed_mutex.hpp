@@ -9,6 +9,7 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/assert.hpp>
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
@@ -58,40 +59,8 @@ namespace boost
             
             void lock()
             {
-                long old_count=0;
-                while(true)
-                {
-                    long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,(old_count+1)|lock_flag_value,old_count);
-                    if(current_count==old_count)
-                    {
-                        break;
-                    }
-                    old_count=current_count;
-                }
-
-                if(old_count&lock_flag_value)
-                {
-                    bool lock_acquired=false;
-                    void* const sem=get_semaphore();
-                    ++old_count; // we're waiting, too
-                    do
-                    {
-                        old_count-=(lock_flag_value+1); // there will be one less active thread on this mutex when it gets unlocked
-                        BOOST_WAIT_FOR_SINGLE_OBJECT(sem,BOOST_INFINITE);
-                        do
-                        {
-                            long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,old_count|lock_flag_value,old_count);
-                            if(current_count==old_count)
-                            {
-                                break;
-                            }
-                            old_count=current_count;
-                        }
-                        while(!(old_count&lock_flag_value));
-                        lock_acquired=!(old_count&lock_flag_value);
-                    }
-                    while(!lock_acquired);
-                }
+                bool const success=timed_lock(::boost::detail::get_xtime_sentinel());
+                BOOST_ASSERT(success);
             }
             bool timed_lock(::boost::xtime const& target_time)
             {
