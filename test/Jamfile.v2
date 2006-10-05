@@ -20,10 +20,6 @@ import testing ;
 project
     : requirements <library>../../test/build//boost_unit_test_framework
                    <threading>multi
-                   # All tests hang when executed on Tru64 with GCC
-                   # 4.1.1 on a dual processor machine. Seems that
-                   # threading is pretty broken.
-                   <toolset>gcc/<toolset-version>4_1_1_tru64>:<build>no
     ;
     
 rule thread-run ( sources )
