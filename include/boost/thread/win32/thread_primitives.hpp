@@ -71,6 +71,10 @@ namespace boost
             {
                 return ::ResetEvent(hEvent);
             }
+            inline DWORD WaitForMultipleObjects(DWORD nCount,const HANDLE* lpHandles,BOOL bWaitAll,DWORD dwMilliseconds)
+            {
+                return ::WaitForMultipleObjects(nCount,lpHandles,bWaitAll,dwMilliseconds);
+            }
 
 
 //             inline unsigned long GetCurrentProcessId();
@@ -113,9 +117,10 @@ namespace boost
             __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
             typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
             __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
-            __declspec(dllimport) void* CreateEventA(_SECURITY_ATTRIBUTES*,int,int,char const*);
+            __declspec(dllimport) void* __stdcall CreateEventA(_SECURITY_ATTRIBUTES*,int,int,char const*);
             __declspec(dllimport) int __stdcall SetEvent(void*);
             __declspec(dllimport) int __stdcall ResetEvent(void*);
+            __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
         }
     }
 }

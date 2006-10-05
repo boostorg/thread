@@ -199,6 +199,34 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+writer_count);
 }
 
+void test_only_one_upgradeable_lock_permitted()
+{
+    unsigned const number_of_threads=100;
+    
+    boost::thread_group pool;
+
+    boost::read_write_mutex rw_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex unblocked_count_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    
+    for(unsigned i=0;i<number_of_threads;++i)
+    {
+        pool.create_thread(locking_thread<boost::read_write_mutex::scoped_upgradeable_lock>(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex));
+    }
+
+    boost::thread::sleep(delay(1));
+
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
+
+    finish_lock.unlock();
+
+    pool.join_all();
+
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
+}
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
