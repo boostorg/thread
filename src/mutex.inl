@@ -61,8 +61,10 @@ inline void* new_critical_section()
 inline void* new_mutex(const char* name)
 {
 #if defined(BOOST_NO_ANSI_APIS)
-    USES_CONVERSION;
-    HANDLE mutex = CreateMutexW(0, 0, A2CW(name));
+    int num_wide_chars = (strlen(name) + 1);
+    LPWSTR wide_name = (LPWSTR)_alloca( num_wide_chars * 2 );
+    ::MultiByteToWideChar(CP_ACP, 0, name, -1, wide_name, num_wide_chars);
+    HANDLE mutex = CreateMutexW(0, 0, wide_name);
 #else
     HANDLE mutex = CreateMutexA(0, 0, name);
 #endif
