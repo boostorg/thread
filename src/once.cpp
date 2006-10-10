@@ -18,6 +18,7 @@
       using std::size_t;
 #   endif
 #   include <windows.h>
+#   include "mutex.inl"
 #   if defined(BOOST_NO_STRINGSTREAM)
 #       include <strstream>
 
@@ -137,11 +138,7 @@ void call_once(void (*func)(), once_flag& flag)
              << &flag 
              << std::ends;
         unfreezer unfreeze(strm);
-#   if defined (BOOST_NO_ANSI_APIS)
-        USES_CONVERSION;
-        HANDLE mutex = CreateMutexW(NULL, FALSE, A2CW(strm.str()));
-#   else
-        HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str());
+        HANDLE mutex=new_mutex(strm.str());
 #   endif
 #else
 #   if defined (BOOST_NO_ANSI_APIS)
