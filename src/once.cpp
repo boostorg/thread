@@ -9,6 +9,7 @@
 #include <boost/detail/workaround.hpp>
 
 #include <boost/thread/once.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <cstdio>
 #include <cassert>
 
