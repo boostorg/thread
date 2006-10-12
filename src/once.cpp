@@ -139,7 +139,6 @@ void call_once(void (*func)(), once_flag& flag)
              << std::ends;
         unfreezer unfreeze(strm);
         HANDLE mutex=new_mutex(strm.str());
-#   endif
 #else
 #   if defined (BOOST_NO_ANSI_APIS)
         std::wostringstream strm;
