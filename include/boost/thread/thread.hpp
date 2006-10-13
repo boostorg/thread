@@ -65,7 +65,7 @@ public:
     void add_thread(thread* thrd);
     void remove_thread(thread* thrd);
     void join_all();
-        int size();
+        int size() const;
 
 private:
     std::list<thread*> m_threads;

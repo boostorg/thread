@@ -378,7 +378,7 @@ void thread_group::join_all()
     }
 }
 
-int thread_group::size()
+int thread_group::size() const
 {
         return m_threads.size();
 }
