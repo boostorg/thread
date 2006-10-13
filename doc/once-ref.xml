@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
@@ -15,7 +15,7 @@
 		<code>once_flag</code> type (statically initialized to 
 		<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
 		routine exactly once. This can be used to initialize data in a
-		<link linkend="threads.glossary.thread-safe">thread-safe</link>
+		<link linkend="thread.glossary.thread-safe">thread-safe</link>
 		manner.</purpose>
 		
 		<description>The implementation-defined macro 
@@ -31,7 +31,7 @@
 			<code>once_flag</code> type (statically initialized to 
 			<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
 			routine exactly once. This can be used to initialize data in a
-			<link linkend="threads.glossary.thread-safe">thread-safe</link>
+			<link linkend="thread.glossary.thread-safe">thread-safe</link>
 			manner.</purpose>
 			
 			<description>The implementation-defined type <code>once_flag</code>
@@ -49,7 +49,7 @@
 			<code>once_flag</code> type (statically initialized to 
 			<macroname>BOOST_ONCE_INIT</macroname>) can be used to run a
 			routine exactly once. This can be used to initialize data in a
-			<link linkend="threads.glossary.thread-safe">thread-safe</link>
+			<link linkend="thread.glossary.thread-safe">thread-safe</link>
 			manner.</purpose>
 			
 			<description>

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
@@ -12,7 +12,7 @@
 last-revision="$Date$">
   <title>Acknowledgements</title>
   <para>William E. Kempf was the architect, designer, and implementor of 
-  &Boost.Threads;.</para>
+  &Boost.Thread;.</para>
   <para>Mac OS Carbon implementation written by Mac Murrett.</para>
   <para>Dave Moore provided initial submissions and further comments on the 
   <code>barrier</code>
@@ -32,7 +32,7 @@ last-revision="$Date$">
   on the design), Paul Mclachlan, Thomas Matelich and Iain Hanson (for help
   in trying to get the build to work on other platforms), and Kevin S. Van
   Horn (for several updates/corrections to the documentation).</para>
-  <para>Mike Glassford finished changes to &Boost.Threads; that were begun
+  <para>Mike Glassford finished changes to &Boost.Thread; that were begun
   by William Kempf and moved them into the main CVS branch.
   He also addressed a number of issues that were brought up on the Boost
   developer's mailing list and provided some additions and changes to the 
@@ -42,7 +42,7 @@ last-revision="$Date$">
   Mike Glassford finished William Kempf's conversion of the documentation to 
   BoostBook format and added a number of new sections.</para>
   <para>Discussions on the boost.org mailing list were essential in the
-  development of &Boost.Threads;
+  development of &Boost.Thread;
   . As of August 1, 2001, participants included Alan Griffiths, Albrecht
   Fritzsche, Aleksey Gurtovoy, Alexander Terekhov, Andrew Green, Andy Sawyer,
   Asger Alstrup Nielsen, Beman Dawes, Bill Klein, Bill Rutiser, Bill Wade,

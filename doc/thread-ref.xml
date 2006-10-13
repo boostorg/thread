@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
@@ -15,15 +15,15 @@
 		<purpose>
 			<para>The <classname>thread</classname> class represents threads of
 			execution, and provides the functionality to create and manage 
-			threads within the &Boost.Threads; library. See 
-			<xref linkend="threads.glossary"/> for a precise description of 
-			<link linkend="threads.glossary.thread">thread of execution</link>,
+			threads within the &Boost.Thread; library. See 
+			<xref linkend="thread.glossary"/> for a precise description of 
+			<link linkend="thread.glossary.thread">thread of execution</link>,
 			and for definitions of threading-related terms and of thread states such as 
-			<link linkend="threads.glossary.thread-state">blocked</link>.</para>
+			<link linkend="thread.glossary.thread-state">blocked</link>.</para>
 		</purpose>
 
 		<description>
-			<para>A <link linkend="threads.glossary.thread">thread of execution</link>
+			<para>A <link linkend="thread.glossary.thread">thread of execution</link>
 			has an initial function. For the program's initial thread, the initial 
 			function is <code>main()</code>. For other threads, the initial 
 			function is <code>operator()</code> of the function object passed to
@@ -40,7 +40,7 @@
 			&quot;joinable&quot; or &quot;non-joinable&quot;.</para>
 
 			<para>Except as described below, the policy used by an implementation
-			of &Boost.Threads; to schedule transitions between thread states is 
+			of &Boost.Thread; to schedule transitions between thread states is 
 			unspecified.</para>
 
 			<para><note>Just as the lifetime of a file may be different from the
@@ -153,7 +153,7 @@
 				<notes>If <code>*this == thread()</code> the result is 
 				implementation-defined. If the implementation doesn't
 				detect this the result will be 
-				<link linkend="threads.glossary.deadlock">deadlock</link>.
+				<link linkend="thread.glossary.deadlock">deadlock</link>.
 				</notes>
 			</method>
 		</method-group>
@@ -174,7 +174,7 @@
 				<type>void</type>
 
 				<effects>The current thread of execution is placed in the
-				<link linkend="threads.glossary.thread-state">ready</link> 
+				<link linkend="thread.glossary.thread-state">ready</link> 
 				state.</effects>
 				
 				<notes>
@@ -264,7 +264,20 @@
 				<effects>Calls <code>join()</code> on each of the managed 
 				<classname>thread</classname> objects.</effects>
 			</method>
-		</method-group>
+        </method-group>
+        
+        <method-group name="capacity">
+            
+            <method name="size" cv="const">
+                <type>int</type>
+                
+                <returns>the number of <classname>thread</classname> 
+                    objects in the group
+                </returns>
+
+            </method>
+
+        </method-group>
 	</class>
   </namespace>
 </header>
