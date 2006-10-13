@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<section id="threads.overview" last-revision="$Date$">
+<section id="thread.overview" last-revision="$Date$">
   <title>Overview</title>
-  <section id="threads.introduction">
+  <section id="thread.introduction">
     <title>Introduction</title>
-    <para>&Boost.Threads; allows C++ programs to execute as multiple,
+    <para>&Boost.Thread; allows C++ programs to execute as multiple,
     asynchronous, independent threads-of-execution. Each thread has its own
     machine state including program instruction counter and registers. Programs
     which execute as multiple threads are called multithreaded programs to
     distinguish them from traditional single-threaded programs. The <link
-	linkend="threads.glossary">glossary</link> gives a more complete description
+	linkend="thread.glossary">glossary</link> gives a more complete description
 	of the multithreading execution environment.</para>
     <para>Multithreading provides several advantages:
     <itemizedlist>
@@ -48,15 +48,15 @@
     multithreaded programs are subject to additional errors:
     <itemizedlist>
       <listitem>
-        <para><link linkend="threads.glossary.race-condition">Race
+        <para><link linkend="thread.glossary.race-condition">Race
 	    conditions</link></para>
       </listitem>
       <listitem>
-        <para><link linkend="threads.glossary.deadlock">Deadlock</link>
+        <para><link linkend="thread.glossary.deadlock">Deadlock</link>
         (sometimes called "deadly embrace")</para>
       </listitem>
       <listitem>
-        <para><link linkend="threads.glossary.priority-failure">Priority
+        <para><link linkend="thread.glossary.priority-failure">Priority
         failures</link> (priority inversion, infinite overtaking, starvation,
 		etc.)</para>
       </listitem>
@@ -65,10 +65,10 @@
 	errors. These aren't rare or exotic failures - they are virtually guaranteed
 	to occur unless multithreaded code is designed to avoid them. Priority
 	failures are somewhat less common, but are nonetheless serious.</para>
-    <para>The <link linkend="threads.design">&Boost.Threads; design</link>
+    <para>The <link linkend="thread.design">&Boost.Thread; design</link>
     attempts to minimize these errors, but they will still occur unless the
     programmer proactively designs to avoid them.</para>
-	<note>Please also see <xref linkend="threads.implementation_notes"/>
+	<note>Please also see <xref linkend="thread.implementation_notes"/>
 	for additional, implementation-specific considerations.</note>
 	</section>
     <section>
@@ -123,11 +123,11 @@
       <title>Runtime libraries</title>
       <para>
       <emphasis role="bold">Warning:</emphasis> Multithreaded programs such as
-	  those using &Boost.Threads; must link to <link
-	  linkend="threads.glossary.thread-safe">thread-safe</link> versions of
+	  those using &Boost.Thread; must link to <link
+	  linkend="thread.glossary.thread-safe">thread-safe</link> versions of
 	  all runtime libraries used by the program, including the runtime library
 	  for the C++ Standard Library. Failure to do so will cause <link
-	  linkend="threads.glossary.race-condition">race conditions</link> to occur
+	  linkend="thread.glossary.race-condition">race conditions</link> to occur
 	  when multiple threads simultaneously execute runtime library functions for
 	  <code>new</code>, <code>delete</code>, or other language features which
 	  imply shared state.</para>
@@ -173,15 +173,15 @@
     </section>
   </section>
   <section>
-    <title>Common guarantees for all &Boost.Threads; components</title>
+    <title>Common guarantees for all &Boost.Thread; components</title>
     <section>
       <title>Exceptions</title>
-      <para>&Boost.Threads; destructors never
+      <para>&Boost.Thread; destructors never
 	  throw exceptions. Unless otherwise specified, other
-	  &Boost.Threads; functions that do not have
+	  &Boost.Thread; functions that do not have
 	  an exception-specification may throw implementation-defined
 	  exceptions.</para>
-      <para>In particular, &Boost.Threads;
+      <para>In particular, &Boost.Thread;
 	  reports failure to allocate storage by throwing an exception of type
 	  <code>std::bad_alloc</code> or a class derived from
 	  <code>std::bad_alloc</code>, failure to obtain thread resources other than
@@ -195,7 +195,7 @@
     </section>
     <section>
       <title>NonCopyable requirement</title>
-      <para>&Boost.Threads; classes documented as
+      <para>&Boost.Thread; classes documented as
 	  meeting the NonCopyable requirement disallow copy construction and copy
 	  assignment. For the sake of exposition, the synopsis of such classes show
 	  private derivation from <classname>boost::noncopyable</classname>. Users

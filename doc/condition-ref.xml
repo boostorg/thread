@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
@@ -25,12 +25,12 @@
 
       <description>
         <para>A <classname>condition</classname> object is always used in
-          conjunction with a <link linkend="threads.concepts.mutexes">mutex</link>
+          conjunction with a <link linkend="thread.concepts.mutexes">mutex</link>
           object (an object whose type is a model of a <link
-            linkend="threads.concepts.Mutex">Mutex</link> or one of its
+            linkend="thread.concepts.Mutex">Mutex</link> or one of its
           refinements). The mutex object must be locked prior to waiting on the
           condition, which is verified by passing a lock object (an object whose
-          type is a model of <link linkend="threads.concepts.Lock">Lock</link> or
+          type is a model of <link linkend="thread.concepts.Lock">Lock</link> or
           one of its refinements) to the <classname>condition</classname> object's
           wait functions. Upon blocking on the <classname>condition</classname>
           object, the thread unlocks the mutex object. When the thread returns
@@ -43,8 +43,8 @@
           &cite.SchmidtStalRohnertBuschmann; and &cite.Hoare74;). Monitors are one
           of the most important patterns for creating reliable multithreaded
           programs.</para>
-        <para>See <xref linkend="threads.glossary"/> for definitions of <link
-            linkend="threads.glossary.thread-state">thread states</link>
+        <para>See <xref linkend="thread.glossary"/> for definitions of <link
+            linkend="thread.glossary.thread-state">thread states</link>
           blocked and ready. Note that "waiting" is a synonym for blocked.</para>
       </description>
 
@@ -91,10 +91,10 @@
           </parameter>
 
           <requires><simpara><code>ScopedLock</code> meets the <link
-                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+                linkend="thread.concepts.ScopedLock">ScopedLock</link>
               requirements.</simpara></requires>
           <effects><simpara>Releases the lock on the <link
-                linkend="threads.concepts.mutexes">mutex object</link>
+                linkend="thread.concepts.mutexes">mutex object</link>
               associated with <code>lock</code>, blocks the current thread of execution
               until readied by a call to <code>this->notify_one()</code>
               or<code> this->notify_all()</code>, and then reacquires the
@@ -120,7 +120,7 @@
           </parameter>
 
           <requires><simpara><code>ScopedLock</code> meets the <link
-                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+                linkend="thread.concepts.ScopedLock">ScopedLock</link>
               requirements and the return from <code>pred()</code> is
               convertible to <code>bool</code>.</simpara></requires>
           <effects><simpara>As if: <code>while (!pred())
@@ -145,10 +145,10 @@
           </parameter>
 
           <requires><simpara><code>ScopedLock</code> meets the <link
-                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+                linkend="thread.concepts.ScopedLock">ScopedLock</link>
               requirements.</simpara></requires>
           <effects><simpara>Releases the lock on the <link
-                linkend="threads.concepts.mutexes">mutex object</link>
+                linkend="thread.concepts.mutexes">mutex object</link>
               associated with <code>lock</code>, blocks the current thread of execution
               until readied by a call to <code>this->notify_one()</code>
               or<code> this->notify_all()</code>, or until time <code>xt</code> 
@@ -180,7 +180,7 @@
           </parameter>
 
           <requires><simpara><code>ScopedLock</code> meets the <link
-                linkend="threads.concepts.ScopedLock">ScopedLock</link>
+                linkend="thread.concepts.ScopedLock">ScopedLock</link>
               requirements and the return from <code>pred()</code> is
               convertible to <code>bool</code>.</simpara></requires>
           <effects><simpara>As if: <code>while (!pred()) { if (!timed_wait(lock,
