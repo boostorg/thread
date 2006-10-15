@@ -16,7 +16,7 @@
 
     //Definitions required by implementation
 
-    #if (_MSC_VER < 1310) // 1310 == VC++ 7.1
+    #if (_MSC_VER < 1300) // 1300 == VC++ 7.0
         typedef void (__cdecl *_PVFV)(void);
         #define INIRETSUCCESS
         #define PVAPI void
@@ -48,7 +48,7 @@
         //The .CRT$Xxx information is taken from Codeguru:
         //http://www.codeguru.com/Cpp/misc/misc/threadsprocesses/article.php/c6945__2/
 
-        #if (_MSC_VER >= 1310) // 1310 == VC++ 7.1
+        #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
         #endif
             //Callback to run tls glue code first.
@@ -78,7 +78,7 @@
             #pragma data_seg(".CRT$XTU")
             static _PVFV p_process_term = on_process_term;
             #pragma data_seg()
-        #if (_MSC_VER >= 1310) // 1310 == VC++ 7.1
+        #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(pop, old_seg)
         #endif
 
@@ -94,7 +94,7 @@
 
             DWORD volatile dw = _tls_used;
 
-            #if (_MSC_VER < 1310) // 1310 == VC++ 7.1
+            #if (_MSC_VER < 1300) // 1300 == VC++ 7.0
                 _TLSCB* pfbegin = __xl_a;
                 _TLSCB* pfend = __xl_z;
                 _TLSCB* pfdst = pfbegin;
