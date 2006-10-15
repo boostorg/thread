@@ -39,7 +39,7 @@ tss_data_cleanup_handlers_type* tss_data_cleanup_handlers = 0;
 #endif
 int tss_data_use = 0;
 
-void tss_data_inc_use()
+void tss_data_inc_use(boost::mutex::scoped_lock& lk)
 {
     ++tss_data_use;
 }
@@ -112,8 +112,8 @@ void init_tss_data()
     // The life time of cleanup handlers and mutex is beeing
     // managed by a reference counting technique.
     // This avoids a memory leak by releasing the global data
-    // after last use  only, since the execution order of cleanup
-    // handlers is unspecified on any platform with regards to 
+    // after last use only, since the execution order of cleanup
+    // handlers is unspecified on any platform with regards to
     // C++ destructor ordering rules.
     tss_data_cleanup_handlers = temp.release();
     tss_data_mutex = temp_mutex.release();
@@ -163,7 +163,7 @@ tss_slots* get_slots(bool alloc)
 #endif
         {
             boost::mutex::scoped_lock lock(*tss_data_mutex);
-            tss_data_inc_use();
+            tss_data_inc_use(lock);
         }
         slots = temp.release();
     }
@@ -186,7 +186,7 @@ void tss::init(boost::function1<void, void*>* pcleanup)
     {
         tss_data_cleanup_handlers->push_back(pcleanup);
         m_slot = tss_data_cleanup_handlers->size() - 1;
-        tss_data_inc_use();
+        tss_data_inc_use(lock);
     }
     catch (...)
     {
