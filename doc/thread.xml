@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<library name="Threads" dirname="thread" id="threads"
+<library name="Thread" dirname="thread" id="thread"
 last-revision="$Date$"
 xmlns:xi="http://www.w3.org/2001/XInclude">
   <libraryinfo>
@@ -29,9 +29,9 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
     </legalnotice>
     <librarypurpose>Portable C++ multi-threading</librarypurpose>
     <librarycategory name="category:concurrent" />
-    <title>Boost.Threads</title>
+    <title>Boost.Thread</title>
   </libraryinfo>
-  <title>Boost.Threads</title>
+  <title>Boost.Thread</title>
   <xi:include href="overview.xml"/>
   <xi:include href="design.xml"/>
   <xi:include href="concepts.xml"/>

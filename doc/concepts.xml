@@ -1,26 +1,26 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<section id="threads.concepts" last-revision="$Date$">
+<section id="thread.concepts" last-revision="$Date$">
 	<title>Concepts</title>
 
-	<para>&Boost.Threads; currently supports two types of mutex concepts:
-	ordinary <link linkend="threads.concepts.mutexes">Mutexes</link>,
+	<para>&Boost.Thread; currently supports two types of mutex concepts:
+	ordinary <link linkend="thread.concepts.mutexes">Mutexes</link>,
 	which allow only one thread at a time to access a resource, and
-	<link linkend="threads.concepts.read-write-mutexes">Read/Write Mutexes</link>,
+	<link linkend="thread.concepts.read-write-mutexes">Read/Write Mutexes</link>,
 	which allow only one thread at a time to access a resource when it is
 	being modified (the "Write" part of Read/Write), but allows multiple threads
 	to access a resource when it is only being referenced (the "Read" part of
 	Read/Write).</para>
 
-	<section id="threads.concepts.mutexes">
+	<section id="thread.concepts.mutexes">
 		<title>Mutexes</title>
 
 		<note>Certain changes to the mutexes and lock concepts are
@@ -31,17 +31,17 @@
 		
 		<para>A mutex (short for mutual-exclusion) object is used to serialize
 		access to a resource shared between multiple threads. The
-		<link linkend="threads.concepts.Mutex">Mutex</link> concept, with
-		<link linkend="threads.concepts.TryMutex">TryMutex</link> and
-		<link linkend="threads.concepts.TimedMutex">TimedMutex</link> refinements,
+		<link linkend="thread.concepts.Mutex">Mutex</link> concept, with
+		<link linkend="thread.concepts.TryMutex">TryMutex</link> and
+		<link linkend="thread.concepts.TimedMutex">TimedMutex</link> refinements,
 		formalize the requirements. A model that implements Mutex and its
 		refinements has two states: <emphasis role="bold">locked</emphasis> and
 		<emphasis role="bold">unlocked</emphasis>. Before using a shared resource, a
-		thread locks a &Boost.Threads; mutex object
+		thread locks a &Boost.Thread; mutex object
 		(an object whose type is a model of
-		<link linkend="threads.concepts.Mutex">Mutex</link> or one of it's
+		<link linkend="thread.concepts.Mutex">Mutex</link> or one of it's
 		refinements), ensuring
-		<link linkend="threads.glossary.thread-safe">thread-safe</link> access to
+		<link linkend="thread.glossary.thread-safe">thread-safe</link> access to
 		the shared resource. When use of the shared resource is complete, the thread
 		unlocks the mutex object, allowing another thread to acquire the lock and
 		use the shared resource.</para>
@@ -52,27 +52,27 @@
 		unlock a mutex object becomes even greater. When exceptions are thrown,
 		it becomes nearly impossible to ensure that the mutex object is unlocked
 		properly when using these traditional API's. The result is
-		<link linkend="threads.glossary.deadlock">deadlock</link>.</para>
+		<link linkend="thread.glossary.deadlock">deadlock</link>.</para>
 		<para>Many C++ threading libraries use a pattern known as <emphasis>Scoped
 		Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; to free the programmer from
 		the need to explicitly lock and unlock mutex objects. With this pattern, a
-		<link linkend="threads.concepts.lock-concepts">Lock</link> concept is employed where
+		<link linkend="thread.concepts.lock-concepts">Lock</link> concept is employed where
 		the lock object's constructor locks the associated mutex object and the
 		destructor automatically does the unlocking. The
-		&Boost.Threads; library takes this pattern to
+		&Boost.Thread; library takes this pattern to
 		the extreme in that Lock concepts are the only way to lock and unlock a
 		mutex object: lock and unlock functions are not exposed by any
-		&Boost.Threads; mutex objects. This helps to
+		&Boost.Thread; mutex objects. This helps to
 		ensure safe usage patterns, especially when code throws exceptions.</para>
 
-		<section id="threads.concepts.locking-strategies">
+		<section id="thread.concepts.locking-strategies">
 			<title>Locking Strategies</title>
 			
 			<para>Every mutex object follows one of several locking strategies. These
 			strategies define the semantics for the locking operation when the calling
 			thread already owns a lock on the mutex object.</para>
 			
-			<section id="threads.concepts.recursive-locking-strategy">
+			<section id="thread.concepts.recursive-locking-strategy">
 				<title>Recursive Locking Strategy</title>
 			
 				<para>With a recursive locking strategy, when a thread attempts to acquire
@@ -85,7 +85,7 @@
 				<para>Internally a lock count is maintained and the owning thread must
 				unlock the mutex object the same number of times that it locked it before
 				the mutex object's state returns to unlocked. Since mutex objects in
-				&Boost.Threads; expose locking
+				&Boost.Thread; expose locking
 				functionality only through lock concepts, a thread will always unlock a
 				mutex object the same number of times that it locked it. This helps to
 				eliminate a whole set of errors typically found in traditional C style
@@ -97,7 +97,7 @@
 				strategy.</para>
 			</section>
 			
-			<section id="threads.concepts.checked-locking-strategy">
+			<section id="thread.concepts.checked-locking-strategy">
 				<title>Checked Locking Strategy</title>
 				
 				<para>With a checked locking strategy, when a thread attempts to acquire a
@@ -105,35 +105,35 @@
 				operation will fail with some sort of error indication. Further, attempts
 				by a thread to unlock a mutex object that was not locked by the thread
 				will also return some sort of error indication. In
-				&Boost.Threads;, an exception of type
+				&Boost.Thread;, an exception of type
 				<classname>boost::lock_error</classname> 
 				would be thrown in these cases.</para>
 				
-				<para>&Boost.Threads; does not currently
+				<para>&Boost.Thread; does not currently
 				provide any mutex objects that use this strategy.</para>
 			</section>
 			
-			<section id="threads.concepts.unchecked-locking-strategy">
+			<section id="thread.concepts.unchecked-locking-strategy">
 				<title>Unchecked Locking Strategy</title>
 				
 				<para>With an unchecked locking strategy, when a thread attempts to acquire
 				a lock on a mutex object for which the thread already owns a lock the
 				operation will
-				<link linkend="threads.glossary.deadlock">deadlock</link>. In general
+				<link linkend="thread.glossary.deadlock">deadlock</link>. In general
 				this locking strategy is less safe than a checked or recursive strategy,
 				but it's also a faster strategy and so is employed by many libraries.</para>
 				
-				<para>&Boost.Threads; does not currently
+				<para>&Boost.Thread; does not currently
 				provide any mutex objects that use this strategy.</para>
 			</section>
 			
-			<section id="threads.concepts.unspecified-locking-strategy">
+			<section id="thread.concepts.unspecified-locking-strategy">
 				<title>Unspecified Locking Strategy</title>
 				
 				<para>With an unspecified locking strategy, when a thread attempts to
 				acquire a lock on a mutex object for which the thread already owns a lock
 				the operation results in 
-				<link linkend="threads.glossary.undefined-behavior">undefined behavior</link>.
+				<link linkend="thread.glossary.undefined-behavior">undefined behavior</link>.
 				</para>
 				
 				<para>In general a mutex object with an unspecified locking strategy is
@@ -149,7 +149,7 @@
 			</section>
 		</section>
 		
-		<section id="threads.concepts.sheduling-policies">
+		<section id="thread.concepts.sheduling-policies">
 			<title>Scheduling Policies</title>
 			
 			<para>Every mutex object follows one of several scheduling policies. These
@@ -157,7 +157,7 @@
 			more than one thread waiting to acquire a lock. In other words, the policy
 			defines which waiting thread shall acquire the lock.</para>
 			
-			<section id="threads.concepts.FIFO-scheduling-policy">
+			<section id="thread.concepts.FIFO-scheduling-policy">
 				<title>FIFO Scheduling Policy</title>
 				
 				<para>With a FIFO ("First In First Out") scheduling policy, threads waiting 
@@ -166,7 +166,7 @@
 				threads that are also waiting on the mutex object's lock.</para>
 			</section>
 			
-			<section id="threads.concepts.priority-driven-scheduling-policy">
+			<section id="thread.concepts.priority-driven-scheduling-policy">
 				<title>Priority Driven Policy</title>
 				
 				<para>With a Priority Driven scheduling policy, the thread with the
@@ -178,19 +178,19 @@
 				will determine which thread shall acquire the lock.</para>
 			</section>
 			
-			<section id="threads.concepts.unspecified-scheduling-policy">
+			<section id="thread.concepts.unspecified-scheduling-policy">
 				<title>Unspecified Policy</title>
 				
 				<para>The mutex object does not specify a scheduling policy. In order to
-				ensure portability, all &Boost.Threads;
+				ensure portability, all &Boost.Thread;
 				mutex objects use an unspecified scheduling policy.</para>
 			</section>
 		</section>
 		
-		<section id="threads.concepts.mutex-concepts">
+		<section id="thread.concepts.mutex-concepts">
 			<title>Mutex Concepts</title>
 			
-			<section id="threads.concepts.Mutex">
+			<section id="thread.concepts.Mutex">
 				<title>Mutex Concept</title>
 				
 				<para>A Mutex object has two states: locked and unlocked. Mutex object
@@ -231,7 +231,7 @@
 							<row>
 								<entry>M::scoped_lock</entry>
 								<entry>A model of
-								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
+								<link linkend="thread.concepts.ScopedLock">ScopedLock</link>
 								</entry>
 							</row>
 						</tbody>
@@ -239,11 +239,11 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.TryMutex">
+			<section id="thread.concepts.TryMutex">
 				<title>TryMutex Concept</title>
 				
 				<para>A TryMutex is a refinement of
-				<link linkend="threads.concepts.Mutex">Mutex</link>. 
+				<link linkend="thread.concepts.Mutex">Mutex</link>. 
 				For a TryMutex type <code>M</code>
 				and an object <code>m</code> of that type, 
 				the following expressions must be well-formed 
@@ -264,7 +264,7 @@
 							<row>
 								<entry>M::scoped_try_lock</entry>
 								<entry>A model of
-								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
+								<link linkend="thread.concepts.ScopedTryLock">ScopedTryLock</link>
 								</entry>
 							</row>
 						</tbody>
@@ -272,11 +272,11 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.TimedMutex">
+			<section id="thread.concepts.TimedMutex">
 				<title>TimedMutex Concept</title>
 				
 				<para>A TimedMutex is a refinement of
-				<link linkend="threads.concepts.TryMutex">TryMutex</link>. 
+				<link linkend="thread.concepts.TryMutex">TryMutex</link>. 
 				For a TimedMutex type <code>M</code>
 				and an object <code>m</code> of that type, 
 				the following expressions must be well-formed
@@ -298,7 +298,7 @@
 								<entry>M::scoped_timed_lock</entry>
 								<entry>A model of
 								<link
-								linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
+								linkend="thread.concepts.ScopedTimedLock">ScopedTimedLock</link>
 								</entry>
 							</row>
 						</tbody>
@@ -307,11 +307,11 @@
 			</section>
 		</section>
 		
-		<section id="threads.concepts.mutex-models">
+		<section id="thread.concepts.mutex-models">
 			<title>Mutex Models</title>
 			
-			<para>&Boost.Threads; currently supplies six models of
-			<link linkend="threads.concepts.Mutex">Mutex</link>
+			<para>&Boost.Thread; currently supplies six models of
+			<link linkend="thread.concepts.Mutex">Mutex</link>
 			and its refinements.</para>
 			
 			<table>
@@ -328,7 +328,7 @@
 					
 					<tbody>
 						<row>
-							<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+							<entry><link linkend="thread.concepts.Mutex">Mutex</link></entry>
 							<entry></entry>
 							<entry>
 							<para><classname>boost::mutex</classname></para>
@@ -336,16 +336,16 @@
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
-							<entry><link linkend="threads.concepts.Mutex">Mutex</link></entry>
+							<entry><link linkend="thread.concepts.TryMutex">TryMutex</link></entry>
+							<entry><link linkend="thread.concepts.Mutex">Mutex</link></entry>
 							<entry>
 								<para><classname>boost::try_mutex</classname></para>
 								<para><classname>boost::recursive_try_mutex</classname></para>
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TimedMutex">TimedMutex</link></entry>
-							<entry><link linkend="threads.concepts.TryMutex">TryMutex</link></entry>
+							<entry><link linkend="thread.concepts.TimedMutex">TimedMutex</link></entry>
+							<entry><link linkend="thread.concepts.TryMutex">TryMutex</link></entry>
 							<entry>
 								<para><classname>boost::timed_mutex</classname></para>
 								<para><classname>boost::recursive_timed_mutex</classname></para>
@@ -356,17 +356,17 @@
 			</table>
 		</section>
 		
-		<section id="threads.concepts.lock-concepts">
+		<section id="thread.concepts.lock-concepts">
 			<title>Lock Concepts</title>
 
 			<para>A lock object provides a safe means for locking and unlocking a mutex
 			object (an object whose type is a model of <link
-			linkend="threads.concepts.Mutex">Mutex</link> or one of its refinements). In
+			linkend="thread.concepts.Mutex">Mutex</link> or one of its refinements). In
 			other words they are an implementation of the <emphasis>Scoped
 			Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; pattern. The <link
-			linkend="threads.concepts.ScopedLock">ScopedLock</link>,
-			<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>, and 
-			<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link>
+			linkend="thread.concepts.ScopedLock">ScopedLock</link>,
+			<link linkend="thread.concepts.ScopedTryLock">ScopedTryLock</link>, and 
+			<link linkend="thread.concepts.ScopedTimedLock">ScopedTimedLock</link>
 			concepts formalize the requirements.</para>
 			<para>Lock objects are constructed with a reference to a mutex object and
 			typically acquire ownership of the mutex object by setting its state to
@@ -375,12 +375,12 @@
 			and unlock the mutex object.</para>
 			<para>Lock objects are meant to be short lived, expected to be used at block
 			scope only. The lock objects are not <link
-			linkend="threads.glossary.thread-safe">thread-safe</link>. Lock objects must
+			linkend="thread.glossary.thread-safe">thread-safe</link>. Lock objects must
 			maintain state to indicate whether or not they've been locked and this state
 			is not protected by any synchronization concepts. For this reason a lock
 			object should never be shared between multiple threads.</para>
 
-			<section id="threads.concepts.Lock">
+			<section id="thread.concepts.Lock">
 				<title>Lock Concept</title>
 				
 				<para>For a Lock type <code>L</code> 
@@ -423,15 +423,15 @@
 									
 									<para>If the associated mutex object is
 									already locked by some other thread, places the current thread in the 
-									<link linkend="threads.glossary.thread-state">Blocked</link> state until
+									<link linkend="thread.glossary.thread-state">Blocked</link> state until
 									the associated mutex is unlocked, after which the current thread
 									is placed in the <link
-									linkend="threads.glossary.thread-state">Ready</link> state,
+									linkend="thread.glossary.thread-state">Ready</link> state,
 									eventually to be returned to the <link
-									linkend="threads.glossary.thread-state">Running</link> state. If
+									linkend="thread.glossary.thread-state">Running</link> state. If
 									the associated mutex object is already locked by the same thread
 									the behavior is dependent on the <link
-									linkend="threads.concepts.locking-strategies">locking
+									linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated mutex object.</para>
 									
 									<para>Postcondition: <code>locked() == true</code></para>
@@ -452,15 +452,15 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.ScopedLock">
+			<section id="thread.concepts.ScopedLock">
 				<title>ScopedLock Concept</title>
 				
 				<para>A ScopedLock is a refinement of <link
-				linkend="threads.concepts.Lock">Lock</link>. 
+				linkend="thread.concepts.Lock">Lock</link>. 
 				For a ScopedLock type <code>L</code> 
 				and an object <code>lk</code> of that type, 
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.Mutex">Mutex</link> requirements, 
+				<link linkend="thread.concepts.Mutex">Mutex</link> requirements, 
 				and an object <code>b</code> of type <code>bool</code>, 
 				the following expressions must be well-formed 
 				and have the indicated effects.</para>
@@ -494,11 +494,11 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.TryLock">
+			<section id="thread.concepts.TryLock">
 				<title>TryLock Concept</title>
 				
 				<para>A TryLock is a refinement of <link
-				linkend="threads.concepts.Lock">Lock</link>. 
+				linkend="thread.concepts.Lock">Lock</link>. 
 				For a TryLock type <code>L</code> 
 				and an object <code>lk</code> of that type, 
 				the following expressions must be well-formed 
@@ -527,7 +527,7 @@
 									returning <code>true</code> if the lock attempt is successful,
 									otherwise <code>false</code>. If the associated mutex object is
 									already locked by the same thread the behavior is dependent on the
-									<link linkend="threads.concepts.locking-strategies">locking
+									<link linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated mutex object.</para>
 								</entry>
 							</row>
@@ -536,15 +536,15 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.ScopedTryLock">
+			<section id="thread.concepts.ScopedTryLock">
 				<title>ScopedTryLock Concept</title>
 				
 				<para>A ScopedTryLock is a refinement of <link
-				linkend="threads.concepts.TryLock">TryLock</link>. 
+				linkend="thread.concepts.TryLock">TryLock</link>. 
 				For a ScopedTryLock type <code>L</code> 
 				and an object <code>lk</code> of that type, 
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.TryMutex">TryMutex</link> requirements, 
+				<link linkend="thread.concepts.TryMutex">TryMutex</link> requirements, 
 				and an object <code>b</code> of type <code>bool</code>, 
 				the following expressions must be well-formed 
 				and have the indicated effects.</para>
@@ -578,11 +578,11 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.TimedLock">
+			<section id="thread.concepts.TimedLock">
 				<title>TimedLock Concept</title>
 				
 				<para>A TimedLock is a refinement of <link
-				linkend="threads.concepts.TryLock">TryLock</link>. 
+				linkend="thread.concepts.TryLock">TryLock</link>. 
 				For a TimedLock type <code>L</code> 
 				and an object <code>lk</code> of that type, 
 				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
@@ -611,7 +611,7 @@
 									if successful within the specified time <code>t</code>, otherwise
 									<code>false</code>. If the associated mutex object is already
 									locked by the same thread the behavior is dependent on the <link
-									linkend="threads.concepts.locking-strategies">locking
+									linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated mutex object.</para>
 								</entry>
 							</row>
@@ -620,15 +620,15 @@
 				</table>
 			</section>
 		
-			<section id="threads.concepts.ScopedTimedLock">
+			<section id="thread.concepts.ScopedTimedLock">
 				<title>ScopedTimedLock Concept</title>
 				
 				<para>A ScopedTimedLock is a refinement of <link
-				linkend="threads.concepts.TimedLock">TimedLock</link>. 
+				linkend="thread.concepts.TimedLock">TimedLock</link>. 
 				For a ScopedTimedLock type <code>L</code> 
 				and an object <code>lk</code> of that type, 
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.TimedMutex">TimedMutex</link> requirements, 
+				<link linkend="thread.concepts.TimedMutex">TimedMutex</link> requirements, 
 				and an object <code>b</code> of type <code>bool</code>, 
 				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
 				the following expressions must be well-formed 
@@ -663,11 +663,11 @@
 			</section>
 		</section>
 
-		<section id="threads.concepts.lock-models">
+		<section id="thread.concepts.lock-models">
 			<title>Lock Models</title>
 			
-			<para>&Boost.Threads; currently supplies twelve models of
-			<link linkend="threads.concepts.Lock">Lock</link>
+			<para>&Boost.Thread; currently supplies twelve models of
+			<link linkend="thread.concepts.Lock">Lock</link>
 			and its refinements.</para>
 			
 			<table>
@@ -684,13 +684,13 @@
 					
 					<tbody>
 						<row>
-							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry><link linkend="thread.concepts.Lock">Lock</link></entry>
 							<entry></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedLock">ScopedLock</link></entry>
-							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedLock">ScopedLock</link></entry>
+							<entry><link linkend="thread.concepts.Lock">Lock</link></entry>
 							<entry>
 								<para><classname>boost::mutex::scoped_lock</classname></para>
 								<para><classname>boost::recursive_mutex::scoped_lock</classname></para>
@@ -703,13 +703,13 @@
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
-							<entry><link linkend="threads.concepts.Lock">Lock</link></entry>
+							<entry><link linkend="thread.concepts.TryLock">TryLock</link></entry>
+							<entry><link linkend="thread.concepts.Lock">Lock</link></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link></entry>
-							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedTryLock">ScopedTryLock</link></entry>
+							<entry><link linkend="thread.concepts.TryLock">TryLock</link></entry>
 							<entry>
 								<para><classname>boost::try_mutex::scoped_try_lock</classname></para>
 								<para><classname>boost::recursive_try_mutex::scoped_try_lock</classname></para>
@@ -719,13 +719,13 @@
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TimedLock">TimedLock</link></entry>
-							<entry><link linkend="threads.concepts.TryLock">TryLock</link></entry>
+							<entry><link linkend="thread.concepts.TimedLock">TimedLock</link></entry>
+							<entry><link linkend="thread.concepts.TryLock">TryLock</link></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
-							<entry><link linkend="threads.concepts.TimedLock">TimedLock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedTimedLock">ScopedTimedLock</link></entry>
+							<entry><link linkend="thread.concepts.TimedLock">TimedLock</link></entry>
 							<entry>
 								<para><classname>boost::timed_mutex::scoped_timed_lock</classname></para>
 								<para><classname>boost::recursive_timed_mutex::scoped_timed_lock</classname></para>
@@ -737,11 +737,11 @@
 		</section>
 	</section>
 
-	<section id="threads.concepts.read-write-mutexes">
+	<section id="thread.concepts.read-write-mutexes">
 	<title>Read/Write Mutexes</title>
 		<note>Since the read/write mutex and related classes are new,
 		both interface and implementation are liable to change
-		in future releases of &Boost.Threads;.
+		in future releases of &Boost.Thread;.
 		The lock concepts and lock promotion and demotion in particular 
 		are still under discussion and very likely to change.</note>
 
@@ -749,9 +749,9 @@
 		is used to serialize access to a resource shared between multiple 
 		threads, where multiple "readers" can share simultaneous access, but 
 		"writers" require exclusive access. The
-		<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link> concept, with 
-		<link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link> and 
-		<link linkend="threads.concepts.TimedReadWriteMutex"> TimedReadWriteMutex</link>
+		<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link> concept, with 
+		<link linkend="thread.concepts.TryReadWriteMutex">TryReadWriteMutex</link> and 
+		<link linkend="thread.concepts.TimedReadWriteMutex"> TimedReadWriteMutex</link>
 		refinements formalize the requirements. A model that implements 
 		ReadWriteMutex and its refinements has three states: 
 		<emphasis role="bold">read-locked</emphasis>,
@@ -759,19 +759,19 @@
 		<emphasis role="bold">unlocked</emphasis>.
 		Before reading from a shared resource, a thread 
 		<emphasis role="bold">read-locks</emphasis> 
-		a &Boost.Threads; read/write mutex object
+		a &Boost.Thread; read/write mutex object
 		(an object whose type is a model of
-		<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>
+		<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link>
 		or one of it's refinements), ensuring 
-		<link linkend="threads.glossary.thread-safe">thread-safe</link>
+		<link linkend="thread.glossary.thread-safe">thread-safe</link>
 		access for reading from the shared resource. Before writing 
 		to a shared resource, a thread 
-		<emphasis role="bold">write-locks</emphasis> a &Boost.Threads; 
+		<emphasis role="bold">write-locks</emphasis> a &Boost.Thread; 
 		read/write mutex object
 		(an object whose type is a model of
-		<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>
+		<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link>
 		or one of it's refinements), ensuring 
-		<link linkend="threads.glossary.thread-safe">thread-safe</link>
+		<link linkend="thread.glossary.thread-safe">thread-safe</link>
 		access for altering the shared resource. When use of the shared 
 		resource is complete, the thread unlocks the mutex object, 
 		allowing another thread to acquire the lock and use the shared 
@@ -785,25 +785,25 @@
 		becomes even greater. When exceptions are thrown, it becomes nearly
 		impossible to ensure that the mutex object is unlocked
 		properly when using these traditional API's. The result is
-		<link linkend="threads.glossary.deadlock">deadlock</link>.</para>
+		<link linkend="thread.glossary.deadlock">deadlock</link>.</para>
 		
 		<para>Many C++ threading libraries use a pattern known as <emphasis>Scoped
 		Locking</emphasis> &cite.SchmidtStalRohnertBuschmann; to free the
 		programmer from the need to explicitly lock and unlock
 		read/write mutex objects. With this  pattern, a 
-		<link linkend="threads.concepts.read-write-lock-concepts">Read/Write Lock</link>
+		<link linkend="thread.concepts.read-write-lock-concepts">Read/Write Lock</link>
 		concept is employed where the lock object's constructor locks
 		the associated read/write mutex object
 		and the destructor automatically does the unlocking. The
-		&Boost.Threads; library takes this pattern to
+		&Boost.Thread; library takes this pattern to
 		the extreme in that 
-		<link linkend="threads.concepts.read-write-lock-concepts">Read/Write Lock</link>
+		<link linkend="thread.concepts.read-write-lock-concepts">Read/Write Lock</link>
 		concepts are the only way to lock and unlock a read/write mutex
 		object: lock and unlock functions are not exposed by any
-		&Boost.Threads; read/write mutex objects. This helps to
+		&Boost.Thread; read/write mutex objects. This helps to
 		ensure safe usage patterns, especially when code throws exceptions.</para>
 		
-		<section id="threads.concepts.read-write-locking-strategies">
+		<section id="thread.concepts.read-write-locking-strategies">
 			<title>Locking Strategies</title>
 			
 			<para>Every read/write mutex object follows one of several locking
@@ -811,7 +811,7 @@
 			operation when the calling thread already owns a lock on the 
 			read/write mutex object.</para>
 			
-			<section id="threads.concepts.read-write-locking-strategies.recursive">
+			<section id="thread.concepts.read-write-locking-strategies.recursive">
 				<title>Recursive Locking Strategy</title>
 
 				<para>With a recursive locking strategy, when a thread attempts
@@ -866,21 +866,21 @@
 				<para>Internally a lock count is maintained and the owning
 				thread must unlock the mutex object the same number of times
 				that it locked it before the mutex object's state returns
-				to unlocked. Since mutex objects in &Boost.Threads; expose
+				to unlocked. Since mutex objects in &Boost.Thread; expose
 				locking functionality only through lock concepts, a thread
 				will always unlock a mutex object the same number of times
 				that it locked it. This helps to eliminate a whole set of
 				errors typically found in traditional C style thread APIs.
 				</para>
 				
-				<para>&Boost.Threads; does not currently provide any read/write mutex objects 
+				<para>&Boost.Thread; does not currently provide any read/write mutex objects 
 				that use this strategy.  A successful implementation of this locking strategy
 				may require
-				<link linkend="threads.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
+				<link linkend="thread.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
 				</para>
 			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.checked">
+			<section id="thread.concepts.read-write-locking-strategies.checked">
 				<title>Checked Locking Strategy</title>
 
 				<para>With a checked locking strategy, when a thread attempts
@@ -890,7 +890,7 @@
 				acquisition which is a normal operation for ANY ReadWriteMutex.
 				Further, attempts by a thread to unlock a mutex that was not
 				locked by the thread will also return some sort of error
-				indication. In &Boost.Threads;, an exception of type 
+				indication. In &Boost.Thread;, an exception of type 
 				<classname>boost::lock_error</classname> would be thrown in
 				these cases.</para>
 
@@ -929,20 +929,20 @@
 					</tgroup>
 				</informaltable>
 				
-				<para>&Boost.Threads; does not currently provide any read/write mutex objects 
+				<para>&Boost.Thread; does not currently provide any read/write mutex objects 
 				that use this strategy.  A successful implementation of this locking strategy
 				may require
-				<link linkend="threads.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
+				<link linkend="thread.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
 				</para>
 			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.unchecked">
+			<section id="thread.concepts.read-write-locking-strategies.unchecked">
 				<title>Unchecked Locking Strategy</title>
 
 				<para>With an unchecked locking strategy, when a thread
 				attempts to acquire a lock on the read/write mutex object
 				for which the thread already owns a lock, the operation 
-				will <link linkend="threads.glossary.deadlock">deadlock</link>.
+				will <link linkend="thread.glossary.deadlock">deadlock</link>.
 				In general this locking strategy is less safe than a checked
 				or recursive strategy, but it can be a faster strategy and so
 				is employed by many libraries.</para>
@@ -966,38 +966,38 @@
 							<row> 
 								<entry>read-lock</entry>
 								<entry>write-lock</entry>
-								<entry><link linkend="threads.glossary.deadlock">Deadlock</link></entry>
+								<entry><link linkend="thread.glossary.deadlock">Deadlock</link></entry>
 							</row>
 							<row> 
 								<entry>write-locked</entry>
 								<entry>read-lock</entry>
-								<entry><link linkend="threads.glossary.deadlock">Deadlock</link></entry>
+								<entry><link linkend="thread.glossary.deadlock">Deadlock</link></entry>
 							</row>
 							<row> 
 								<entry>write-locked</entry>
 								<entry>write-lock</entry>
-								<entry><link linkend="threads.glossary.deadlock">Deadlock</link></entry>
+								<entry><link linkend="thread.glossary.deadlock">Deadlock</link></entry>
 							</row>
 						</tbody>
 					</tgroup>
 				</informaltable>
 				
-				<para>&Boost.Threads; does not currently provide any mutex
+				<para>&Boost.Thread; does not currently provide any mutex
 				objects that use this strategy.  For ReadWriteMutexes on
 				platforms that contain natively recursive synchronization
 				primitives, implementing a guaranteed-deadlock can actually
 				involve extra work, and would likely require 
-				<link linkend="threads.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
+				<link linkend="thread.concepts.read-write-locking-strategies.thread-identification">thread identification</link>.
 				</para>
   			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.unspecified">
+			<section id="thread.concepts.read-write-locking-strategies.unspecified">
 				<title>Unspecified Locking Strategy</title>
 
 				<para>With an unspecified locking strategy, when a thread
 				attempts to acquire a lock on a read/write mutex object for
 				which the thread already owns a lock, the operation results 
-				in <link linkend="threads.glossary.undefined-behavior">undefined behavior</link>.
+				in <link linkend="thread.glossary.undefined-behavior">undefined behavior</link>.
 				When a read/write mutex object has an unspecified locking 
 				strategy the programmer must assume that the read/write mutex
 				object instead uses an unchecked strategy as the worse case,
@@ -1024,18 +1024,18 @@
 								<entry>read-lock</entry>
 								<entry>write-lock</entry>
 								<entry> 
-								<link linkend="threads.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="threads.glossary.deadlock">deadlock</link>
+								<link linkend="thread.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="thread.glossary.deadlock">deadlock</link>
 							</entry>
 							</row>
 							<row> 
 								<entry>write-locked</entry>
 								<entry>read-lock</entry>
-								<entry><link linkend="threads.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="threads.glossary.deadlock">deadlock</link></entry>
+								<entry><link linkend="thread.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="thread.glossary.deadlock">deadlock</link></entry>
 							</row>
 							<row> 
 								<entry>write-locked</entry>
 								<entry>write-lock</entry>
-								<entry><link linkend="threads.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="threads.glossary.deadlock">deadlock</link></entry>
+								<entry><link linkend="thread.glossary.undefined-behavior">Undefined</link>, but generally <link linkend="thread.glossary.deadlock">deadlock</link></entry>
 							</row>
 						</tbody>
 					</tgroup>
@@ -1054,7 +1054,7 @@
 				use this locking strategy despite the lack of safety.</para>
 			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.thread-identification">
+			<section id="thread.concepts.read-write-locking-strategies.thread-identification">
 				<title>Thread Identification</title>
 
 				<para>ReadWriteMutexes can support specific Locking Strategies 
@@ -1077,17 +1077,17 @@
 				a recursive or checked ReadWriteMutex while still providing
 				flexibility in terms of Scheduling Policies. </para>
 				
-				<para>Please refer to the &Boost.Threads;
-				<link linkend="threads.concepts.read-write-mutex-concepts">read/write mutex concept</link> 
+				<para>Please refer to the &Boost.Thread;
+				<link linkend="thread.concepts.read-write-mutex-concepts">read/write mutex concept</link> 
 				documentation for a discussion of locking strategies.
 				The read/write mutex supports only the
-				<link linkend="threads.concepts.read-write-locking-strategies.unspecified">unspecified</link>
+				<link linkend="thread.concepts.read-write-locking-strategies.unspecified">unspecified</link>
 				locking strategy. ReadWriteMutexes are parameterized on a
 				Mutex type which they use to control write-locking 
 				and access to internal state.</para>
 			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.promotion">
+			<section id="thread.concepts.read-write-locking-strategies.promotion">
 				<title>Lock Promotion</title>
 
 				<para>ReadWriteMutexes can support lock promotion, where a
@@ -1101,12 +1101,12 @@
 				both threads will be waiting for the other to release their read-lock.
 				</para>
 				
-				<para>Currently, &Boost.Threads; supports lock promotion
+				<para>Currently, &Boost.Thread; supports lock promotion
 				through <code>promote()</code>, <code>try_promote()</code>,
 				and <code>timed_promote()</code> operations.</para>
 			</section>
 			
-			<section id="threads.concepts.read-write-locking-strategies.demotion">
+			<section id="thread.concepts.read-write-locking-strategies.demotion">
 				<title>Lock Demotion</title>
 
 				<para>ReadWriteMutexes can support lock demotion, where a
@@ -1117,13 +1117,13 @@
 				during lock promotion is not a problem for lock
 				demotion.</para>
 				
-				<para>Currently, &Boost.Threads; supports lock demotion
+				<para>Currently, &Boost.Thread; supports lock demotion
 				through <code>demote()</code>, <code>try_demote()</code>,
 				and <code>timed_demote()</code> operations.</para>
 			</section>
 		</section>
 		
-		<section id="threads.concepts.read-write-scheduling-policies">
+		<section id="thread.concepts.read-write-scheduling-policies">
 			<title>Scheduling Policies</title>
 			
 			<para>Every read/write mutex object follows one of several scheduling
@@ -1143,10 +1143,10 @@
 			waiting for the same type of lock) will acquire the thread.
 			</para>
 			
-			<section id="threads.concepts.read-write-scheduling-policies.inter-class">
+			<section id="thread.concepts.read-write-scheduling-policies.inter-class">
 				<title>Inter-Class Scheduling Policies</title>
 				
-				<section id="threads.concepts.read-write-scheduling-policies.reader-priority">	
+				<section id="thread.concepts.read-write-scheduling-policies.reader-priority">	
 					<title>ReaderPriority</title>
 					
 					<para>With ReaderPriority scheduling, any pending request for
@@ -1234,7 +1234,7 @@
 					</informaltable>
 				</section>
 
-				<section id="threads.concepts.read-write-scheduling-policies.writer-priority">
+				<section id="thread.concepts.read-write-scheduling-policies.writer-priority">
 					<title>WriterPriority</title>
 					
 					<para>With WriterPriority scheduling, any pending request
@@ -1323,7 +1323,7 @@
 					</informaltable>
 				</section>
 				
-				<section id="threads.concepts.read-write-scheduling-policies.alternating-many-reads">
+				<section id="thread.concepts.read-write-scheduling-policies.alternating-many-reads">
 					<title>AlternatingPriority/ManyReads</title>
 					
 					<para>With AlternatingPriority/ManyReads scheduling, reader
@@ -1421,7 +1421,7 @@
 					</informaltable>
 				</section>
 				
-				<section id="threads.concepts.read-write-scheduling-policies.alternating-single-read">
+				<section id="thread.concepts.read-write-scheduling-policies.alternating-single-read">
 					<title>AlternatingPriority/SingleRead</title>
 					
 					<para>With AlternatingPriority/SingleRead scheduling, reader
@@ -1521,34 +1521,34 @@
 				</section>
 			</section>
 			
-			<section id="threads.concepts.read-write-scheduling-policies.intra-class">
+			<section id="thread.concepts.read-write-scheduling-policies.intra-class">
 				<title>Intra-Class Scheduling Policies</title>
 				
 				<para>Please refer to 
-				<xref linkend="threads.concepts.sheduling-policies" />
+				<xref linkend="thread.concepts.sheduling-policies" />
 				for a discussion of mutex scheduling policies, which are identical to 
 				read/write mutex intra-class scheduling policies.</para>
 				
 				<para>For threads waiting to obtain write-locks, the read/write mutex
 				supports only the 
-				<link linkend="threads.concepts.unspecified-scheduling-policy">Unspecified</link>
+				<link linkend="thread.concepts.unspecified-scheduling-policy">Unspecified</link>
 				intra-class scheduling policy. That is, given a set of threads
 				waiting for write-locks, the order, relative to one another, in
 				which they receive the write-lock is unspecified.</para>
 				
 				<para>For threads waiting to obtain read-locks, the read/write mutex
 				supports only the 
-				<link linkend="threads.concepts.unspecified-scheduling-policy">Unspecified</link>
+				<link linkend="thread.concepts.unspecified-scheduling-policy">Unspecified</link>
 				intra-class scheduling policy. That is, given a set of threads
 				waiting for read-locks, the order, relative to one another, in
 				which they receive the read-lock is unspecified.</para>
 			</section>
 		</section>
 
-		<section id="threads.concepts.read-write-mutex-concepts">
+		<section id="thread.concepts.read-write-mutex-concepts">
 			<title>Mutex Concepts</title>
 			
-			<section id="threads.concepts.ReadWriteMutex">
+			<section id="thread.concepts.ReadWriteMutex">
 				<title>ReadWriteMutex Concept</title>
 				
 				<para>A ReadWriteMutex object has three states: read-locked,
@@ -1591,19 +1591,19 @@
 							<row> 
 								<entry><code>M::scoped_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>
+								<link linkend="thread.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>
 								requirements. </entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_read_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
+								<link linkend="thread.concepts.ScopedLock">ScopedLock</link>
 								requirements. </entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedLock">ScopedLock</link>
+								<link linkend="thread.concepts.ScopedLock">ScopedLock</link>
 								requirements. </entry>
 							</row>
 						</tbody>
@@ -1611,11 +1611,11 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.TryReadWriteMutex">
+			<section id="thread.concepts.TryReadWriteMutex">
 				<title>TryReadWriteMutex Concept</title>
 				
 				<para>A TryReadWriteMutex is a refinement of
-				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>.
+				<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link>.
 				For a TryReadWriteMutex type <code>M</code> 
 				and an object <code>m</code> of that type,
 				the following expressions must be well-formed 
@@ -1636,19 +1636,19 @@
 							<row> 
 								<entry><code>M::scoped_try_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>
+								<link linkend="thread.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>
 								requirements.</entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_try_read_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
+								<link linkend="thread.concepts.ScopedTryLock">ScopedTryLock</link>
 								requirements.</entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_try_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTryLock">ScopedTryLock</link>
+								<link linkend="thread.concepts.ScopedTryLock">ScopedTryLock</link>
 								requirements.</entry>
 							</row>
 						</tbody>
@@ -1656,11 +1656,11 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.TimedReadWriteMutex">
+			<section id="thread.concepts.TimedReadWriteMutex">
 				<title>TimedReadWriteMutex Concept</title>
 				
 				<para>A TimedReadWriteMutex is a refinement of
-				<link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link>.
+				<link linkend="thread.concepts.TryReadWriteMutex">TryReadWriteMutex</link>.
 				For a TimedReadWriteMutex type <code>M</code> 
 				and an object <code>m</code> of that type
 				the following expressions must be well-formed 
@@ -1681,19 +1681,19 @@
 							<row> 
 								<entry><code>M::scoped_timed_read_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link> 
+								<link linkend="thread.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link> 
 								requirements.</entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_timed_read_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link> 
+								<link linkend="thread.concepts.ScopedTimedLock">ScopedTimedLock</link> 
 								requirements.</entry>
 							</row>
 							<row> 
 								<entry><code>M::scoped_timed_write_lock</code></entry>
 								<entry>A type meeting the 
-								<link linkend="threads.concepts.ScopedTimedLock">ScopedTimedLock</link> 
+								<link linkend="thread.concepts.ScopedTimedLock">ScopedTimedLock</link> 
 								requirements.</entry>
 							</row>
 						</tbody>
@@ -1702,11 +1702,11 @@
 			</section>
 		</section>
 		
-		<section id="threads.concepts.read-write-mutex-models">
+		<section id="thread.concepts.read-write-mutex-models">
 			<title>Mutex Models</title>
 			
-			<para>&Boost.Threads; currently supplies three models of
-			<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link>
+			<para>&Boost.Thread; currently supplies three models of
+			<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link>
 			and its refinements.</para>
 			
 			<table>
@@ -1723,18 +1723,18 @@
 
 					<tbody>
 						<row> 
-							<entry><link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link></entry>
+							<entry><link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link></entry>
 							<entry></entry>
 							<entry><classname>boost::read_write_mutex</classname></entry>
 						</row>
 						<row> 
-							<entry><link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
-							<entry><link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link></entry>
+							<entry><link linkend="thread.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
+							<entry><link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link></entry>
 							<entry><classname>boost::try_read_write_mutex</classname></entry>
 						</row>
 						<row> 
-							<entry><link linkend="threads.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link></entry>
-							<entry><link linkend="threads.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
+							<entry><link linkend="thread.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link></entry>
+							<entry><link linkend="thread.concepts.TryReadWriteMutex">TryReadWriteMutex</link></entry>
 							<entry><classname>boost::timed_read_write_mutex</classname></entry>
 						</row>
 					</tbody>
@@ -1742,19 +1742,19 @@
 			</table>
 		</section>
 				
-		<section id="threads.concepts.read-write-lock-concepts">
+		<section id="thread.concepts.read-write-lock-concepts">
 			<title>Lock Concepts</title>
 
 			<para>A read/write lock object provides a safe means for locking
 			and unlocking a read/write mutex object (an object whose type is
 			a model of 
-			<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link> 
+			<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link> 
 			or one of its refinements). In other words they are an
 			implementation of the <emphasis>Scoped Locking</emphasis>
 			&cite.SchmidtStalRohnertBuschmann; pattern. The 
-			<link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>, 
-			<link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>, and 
-			<link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link>
+			<link linkend="thread.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link>, 
+			<link linkend="thread.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link>, and 
+			<link linkend="thread.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link>
 			concepts formalize the requirements.</para>
 			
 			<para>Read/write lock objects are constructed with a reference to a
@@ -1766,13 +1766,13 @@
 			
 			<para>Read/write lock objects are meant to be short lived, expected
 			to be used at block scope only. The read/write lock objects are not 
-			<link linkend="threads.glossary.thread-safe">thread-safe</link>.
+			<link linkend="thread.glossary.thread-safe">thread-safe</link>.
 			Read/write lock objects must maintain state to indicate whether or
 			not they've been locked and this state is not protected by any
 			synchronization concepts. For this reason a read/write lock object
 			should never be shared between multiple threads.</para>
 			
-			<section id="threads.concepts.ReadWriteLock">
+			<section id="thread.concepts.ReadWriteLock">
 				<title>ReadWriteLock Concept</title>
 				
 				<para>For a read/write lock type <code>L</code>
@@ -1833,36 +1833,36 @@
 									<para>If the associated read/write mutex
 									object is already read-locked by some other
 									thread, the effect depends on the
-									<link linkend="threads.concepts.read-write-scheduling-policies.inter-class">inter-class scheduling policy</link>
+									<link linkend="thread.concepts.read-write-scheduling-policies.inter-class">inter-class scheduling policy</link>
 									of the associated read/write mutex:
 									either immediately obtains an additional
 									read-lock on the associated read/write
 									mutex, or places the current thread in the
-									<link linkend="threads.glossary.thread-state">Blocked</link>
+									<link linkend="thread.glossary.thread-state">Blocked</link>
 									state until the associated read/write mutex
 									is unlocked, after which the current thread
 									is placed in the 
-									<link linkend="threads.glossary.thread-state">Ready</link>
+									<link linkend="thread.glossary.thread-state">Ready</link>
 									state, eventually to be returned to the 
-									<link linkend="threads.glossary.thread-state">Running</link>
+									<link linkend="thread.glossary.thread-state">Running</link>
 									state.</para>
 									
 									<para>If the associated read/write mutex
 									object is already write-locked by some other
 									thread, places the current thread in the
-									<link linkend="threads.glossary.thread-state">Blocked</link>
+									<link linkend="thread.glossary.thread-state">Blocked</link>
 									state until the associated read/write mutex
 									is unlocked, after which the current thread
 									is placed in the 
-									<link linkend="threads.glossary.thread-state">Ready</link>
+									<link linkend="thread.glossary.thread-state">Ready</link>
 									state, eventually to be returned to the
-									<link linkend="threads.glossary.thread-state">Running</link>
+									<link linkend="thread.glossary.thread-state">Running</link>
 									state.</para>
 
 									<para>If the associated read/write mutex
 									object is already locked by the same thread
 									the behavior is dependent on the
-									<link linkend="threads.concepts.read-write-locking-strategies">locking strategy</link>
+									<link linkend="thread.concepts.read-write-locking-strategies">locking strategy</link>
 									of the associated read/write mutex object.
 									</para>
 									
@@ -1879,19 +1879,19 @@
 									<para>If the associated read/write mutex
 									object is already locked by some other
 									thread, places the current thread in the
-									<link linkend="threads.glossary.thread-state">Blocked</link>
+									<link linkend="thread.glossary.thread-state">Blocked</link>
 									state until the associated read/write mutex
 									is unlocked, after which the current thread
 									is placed in the 
-									<link linkend="threads.glossary.thread-state">Ready</link>
+									<link linkend="thread.glossary.thread-state">Ready</link>
 									state, eventually to be returned to the
-									<link linkend="threads.glossary.thread-state">Running</link>
+									<link linkend="thread.glossary.thread-state">Running</link>
 									state.</para>
 
 									<para>If the associated read/write mutex
 									object is already locked by the same thread
 									the behavior is dependent on the
-									<link linkend="threads.concepts.read-write-locking-strategies">locking strategy</link>
+									<link linkend="thread.concepts.read-write-locking-strategies">locking strategy</link>
 									of the associated read/write mutex object.
 									</para>
 									
@@ -1940,15 +1940,15 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.ScopedReadWriteLock">
+			<section id="thread.concepts.ScopedReadWriteLock">
 				<title>ScopedReadWriteLock Concept</title>
 				
 				<para>A ScopedReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>. 
+				<link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link>. 
 				For a ScopedReadWriteLock type <code>L</code> 
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.ReadWriteMutex">ReadWriteMutex</link> requirements,
+				<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link> requirements,
 				and an object <code>s</code> of type <code>read_write_lock_state</code>,
 				the following expressions must be well-formed 
 				and have the indicated effects.</para>
@@ -1977,11 +1977,11 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.TryReadWriteLock">
+			<section id="thread.concepts.TryReadWriteLock">
 				<title>TryReadWriteLock Expressions</title>
 				
 				<para>A TryReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>.
+				<link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link>.
 				For a TryReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				the following expressions must be well-formed
@@ -2009,7 +2009,7 @@
 									mutex object, returning <code>true</code> if the attempt is successful,
 									otherwise <code>false</code>. If the associated read/write mutex object is
 									already locked by the same thread the behavior is dependent on the
-									<link linkend="threads.concepts.locking-strategies">locking
+									<link linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated read/write mutex object.</para>
 								</entry>
 							</row>
@@ -2023,7 +2023,7 @@
 									mutex object, returning <code>true</code> if the attempt is successful,
 									otherwise <code>false</code>. If the associated read/write mutex object is
 									already locked by the same thread the behavior is dependent on the
-									<link linkend="threads.concepts.locking-strategies">locking
+									<link linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated read/write mutex object.</para>
 								</entry>
 							</row>
@@ -2056,15 +2056,15 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.ScopedTryReadWriteLock">
+			<section id="thread.concepts.ScopedTryReadWriteLock">
 				<title>ScopedTryReadWriteLock Expressions</title>
 				
 				<para>A ScopedTryReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link>.
+				<link linkend="thread.concepts.TryReadWriteLock">TryReadWriteLock</link>.
 				For a ScopedTryReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the
-				<link linkend="threads.concepts.TryMutex">TryReadWriteMutex</link> requirements,
+				<link linkend="thread.concepts.TryMutex">TryReadWriteMutex</link> requirements,
 				and an object <code>s</code> of type <code>read_write_lock_state</code>,
 				and an object <code>b</code> of type <code>blocking_mode</code>, 
 				the following expressions must be well-formed
@@ -2095,11 +2095,11 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.TimedReadWriteLock">
+			<section id="thread.concepts.TimedReadWriteLock">
 				<title>TimedReadWriteLock Concept</title>
 				
 				<para>A TimedReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link>. 
+				<link linkend="thread.concepts.TryReadWriteLock">TryReadWriteLock</link>. 
 				For a TimedReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
@@ -2128,7 +2128,7 @@
 									and returns <code>true</code> if successful within the specified time <code>t</code>,
 									otherwise <code>false</code>. If the associated read/write mutex object is already
 									locked by the same thread the behavior is dependent on the <link
-									linkend="threads.concepts.locking-strategies">locking
+									linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated read/write mutex object.</para>
 								</entry>
 							</row>
@@ -2142,7 +2142,7 @@
 									and returns <code>true</code> if successful within the specified time <code>t</code>,
 									otherwise <code>false</code>. If the associated read/write mutex object is already
 									locked by the same thread the behavior is dependent on the <link
-									linkend="threads.concepts.locking-strategies">locking
+									linkend="thread.concepts.locking-strategies">locking
 									strategy</link> of the associated read/write mutex object.</para>
 								</entry>
 							</row>
@@ -2175,15 +2175,15 @@
 				</table>
 			</section>
 			
-			<section id="threads.concepts.ScopedTimedReadWriteLock">
+			<section id="thread.concepts.ScopedTimedReadWriteLock">
 				<title>ScopedTimedReadWriteLock Concept</title>
 				
 				<para>A ScopedTimedReadWriteLock is a refinement of 
-				<link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link>. 
+				<link linkend="thread.concepts.TimedReadWriteLock">TimedReadWriteLock</link>. 
 				For a ScopedTimedReadWriteLock type <code>L</code>
 				and an object <code>lk</code> of that type,
 				and an object <code>m</code> of a type meeting the 
-				<link linkend="threads.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link> requirements,
+				<link linkend="thread.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link> requirements,
 				and an object <code>s</code> of type <code>read_write_lock_state</code>,
 				and an object <code>t</code> of type <classname>boost::xtime</classname>, 
 				and an object <code>b</code> of type <code>blocking_mode</code>, 
@@ -2223,11 +2223,11 @@
 			</section>
 		</section>
 
-		<section id="threads.concepts.read-write-lock-models">
+		<section id="thread.concepts.read-write-lock-models">
 			<title>Lock Models</title>
 			
-			<para>&Boost.Threads; currently supplies six models of
-			<link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link>
+			<para>&Boost.Thread; currently supplies six models of
+			<link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link>
 			and its refinements.</para>
 			
 			<table>
@@ -2244,13 +2244,13 @@
 					
 					<tbody>
 						<row>
-							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link></entry>
 							<entry></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
-							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedReadWriteLock">ScopedReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link></entry>
 							<entry>
 								<para><classname>boost::read_write_mutex::scoped_read_write_lock</classname></para>
 								<para><classname>boost::try_read_write_mutex::scoped_read_write_lock</classname></para>
@@ -2258,26 +2258,26 @@
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
-							<entry><link linkend="threads.concepts.ReadWriteLock">ReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ReadWriteLock">ReadWriteLock</link></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
-							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedTryReadWriteLock">ScopedTryReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
 							<entry>
 								<para><classname>boost::try_read_write_mutex::scoped_try_read_write_lock</classname></para>
 								<para><classname>boost::timed_read_write_mutex::scoped_try_read_write_lock</classname></para>
 							</entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
-							<entry><link linkend="threads.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.TryReadWriteLock">TryReadWriteLock</link></entry>
 							<entry></entry>
 						</row>
 						<row>
-							<entry><link linkend="threads.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link></entry>
-							<entry><link linkend="threads.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.ScopedTimedReadWriteLock">ScopedTimedReadWriteLock</link></entry>
+							<entry><link linkend="thread.concepts.TimedReadWriteLock">TimedReadWriteLock</link></entry>
 							<entry>
 								<para><classname>boost::timed_read_write_mutex::scoped_timed_read_write_lock</classname></para>
 							</entry>

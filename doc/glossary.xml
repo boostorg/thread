@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<glossary id="threads.glossary" last-revision="$Date$">
+<glossary id="thread.glossary" last-revision="$Date$">
   <title>Glossary</title>
   <para>Definitions are given in terms of the C++ Standard
   &cite.ISO98;. References to the standard are in the form [1.2.3/4], which
@@ -16,9 +16,9 @@
   "/".</para>
   <para>Because the definitions are written in something akin to "standardese",
   they can be difficult to understand. The intent isn't to confuse, but rather
-  to clarify the additional requirements &Boost.Threads; places on a C++
+  to clarify the additional requirements &Boost.Thread; places on a C++
   implementation as defined by the C++ Standard.</para>
-  <glossentry id="threads.glossary.thread">
+  <glossentry id="thread.glossary.thread">
     <glossterm>Thread</glossterm>
     <glossdef>
 	  <para>Thread is short for "thread of execution". A thread of execution is
@@ -54,13 +54,13 @@
       </itemizedlist>
     </glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.thread-safe">
+  <glossentry id="thread.glossary.thread-safe">
     <glossterm>Thread-safe</glossterm>
 	<glossdef>
       <para>A program is thread-safe if it has no <link
-	  linkend="threads.glossary.race-condition">race conditions</link>, does
-	  not <link linkend="threads.glossary.deadlock">deadlock</link>, and has
-	  no <link linkend="threads.glossary.priority-failure">priority
+	  linkend="thread.glossary.race-condition">race conditions</link>, does
+	  not <link linkend="thread.glossary.deadlock">deadlock</link>, and has
+	  no <link linkend="thread.glossary.priority-failure">priority
 	  failures</link>.</para>
 	  <para>Note that thread-safety does not necessarily imply efficiency, and
 	  than while some thread-safety violations can be determined statically at
@@ -68,7 +68,7 @@
 	  runtime.</para>
 	</glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.thread-state">
+  <glossentry id="thread.glossary.thread-state">
     <glossterm>Thread State</glossterm>
 	<glossdef>
       <para>During the lifetime of a thread, it shall be in one of the following
@@ -170,7 +170,7 @@
 	  above table.]</para>
     </glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.race-condition">
+  <glossentry id="thread.glossary.race-condition">
     <glossterm>Race Condition</glossterm>
 	<glossdef>
       <para>A race condition is what occurs when multiple threads read from and write
@@ -179,10 +179,10 @@
 	  pattern which isn't even a valid value for the data type. A race condition
 	  results in undefined behavior [1.3.12].</para>
       <para>Race conditions can be prevented by serializing memory access using
-	  the tools provided by &Boost.Threads;.</para>
+	  the tools provided by &Boost.Thread;.</para>
     </glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.deadlock">
+  <glossentry id="thread.glossary.deadlock">
     <glossterm>Deadlock</glossterm>
 	<glossdef>
       <para>Deadlock is an execution state where for some set of threads, each
@@ -191,14 +191,14 @@
 	  become ready again.</para>
 	</glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.starvation">
+  <glossentry id="thread.glossary.starvation">
     <glossterm>Starvation</glossterm>
 	<glossdef>
 	  <para>The condition in which a thread is not making sufficient progress in
 	  its work during a given time interval.</para>
 	</glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.priority-failure">
+  <glossentry id="thread.glossary.priority-failure">
     <glossterm>Priority Failure</glossterm>
 	<glossdef>
 	  <para>A priority failure (such as priority inversion or infinite overtaking)
@@ -206,10 +206,10 @@
 	  performed in time to be useful.</para>
 	</glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.undefined-behavior">
+  <glossentry id="thread.glossary.undefined-behavior">
     <glossterm>Undefined Behavior</glossterm>
 	<glossdef>
-	  <para>The result of certain operations in &Boost.Threads; is undefined;
+	  <para>The result of certain operations in &Boost.Thread; is undefined;
 	  this means that those operations can invoke almost any behavior when
 	  they are executed.</para>
 	  
@@ -224,7 +224,7 @@
 	  programming error.</para>
 	</glossdef>
   </glossentry>
-  <glossentry id="threads.glossary.memory-visibility">
+  <glossentry id="thread.glossary.memory-visibility">
     <glossterm>Memory Visibility</glossterm>
 	<glossdef>
 	  <para>An address [1.7] shall always point to the same memory byte,

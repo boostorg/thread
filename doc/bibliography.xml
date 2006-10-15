@@ -1,18 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<bibliography id="threads.bibliography"
+<bibliography id="thread.bibliography"
 last-revision="$Date$">
   <title>Bibliography</title>
-  <biblioentry id="threads.bib.AndrewsSchneider83">
-    <abbrev id="threads.bib.AndrewsSchneider83.abbrev">AndrewsSchnieder83</abbrev>
+  <biblioentry id="thread.bib.AndrewsSchneider83">
+    <abbrev id="thread.bib.AndrewsSchneider83.abbrev">AndrewsSchnieder83</abbrev>
     <biblioset relation="journal">
       <title>ACM Computing Surveys</title>
       <volumenum>Vol. 15</volumenum>
@@ -42,18 +42,18 @@ last-revision="$Date$">
     Expressions, Message Passing, and Remote Procedure Call in addition to the
     basics</para>
   </biblioentry>
-  <biblioentry id="threads.bib.Boost">
-    <abbrev id="threads.bib.Boost.abbrev">Boost</abbrev>
+  <biblioentry id="thread.bib.Boost">
+    <abbrev id="thread.bib.Boost.abbrev">Boost</abbrev>
     <bibliomisc>The <emphasis>Boost</emphasis> world wide web site.
 	<ulink url="http:/www.boost.org">http://www.boost.org</ulink></bibliomisc>
-	<para>&Boost.Threads; is one of many Boost libraries. The Boost web
+	<para>&Boost.Thread; is one of many Boost libraries. The Boost web
     site includes a great deal of documentation and general information which
     applies to all Boost libraries. Current copies of the libraries including
     documentation and test programs may be downloaded from the web
     site.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.Hansen73">
-    <abbrev id="threads.bib.Hansen73.abbrev">Hansen73</abbrev>
+  <biblioentry id="thread.bib.Hansen73">
+    <abbrev id="thread.bib.Hansen73.abbrev">Hansen73</abbrev>
     <biblioset relation="journal">
       <title>ACM Computing Surveys</title>
       <volumenum>Vol. 5</volumenum>
@@ -78,8 +78,8 @@ last-revision="$Date$">
     Brinch Hansen was years ahead of others in recognizing pattern concepts
     applied to software, too.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.Butenhof97">
-    <abbrev id="threads.bib.Butenhof97.abbrev">Butenhof97</abbrev>
+  <biblioentry id="thread.bib.Butenhof97">
+    <abbrev id="thread.bib.Butenhof97.abbrev">Butenhof97</abbrev>
 	<title>
 	  <ulink url="http://cseng.aw.com/book/0,3828,0201633922,00.html"
 	  >Programming with POSIX Threads </ulink>
@@ -96,8 +96,8 @@ last-revision="$Date$">
 	them. Many of the insights given apply to all multithreaded programming, not
 	just POSIX Threads</para>
   </biblioentry>
-  <biblioentry id="threads.bib.Hoare74">
-    <abbrev id="threads.bib.Hoare74.abbrev">Hoare74</abbrev>
+  <biblioentry id="thread.bib.Hoare74">
+    <abbrev id="thread.bib.Hoare74.abbrev">Hoare74</abbrev>
 	<biblioset relation="journal">
 	  <title>Communications of the ACM</title>
 	  <volumenum>Vol. 17</volumenum>
@@ -119,8 +119,8 @@ last-revision="$Date$">
 	multithreading patterns. This is one of the most often referenced papers in
 	all of computer science, and with good reason.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.ISO98">
-    <abbrev id="threads.bib.ISO98.abbrev">ISO98</abbrev>
+  <biblioentry id="thread.bib.ISO98">
+    <abbrev id="thread.bib.ISO98.abbrev">ISO98</abbrev>
 	<title>
 	  <ulink url="http://www.ansi.org">Programming Language C++</ulink>
 	</title>
@@ -129,8 +129,8 @@ last-revision="$Date$">
 	<para>This is the official C++ Standards document. Available from the ANSI
 	(American National Standards Institute) Electronic Standards Store.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.McDowellHelmbold89">
-    <abbrev id="threads.bib.McDowellHelmbold89.abbrev">McDowellHelmbold89</abbrev>
+  <biblioentry id="thread.bib.McDowellHelmbold89">
+    <abbrev id="thread.bib.McDowellHelmbold89.abbrev">McDowellHelmbold89</abbrev>
 	<biblioset relation="journal">
 	  <title>Communications of the ACM</title>
 	  <volumenum>Vol. 21</volumenum>
@@ -157,8 +157,8 @@ last-revision="$Date$">
 	<para>Identifies many of the unique failure modes and debugging difficulties
 	associated with concurrent programs.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.SchmidtPyarali">
-    <abbrev id="threads.bib.SchmidtPyarali.abbrev">SchmidtPyarali</abbrev>
+  <biblioentry id="thread.bib.SchmidtPyarali">
+    <abbrev id="thread.bib.SchmidtPyarali.abbrev">SchmidtPyarali</abbrev>
 	<title>
 	  <ulink url="http://www.cs.wustl.edu/~schmidt/win32-cv-1.html8"
 	  >Strategies for Implementing POSIX Condition Variables on Win32</ulink>
@@ -176,14 +176,14 @@ last-revision="$Date$">
 	</authorgroup>
 	<orgname>Department of Computer Science, Washington University, St. Louis,
 	Missouri</orgname>
-	<para>Rationale for understanding &Boost.Threads; condition
+	<para>Rationale for understanding &Boost.Thread; condition
 	variables. Note that Alexander Terekhov found some bugs in the
-	implementation given in this article, so pthreads-win32 and &Boost.Threads;
+	implementation given in this article, so pthreads-win32 and &Boost.Thread;
 	are even more complicated yet.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.SchmidtStalRohnertBuschmann">
+  <biblioentry id="thread.bib.SchmidtStalRohnertBuschmann">
     <abbrev
-	id="threads.bib.SchmidtStalRohnertBuschmann.abbrev">SchmidtStalRohnertBuschmann</abbrev>
+	id="thread.bib.SchmidtStalRohnertBuschmann.abbrev">SchmidtStalRohnertBuschmann</abbrev>
 	<title>
 	  <ulink
 	  url="http://www.wiley.com/Corporate/Website/Objects/Products/0,9049,104671,00.html"
@@ -214,11 +214,11 @@ last-revision="$Date$">
 	<copyright><year>2000</year></copyright>
 	<para>This is a very good explanation of how to apply several patterns
 	useful for concurrent programming. Among the patterns documented is the
-	Monitor Pattern mentioned frequently in the &Boost.Threads;
+	Monitor Pattern mentioned frequently in the &Boost.Thread;
 	documentation.</para>
   </biblioentry>
-  <biblioentry id="threads.bib.Stroustrup">
-    <abbrev id="threads.bib.Stroustrup.abbrev">Stroustrup</abbrev>
+  <biblioentry id="thread.bib.Stroustrup">
+    <abbrev id="thread.bib.Stroustrup.abbrev">Stroustrup</abbrev>
 	<title>
 	  <ulink url="http://cseng.aw.com/book/0,3828,0201700735,00.html"
 	  >The C++ Programming Language</ulink>

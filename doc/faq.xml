@@ -1,49 +1,49 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!DOCTYPE library PUBLIC "-//Boost//DTD BoostBook XML V1.0//EN"
   "http://www.boost.org/tools/boostbook/dtd/boostbook.dtd" [
-  <!ENTITY % threads.entities SYSTEM "entities.xml">
-  %threads.entities;
+  <!ENTITY % thread.entities SYSTEM "entities.xml">
+  %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
-<section id="threads.faq" last-revision="$Date$">
+<section id="thread.faq" last-revision="$Date$">
   <title>Frequently Asked Questions</title>
   <qandaset>
     <qandaentry>
 	  <question>
 	    <para>Are lock objects <link
-		linkend="threads.glossary.thread-safe">thread safe</link>?</para>
+		linkend="thread.glossary.thread-safe">thread safe</link>?</para>
 	  </question>
 	  <answer>
 	    <para><emphasis role="bold">No!</emphasis> Lock objects are not meant to
 		be shared between threads. They are meant to be short-lived objects
 		created on automatic storage within a code block. Any other usage is
 		just likely to lead to errors and won't really be of actual benefit anyway.
-		Share <link linkend="threads.concepts.mutexes">Mutexes</link>, not
+		Share <link linkend="thread.concepts.mutexes">Mutexes</link>, not
 		Locks. For more information see the <link
-		linkend="threads.rationale.locks">rationale</link> behind the
+		linkend="thread.rationale.locks">rationale</link> behind the
 		design for lock objects.</para>
 	  </answer>
 	</qandaentry>
     <qandaentry>
       <question>
-	    <para>Why was &Boost.Threads; modeled after (specific library
+	    <para>Why was &Boost.Thread; modeled after (specific library
 		name)?</para>
 	  </question>
 	  <answer>
-	    <para>It wasn't. &Boost.Threads; was designed from scratch. Extensive
+	    <para>It wasn't. &Boost.Thread; was designed from scratch. Extensive
 		design discussions involved numerous people representing a wide range of
 		experience across many platforms. To ensure portability, the initial
 		implements were done in parallel using POSIX Threads and the Win32
-		threading API. But the &Boost.Threads; design is very much in the spirit
+		threading API. But the &Boost.Thread; design is very much in the spirit
 		of C++, and thus doesn't model such C based APIs.</para>
 	  </answer>
 	</qandaentry>
 	<qandaentry>
 	  <question>
-	    <para>Why wasn't &Boost.Threads; modeled after (specific library
+	    <para>Why wasn't &Boost.Thread; modeled after (specific library
 	    name)?</para>
 	  </question>
 	  <answer>
@@ -58,12 +58,12 @@
 	</qandaentry>
 	<qandaentry>
 	  <question>
-	    <para>Why do <link linkend="threads.concepts.mutexes">Mutexes</link>
+	    <para>Why do <link linkend="thread.concepts.mutexes">Mutexes</link>
 		have noncopyable semantics?</para>
 	  </question>
 	  <answer>
         <para>To ensure that <link
-		linkend="threads.glossary.deadlock">deadlocks</link> don't occur. The
+		linkend="thread.glossary.deadlock">deadlocks</link> don't occur. The
 		only logical form of copy would be to use some sort of shallow copy
 		semantics in which multiple mutex objects could refer to the same mutex
 		state. This means that if ObjA has a mutex object as part of its state
@@ -77,20 +77,20 @@
 	<qandaentry>
 	  <question>
 	    <para>How can you prevent <link
-		linkend="threads.glossary.deadlock">deadlock</link> from occurring when
+		linkend="thread.glossary.deadlock">deadlock</link> from occurring when
 		a thread must lock multiple mutexes?</para>
 	  </question>
 	  <answer>
 	    <para>Always lock them in the same order. One easy way of doing this is
 		to use each mutex's address to determine the order in which they are
-		locked. A future &Boost.Threads; concept may wrap this pattern up in a
+		locked. A future &Boost.Thread; concept may wrap this pattern up in a
 		reusable class.</para>
 	  </answer>
 	</qandaentry>
 	<qandaentry>
 	  <question>
 	    <para>Don't noncopyable <link
-		linkend="threads.concepts.mutexes">Mutex</link> semantics mean that a
+		linkend="thread.concepts.mutexes">Mutex</link> semantics mean that a
 		class with a mutex member will be noncopyable as well?</para>
 	  </question>
 	  <answer>
@@ -98,7 +98,7 @@
 		copy constructor and assignment operator, so they will have to be coded
 		explicitly. This is a <emphasis role="bold">good thing</emphasis>,
 		however, since the compiler generated operations would not be <link
-		linkend="threads.glossary.thread-safe">thread-safe</link>. The following
+		linkend="thread.glossary.thread-safe">thread-safe</link>. The following
 		is a simple example of a class with copyable semantics and internal
         synchronization through a mutex member.</para>
 <programlisting>
@@ -148,7 +148,7 @@ private:
 	<qandaentry>
 	  <question>
 	    <para>How can you lock a <link
-		linkend="threads.concepts.mutexes">Mutex</link> member in a const member
+		linkend="thread.concepts.mutexes">Mutex</link> member in a const member
 		function, in order to implement the Monitor Pattern?</para>
 	  </question>
 	  <answer>
@@ -169,8 +169,8 @@ private:
 	  </question>
 	  <answer>
 	    <para>Condition variables result in user code much less prone to <link
-		linkend="threads.glossary.race-condition">race conditions</link> than
-		event variables. See <xref linkend="threads.rationale.events" /> 
+		linkend="thread.glossary.race-condition">race conditions</link> than
+		event variables. See <xref linkend="thread.rationale.events" /> 
 		for analysis. Also see &cite.Hoare74; and &cite.SchmidtStalRohnertBuschmann;.
 		</para>
 	  </answer>
@@ -181,7 +181,7 @@ private:
 	  </question>
 	  <answer>
 	    <para>There's a valid need for thread termination, so at some point
-		&Boost.Threads; probably will include it, but only after we can find a
+		&Boost.Thread; probably will include it, but only after we can find a
 		truly safe (and portable) mechanism for this concept.</para>
 	  </answer>
 	</qandaentry>
