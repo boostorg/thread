@@ -48,12 +48,21 @@ namespace boost
             return old_state;
         }
 
+        enum{
+            auto_reset=false,
+            manual_reset=true
+        };
+        enum{
+            initially_set=true,
+            initially_reset=false
+        };
+
     public:
         read_write_mutex():
             state(0),
-            shared_event(::boost::detail::CreateEventA(NULL,true,false,NULL)),
-            exclusive_event(::boost::detail::CreateEventA(NULL,false,false,NULL)),
-            upgradeable_event(::boost::detail::CreateEventA(NULL,false,true,NULL))
+            shared_event(::boost::detail::CreateEventA(NULL,manual_reset,initially_set,NULL)),
+            exclusive_event(::boost::detail::CreateEventA(NULL,auto_reset,initially_reset,NULL)),
+            upgradeable_event(::boost::detail::CreateEventA(NULL,auto_reset,initially_set,NULL)) 
         {}
 
         ~read_write_mutex()
@@ -182,8 +191,6 @@ namespace boost
                     BOOST_ASSERT(success);
                 }
             }
-            bool const success=::boost::detail::ResetEvent(shared_event);
-            BOOST_ASSERT(success);
         }
 
         void unlock_upgradeable()
