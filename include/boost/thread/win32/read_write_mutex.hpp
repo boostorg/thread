@@ -17,9 +17,9 @@ namespace boost
         void* upgradeable_event;
 
         BOOST_STATIC_CONSTANT(long,shared_count_increment=1);
-        BOOST_STATIC_CONSTANT(long,shared_count_mask=0x1fff);
-        BOOST_STATIC_CONSTANT(long,exclusive_count_mask=0x1ffe00);
-        BOOST_STATIC_CONSTANT(long,exclusive_count_increment=0x2000);
+        BOOST_STATIC_CONSTANT(long,shared_count_mask=0x7fff);
+        BOOST_STATIC_CONSTANT(long,exclusive_count_mask=0x1fff8000);
+        BOOST_STATIC_CONSTANT(long,exclusive_count_increment=0x8000);
         BOOST_STATIC_CONSTANT(long,shared=0x20000000);
         BOOST_STATIC_CONSTANT(long,upgradeable=0x40000000);
         BOOST_STATIC_CONSTANT(long,exclusive=0x80000000);
@@ -48,21 +48,28 @@ namespace boost
             return old_state;
         }
 
-        enum{
+        enum event_type
+        {
             auto_reset=false,
             manual_reset=true
         };
-        enum{
+        enum initial_event_state
+        {
             initially_set=true,
             initially_reset=false
         };
 
+        void* create_anonymous_event(event_type type,initial_event_state initial_state)
+        {
+            return ::boost::detail::CreateEventA(NULL,type,initial_state,NULL);
+        }
+
     public:
         read_write_mutex():
             state(0),
-            shared_event(::boost::detail::CreateEventA(NULL,manual_reset,initially_set,NULL)),
-            exclusive_event(::boost::detail::CreateEventA(NULL,auto_reset,initially_reset,NULL)),
-            upgradeable_event(::boost::detail::CreateEventA(NULL,auto_reset,initially_set,NULL)) 
+            shared_event(create_anonymous_event(manual_reset,initially_set)),
+            exclusive_event(create_anonymous_event(auto_reset,initially_reset)),
+            upgradeable_event(create_anonymous_event(auto_reset,initially_set)) 
         {}
 
         ~read_write_mutex()
@@ -247,11 +254,8 @@ namespace boost
             long old_state=update_state<upgradeable|shared,exclusive,
                 shared_count_mask|exclusive_count_mask,shared_count_increment-exclusive_count_increment,
                 0,false>(exclusive|exclusive_count_increment);
-            if(old_state&shared_count_mask)
-            {
-                bool const success=::boost::detail::SetEvent(shared_event)!=0;
-                BOOST_ASSERT(success);
-            }
+            bool const success=::boost::detail::SetEvent(shared_event)!=0;
+            BOOST_ASSERT(success);
         }
         
         void unlock_and_lock_shareable()
@@ -259,21 +263,13 @@ namespace boost
             long old_state=update_state<shared,exclusive,
                 shared_count_mask|exclusive_count_mask,shared_count_increment-exclusive_count_increment,
                 0,false>(exclusive|exclusive_count_increment);
-            if(old_state&shared_count_mask)
-            {
-                bool const success=::boost::detail::SetEvent(shared_event)!=0;
-                BOOST_ASSERT(success);
-            }
+            bool const success=::boost::detail::SetEvent(shared_event)!=0;
+            BOOST_ASSERT(success);
         }
 
         void unlock_upgradeable_and_lock_shareable()
         {
             long old_state=update_state<0,upgradeable,0,0,0,false>(upgradeable|shared|shared_count_increment);
-            if((old_state&shared_count_mask)!=shared_count_increment)
-            {
-                bool const success=::boost::detail::SetEvent(shared_event)!=0;
-                BOOST_ASSERT(success);
-            }
             bool const success=::boost::detail::SetEvent(upgradeable_event)!=0;
             BOOST_ASSERT(success);
         }
