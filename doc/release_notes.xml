@@ -42,6 +42,27 @@
                 attempts to fix the known bugs. Upcoming releases will bring in new things.
             </para>
         </section>
+
+        <section id="thread.release_notes.boost_1_34_0.change_log.read_write_mutex">
+            <title>read_write_mutex still broken</title>
+
+            <para>
+                <warning>
+                    Read this as a big fat warning! The read_write_mutex, altough
+                    provided, in this release still seems to be broken. The issue
+                    has been discovered before 1.33 was released and the code has
+                    been omitted from that release. Altough it is included in 1.34
+                    the problems have not yet been fixed. A reworked mutex is expected
+                    for 1.35. Also see:  
+                    <ulink url="http://lists.boost.org/Archives/boost/2005/08/92307.php">
+                        read_write_mutex bug</ulink> 
+                    and 
+                    <ulink url="http://lists.boost.org/Archives/boost/2005/09/93180.php">
+                        read_write_mutex fundamentally broken in 1.33</ulink>
+                </warning>
+            </para>
+        </section>
+
     </section>
     <section id="thread.release_notes.boost_1_32_0">
 		<title>Boost 1.32.0</title>
