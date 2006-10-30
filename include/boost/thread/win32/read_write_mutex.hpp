@@ -24,7 +24,8 @@ namespace boost
             unsigned shared_count:10;
             unsigned shared_waiting:10;
             unsigned exclusive:1;
-            unsigned exclusive_waiting:10;
+            unsigned upgradeable:1;
+            unsigned exclusive_waiting:9;
             unsigned exclusive_waiting_blocked:1;
 
             friend bool operator==(state_data const& lhs,state_data const& rhs)
@@ -48,6 +49,7 @@ namespace boost
         void* semaphores[2];
         void* &unlock_sem;
         void* &exclusive_sem;
+        void* upgradeable_sem;
 
         void release_waiters(state_data old_state)
         {
@@ -72,12 +74,14 @@ namespace boost
         {
             unlock_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
             exclusive_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
+            upgradeable_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
             state_data state_={0};
             state=state_;
         }
 
         ~read_write_mutex()
         {
+            ::boost::detail::CloseHandle(upgradeable_sem);
             ::boost::detail::CloseHandle(unlock_sem);
             ::boost::detail::CloseHandle(exclusive_sem);
         }
@@ -128,12 +132,20 @@ namespace boost
                 
                 if(last_reader)
                 {
-                    if(new_state.exclusive_waiting)
+                    if(new_state.upgradeable)
                     {
-                        --new_state.exclusive_waiting;
-                        new_state.exclusive_waiting_blocked=false;
+                        new_state.upgradeable=false;
+                        new_state.exclusive=true;
                     }
-                    new_state.shared_waiting=0;
+                    else
+                    {
+                        if(new_state.exclusive_waiting)
+                        {
+                            --new_state.exclusive_waiting;
+                            new_state.exclusive_waiting_blocked=false;
+                        }
+                        new_state.shared_waiting=0;
+                    }
                 }
                 
                 state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
@@ -141,7 +153,15 @@ namespace boost
                 {
                     if(last_reader)
                     {
-                        release_waiters(old_state);
+                        if(old_state.upgradeable)
+                        {
+                            bool const success=::boost::detail::ReleaseSemaphore(upgradeable_sem,1,NULL)!=0;
+                            BOOST_ASSERT(success);
+                        }
+                        else
+                        {
+                            release_waiters(old_state);
+                        }
                     }
                     break;
                 }
@@ -211,6 +231,183 @@ namespace boost
             while(true);
             release_waiters(old_state);
         }
+
+        void lock_upgradeable()
+        {
+            while(true)
+            {
+                state_data old_state=state;
+                do
+                {
+                    state_data new_state=old_state;
+                    if(new_state.exclusive || new_state.exclusive_waiting_blocked || new_state.upgradeable)
+                    {
+                        ++new_state.shared_waiting;
+                    }
+                    else
+                    {
+                        ++new_state.shared_count;
+                        new_state.upgradeable=true;
+                    }
+
+                    state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                    if(current_state==old_state)
+                    {
+                        break;
+                    }
+                    old_state=current_state;
+                }
+                while(true);
+
+                if(!(old_state.exclusive|| old_state.exclusive_waiting_blocked|| old_state.upgradeable))
+                {
+                    return;
+                }
+                    
+                unsigned long const res=::boost::detail::WaitForSingleObject(unlock_sem,BOOST_INFINITE);
+                BOOST_ASSERT(res==0);
+            }
+        }
+
+        void unlock_upgradeable()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                new_state.upgradeable=false;
+                bool const last_reader=!--new_state.shared_count;
+                
+                if(last_reader)
+                {
+                    if(new_state.exclusive_waiting)
+                    {
+                        --new_state.exclusive_waiting;
+                        new_state.exclusive_waiting_blocked=false;
+                    }
+                    new_state.shared_waiting=0;
+                }
+                
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    if(last_reader)
+                    {
+                        release_waiters(old_state);
+                    }
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+        }
+
+        void unlock_upgradeable_and_lock()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                bool const last_reader=!--new_state.shared_count;
+                
+                if(last_reader)
+                {
+                    new_state.upgradeable=false;
+                    new_state.exclusive=true;
+                }
+                
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    if(!last_reader)
+                    {
+                        unsigned long const res=::boost::detail::WaitForSingleObject(upgradeable_sem,BOOST_INFINITE);
+                        BOOST_ASSERT(res==0);
+                    }
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+        }
+
+        void unlock_and_lock_upgradeable()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                new_state.exclusive=false;
+                new_state.upgradeable=true;
+                ++new_state.shared_count;
+                if(new_state.exclusive_waiting)
+                {
+                    --new_state.exclusive_waiting;
+                    new_state.exclusive_waiting_blocked=false;
+                }
+                new_state.shared_waiting=0;
+
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+            release_waiters(old_state);
+        }
+        
+        void unlock_and_lock_shareable()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                new_state.exclusive=false;
+                ++new_state.shared_count;
+                if(new_state.exclusive_waiting)
+                {
+                    --new_state.exclusive_waiting;
+                    new_state.exclusive_waiting_blocked=false;
+                }
+                new_state.shared_waiting=0;
+
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+            release_waiters(old_state);
+        }
+        
+        void unlock_upgradeable_and_lock_shareable()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                new_state.upgradeable=false;
+                if(new_state.exclusive_waiting)
+                {
+                    --new_state.exclusive_waiting;
+                    new_state.exclusive_waiting_blocked=false;
+                }
+                new_state.shared_waiting=0;
+
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+            release_waiters(old_state);
+        }
         
         class scoped_read_lock
         {
@@ -257,6 +454,50 @@ namespace boost
                 }
             }
         };
+
+        class scoped_upgradeable_lock
+        {
+            read_write_mutex& m;
+            bool locked;
+            bool upgraded;
+            
+        public:
+            scoped_upgradeable_lock(read_write_mutex& m_):
+                m(m_),
+                locked(false),upgraded(false)
+            {
+                lock();
+            }
+            void lock()
+            {
+                m.lock_upgradeable();
+                locked=true;
+            }
+            void upgrade()
+            {
+                m.unlock_upgradeable_and_lock();
+                upgraded=true;
+            }
+            void unlock()
+            {
+                if(upgraded)
+                {
+                    m.unlock();
+                }
+                else
+                {
+                    m.unlock_upgradeable();
+                }
+            }
+            ~scoped_upgradeable_lock()
+            {
+                if(locked)
+                {
+                    unlock();
+                }
+            }
+        };
+        
         
     };
 }
