@@ -23,7 +23,12 @@
 namespace boost {
 
 struct xtime;
-
+// disable warnings about non dll import
+// see: http://www.boost.org/more/separate_compilation.html#dlls
+#ifdef BOOST_MSVC
+#   pragma warning(push)
+#   pragma warning(disable: 4251 4231 4660 4275)
+#endif
 class BOOST_THREAD_DECL recursive_mutex
     : private noncopyable
 {
@@ -164,7 +169,9 @@ private:
     std::size_t m_count;
 #endif
 };
-
+#ifdef BOOST_MSVC
+#   pragma warning(pop)
+#endif
 } // namespace boost
 
 #endif // BOOST_RECURSIVE_MUTEX_WEK070601_HPP
