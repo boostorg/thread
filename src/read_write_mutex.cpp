@@ -7,6 +7,9 @@
 /*
 PROBLEMS:
 
+The read write mutex currently is broken. Do not use it.
+The file is supplied just for reference.
+
 The algorithms are not exception safe. For instance, if conditon::wait()
 or another call throws an exception, the lock state and other state data
 are not appropriately adjusted.
