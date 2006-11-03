@@ -11,6 +11,8 @@
 #ifndef BOOST_READ_WRITE_MUTEX_JDM030602_HPP
 #define BOOST_READ_WRITE_MUTEX_JDM030602_HPP
 
+#error Read Write Mutex is broken, do not include this header 
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
