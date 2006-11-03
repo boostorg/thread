@@ -14,7 +14,7 @@
         <title>Boost 1.34.0</title>
 
         <section id="thread.release_notes.boost_1_34_0.change_log.maintainance">
-            <title>New group of maintainers</title>
+            <title>New team of maintainers</title>
 
             <para>
                 Since the original author William E. Kempf no longer is available to
@@ -47,19 +47,21 @@
             <title>read_write_mutex still broken</title>
 
             <para>
-                <warning>
-                    Read this as a big fat warning! The read_write_mutex, altough
-                    provided, in this release still seems to be broken. The issue
+                <note>
+                    It has been decided not to release the Read/Write Mutex, since the current
+                    implementation suffers from a serious bug. The documentation of the concepts
+                    has been included though, giving the interested reader an opportunity to study the
+                    original concepts. Please refer to the following links if you are interested
+                    which problems led to the decision to held back this mutex type.The issue
                     has been discovered before 1.33 was released and the code has
-                    been omitted from that release. Altough it is included in 1.34
-                    the problems have not yet been fixed. A reworked mutex is expected
-                    for 1.35. Also see:  
+                    been omitted from that release. A reworked mutex is expected to appear in 1.35.
+                    Also see:  
                     <ulink url="http://lists.boost.org/Archives/boost/2005/08/92307.php">
                         read_write_mutex bug</ulink> 
                     and 
                     <ulink url="http://lists.boost.org/Archives/boost/2005/09/93180.php">
                         read_write_mutex fundamentally broken in 1.33</ulink>
-                </warning>
+                </note>
             </para>
         </section>
 
@@ -68,7 +70,7 @@
 		<title>Boost 1.32.0</title>
 
 		<section id="thread.release_notes.boost_1_32_0.change_log.documentation">
-			<title>Dicumentation converted to BoostBook</title>
+			<title>Documentation converted to BoostBook</title>
 
 			<para>The documentation was converted to BoostBook format,
 			and a number of errors and inconsistencies were

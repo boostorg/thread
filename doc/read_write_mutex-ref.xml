@@ -23,7 +23,16 @@
 				<link linkend="thread.concepts.read-write-scheduling-policies.inter-class">inter-class sheduling policy</link>
 				to use when a set of threads try to obtain different types of
 				locks simultaneously.</para>
-			</purpose>
+                <warning>
+                    The read_write_mutex currently is broken. The page you are viewing is not an
+                    official part of this release. If you have found this page by following links
+                    within the documentation set, consider this as unintended. If you have found
+                    this page by opening it directly you are likely knowing what you are doing.
+                    You will be unable to use the code, since it also has been stripped from
+                    the release set. If you are still wanting to see it, please look into the CVS
+                    repository where it is available of course.
+                </warning>    
+            </purpose>
 
 			<description>
 				<para>The only clock type supported by &Boost.Thread; is 
