@@ -347,6 +347,73 @@ void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
     writer.join();
 }
 
+void test_if_no_thread_has_lock_try_lock_shared_returns_true()
+{
+    boost::read_write_mutex rw_mutex;
+    bool const try_succeeded=rw_mutex.try_lock_shareable();
+    BOOST_CHECK(try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_shareable();
+    }
+}
+
+namespace
+{
+    class simple_reading_thread
+    {
+        boost::read_write_mutex& rwm;
+        boost::mutex& finish_mutex;
+        boost::mutex& unblocked_mutex;
+        unsigned& unblocked_count;
+        
+    public:
+        simple_reading_thread(boost::read_write_mutex& rwm_,
+                              boost::mutex& finish_mutex_,
+                              boost::mutex& unblocked_mutex_,
+                              unsigned& unblocked_count_):
+            rwm(rwm_),finish_mutex(finish_mutex_),
+            unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
+        {}
+        
+        void operator()()
+        {
+            boost::read_write_mutex::scoped_read_lock lk(rwm);
+            
+            {
+                boost::mutex::scoped_lock ulk(unblocked_mutex);
+                ++unblocked_count;
+            }
+            
+            boost::mutex::scoped_lock flk(finish_mutex);
+        }
+    };
+}
+
+void test_if_other_thread_has_shared_lock_try_lock_shared_returns_true()
+{
+
+    boost::read_write_mutex rw_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex unblocked_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::thread writer(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
+    boost::thread::sleep(delay(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1);
+
+    bool const try_succeeded=rw_mutex.try_lock_shareable();
+    BOOST_CHECK(try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_shareable();
+    }
+
+    finish_lock.unlock();
+    writer.join();
+}
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -360,6 +427,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_only_one_upgradeable_lock_permitted));
     test->add(BOOST_TEST_CASE(&test_can_lock_upgradeable_if_currently_locked_shared));
     test->add(BOOST_TEST_CASE(&test_if_other_thread_has_write_lock_try_lock_shared_returns_false));
+    test->add(BOOST_TEST_CASE(&test_if_no_thread_has_lock_try_lock_shared_returns_true));
+    test->add(BOOST_TEST_CASE(&test_if_other_thread_has_shared_lock_try_lock_shared_returns_true));
 
     return test;
 }
