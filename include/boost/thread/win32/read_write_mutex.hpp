@@ -86,6 +86,28 @@ namespace boost
             ::boost::detail::CloseHandle(exclusive_sem);
         }
 
+        bool try_lock_shareable()
+        {
+            state_data old_state=state;
+            do
+            {
+                state_data new_state=old_state;
+                if(!new_state.exclusive && !new_state.exclusive_waiting_blocked)
+                {
+                    ++new_state.shared_count;
+                }
+                
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+            }
+            while(true);
+            return !(old_state.exclusive| old_state.exclusive_waiting_blocked);
+        }
+
         void lock_shareable()
         {
             while(true)
