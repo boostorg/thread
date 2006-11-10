@@ -18,7 +18,7 @@
 import testing ;
 
 project
-    : requirements <library>../../test/build//boost_unit_test_framework
+    : requirements <library>/boost/test//boost_unit_test_framework/<link>static
                    <threading>multi
     ;
     
