@@ -37,7 +37,7 @@ namespace boost
 
     class mutex:
         noncopyable,
-        protected ::boost::detail::underlying_mutex
+        public ::boost::detail::underlying_mutex
     {
     public:
         mutex()
