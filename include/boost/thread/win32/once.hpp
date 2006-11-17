@@ -43,7 +43,7 @@ namespace boost
             {}
             ~handle_closer()
             {
-                BOOST_CLOSE_HANDLE(handle_to_close);
+                win32::CloseHandle(handle_to_close);
             }
         };
 
@@ -53,11 +53,11 @@ namespace boost
             win32_mutex_scoped_lock(void* mutex_handle_):
                 mutex_handle(mutex_handle_)
             {
-                BOOST_WAIT_FOR_SINGLE_OBJECT(mutex_handle,BOOST_INFINITE);
+                win32::WaitForSingleObject(mutex_handle,win32::infinite);
             }
             ~win32_mutex_scoped_lock()
             {
-                BOOST_RELEASE_MUTEX(mutex_handle);
+                win32::ReleaseMutex(mutex_handle);
             }
         };
 
@@ -88,10 +88,10 @@ namespace boost
 
             BOOST_STATIC_ASSERT(sizeof(void*) == sizeof(std::ptrdiff_t));
             detail::int_to_string(reinterpret_cast<std::ptrdiff_t>(flag_address), mutex_name + once_mutex_name_fixed_length);
-            detail::int_to_string(BOOST_GET_PROCESS_ID(), mutex_name + once_mutex_name_fixed_length + sizeof(void*)*2);
+            detail::int_to_string(win32::GetCurrentProcessId(), mutex_name + once_mutex_name_fixed_length + sizeof(void*)*2);
             BOOST_ASSERT(sizeof(mutex_name) == std::strlen(mutex_name) + 1);
 
-            return BOOST_CREATE_MUTEX(NULL, 0, mutex_name);
+            return win32::CreateMutexA(NULL, 0, mutex_name);
         }
         
     }

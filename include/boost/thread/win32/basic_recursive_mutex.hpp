@@ -12,11 +12,6 @@
 #include <boost/detail/interlocked.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
-#ifdef BOOST_USE_CHECKED_MUTEX
-#include <boost/thread/win32/basic_checked_mutex.hpp>
-#else
-#include <boost/thread/win32/basic_mutex.hpp>
-#endif
 #include <boost/thread/win32/basic_timed_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 
@@ -45,13 +40,13 @@ namespace boost
 
             bool try_lock()
             {
-                long const current_thread_id=BOOST_GET_CURRENT_THREAD_ID();
+                long const current_thread_id=win32::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_basic_lock(current_thread_id);
             }
             
             void lock()
             {
-                long const current_thread_id=BOOST_GET_CURRENT_THREAD_ID();
+                long const current_thread_id=win32::GetCurrentThreadId();
                 if(!try_recursive_lock(current_thread_id))
                 {
                     mutex.lock();
@@ -61,7 +56,7 @@ namespace boost
             }
             bool timed_lock(::boost::xtime const& target)
             {
-                long const current_thread_id=BOOST_GET_CURRENT_THREAD_ID();
+                long const current_thread_id=win32::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_timed_lock(current_thread_id,target);
             }
             long get_active_count()
@@ -118,12 +113,7 @@ namespace boost
             
         };
 
-#ifdef BOOST_USE_CHECKED_MUTEX
-        typedef basic_recursive_mutex_impl<basic_checked_mutex> basic_recursive_mutex;
-#else
-        typedef basic_recursive_mutex_impl<basic_mutex> basic_recursive_mutex;
-#endif
-
+        typedef basic_recursive_mutex_impl<basic_timed_mutex> basic_recursive_mutex;
         typedef basic_recursive_mutex_impl<basic_timed_mutex> basic_recursive_timed_mutex;
     }
 }

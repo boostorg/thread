@@ -19,8 +19,8 @@ namespace boost
         inline ::boost::xtime get_xtime_sentinel()
         {
             boost::xtime const sentinel={
-                std::numeric_limits<boost::xtime::xtime_sec_t>::max(),
-                std::numeric_limits<boost::xtime::xtime_nsec_t>::max()
+                (std::numeric_limits<boost::xtime::xtime_sec_t>::max)(),
+                (std::numeric_limits<boost::xtime::xtime_nsec_t>::max)()
             };
             return sentinel;
             
@@ -35,7 +35,7 @@ namespace boost
         {
             if(!boost::xtime_cmp(target,get_xtime_sentinel()))
             {
-                return std::numeric_limits<unsigned long>::max();
+                return (std::numeric_limits<unsigned long>::max)();
             }
             
             boost::xtime now;
@@ -66,7 +66,7 @@ namespace boost
                 }
                 // we are throwing away some bits, but one second after having 
                 // waited for 49 years does not really matter ...
-                if (target.sec < std::numeric_limits<unsigned long>::max()/milliseconds_per_second)
+                if (target.sec < (std::numeric_limits<unsigned long>::max)()/milliseconds_per_second)
                 {
                     return static_cast<unsigned long>(
                         target.sec*milliseconds_per_second + 
@@ -74,7 +74,7 @@ namespace boost
                 }
                 else
                 {
-                    return std::numeric_limits<unsigned long>::max();
+                    return (std::numeric_limits<unsigned long>::max)();
                 }
             }
         }

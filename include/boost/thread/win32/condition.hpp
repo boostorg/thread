@@ -3,9 +3,6 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-//
-// This work is a reimplementation along the design and ideas
-// of William E. Kempf.
 
 #ifndef BOOST_THREAD_RS06041001_HPP
 #define BOOST_THREAD_RS06041001_HPP
@@ -78,7 +75,7 @@ namespace boost
                         entry.unlink();
                     }
                 }
-                BOOST_CLOSE_HANDLE(entry.waiting_thread_handle);
+                detail::win32::CloseHandle(entry.waiting_thread_handle);
                 m.lock();
             }
         };
@@ -87,10 +84,10 @@ namespace boost
         bool do_wait(lockable_type& m,boost::xtime const& target=::boost::detail::get_xtime_sentinel())
         {
             waiting_list_entry entry={0};
-            void* const currentProcess=BOOST_GET_CURRENT_PROCESS();
+            void* const currentProcess=detail::win32::GetCurrentProcess();
             
             long const same_access_flag=2;
-            bool const success=BOOST_DUPLICATE_HANDLE(currentProcess,BOOST_GET_CURRENT_THREAD(),currentProcess,&entry.waiting_thread_handle,0,false,same_access_flag)!=0;
+            bool const success=detail::win32::DuplicateHandle(currentProcess,detail::win32::GetCurrentThread(),currentProcess,&entry.waiting_thread_handle,0,false,same_access_flag)!=0;
             BOOST_ASSERT(success);
             
             {
@@ -98,13 +95,13 @@ namespace boost
 
                 unsigned const woken_due_to_apc=0xc0;
                 while(!::boost::detail::interlocked_read(&entry.notified) && 
-                      BOOST_SLEEP_EX(::boost::detail::get_milliseconds_until_time(target),true)==woken_due_to_apc);
+                      detail::win32::SleepEx(::boost::detail::get_milliseconds_until_time(target),true)==woken_due_to_apc);
             }
             
             return ::boost::detail::interlocked_read(&entry.notified)!=0;
         }
 
-        static void __stdcall notify_function(::boost::detail::ulong_ptr)
+        static void __stdcall notify_function(detail::win32::ulong_ptr)
         {
         }
 
@@ -113,7 +110,7 @@ namespace boost
             BOOST_INTERLOCKED_EXCHANGE(&entry->notified,true);
             if(entry->waiting_thread_handle)
             {
-                BOOST_QUEUE_USER_APC(notify_function,entry->waiting_thread_handle,0);
+                detail::win32::QueueUserAPC(notify_function,entry->waiting_thread_handle,0);
             }
         }
 

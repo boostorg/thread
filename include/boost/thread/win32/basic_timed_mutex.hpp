@@ -24,20 +24,20 @@ namespace boost
         {
             BOOST_STATIC_CONSTANT(long,lock_flag_value=0x10000);
             long active_count;
-            void* semaphore;
+            void* event;
 
             void initialize()
             {
                 active_count=0;
-                semaphore=0;
+                event=0;
             }
 
             void destroy()
             {
-                void* const old_semaphore=BOOST_INTERLOCKED_EXCHANGE_POINTER(&semaphore,0);
-                if(old_semaphore)
+                void* const old_event=BOOST_INTERLOCKED_EXCHANGE_POINTER(&event,0);
+                if(old_event)
                 {
-                    BOOST_CLOSE_HANDLE(old_semaphore);
+                    win32::CloseHandle(old_event);
                 }
             }
             
@@ -78,12 +78,12 @@ namespace boost
                 if(old_count&lock_flag_value)
                 {
                     bool lock_acquired=false;
-                    void* const sem=get_semaphore();
+                    void* const sem=get_event();
                     ++old_count; // we're waiting, too
                     do
                     {
                         old_count-=(lock_flag_value+1); // there will be one less active thread on this mutex when it gets unlocked
-                        if(BOOST_WAIT_FOR_SINGLE_OBJECT(sem,::boost::detail::get_milliseconds_until_time(target_time))!=0)
+                        if(win32::WaitForSingleObject(sem,::boost::detail::get_milliseconds_until_time(target_time))!=0)
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
                             return false;
@@ -117,7 +117,7 @@ namespace boost
                 
                 if(old_count>offset)
                 {
-                    BOOST_RELEASE_SEMAPHORE(get_semaphore(),1,0);
+                    win32::SetEvent(get_event());
                 }
             }
 
@@ -127,25 +127,25 @@ namespace boost
             }
             
         private:
-            void* get_semaphore()
+            void* get_event()
             {
-                void* current_semaphore=::boost::detail::interlocked_read(&semaphore);
+                void* current_event=::boost::detail::interlocked_read(&event);
                 
-                if(!current_semaphore)
+                if(!current_event)
                 {
-                    void* const new_semaphore=BOOST_CREATE_SEMAPHORE(0,0,1,0);
-                    void* const old_semaphore=BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(&semaphore,new_semaphore,0);
-                    if(old_semaphore!=0)
+                    void* const new_event=win32::create_anonymous_event(win32::auto_reset_event,win32::event_initially_reset);
+                    void* const old_event=BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(&event,new_event,0);
+                    if(old_event!=0)
                     {
-                        BOOST_CLOSE_HANDLE(new_semaphore);
-                        return old_semaphore;
+                        win32::CloseHandle(new_event);
+                        return old_event;
                     }
                     else
                     {
-                        return new_semaphore;
+                        return new_event;
                     }
                 }
-                return current_semaphore;
+                return current_event;
             }
             
         };

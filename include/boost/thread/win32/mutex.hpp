@@ -12,11 +12,6 @@
 
 #include <boost/thread/win32/config.hpp>
 
-#ifdef BOOST_USE_CHECKED_MUTEX
-#include <boost/thread/win32/basic_checked_mutex.hpp>
-#else
-#include <boost/thread/win32/basic_mutex.hpp>
-#endif
 #include <boost/thread/win32/basic_timed_mutex.hpp>
 #include <boost/utility.hpp>
 #include <boost/thread/win32/lock.hpp>
@@ -27,11 +22,6 @@ namespace boost
 {
     namespace detail
     {
-// #ifdef BOOST_USE_CHECKED_MUTEX
-//         typedef ::boost::detail::basic_checked_mutex underlying_mutex;
-// #else
-//         typedef ::boost::detail::basic_mutex underlying_mutex;
-// #endif
         typedef ::boost::detail::basic_timed_mutex underlying_mutex;
     }
 

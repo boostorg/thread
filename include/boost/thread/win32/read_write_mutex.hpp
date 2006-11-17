@@ -55,13 +55,13 @@ namespace boost
         {
             if(old_state.exclusive_waiting)
             {
-                bool const success=::boost::detail::ReleaseSemaphore(exclusive_sem,1,NULL)!=0;
+                bool const success=detail::win32::ReleaseSemaphore(exclusive_sem,1,NULL)!=0;
                 BOOST_ASSERT(success);
             }
                         
             if(old_state.shared_waiting || old_state.exclusive_waiting)
             {
-                bool const success=::boost::detail::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),NULL)!=0;
+                bool const success=detail::win32::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),NULL)!=0;
                 BOOST_ASSERT(success);
             }
         }
@@ -72,18 +72,18 @@ namespace boost
             unlock_sem(semaphores[0]),
             exclusive_sem(semaphores[1]) 
         {
-            unlock_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
-            exclusive_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
-            upgradeable_sem=::boost::detail::CreateSemaphoreA(NULL,0,LONG_MAX,NULL);
+            unlock_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+            exclusive_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+            upgradeable_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
             state_data state_={0};
             state=state_;
         }
 
         ~read_write_mutex()
         {
-            ::boost::detail::CloseHandle(upgradeable_sem);
-            ::boost::detail::CloseHandle(unlock_sem);
-            ::boost::detail::CloseHandle(exclusive_sem);
+            detail::win32::CloseHandle(upgradeable_sem);
+            detail::win32::CloseHandle(unlock_sem);
+            detail::win32::CloseHandle(exclusive_sem);
         }
 
         bool try_lock_shareable()
@@ -139,7 +139,7 @@ namespace boost
                     return;
                 }
                     
-                unsigned long const res=::boost::detail::WaitForSingleObject(unlock_sem,BOOST_INFINITE);
+                unsigned long const res=detail::win32::WaitForSingleObject(unlock_sem,detail::win32::infinite);
                 BOOST_ASSERT(res==0);
             }
         }
@@ -177,7 +177,7 @@ namespace boost
                     {
                         if(old_state.upgradeable)
                         {
-                            bool const success=::boost::detail::ReleaseSemaphore(upgradeable_sem,1,NULL)!=0;
+                            bool const success=detail::win32::ReleaseSemaphore(upgradeable_sem,1,NULL)!=0;
                             BOOST_ASSERT(success);
                         }
                         else
@@ -224,7 +224,7 @@ namespace boost
                 {
                     break;
                 }
-                bool const success2=::boost::detail::WaitForMultipleObjects(2,semaphores,true,BOOST_INFINITE)<2;
+                bool const success2=detail::win32::WaitForMultipleObjects(2,semaphores,true,detail::win32::infinite)<2;
                 BOOST_ASSERT(success2);
             }
         }
@@ -286,7 +286,7 @@ namespace boost
                     return;
                 }
                     
-                unsigned long const res=::boost::detail::WaitForSingleObject(unlock_sem,BOOST_INFINITE);
+                unsigned long const res=detail::win32::WaitForSingleObject(unlock_sem,detail::win32::infinite);
                 BOOST_ASSERT(res==0);
             }
         }
@@ -343,7 +343,7 @@ namespace boost
                 {
                     if(!last_reader)
                     {
-                        unsigned long const res=::boost::detail::WaitForSingleObject(upgradeable_sem,BOOST_INFINITE);
+                        unsigned long const res=detail::win32::WaitForSingleObject(upgradeable_sem,detail::win32::infinite);
                         BOOST_ASSERT(res==0);
                     }
                     break;
