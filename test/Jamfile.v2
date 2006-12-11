@@ -26,7 +26,7 @@ rule thread-run ( sources )
 {
     return 
 	[ run $(sources) ../build//boost_thread ]
-	[ run $(sources) ../build//boost_thread/<link>static 
+	[ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static 
 	    : : : : $(sources[1]:B)_lib ]
 	;
 }    
