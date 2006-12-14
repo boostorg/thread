@@ -373,6 +373,10 @@ bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 
     int res = 0;
     res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
+    assert(res != EINVAL);
+    assert(res != EPERM);
+    assert(res != EAGAIN);
+    assert(res != EFAULT);
     assert(res == 0 || res == ETIMEDOUT);
 
     return res != ETIMEDOUT;
