@@ -149,7 +149,7 @@ void do_test_tss()
         // only when bound to the static version of the thread lib.
         // 2006-10-15 Roland Schwarz
         //BOOST_CHECK_EQUAL(tss_instances, 0);
-        BOOST_WARN_MESSAGE(tss_instances ==0, "Support of automatic tss cleanup for native threading API");
+        BOOST_CHECK_MESSAGE(tss_instances ==0, "Support of automatic tss cleanup for native threading API not available");
         BOOST_CHECK_EQUAL(tss_total, 5);
     #endif
 }
