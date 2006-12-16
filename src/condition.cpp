@@ -27,6 +27,12 @@
 #   include "mac/safe.hpp"
 #endif
 
+// The following include can be removed after the bug on QNX
+// has been tracked down. I need this only for debugging
+//#if !defined(NDEBUG) && defined(BOOST_HAS_PTHREADS)
+#include <iostream>
+//#endif
+
 namespace boost {
 
 namespace detail {
@@ -373,10 +379,17 @@ bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 
     int res = 0;
     res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
-    assert(res != EINVAL);
-    assert(res != EPERM);
-    assert(res != EAGAIN);
-    assert(res != EFAULT);
+// Test code for QNX debugging, to get information during regressions
+#ifndef NDEBUG
+    if (res == EINVAL) {
+        boost::xtime now;
+        boost::xtime_get(&now, boost::TIME_UTC);
+        std::cerr << "now: " << now.sec << " " << now.nsec << std::endl;
+        std::cerr << "xtime: " << xt.sec << " " << xt.nsec << std::endl;
+        std::cerr << "ts: " << ts.tv_sec << " " << ts.tv_nsec << std::endl;
+        assert(res != EINVAL);
+    }
+#endif    
     assert(res == 0 || res == ETIMEDOUT);
 
     return res != ETIMEDOUT;
