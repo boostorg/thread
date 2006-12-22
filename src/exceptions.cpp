@@ -24,6 +24,10 @@ namespace std { using ::strerror; }
 # endif
 
 # if defined( BOOST_WINDOWS )
+#   ifdef BOOST_NO_ANSI_APIS
+#       include <atlbase.h>
+#       include <atlconv.h>  // for USES_CONVERSION and A2CW
+#   endif
 #   include "windows.h"
 # else
 #   include <errno.h> // for POSIX error codes
@@ -37,17 +41,32 @@ std::string system_message(int sys_err_code)
     std::string str;
 # ifdef BOOST_WINDOWS
     LPVOID lpMsgBuf;
-    ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        sys_err_code,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-        (LPSTR)&lpMsgBuf,
-        0,
-        NULL);
-    str += static_cast<LPCSTR>(lpMsgBuf);
-    ::LocalFree(lpMsgBuf); // free the buffer
+#       ifndef BOOST_NO_ANSI_APIS    
+        ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            sys_err_code,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+            (LPSTR)&lpMsgBuf,
+            0,
+            NULL);
+        str += static_cast<LPCSTR>(lpMsgBuf);
+        ::LocalFree(lpMsgBuf); // free the buffer
+#       else
+        ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
+            FORMAT_MESSAGE_FROM_SYSTEM |
+            FORMAT_MESSAGE_IGNORE_INSERTS,
+            NULL,
+            sys_err_code,
+            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+            (LPWSTR)&lpMsgBuf,
+            0,
+            NULL);
+        USES_CONVERSION;
+        str += static_cast<LPCWSTR>(lpMsgBuf);
+    :   :LocalFree(lpMsgBuf); // free the buffer
+#       endif    
     while (str.size() && (str[str.size()-1] == '\n' ||
                str[str.size()-1] == '\r'))
     {
