@@ -385,8 +385,11 @@ bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
         boost::xtime now;
         boost::xtime_get(&now, boost::TIME_UTC);
         std::cerr << "now: " << now.sec << " " << now.nsec << std::endl;
+        std::cerr << "time: " << time(0) << std::endl;
         std::cerr << "xtime: " << xt.sec << " " << xt.nsec << std::endl;
         std::cerr << "ts: " << ts.tv_sec << " " << ts.tv_nsec << std::endl;
+        std::cerr << "pmutex: " << pmutex << std::endl;
+        std::cerr << "condition: " << &m_condition << std::endl;
         assert(res != EINVAL);
     }
 #endif    
