@@ -24,7 +24,7 @@ void init_TryEnterCriticalSection()
         version_info.dwMajorVersion >= 4)
     {
         if (HMODULE kernel_module = GetModuleHandle(TEXT("KERNEL32.DLL")))
-            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(GetProcAddress(kernel_module, "TryEnterCriticalSection"));
+            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(GetProcAddress(kernel_module, TEXT("TryEnterCriticalSection")));
     }
 }
 
