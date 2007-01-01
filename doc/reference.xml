@@ -22,8 +22,8 @@
   implementation suffers from a serious, yet unresolved bug.
   The implementation is likely to appear in a reworked
   form in the next release.
-  <xi:include href="read_write_mutex-ref.xml"/>
 -->
+  <xi:include href="read_write_mutex-ref.xml"/>
   <xi:include href="thread-ref.xml"/>
   <xi:include href="tss-ref.xml"/>
   <xi:include href="xtime-ref.xml"/>

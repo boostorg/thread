@@ -743,7 +743,7 @@
             some serious problems. So it was decided not to put this implementation into
             release grade code. Also discussions on the mailing list led to the
             conclusion that the current concepts need to be rethought. In particular
-            the schedulings <link linked="thread.concepts.read-write-scheduling-policies.inter-class">
+            the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
                 Inter-Class Scheduling Policies</link> are deemed unnecessary.
             There seems to be common believe, that a fair scheme suffices.
             The following documentation has been retained however, to give
