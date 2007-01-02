@@ -18,7 +18,17 @@
 	which allow only one thread at a time to access a resource when it is
 	being modified (the "Write" part of Read/Write), but allows multiple threads
 	to access a resource when it is only being referenced (the "Read" part of
-	Read/Write).</para>
+    Read/Write).</para> 
+    <note> Unfortunately it turned out that the current implementation of Read/Write Mutex has     
+            some serious problems. So it was decided not to put this implementation into
+            release grade code. Also discussions on the mailing list led to the
+            conclusion that the current concepts need to be rethought. In particular
+            the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
+                Inter-Class Scheduling Policies</link> are deemed unnecessary.
+            There seems to be common belief that a fair scheme suffices.
+            The following documentation has been retained however, to give
+            readers of this document the opportunity to study the original design.
+    </note>
 
 	<section id="thread.concepts.mutexes">
 		<title>Mutexes</title>
@@ -745,7 +755,7 @@
             conclusion that the current concepts need to be rethought. In particular
             the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
                 Inter-Class Scheduling Policies</link> are deemed unnecessary.
-            There seems to be common believe, that a fair scheme suffices.
+            There seems to be common belief that a fair scheme suffices.
             The following documentation has been retained however, to give
             readers of this document the opportunity to study the original design.
         </note>
