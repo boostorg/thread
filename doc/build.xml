@@ -28,7 +28,7 @@
 		<para>
 	To build the &Boost.Thread; libraries using &Boost.Build;, simply change to the
 	directory <emphasis>boost_root</emphasis>/libs/thread/build and execute the command:
-		<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis></programlisting>
+		<programlisting>bjam toolset=<emphasis>toolset</emphasis></programlisting>
 	This will create the debug and the release builds of the &Boost.Thread; library.
 	<note>Invoking the above command in <emphasis>boost_root</emphasis> will build all of 
 	the Boost distribution, including &Boost.Thread;.</note>
@@ -56,7 +56,7 @@
 		<para>
 	To test the &Boost.Thread; libraries using &Boost.Build;, simply change to the
 	directory <emphasis>boost_root</emphasis>/libs/thread/test and execute the command:
-			<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis> test</programlisting>
+			<programlisting>bjam toolset=<emphasis>toolset</emphasis> test</programlisting>
 		</para>
 	</section>
 </section>
