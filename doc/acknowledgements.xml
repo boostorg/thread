@@ -63,6 +63,11 @@ last-revision="$Date$">
   Steve Cleary, Steven Kirk, Thomas Holenstein, Thomas Matelich, Trevor
   Perrin, Valentin Bonnard, Vesa Karvonen, Wayne Miller, and William
   Kempf.</para>
+  <para>
+  As of February 2006 Anthony Williams and Roland Schwarz took over maintainance 
+  and further development of the library after it has been in an orphaned state
+  for a rather long period of time. 
+  </para>
   <para>Apologies for anyone inadvertently missed.</para>
 </section>
 
