@@ -10,76 +10,6 @@
 #include <cstring>
 #include <string>
 
-# ifdef BOOST_NO_STDC_NAMESPACE
-namespace std { using ::strerror; }
-# endif
-
-// BOOST_POSIX or BOOST_WINDOWS specify which API to use.
-# if !defined( BOOST_WINDOWS ) && !defined( BOOST_POSIX )
-#   if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
-#     define BOOST_WINDOWS
-#   else
-#     define BOOST_POSIX
-#   endif
-# endif
-
-# if defined( BOOST_WINDOWS )
-#   ifdef BOOST_NO_ANSI_APIS
-#       include <atlbase.h>
-#       include <atlconv.h>  // for USES_CONVERSION and A2CW
-#   endif
-#   include "windows.h"
-# else
-#   include <errno.h> // for POSIX error codes
-# endif
-
-namespace
-{
-
-std::string system_message(int sys_err_code)
-{
-    std::string str;
-# ifdef BOOST_WINDOWS
-    LPVOID lpMsgBuf;
-#       ifndef BOOST_NO_ANSI_APIS    
-        ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            sys_err_code,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-            (LPSTR)&lpMsgBuf,
-            0,
-            NULL);
-        str += static_cast<LPCSTR>(lpMsgBuf);
-        ::LocalFree(lpMsgBuf); // free the buffer
-#       else
-        ::FormatMessageW(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-            FORMAT_MESSAGE_FROM_SYSTEM |
-            FORMAT_MESSAGE_IGNORE_INSERTS,
-            NULL,
-            sys_err_code,
-            MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-            (LPWSTR)&lpMsgBuf,
-            0,
-            NULL);
-        USES_CONVERSION;
-        str += static_cast<LPCWSTR>(lpMsgBuf);
-    :   :LocalFree(lpMsgBuf); // free the buffer
-#       endif    
-    while (str.size() && (str[str.size()-1] == '\n' ||
-               str[str.size()-1] == '\r'))
-    {
-        str.erase(str.size()-1);
-    }
-# else
-    str += std::strerror(errno);
-# endif
-    return str;
-}
-
-} // unnamed namespace
-
 namespace boost {
 
 thread_exception::thread_exception()
@@ -99,13 +29,6 @@ thread_exception::~thread_exception() throw()
 int thread_exception::native_error() const
 {
     return m_sys_err; 
-}
-
-const char* thread_exception::message() const
-{
-    if (m_sys_err != 0)
-        return system_message(m_sys_err).c_str();
-    return what();
 }
 
 lock_error::lock_error()
