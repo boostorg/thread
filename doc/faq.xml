@@ -210,5 +210,26 @@ private:
 		condition variable.</para>
 	  </answer>
 	</qandaentry>
+	<qandaentry>
+	  <question>
+	    <para>Why doesn't the thread's ctor take at least a void* to pass any
+	    information along with the function? All other threading libs support
+	    that and it makes Boost.Threads inferiour. </para>
+	  </question>
+	  <answer>
+	    <para>There is no need, because Boost.Threads are superiour! First
+	    thing is that its ctor doesn't take a function but a functor. That
+	    means that you can pass an object with an overloaded operator() and
+	    include additional data as members in that object. Beware though that
+	    this object is copied, use boost::ref to prevent that. Secondly, even
+	    a boost::function<void (void)> can carry parameters, you only have to
+	    use boost::bind() to create it from any function and bind its 
+	    parameters.</para>
+	    <para>That is also why Boost.Threads are superiour, because they
+	    don't require you to pass a type-unsafe void pointer. Rather, you can
+	    use the flexible Boost.Functions to create a thread entry out of
+	    anything that can be called.</para>
+	  </answer>
+	</qandaentry>
   </qandaset>
 </section>
