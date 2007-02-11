@@ -31,8 +31,6 @@ public:
 
     int native_error() const;
 
-    const char* message() const;
-
 private:
     int m_sys_err;
 };
