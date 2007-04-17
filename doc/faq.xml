@@ -222,7 +222,7 @@ private:
 	    means that you can pass an object with an overloaded operator() and
 	    include additional data as members in that object. Beware though that
 	    this object is copied, use boost::ref to prevent that. Secondly, even
-	    a boost::function<void (void)> can carry parameters, you only have to
+	    a boost::function&lt;void (void)&gt; can carry parameters, you only have to
 	    use boost::bind() to create it from any function and bind its 
 	    parameters.</para>
 	    <para>That is also why Boost.Threads are superiour, because they
