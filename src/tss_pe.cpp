@@ -131,7 +131,7 @@
             //for destructors of global objects, so that
             //shouldn't be a problem.
 
-            atexit(on_thread_exit);
+//             atexit(on_thread_exit);
 
             //Call Boost process entry callback here
 
@@ -151,6 +151,7 @@
             switch (dwReason)
             {
                 case DLL_THREAD_DETACH:
+                case DLL_PROCESS_DETACH:
                 {
                     on_thread_exit();
                     break;
