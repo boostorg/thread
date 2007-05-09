@@ -22,6 +22,7 @@ namespace boost
             typedef ULONG_PTR ulong_ptr;
             typedef HANDLE handle;
             unsigned const infinite=INFINITE;
+            unsigned const timeout=WAIT_TIMEOUT;
 
             using ::CreateMutexA;
             using ::CreateEventA;
@@ -58,6 +59,7 @@ namespace boost
 # endif
             typedef void* handle;
             unsigned const infinite=~0U;
+            unsigned const timeout=258U;
 
             extern "C"
             {
