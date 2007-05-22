@@ -31,7 +31,7 @@ boost::once_flag tss_data_once = BOOST_ONCE_INIT;
 boost::mutex* tss_data_mutex = 0;
 tss_data_cleanup_handlers_type* tss_data_cleanup_handlers = 0;
 #if defined(BOOST_HAS_WINTHREADS)
-    DWORD tss_data_native_key;
+    DWORD tss_data_native_key=TLS_OUT_OF_INDEXES;
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_key_t tss_data_native_key;
 #elif defined(BOOST_HAS_MPTASKS)
@@ -60,6 +60,7 @@ void tss_data_dec_use(boost::mutex::scoped_lock& lk)
         tss_data_mutex = 0;
 #if defined(BOOST_HAS_WINTHREADS)
         TlsFree(tss_data_native_key);
+        tss_data_native_key=TLS_OUT_OF_INDEXES;
 #elif defined(BOOST_HAS_PTHREADS)
         pthread_key_delete(tss_data_native_key);
 #elif defined(BOOST_HAS_MPTASKS)
@@ -78,6 +79,9 @@ extern "C" void cleanup_slots(void* p)
         (*(*tss_data_cleanup_handlers)[i])((*slots)[i]);
         (*slots)[i] = 0;
     }
+#if defined(BOOST_HAS_WINTHREADS)
+    TlsSetValue(tss_data_native_key,0);
+#endif
     tss_data_dec_use(lock);
     delete slots;
 }
@@ -97,7 +101,7 @@ void init_tss_data()
 
     //Allocate tls slot
     tss_data_native_key = TlsAlloc();
-    if (tss_data_native_key == 0xFFFFFFFF)
+    if (tss_data_native_key == TLS_OUT_OF_INDEXES)
         return;
 #elif defined(BOOST_HAS_PTHREADS)
     int res = pthread_key_create(&tss_data_native_key, &cleanup_slots);
