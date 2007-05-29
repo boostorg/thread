@@ -24,7 +24,15 @@ void init_TryEnterCriticalSection()
         version_info.dwMajorVersion >= 4)
     {
         if (HMODULE kernel_module = GetModuleHandle(TEXT("KERNEL32.DLL")))
-            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(GetProcAddress(kernel_module, TEXT("TryEnterCriticalSection")));
+        {
+            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(
+#if defined(BOOST_NO_ANSI_APIS)
+                GetProcAddressW(kernel_module, L"TryEnterCriticalSection")
+#else
+                GetProcAddress(kernel_module, "TryEnterCriticalSection")
+#endif        
+                );
+        }
     }
 }
 
