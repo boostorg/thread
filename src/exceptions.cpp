@@ -1,70 +1,14 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
 //
-// Permission to use, copy, modify, distribute and sell this software
-// and its documentation for any purpose is hereby granted without fee,
-// provided that the above copyright notice appear in all copies and
-// that both that copyright notice and this permission notice appear
-// in supporting documentation.  William E. Kempf makes no representations
-// about the suitability of this software for any purpose.
-// It is provided "as is" without express or implied warranty.
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/exceptions.hpp>
 #include <cstring>
 #include <string>
-
-# ifdef BOOST_NO_STDC_NAMESPACE
-namespace std { using ::strerror; }
-# endif
-
-// BOOST_POSIX or BOOST_WINDOWS specify which API to use.
-# if !defined( BOOST_WINDOWS ) && !defined( BOOST_POSIX )
-#   if defined(_WIN32) || defined(__WIN32__) || defined(WIN32) || defined(__CYGWIN__)
-#     define BOOST_WINDOWS
-#   else
-#     define BOOST_POSIX
-#   endif
-# endif
-
-# if defined( BOOST_WINDOWS )
-#   include "windows.h"
-# else
-#   include <errno.h> // for POSIX error codes
-# endif
-
-namespace
-{
-
-std::string system_message(int sys_err_code)
-{
-    std::string str;
-# ifdef BOOST_WINDOWS
-    LPVOID lpMsgBuf;
-    ::FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER |
-        FORMAT_MESSAGE_FROM_SYSTEM |
-        FORMAT_MESSAGE_IGNORE_INSERTS,
-        NULL,
-        sys_err_code,
-        MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
-        (LPSTR)&lpMsgBuf,
-        0,
-        NULL);
-    str += static_cast<LPCSTR>(lpMsgBuf);
-    ::LocalFree(lpMsgBuf); // free the buffer
-    while (str.size() && (str[str.size()-1] == '\n' ||
-               str[str.size()-1] == '\r'))
-    {
-        str.erase(str.size()-1);
-    }
-# else
-    str += std::strerror(errno);
-# endif
-    return str;
-}
-
-} // unnamed namespace
 
 namespace boost {
 
@@ -85,13 +29,6 @@ thread_exception::~thread_exception() throw()
 int thread_exception::native_error() const
 {
     return m_sys_err; 
-}
-
-const char* thread_exception::message() const
-{
-    if (m_sys_err != 0)
-        return system_message(m_sys_err).c_str();
-    return what();
 }
 
 lock_error::lock_error()
