@@ -11,6 +11,9 @@
 
 #include <boost/detail/interlocked.hpp>
 
+extern "C" void _ReadWriteBarrier(void);
+#pragma intrinsic(_ReadWriteBarrier)
+
 namespace boost
 {
     namespace detail

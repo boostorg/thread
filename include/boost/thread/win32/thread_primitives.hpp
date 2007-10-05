@@ -133,7 +133,7 @@ namespace boost
 
             inline void release_semaphore(handle semaphore,long count)
             {
-                bool const success=ReleaseSemaphore(semaphore,count,0);
+                bool const success=ReleaseSemaphore(semaphore,count,0)!=0;
                 BOOST_ASSERT(success);
             }
 
