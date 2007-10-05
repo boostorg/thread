@@ -28,6 +28,7 @@ struct xtime;
 #   pragma warning(push)
 #   pragma warning(disable: 4251 4231 4660 4275)
 #endif
+
 namespace detail {
 
 class BOOST_THREAD_DECL condition_impl : private noncopyable

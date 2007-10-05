@@ -10,7 +10,63 @@
 -->
 <section id="thread.release_notes" last-revision="$Date$">
 	<title>Release Notes</title>
-	<section id="thread.release_notes.boost_1_32_0">
+    <section id="thread.release_notes.boost_1_34_0">
+        <title>Boost 1.34.0</title>
+
+        <section id="thread.release_notes.boost_1_34_0.change_log.maintainance">
+            <title>New team of maintainers</title>
+
+            <para>
+                Since the original author William E. Kempf no longer is available to
+                maintain the &Boost.Thread; library, a new team has been formed
+                in an attempt to continue the work on &Boost.Thread;.
+                Fortunately William E. Kempf has given
+                <ulink url="http://lists.boost.org/Archives/boost/2006/09/110143.php">
+                    permission </ulink> 
+                to use his work under the boost license.
+            </para>
+            <para>
+                The team currently consists of
+                <itemizedlist>
+                    <listitem>
+                        Anthony Williams, for the Win32 platform,
+                    </listitem>
+                    <listitem>
+                        Roland Schwarz, for the linux platform, and various "housekeeping" tasks.
+                    </listitem>
+                </itemizedlist>
+                Volunteers for other platforms are welcome!
+            </para>
+            <para>
+                As the &Boost.Thread; was kind of orphaned over the last release, this release
+                attempts to fix the known bugs. Upcoming releases will bring in new things.
+            </para>
+        </section>
+
+        <section id="thread.release_notes.boost_1_34_0.change_log.read_write_mutex">
+            <title>read_write_mutex still broken</title>
+
+            <para>
+                <note>
+                    It has been decided not to release the Read/Write Mutex, since the current
+                    implementation suffers from a serious bug. The documentation of the concepts
+                    has been included though, giving the interested reader an opportunity to study the
+                    original concepts. Please refer to the following links if you are interested
+                    which problems led to the decision to held back this mutex type.The issue
+                    has been discovered before 1.33 was released and the code has
+                    been omitted from that release. A reworked mutex is expected to appear in 1.35.
+                    Also see:  
+                    <ulink url="http://lists.boost.org/Archives/boost/2005/08/92307.php">
+                        read_write_mutex bug</ulink> 
+                    and 
+                    <ulink url="http://lists.boost.org/Archives/boost/2005/09/93180.php">
+                        read_write_mutex fundamentally broken in 1.33</ulink>
+                </note>
+            </para>
+        </section>
+
+    </section>
+    <section id="thread.release_notes.boost_1_32_0">
 		<title>Boost 1.32.0</title>
 
 		<section id="thread.release_notes.boost_1_32_0.change_log.documentation">
