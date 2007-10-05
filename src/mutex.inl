@@ -38,7 +38,7 @@ void init_TryEnterCriticalSection()
 
 inline bool has_TryEnterCriticalSection()
 {
-    boost::call_once(init_TryEnterCriticalSection, once_init_TryEnterCriticalSection);
+    boost::call_once(once_init_TryEnterCriticalSection, init_TryEnterCriticalSection);
     return g_TryEnterCriticalSection != 0;
 }
 
