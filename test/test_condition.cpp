@@ -22,7 +22,7 @@ struct condition_test_data
     condition_test_data() : notified(0), awoken(0) { }
 
     boost::mutex mutex;
-    boost::condition condition;
+    boost::condition<boost::mutex> condition;
     int notified;
     int awoken;
 };

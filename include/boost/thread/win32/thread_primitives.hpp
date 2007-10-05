@@ -10,6 +10,8 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/config.hpp>
+#include <boost/assert.hpp>
+#include <boost/thread/exceptions.hpp>
 
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
@@ -110,13 +112,84 @@ namespace boost
             
             inline handle create_anonymous_event(event_type type,initial_event_state state)
             {
-                return CreateEventA(0,type,state,0);
+                handle const res=CreateEventA(0,type,state,0);
+                return res?res:throw thread_resource_error();
             }
 
             inline handle create_anonymous_semaphore(long initial_count,long max_count)
             {
-                return CreateSemaphoreA(NULL,initial_count,max_count,NULL);
+                handle const res=CreateSemaphoreA(NULL,initial_count,max_count,NULL);
+                return res?res:throw thread_resource_error();
             }
+
+            inline handle duplicate_handle(handle source)
+            {
+                handle const current_process=GetCurrentProcess();
+                long const same_access_flag=2;
+                handle new_handle=0;
+                bool const success=DuplicateHandle(current_process,source,current_process,&new_handle,0,false,same_access_flag)!=0;
+                return success?new_handle:throw thread_resource_error();
+            }
+
+            inline void release_semaphore(handle semaphore,long count)
+            {
+                bool const success=ReleaseSemaphore(semaphore,count,0);
+                BOOST_ASSERT(success);
+            }
+
+            class handle_manager
+            {
+            private:
+                handle handle_to_manage;
+                handle_manager(handle_manager&);
+                handle_manager& operator=(handle_manager&);
+
+                void cleanup()
+                {
+                    if(handle_to_manage)
+                    {
+                        unsigned long result=CloseHandle(handle_to_manage);
+                        BOOST_ASSERT(result);
+                    }
+                }
+                
+            public:
+                explicit handle_manager(handle handle_to_manage_):
+                    handle_to_manage(handle_to_manage_)
+                {}
+                handle_manager():
+                    handle_to_manage(0)
+                {}
+                
+                handle_manager& operator=(handle new_handle)
+                {
+                    cleanup();
+                    handle_to_manage=new_handle;
+                }
+
+                operator handle() const
+                {
+                    return handle_to_manage;
+                }
+
+                handle release()
+                {
+                    handle const res=handle_to_manage;
+                    handle_to_manage=0;
+                    return res;
+                }
+
+                bool operator!() const
+                {
+                    return !handle_to_manage;
+                }
+                
+                ~handle_manager()
+                {
+                    cleanup();
+                }
+            };
+            
         }
     }
 }

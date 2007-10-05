@@ -25,7 +25,6 @@ lib boost_thread_pthread
 	    pthread/condition.cpp
 	    pthread/exceptions.cpp
 	    pthread/xtime.cpp
-	    pthread/once.cpp
 	    pthread/tss.cpp
 	: ## requirements ##
 	    <define>BOOST_THREAD_POSIX
@@ -41,7 +40,6 @@ lib boost_thread
 	    pthread/condition.cpp
 	    pthread/exceptions.cpp
 	    pthread/xtime.cpp
-	    pthread/once.cpp
 	    pthread/tss.cpp
 	: ## requirements ##
 	    <define>BOOST_THREAD_POSIX

@@ -3,7 +3,7 @@
 
 //  once.hpp
 //
-//  (C) Copyright 2005-6 Anthony Williams 
+//  (C) Copyright 2005-7 Anthony Williams 
 //  (C) Copyright 2005 John Maddock
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
@@ -35,29 +35,19 @@ namespace boost
 
     namespace detail
     {
-        struct handle_closer
-        {
-            void* const handle_to_close;
-            handle_closer(void* handle_to_close_):
-                handle_to_close(handle_to_close_)
-            {}
-            ~handle_closer()
-            {
-                win32::CloseHandle(handle_to_close);
-            }
-        };
-
         struct win32_mutex_scoped_lock
         {
             void* const mutex_handle;
-            win32_mutex_scoped_lock(void* mutex_handle_):
+            explicit win32_mutex_scoped_lock(void* mutex_handle_):
                 mutex_handle(mutex_handle_)
             {
-                win32::WaitForSingleObject(mutex_handle,win32::infinite);
+                unsigned long const res=win32::WaitForSingleObject(mutex_handle,win32::infinite);
+                BOOST_ASSERT(!res);
             }
             ~win32_mutex_scoped_lock()
             {
-                win32::ReleaseMutex(mutex_handle);
+                bool const success=win32::ReleaseMutex(mutex_handle)!=0;
+                BOOST_ASSERT(success);
             }
         };
 
@@ -98,21 +88,21 @@ namespace boost
     
 
     template<typename Function>
-    void call_once(Function f,once_flag& flag)
+    void call_once(once_flag& flag,Function f)
     {
         // Try for a quick win: if the proceedure has already been called
         // just skip through:
         long const function_complete_flag_value=0xc15730e2;
 
-        if(::boost::detail::interlocked_read(&flag)!=function_complete_flag_value)
+        if(::boost::detail::interlocked_read_acquire(&flag)!=function_complete_flag_value)
         {
             char mutex_name[::boost::detail::once_mutex_name_length];
             void* const mutex_handle(::boost::detail::create_once_mutex(mutex_name,&flag));
             BOOST_ASSERT(mutex_handle);
-            detail::handle_closer const closer(mutex_handle);
+            detail::win32::handle_manager const closer(mutex_handle);
             detail::win32_mutex_scoped_lock const lock(mutex_handle);
       
-            if(::boost::detail::interlocked_read(&flag)!=function_complete_flag_value)
+            if(flag!=function_complete_flag_value)
             {
                 f();
                 BOOST_INTERLOCKED_EXCHANGE(&flag,function_complete_flag_value);

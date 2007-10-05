@@ -1,4 +1,4 @@
-// (C) Copyright 2006 Anthony Williams
+// (C) Copyright 2006-7 Anthony Williams
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -25,7 +25,7 @@ void call_once_thread()
     int my_once_value=0;
     for(unsigned i=0;i<loop_count;++i)
     {
-        boost::call_once(initialize_variable, flag);
+        boost::call_once(flag, initialize_variable);
         my_once_value=var_to_init;
         if(my_once_value!=1)
         {
