@@ -9,7 +9,7 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/pthread/config.hpp>
+#include <boost/thread/detail/config.hpp>
 
 #include <pthread.h>
 #include <boost/assert.hpp>
