@@ -182,7 +182,7 @@ namespace boost {
 namespace detail {
 void tss::init(boost::function1<void, void*>* pcleanup)
 {
-    boost::call_once(&init_tss_data, tss_data_once);
+    boost::call_once(tss_data_once, &init_tss_data);
     if (tss_data_cleanup_handlers == 0)
         throw thread_resource_error();
     boost::mutex::scoped_lock lock(*tss_data_mutex);

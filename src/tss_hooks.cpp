@@ -74,7 +74,7 @@
         thread_exit_handler exit_handler
         )
     {
-        boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
+        boost::call_once(once_init_threadmon_mutex, init_threadmon_mutex);
         //boost::mutex::scoped_lock lock(*threadmon_mutex);
         CScopedCSLock lock(&threadmon_mutex);
 
@@ -141,7 +141,7 @@
 
     extern "C" BOOST_THREAD_DECL void on_process_enter(void)
     {
-        boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
+        boost::call_once(once_init_threadmon_mutex, init_threadmon_mutex);
 //        boost::mutex::scoped_lock lock(*threadmon_mutex);
         CScopedCSLock lock(&threadmon_mutex);
 
@@ -150,7 +150,7 @@
 
     extern "C" BOOST_THREAD_DECL void on_process_exit(void)
     {
-        boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
+        boost::call_once(once_init_threadmon_mutex, init_threadmon_mutex);
 //        boost::mutex::scoped_lock lock(*threadmon_mutex);
         CScopedCSLock lock(&threadmon_mutex);
 
@@ -173,7 +173,7 @@
 
     extern "C" BOOST_THREAD_DECL void on_thread_exit(void)
     {
-        boost::call_once(init_threadmon_mutex, once_init_threadmon_mutex);
+        boost::call_once(once_init_threadmon_mutex, init_threadmon_mutex);
 //        boost::mutex::scoped_lock lock(*threadmon_mutex);
         CScopedCSLock lock(&threadmon_mutex);
 
