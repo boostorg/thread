@@ -29,7 +29,7 @@ private:
 #ifdef BOOST_MSVC
 #   pragma warning(push)
 #   pragma warning(disable: 4251 4231 4660 4275)
-#endif    
+#endif
     condition m_cond;
 #ifdef BOOST_MSVC
 #   pragma warning(pop)

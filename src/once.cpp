@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -9,7 +10,6 @@
 #include <boost/detail/workaround.hpp>
 
 #include <boost/thread/once.hpp>
-#include <boost/thread/exceptions.hpp>
 #include <cstdio>
 #include <cassert>
 
@@ -19,7 +19,6 @@
       using std::size_t;
 #   endif
 #   include <windows.h>
-#   include "mutex.inl"
 #   if defined(BOOST_NO_STRINGSTREAM)
 #       include <strstream>
 
@@ -116,8 +115,11 @@ inline LONG ice_wrapper(LPVOID (__stdcall *ice)(LPVOID*, LPVOID, LPVOID),
 inline LONG compare_exchange(volatile LPLONG dest, LONG exch, LONG cmp)
 {
 #ifdef _WIN64
-    return InterlockedCompareExchange(dest, exch, cmp);
-#else
+    // Original patch from Anthony Williams.
+    // I (Roland Schwarz) am trying this for RC_1_34_0, since x64 regressions are
+    // currently not run on x64 platforms for HEAD
+    return InterlockedCompareExchange(dest, exch,cmp);
+#else    
     return ice_wrapper(&InterlockedCompareExchange, dest, exch, cmp);
 #endif
 }
@@ -139,7 +141,16 @@ void call_once(void (*func)(), once_flag& flag)
              << &flag 
              << std::ends;
         unfreezer unfreeze(strm);
-        HANDLE mutex=new_mutex(strm.str());
+#   if defined (BOOST_NO_ANSI_APIS)
+        int const num_wide_chars = ::MultiByteToWideChar(CP_ACP, 0, strm.str(), -1, 0, 0);
+        LPWSTR const wide_name = (LPWSTR)_alloca( (num_wide_chars+1) * 2 );
+        int const res=::MultiByteToWideChar(CP_ACP, 0, name, -1, wide_name, num_wide_chars);
+        if(!res)
+            throw boost::thread_resource_error();
+        HANDLE mutex = CreateMutexW(NULL, FALSE, wide_name);
+#   else
+        HANDLE mutex = CreateMutexA(NULL, FALSE, strm.str());
+#   endif
 #else
 #   if defined (BOOST_NO_ANSI_APIS)
         std::wostringstream strm;

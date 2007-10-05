@@ -291,7 +291,8 @@ recursive_mutex::recursive_mutex()
 
     res = pthread_mutex_init(&m_mutex, &attr);
     {
-        int res = pthread_mutexattr_destroy(&attr);
+        int res = 0;
+        res = pthread_mutexattr_destroy(&attr);
         assert(res == 0);
     }
     if (res != 0)
@@ -447,7 +448,8 @@ recursive_try_mutex::recursive_try_mutex()
 
     res = pthread_mutex_init(&m_mutex, &attr);
     {
-        int res = pthread_mutexattr_destroy(&attr);
+        int res = 0;
+        res = pthread_mutexattr_destroy(&attr);
         assert(res == 0);
     }
     if (res != 0)
