@@ -65,25 +65,23 @@ void init()
 
 void thread_proc()
 {
-    boost::call_once(&amp;init, once);
+    boost::call_once(once, &amp;init);
 }</programlisting>
 			</para></description>
-			
-			<parameter name="func">
-				<paramtype>void (*func)()</paramtype>
-			</parameter>
 			
 			<parameter name="flag">
 				<paramtype>once_flag&amp;</paramtype>
 			</parameter>
-			
-			<requires>The function <code>func</code> shall not throw
-			exceptions.</requires>
+
+			<parameter name="func">
+				<paramtype>Function func</paramtype>
+			</parameter>
 			
 			<effects>As if (in an atomic fashion): 
-			<code>if (flag == BOOST_ONCE_INIT) func();</code></effects>
+			<code>if (flag == BOOST_ONCE_INIT) func();</code>. If <code>func()</code> throws an exception, it shall be as if this
+thread never invoked <code>call_once</code></effects>
 			
-			<postconditions><code>flag != BOOST_ONCE_INIT</code>
+			<postconditions><code>flag != BOOST_ONCE_INIT</code> unless <code>func()</code> throws an exception.
 			</postconditions>
 		</function>
 	</namespace>

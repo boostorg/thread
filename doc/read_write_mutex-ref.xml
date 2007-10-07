@@ -37,6 +37,16 @@
 		<purpose>
 			<para>The <classname>read_write_mutex</classname> class is a model of the 
 			<link linkend="thread.concepts.ReadWriteMutex">ReadWriteMutex</link> concept.</para>
+    <note> Unfortunately it turned out that the current implementation of Read/Write Mutex has     
+            some serious problems. So it was decided not to put this implementation into
+            release grade code. Also discussions on the mailing list led to the
+            conclusion that the current concepts need to be rethought. In particular
+            the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
+                Inter-Class Scheduling Policies</link> are deemed unnecessary.
+            There seems to be common belief that a fair scheme suffices.
+            The following documentation has been retained however, to give
+            readers of this document the opportunity to study the original design.
+    </note>
 		</purpose>
 		
 		<description>
@@ -160,6 +170,16 @@
 		<purpose>
 			<para>The <classname>try_read_write_mutex</classname> class is a model of the 
 			<link linkend="thread.concepts.TryReadWriteMutex">TryReadWriteMutex</link> concept.</para>
+    <note> Unfortunately it turned out that the current implementation of Read/Write Mutex has     
+            some serious problems. So it was decided not to put this implementation into
+            release grade code. Also discussions on the mailing list led to the
+            conclusion that the current concepts need to be rethought. In particular
+            the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
+                Inter-Class Scheduling Policies</link> are deemed unnecessary.
+            There seems to be common belief that a fair scheme suffices.
+            The following documentation has been retained however, to give
+            readers of this document the opportunity to study the original design.
+    </note>
 		</purpose>
 		
 		<description>
@@ -302,6 +322,16 @@
 		<purpose>
 			<para>The <classname>timed_read_write_mutex</classname> class is a model of the 
 			<link linkend="thread.concepts.TimedReadWriteMutex">TimedReadWriteMutex</link> concept.</para>
+    <note> Unfortunately it turned out that the current implementation of Read/Write Mutex has     
+            some serious problems. So it was decided not to put this implementation into
+            release grade code. Also discussions on the mailing list led to the
+            conclusion that the current concepts need to be rethought. In particular
+            the schedulings <link linkend="thread.concepts.read-write-scheduling-policies.inter-class">
+                Inter-Class Scheduling Policies</link> are deemed unnecessary.
+            There seems to be common belief that a fair scheme suffices.
+            The following documentation has been retained however, to give
+            readers of this document the opportunity to study the original design.
+    </note>
 		</purpose>
 		
 		<description>

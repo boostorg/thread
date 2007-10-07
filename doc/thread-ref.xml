@@ -264,20 +264,7 @@
 				<effects>Calls <code>join()</code> on each of the managed 
 				<classname>thread</classname> objects.</effects>
 			</method>
-        </method-group>
-        
-        <method-group name="capacity">
-            
-            <method name="size" cv="const">
-                <type>int</type>
-                
-                <returns>the number of <classname>thread</classname> 
-                    objects in the group
-                </returns>
-
-            </method>
-
-        </method-group>
+		</method-group>
 	</class>
   </namespace>
 </header>

@@ -24,13 +24,21 @@ void init_TryEnterCriticalSection()
         version_info.dwMajorVersion >= 4)
     {
         if (HMODULE kernel_module = GetModuleHandle(TEXT("KERNEL32.DLL")))
-            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(GetProcAddress(kernel_module, TEXT("TryEnterCriticalSection")));
+        {
+            g_TryEnterCriticalSection = reinterpret_cast<TryEnterCriticalSection_type>(
+#if defined(BOOST_NO_ANSI_APIS)
+                GetProcAddressW(kernel_module, L"TryEnterCriticalSection")
+#else
+                GetProcAddress(kernel_module, "TryEnterCriticalSection")
+#endif        
+                );
+        }
     }
 }
 
 inline bool has_TryEnterCriticalSection()
 {
-    boost::call_once(init_TryEnterCriticalSection, once_init_TryEnterCriticalSection);
+    boost::call_once(once_init_TryEnterCriticalSection, init_TryEnterCriticalSection);
     return g_TryEnterCriticalSection != 0;
 }
 
@@ -62,9 +70,11 @@ inline void* new_critical_section()
 inline void* new_mutex(const char* name)
 {
 #if defined(BOOST_NO_ANSI_APIS)
-    int num_wide_chars = (strlen(name) + 1);
-    LPWSTR wide_name = (LPWSTR)_alloca( num_wide_chars * 2 );
-    ::MultiByteToWideChar(CP_ACP, 0, name, -1, wide_name, num_wide_chars);
+    int const num_wide_chars = ::MultiByteToWideChar(CP_ACP, 0, name, -1, 0, 0);
+    LPWSTR const wide_name = (LPWSTR)_alloca( (num_wide_chars+1) * 2 );
+    int const res=::MultiByteToWideChar(CP_ACP, 0, name, -1, wide_name, num_wide_chars);
+    if(!res)
+        throw boost::thread_resource_error();
     HANDLE mutex = CreateMutexW(0, 0, wide_name);
 #else
     HANDLE mutex = CreateMutexA(0, 0, name);
