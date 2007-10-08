@@ -113,13 +113,21 @@ namespace boost
             inline handle create_anonymous_event(event_type type,initial_event_state state)
             {
                 handle const res=CreateEventA(0,type,state,0);
-                return res?res:throw thread_resource_error();
+                if(!res)
+                {
+                    throw thread_resource_error();
+                }
+                return res;
             }
 
             inline handle create_anonymous_semaphore(long initial_count,long max_count)
             {
                 handle const res=CreateSemaphoreA(NULL,initial_count,max_count,NULL);
-                return res?res:throw thread_resource_error();
+                if(!res)
+                {
+                    throw thread_resource_error();
+                }
+                return res;
             }
 
             inline handle duplicate_handle(handle source)
@@ -128,7 +136,11 @@ namespace boost
                 long const same_access_flag=2;
                 handle new_handle=0;
                 bool const success=DuplicateHandle(current_process,source,current_process,&new_handle,0,false,same_access_flag)!=0;
-                return success?new_handle:throw thread_resource_error();
+                if(!success)
+                {
+                    throw thread_resource_error();
+                }
+                return new_handle;
             }
 
             inline void release_semaphore(handle semaphore,long count)

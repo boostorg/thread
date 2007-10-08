@@ -342,6 +342,9 @@ condition_impl::condition_impl()
     res = pthread_cond_init(&m_condition, 0);
     if (res != 0)
         throw thread_resource_error();
+    res = pthread_mutex_init(&m_mutex, 0);
+    if (res != 0)
+        throw thread_resource_error();
 }
 
 condition_impl::~condition_impl()
@@ -349,19 +352,29 @@ condition_impl::~condition_impl()
     int res = 0;
     res = pthread_cond_destroy(&m_condition);
     assert(res == 0);
+    res = pthread_mutex_destroy(&m_mutex);
+    assert(res == 0);
 }
 
 void condition_impl::notify_one()
 {
     int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
+    assert(res == 0);
     res = pthread_cond_signal(&m_condition);
+    assert(res == 0);
+    res = pthread_mutex_unlock(&m_mutex);
     assert(res == 0);
 }
 
 void condition_impl::notify_all()
 {
     int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
+    assert(res == 0);
     res = pthread_cond_broadcast(&m_condition);
+    assert(res == 0);
+    res = pthread_mutex_unlock(&m_mutex);
     assert(res == 0);
 }
 
