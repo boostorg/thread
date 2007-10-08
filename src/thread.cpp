@@ -10,6 +10,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/condition.hpp>
+#include <boost/thread/locks.hpp>
 #include <cassert>
 
 #if defined(BOOST_HAS_WINTHREADS)
