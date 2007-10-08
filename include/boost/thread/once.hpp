@@ -10,19 +10,14 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/platform.hpp>
-#ifdef BOOST_HAS_MPTASKS
-namespace boost {
-
-typedef long once_flag;
-#define BOOST_ONCE_INIT 0
-
-void call_once(once_flag& flag, void (*func)());
-
-}
-
-#else
 #include BOOST_THREAD_PLATFORM(once.hpp)
-#endif
 
+namespace boost
+{
+    inline void call_once(void (*func)(),once_flag& flag)
+    {
+        call_once(flag,func);
+    }
+}
 
 #endif
