@@ -83,7 +83,6 @@ void call_once_with_functor()
     BOOST_CHECK_EQUAL(my_once_value, 1);
 }
 
-
 void test_call_once_arbitrary_functor()
 {
     unsigned const num_threads=100;
@@ -98,6 +97,56 @@ void test_call_once_arbitrary_functor()
 }
 
 
+struct throw_before_third_pass
+{
+    struct my_exception
+    {};
+
+    static unsigned pass_counter;
+    
+    void operator()() const
+    {
+        boost::mutex::scoped_lock lock(m);
+        ++pass_counter;
+        if(pass_counter<3)
+        {
+            throw my_exception();
+        }
+    }
+};
+
+unsigned throw_before_third_pass::pass_counter=0;
+unsigned exception_counter=0;
+
+void call_once_with_exception()
+{
+    static boost::once_flag functor_flag=BOOST_ONCE_INIT;
+    try
+    {
+        boost::call_once(functor_flag, throw_before_third_pass());
+    }
+    catch(throw_before_third_pass::my_exception)
+    {
+        boost::mutex::scoped_lock lock(m);
+        ++exception_counter;
+    }
+}
+
+void test_call_once_retried_on_exception()
+{
+    unsigned const num_threads=100;
+    boost::thread_group group;
+
+    for(unsigned i=0;i<num_threads;++i)
+    {
+        group.create_thread(&call_once_with_exception);
+    }
+    group.join_all();
+    BOOST_CHECK_EQUAL(throw_before_third_pass::pass_counter,3);
+    BOOST_CHECK_EQUAL(exception_counter,2);
+}
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -105,6 +154,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_call_once));
     test->add(BOOST_TEST_CASE(test_call_once_arbitrary_functor));
+    test->add(BOOST_TEST_CASE(test_call_once_retried_on_exception));
 
     return test;
 }
