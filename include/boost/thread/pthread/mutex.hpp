@@ -103,7 +103,7 @@ namespace boost
             {
                 throw thread_resource_error();
             }
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
@@ -118,7 +118,7 @@ namespace boost
         {
             int const res=pthread_mutex_destroy(&m);
             BOOST_ASSERT(!res);
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
             int const res2=pthread_cond_destroy(&cond);
             BOOST_ASSERT(!res2);
 #endif
