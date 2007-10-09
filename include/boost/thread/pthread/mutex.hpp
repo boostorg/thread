@@ -193,8 +193,8 @@ namespace boost
             pthread_mutex_scoped_lock const _(&m);
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timewait(&cond,&m,&timeout);
-                if(cond_res==ETIMEOUT)
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout);
+                if(cond_res==ETIMEDOUT)
                 {
                     return false;
                 }
