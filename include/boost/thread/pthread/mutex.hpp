@@ -72,7 +72,7 @@ namespace boost
     {
     private:
         pthread_mutex_t m;
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
         pthread_cond_t cond;
         bool is_locked;
 
