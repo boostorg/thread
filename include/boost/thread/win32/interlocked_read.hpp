@@ -9,7 +9,7 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/detail/interlocked.hpp>
+#ifdef BOOST_MSVC
 
 extern "C" void _ReadWriteBarrier(void);
 #pragma intrinsic(_ReadWriteBarrier)
@@ -32,5 +32,27 @@ namespace boost
         }
     }
 }
+
+#else
+
+#include <boost/detail/interlocked.hpp>
+
+namespace boost
+{
+    namespace detail
+    {
+        inline long interlocked_read_acquire(long volatile* x)
+        {
+            return BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,0,0);
+        }
+        inline void* interlocked_read_acquire(void* volatile* x)
+        {
+            return BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(x,0,0);
+        }
+    }
+}
+
+#endif
+
 
 #endif
