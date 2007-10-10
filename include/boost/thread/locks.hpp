@@ -24,13 +24,13 @@ namespace boost
     const adopt_lock_t adopt_lock={};
 
     template<typename Mutex>
-    class shareable_lock;
+    class shared_lock;
 
     template<typename Mutex>
     class exclusive_lock;
 
     template<typename Mutex>
-    class upgradeable_lock;
+    class upgrade_lock;
 
     template<typename Mutex>
     class lock_guard
@@ -86,21 +86,21 @@ namespace boost
         {
             timed_lock(target_time);
         }
-        unique_lock(boost::move_t<unique_lock> other):
+        unique_lock(boost::move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
         }
-        unique_lock(boost::move_t<upgradeable_lock<Mutex> > other);
+        unique_lock(boost::move_t<upgrade_lock<Mutex> > other);
 
-        unique_lock& operator=(boost::move_t<unique_lock> other)
+        unique_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
         {
             unique_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        unique_lock& operator=(boost::move_t<upgradeable_lock<Mutex> > other)
+        unique_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
         {
             unique_lock temp(other);
             swap(temp);
@@ -112,7 +112,7 @@ namespace boost
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
-        void swap(boost::move_t<unique_lock> other)
+        void swap(boost::move_t<unique_lock<Mutex> > other)
         {
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
@@ -170,6 +170,10 @@ namespace boost
         {
             return is_locked?&unique_lock::lock:0;
         }
+        bool operator!() const
+        {
+            return !owns_lock();
+        }
         bool owns_lock() const
         {
             return is_locked;
@@ -188,91 +192,100 @@ namespace boost
             return res;
         }
 
-        friend class shareable_lock<Mutex>;
-        friend class upgradeable_lock<Mutex>;
+        friend class shared_lock<Mutex>;
+        friend class upgrade_lock<Mutex>;
     };
 
     template<typename Mutex>
-    class shareable_lock
+    class shared_lock
     {
     protected:
         Mutex* m;
         bool is_locked;
     private:
-        explicit shareable_lock(shareable_lock&);
-        shareable_lock& operator=(shareable_lock&);
+        explicit shared_lock(shared_lock&);
+        shared_lock& operator=(shared_lock&);
     public:
-        explicit shareable_lock(Mutex& m_):
+        explicit shared_lock(Mutex& m_):
             m(&m_),is_locked(false)
         {
             lock();
         }
-        shareable_lock(Mutex& m_,bool do_lock):
+        shared_lock(Mutex& m_,adopt_lock_t):
+            m(&m_),is_locked(true)
+        {}
+        shared_lock(Mutex& m_,defer_lock_t):
+            m(&m_),is_locked(false)
+        {}
+        shared_lock(Mutex& m_,try_to_lock_t):
             m(&m_),is_locked(false)
         {
-            if(do_lock)
-            {
-                lock();
-            }
+            try_lock();
         }
-        shareable_lock(boost::move_t<shareable_lock> other):
+        shared_lock(Mutex& m_,system_time const& target_time):
+            m(&m_),is_locked(false)
+        {
+            timed_lock(target_time);
+        }
+
+        shared_lock(boost::move_t<shared_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
         }
 
-        shareable_lock(boost::move_t<unique_lock<Mutex> > other):
-            m(other->m),is_locked(other->is_locked)
-        {
-            other->is_locked=false;
-            if(is_locked)
-            {
-                m->unlock_and_lock_shareable();
-            }
-        }
-
-        shareable_lock(boost::move_t<upgradeable_lock<Mutex> > other):
+        shared_lock(boost::move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
             if(is_locked)
             {
-                m->unlock_upgradeable_and_lock_shareable();
+                m->unlock_and_lock_shared();
             }
         }
 
-        shareable_lock& operator=(boost::move_t<shareable_lock> other)
+        shared_lock(boost::move_t<upgrade_lock<Mutex> > other):
+            m(other->m),is_locked(other->is_locked)
         {
-            shareable_lock temp(other);
+            other->is_locked=false;
+            if(is_locked)
+            {
+                m->unlock_upgrade_and_lock_shared();
+            }
+        }
+
+        shared_lock& operator=(boost::move_t<shared_lock<Mutex> > other)
+        {
+            shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        shareable_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
+        shared_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
         {
-            shareable_lock temp(other);
+            shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        shareable_lock& operator=(boost::move_t<upgradeable_lock<Mutex> > other)
+        shared_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
         {
-            shareable_lock temp(other);
+            shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        void swap(shareable_lock& other)
+        void swap(shared_lock& other)
         {
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
         
-        ~shareable_lock()
+        ~shared_lock()
         {
             if(owns_lock())
             {
-                m->unlock_shareable();
+                m->unlock_shared();
             }
         }
         void lock()
@@ -281,7 +294,7 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            m->lock_shareable();
+            m->lock_shared();
             is_locked=true;
         }
         bool try_lock()
@@ -290,7 +303,16 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            is_locked=m->try_lock_shareable();
+            is_locked=m->try_lock_shared();
+            return is_locked;
+        }
+        bool timed_lock(boost::system_time const& target_time)
+        {
+            if(owns_lock())
+            {
+                throw boost::lock_error();
+            }
+            is_locked=m->timed_lock_shared(target_time);
             return is_locked;
         }
         void unlock()
@@ -299,14 +321,18 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            m->unlock_shareable();
+            m->unlock_shared();
             is_locked=false;
         }
             
-        typedef void (shareable_lock::*bool_type)();
+        typedef void (shared_lock::*bool_type)();
         operator bool_type() const
         {
-            return is_locked?&shareable_lock::lock:0;
+            return is_locked?&shared_lock::lock:0;
+        }
+        bool operator!() const
+        {
+            return !owns_lock();
         }
         bool owns_lock() const
         {
@@ -316,21 +342,21 @@ namespace boost
     };
 
     template<typename Mutex>
-    class upgradeable_lock
+    class upgrade_lock
     {
     protected:
         Mutex* m;
         bool is_locked;
     private:
-        explicit upgradeable_lock(upgradeable_lock&);
-        upgradeable_lock& operator=(upgradeable_lock&);
+        explicit upgrade_lock(upgrade_lock&);
+        upgrade_lock& operator=(upgrade_lock&);
     public:
-        explicit upgradeable_lock(Mutex& m_):
+        explicit upgrade_lock(Mutex& m_):
             m(&m_),is_locked(false)
         {
             lock();
         }
-        upgradeable_lock(Mutex& m_,bool do_lock):
+        upgrade_lock(Mutex& m_,bool do_lock):
             m(&m_),is_locked(false)
         {
             if(do_lock)
@@ -338,47 +364,47 @@ namespace boost
                 lock();
             }
         }
-        upgradeable_lock(boost::move_t<upgradeable_lock> other):
+        upgrade_lock(boost::move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
         }
 
-        upgradeable_lock(boost::move_t<unique_lock<Mutex> > other):
+        upgrade_lock(boost::move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
             if(is_locked)
             {
-                m->unlock_and_lock_upgradeable();
+                m->unlock_and_lock_upgrade();
             }
         }
 
-        upgradeable_lock& operator=(boost::move_t<upgradeable_lock> other)
+        upgrade_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
         {
-            upgradeable_lock temp(other);
+            upgrade_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        upgradeable_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
+        upgrade_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
         {
-            upgradeable_lock temp(other);
+            upgrade_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        void swap(upgradeable_lock& other)
+        void swap(upgrade_lock& other)
         {
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
         
-        ~upgradeable_lock()
+        ~upgrade_lock()
         {
             if(owns_lock())
             {
-                m->unlock_upgradeable();
+                m->unlock_upgrade();
             }
         }
         void lock()
@@ -387,7 +413,7 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            m->lock_upgradeable();
+            m->lock_upgrade();
             is_locked=true;
         }
         bool try_lock()
@@ -396,7 +422,7 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            is_locked=m->try_lock_upgradeable();
+            is_locked=m->try_lock_upgrade();
             return is_locked;
         }
         void unlock()
@@ -405,31 +431,35 @@ namespace boost
             {
                 throw boost::lock_error();
             }
-            m->unlock_upgradeable();
+            m->unlock_upgrade();
             is_locked=false;
         }
             
-        typedef void (upgradeable_lock::*bool_type)();
+        typedef void (upgrade_lock::*bool_type)();
         operator bool_type() const
         {
-            return is_locked?&upgradeable_lock::lock:0;
+            return is_locked?&upgrade_lock::lock:0;
+        }
+        bool operator!() const
+        {
+            return !owns_lock();
         }
         bool owns_lock() const
         {
             return is_locked;
         }
-        friend class shareable_lock<Mutex>;
+        friend class shared_lock<Mutex>;
         friend class unique_lock<Mutex>;
     };
 
     template<typename Mutex>
-    unique_lock<Mutex>::unique_lock(boost::move_t<upgradeable_lock<Mutex> > other):
+    unique_lock<Mutex>::unique_lock(boost::move_t<upgrade_lock<Mutex> > other):
         m(other->m),is_locked(other->is_locked)
     {
         other->is_locked=false;
         if(is_locked)
         {
-            m->unlock_upgradeable_and_lock();
+            m->unlock_upgrade_and_lock();
         }
     }
 
@@ -437,13 +467,13 @@ namespace boost
     class upgrade_to_unique_lock
     {
     private:
-        upgradeable_lock<Mutex>* source;
+        upgrade_lock<Mutex>* source;
         unique_lock<Mutex> exclusive;
 
         explicit upgrade_to_unique_lock(upgrade_to_unique_lock&);
         upgrade_to_unique_lock& operator=(upgrade_to_unique_lock&);
     public:
-        explicit upgrade_to_unique_lock(upgradeable_lock<Mutex>& m_):
+        explicit upgrade_to_unique_lock(upgrade_lock<Mutex>& m_):
             source(&m_),exclusive(boost::move(*source))
         {}
         ~upgrade_to_unique_lock()
@@ -454,13 +484,13 @@ namespace boost
             }
         }
 
-        upgrade_to_unique_lock(boost::move_t<upgrade_to_unique_lock> other):
+        upgrade_to_unique_lock(boost::move_t<upgrade_to_unique_lock<Mutex> > other):
             source(other->source),exclusive(boost::move(other->exclusive))
         {
             other->source=0;
         }
         
-        upgrade_to_unique_lock& operator=(boost::move_t<upgrade_to_unique_lock> other)
+        upgrade_to_unique_lock& operator=(boost::move_t<upgrade_to_unique_lock<Mutex> > other)
         {
             upgrade_to_unique_lock temp(other);
             swap(temp);
@@ -475,6 +505,10 @@ namespace boost
         operator bool_type() const
         {
             return exclusive.owns_lock()?&upgrade_to_unique_lock::swap:0;
+        }
+        bool operator!() const
+        {
+            return !owns_lock();
         }
         bool owns_lock() const
         {

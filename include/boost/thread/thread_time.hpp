@@ -30,7 +30,7 @@ namespace boost
             {
                 return 0;
             }
-            return (target_time-now).total_milliseconds();
+            return (target_time-now).total_milliseconds()+1;
         }
 
     }

@@ -112,7 +112,7 @@ namespace boost
             
             inline handle create_anonymous_event(event_type type,initial_event_state state)
             {
-                handle const res=CreateEventA(0,type,state,0);
+                handle const res=win32::CreateEventA(0,type,state,0);
                 if(!res)
                 {
                     throw thread_resource_error();
@@ -177,6 +177,7 @@ namespace boost
                 {
                     cleanup();
                     handle_to_manage=new_handle;
+                    return *this;
                 }
 
                 operator handle() const
