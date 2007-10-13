@@ -10,6 +10,8 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/cstdint.hpp>
+#include <boost/thread/thread_time.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
 
 namespace boost {
 
@@ -47,6 +49,16 @@ inline int xtime_cmp(const xtime& xt1, const xtime& xt2)
         return (int)(xt1.nsec - xt2.nsec);
     else 
         return (xt1.sec > xt2.sec) ? 1 : -1;
+}
+
+inline xtime get_xtime(boost::system_time const& abs_time)
+{
+    xtime res={0};
+    boost::posix_time::time_duration const time_since_epoch=abs_time-boost::posix_time::from_time_t(0);
+            
+    res.sec=time_since_epoch.total_seconds();
+    res.nsec=time_since_epoch.fractional_seconds()*(1000000000/time_since_epoch.ticks_per_second());
+    return res;
 }
 
 } // namespace boost

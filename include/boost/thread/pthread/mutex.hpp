@@ -72,7 +72,7 @@ namespace boost
     {
     private:
         pthread_mutex_t m;
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
         pthread_cond_t cond;
         bool is_locked;
 
@@ -103,7 +103,7 @@ namespace boost
             {
                 throw thread_resource_error();
             }
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
@@ -118,7 +118,7 @@ namespace boost
         {
             int const res=pthread_mutex_destroy(&m);
             BOOST_ASSERT(!res);
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
             int const res2=pthread_cond_destroy(&cond);
             BOOST_ASSERT(!res2);
 #endif
@@ -193,8 +193,8 @@ namespace boost
             pthread_mutex_scoped_lock const _(&m);
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timewait(&cond,&m,&timeout);
-                if(cond_res==ETIMEOUT)
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout);
+                if(cond_res==ETIMEDOUT)
                 {
                     return false;
                 }

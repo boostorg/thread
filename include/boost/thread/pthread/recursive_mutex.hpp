@@ -133,6 +133,8 @@ namespace boost
             int const res=pthread_mutex_init(&m,&attr);
             if(res)
             {
+                int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
+                BOOST_ASSERT(!destroy_attr_res);
                 throw thread_resource_error();
             }
             int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
@@ -247,12 +249,12 @@ namespace boost
             if(is_locked && owner==pthread_self())
             {
                 ++count;
-                return;
+                return true;
             }
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timewait(&cond,&m,&timeout);
-                if(cond_res==ETIMEOUT)
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout);
+                if(cond_res==ETIMEDOUT)
                 {
                     return false;
                 }

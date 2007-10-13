@@ -17,9 +17,9 @@ CPP_SOURCES =
         barrier
         condition
         exceptions
-        mutex
+#        mutex
 #        once
-        recursive_mutex
+#        recursive_mutex
 #        read_write_mutex
         thread
         tss_hooks
