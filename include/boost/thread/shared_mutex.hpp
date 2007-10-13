@@ -1,7 +1,7 @@
-#ifndef BOOST_THREAD_MUTEX_HPP
-#define BOOST_THREAD_MUTEX_HPP
+#ifndef BOOST_THREAD_SHARED_MUTEX_HPP
+#define BOOST_THREAD_SHARED_MUTEX_HPP
 
-//  mutex.hpp
+//  shared_mutex.hpp
 //
 //  (C) Copyright 2007 Anthony Williams 
 //
@@ -10,6 +10,6 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/platform.hpp>
-#include BOOST_THREAD_PLATFORM(mutex.hpp)
+#include BOOST_THREAD_PLATFORM(shared_mutex.hpp)
 
 #endif

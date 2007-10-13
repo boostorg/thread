@@ -27,6 +27,12 @@
 #   include "mac/safe.hpp"
 #endif
 
+// The following include can be removed after the bug on QNX
+// has been tracked down. I need this only for debugging
+//#if !defined(NDEBUG) && defined(BOOST_HAS_PTHREADS)
+#include <iostream>
+//#endif
+
 namespace boost {
 
 namespace detail {
@@ -336,6 +342,9 @@ condition_impl::condition_impl()
     res = pthread_cond_init(&m_condition, 0);
     if (res != 0)
         throw thread_resource_error();
+    res = pthread_mutex_init(&m_mutex, 0);
+    if (res != 0)
+        throw thread_resource_error();
 }
 
 condition_impl::~condition_impl()
@@ -343,19 +352,29 @@ condition_impl::~condition_impl()
     int res = 0;
     res = pthread_cond_destroy(&m_condition);
     assert(res == 0);
+    res = pthread_mutex_destroy(&m_mutex);
+    assert(res == 0);
 }
 
 void condition_impl::notify_one()
 {
     int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
+    assert(res == 0);
     res = pthread_cond_signal(&m_condition);
+    assert(res == 0);
+    res = pthread_mutex_unlock(&m_mutex);
     assert(res == 0);
 }
 
 void condition_impl::notify_all()
 {
     int res = 0;
+    res = pthread_mutex_lock(&m_mutex);
+    assert(res == 0);
     res = pthread_cond_broadcast(&m_condition);
+    assert(res == 0);
+    res = pthread_mutex_unlock(&m_mutex);
     assert(res == 0);
 }
 
@@ -373,6 +392,20 @@ bool condition_impl::do_timed_wait(const xtime& xt, pthread_mutex_t* pmutex)
 
     int res = 0;
     res = pthread_cond_timedwait(&m_condition, pmutex, &ts);
+// Test code for QNX debugging, to get information during regressions
+#ifndef NDEBUG
+    if (res == EINVAL) {
+        boost::xtime now;
+        boost::xtime_get(&now, boost::TIME_UTC);
+        std::cerr << "now: " << now.sec << " " << now.nsec << std::endl;
+        std::cerr << "time: " << time(0) << std::endl;
+        std::cerr << "xtime: " << xt.sec << " " << xt.nsec << std::endl;
+        std::cerr << "ts: " << ts.tv_sec << " " << ts.tv_nsec << std::endl;
+        std::cerr << "pmutex: " << pmutex << std::endl;
+        std::cerr << "condition: " << &m_condition << std::endl;
+        assert(res != EINVAL);
+    }
+#endif    
     assert(res == 0 || res == ETIMEDOUT);
 
     return res != ETIMEDOUT;

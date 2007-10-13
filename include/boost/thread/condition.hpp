@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -28,6 +29,7 @@ struct xtime;
 #   pragma warning(push)
 #   pragma warning(disable: 4251 4231 4660 4275)
 #endif
+
 namespace detail {
 
 class BOOST_THREAD_DECL condition_impl : private noncopyable
@@ -60,6 +62,7 @@ public:
                         // still waiting to be removed from m_queue
 #elif defined(BOOST_HAS_PTHREADS)
     pthread_cond_t m_condition;
+    pthread_mutex_t m_mutex;
 #elif defined(BOOST_HAS_MPTASKS)
     MPSemaphoreID m_gate;
     MPSemaphoreID m_queue;
@@ -89,7 +92,7 @@ public:
         if (!lock)
             throw lock_error();
 
-        do_wait(lock.m_mutex);
+        do_wait(*lock.mutex());
     }
 
     template <typename L, typename Pr>
@@ -99,7 +102,7 @@ public:
             throw lock_error();
 
         while (!pred())
-            do_wait(lock.m_mutex);
+            do_wait(*lock.mutex());
     }
 
     template <typename L>
@@ -108,7 +111,7 @@ public:
         if (!lock)
             throw lock_error();
 
-        return do_timed_wait(lock.m_mutex, xt);
+        return do_timed_wait(*lock.mutex(), xt);
     }
 
     template <typename L, typename Pr>
@@ -119,7 +122,7 @@ public:
 
         while (!pred())
         {
-            if (!do_timed_wait(lock.m_mutex, xt))
+            if (!do_timed_wait(*lock.mutex(), xt))
                 return false;
         }
 
@@ -134,25 +137,22 @@ private:
     {
 #if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         m_impl.enter_wait();
+#else
+        pthread_mutex_lock(&m_impl.m_mutex);
 #endif
 
-        typedef detail::thread::lock_ops<M>
-#if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
-# define lock_ops lock_ops_  // HP confuses lock_ops witht the template
-#endif
-            lock_ops;
-
-        typename lock_ops::lock_state state;
-        lock_ops::unlock(mutex, state);
+        mutex.unlock();
 
 #if defined(BOOST_HAS_PTHREADS)
-        m_impl.do_wait(state.pmutex);
+        m_impl.do_wait(&m_impl.m_mutex);
 #elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         m_impl.do_wait();
 #endif
 
-        lock_ops::lock(mutex, state);
-#undef lock_ops
+#if defined(BOOST_HAS_PTHREADS)
+        pthread_mutex_unlock(&m_impl.m_mutex);
+#endif
+        mutex.lock();
     }
 
     template <typename M>
@@ -160,27 +160,24 @@ private:
     {
 #if (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         m_impl.enter_wait();
+#else
+        pthread_mutex_lock(&m_impl.m_mutex);
 #endif
 
-        typedef detail::thread::lock_ops<M>
-#if defined(__HP_aCC) && __HP_aCC <= 33900 && !defined(BOOST_STRICT_CONFIG)
-# define lock_ops lock_ops_  // HP confuses lock_ops witht the template
-#endif
-            lock_ops;
-
-        typename lock_ops::lock_state state;
-        lock_ops::unlock(mutex, state);
+        mutex.unlock();
 
         bool ret = false;
 
 #if defined(BOOST_HAS_PTHREADS)
-        ret = m_impl.do_timed_wait(xt, state.pmutex);
+        ret = m_impl.do_timed_wait(xt, &m_impl.m_mutex);
 #elif (defined(BOOST_HAS_WINTHREADS) || defined(BOOST_HAS_MPTASKS))
         ret = m_impl.do_timed_wait(xt);
 #endif
 
-        lock_ops::lock(mutex, state);
-#undef lock_ops
+#if defined(BOOST_HAS_PTHREADS)
+        pthread_mutex_unlock(&m_impl.m_mutex);
+#endif
+        mutex.lock();
 
         return ret;
     }

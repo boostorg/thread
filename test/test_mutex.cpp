@@ -8,7 +8,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include <boost/thread/xtime.hpp>
+#include <boost/thread/thread_time.hpp>
 #include <boost/thread/condition.hpp>
 
 #include <boost/test/unit_test.hpp>
@@ -29,7 +29,7 @@ struct test_lock
 
         // Test the lock's constructors.
         {
-            lock_type lock(mutex, false);
+            lock_type lock(mutex, boost::defer_lock);
             BOOST_CHECK(!lock);
         }
         lock_type lock(mutex);
@@ -69,10 +69,10 @@ struct test_trylock
             BOOST_CHECK(lock ? true : false);
         }
         {
-            try_lock_type lock(mutex, false);
+            try_lock_type lock(mutex, boost::defer_lock);
             BOOST_CHECK(!lock);
         }
-        try_lock_type lock(mutex, true);
+        try_lock_type lock(mutex);
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
@@ -110,16 +110,16 @@ struct test_timedlock
         // Test the lock's constructors.
         {
             // Construct and initialize an xtime for a fast time out.
-            boost::xtime xt = delay(0, 100);
+            boost::system_time xt = boost::get_system_time()+boost::posix_time::milliseconds(100);
 
             timed_lock_type lock(mutex, xt);
             BOOST_CHECK(lock ? true : false);
         }
         {
-            timed_lock_type lock(mutex, false);
+            timed_lock_type lock(mutex, boost::defer_lock);
             BOOST_CHECK(!lock);
         }
-        timed_lock_type lock(mutex, true);
+        timed_lock_type lock(mutex);
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
@@ -139,8 +139,8 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
         lock.unlock();
         BOOST_CHECK(!lock);
-        xt = delay(0, 100);
-        BOOST_CHECK(lock.timed_lock(xt));
+        boost::system_time target = boost::get_system_time()+boost::posix_time::milliseconds(100);
+        BOOST_CHECK(lock.timed_lock(target));
         BOOST_CHECK(lock ? true : false);
     }
 };

@@ -17,6 +17,12 @@
   <xi:include href="mutex-ref.xml"/>
   <xi:include href="once-ref.xml"/>
   <xi:include href="recursive_mutex-ref.xml"/>
+<!--
+  The read_write_mutex is held back from release, since the
+  implementation suffers from a serious, yet unresolved bug.
+  The implementation is likely to appear in a reworked
+  form in the next release.
+-->
   <xi:include href="read_write_mutex-ref.xml"/>
   <xi:include href="thread-ref.xml"/>
   <xi:include href="tss-ref.xml"/>
