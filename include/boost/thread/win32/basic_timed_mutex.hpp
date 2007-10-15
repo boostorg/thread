@@ -13,6 +13,7 @@
 #include "thread_primitives.hpp"
 #include "interlocked_read.hpp"
 #include <boost/thread/thread_time.hpp>
+#include <boost/detail/interlocked.hpp>
 
 namespace boost
 {
