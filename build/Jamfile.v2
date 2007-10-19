@@ -14,8 +14,8 @@ project boost/thread
     ;
 
 CPP_SOURCES =  
-        barrier
-        condition
+#        barrier
+#        condition
         exceptions
 #        mutex
 #        once

@@ -62,6 +62,13 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle() const
+        {
+            return &m;
+        }
+
         typedef unique_lock<mutex> scoped_lock;
         typedef scoped_lock scoped_try_lock;
     };
