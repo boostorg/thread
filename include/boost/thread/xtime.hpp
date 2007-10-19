@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -39,6 +40,18 @@ struct xtime
 
     xtime_sec_t sec;
     xtime_nsec_t nsec;
+
+    operator system_time() const
+    {
+        return boost::posix_time::from_time_t(0)+
+            boost::posix_time::seconds(static_cast<long>(sec))+
+#ifdef BOOST_DATE_TIME_HAS_NANOSECONDS
+            boost::posix_time::nanoseconds(nsec);
+#else
+        boost::posix_time::microseconds((nsec+500)/1000);
+#endif
+    }
+    
 };
 
 int BOOST_THREAD_DECL xtime_get(struct xtime* xtp, int clock_type);

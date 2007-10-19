@@ -1,5 +1,6 @@
 // Copyright (C) 2002-2003
 // David Moore, William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,33 +12,47 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
+#include <string>
+#include <stdexcept>
 
-namespace boost {
-
-class BOOST_THREAD_DECL barrier
+namespace boost
 {
-public:
-    barrier(unsigned int count);
-    ~barrier();
 
-    bool wait();
+    class barrier
+    {
+    public:
+        barrier(unsigned int count)
+            : m_threshold(count), m_count(count), m_generation(0)
+        {
+            if (count == 0)
+                throw std::invalid_argument("count cannot be zero.");
+        }
+    
+        bool wait()
+        {
+            boost::mutex::scoped_lock lock(m_mutex);
+            unsigned int gen = m_generation;
+        
+            if (--m_count == 0)
+            {
+                m_generation++;
+                m_count = m_threshold;
+                m_cond.notify_all();
+                return true;
+            }
 
-private:
-    mutex m_mutex;
-// disable warnings about non dll import
-// see: http://www.boost.org/more/separate_compilation.html#dlls
-#ifdef BOOST_MSVC
-#   pragma warning(push)
-#   pragma warning(disable: 4251 4231 4660 4275)
-#endif
-    condition m_cond;
-#ifdef BOOST_MSVC
-#   pragma warning(pop)
-#endif
-    unsigned int m_threshold;
-    unsigned int m_count;
-    unsigned int m_generation;
-};
+            while (gen == m_generation)
+                m_cond.wait(lock);
+            return false;
+        }
+
+    private:
+        mutex m_mutex;
+        condition m_cond;
+        unsigned int m_threshold;
+        unsigned int m_count;
+        unsigned int m_generation;
+    };
 
 }   // namespace boost
 

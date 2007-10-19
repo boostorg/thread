@@ -11,7 +11,6 @@
 #include <boost/static_assert.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
-#include <boost/thread/xtime.hpp>
 
 namespace boost
 {
@@ -95,7 +94,7 @@ namespace boost
                     return true;
                 }
                 
-                if(!shared_cond.timed_wait(lock,get_xtime(timeout)))
+                if(!shared_cond.timed_wait(lock,timeout))
                 {
                     return false;
                 }
@@ -157,7 +156,7 @@ namespace boost
                     state.exclusive=true;
                     return true;
                 }
-                if(!exclusive_cond.timed_wait(lock,get_xtime(timeout)))
+                if(!exclusive_cond.timed_wait(lock,timeout))
                 {
                     return false;
                 }
@@ -216,7 +215,7 @@ namespace boost
                     return true;
                 }
                 
-                if(!shared_cond.timed_wait(lock,get_xtime(timeout)))
+                if(!shared_cond.timed_wait(lock,timeout))
                 {
                     return false;
                 }
