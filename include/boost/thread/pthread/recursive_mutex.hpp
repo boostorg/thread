@@ -15,6 +15,7 @@
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <errno.h>
 #include "timespec.hpp"
+#include "pthread_mutex_scoped_lock.hpp"
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
@@ -93,25 +94,6 @@ namespace boost
         bool is_locked;
         pthread_t owner;
         unsigned count;
-
-        struct pthread_mutex_scoped_lock
-        {
-            pthread_mutex_t* m;
-            explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_):
-                m(m_)
-            {
-                int const res=pthread_mutex_lock(m);
-                BOOST_ASSERT(!res);
-            }
-            ~pthread_mutex_scoped_lock()
-            {
-                int const res=pthread_mutex_unlock(m);
-                BOOST_ASSERT(!res);
-            }
-            
-        };
-        
-            
 #endif
     public:
         recursive_timed_mutex()
@@ -201,7 +183,7 @@ namespace boost
 #else
         void lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && owner==pthread_self())
             {
                 ++count;
@@ -220,7 +202,7 @@ namespace boost
 
         void unlock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(!--count)
             {
                 is_locked=false;
@@ -231,7 +213,7 @@ namespace boost
         
         bool try_lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && owner!=pthread_self())
             {
                 return false;
@@ -245,7 +227,7 @@ namespace boost
         bool timed_lock(system_time const & abs_time)
         {
             struct timespec const timeout=detail::get_timespec(abs_time);
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && owner==pthread_self())
             {
                 ++count;

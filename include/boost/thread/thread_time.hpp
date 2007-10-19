@@ -19,11 +19,11 @@ namespace boost
             return system_time(boost::posix_time::pos_infin);
         }
 
-        inline unsigned get_milliseconds_until(system_time const& target_time)
+        inline system_time::time_duration_type::tick_type get_milliseconds_until(system_time const& target_time)
         {
             if(target_time.is_pos_infinity())
             {
-                return ~0u;
+                return ~(system_time::time_duration_type::tick_type)0;
             }
             system_time const now=get_system_time();
             if(target_time<=now)

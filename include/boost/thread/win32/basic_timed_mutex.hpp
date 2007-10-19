@@ -113,7 +113,7 @@ namespace boost
             void unlock()
             {
                 long const offset=lock_flag_value+1;
-                long old_count=BOOST_INTERLOCKED_EXCHANGE_ADD(&active_count,-offset);
+                long old_count=BOOST_INTERLOCKED_EXCHANGE_ADD(&active_count,(~offset)+1);
                 
                 if(old_count>offset)
                 {
