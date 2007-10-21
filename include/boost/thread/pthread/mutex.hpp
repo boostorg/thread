@@ -14,6 +14,7 @@
 #include <unistd.h>
 #include <errno.h>
 #include "timespec.hpp"
+#include "pthread_mutex_scoped_lock.hpp"
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
@@ -61,6 +62,13 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle() const
+        {
+            return &m;
+        }
+
         typedef unique_lock<mutex> scoped_lock;
         typedef scoped_lock scoped_try_lock;
     };
@@ -75,25 +83,6 @@ namespace boost
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
         pthread_cond_t cond;
         bool is_locked;
-
-        struct pthread_mutex_scoped_lock
-        {
-            pthread_mutex_t* m;
-            explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_):
-                m(m_)
-            {
-                int const res=pthread_mutex_lock(m);
-                BOOST_ASSERT(!res);
-            }
-            ~pthread_mutex_scoped_lock()
-            {
-                int const res=pthread_mutex_unlock(m);
-                BOOST_ASSERT(!res);
-            }
-            
-        };
-        
-            
 #endif
     public:
         timed_mutex()
@@ -159,7 +148,7 @@ namespace boost
 #else
         void lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             while(is_locked)
             {
                 int const cond_res=pthread_cond_wait(&cond,&m);
@@ -170,7 +159,7 @@ namespace boost
 
         void unlock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             is_locked=false;
             int const res=pthread_cond_signal(&cond);
             BOOST_ASSERT(!res);
@@ -178,7 +167,7 @@ namespace boost
         
         bool try_lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked)
             {
                 return false;
@@ -190,7 +179,7 @@ namespace boost
         bool timed_lock(system_time const & abs_time)
         {
             struct timespec const timeout=detail::get_timespec(abs_time);
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             while(is_locked)
             {
                 int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout);
