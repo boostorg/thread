@@ -64,7 +64,7 @@ namespace boost
         }
 
         typedef pthread_mutex_t* native_handle_type;
-        native_handle_type native_handle() const
+        native_handle_type native_handle()
         {
             return &m;
         }
