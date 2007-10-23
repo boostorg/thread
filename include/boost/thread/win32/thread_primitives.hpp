@@ -12,6 +12,7 @@
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <algorithm>
 
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
@@ -25,6 +26,7 @@ namespace boost
             typedef HANDLE handle;
             unsigned const infinite=INFINITE;
             unsigned const timeout=WAIT_TIMEOUT;
+            handle const invalid_handle_value=INVALID_HANDLE_VALUE;
 
             using ::CreateMutexA;
             using ::CreateEventA;
@@ -42,6 +44,7 @@ namespace boost
             using ::GetCurrentProcess;
             using ::DuplicateHandle;
             using ::SleepEx;
+            using ::Sleep;
             using ::QueueUserAPC;
         }
     }
@@ -62,6 +65,7 @@ namespace boost
             typedef void* handle;
             unsigned const infinite=~0U;
             unsigned const timeout=258U;
+            handle const invalid_handle_value=(handle)(-1);
 
             extern "C"
             {
@@ -79,6 +83,7 @@ namespace boost
                 __declspec(dllimport) void* __stdcall GetCurrentProcess();
                 __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
                 __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
+                __declspec(dllimport) void __stdcall Sleep(unsigned long);
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
                 __declspec(dllimport) int __stdcall SetEvent(void*);
@@ -158,9 +163,9 @@ namespace boost
 
                 void cleanup()
                 {
-                    if(handle_to_manage)
+                    if(handle_to_manage && handle_to_manage!=invalid_handle_value)
                     {
-                        unsigned long result=CloseHandle(handle_to_manage);
+                        unsigned long const result=CloseHandle(handle_to_manage);
                         BOOST_ASSERT(result);
                     }
                 }
@@ -183,6 +188,16 @@ namespace boost
                 operator handle() const
                 {
                     return handle_to_manage;
+                }
+
+                handle duplicate() const
+                {
+                    return duplicate_handle(handle_to_manage);
+                }
+
+                void swap(handle_manager& other)
+                {
+                    std::swap(handle_to_manage,other.handle_to_manage);
                 }
 
                 handle release()

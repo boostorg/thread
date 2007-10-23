@@ -9,6 +9,8 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include "util.inl"
+#include <iostream>
+#include <boost/date_time/posix_time/posix_time_io.hpp>
 
 #define CHECK_LOCKED_VALUE_EQUAL(mutex_name,value,expected_value)    \
     {                                                                \
@@ -37,10 +39,10 @@ namespace
                        unsigned& max_simultaneous_running_):
             rw_mutex(rw_mutex_),
             unblocked_count(unblocked_count_),
-            unblocked_count_mutex(unblocked_count_mutex_),
-            finish_mutex(finish_mutex_),
             simultaneous_running_count(simultaneous_running_count_),
-            max_simultaneous_running(max_simultaneous_running_)
+            max_simultaneous_running(max_simultaneous_running_),
+            unblocked_count_mutex(unblocked_count_mutex_),
+            finish_mutex(finish_mutex_)
         {}
         
         void operator()()
@@ -129,7 +131,7 @@ void test_only_one_writer_permitted()
     pool.join_all();
 
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1u);
 }
 
 void test_reader_blocks_writer()
@@ -156,7 +158,7 @@ void test_reader_blocks_writer()
     pool.join_all();
 
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,2U);
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1u);
 }
 
 void test_unlocking_writer_unblocks_all_readers()
@@ -218,19 +220,19 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     {
         pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_writing_mutex,simultaneous_running_writers,max_simultaneous_writers));
     }
-    boost::thread::sleep(delay(1));
+    boost::thread::sleep(delay(2));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count);
 
     finish_reading_lock.unlock();
 
-    boost::thread::sleep(delay(1));
+    boost::thread::sleep(delay(2));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+1);
 
     finish_writing_lock.unlock();
     pool.join_all();
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+writer_count);
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_readers,reader_count);
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_writers,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_writers,1u);
 }
 
 void test_only_one_upgrade_lock_permitted()
@@ -261,7 +263,7 @@ void test_only_one_upgrade_lock_permitted()
     pool.join_all();
 
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,1u);
 }
 
 void test_can_lock_upgrade_if_currently_locked_shared()
@@ -334,7 +336,7 @@ void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::thread::sleep(delay(1));
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
 
     bool const try_succeeded=rw_mutex.try_lock_shared();
     BOOST_CHECK(!try_succeeded);
@@ -400,7 +402,7 @@ void test_if_other_thread_has_shared_lock_try_lock_shared_returns_true()
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     boost::thread writer(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::thread::sleep(delay(1));
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
 
     bool const try_succeeded=rw_mutex.try_lock_shared();
     BOOST_CHECK(try_succeeded);
@@ -422,12 +424,18 @@ void test_timed_lock_shared_times_out_if_write_lock_held()
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::thread::sleep(delay(1));
-    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1);
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
 
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+boost::posix_time::milliseconds(100);
     bool const timed_lock_succeeded=rw_mutex.timed_lock_shared(timeout);
-    BOOST_CHECK(timeout<=boost::get_system_time());
+    boost::system_time const wakeup=boost::get_system_time();
+    BOOST_CHECK(timeout<=(wakeup+boost::posix_time::milliseconds(1)));
+    if(timeout>wakeup)
+    {
+        std::cout<<"timeout="<<timeout<<", wakeup="<<wakeup<<std::endl;
+    }
+    
     BOOST_CHECK(!timed_lock_succeeded);
     if(timed_lock_succeeded)
     {

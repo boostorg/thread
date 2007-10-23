@@ -21,12 +21,16 @@ void simple_thread()
     test_value = 999;
 }
 
-void comparison_thread(boost::thread* parent)
+void comparison_thread(boost::thread::id parent)
 {
-    boost::thread thrd;
-    BOOST_CHECK(thrd != *parent);
-    boost::thread thrd2;
-    BOOST_CHECK(thrd == thrd2);
+    boost::thread::id const my_id=boost::this_thread::get_id();
+    
+    BOOST_CHECK(my_id != parent);
+    boost::thread::id const my_id2=boost::this_thread::get_id();
+    BOOST_CHECK(my_id == my_id2);
+
+    boost::thread::id const no_thread_id=boost::thread::id();
+    BOOST_CHECK(my_id != no_thread_id);
 }
 
 void test_sleep()
@@ -52,16 +56,16 @@ void test_creation()
     timed_test(&do_test_creation, 1);
 }
 
-void do_test_comparison()
+void do_test_id_comparison()
 {
-    boost::thread self;
-    boost::thread thrd(bind(&comparison_thread, &self));
+    boost::thread::id const self=boost::this_thread::get_id();
+    boost::thread thrd(bind(&comparison_thread, self));
     thrd.join();
 }
 
-void test_comparison()
+void test_id_comparison()
 {
-    timed_test(&do_test_comparison, 1);
+    timed_test(&do_test_id_comparison, 1);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
@@ -71,7 +75,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
-    test->add(BOOST_TEST_CASE(test_comparison));
+    test->add(BOOST_TEST_CASE(test_id_comparison));
 
     return test;
 }
