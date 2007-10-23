@@ -1,39 +1,83 @@
-# (C) Copyright Vladimir Prus, David Abrahams, Michael Stevens, Hartmut Kaiser, 
-# William E Kempf 2002-2006
-# Use, modification and distribution are subject to the
-# Boost Software License, Version 1.0. (See accompanying file
-# LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+# Copyright 2006 Roland Schwarz.
+# Copyright 2007 Anthony Williams
+# Distributed under the Boost Software License, Version 1.0. (See
+# accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
 
 import os ;
-
+import feature ;
 
 project boost/thread
-    : source-location ../src 
-    : requirements <link>shared:<define>BOOST_THREAD_BUILD_DLL=1  <threading>multi 
-    : default-build <threading>multi
+    : source-location ../src
+    : requirements <threading>multi
+      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+    : default-build <threading>multi 
     ;
 
-CPP_SOURCES =  
-#        barrier
-#        condition
-        exceptions
-#        mutex
-#        once
-#        recursive_mutex
-#        read_write_mutex
-        thread
-        tss_hooks
-        tss_dll
-        tss_pe
-        tss
-        xtime
-    ;
+BOOST_PTHREAD_OPTS = <define>BOOST_THREAD_POSIX ;
 
+if [ os.name ] = "NT"
+{
+        AVAILABLE_THREAD_APIS = win32 ;
+
+       	local PTW32_INCLUDE = [ modules.peek : PTW32_INCLUDE ] ;
+        local PTW32_LIB = [ modules.peek : PTW32_LIB ] ;
+	if $(PTW32_INCLUDE) && $(PTW32_LIB) 
+	{
+                BOOST_PTHREAD_OPTS +=
+                        <define>BOOST_HAS_PTHREADS
+                        <include>$(PTW32_INCLUDE)
+                        <library>$(PTW32_LIB) ;
+        
+                AVAILABLE_THREAD_APIS +=  pthread ;
+        }
+        else
+        {
+		echo "******************************************************" ;
+		echo "Building Boost.Thread without optional pthread support" ;
+		echo "If you need pthread you should specify the paths." ;
+		echo "For example:" ;
+		echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include" ;
+		echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib\\pthreadVC2.lib" ;
+		echo "******************************************************" ;
+                BOOST_PTHREAD_OPTS += <build>no ;
+        }
+}
+else
+{
+        AVAILABLE_THREAD_APIS = pthread ;
+        if [ os.name ] = CYGWIN
+        {
+                AVAILABLE_THREAD_APIS += win32 ;
+        }        
+}
+
+feature.feature thrd-api : $(AVAILABLE_THREAD_APIS) : symmetric propagated composite ;
+feature.compose <thrd-api>pthread : $(BOOST_PTHREAD_OPTS) ;
+
+lib boost_thread 
+	: ## sources ##
+	  win32/thread.cpp
+	  win32/exceptions.cpp
+	  win32/xtime.cpp
+	  win32/tss.cpp
+	  win32/tss_hooks.cpp
+	  win32/tss_dll.cpp
+	  win32/tss_pe.cpp
+	: ## requirements ##
+            <thrd-api>win32
+	;
+
+# build the pthread based variant
 lib boost_thread
-   : $(CPP_SOURCES).cpp
-   : <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-     <link>static:<define>BOOST_THREAD_BUILD_LIB=1
-   : # default build
-   : <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-     <link>static:<define>BOOST_THREAD_BUILD_LIB=1
-   ;
+	: ## sources ##
+	    pthread/thread.cpp
+	    pthread/exceptions.cpp
+	    pthread/xtime.cpp
+	    pthread/tss.cpp
+	: ## requirements ##
+            <thrd-api>pthread
+            $(BOOST_PTHREAD_OPTS)
+	;
+
