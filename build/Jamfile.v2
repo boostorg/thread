@@ -53,7 +53,7 @@ else
         }        
 }
 
-feature.feature thrd-api : $(AVAILABLE_THREAD_APIS) : symmetric propagated composite ;
+feature.feature thrd-api : $(AVAILABLE_THREAD_APIS) : propagated composite ;
 feature.compose <thrd-api>pthread : $(BOOST_PTHREAD_OPTS) ;
 
 lib boost_thread 
