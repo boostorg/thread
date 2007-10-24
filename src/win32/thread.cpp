@@ -184,12 +184,13 @@ namespace boost
         
     thread::operator boost::move_t<thread>()
     {
-        return boost::move_t<thread>(*this);
+        return move();
     }
 
     boost::move_t<thread> thread::move()
     {
-        return boost::move_t<thread>(*this);
+        boost::move_t<thread> x(*this);
+        return x;
     }
 
     void thread::swap(thread& x)
