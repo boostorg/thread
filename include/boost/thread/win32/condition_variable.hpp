@@ -29,6 +29,10 @@ namespace boost
                 detail::win32::handle semaphore;
                 long count;
                 bool notified;
+
+                list_entry():
+                    semaphore(0),count(0),notified(0)
+                {}
             };
 
             BOOST_STATIC_CONSTANT(unsigned,generation_count=3);
@@ -173,12 +177,7 @@ namespace boost
         public:
             basic_condition_variable():
                 total_count(0),active_generation_count(0),wake_sem(0)
-            {
-                for(unsigned i=0;i<generation_count;++i)
-                {
-                    generations[i]=list_entry();
-                }
-            }
+            {}
             
             ~basic_condition_variable()
             {
