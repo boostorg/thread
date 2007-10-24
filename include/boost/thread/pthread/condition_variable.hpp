@@ -1,5 +1,5 @@
-#ifndef BOOST_THREAD_CONDITION_VARIABLE_WIN32_HPP
-#define BOOST_THREAD_CONDITION_VARIABLE_WIN32_HPP
+#ifndef BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP
+#define BOOST_THREAD_CONDITION_VARIABLE_PTHREAD_HPP
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -9,7 +9,6 @@
 #include <limits.h>
 #include <boost/assert.hpp>
 #include <algorithm>
-#include <boost/thread/thread.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <pthread.h>
 #include "timespec.hpp"

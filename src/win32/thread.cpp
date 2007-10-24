@@ -88,7 +88,7 @@ namespace boost
         {
             thread_info->run();
         }
-        catch(thread_canceled const&)
+        catch(thread_cancelled const&)
         {
         }
         catch(...)
@@ -302,7 +302,7 @@ namespace boost
                 else if(notified_index==cancel_index)
                 {
                     detail::win32::ResetEvent(get_current_thread_data()->cancel_handle);
-                    throw thread_canceled();
+                    throw thread_cancelled();
                 }
             }
             else
@@ -322,7 +322,7 @@ namespace boost
             if(cancellation_enabled() && cancellation_requested())
             {
                 detail::win32::ResetEvent(get_current_thread_data()->cancel_handle);
-                throw thread_canceled();
+                throw thread_cancelled();
             }
         }
         

@@ -20,7 +20,7 @@
 
 namespace boost
 {
-    class thread_canceled
+    class thread_cancelled
     {};
 
     namespace detail
@@ -105,19 +105,19 @@ namespace boost
         ~thread();
 
         template <class F>
-        thread(F f):
+        explicit thread(F f):
             thread_info(detail::heap_new<thread_data<F> >(f))
         {
             start_thread();
         }
         template <class F>
-        thread(boost::move_t<F> f):
+        explicit thread(boost::move_t<F> f):
             thread_info(detail::heap_new<thread_data<F> >(f))
         {
             start_thread();
         }
 
-        thread(boost::move_t<thread> x);
+        explicit thread(boost::move_t<thread> x);
         thread& operator=(boost::move_t<thread> x);
         operator boost::move_t<thread>();
         boost::move_t<thread> move();
