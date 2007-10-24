@@ -1,3 +1,5 @@
+#ifndef BOOST_THREAD_THREAD_PTHREAD_HPP
+#define BOOST_THREAD_THREAD_PTHREAD_HPP
 // Copyright (C) 2001-2003
 // William E. Kempf
 // Copyright (C) 2007 Anthony Williams
@@ -5,21 +7,22 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_THREAD_WEK070601_HPP
-#define BOOST_THREAD_WEK070601_HPP
-
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/utility.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <list>
 #include <memory>
 
 #include <pthread.h>
 #include <boost/optional.hpp>
+#include <boost/thread/detail/move.hpp>
+#include <boost/shared_ptr.hpp>
 
-namespace boost {
+namespace boost
+{
 
     class thread;
 
@@ -78,39 +81,197 @@ namespace boost {
         };
     }
 
-    struct xtime;
-    class BOOST_THREAD_DECL thread : private noncopyable
+    class thread_cancelled
+    {};
+
+    namespace detail
     {
+        struct thread_exit_callback_node;
+        
+        struct thread_data_base
+        {
+            boost::shared_ptr<thread_data_base> self;
+            pthread_t thread_handle;
+            boost::mutex done_mutex;
+            boost::condition_variable done_condition;
+            bool done;
+            bool join_started;
+            bool joined;
+            boost::detail::thread_exit_callback_node* thread_exit_callbacks;
+            bool cancel_enabled;
+
+            thread_data_base():
+                done(false),join_started(false),joined(false),
+                thread_exit_callbacks(0),
+                cancel_enabled(true)
+            {}
+            virtual ~thread_data_base()
+            {}
+
+            virtual void run()=0;
+        };
+    }
+
+    struct xtime;
+    class BOOST_THREAD_DECL thread
+    {
+    private:
+        thread(thread&);
+        thread& operator=(thread&);
+
+        template<typename F>
+        struct thread_data:
+            detail::thread_data_base
+        {
+            F f;
+
+            thread_data(F f_):
+                f(f_)
+            {}
+            thread_data(boost::move_t<F> f_):
+                f(f_)
+            {}
+            
+            void run()
+            {
+                f();
+            }
+        };
+        
+        mutable boost::mutex thread_info_mutex;
+        boost::shared_ptr<detail::thread_data_base> thread_info;
+
+        void start_thread();
+        
+        explicit thread(boost::shared_ptr<detail::thread_data_base> data);
+
+        boost::shared_ptr<detail::thread_data_base> get_thread_info() const;
+        
     public:
         thread();
-        explicit thread(const function0<void>& threadfunc);
         ~thread();
+        
+        template <class F>
+        explicit thread(F f):
+            thread_info(new thread_data<F>(f))
+        {
+            start_thread();
+        }
+        template <class F>
+        explicit thread(boost::move_t<F> f):
+            thread_info(new thread_data<F>(f))
+        {
+            start_thread();
+        }
 
-        bool operator==(const thread& other) const;
-        bool operator!=(const thread& other) const;
+        explicit thread(boost::move_t<thread> x);
+        thread& operator=(boost::move_t<thread> x);
+        operator boost::move_t<thread>();
+        boost::move_t<thread> move();
 
-        void join();
-
-        static void sleep(const xtime& xt);
-        static void yield();
+        void swap(thread& x);
 
         typedef detail::thread_id id;
         
-        id get_id() const
-        {
-            return m_id;
-        }
+        id get_id() const;
 
-    private:
-        id m_id;
-        bool m_joinable;
+        bool joinable() const;
+        void join();
+        void detach();
+
+        static unsigned hardware_concurrency();
+
+        // backwards compatibility
+        bool operator==(const thread& other) const;
+        bool operator!=(const thread& other) const;
+
+        static void sleep(const system_time& xt);
+        static void yield();
+
+        // extensions
+        class cancel_handle;
+        cancel_handle get_cancel_handle() const;
+        void cancel();
+        bool cancellation_requested() const;
+
+        static thread self();
     };
 
     namespace this_thread
     {
+        class disable_cancellation
+        {
+            disable_cancellation(const disable_cancellation&);
+            disable_cancellation& operator=(const disable_cancellation&);
+            
+            bool cancel_was_enabled;
+            friend class enable_cancellation;
+        public:
+            disable_cancellation();
+            ~disable_cancellation();
+        };
+
+        class enable_cancellation
+        {
+            enable_cancellation(const enable_cancellation&);
+            enable_cancellation& operator=(const enable_cancellation&);
+        public:
+            explicit enable_cancellation(disable_cancellation& d);
+            ~enable_cancellation();
+        };
+
         inline thread::id get_id()
         {
             return thread::id(pthread_self());
+        }
+
+        void BOOST_THREAD_DECL cancellation_point();
+        bool BOOST_THREAD_DECL cancellation_enabled();
+        bool BOOST_THREAD_DECL cancellation_requested();
+
+        void BOOST_THREAD_DECL yield();
+        template<typename TimeDuration>
+        void sleep(TimeDuration const& rel_time)
+        {
+            thread::sleep(get_system_time()+rel_time);
+        }
+    }
+
+    namespace detail
+    {
+        struct thread_exit_function_base
+        {
+            virtual ~thread_exit_function_base()
+            {}
+            virtual void operator()() const=0;
+        };
+        
+        template<typename F>
+        struct thread_exit_function:
+            thread_exit_function_base
+        {
+            F f;
+            
+            thread_exit_function(F f_):
+                f(f_)
+            {}
+            
+            void operator()() const
+            {
+                f();
+            }
+        };
+        
+        void add_thread_exit_function(thread_exit_function_base*);
+    }
+    
+    namespace this_thread
+    {
+        template<typename F>
+        void at_thread_exit(F f)
+        {
+            detail::thread_exit_function_base* const thread_exit_func=new detail::thread_exit_function<F>(f);
+            detail::add_thread_exit_function(thread_exit_func);
         }
     }
 
@@ -133,4 +294,4 @@ namespace boost {
 } // namespace boost
 
 
-#endif // BOOST_THREAD_WEK070601_HPP
+#endif
