@@ -162,7 +162,6 @@ namespace boost
     
     thread::~thread()
     {
-        cancel();
         detach();
     }
     
@@ -381,6 +380,11 @@ namespace boost
         {
             boost::detail::thread_exit_function_base* func;
             thread_exit_callback_node* next;
+
+            thread_exit_callback_node(boost::detail::thread_exit_function_base* func_,
+                                      thread_exit_callback_node* next_):
+                func(func_),next(next_)
+            {}
         };
     }
     namespace
@@ -434,9 +438,9 @@ namespace boost
     {
         void add_thread_exit_function(thread_exit_function_base* func)
         {
-            thread_exit_callback_node* const new_node=heap_new<thread_exit_callback_node>();
-            new_node->func=func;
-            new_node->next=get_current_thread_data()->thread_exit_callbacks;
+            thread_exit_callback_node* const new_node=
+                heap_new<thread_exit_callback_node>(func,
+                                                    get_current_thread_data()->thread_exit_callbacks);
             get_current_thread_data()->thread_exit_callbacks=new_node;
         }
     }

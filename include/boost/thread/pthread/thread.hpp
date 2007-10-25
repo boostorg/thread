@@ -150,7 +150,7 @@ namespace boost
     public:
         thread();
         ~thread();
-        
+
         template <class F>
         explicit thread(F f):
             thread_info(new thread_data<F>(f))
@@ -158,7 +158,7 @@ namespace boost
             start_thread();
         }
         template <class F>
-        explicit thread(boost::move_t<F> f):
+        thread(boost::move_t<F> f):
             thread_info(new thread_data<F>(f))
         {
             start_thread();
@@ -193,8 +193,6 @@ namespace boost
         cancel_handle get_cancel_handle() const;
         void cancel();
         bool cancellation_requested() const;
-
-        static thread self();
     };
 
     namespace this_thread
