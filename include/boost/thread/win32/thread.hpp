@@ -117,7 +117,7 @@ namespace boost
             start_thread();
         }
 
-        explicit thread(boost::move_t<thread> x);
+        thread(boost::move_t<thread> x);
         thread& operator=(boost::move_t<thread> x);
         operator boost::move_t<thread>();
         boost::move_t<thread> move();
