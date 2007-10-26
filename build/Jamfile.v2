@@ -80,4 +80,5 @@ lib boost_thread
             <thrd-api>pthread
             $(BOOST_PTHREAD_OPTS)
 	;
-
+	
+boost-install boost_thread ;
