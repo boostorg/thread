@@ -357,7 +357,7 @@ namespace boost
             }
         }
 
-        enable_cancellation::enable_cancellation(disable_cancellation& d)
+        restore_cancellation::restore_cancellation(disable_cancellation& d)
         {
             if(d.cancel_was_enabled)
             {
@@ -365,7 +365,7 @@ namespace boost
             }
         }
         
-        enable_cancellation::~enable_cancellation()
+        restore_cancellation::~restore_cancellation()
         {
             if(get_current_thread_data())
             {

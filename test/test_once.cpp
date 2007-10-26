@@ -38,7 +38,7 @@ void call_once_thread()
 
 void test_call_once()
 {
-    unsigned const num_threads=100;
+    unsigned const num_threads=20;
     boost::thread_group group;
     
     for(unsigned i=0;i<num_threads;++i)
@@ -85,7 +85,7 @@ void call_once_with_functor()
 
 void test_call_once_arbitrary_functor()
 {
-    unsigned const num_threads=100;
+    unsigned const num_threads=20;
     boost::thread_group group;
 
     for(unsigned i=0;i<num_threads;++i)
@@ -134,7 +134,7 @@ void call_once_with_exception()
 
 void test_call_once_retried_on_exception()
 {
-    unsigned const num_threads=100;
+    unsigned const num_threads=20;
     boost::thread_group group;
 
     for(unsigned i=0;i<num_threads;++i)
