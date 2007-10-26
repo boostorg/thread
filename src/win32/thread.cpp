@@ -80,10 +80,50 @@ namespace boost
         }
     }
 
+    namespace detail
+    {
+        struct thread_exit_callback_node
+        {
+            boost::detail::thread_exit_function_base* func;
+            thread_exit_callback_node* next;
+
+            thread_exit_callback_node(boost::detail::thread_exit_function_base* func_,
+                                      thread_exit_callback_node* next_):
+                func(func_),next(next_)
+            {}
+        };
+
+    }
+
+    namespace
+    {
+        void run_thread_exit_callbacks()
+        {
+            boost::intrusive_ptr<detail::thread_data_base> current_thread_data(get_current_thread_data(),false);
+            if(current_thread_data)
+            {
+                while(current_thread_data->thread_exit_callbacks)
+                {
+                    detail::thread_exit_callback_node* const current_node=current_thread_data->thread_exit_callbacks;
+                    current_thread_data->thread_exit_callbacks=current_node->next;
+                    if(current_node->func)
+                    {
+                        (*current_node->func)();
+                        boost::detail::heap_delete(current_node->func);
+                    }
+                    boost::detail::heap_delete(current_node);
+                }
+            }
+            set_current_thread_data(0);
+        }
+        
+    }
+    
+
     unsigned __stdcall thread::thread_start_function(void* param)
     {
-        boost::intrusive_ptr<detail::thread_data_base> thread_info(reinterpret_cast<detail::thread_data_base*>(param),false);
-        set_current_thread_data(thread_info.get());
+        detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(param));
+        set_current_thread_data(thread_info);
         try
         {
             thread_info->run();
@@ -95,6 +135,7 @@ namespace boost
         {
             std::terminate();
         }
+        run_thread_exit_callbacks();
         return 0;
     }
 
@@ -127,27 +168,15 @@ namespace boost
                 ++count;
                 thread_handle=detail::win32::duplicate_handle(detail::win32::GetCurrentThread());
             }
+            ~externally_launched_thread()
+            {
+                OutputDebugString("External thread finished\n");
+            }
             
             void run()
             {}
         };
-        
-        struct externally_launched_thread_deleter
-        {
-            externally_launched_thread* thread_data;
-            
-            externally_launched_thread_deleter(externally_launched_thread* thread_data_):
-                thread_data(thread_data_)
-            {}
-            
-            void operator()() const
-            {
-                intrusive_ptr_release(thread_data);
-            }
-        };
-        
     }
-    
 
     thread thread::self()
     {
@@ -155,7 +184,6 @@ namespace boost
         {
             externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
             set_current_thread_data(me);
-            this_thread::at_thread_exit(externally_launched_thread_deleter(me));
         }
         return thread(boost::intrusive_ptr<detail::thread_data_base>(get_current_thread_data()));
     }
@@ -374,19 +402,6 @@ namespace boost
         }
     }
 
-    namespace detail
-    {
-        struct thread_exit_callback_node
-        {
-            boost::detail::thread_exit_function_base* func;
-            thread_exit_callback_node* next;
-
-            thread_exit_callback_node(boost::detail::thread_exit_function_base* func_,
-                                      thread_exit_callback_node* next_):
-                func(func_),next(next_)
-            {}
-        };
-    }
     namespace
     {
         void NTAPI thread_exit_func_callback(HINSTANCE, DWORD, PVOID);
@@ -416,20 +431,7 @@ namespace boost
         {
             if((dwReason==DLL_THREAD_DETACH) || (dwReason==DLL_PROCESS_DETACH))
             {
-                if(boost::detail::thread_data_base* const current_thread_data=get_current_thread_data())
-                {
-                    while(current_thread_data->thread_exit_callbacks)
-                    {
-                        detail::thread_exit_callback_node* const current_node=current_thread_data->thread_exit_callbacks;
-                        current_thread_data->thread_exit_callbacks=current_node->next;
-                        if(current_node->func)
-                        {
-                            (*current_node->func)();
-                            boost::detail::heap_delete(current_node->func);
-                        }
-                        boost::detail::heap_delete(current_node);
-                    }
-                }
+                run_thread_exit_callbacks();
             }
         }
     }
