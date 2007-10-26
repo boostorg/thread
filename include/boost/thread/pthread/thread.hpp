@@ -197,7 +197,7 @@ namespace boost
 
     namespace this_thread
     {
-        class disable_cancellation
+        class BOOST_THREAD_DECL disable_cancellation
         {
             disable_cancellation(const disable_cancellation&);
             disable_cancellation& operator=(const disable_cancellation&);
@@ -209,7 +209,7 @@ namespace boost
             ~disable_cancellation();
         };
 
-        class restore_cancellation
+        class BOOST_THREAD_DECL restore_cancellation
         {
             restore_cancellation(const restore_cancellation&);
             restore_cancellation& operator=(const restore_cancellation&);
