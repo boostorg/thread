@@ -191,8 +191,6 @@ namespace boost
         static void yield();
 
         // extensions
-        class cancel_handle;
-        cancel_handle get_cancel_handle() const;
         void cancel();
         bool cancellation_requested() const;
     };
