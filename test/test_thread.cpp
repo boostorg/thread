@@ -8,6 +8,7 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
+#include <boost/bind.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -59,13 +60,62 @@ void test_creation()
 void do_test_id_comparison()
 {
     boost::thread::id const self=boost::this_thread::get_id();
-    boost::thread thrd(bind(&comparison_thread, self));
+    boost::thread thrd(boost::bind(&comparison_thread, self));
     thrd.join();
 }
 
 void test_id_comparison()
 {
     timed_test(&do_test_id_comparison, 1);
+}
+
+void cancellation_point_thread(boost::mutex* m,bool* failed)
+{
+    boost::mutex::scoped_lock lk(*m);
+    boost::this_thread::cancellation_point();
+    *failed=true;
+}
+
+void do_test_thread_cancels_at_cancellation_point()
+{
+    boost::mutex m;
+    bool failed=false;
+    boost::mutex::scoped_lock lk(m);
+    boost::thread thrd(boost::bind(&cancellation_point_thread,&m,&failed));
+    thrd.cancel();
+    lk.unlock();
+    thrd.join();
+    BOOST_CHECK(!failed);
+}
+
+void test_thread_cancels_at_cancellation_point()
+{
+    timed_test(&do_test_thread_cancels_at_cancellation_point, 1);
+}
+
+void disabled_cancellation_point_thread(boost::mutex* m,bool* failed)
+{
+    boost::mutex::scoped_lock lk(*m);
+    boost::this_thread::disable_cancellation dc;
+    boost::this_thread::cancellation_point();
+    *failed=false;
+}
+
+void do_test_thread_no_cancel_if_cancels_disabled_at_cancellation_point()
+{
+    boost::mutex m;
+    bool failed=true;
+    boost::mutex::scoped_lock lk(m);
+    boost::thread thrd(boost::bind(&disabled_cancellation_point_thread,&m,&failed));
+    thrd.cancel();
+    lk.unlock();
+    thrd.join();
+    BOOST_CHECK(!failed);
+}
+
+void test_thread_no_cancel_if_cancels_disabled_at_cancellation_point()
+{
+    timed_test(&do_test_thread_no_cancel_if_cancels_disabled_at_cancellation_point, 1);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
@@ -76,6 +126,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
     test->add(BOOST_TEST_CASE(test_id_comparison));
+    test->add(BOOST_TEST_CASE(test_thread_cancels_at_cancellation_point));
+    test->add(BOOST_TEST_CASE(test_thread_no_cancel_if_cancels_disabled_at_cancellation_point));
 
     return test;
 }

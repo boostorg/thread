@@ -92,18 +92,20 @@ namespace boost
         {
             boost::shared_ptr<thread_data_base> self;
             pthread_t thread_handle;
-            boost::mutex done_mutex;
+            boost::mutex data_mutex;
             boost::condition_variable done_condition;
             bool done;
             bool join_started;
             bool joined;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
             bool cancel_enabled;
+            bool cancel_requested;
 
             thread_data_base():
                 done(false),join_started(false),joined(false),
                 thread_exit_callbacks(0),
-                cancel_enabled(true)
+                cancel_enabled(true),
+                cancel_requested(false)
             {}
             virtual ~thread_data_base()
             {}
@@ -203,19 +205,19 @@ namespace boost
             disable_cancellation& operator=(const disable_cancellation&);
             
             bool cancel_was_enabled;
-            friend class enable_cancellation;
+            friend class restore_cancellation;
         public:
             disable_cancellation();
             ~disable_cancellation();
         };
 
-        class enable_cancellation
+        class restore_cancellation
         {
-            enable_cancellation(const enable_cancellation&);
-            enable_cancellation& operator=(const enable_cancellation&);
+            restore_cancellation(const restore_cancellation&);
+            restore_cancellation& operator=(const restore_cancellation&);
         public:
-            explicit enable_cancellation(disable_cancellation& d);
-            ~enable_cancellation();
+            explicit restore_cancellation(disable_cancellation& d);
+            ~restore_cancellation();
         };
 
         inline thread::id get_id()
@@ -227,9 +229,13 @@ namespace boost
         bool BOOST_THREAD_DECL cancellation_enabled();
         bool BOOST_THREAD_DECL cancellation_requested();
 
-        void BOOST_THREAD_DECL yield();
+        inline void yield()
+        {
+            thread::yield();
+        }
+        
         template<typename TimeDuration>
-        void sleep(TimeDuration const& rel_time)
+        inline void sleep(TimeDuration const& rel_time)
         {
             thread::sleep(get_system_time()+rel_time);
         }

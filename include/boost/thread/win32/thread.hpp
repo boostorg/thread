@@ -161,19 +161,19 @@ namespace boost
             disable_cancellation& operator=(const disable_cancellation&);
             
             bool cancel_was_enabled;
-            friend class enable_cancellation;
+            friend class restore_cancellation;
         public:
             disable_cancellation();
             ~disable_cancellation();
         };
 
-        class enable_cancellation
+        class restore_cancellation
         {
-            enable_cancellation(const enable_cancellation&);
-            enable_cancellation& operator=(const enable_cancellation&);
+            restore_cancellation(const restore_cancellation&);
+            restore_cancellation& operator=(const restore_cancellation&);
         public:
-            explicit enable_cancellation(disable_cancellation& d);
-            ~enable_cancellation();
+            explicit restore_cancellation(disable_cancellation& d);
+            ~restore_cancellation();
         };
 
         thread::id BOOST_THREAD_DECL get_id();

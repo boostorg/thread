@@ -11,7 +11,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <string>
 #include <stdexcept>
 
@@ -48,7 +48,7 @@ namespace boost
 
     private:
         mutex m_mutex;
-        condition m_cond;
+        condition_variable m_cond;
         unsigned int m_threshold;
         unsigned int m_count;
         unsigned int m_generation;

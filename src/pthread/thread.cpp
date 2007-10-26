@@ -94,7 +94,7 @@ namespace boost
 
                 tls_destructor(thread_info.get());
                 set_current_thread_data(0);
-                boost::lock_guard<boost::mutex> lock(thread_info->done_mutex);
+                boost::lock_guard<boost::mutex> lock(thread_info->data_mutex);
                 thread_info->done=true;
                 thread_info->done_condition.notify_all();
                 return 0;
@@ -147,7 +147,7 @@ namespace boost
             bool do_join=false;
             
             {
-                unique_lock<mutex> lock(local_thread_info->done_mutex);
+                unique_lock<mutex> lock(local_thread_info->data_mutex);
                 while(!local_thread_info->done)
                 {
                     local_thread_info->done_condition.wait(lock);
@@ -171,7 +171,7 @@ namespace boost
                 void* result=0;
                 int const res=pthread_join(local_thread_info->thread_handle,&result);
                 BOOST_ASSERT(!res);
-                lock_guard<mutex> lock(local_thread_info->done_mutex);
+                lock_guard<mutex> lock(local_thread_info->data_mutex);
                 local_thread_info->joined=true;
                 local_thread_info->done_condition.notify_all();
             }
@@ -200,7 +200,7 @@ namespace boost
         
         if(local_thread_info)
         {
-            lock_guard<mutex> lock(local_thread_info->done_mutex);
+            lock_guard<mutex> lock(local_thread_info->data_mutex);
             if(!local_thread_info->join_started)
             {
                 int const res=pthread_detach(local_thread_info->thread_handle);
@@ -275,6 +275,87 @@ namespace boost
         else
         {
             return id();
+        }
+    }
+
+    void thread::cancel()
+    {
+        boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        if(local_thread_info)
+        {
+            lock_guard<mutex> lk(local_thread_info->data_mutex);
+            local_thread_info->cancel_requested=true;
+        }
+    }
+    
+
+    namespace this_thread
+    {
+        void cancellation_point()
+        {
+            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            if(thread_info && thread_info->cancel_enabled)
+            {
+                lock_guard<mutex> lg(thread_info->data_mutex);
+                if(thread_info->cancel_requested)
+                {
+                    thread_info->cancel_requested=false;
+                    throw thread_cancelled();
+                }
+            }
+        }
+        
+        bool cancellation_enabled()
+        {
+            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            return thread_info && thread_info->cancel_enabled;
+        }
+        
+        bool cancellation_requested()
+        {
+            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            if(!thread_info)
+            {
+                return false;
+            }
+            else
+            {
+                lock_guard<mutex> lg(thread_info->data_mutex);
+                return thread_info->cancel_requested;
+            }
+        }
+
+        disable_cancellation::disable_cancellation():
+            cancel_was_enabled(cancellation_enabled())
+        {
+            if(cancel_was_enabled)
+            {
+                get_current_thread_data()->cancel_enabled=false;
+            }
+        }
+        
+        disable_cancellation::~disable_cancellation()
+        {
+            if(get_current_thread_data())
+            {
+                get_current_thread_data()->cancel_enabled=cancel_was_enabled;
+            }
+        }
+
+        restore_cancellation::restore_cancellation(disable_cancellation& d)
+        {
+            if(d.cancel_was_enabled)
+            {
+                get_current_thread_data()->cancel_enabled=true;
+            }
+        }
+        
+        restore_cancellation::~restore_cancellation()
+        {
+            if(get_current_thread_data())
+            {
+                get_current_thread_data()->cancel_enabled=false;
+            }
         }
     }
 
