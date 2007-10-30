@@ -17,6 +17,7 @@
 #include <boost/utility.hpp>
 #include <list>
 #include <algorithm>
+#include <boost/ref.hpp>
 
 namespace boost
 {
@@ -152,6 +153,23 @@ namespace boost
 
         static thread self();
     };
+
+    template<typename F>
+    struct thread::thread_data<boost::reference_wrapper<F> >:
+        detail::thread_data_base
+    {
+        F& f;
+        
+        thread_data(boost::reference_wrapper<F> f_):
+            f(f_)
+        {}
+        
+        void run()
+        {
+            f();
+        }
+    };
+    
 
     namespace this_thread
     {

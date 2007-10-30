@@ -9,6 +9,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/bind.hpp>
+#include <boost/ref.hpp>
+#include <boost/utility.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -118,6 +120,36 @@ void test_thread_no_cancel_if_cancels_disabled_at_cancellation_point()
     timed_test(&do_test_thread_no_cancel_if_cancels_disabled_at_cancellation_point, 1);
 }
 
+struct non_copyable_functor:
+    boost::noncopyable
+{
+    unsigned value;
+    
+    non_copyable_functor():
+        value(0)
+    {}
+    
+    void operator()()
+    {
+        value=999;
+    }
+};
+
+void do_test_creation_through_reference_wrapper()
+{
+    non_copyable_functor f;
+    
+    boost::thread thrd(boost::ref(f));
+    thrd.join();
+    BOOST_CHECK_EQUAL(f.value, 999);
+}
+
+void test_creation_through_reference_wrapper()
+{
+    timed_test(&do_test_creation_through_reference_wrapper, 1);
+}
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -128,6 +160,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_id_comparison));
     test->add(BOOST_TEST_CASE(test_thread_cancels_at_cancellation_point));
     test->add(BOOST_TEST_CASE(test_thread_no_cancel_if_cancels_disabled_at_cancellation_point));
+    test->add(BOOST_TEST_CASE(test_creation_through_reference_wrapper));
 
     return test;
 }

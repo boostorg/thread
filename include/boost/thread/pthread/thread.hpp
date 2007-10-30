@@ -195,6 +195,22 @@ namespace boost
         bool cancellation_requested() const;
     };
 
+    template<typename F>
+    struct thread::thread_data<boost::reference_wrapper<F> >:
+        detail::thread_data_base
+    {
+        F& f;
+        
+        thread_data(boost::reference_wrapper<F> f_):
+            f(f_)
+        {}
+        
+        void run()
+        {
+            f();
+        }
+    };
+
     namespace this_thread
     {
         class BOOST_THREAD_DECL disable_cancellation
