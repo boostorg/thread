@@ -141,12 +141,61 @@ void do_test_creation_through_reference_wrapper()
     
     boost::thread thrd(boost::ref(f));
     thrd.join();
-    BOOST_CHECK_EQUAL(f.value, 999);
+    BOOST_CHECK_EQUAL(f.value, 999u);
 }
 
 void test_creation_through_reference_wrapper()
 {
     timed_test(&do_test_creation_through_reference_wrapper, 1);
+}
+
+struct long_running_thread
+{
+    boost::condition_variable cond;
+    boost::mutex mut;
+    bool done;
+    
+    long_running_thread():
+        done(false)
+    {}
+    
+    void operator()()
+    {
+        boost::mutex::scoped_lock lk(mut);
+        while(!done)
+        {
+            cond.wait(lk);
+        }
+    }
+};
+
+void do_test_timed_join()
+{
+    long_running_thread f;
+    boost::thread thrd(boost::ref(f));
+    BOOST_CHECK(thrd.joinable());
+    boost::system_time xt=delay(3);
+    bool const joined=thrd.timed_join(xt);
+    BOOST_CHECK(in_range(boost::get_xtime(xt), 2));
+    BOOST_CHECK(!joined);
+    BOOST_CHECK(thrd.joinable());
+    {
+        boost::mutex::scoped_lock lk(f.mut);
+        f.done=true;
+        f.cond.notify_one();
+    }
+    
+    xt=delay(3);
+    bool const joined2=thrd.timed_join(xt);
+    boost::system_time const now=boost::get_system_time();
+    BOOST_CHECK(xt>now);
+    BOOST_CHECK(joined2);
+    BOOST_CHECK(!thrd.joinable());
+}
+
+void test_timed_join()
+{
+    timed_test(&do_test_timed_join, 10);
 }
 
 
@@ -161,6 +210,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_thread_cancels_at_cancellation_point));
     test->add(BOOST_TEST_CASE(test_thread_no_cancel_if_cancels_disabled_at_cancellation_point));
     test->add(BOOST_TEST_CASE(test_creation_through_reference_wrapper));
+    test->add(BOOST_TEST_CASE(test_timed_join));
 
     return test;
 }

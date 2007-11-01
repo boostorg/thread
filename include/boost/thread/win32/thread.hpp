@@ -131,6 +131,13 @@ namespace boost
 
         bool joinable() const;
         void join();
+        bool timed_join(const system_time& wait_until);
+
+        template<typename TimeDuration>
+        inline bool timed_join(TimeDuration const& rel_time)
+        {
+            return timed_join(get_system_time()+rel_time);
+        }
         void detach();
 
         static unsigned hardware_concurrency();

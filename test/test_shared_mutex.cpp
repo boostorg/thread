@@ -427,15 +427,9 @@ void test_timed_lock_shared_times_out_if_write_lock_held()
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
 
     boost::system_time const start=boost::get_system_time();
-    boost::system_time const timeout=start+boost::posix_time::milliseconds(100);
+    boost::system_time const timeout=start+boost::posix_time::milliseconds(2000);
     bool const timed_lock_succeeded=rw_mutex.timed_lock_shared(timeout);
-    boost::system_time const wakeup=boost::get_system_time();
-    BOOST_CHECK(timeout<=(wakeup+boost::posix_time::milliseconds(1)));
-    if(timeout>wakeup)
-    {
-        std::cout<<"timeout="<<timeout<<", wakeup="<<wakeup<<std::endl;
-    }
-    
+    BOOST_CHECK(in_range(boost::get_xtime(timeout),1));
     BOOST_CHECK(!timed_lock_succeeded);
     if(timed_lock_succeeded)
     {

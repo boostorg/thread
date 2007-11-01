@@ -251,6 +251,20 @@ namespace boost
             release_handle();
         }
     }
+
+    bool thread::timed_join(boost::system_time const& wait_until)
+    {
+        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        if(local_thread_info)
+        {
+            if(!this_thread::cancellable_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
+            {
+                return false;
+            }
+            release_handle();
+        }
+        return true;
+    }
     
     void thread::detach()
     {
