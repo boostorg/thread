@@ -24,41 +24,42 @@ namespace boost
             boost::detail::thread_exit_function_base* func;
             thread_exit_callback_node* next;
         };
-    }
-    namespace
-    {
-        boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
-        pthread_key_t current_thread_tls_key;
 
-        extern "C"
+        namespace
         {
-            void tls_destructor(void* data)
+            boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
+            pthread_key_t current_thread_tls_key;
+
+            extern "C"
             {
-                boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
-                if(thread_info)
+                void tls_destructor(void* data)
                 {
-                    while(thread_info->thread_exit_callbacks)
+                    boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
+                    if(thread_info)
                     {
-                        boost::detail::thread_exit_callback_node* const current_node=thread_info->thread_exit_callbacks;
-                        thread_info->thread_exit_callbacks=current_node->next;
-                        if(current_node->func)
+                        while(thread_info->thread_exit_callbacks)
                         {
-                            (*current_node->func)();
-                            delete current_node->func;
+                            boost::detail::thread_exit_callback_node* const current_node=thread_info->thread_exit_callbacks;
+                            thread_info->thread_exit_callbacks=current_node->next;
+                            if(current_node->func)
+                            {
+                                (*current_node->func)();
+                                delete current_node->func;
+                            }
+                            delete current_node;
                         }
-                        delete current_node;
                     }
                 }
             }
-        }
     
 
-        void create_current_thread_tls_key()
-        {
-            int const res=pthread_key_create(&current_thread_tls_key,NULL);
-            BOOST_ASSERT(!res);
+            void create_current_thread_tls_key()
+            {
+                int const res=pthread_key_create(&current_thread_tls_key,NULL);
+                BOOST_ASSERT(!res);
+            }
         }
-
+        
         boost::detail::thread_data_base* get_current_thread_data()
         {
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
@@ -71,15 +72,17 @@ namespace boost
             int const res=pthread_setspecific(current_thread_tls_key,new_data);
             BOOST_ASSERT(!res);
         }
-
-
+    }
+    
+    namespace
+    {
         extern "C"
         {
             void* thread_proxy(void* param)
             {
                 boost::shared_ptr<boost::detail::thread_data_base> thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
-                set_current_thread_data(thread_info.get());
+                detail::set_current_thread_data(thread_info.get());
                 try
                 {
                     thread_info->run();
@@ -92,8 +95,8 @@ namespace boost
                     std::terminate();
                 }
 
-                tls_destructor(thread_info.get());
-                set_current_thread_data(0);
+                detail::tls_destructor(thread_info.get());
+                detail::set_current_thread_data(0);
                 boost::lock_guard<boost::mutex> lock(thread_info->data_mutex);
                 thread_info->done=true;
                 thread_info->done_condition.notify_all();
@@ -213,33 +216,43 @@ namespace boost
 
     void thread::sleep(const system_time& st)
     {
-        xtime const xt=get_xtime(st);
-    
-        for (int foo=0; foo < 5; ++foo)
+        detail::thread_data_base* const thread_info=detail::get_current_thread_data();
+        
+        if(thread_info)
         {
+            unique_lock<mutex> lk(thread_info->sleep_mutex);
+            while(thread_info->sleep_condition.timed_wait(lk,st));
+        }
+        else
+        {
+            xtime const xt=get_xtime(st);
+            
+            for (int foo=0; foo < 5; ++foo)
+            {
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-            timespec ts;
-            to_timespec_duration(xt, ts);
-            int res = 0;
-            res = pthread_delay_np(&ts);
-            BOOST_ASSERT(res == 0);
+                timespec ts;
+                to_timespec_duration(xt, ts);
+                int res = 0;
+                res = pthread_delay_np(&ts);
+                BOOST_ASSERT(res == 0);
 #   elif defined(BOOST_HAS_NANOSLEEP)
-            timespec ts;
-            to_timespec_duration(xt, ts);
-
-            //  nanosleep takes a timespec that is an offset, not
-            //  an absolute time.
-            nanosleep(&ts, 0);
+                timespec ts;
+                to_timespec_duration(xt, ts);
+                
+                //  nanosleep takes a timespec that is an offset, not
+                //  an absolute time.
+                nanosleep(&ts, 0);
 #   else
-            mutex mx;
-            mutex::scoped_lock lock(mx);
-            condition cond;
-            cond.timed_wait(lock, xt);
+                mutex mx;
+                mutex::scoped_lock lock(mx);
+                condition cond;
+                cond.timed_wait(lock, xt);
 #   endif
-            xtime cur;
-            xtime_get(&cur, TIME_UTC);
-            if (xtime_cmp(xt, cur) <= 0)
-                return;
+                xtime cur;
+                xtime_get(&cur, TIME_UTC);
+                if (xtime_cmp(xt, cur) <= 0)
+                    return;
+            }
         }
     }
 
@@ -285,6 +298,11 @@ namespace boost
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
             local_thread_info->cancel_requested=true;
+            if(local_thread_info->current_cond)
+            {
+                int const res=pthread_cond_broadcast(local_thread_info->current_cond);
+                BOOST_ASSERT(!res);
+            }
         }
     }
     
@@ -293,7 +311,7 @@ namespace boost
     {
         void cancellation_point()
         {
-            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(thread_info && thread_info->cancel_enabled)
             {
                 lock_guard<mutex> lg(thread_info->data_mutex);
@@ -307,13 +325,13 @@ namespace boost
         
         bool cancellation_enabled()
         {
-            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             return thread_info && thread_info->cancel_enabled;
         }
         
         bool cancellation_requested()
         {
-            boost::detail::thread_data_base* const thread_info=get_current_thread_data();
+            boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(!thread_info)
             {
                 return false;
@@ -330,15 +348,15 @@ namespace boost
         {
             if(cancel_was_enabled)
             {
-                get_current_thread_data()->cancel_enabled=false;
+                detail::get_current_thread_data()->cancel_enabled=false;
             }
         }
         
         disable_cancellation::~disable_cancellation()
         {
-            if(get_current_thread_data())
+            if(detail::get_current_thread_data())
             {
-                get_current_thread_data()->cancel_enabled=cancel_was_enabled;
+                detail::get_current_thread_data()->cancel_enabled=cancel_was_enabled;
             }
         }
 
@@ -346,15 +364,15 @@ namespace boost
         {
             if(d.cancel_was_enabled)
             {
-                get_current_thread_data()->cancel_enabled=true;
+                detail::get_current_thread_data()->cancel_enabled=true;
             }
         }
         
         restore_cancellation::~restore_cancellation()
         {
-            if(get_current_thread_data())
+            if(detail::get_current_thread_data())
             {
-                get_current_thread_data()->cancel_enabled=false;
+                detail::get_current_thread_data()->cancel_enabled=false;
             }
         }
     }

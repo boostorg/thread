@@ -156,13 +156,10 @@ namespace boost
                         ++generations[0].count;
                         sem=detail::win32::duplicate_handle(generations[0].semaphore);
                     }
-                    unsigned long const wait_result=detail::win32::WaitForSingleObject(sem,::boost::detail::get_milliseconds_until(wait_until));
-
-                    if(wait_result==detail::win32::timeout)
+                    if(!this_thread::cancellable_wait(sem,::boost::detail::get_milliseconds_until(wait_until)))
                     {
                         break;
                     }
-                    BOOST_ASSERT(!wait_result);
                 
                     unsigned long const woken_result=detail::win32::WaitForSingleObject(local_wake_sem,0);
                     BOOST_ASSERT(woken_result==detail::win32::timeout || woken_result==0);
