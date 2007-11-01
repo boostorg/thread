@@ -142,8 +142,8 @@ void test_call_once_retried_on_exception()
         group.create_thread(&call_once_with_exception);
     }
     group.join_all();
-    BOOST_CHECK_EQUAL(throw_before_third_pass::pass_counter,3);
-    BOOST_CHECK_EQUAL(exception_counter,2);
+    BOOST_CHECK_EQUAL(throw_before_third_pass::pass_counter,3u);
+    BOOST_CHECK_EQUAL(exception_counter,2u);
 }
 
 

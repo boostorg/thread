@@ -187,6 +187,55 @@ namespace boost
         }
     }
 
+    bool thread::timed_join(system_time const& wait_until)
+    {
+        boost::shared_ptr<detail::thread_data_base> const local_thread_info=get_thread_info();
+        if(local_thread_info)
+        {
+            bool do_join=false;
+            
+            {
+                unique_lock<mutex> lock(local_thread_info->data_mutex);
+                while(!local_thread_info->done)
+                {
+                    if(!local_thread_info->done_condition.timed_wait(lock,wait_until))
+                    {
+                        return false;
+                    }
+                }
+                do_join=!local_thread_info->join_started;
+                
+                if(do_join)
+                {
+                    local_thread_info->join_started=true;
+                }
+                else
+                {
+                    while(!local_thread_info->joined)
+                    {
+                        local_thread_info->done_condition.wait(lock);
+                    }
+                }
+            }
+            if(do_join)
+            {
+                void* result=0;
+                int const res=pthread_join(local_thread_info->thread_handle,&result);
+                BOOST_ASSERT(!res);
+                lock_guard<mutex> lock(local_thread_info->data_mutex);
+                local_thread_info->joined=true;
+                local_thread_info->done_condition.notify_all();
+            }
+            
+            lock_guard<mutex> l1(thread_info_mutex);
+            if(thread_info==local_thread_info)
+            {
+                thread_info.reset();
+            }
+        }
+        return true;
+    }
+
     bool thread::joinable() const
     {
         return get_thread_info();
