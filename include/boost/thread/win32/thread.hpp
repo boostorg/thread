@@ -197,6 +197,10 @@ namespace boost
         thread::id BOOST_THREAD_DECL get_id();
 
         bool BOOST_THREAD_DECL cancellable_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds);
+        inline bool cancellable_wait(unsigned long milliseconds)
+        {
+            return cancellable_wait(detail::win32::invalid_handle_value,milliseconds);
+        }
 
         void BOOST_THREAD_DECL cancellation_point();
         bool BOOST_THREAD_DECL cancellation_enabled();
@@ -207,7 +211,7 @@ namespace boost
         template<typename TimeDuration>
         void sleep(TimeDuration const& rel_time)
         {
-            cancellable_wait(detail::win32::invalid_handle_value,static_cast<unsigned long>(rel_time.total_milliseconds()));
+            cancellable_wait(static_cast<unsigned long>(rel_time.total_milliseconds()));
         }
     }
 

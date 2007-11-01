@@ -13,78 +13,56 @@
 #include <pthread.h>
 #include "timespec.hpp"
 #include "pthread_mutex_scoped_lock.hpp"
+#include "thread_data.hpp"
+#include "condition_variable_fwd.hpp"
 
 namespace boost
 {
-    class condition_variable
+    inline condition_variable::condition_variable()
     {
-    private:
-        pthread_cond_t cond;
+        int const res=pthread_cond_init(&cond,NULL);
+        if(res)
+        {
+            throw thread_resource_error();
+        }
+    }
+    inline condition_variable::~condition_variable()
+    {
+        int const res=pthread_cond_destroy(&cond);
+        BOOST_ASSERT(!res);
+    }
+
+    inline void condition_variable::wait(unique_lock<mutex>& m)
+    {
+        detail::cancel_wrapper allow_cancel(&cond);
+        int const cond_res=pthread_cond_wait(&cond,m.mutex()->native_handle());
+        BOOST_ASSERT(!cond_res);
+    }
+
+    inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
+    {
+        detail::cancel_wrapper allow_cancel(&cond);
+        struct timespec const timeout=detail::get_timespec(wait_until);
+        int const cond_res=pthread_cond_timedwait(&cond,m.mutex()->native_handle(),&timeout);
+        if(cond_res==ETIMEDOUT)
+        {
+            return false;
+        }
+        BOOST_ASSERT(!cond_res);
+        return true;
+    }
+
+    inline void condition_variable::notify_one()
+    {
+        int const res=pthread_cond_signal(&cond);
+        BOOST_ASSERT(!res);
+    }
         
-        condition_variable(condition_variable&);
-        condition_variable& operator=(condition_variable&);
-    public:
-        condition_variable()
-        {
-            int const res=pthread_cond_init(&cond,NULL);
-            if(res)
-            {
-                throw thread_resource_error();
-            }
-        }
-        ~condition_variable()
-        {
-            int const res=pthread_cond_destroy(&cond);
-            BOOST_ASSERT(!res);
-        }
-
-        void wait(unique_lock<mutex>& m)
-        {
-            int const cond_res=pthread_cond_wait(&cond,m.mutex()->native_handle());
-            BOOST_ASSERT(!cond_res);
-        }
-
-        template<typename predicate_type>
-        void wait(unique_lock<mutex>& m,predicate_type pred)
-        {
-            while(!pred()) wait(m);
-        }
-
-        bool timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
-        {
-            struct timespec const timeout=detail::get_timespec(wait_until);
-            int const cond_res=pthread_cond_timedwait(&cond,m.mutex()->native_handle(),&timeout);
-            if(cond_res==ETIMEDOUT)
-            {
-                return false;
-            }
-            BOOST_ASSERT(!cond_res);
-            return true;
-        }
-
-        template<typename predicate_type>
-        bool timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until,predicate_type pred)
-        {
-            while (!pred())
-            {
-                if(!timed_wait(m, wait_until))
-                    return false;
-            }
-            return true;
-        }
-
-        void notify_one()
-        {
-            int const res=pthread_cond_signal(&cond);
-            BOOST_ASSERT(!res);
-        }
-        
-        void notify_all()
-        {
-            int const res=pthread_cond_broadcast(&cond);
-            BOOST_ASSERT(!res);
-        }
-    };
+    inline void condition_variable::notify_all()
+    {
+        int const res=pthread_cond_broadcast(&cond);
+        BOOST_ASSERT(!res);
+    }
     
     class condition_variable_any
     {
@@ -123,11 +101,14 @@ namespace boost
         {
             int res=0;
             {
-                boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-                m.unlock();
-                res=pthread_cond_wait(&cond,&internal_mutex);
+                detail::cancel_wrapper allow_cancel(&cond);
+                {
+                    boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+                    m.unlock();
+                    res=pthread_cond_wait(&cond,&internal_mutex);
+                }
+                m.lock();
             }
-            m.lock();
             if(res)
             {
                 throw condition_error();
@@ -146,11 +127,14 @@ namespace boost
             struct timespec const timeout=detail::get_timespec(wait_until);
             int res=0;
             {
-                boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-                m.unlock();
-                res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+                detail::cancel_wrapper allow_cancel(&cond);
+                {
+                    boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+                    m.unlock();
+                    res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+                }
+                m.lock();
             }
-            m.lock();
             if(res==ETIMEDOUT)
             {
                 return false;

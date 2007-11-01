@@ -20,10 +20,10 @@
 #include <boost/optional.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/shared_ptr.hpp>
+#include "thread_data.hpp"
 
 namespace boost
 {
-
     class thread;
 
     namespace detail
@@ -78,39 +78,6 @@ namespace boost
                 }
             }
         
-        };
-    }
-
-    class thread_cancelled
-    {};
-
-    namespace detail
-    {
-        struct thread_exit_callback_node;
-        
-        struct thread_data_base
-        {
-            boost::shared_ptr<thread_data_base> self;
-            pthread_t thread_handle;
-            boost::mutex data_mutex;
-            boost::condition_variable done_condition;
-            bool done;
-            bool join_started;
-            bool joined;
-            boost::detail::thread_exit_callback_node* thread_exit_callbacks;
-            bool cancel_enabled;
-            bool cancel_requested;
-
-            thread_data_base():
-                done(false),join_started(false),joined(false),
-                thread_exit_callbacks(0),
-                cancel_enabled(true),
-                cancel_requested(false)
-            {}
-            virtual ~thread_data_base()
-            {}
-
-            virtual void run()=0;
         };
     }
 
