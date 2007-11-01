@@ -10,7 +10,7 @@
 #include <boost/assert.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 namespace boost
 {
@@ -29,9 +29,9 @@ namespace boost
 
         state_data state;
         boost::mutex state_change;
-        boost::condition shared_cond;
-        boost::condition exclusive_cond;
-        boost::condition upgrade_cond;
+        boost::condition_variable shared_cond;
+        boost::condition_variable exclusive_cond;
+        boost::condition_variable upgrade_cond;
 
         void release_waiters()
         {
@@ -53,6 +53,7 @@ namespace boost
 
         void lock_shared()
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -84,6 +85,7 @@ namespace boost
 
         bool timed_lock_shared(system_time const& timeout)
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -124,6 +126,7 @@ namespace boost
 
         void lock()
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -143,6 +146,7 @@ namespace boost
 
         bool timed_lock(system_time const& timeout)
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -189,6 +193,7 @@ namespace boost
 
         void lock_upgrade()
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
             while(true)
             {
@@ -205,6 +210,7 @@ namespace boost
 
         bool timed_lock_upgrade(system_time const& timeout)
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
             while(true)
             {
@@ -252,6 +258,7 @@ namespace boost
 
         void unlock_upgrade_and_lock()
         {
+            boost::this_thread::disable_cancellation no_cancel;
             boost::mutex::scoped_lock lock(state_change);
             --state.shared_count;
             while(true)
