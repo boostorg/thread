@@ -3,7 +3,8 @@
 
 //  win32_thread_primitives.hpp
 //
-//  (C) Copyright 2005-6 Anthony Williams 
+//  (C) Copyright 2005-7 Anthony Williams 
+//  (C) Copyright 2007 David Deakins 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -28,9 +29,15 @@ namespace boost
             unsigned const timeout=WAIT_TIMEOUT;
             handle const invalid_handle_value=INVALID_HANDLE_VALUE;
 
+# ifdef BOOST_NO_ANSI_APIS
+            using ::CreateMutexW;
+            using ::CreateEventW;
+            using ::CreateSemaphoreW;
+# else
             using ::CreateMutexA;
             using ::CreateEventA;
             using ::CreateSemaphoreA;
+# endif
             using ::CloseHandle;
             using ::ReleaseMutex;
             using ::ReleaseSemaphore;
@@ -50,6 +57,29 @@ namespace boost
     }
 }
 #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ )
+
+# ifdef UNDER_CE
+#  ifndef WINAPI
+#   ifndef _WIN32_WCE_EMULATION
+#    define WINAPI  __cdecl	// Note this doesn't match the desktop definition
+#   else
+#    define WINAPI  __stdcall
+#   endif
+#  endif
+
+#  ifdef __cplusplus
+extern "C" {
+#  endif
+typedef int BOOL;
+typedef unsigned long DWORD;
+typedef void* HANDLE;
+
+#  include <kfuncs.h>
+#  ifdef __cplusplus
+}
+#  endif
+# endif
+
 namespace boost
 {
     namespace detail
@@ -70,25 +100,41 @@ namespace boost
             extern "C"
             {
                 struct _SECURITY_ATTRIBUTES;
+# ifdef BOOST_NO_ANSI_APIS
+                __declspec(dllimport) void* __stdcall CreateMutexW(_SECURITY_ATTRIBUTES*,int,wchar_t const*);
+                __declspec(dllimport) void* __stdcall CreateSemaphoreW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*);
+                __declspec(dllimport) void* __stdcall CreateEventW(_SECURITY_ATTRIBUTES*,int,int,wchar_t const*);
+# else
                 __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
                 __declspec(dllimport) void* __stdcall CreateEventA(_SECURITY_ATTRIBUTES*,int,int,char const*);
+# endif
                 __declspec(dllimport) int __stdcall CloseHandle(void*);
                 __declspec(dllimport) int __stdcall ReleaseMutex(void*);
-                __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
-                __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
                 __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
+                __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
                 __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
-                __declspec(dllimport) void* __stdcall GetCurrentThread();
-                __declspec(dllimport) void* __stdcall GetCurrentProcess();
                 __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
                 __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
                 __declspec(dllimport) void __stdcall Sleep(unsigned long);
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+
+# ifndef UNDER_CE
+                __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
+                __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+                __declspec(dllimport) void* __stdcall GetCurrentThread();
+                __declspec(dllimport) void* __stdcall GetCurrentProcess();
                 __declspec(dllimport) int __stdcall SetEvent(void*);
                 __declspec(dllimport) int __stdcall ResetEvent(void*);
-                __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
+# else
+                using ::GetCurrentProcessId;
+                using ::GetCurrentThreadId;
+                using ::GetCurrentThread;
+                using ::GetCurrentProcess;
+                using ::SetEvent;
+                using ::ResetEvent;
+# endif
             }
         }
     }
@@ -117,7 +163,11 @@ namespace boost
             
             inline handle create_anonymous_event(event_type type,initial_event_state state)
             {
+#if !defined(BOOST_NO_ANSI_APIS)  
                 handle const res=win32::CreateEventA(0,type,state,0);
+#else
+                handle const res=win32::CreateEventW(0,type,state,0);
+#endif                
                 if(!res)
                 {
                     throw thread_resource_error();
@@ -127,7 +177,11 @@ namespace boost
 
             inline handle create_anonymous_semaphore(long initial_count,long max_count)
             {
+#if !defined(BOOST_NO_ANSI_APIS)  
                 handle const res=CreateSemaphoreA(NULL,initial_count,max_count,NULL);
+#else
+                handle const res=CreateSemaphoreW(NULL,initial_count,max_count,NULL);
+#endif               
                 if(!res)
                 {
                     throw thread_resource_error();

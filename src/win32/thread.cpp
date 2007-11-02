@@ -2,11 +2,14 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2007 David Deakins
 
 #include <boost/thread/thread.hpp>
 #include <algorithm>
 #include <windows.h>
+#ifndef UNDER_CE
 #include <process.h>
+#endif
 #include <stdio.h>
 #include <boost/thread/once.hpp>
 #include <boost/assert.hpp>
@@ -15,7 +18,7 @@ namespace boost
 {
     namespace
     {
-#ifdef _MSC_VER
+#if defined(_MSC_VER) && !defined(UNDER_CE)
         __declspec(thread) detail::thread_data_base* current_thread_data=0;
         detail::thread_data_base* get_current_thread_data()
         {
@@ -59,6 +62,41 @@ namespace boost
             BOOST_ASSERT(res);
         }
 #endif
+
+#ifdef BOOST_NO_THREADEX
+// Windows CE doesn't define _beginthreadex
+
+        struct ThreadProxyData
+        {
+            typedef unsigned (__stdcall* func)(void*);
+            func start_address_;
+            void* arglist_;
+            ThreadProxyData(func start_address,void* arglist) : start_address_(start_address), arglist_(arglist) {}
+        };
+
+        DWORD WINAPI ThreadProxy(LPVOID args)
+        {
+            ThreadProxyData* data=reinterpret_cast<ThreadProxyData*>(args);
+            DWORD ret=data->start_address_(data->arglist_);
+            delete data;
+            return ret;
+        }
+        
+        typedef void* uintptr_t;
+
+        inline uintptr_t const _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
+            void* arglist, unsigned initflag, unsigned* thrdaddr)
+        {
+            DWORD threadID;
+            HANDLE hthread=CreateThread(static_cast<LPSECURITY_ATTRIBUTES>(security),stack_size,ThreadProxy,
+                new ThreadProxyData(start_address,arglist),initflag,&threadID);
+            if (hthread!=0)
+                *thrdaddr=threadID;
+            return reinterpret_cast<uintptr_t const>(hthread);
+        }
+
+#endif
+
     }
 
     void thread::yield()
@@ -166,11 +204,8 @@ namespace boost
             externally_launched_thread()
             {
                 ++count;
+                cancel_enabled=false;
                 thread_handle=detail::win32::duplicate_handle(detail::win32::GetCurrentThread());
-            }
-            ~externally_launched_thread()
-            {
-                OutputDebugString("External thread finished\n");
             }
             
             void run()

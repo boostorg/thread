@@ -1,11 +1,13 @@
 // (C) Copyright Aaron W. LaFramboise, Roland Schwarz, Michael Glassford 2004.
+// (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2007 David Deakins
 // Use, modification and distribution are subject to the
 // Boost Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) && defined(_MSC_VER)
+#if defined(BOOST_THREAD_BUILD_LIB) && defined(_MSC_VER) && !defined(UNDER_CE)
 
     #include <boost/thread/detail/tss_hooks.hpp>
 
