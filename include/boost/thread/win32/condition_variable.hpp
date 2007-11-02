@@ -156,7 +156,7 @@ namespace boost
                         ++generations[0].count;
                         sem=detail::win32::duplicate_handle(generations[0].semaphore);
                     }
-                    if(!this_thread::cancellable_wait(sem,::boost::detail::get_milliseconds_until(wait_until)))
+                    if(!this_thread::interruptible_wait(sem,::boost::detail::get_milliseconds_until(wait_until)))
                     {
                         break;
                     }

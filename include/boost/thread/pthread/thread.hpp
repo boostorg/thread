@@ -165,8 +165,8 @@ namespace boost
         static void yield();
 
         // extensions
-        void cancel();
-        bool cancellation_requested() const;
+        void interrupt();
+        bool interruption_requested() const;
     };
 
     template<typename F>
@@ -187,25 +187,25 @@ namespace boost
 
     namespace this_thread
     {
-        class BOOST_THREAD_DECL disable_cancellation
+        class BOOST_THREAD_DECL disable_interruption
         {
-            disable_cancellation(const disable_cancellation&);
-            disable_cancellation& operator=(const disable_cancellation&);
+            disable_interruption(const disable_interruption&);
+            disable_interruption& operator=(const disable_interruption&);
             
-            bool cancel_was_enabled;
-            friend class restore_cancellation;
+            bool interruption_was_enabled;
+            friend class restore_interruption;
         public:
-            disable_cancellation();
-            ~disable_cancellation();
+            disable_interruption();
+            ~disable_interruption();
         };
 
-        class BOOST_THREAD_DECL restore_cancellation
+        class BOOST_THREAD_DECL restore_interruption
         {
-            restore_cancellation(const restore_cancellation&);
-            restore_cancellation& operator=(const restore_cancellation&);
+            restore_interruption(const restore_interruption&);
+            restore_interruption& operator=(const restore_interruption&);
         public:
-            explicit restore_cancellation(disable_cancellation& d);
-            ~restore_cancellation();
+            explicit restore_interruption(disable_interruption& d);
+            ~restore_interruption();
         };
 
         inline thread::id get_id()
@@ -213,9 +213,9 @@ namespace boost
             return thread::id(pthread_self());
         }
 
-        void BOOST_THREAD_DECL cancellation_point();
-        bool BOOST_THREAD_DECL cancellation_enabled();
-        bool BOOST_THREAD_DECL cancellation_requested();
+        void BOOST_THREAD_DECL interruption_point();
+        bool BOOST_THREAD_DECL interruption_enabled();
+        bool BOOST_THREAD_DECL interruption_requested();
 
         inline void yield()
         {

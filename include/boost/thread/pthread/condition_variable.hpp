@@ -34,14 +34,14 @@ namespace boost
 
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
-        detail::cancel_wrapper allow_cancel(&cond);
+        detail::interruption_checker check_for_interruption(&cond);
         int const cond_res=pthread_cond_wait(&cond,m.mutex()->native_handle());
         BOOST_ASSERT(!cond_res);
     }
 
     inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
     {
-        detail::cancel_wrapper allow_cancel(&cond);
+        detail::interruption_checker check_for_interruption(&cond);
         struct timespec const timeout=detail::get_timespec(wait_until);
         int const cond_res=pthread_cond_timedwait(&cond,m.mutex()->native_handle(),&timeout);
         if(cond_res==ETIMEDOUT)
@@ -101,7 +101,7 @@ namespace boost
         {
             int res=0;
             {
-                detail::cancel_wrapper allow_cancel(&cond);
+                detail::interruption_checker check_for_interruption(&cond);
                 {
                     boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
                     m.unlock();
@@ -127,7 +127,7 @@ namespace boost
             struct timespec const timeout=detail::get_timespec(wait_until);
             int res=0;
             {
-                detail::cancel_wrapper allow_cancel(&cond);
+                detail::interruption_checker check_for_interruption(&cond);
                 {
                     boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
                     m.unlock();

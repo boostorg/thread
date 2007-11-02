@@ -71,53 +71,53 @@ void test_id_comparison()
     timed_test(&do_test_id_comparison, 1);
 }
 
-void cancellation_point_thread(boost::mutex* m,bool* failed)
+void interruption_point_thread(boost::mutex* m,bool* failed)
 {
     boost::mutex::scoped_lock lk(*m);
-    boost::this_thread::cancellation_point();
+    boost::this_thread::interruption_point();
     *failed=true;
 }
 
-void do_test_thread_cancels_at_cancellation_point()
+void do_test_thread_interrupts_at_interruption_point()
 {
     boost::mutex m;
     bool failed=false;
     boost::mutex::scoped_lock lk(m);
-    boost::thread thrd(boost::bind(&cancellation_point_thread,&m,&failed));
-    thrd.cancel();
+    boost::thread thrd(boost::bind(&interruption_point_thread,&m,&failed));
+    thrd.interrupt();
     lk.unlock();
     thrd.join();
     BOOST_CHECK(!failed);
 }
 
-void test_thread_cancels_at_cancellation_point()
+void test_thread_interrupts_at_interruption_point()
 {
-    timed_test(&do_test_thread_cancels_at_cancellation_point, 1);
+    timed_test(&do_test_thread_interrupts_at_interruption_point, 1);
 }
 
-void disabled_cancellation_point_thread(boost::mutex* m,bool* failed)
+void disabled_interruption_point_thread(boost::mutex* m,bool* failed)
 {
     boost::mutex::scoped_lock lk(*m);
-    boost::this_thread::disable_cancellation dc;
-    boost::this_thread::cancellation_point();
+    boost::this_thread::disable_interruption dc;
+    boost::this_thread::interruption_point();
     *failed=false;
 }
 
-void do_test_thread_no_cancel_if_cancels_disabled_at_cancellation_point()
+void do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
 {
     boost::mutex m;
     bool failed=true;
     boost::mutex::scoped_lock lk(m);
-    boost::thread thrd(boost::bind(&disabled_cancellation_point_thread,&m,&failed));
-    thrd.cancel();
+    boost::thread thrd(boost::bind(&disabled_interruption_point_thread,&m,&failed));
+    thrd.interrupt();
     lk.unlock();
     thrd.join();
     BOOST_CHECK(!failed);
 }
 
-void test_thread_no_cancel_if_cancels_disabled_at_cancellation_point()
+void test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
 {
-    timed_test(&do_test_thread_no_cancel_if_cancels_disabled_at_cancellation_point, 1);
+    timed_test(&do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point, 1);
 }
 
 struct non_copyable_functor:
@@ -207,8 +207,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
     test->add(BOOST_TEST_CASE(test_id_comparison));
-    test->add(BOOST_TEST_CASE(test_thread_cancels_at_cancellation_point));
-    test->add(BOOST_TEST_CASE(test_thread_no_cancel_if_cancels_disabled_at_cancellation_point));
+    test->add(BOOST_TEST_CASE(test_thread_interrupts_at_interruption_point));
+    test->add(BOOST_TEST_CASE(test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point));
     test->add(BOOST_TEST_CASE(test_creation_through_reference_wrapper));
     test->add(BOOST_TEST_CASE(test_timed_join));
 
