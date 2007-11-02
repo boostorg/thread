@@ -150,7 +150,6 @@ alias thread_sources
     : ## win32 sources ##
       win32/thread.cpp
       win32/exceptions.cpp
-      win32/xtime.cpp
       win32/tss.cpp
       win32/tss_hooks.cpp
       win32/tss_dll.cpp
@@ -163,7 +162,6 @@ alias thread_sources
     : ## pthread sources ##
       pthread/thread.cpp
       pthread/exceptions.cpp
-      pthread/xtime.cpp
       pthread/tss.cpp
     : ## requirements ##
       <threadapi>pthread
