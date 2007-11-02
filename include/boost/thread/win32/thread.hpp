@@ -21,7 +21,7 @@
 
 namespace boost
 {
-    class thread_cancelled
+    class thread_interrupted
     {};
 
     namespace detail
@@ -32,16 +32,16 @@ namespace boost
         {
             long count;
             detail::win32::handle_manager thread_handle;
-            detail::win32::handle_manager cancel_handle;
+            detail::win32::handle_manager interruption_handle;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
-            bool cancel_enabled;
+            bool interruption_enabled;
             unsigned id;
 
             thread_data_base():
                 count(0),thread_handle(detail::win32::invalid_handle_value),
-                cancel_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
+                interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
                 thread_exit_callbacks(0),
-                cancel_enabled(true),
+                interruption_enabled(true),
                 id(0)
             {}
             virtual ~thread_data_base()
@@ -153,10 +153,10 @@ namespace boost
         static void sleep(const system_time& xt);
 
         // extensions
-        class cancel_handle;
-        cancel_handle get_cancel_handle() const;
-        void cancel();
-        bool cancellation_requested() const;
+        class interruption_handle;
+        interruption_handle get_interruption_handle() const;
+        void interrupt();
+        bool interruption_requested() const;
 
         static thread self();
     };
@@ -180,45 +180,45 @@ namespace boost
 
     namespace this_thread
     {
-        class BOOST_THREAD_DECL disable_cancellation
+        class BOOST_THREAD_DECL disable_interruption
         {
-            disable_cancellation(const disable_cancellation&);
-            disable_cancellation& operator=(const disable_cancellation&);
+            disable_interruption(const disable_interruption&);
+            disable_interruption& operator=(const disable_interruption&);
             
-            bool cancel_was_enabled;
-            friend class restore_cancellation;
+            bool interruption_was_enabled;
+            friend class restore_interruption;
         public:
-            disable_cancellation();
-            ~disable_cancellation();
+            disable_interruption();
+            ~disable_interruption();
         };
 
-        class BOOST_THREAD_DECL restore_cancellation
+        class BOOST_THREAD_DECL restore_interruption
         {
-            restore_cancellation(const restore_cancellation&);
-            restore_cancellation& operator=(const restore_cancellation&);
+            restore_interruption(const restore_interruption&);
+            restore_interruption& operator=(const restore_interruption&);
         public:
-            explicit restore_cancellation(disable_cancellation& d);
-            ~restore_cancellation();
+            explicit restore_interruption(disable_interruption& d);
+            ~restore_interruption();
         };
 
         thread::id BOOST_THREAD_DECL get_id();
 
-        bool BOOST_THREAD_DECL cancellable_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds);
-        inline bool cancellable_wait(unsigned long milliseconds)
+        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds);
+        inline bool interruptible_wait(unsigned long milliseconds)
         {
-            return cancellable_wait(detail::win32::invalid_handle_value,milliseconds);
+            return interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
         }
 
-        void BOOST_THREAD_DECL cancellation_point();
-        bool BOOST_THREAD_DECL cancellation_enabled();
-        bool BOOST_THREAD_DECL cancellation_requested();
-        thread::cancel_handle BOOST_THREAD_DECL get_cancel_handle();
+        void BOOST_THREAD_DECL interruption_point();
+        bool BOOST_THREAD_DECL interruption_enabled();
+        bool BOOST_THREAD_DECL interruption_requested();
+        thread::interruption_handle BOOST_THREAD_DECL get_interruption_handle();
 
         void BOOST_THREAD_DECL yield();
         template<typename TimeDuration>
         void sleep(TimeDuration const& rel_time)
         {
-            cancellable_wait(static_cast<unsigned long>(rel_time.total_milliseconds()));
+            interruptible_wait(static_cast<unsigned long>(rel_time.total_milliseconds()));
         }
     }
 
@@ -285,32 +285,32 @@ namespace boost
         return get_id()!=other.get_id();
     }
 
-    class thread::cancel_handle
+    class thread::interruption_handle
     {
     private:
         boost::detail::win32::handle_manager handle;
         friend class thread;
-        friend cancel_handle this_thread::get_cancel_handle();
+        friend interruption_handle this_thread::get_interruption_handle();
 
-        cancel_handle(detail::win32::handle h_):
+        interruption_handle(detail::win32::handle h_):
             handle(h_)
         {}
     public:
-        cancel_handle(cancel_handle const& other):
+        interruption_handle(interruption_handle const& other):
             handle(other.handle.duplicate())
         {}
-        cancel_handle():
+        interruption_handle():
             handle(0)
         {}
 
-        void swap(cancel_handle& other)
+        void swap(interruption_handle& other)
         {
             handle.swap(other.handle);
         }
         
-        cancel_handle& operator=(cancel_handle const& other)
+        interruption_handle& operator=(interruption_handle const& other)
         {
-            cancel_handle temp(other);
+            interruption_handle temp(other);
             swap(temp);
             return *this;
         }
@@ -320,7 +320,7 @@ namespace boost
             handle=0;
         }
 
-        void cancel()
+        void interrupt()
         {
             if(handle)
             {
@@ -328,10 +328,10 @@ namespace boost
             }
         }
 
-        typedef void(cancel_handle::*bool_type)();
+        typedef void(interruption_handle::*bool_type)();
         operator bool_type() const
         {
-            return handle?&cancel_handle::cancel:0;
+            return handle?&interruption_handle::interrupt:0;
         }
     };
         

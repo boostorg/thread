@@ -14,7 +14,7 @@
 
 namespace boost
 {
-    class thread_cancelled
+    class thread_interrupted
     {};
 
     namespace detail
@@ -33,15 +33,15 @@ namespace boost
             bool join_started;
             bool joined;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
-            bool cancel_enabled;
-            bool cancel_requested;
+            bool interrupt_enabled;
+            bool interrupt_requested;
             pthread_cond_t* current_cond;
 
             thread_data_base():
                 done(false),join_started(false),joined(false),
                 thread_exit_callbacks(0),
-                cancel_enabled(true),
-                cancel_requested(false),
+                interrupt_enabled(true),
+                interrupt_requested(false),
                 current_cond(0)
             {}
             virtual ~thread_data_base()
@@ -52,37 +52,37 @@ namespace boost
 
         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
 
-        class cancel_wrapper
+        class interrupt_wrapper
         {
             thread_data_base* const thread_info;
 
-            void check_cancel()
+            void check_for_interruption()
             {
-                if(thread_info->cancel_requested)
+                if(thread_info->interrupt_requested)
                 {
-                    thread_info->cancel_requested=false;
-                    throw thread_cancelled();
+                    thread_info->interrupt_requested=false;
+                    throw thread_interrupted();
                 }
             }
             
         public:
-            explicit cancel_wrapper(pthread_cond_t* cond):
+            explicit interrupt_wrapper(pthread_cond_t* cond):
                 thread_info(detail::get_current_thread_data())
             {
-                if(thread_info && thread_info->cancel_enabled)
+                if(thread_info && thread_info->interrupt_enabled)
                 {
                     lock_guard<mutex> guard(thread_info->data_mutex);
-                    check_cancel();
+                    check_for_interruption();
                     thread_info->current_cond=cond;
                 }
             }
-            ~cancel_wrapper()
+            ~interrupt_wrapper()
             {
-                if(thread_info && thread_info->cancel_enabled)
+                if(thread_info && thread_info->interrupt_enabled)
                 {
                     lock_guard<mutex> guard(thread_info->data_mutex);
                     thread_info->current_cond=NULL;
-                    check_cancel();
+                    check_for_interruption();
                 }
             }
         };

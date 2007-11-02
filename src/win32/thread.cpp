@@ -166,7 +166,7 @@ namespace boost
         {
             thread_info->run();
         }
-        catch(thread_cancelled const&)
+        catch(thread_interrupted const&)
         {
         }
         catch(...)
@@ -204,7 +204,7 @@ namespace boost
             externally_launched_thread()
             {
                 ++count;
-                cancel_enabled=false;
+                interruption_enabled=false;
                 thread_handle=detail::win32::duplicate_handle(detail::win32::GetCurrentThread());
             }
             
@@ -266,10 +266,10 @@ namespace boost
         return local_thread_info?thread::id(local_thread_info->id):thread::id();
     }
 
-    thread::cancel_handle thread::get_cancel_handle() const
+    thread::interruption_handle thread::get_interruption_handle() const
     {
         boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
-        return local_thread_info?thread::cancel_handle(local_thread_info->cancel_handle.duplicate()):thread::cancel_handle();
+        return local_thread_info?thread::interruption_handle(local_thread_info->interruption_handle.duplicate()):thread::interruption_handle();
     }
     
     bool thread::joinable() const
@@ -282,7 +282,7 @@ namespace boost
         boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            this_thread::cancellable_wait(local_thread_info->thread_handle,detail::win32::infinite);
+            this_thread::interruptible_wait(local_thread_info->thread_handle,detail::win32::infinite);
             release_handle();
         }
     }
@@ -292,7 +292,7 @@ namespace boost
         boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            if(!this_thread::cancellable_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
+            if(!this_thread::interruptible_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
             {
                 return false;
             }
@@ -312,19 +312,19 @@ namespace boost
         thread_info=0;
     }
     
-    void thread::cancel()
+    void thread::interrupt()
     {
         boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            detail::win32::SetEvent(local_thread_info->cancel_handle);
+            detail::win32::SetEvent(local_thread_info->interruption_handle);
         }
     }
     
-    bool thread::cancellation_requested() const
+    bool thread::interruption_requested() const
     {
         boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
-        return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->cancel_handle,0)==0);
+        return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
     }
     
     unsigned thread::hardware_concurrency()
@@ -348,24 +348,24 @@ namespace boost
 
     namespace this_thread
     {
-        thread::cancel_handle get_cancel_handle()
+        thread::interruption_handle get_interruption_handle()
         {
-            return get_current_thread_data()?thread::cancel_handle(get_current_thread_data()->cancel_handle.duplicate()):thread::cancel_handle();
+            return get_current_thread_data()?thread::interruption_handle(get_current_thread_data()->interruption_handle.duplicate()):thread::interruption_handle();
         }
 
-        bool cancellable_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds)
+        bool interruptible_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds)
         {
             detail::win32::handle handles[2]={0};
             unsigned handle_count=0;
-            unsigned cancel_index=~0U;
+            unsigned interruption_index=~0U;
             if(handle_to_wait_for!=detail::win32::invalid_handle_value)
             {
                 handles[handle_count++]=handle_to_wait_for;
             }
-            if(get_current_thread_data() && get_current_thread_data()->cancel_enabled)
+            if(get_current_thread_data() && get_current_thread_data()->interruption_enabled)
             {
-                cancel_index=handle_count;
-                handles[handle_count++]=get_current_thread_data()->cancel_handle;
+                interruption_index=handle_count;
+                handles[handle_count++]=get_current_thread_data()->interruption_handle;
             }
         
             if(handle_count)
@@ -375,10 +375,10 @@ namespace boost
                 {
                     return true;
                 }
-                else if(notified_index==cancel_index)
+                else if(notified_index==interruption_index)
                 {
-                    detail::win32::ResetEvent(get_current_thread_data()->cancel_handle);
-                    throw thread_cancelled();
+                    detail::win32::ResetEvent(get_current_thread_data()->interruption_handle);
+                    throw thread_interrupted();
                 }
             }
             else
@@ -393,23 +393,23 @@ namespace boost
             return thread::id(detail::win32::GetCurrentThreadId());
         }
 
-        void cancellation_point()
+        void interruption_point()
         {
-            if(cancellation_enabled() && cancellation_requested())
+            if(interruption_enabled() && interruption_requested())
             {
-                detail::win32::ResetEvent(get_current_thread_data()->cancel_handle);
-                throw thread_cancelled();
+                detail::win32::ResetEvent(get_current_thread_data()->interruption_handle);
+                throw thread_interrupted();
             }
         }
         
-        bool cancellation_enabled()
+        bool interruption_enabled()
         {
-            return get_current_thread_data() && get_current_thread_data()->cancel_enabled;
+            return get_current_thread_data() && get_current_thread_data()->interruption_enabled;
         }
         
-        bool cancellation_requested()
+        bool interruption_requested()
         {
-            return get_current_thread_data() && (detail::win32::WaitForSingleObject(get_current_thread_data()->cancel_handle,0)==0);
+            return get_current_thread_data() && (detail::win32::WaitForSingleObject(get_current_thread_data()->interruption_handle,0)==0);
         }
 
         void yield()
@@ -417,36 +417,36 @@ namespace boost
             detail::win32::Sleep(0);
         }
         
-        disable_cancellation::disable_cancellation():
-            cancel_was_enabled(cancellation_enabled())
+        disable_interruption::disable_interruption():
+            interruption_was_enabled(interruption_enabled())
         {
-            if(cancel_was_enabled)
+            if(interruption_was_enabled)
             {
-                get_current_thread_data()->cancel_enabled=false;
+                get_current_thread_data()->interruption_enabled=false;
             }
         }
         
-        disable_cancellation::~disable_cancellation()
+        disable_interruption::~disable_interruption()
         {
             if(get_current_thread_data())
             {
-                get_current_thread_data()->cancel_enabled=cancel_was_enabled;
+                get_current_thread_data()->interruption_enabled=interruption_was_enabled;
             }
         }
 
-        restore_cancellation::restore_cancellation(disable_cancellation& d)
+        restore_interruption::restore_interruption(disable_interruption& d)
         {
-            if(d.cancel_was_enabled)
+            if(d.interruption_was_enabled)
             {
-                get_current_thread_data()->cancel_enabled=true;
+                get_current_thread_data()->interruption_enabled=true;
             }
         }
         
-        restore_cancellation::~restore_cancellation()
+        restore_interruption::~restore_interruption()
         {
             if(get_current_thread_data())
             {
-                get_current_thread_data()->cancel_enabled=false;
+                get_current_thread_data()->interruption_enabled=false;
             }
         }
     }

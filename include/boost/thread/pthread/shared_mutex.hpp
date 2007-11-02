@@ -53,7 +53,7 @@ namespace boost
 
         void lock_shared()
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -85,7 +85,7 @@ namespace boost
 
         bool timed_lock_shared(system_time const& timeout)
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -126,7 +126,7 @@ namespace boost
 
         void lock()
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -146,7 +146,7 @@ namespace boost
 
         bool timed_lock(system_time const& timeout)
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
             while(true)
@@ -193,7 +193,7 @@ namespace boost
 
         void lock_upgrade()
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
             while(true)
             {
@@ -210,7 +210,7 @@ namespace boost
 
         bool timed_lock_upgrade(system_time const& timeout)
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
             while(true)
             {
@@ -258,7 +258,7 @@ namespace boost
 
         void unlock_upgrade_and_lock()
         {
-            boost::this_thread::disable_cancellation no_cancel;
+            boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
             --state.shared_count;
             while(true)

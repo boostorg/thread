@@ -189,21 +189,21 @@ void test_condition_waits()
     timed_test(&do_test_condition_waits, 12);
 }
 
-void do_test_condition_wait_is_a_cancellation_point()
+void do_test_condition_wait_is_a_interruption_point()
 {
     condition_test_data data;
 
     boost::thread thread(bind(&condition_test_thread, &data));
 
-    thread.cancel();
+    thread.interrupt();
     thread.join();
     BOOST_CHECK_EQUAL(data.awoken,0);
 }
 
 
-void test_condition_wait_is_a_cancellation_point()
+void test_condition_wait_is_a_interruption_point()
 {
-    timed_test(&do_test_condition_wait_is_a_cancellation_point, 1);
+    timed_test(&do_test_condition_wait_is_a_interruption_point, 1);
 }
 
 
@@ -215,7 +215,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_condition_notify_one));
     test->add(BOOST_TEST_CASE(&test_condition_notify_all));
     test->add(BOOST_TEST_CASE(&test_condition_waits));
-    test->add(BOOST_TEST_CASE(&test_condition_wait_is_a_cancellation_point));
+    test->add(BOOST_TEST_CASE(&test_condition_wait_is_a_interruption_point));
 
     return test;
 }

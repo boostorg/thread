@@ -87,7 +87,7 @@ namespace boost
                 {
                     thread_info->run();
                 }
-                catch(thread_cancelled const&)
+                catch(thread_interrupted const&)
                 {
                 }
                 catch(...)
@@ -340,13 +340,13 @@ namespace boost
         }
     }
 
-    void thread::cancel()
+    void thread::interrupt()
     {
         boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
-            local_thread_info->cancel_requested=true;
+            local_thread_info->interrupt_requested=true;
             if(local_thread_info->current_cond)
             {
                 int const res=pthread_cond_broadcast(local_thread_info->current_cond);
@@ -354,31 +354,45 @@ namespace boost
             }
         }
     }
+
+    bool thread::interruption_requested() const
+    {
+        boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        if(local_thread_info)
+        {
+            lock_guard<mutex> lk(local_thread_info->data_mutex);
+            return local_thread_info->interrupt_requested;
+        }
+        else
+        {
+            return false;
+        }
+    }
     
 
     namespace this_thread
     {
-        void cancellation_point()
+        void interruption_point()
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
-            if(thread_info && thread_info->cancel_enabled)
+            if(thread_info && thread_info->interrupt_enabled)
             {
                 lock_guard<mutex> lg(thread_info->data_mutex);
-                if(thread_info->cancel_requested)
+                if(thread_info->interrupt_requested)
                 {
-                    thread_info->cancel_requested=false;
-                    throw thread_cancelled();
+                    thread_info->interrupt_requested=false;
+                    throw thread_interrupted();
                 }
             }
         }
         
-        bool cancellation_enabled()
+        bool interruption_enabled()
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
-            return thread_info && thread_info->cancel_enabled;
+            return thread_info && thread_info->interrupt_enabled;
         }
         
-        bool cancellation_requested()
+        bool interruption_requested()
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(!thread_info)
@@ -388,40 +402,40 @@ namespace boost
             else
             {
                 lock_guard<mutex> lg(thread_info->data_mutex);
-                return thread_info->cancel_requested;
+                return thread_info->interrupt_requested;
             }
         }
 
-        disable_cancellation::disable_cancellation():
-            cancel_was_enabled(cancellation_enabled())
+        disable_interruption::disable_interruption():
+            interruption_was_enabled(interruption_enabled())
         {
-            if(cancel_was_enabled)
+            if(interruption_was_enabled)
             {
-                detail::get_current_thread_data()->cancel_enabled=false;
+                detail::get_current_thread_data()->interrupt_enabled=false;
             }
         }
         
-        disable_cancellation::~disable_cancellation()
+        disable_interruption::~disable_interruption()
         {
             if(detail::get_current_thread_data())
             {
-                detail::get_current_thread_data()->cancel_enabled=cancel_was_enabled;
+                detail::get_current_thread_data()->interrupt_enabled=interruption_was_enabled;
             }
         }
 
-        restore_cancellation::restore_cancellation(disable_cancellation& d)
+        restore_interruption::restore_interruption(disable_interruption& d)
         {
-            if(d.cancel_was_enabled)
+            if(d.interruption_was_enabled)
             {
-                detail::get_current_thread_data()->cancel_enabled=true;
+                detail::get_current_thread_data()->interrupt_enabled=true;
             }
         }
         
-        restore_cancellation::~restore_cancellation()
+        restore_interruption::~restore_interruption()
         {
             if(detail::get_current_thread_data())
             {
-                detail::get_current_thread_data()->cancel_enabled=false;
+                detail::get_current_thread_data()->interrupt_enabled=false;
             }
         }
     }
