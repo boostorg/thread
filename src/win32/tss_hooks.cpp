@@ -1,5 +1,7 @@
 // Copyright (C) 2004 Michael Glassford
 // Copyright (C) 2006 Roland Schwarz
+// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007 David Deakins
 // Use, modification and distribution are subject to the
 // Boost Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +20,10 @@
 
     #define WIN32_LEAN_AND_MEAN
     #include <windows.h>
+
+#   if defined(UNDER_CE) && !defined(TLS_OUT_OF_INDEXES)
+#       define TLS_OUT_OF_INDEXES 0xFFFFFFFF
+#   endif
 
     namespace
     {

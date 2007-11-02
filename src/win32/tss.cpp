@@ -1,5 +1,7 @@
 // Copyright (C) 2001-2003 William E. Kempf
 // Copyright (C) 2006 Roland Schwarz
+// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007 David Deakins
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,9 +19,10 @@
 #include <stdexcept>
 #include <cassert>
 
-#if defined(BOOST_HAS_WINTHREADS)
-#   include <windows.h>
-#   include <boost/thread/detail/tss_hooks.hpp>
+#include <windows.h>
+#include <boost/thread/detail/tss_hooks.hpp>
+#if defined(UNDER_CE) && !defined(TLS_OUT_OF_INDEXES)
+#    define TLS_OUT_OF_INDEXES 0xFFFFFFFF
 #endif
 
 namespace {
@@ -30,13 +33,7 @@ typedef std::vector<boost::function1<void, void*>*> tss_data_cleanup_handlers_ty
 boost::once_flag tss_data_once = BOOST_ONCE_INIT;
 boost::mutex* tss_data_mutex = 0;
 tss_data_cleanup_handlers_type* tss_data_cleanup_handlers = 0;
-#if defined(BOOST_HAS_WINTHREADS)
     DWORD tss_data_native_key=TLS_OUT_OF_INDEXES;
-#elif defined(BOOST_HAS_PTHREADS)
-    pthread_key_t tss_data_native_key;
-#elif defined(BOOST_HAS_MPTASKS)
-    TaskStorageIndex tss_data_native_key;
-#endif
 int tss_data_use = 0;
 
 void tss_data_inc_use(boost::mutex::scoped_lock& lk)
@@ -58,15 +55,8 @@ void tss_data_dec_use(boost::mutex::scoped_lock& lk)
         lk.unlock();
         delete tss_data_mutex;
         tss_data_mutex = 0;
-#if defined(BOOST_HAS_WINTHREADS)
         TlsFree(tss_data_native_key);
         tss_data_native_key=TLS_OUT_OF_INDEXES;
-#elif defined(BOOST_HAS_PTHREADS)
-        pthread_key_delete(tss_data_native_key);
-#elif defined(BOOST_HAS_MPTASKS)
-        // Don't know what to put here.
-        // But MPTASKS isn't currently maintained anyways...
-#endif
     }
 }
 
@@ -79,9 +69,7 @@ extern "C" void cleanup_slots(void* p)
         (*(*tss_data_cleanup_handlers)[i])((*slots)[i]);
         (*slots)[i] = 0;
     }
-#if defined(BOOST_HAS_WINTHREADS)
     TlsSetValue(tss_data_native_key,0);
-#endif
     tss_data_dec_use(lock);
     delete slots;
 }
@@ -95,7 +83,6 @@ void init_tss_data()
     if (temp_mutex.get() == 0)
         throw boost::thread_resource_error();
 
-#if defined(BOOST_HAS_WINTHREADS)
     //Force the cleanup implementation library to be linked in
     tss_cleanup_implemented();
 
@@ -103,15 +90,6 @@ void init_tss_data()
     tss_data_native_key = TlsAlloc();
     if (tss_data_native_key == TLS_OUT_OF_INDEXES)
         return;
-#elif defined(BOOST_HAS_PTHREADS)
-    int res = pthread_key_create(&tss_data_native_key, &cleanup_slots);
-    if (res != 0)
-        return;
-#elif defined(BOOST_HAS_MPTASKS)
-    OSStatus status = MPAllocateTaskStorageIndex(&tss_data_native_key);
-    if (status != noErr)
-        return;
-#endif
 
     // The life time of cleanup handlers and mutex is beeing
     // managed by a reference counting technique.
@@ -123,7 +101,6 @@ void init_tss_data()
     tss_data_mutex = temp_mutex.release();
 }
 
-#if defined(BOOST_HAS_WINTHREADS)
 tss_slots* get_slots(bool alloc);
 
 void __cdecl tss_thread_exit()
@@ -132,39 +109,22 @@ void __cdecl tss_thread_exit()
     if (slots)
         cleanup_slots(slots);
 }
-#endif
 
 tss_slots* get_slots(bool alloc)
 {
     tss_slots* slots = 0;
 
-#if defined(BOOST_HAS_WINTHREADS)
     slots = static_cast<tss_slots*>(
         TlsGetValue(tss_data_native_key));
-#elif defined(BOOST_HAS_PTHREADS)
-    slots = static_cast<tss_slots*>(
-        pthread_getspecific(tss_data_native_key));
-#elif defined(BOOST_HAS_MPTASKS)
-    slots = static_cast<tss_slots*>(
-        MPGetTaskStorageValue(tss_data_native_key));
-#endif
 
     if (slots == 0 && alloc)
     {
         std::auto_ptr<tss_slots> temp(new tss_slots);
 
-#if defined(BOOST_HAS_WINTHREADS)
         if (at_thread_exit(&tss_thread_exit) == -1)
             return 0;
         if (!TlsSetValue(tss_data_native_key, temp.get()))
             return 0;
-#elif defined(BOOST_HAS_PTHREADS)
-        if (pthread_setspecific(tss_data_native_key, temp.get()) != 0)
-            return 0;
-#elif defined(BOOST_HAS_MPTASKS)
-        if (MPSetTaskStorageValue(tss_data_native_key, temp.get()) != noErr)
-            return 0;
-#endif
         {
             boost::mutex::scoped_lock lock(*tss_data_mutex);
             tss_data_inc_use(lock);

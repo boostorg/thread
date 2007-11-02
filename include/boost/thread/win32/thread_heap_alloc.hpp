@@ -25,6 +25,10 @@ namespace boost
 
 #else
 
+# ifdef HeapAlloc
+# undef HeapAlloc
+# endif
+
 namespace boost
 {
     namespace detail
