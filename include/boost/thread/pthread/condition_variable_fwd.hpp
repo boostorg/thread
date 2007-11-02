@@ -19,7 +19,6 @@ namespace boost
         condition_variable(condition_variable&);
         condition_variable& operator=(condition_variable&);
 
-        struct interruption_checker;
     public:
         condition_variable();
         ~condition_variable();

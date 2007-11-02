@@ -52,7 +52,7 @@ namespace boost
 
         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
 
-        class interrupt_wrapper
+        class interruption_checker
         {
             thread_data_base* const thread_info;
 
@@ -66,7 +66,7 @@ namespace boost
             }
             
         public:
-            explicit interrupt_wrapper(pthread_cond_t* cond):
+            explicit interruption_checker(pthread_cond_t* cond):
                 thread_info(detail::get_current_thread_data())
             {
                 if(thread_info && thread_info->interrupt_enabled)
@@ -76,7 +76,7 @@ namespace boost
                     thread_info->current_cond=cond;
                 }
             }
-            ~interrupt_wrapper()
+            ~interruption_checker()
             {
                 if(thread_info && thread_info->interrupt_enabled)
                 {
