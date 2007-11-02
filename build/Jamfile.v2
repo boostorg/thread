@@ -1,84 +1,177 @@
-# Copyright 2006 Roland Schwarz.
+# $Id$
+# Copyright 2006-2007 Roland Schwarz.
 # Copyright 2007 Anthony Williams
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
 
+#########################################################################
+# The boost threading library can be built on top of different API's
+# Currently this is the win32 API and the pthreads API.
+# Pthread is native on unix variants.
+# To get pthread on windows you need the pthread win32 library
+# http://sourceware.org/pthreads-win32 which is available under LGPL.
+#
+# You need to provide the include path and lib path in the variables
+# PTW32_INCLUDE and PTW32_LIB respectively. You can specify these
+# paths in site-config.jam, user-config.jam or in the environment.
+# A new feature is provided to request a specific API:
+# <threadapi>win32 and <threadapi)pthread.
+#
+# The naming of the resulting libraries is mostly the same for the
+# variant native to the build platform, i.e.
+# boost_thread and the boost specific tagging.
+# For the library variant that is not native on the build platform
+# an additional tag is applied:
+# boost_thread_pthread for the pthread variant on windows, and
+# boost_thread_win32 for the win32 variant (likely when built on cygwin).
+#
+# To request the pthread variant on windows, from boost root you would
+# say e.g:
+# bjam msvc-8.0 --with-thread install threadapi=pthread
+#########################################################################
+
 import os ;
 import feature ;
+import indirect ;
+import path ;
 
 project boost/thread
     : source-location ../src
     : requirements <threading>multi
       <link>static:<define>BOOST_THREAD_BUILD_LIB=1
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-    : default-build <threading>multi 
+      -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
+      <tag>@$(__name__).tag
+    : default-build <threading>multi
     ;
 
-BOOST_PTHREAD_OPTS = <define>BOOST_THREAD_POSIX ;
-
-if [ os.name ] = "NT"
+local rule default_threadapi ( )
 {
-        AVAILABLE_THREAD_APIS = win32 ;
+    local api = pthread ;
+    if [ os.name ] = "NT" { api = win32 ; }
+    return $(api) ;
+}
 
-       	local PTW32_INCLUDE = [ modules.peek : PTW32_INCLUDE ] ;
-        local PTW32_LIB = [ modules.peek : PTW32_LIB ] ;
-	if $(PTW32_INCLUDE) && $(PTW32_LIB) 
-	{
-                BOOST_PTHREAD_OPTS +=
-                        <define>BOOST_HAS_PTHREADS
-                        <include>$(PTW32_INCLUDE)
-                        <library>$(PTW32_LIB) ;
+feature.feature threadapi : pthread win32 : propagated ;
+feature.set-default threadapi : [ default_threadapi ] ;
+
+rule tag ( name : type ? : property-set )
+{
+    local result = $(name) ;
+    
+    if $(type) in STATIC_LIB SHARED_LIB IMPORT_LIB
+    {
+        local api = [ $(property-set).get <threadapi> ] ;
         
-                AVAILABLE_THREAD_APIS +=  pthread ;
+        # non native api gets additional tag
+        if $(api) != [ default_threadapi ] {
+            result = $(result)_$(api) ;
         }
-        else
-        {
-		echo "******************************************************" ;
-		echo "Building Boost.Thread without optional pthread support" ;
-		echo "If you need pthread you should specify the paths." ;
-		echo "For example:" ;
-		echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include" ;
-		echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib\\pthreadVC2.lib" ;
-		echo "******************************************************" ;
-                BOOST_PTHREAD_OPTS += <build>no ;
-        }
+    }
+    
+    # forward to the boost tagging rule
+    return  [ indirect.call $(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag 
+                $(result) : $(type) : $(property-set) ] ;
 }
-else
+
+
+rule requirements ( properties * )
 {
-        AVAILABLE_THREAD_APIS = pthread ;
-        if [ os.name ] = CYGWIN
+    local result ;
+    if <threadapi>pthread in $(properties)
+    {
+        result += <define>BOOST_THREAD_POSIX ;
+        if <target-os>windows in $(properties) 
         {
-                AVAILABLE_THREAD_APIS += win32 ;
-        }        
+            local PTW32_INCLUDE ;
+            local PTW32_LIB ;
+            PTW32_INCLUDE  = [ modules.peek             : PTW32_INCLUDE ] ;
+            PTW32_LIB      = [ modules.peek             : PTW32_LIB     ] ;
+            PTW32_INCLUDE ?= [ modules.peek user-config : PTW32_INCLUDE ] ;
+            PTW32_LIB     ?= [ modules.peek user-config : PTW32_LIB     ] ;
+            PTW32_INCLUDE ?= [ modules.peek site-config : PTW32_INCLUDE ] ;
+            PTW32_LIB     ?= [ modules.peek site-config : PTW32_LIB     ] ;
+
+            if ! ( $(PTW32_INCLUDE) && $(PTW32_LIB) )
+            {
+                if  ! $(.notified)
+                {
+                    echo "************************************************************" ;
+                    echo "Trying to build Boost.Thread with pthread support."           ;
+                    echo "If you need pthread you should specify the paths."            ;
+                    echo "You can specify them in site-config.jam, user-config.jam"     ;
+                    echo "or in the environment."                                       ;
+                    echo "For example:"                                                 ;
+                    echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include"  ;
+                    echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib"          ;
+                    echo "************************************************************" ;
+                    .notified = true ;
+                }
+                result = <build>no ;
+            }
+            else
+            {
+                local include_path = [ path.make $(PTW32_INCLUDE) ] ;
+                local lib_path = [ path.make $(PTW32_LIB) ] ;
+                result += <include>$(include_path) ;
+                local libname = pthread ;
+                if <toolset>msvc in $(properties)
+                {
+                    libname = $(libname)VC2.lib ;
+                }
+                if <toolset>gcc in $(properties)
+                {
+                    libname = lib$(libname)GC2.a ;
+                }
+                lib_path = [ path.glob $(lib_path) : $(libname) ] ;
+                if ! $(lib_path)
+                {
+                    if  ! $(.notified)
+                    {
+                        echo "************************************************************" ;
+                        echo "Trying to build Boost.Thread with pthread support."           ;
+                        echo "But the library" $(libname) "could not be found in path"      ;
+                        echo $(PTW32_LIB)                                                   ;
+                        echo "************************************************************" ;
+                        .notified = true ;
+                    }
+                    result = <build>no ;
+                }
+                result += <library>$(lib_path) ;
+            
+            }
+        }
+    }
+    return $(result) ;
 }
 
-feature.feature thrd-api : $(AVAILABLE_THREAD_APIS) : propagated composite ;
-feature.compose <thrd-api>pthread : $(BOOST_PTHREAD_OPTS) ;
+alias thread_sources
+    : ## win32 sources ##
+      win32/thread.cpp
+      win32/exceptions.cpp
+      win32/xtime.cpp
+      win32/tss.cpp
+      win32/tss_hooks.cpp
+      win32/tss_dll.cpp
+      win32/tss_pe.cpp
+    : ## requirements ##
+      <threadapi>win32
+    ;
 
-lib boost_thread 
-	: ## sources ##
-	  win32/thread.cpp
-	  win32/exceptions.cpp
-	  win32/xtime.cpp
-	  win32/tss.cpp
-	  win32/tss_hooks.cpp
-	  win32/tss_dll.cpp
-	  win32/tss_pe.cpp
-	: ## requirements ##
-            <thrd-api>win32
-	;
+alias thread_sources
+    : ## pthread sources ##
+      pthread/thread.cpp
+      pthread/exceptions.cpp
+      pthread/xtime.cpp
+      pthread/tss.cpp
+    : ## requirements ##
+      <threadapi>pthread
+    ;
 
-# build the pthread based variant
+explicit thread_sources ;
+
 lib boost_thread
-	: ## sources ##
-	    pthread/thread.cpp
-	    pthread/exceptions.cpp
-	    pthread/xtime.cpp
-	    pthread/tss.cpp
-	: ## requirements ##
-            <thrd-api>pthread
-            $(BOOST_PTHREAD_OPTS)
-	;
-	
-boost-install boost_thread ;
+    : thread_sources
+    : <conditional>@requirements
+    ;
