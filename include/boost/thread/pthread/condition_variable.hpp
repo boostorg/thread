@@ -28,15 +28,13 @@ namespace boost
     }
     inline condition_variable::~condition_variable()
     {
-        int const res=pthread_cond_destroy(&cond);
-        BOOST_ASSERT(!res);
+        BOOST_VERIFY(0==pthread_cond_destroy(&cond));
     }
 
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
         detail::interruption_checker check_for_interruption(&cond);
-        int const cond_res=pthread_cond_wait(&cond,m.mutex()->native_handle());
-        BOOST_ASSERT(!cond_res);
+        BOOST_VERIFY(0==pthread_cond_wait(&cond,m.mutex()->native_handle()));
     }
 
     inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
@@ -54,14 +52,12 @@ namespace boost
 
     inline void condition_variable::notify_one()
     {
-        int const res=pthread_cond_signal(&cond);
-        BOOST_ASSERT(!res);
+        BOOST_VERIFY(0==pthread_cond_signal(&cond));
     }
         
     inline void condition_variable::notify_all()
     {
-        int const res=pthread_cond_broadcast(&cond);
-        BOOST_ASSERT(!res);
+        BOOST_VERIFY(0==pthread_cond_broadcast(&cond));
     }
     
     class condition_variable_any
@@ -83,17 +79,14 @@ namespace boost
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
-                int const destroy_res=pthread_mutex_destroy(&internal_mutex);
-                BOOST_ASSERT(!destroy_res);
+                BOOST_VERIFY(0==pthread_mutex_destroy(&internal_mutex));
                 throw thread_resource_error();
             }
         }
         ~condition_variable_any()
         {
-            int const res=pthread_mutex_destroy(&internal_mutex);
-            BOOST_ASSERT(!res);
-            int const res2=pthread_cond_destroy(&cond);
-            BOOST_ASSERT(!res2);
+            BOOST_VERIFY(0==pthread_mutex_destroy(&internal_mutex));
+            BOOST_VERIFY(0==pthread_cond_destroy(&cond));
         }
         
         template<typename lock_type>
@@ -160,15 +153,13 @@ namespace boost
         void notify_one()
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-            int const res=pthread_cond_signal(&cond);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_cond_signal(&cond));
         }
         
         void notify_all()
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-            int const res=pthread_cond_broadcast(&cond);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_cond_broadcast(&cond));
         }
     };
 

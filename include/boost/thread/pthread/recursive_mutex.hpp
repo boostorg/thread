@@ -53,25 +53,21 @@ namespace boost
             {
                 throw thread_resource_error();
             }
-            int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-            BOOST_ASSERT(!destroy_attr_res);
+            BOOST_VERIFY(0==pthread_mutexattr_destroy(&attr));
         }
         ~recursive_mutex()
         {
-            int const res=pthread_mutex_destroy(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_destroy(&m));
         }
         
         void lock()
         {
-            int const res=pthread_mutex_lock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            int const res=pthread_mutex_unlock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -117,12 +113,10 @@ namespace boost
             int const res=pthread_mutex_init(&m,&attr);
             if(res)
             {
-                int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-                BOOST_ASSERT(!destroy_attr_res);
+                BOOST_VERIFY(0==pthread_mutexattr_destroy(&attr));
                 throw thread_resource_error();
             }
-            int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-            BOOST_ASSERT(!destroy_attr_res);
+            BOOST_VERIFY(0==pthread_mutexattr_destroy(&attr));
 #else
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
@@ -132,8 +126,7 @@ namespace boost
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
-                int const destroy_res=pthread_mutex_destroy(&m);
-                BOOST_ASSERT(!destroy_res);
+                BOOST_VERIFY(0==pthread_mutex_destroy(&m));
                 throw thread_resource_error();
             }
             is_locked=false;
@@ -142,11 +135,9 @@ namespace boost
         }
         ~recursive_timed_mutex()
         {
-            int const res=pthread_mutex_destroy(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_destroy(&m));
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
-            int const res2=pthread_cond_destroy(&cond);
-            BOOST_ASSERT(!res2);
+            BOOST_VERIFY(0==pthread_cond_destroy(&cond));
 #endif
         }
 
@@ -159,14 +150,12 @@ namespace boost
 #ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
         void lock()
         {
-            int const res=pthread_mutex_lock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            int const res=pthread_mutex_unlock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -194,8 +183,7 @@ namespace boost
             
             while(is_locked)
             {
-                int const cond_res=pthread_cond_wait(&cond,&m);
-                BOOST_ASSERT(!cond_res);
+                BOOST_VERIFY(0==pthread_cond_wait(&cond,&m));
             }
             is_locked=true;
             ++count;
@@ -209,8 +197,7 @@ namespace boost
             {
                 is_locked=false;
             }
-            int const res=pthread_cond_signal(&cond);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(0==pthread_cond_signal(&cond));
         }
         
         bool try_lock()

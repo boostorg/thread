@@ -33,13 +33,11 @@ namespace boost {
             explicit pthread_mutex_scoped_lock(pthread_mutex_t* mutex_):
                 mutex(mutex_)
             {
-                int const res=pthread_mutex_lock(mutex);
-                BOOST_ASSERT(!res);
+                BOOST_VERIFY(0==pthread_mutex_lock(mutex));
             }
             ~pthread_mutex_scoped_lock()
             {
-                int const res=pthread_mutex_unlock(mutex);
-                BOOST_ASSERT(!res);
+                BOOST_VERIFY(0==pthread_mutex_unlock(mutex));
             }
         };
     }
