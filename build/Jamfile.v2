@@ -53,8 +53,9 @@ local rule default_threadapi ( )
     return $(api) ;
 }
 
-feature.feature threadapi : pthread win32 : propagated ;
+feature.feature threadapi : pthread win32 : propagated composite ;
 feature.set-default threadapi : [ default_threadapi ] ;
+feature.compose <threadapi>pthread : <define>BOOST_THREAD_POSIX ;
 
 rule tag ( name : type ? : property-set )
 {
