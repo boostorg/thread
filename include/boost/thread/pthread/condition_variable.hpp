@@ -28,13 +28,13 @@ namespace boost
     }
     inline condition_variable::~condition_variable()
     {
-        BOOST_VERIFY(0==pthread_cond_destroy(&cond));
+        BOOST_VERIFY(!pthread_cond_destroy(&cond));
     }
 
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
         detail::interruption_checker check_for_interruption(&cond);
-        BOOST_VERIFY(0==pthread_cond_wait(&cond,m.mutex()->native_handle()));
+        BOOST_VERIFY(!pthread_cond_wait(&cond,m.mutex()->native_handle()));
     }
 
     inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
@@ -52,12 +52,12 @@ namespace boost
 
     inline void condition_variable::notify_one()
     {
-        BOOST_VERIFY(0==pthread_cond_signal(&cond));
+        BOOST_VERIFY(!pthread_cond_signal(&cond));
     }
         
     inline void condition_variable::notify_all()
     {
-        BOOST_VERIFY(0==pthread_cond_broadcast(&cond));
+        BOOST_VERIFY(!pthread_cond_broadcast(&cond));
     }
     
     class condition_variable_any
@@ -79,14 +79,14 @@ namespace boost
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
-                BOOST_VERIFY(0==pthread_mutex_destroy(&internal_mutex));
+                BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
                 throw thread_resource_error();
             }
         }
         ~condition_variable_any()
         {
-            BOOST_VERIFY(0==pthread_mutex_destroy(&internal_mutex));
-            BOOST_VERIFY(0==pthread_cond_destroy(&cond));
+            BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
+            BOOST_VERIFY(!pthread_cond_destroy(&cond));
         }
         
         template<typename lock_type>
@@ -153,13 +153,13 @@ namespace boost
         void notify_one()
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-            BOOST_VERIFY(0==pthread_cond_signal(&cond));
+            BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
         
         void notify_all()
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-            BOOST_VERIFY(0==pthread_cond_broadcast(&cond));
+            BOOST_VERIFY(!pthread_cond_broadcast(&cond));
         }
     };
 

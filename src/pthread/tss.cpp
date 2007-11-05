@@ -17,11 +17,6 @@
 #include <stdexcept>
 #include <cassert>
 
-#if defined(BOOST_HAS_WINTHREADS)
-#   include <windows.h>
-#   include <boost/thread/detail/tss_hooks.hpp>
-#endif
-
 namespace {
 
 typedef std::vector<void*> tss_slots;

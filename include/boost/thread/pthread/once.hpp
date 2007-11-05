@@ -13,45 +13,28 @@
 
 #include <pthread.h>
 #include <boost/assert.hpp>
+#include "pthread_mutex_scoped_lock.hpp"
 
 namespace boost {
 
     struct once_flag
     {
         pthread_mutex_t mutex;
-        unsigned flag;
+        unsigned long flag;
     };
 
 #define BOOST_ONCE_INIT {PTHREAD_MUTEX_INITIALIZER,0}
 
-    namespace detail
-    {
-        struct pthread_mutex_scoped_lock
-        {
-            pthread_mutex_t * mutex;
-            
-            explicit pthread_mutex_scoped_lock(pthread_mutex_t* mutex_):
-                mutex(mutex_)
-            {
-                BOOST_VERIFY(0==pthread_mutex_lock(mutex));
-            }
-            ~pthread_mutex_scoped_lock()
-            {
-                BOOST_VERIFY(0==pthread_mutex_unlock(mutex));
-            }
-        };
-    }
-
     template<typename Function>
     void call_once(once_flag& flag,Function f)
     {
-        long const function_complete_flag_value=0xc15730e2;
+        unsigned long const function_complete_flag_value=0xc15730e2ul;
 
 #ifdef BOOST_PTHREAD_HAS_ATOMICS
         if(::boost::detail::interlocked_read_acquire(&flag.flag)!=function_complete_flag_value)
         {
 #endif
-            detail::pthread_mutex_scoped_lock const lock(&flag.mutex);
+            pthread::pthread_mutex_scoped_lock const lock(&flag.mutex);
             if(flag.flag!=function_complete_flag_value)
             {
                 f();

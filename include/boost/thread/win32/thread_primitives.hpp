@@ -204,8 +204,7 @@ namespace boost
 
             inline void release_semaphore(handle semaphore,long count)
             {
-                bool const success=ReleaseSemaphore(semaphore,count,0)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(ReleaseSemaphore(semaphore,count,0)!=0);
             }
 
             class handle_manager
@@ -219,8 +218,7 @@ namespace boost
                 {
                     if(handle_to_manage && handle_to_manage!=invalid_handle_value)
                     {
-                        unsigned long const result=CloseHandle(handle_to_manage);
-                        BOOST_ASSERT(result);
+                        BOOST_VERIFY(CloseHandle(handle_to_manage));
                     }
                 }
                 
