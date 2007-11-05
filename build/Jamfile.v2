@@ -53,9 +53,8 @@ local rule default_threadapi ( )
     return $(api) ;
 }
 
-feature.feature threadapi : pthread win32 : propagated composite ;
+feature.feature threadapi : pthread win32 : propagated ;
 feature.set-default threadapi : [ default_threadapi ] ;
-feature.compose <threadapi>pthread : <define>BOOST_THREAD_POSIX ;
 
 rule tag ( name : type ? : property-set )
 {
@@ -76,6 +75,84 @@ rule tag ( name : type ? : property-set )
                 $(result) : $(type) : $(property-set) ] ;
 }
 
+rule win32_pthread_paths ( properties * )
+{
+    local result ;
+    local PTW32_INCLUDE ;
+    local PTW32_LIB ;
+    PTW32_INCLUDE  = [ modules.peek             : PTW32_INCLUDE ] ;
+    PTW32_LIB      = [ modules.peek             : PTW32_LIB     ] ;
+    PTW32_INCLUDE ?= [ modules.peek user-config : PTW32_INCLUDE ] ;
+    PTW32_LIB     ?= [ modules.peek user-config : PTW32_LIB     ] ;
+    PTW32_INCLUDE ?= [ modules.peek site-config : PTW32_INCLUDE ] ;
+    PTW32_LIB     ?= [ modules.peek site-config : PTW32_LIB     ] ;
+
+    if ! ( $(PTW32_INCLUDE) && $(PTW32_LIB) )
+    {
+        if  ! $(.notified)
+        {
+            echo "************************************************************" ;
+            echo "Trying to build Boost.Thread with pthread support."           ;
+            echo "If you need pthread you should specify the paths."            ;
+            echo "You can specify them in site-config.jam, user-config.jam"     ;
+            echo "or in the environment."                                       ;
+            echo "For example:"                                                 ;
+            echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include"  ;
+            echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib"          ;
+            echo "************************************************************" ;
+            .notified = true ;
+        }
+    }
+    else
+    {
+        local include_path = [ path.make $(PTW32_INCLUDE) ] ;
+        local lib_path = [ path.make $(PTW32_LIB) ] ;
+        local libname = pthread ;
+        if <toolset>msvc in $(properties)
+        {
+            libname = $(libname)VC2.lib ;
+        }
+        if <toolset>gcc in $(properties)
+        {
+            libname = lib$(libname)GC2.a ;
+        }
+        lib_path = [ path.glob $(lib_path) : $(libname) ] ;
+        if ! $(lib_path)
+        {
+            if  ! $(.notified)
+            {
+                echo "************************************************************" ;
+                echo "Trying to build Boost.Thread with pthread support."           ;
+                echo "But the library" $(libname) "could not be found in path"      ;
+                echo $(PTW32_LIB)                                                   ;
+                echo "************************************************************" ;
+                .notified = true ;
+            }
+        }
+        else 
+        {
+            result += <include>$(include_path) ;
+            result += <library>$(lib_path) ;
+        }
+    }
+    return $(result) ;
+}
+
+rule usage-requirements ( properties * )
+{
+    local result ;
+    if <threadapi>pthread in $(properties)
+    {
+        result += <define>BOOST_THREAD_POSIX ;
+        if <target-os>windows in $(properties)
+        {
+            result += [ win32_pthread_paths $(properties) ] ;
+            # TODO: What is for static linking? Is the <library> also needed
+            # in that case?
+        }
+    }
+    return $(result) ;
+}
 
 rule requirements ( properties * )
 {
@@ -85,62 +162,14 @@ rule requirements ( properties * )
         result += <define>BOOST_THREAD_POSIX ;
         if <target-os>windows in $(properties) 
         {
-            local PTW32_INCLUDE ;
-            local PTW32_LIB ;
-            PTW32_INCLUDE  = [ modules.peek             : PTW32_INCLUDE ] ;
-            PTW32_LIB      = [ modules.peek             : PTW32_LIB     ] ;
-            PTW32_INCLUDE ?= [ modules.peek user-config : PTW32_INCLUDE ] ;
-            PTW32_LIB     ?= [ modules.peek user-config : PTW32_LIB     ] ;
-            PTW32_INCLUDE ?= [ modules.peek site-config : PTW32_INCLUDE ] ;
-            PTW32_LIB     ?= [ modules.peek site-config : PTW32_LIB     ] ;
-
-            if ! ( $(PTW32_INCLUDE) && $(PTW32_LIB) )
+            local paths = [ win32_pthread_paths $(properties) ] ;
+            if $(paths)
             {
-                if  ! $(.notified)
-                {
-                    echo "************************************************************" ;
-                    echo "Trying to build Boost.Thread with pthread support."           ;
-                    echo "If you need pthread you should specify the paths."            ;
-                    echo "You can specify them in site-config.jam, user-config.jam"     ;
-                    echo "or in the environment."                                       ;
-                    echo "For example:"                                                 ;
-                    echo "PTW32_INCLUDE=C:\\Program Files\\ptw32\\Pre-built2\\include"  ;
-                    echo "PTW32_LIB=C:\\Program Files\\ptw32\\Pre-built2\\lib"          ;
-                    echo "************************************************************" ;
-                    .notified = true ;
-                }
-                result = <build>no ;
+                result += $(paths) ;
             }
             else
             {
-                local include_path = [ path.make $(PTW32_INCLUDE) ] ;
-                local lib_path = [ path.make $(PTW32_LIB) ] ;
-                result += <include>$(include_path) ;
-                local libname = pthread ;
-                if <toolset>msvc in $(properties)
-                {
-                    libname = $(libname)VC2.lib ;
-                }
-                if <toolset>gcc in $(properties)
-                {
-                    libname = lib$(libname)GC2.a ;
-                }
-                lib_path = [ path.glob $(lib_path) : $(libname) ] ;
-                if ! $(lib_path)
-                {
-                    if  ! $(.notified)
-                    {
-                        echo "************************************************************" ;
-                        echo "Trying to build Boost.Thread with pthread support."           ;
-                        echo "But the library" $(libname) "could not be found in path"      ;
-                        echo $(PTW32_LIB)                                                   ;
-                        echo "************************************************************" ;
-                        .notified = true ;
-                    }
-                    result = <build>no ;
-                }
-                result += <library>$(lib_path) ;
-            
+                result = <build>no ;
             }
         }
     }
@@ -173,4 +202,6 @@ explicit thread_sources ;
 lib boost_thread
     : thread_sources
     : <conditional>@requirements
+    :
+    : <conditional>@usage-requirements
     ;
