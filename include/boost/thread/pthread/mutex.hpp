@@ -42,17 +42,17 @@ namespace boost
         }
         ~mutex()
         {
-            BOOST_VERIFY(0==pthread_mutex_destroy(&m));
+            BOOST_VERIFY(!pthread_mutex_destroy(&m));
         }
         
         void lock()
         {
-            BOOST_VERIFY(0==pthread_mutex_lock(&m));
+            BOOST_VERIFY(!pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            BOOST_VERIFY(0==pthread_mutex_unlock(&m));
+            BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -95,7 +95,7 @@ namespace boost
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
-                BOOST_VERIFY(0==pthread_mutex_destroy(&m));
+                BOOST_VERIFY(!pthread_mutex_destroy(&m));
                 throw thread_resource_error();
             }
             is_locked=false;
@@ -103,9 +103,9 @@ namespace boost
         }
         ~timed_mutex()
         {
-            BOOST_VERIFY(0==pthread_mutex_destroy(&m));
+            BOOST_VERIFY(!pthread_mutex_destroy(&m));
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
-            BOOST_VERIFY(0==pthread_cond_destroy(&cond));
+            BOOST_VERIFY(!pthread_cond_destroy(&cond));
 #endif
         }
 
@@ -118,12 +118,12 @@ namespace boost
 #ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
         void lock()
         {
-            BOOST_VERIFY(0==pthread_mutex_lock(&m));
+            BOOST_VERIFY(!pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            BOOST_VERIFY(0==pthread_mutex_unlock(&m));
+            BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -145,7 +145,7 @@ namespace boost
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             while(is_locked)
             {
-                BOOST_VERIFY(0==pthread_cond_wait(&cond,&m));
+                BOOST_VERIFY(!pthread_cond_wait(&cond,&m));
             }
             is_locked=true;
         }
@@ -154,7 +154,7 @@ namespace boost
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             is_locked=false;
-            BOOST_VERIFY(0==pthread_cond_signal(&cond));
+            BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
         
         bool try_lock()

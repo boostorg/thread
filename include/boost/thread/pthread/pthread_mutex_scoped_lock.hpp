@@ -14,11 +14,11 @@ namespace boost
             explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_):
                 m(m_)
             {
-                BOOST_VERIFY(0==pthread_mutex_lock(m));
+                BOOST_VERIFY(!pthread_mutex_lock(m));
             }
             ~pthread_mutex_scoped_lock()
             {
-                BOOST_VERIFY(0==pthread_mutex_unlock(m));
+                BOOST_VERIFY(!pthread_mutex_unlock(m));
             }
             
         };

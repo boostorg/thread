@@ -57,14 +57,12 @@ namespace boost
         {
             if(old_state.exclusive_waiting)
             {
-                bool const success=detail::win32::ReleaseSemaphore(exclusive_sem,1,NULL)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(detail::win32::ReleaseSemaphore(exclusive_sem,1,NULL)!=0);
             }
                         
             if(old_state.shared_waiting || old_state.exclusive_waiting)
             {
-                bool const success=detail::win32::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),NULL)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(detail::win32::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),NULL)!=0);
             }
         }
         
@@ -112,8 +110,7 @@ namespace boost
 
         void lock_shared()
         {
-            bool const success=timed_lock_shared(::boost::detail::get_system_time_sentinel());
-            BOOST_ASSERT(success);
+            BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
         }
 
         bool timed_lock_shared(boost::system_time const& wait_until)
@@ -218,8 +215,7 @@ namespace boost
                     {
                         if(old_state.upgrade)
                         {
-                            bool const success=detail::win32::ReleaseSemaphore(upgrade_sem,1,NULL)!=0;
-                            BOOST_ASSERT(success);
+                            BOOST_VERIFY(detail::win32::ReleaseSemaphore(upgrade_sem,1,NULL)!=0);
                         }
                         else
                         {
@@ -235,8 +231,7 @@ namespace boost
 
         void lock()
         {
-            bool const success=timed_lock(::boost::detail::get_system_time_sentinel());
-            BOOST_ASSERT(success);
+            BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
         }
 
         bool timed_lock(boost::system_time const& wait_until)
@@ -364,8 +359,7 @@ namespace boost
                     return;
                 }
                     
-                unsigned long const res=detail::win32::WaitForSingleObject(unlock_sem,detail::win32::infinite);
-                BOOST_ASSERT(res==0);
+                BOOST_VERIFY(!detail::win32::WaitForSingleObject(unlock_sem,detail::win32::infinite));
             }
         }
 
@@ -421,8 +415,7 @@ namespace boost
                 {
                     if(!last_reader)
                     {
-                        unsigned long const res=detail::win32::WaitForSingleObject(upgrade_sem,detail::win32::infinite);
-                        BOOST_ASSERT(res==0);
+                        BOOST_VERIFY(!detail::win32::WaitForSingleObject(upgrade_sem,detail::win32::infinite));
                     }
                     break;
                 }

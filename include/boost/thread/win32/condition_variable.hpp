@@ -79,8 +79,7 @@ namespace boost
             {
                 if(entry.semaphore)
                 {
-                    unsigned long const close_result=detail::win32::CloseHandle(entry.semaphore);
-                    BOOST_ASSERT(close_result);
+                    BOOST_VERIFY(detail::win32::CloseHandle(entry.semaphore));
                     entry.semaphore=0;
                 }
                 entry.notified=false;

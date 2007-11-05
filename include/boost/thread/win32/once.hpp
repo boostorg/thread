@@ -40,13 +40,11 @@ namespace boost
             explicit win32_mutex_scoped_lock(void* mutex_handle_):
                 mutex_handle(mutex_handle_)
             {
-                unsigned long const res=win32::WaitForSingleObject(mutex_handle,win32::infinite);
-                BOOST_ASSERT(!res);
+                BOOST_VERIFY(!win32::WaitForSingleObject(mutex_handle,win32::infinite));
             }
             ~win32_mutex_scoped_lock()
             {
-                bool const success=win32::ReleaseMutex(mutex_handle)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(win32::ReleaseMutex(mutex_handle)!=0);
             }
         };
 
