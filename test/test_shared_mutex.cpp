@@ -6,6 +6,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include "util.inl"
@@ -29,16 +30,19 @@ namespace
         unsigned& simultaneous_running_count;
         unsigned& max_simultaneous_running;
         boost::mutex& unblocked_count_mutex;
+        boost::condition_variable& unblocked_condition;
         boost::mutex& finish_mutex;
     public:
         locking_thread(boost::shared_mutex& rw_mutex_,
                        unsigned& unblocked_count_,
                        boost::mutex& unblocked_count_mutex_,
+                       boost::condition_variable& unblocked_condition_,
                        boost::mutex& finish_mutex_,
                        unsigned& simultaneous_running_count_,
                        unsigned& max_simultaneous_running_):
             rw_mutex(rw_mutex_),
             unblocked_count(unblocked_count_),
+            unblocked_condition(unblocked_condition_),
             simultaneous_running_count(simultaneous_running_count_),
             max_simultaneous_running(max_simultaneous_running_),
             unblocked_count_mutex(unblocked_count_mutex_),
@@ -54,6 +58,7 @@ namespace
             {
                 boost::mutex::scoped_lock ublock(unblocked_count_mutex);
                 ++unblocked_count;
+                unblocked_condition.notify_one();
                 ++simultaneous_running_count;
                 if(simultaneous_running_count>max_simultaneous_running)
                 {
@@ -84,15 +89,23 @@ void test_multiple_readers()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     
     for(unsigned i=0;i<number_of_threads;++i)
     {
-        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_mutex,simultaneous_running_count,max_simultaneous_running));
     }
 
-    boost::thread::sleep(delay(1));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<number_of_threads)
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
 
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,number_of_threads);
 
@@ -114,15 +127,17 @@ void test_only_one_writer_permitted()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     
     for(unsigned i=0;i<number_of_threads;++i)
     {
-        pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+        pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_mutex,simultaneous_running_count,max_simultaneous_running));
     }
 
-    boost::thread::sleep(delay(1));
+    boost::thread::sleep(delay(2));
 
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
 
@@ -143,13 +158,22 @@ void test_reader_blocks_writer()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     
-    pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
-    boost::thread::sleep(delay(1));
+    pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                finish_mutex,simultaneous_running_count,max_simultaneous_running));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<1)
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
-    pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+    pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                finish_mutex,simultaneous_running_count,max_simultaneous_running));
     boost::thread::sleep(delay(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,1U);
 
@@ -171,6 +195,7 @@ void test_unlocking_writer_unblocks_all_readers()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
 
@@ -178,14 +203,22 @@ void test_unlocking_writer_unblocks_all_readers()
 
     for(unsigned i=0;i<reader_count;++i)
     {
-        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_mutex,simultaneous_running_count,max_simultaneous_running));
     }
     boost::thread::sleep(delay(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,0U);
 
     write_lock.unlock();
     
-    boost::thread::sleep(delay(1));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<reader_count)
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
+
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count);
 
     finish_lock.unlock();
@@ -204,6 +237,7 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     unsigned simultaneous_running_writers=0;
     unsigned max_simultaneous_writers=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_reading_mutex;
     boost::mutex::scoped_lock finish_reading_lock(finish_reading_mutex);
     boost::mutex finish_writing_mutex;
@@ -214,18 +248,34 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
 
     for(unsigned i=0;i<reader_count;++i)
     {
-        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_reading_mutex,simultaneous_running_readers,max_simultaneous_readers));
+        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_reading_mutex,simultaneous_running_readers,max_simultaneous_readers));
     }
+    boost::thread::sleep(delay(1));
     for(unsigned i=0;i<writer_count;++i)
     {
-        pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_writing_mutex,simultaneous_running_writers,max_simultaneous_writers));
+        pool.create_thread(locking_thread<boost::unique_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_writing_mutex,simultaneous_running_writers,max_simultaneous_writers));
     }
-    boost::thread::sleep(delay(2));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<reader_count)
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
+    boost::thread::sleep(delay(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count);
 
     finish_reading_lock.unlock();
 
-    boost::thread::sleep(delay(2));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<(reader_count+1))
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+1);
 
     finish_writing_lock.unlock();
@@ -246,12 +296,14 @@ void test_only_one_upgrade_lock_permitted()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     
     for(unsigned i=0;i<number_of_threads;++i)
     {
-        pool.create_thread(locking_thread<boost::upgrade_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+        pool.create_thread(locking_thread<boost::upgrade_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                     finish_mutex,simultaneous_running_count,max_simultaneous_running));
     }
 
     boost::thread::sleep(delay(1));
@@ -275,6 +327,7 @@ void test_can_lock_upgrade_if_currently_locked_shared()
     unsigned simultaneous_running_count=0;
     unsigned max_simultaneous_running=0;
     boost::mutex unblocked_count_mutex;
+    boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
 
@@ -282,10 +335,19 @@ void test_can_lock_upgrade_if_currently_locked_shared()
 
     for(unsigned i=0;i<reader_count;++i)
     {
-        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
+        pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                    finish_mutex,simultaneous_running_count,max_simultaneous_running));
     }
-    pool.create_thread(locking_thread<boost::upgrade_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,finish_mutex,simultaneous_running_count,max_simultaneous_running));
     boost::thread::sleep(delay(1));
+    pool.create_thread(locking_thread<boost::upgrade_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
+                                                                                 finish_mutex,simultaneous_running_count,max_simultaneous_running));
+    {
+        boost::mutex::scoped_lock lk(unblocked_count_mutex);
+        while(unblocked_count<(reader_count+1))
+        {
+            unblocked_condition.wait(lk);
+        }
+    }
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,unblocked_count,reader_count+1);
 
     finish_lock.unlock();
