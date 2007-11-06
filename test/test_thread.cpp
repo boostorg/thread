@@ -8,6 +8,9 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
+#include <boost/bind.hpp>
+#include <boost/ref.hpp>
+#include <boost/utility.hpp>
 
 #include <boost/test/unit_test.hpp>
 
@@ -21,12 +24,16 @@ void simple_thread()
     test_value = 999;
 }
 
-void comparison_thread(boost::thread* parent)
+void comparison_thread(boost::thread::id parent)
 {
-    boost::thread thrd;
-    BOOST_CHECK(thrd != *parent);
-    boost::thread thrd2;
-    BOOST_CHECK(thrd == thrd2);
+    boost::thread::id const my_id=boost::this_thread::get_id();
+    
+    BOOST_CHECK(my_id != parent);
+    boost::thread::id const my_id2=boost::this_thread::get_id();
+    BOOST_CHECK(my_id == my_id2);
+
+    boost::thread::id const no_thread_id=boost::thread::id();
+    BOOST_CHECK(my_id != no_thread_id);
 }
 
 void test_sleep()
@@ -52,17 +59,145 @@ void test_creation()
     timed_test(&do_test_creation, 1);
 }
 
-void do_test_comparison()
+void do_test_id_comparison()
 {
-    boost::thread self;
-    boost::thread thrd(bind(&comparison_thread, &self));
+    boost::thread::id const self=boost::this_thread::get_id();
+    boost::thread thrd(boost::bind(&comparison_thread, self));
     thrd.join();
 }
 
-void test_comparison()
+void test_id_comparison()
 {
-    timed_test(&do_test_comparison, 1);
+    timed_test(&do_test_id_comparison, 1);
 }
+
+void interruption_point_thread(boost::mutex* m,bool* failed)
+{
+    boost::mutex::scoped_lock lk(*m);
+    boost::this_thread::interruption_point();
+    *failed=true;
+}
+
+void do_test_thread_interrupts_at_interruption_point()
+{
+    boost::mutex m;
+    bool failed=false;
+    boost::mutex::scoped_lock lk(m);
+    boost::thread thrd(boost::bind(&interruption_point_thread,&m,&failed));
+    thrd.interrupt();
+    lk.unlock();
+    thrd.join();
+    BOOST_CHECK(!failed);
+}
+
+void test_thread_interrupts_at_interruption_point()
+{
+    timed_test(&do_test_thread_interrupts_at_interruption_point, 1);
+}
+
+void disabled_interruption_point_thread(boost::mutex* m,bool* failed)
+{
+    boost::mutex::scoped_lock lk(*m);
+    boost::this_thread::disable_interruption dc;
+    boost::this_thread::interruption_point();
+    *failed=false;
+}
+
+void do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
+{
+    boost::mutex m;
+    bool failed=true;
+    boost::mutex::scoped_lock lk(m);
+    boost::thread thrd(boost::bind(&disabled_interruption_point_thread,&m,&failed));
+    thrd.interrupt();
+    lk.unlock();
+    thrd.join();
+    BOOST_CHECK(!failed);
+}
+
+void test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
+{
+    timed_test(&do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point, 1);
+}
+
+struct non_copyable_functor:
+    boost::noncopyable
+{
+    unsigned value;
+    
+    non_copyable_functor():
+        value(0)
+    {}
+    
+    void operator()()
+    {
+        value=999;
+    }
+};
+
+void do_test_creation_through_reference_wrapper()
+{
+    non_copyable_functor f;
+    
+    boost::thread thrd(boost::ref(f));
+    thrd.join();
+    BOOST_CHECK_EQUAL(f.value, 999u);
+}
+
+void test_creation_through_reference_wrapper()
+{
+    timed_test(&do_test_creation_through_reference_wrapper, 1);
+}
+
+struct long_running_thread
+{
+    boost::condition_variable cond;
+    boost::mutex mut;
+    bool done;
+    
+    long_running_thread():
+        done(false)
+    {}
+    
+    void operator()()
+    {
+        boost::mutex::scoped_lock lk(mut);
+        while(!done)
+        {
+            cond.wait(lk);
+        }
+    }
+};
+
+void do_test_timed_join()
+{
+    long_running_thread f;
+    boost::thread thrd(boost::ref(f));
+    BOOST_CHECK(thrd.joinable());
+    boost::system_time xt=delay(3);
+    bool const joined=thrd.timed_join(xt);
+    BOOST_CHECK(in_range(boost::get_xtime(xt), 2));
+    BOOST_CHECK(!joined);
+    BOOST_CHECK(thrd.joinable());
+    {
+        boost::mutex::scoped_lock lk(f.mut);
+        f.done=true;
+        f.cond.notify_one();
+    }
+    
+    xt=delay(3);
+    bool const joined2=thrd.timed_join(xt);
+    boost::system_time const now=boost::get_system_time();
+    BOOST_CHECK(xt>now);
+    BOOST_CHECK(joined2);
+    BOOST_CHECK(!thrd.joinable());
+}
+
+void test_timed_join()
+{
+    timed_test(&do_test_timed_join, 10);
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -71,7 +206,11 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_sleep));
     test->add(BOOST_TEST_CASE(test_creation));
-    test->add(BOOST_TEST_CASE(test_comparison));
+    test->add(BOOST_TEST_CASE(test_id_comparison));
+    test->add(BOOST_TEST_CASE(test_thread_interrupts_at_interruption_point));
+    test->add(BOOST_TEST_CASE(test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point));
+    test->add(BOOST_TEST_CASE(test_creation_through_reference_wrapper));
+    test->add(BOOST_TEST_CASE(test_timed_join));
 
     return test;
 }

@@ -5,6 +5,7 @@
   %thread.entities;
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
+     Copyright (c) 2007 Roland Schwarz
      Subject to the Boost Software License, Version 1.0. 
      (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
 -->
@@ -25,38 +26,112 @@
 	</para>
 	<section id="thread.build.building">
 		<title>Building the &Boost.Thread; Libraries</title>
-		<para>
-	To build the &Boost.Thread; libraries using &Boost.Build;, simply change to the
-	directory <emphasis>boost_root</emphasis>/libs/thread/build and execute the command:
-		<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis></programlisting>
-	This will create the debug and the release builds of the &Boost.Thread; library.
-	<note>Invoking the above command in <emphasis>boost_root</emphasis> will build all of 
-	the Boost distribution, including &Boost.Thread;.</note>
-		</para>
-		<para>
-	The Jamfile supplied with &Boost.Thread; produces a dynamic link library named
-	<emphasis>boost_thread{build-specific-tags}.{extension}</emphasis>, where the build-specific
-	tags indicate the toolset used to build the library, whether it's a debug or release
-	build, what version of Boost was used, etc.; and the extension is the appropriate extension
-	for a dynamic link library for the platform for which &Boost.Thread; is being built.
-	For instance, a debug library built for Win32 with VC++ 7.1 using Boost 1.31 would
-	be named <emphasis>boost_thread-vc71-mt-gd-1_31.dll</emphasis>.
-		</para>
-		<para>
-	The source files that are used to create the &Boost.Thread; library
-	are all of the *.cpp files found in <emphasis>boost_root</emphasis>/libs/thread/src.
-	These need to be built with the compiler's and linker's multi-threading support enabled.
-	If you want to create your own build solution you'll have to follow these same
-	guidelines. One of the most frequently reported problems when trying to do this
-	occurs from not enabling the compiler's and linker's support for multi-threading.
-		</para>
+        <para>
+            Building the &Boost.Thread; Library depends on how you intend to use it. You have several options:
+            <itemizedlist>
+                <listitem>
+                    Using as a <link linkend="thread.build.precompiled">precompiled</link> library, possibly
+                    with auto-linking, or for use from within an IDE.
+                </listitem>
+                <listitem>
+                    Use from a <link linkend="thread.build.bjam">&Boost.Build;</link> project.
+                </listitem>
+                <listitem>
+                    Using in <link linkend="thread.build.source">source</link> form.
+                </listitem>
+            </itemizedlist>
+        </para>
+        <section id="thread.build.precompiled">
+            <title>Precompiled</title>
+            <para>
+                Using the &Boost.Thread; library in precompiled form is the way to go if you want to
+                install the library to a standard place, from where your linker is able to resolve code
+                in binary form. You also will want this option if compile time is a concern. Multiple 
+                variants are available, for different toolsets and build variants (debug/release).
+                The library files are named <emphasis>{lead}boost_thread{build-specific-tags}.{extension}</emphasis>,
+                where the build-specific-tags indicate the toolset used to build the library, whether it's
+                a debug or release build, what version of &Boost; was used, etc.; and the lead and extension
+                are the appropriate extensions for a dynamic link library or static library for the platform
+                for which &Boost.Thread; is being built.
+            	For instance, a debug build of the dynamic library built for Win32 with VC++ 7.1 using Boost 1.34 would
+            	be named <emphasis>boost_thread-vc71-mt-gd-1_34.dll</emphasis>.
+                More information on this should be available from the &Boost.Build; documentation.
+            </para>
+            <para>
+                Building should be possible with the default configuration. If you are running into problems,
+                it might be wise to adjust your local settings of &Boost.Build; though. Typically you will
+                need to get your user-config.jam file to reflect your environment, i.e. used toolsets. Please
+                refer to the &Boost.Build; documentation to learn how to do this.
+            </para>
+            <para>
+                To create the libraries you need to open a command shell and change to the 
+                <emphasis>boost_root</emphasis> directory. From there you give the command 
+                <programlisting>bjam --toolset=<emphasis>mytoolset</emphasis> stage --with-thread</programlisting>
+                Replace <emphasis>mytoolset</emphasis> with the name of your toolset, e.g. msvc-7.1 .
+                This will compile and put the libraries into the <emphasis>stage</emphasis> directory which is just below the
+                <emphasis>boost_root</emphasis> directory. &Boost.Build; by default will generate static and 
+                dynamic variants for debug and release.
+            </para>
+            <note>
+                Invoking the above command without the --with-thread switch &Boost.Build; will build all of 
+	            the Boost distribution, including &Boost.Thread;.
+            </note>
+            <para>
+                The next step is to copy your libraries to a place where your linker is able to pick them up.
+                It is also quite possible to leave them in the stage directory and instruct your IDE to take them
+                from there.
+            </para>
+            <para>
+                In your IDE you then need to add <emphasis>boost_root</emphasis>/boost to the paths where the compiler
+                expects to find files to be included. For toolsets that support <emphasis>auto-linking</emphasis>
+                it is not necessary to explicitly specify the name of the library to link against, it is sufficient
+                to specify the path of the stage directory. Typically this is true on Windows. For gcc you need 
+                to specify the exact library name (including all the tags). Please don't forget that threading
+                support must be turned on to be able to use the library. You should be able now to build your
+                project from the IDE.
+            </para>
+	    </section>
+        <section id="thread.build.bjam">
+            <title>&Boost.Build; Project</title>
+            <para>
+                If you have decided to use &Boost.Build; as a build environment for your application, you simply
+                need to add a single line to your <emphasis>Jamroot</emphasis> file:
+                <programlisting>use-project /boost : {path-to-boost-root} ;</programlisting>
+                where <emphasis>{path-to-boost-root}</emphasis> needs to be replaced with the location of
+                your copy of the boost tree.
+                Later when you specify a component that needs to link against &Boost.Thread; you specify this
+                as e.g.:
+                <programlisting>exe myapp : {myappsources} /boost//thread ;</programlisting>
+                and you are done.
+            </para>
+        </section>
+        <section id="thread.build.source">
+            <title>Source Form</title>
+            <para>
+                Of course it is also possible to use the &Boost.Thread; library in source form.
+                First you need to specify the <emphasis>boost_root</emphasis>/boost directory as
+                a path where your compiler expects to find files to include. It is not easy
+                to isolate the &Boost.Thread; include files from the rest of the boost 
+                library though. You would also need to isolate every include file that the thread
+                library depends on. Next you need to copy the files from 
+                <emphasis>boost_root</emphasis>/libs/thread/src to your project and instruct your
+                build system to compile them together with your project. Please look into the
+                <emphasis>Jamfile</emphasis> in <emphasis>boost_root</emphasis>/libs/thread/build
+                to find out which compiler options and defines you will need to get a clean compile.
+                Using the boost library in this way is the least recommended, and should only be
+                considered if avoiding dependency on &Boost.Build; is a requirement. Even if so
+                it might be a better option to use the library in it's precompiled form. 
+                Precompiled downloads are available from the boost consulting web site, or as
+                part of most linux distributions.
+            </para>
+        </section>
 	</section>
 	<section id="thread.build.testing">
 		<title>Testing the &Boost.Thread; Libraries</title>
 		<para>
-	To test the &Boost.Thread; libraries using &Boost.Build;, simply change to the
-	directory <emphasis>boost_root</emphasis>/libs/thread/test and execute the command:
-			<programlisting>bjam -sTOOLS=<emphasis>toolset</emphasis> test</programlisting>
+	        To test the &Boost.Thread; libraries using &Boost.Build;, simply change to the
+	        directory <emphasis>boost_root</emphasis>/libs/thread/test and execute the command:
+			<programlisting>bjam --toolset=<emphasis>mytoolset</emphasis> test</programlisting>
 		</para>
 	</section>
 </section>

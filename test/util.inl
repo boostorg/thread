@@ -16,6 +16,8 @@
 #   define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_condition
 #endif
 
+// boostinspect:nounnamed
+
 namespace
 {
 inline boost::xtime delay(int secs, int msecs=0, int nsecs=0)
