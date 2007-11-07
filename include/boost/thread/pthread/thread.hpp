@@ -33,7 +33,7 @@ namespace boost
     
     namespace this_thread
     {
-        detail::thread_id get_id();
+        BOOST_THREAD_DECL detail::thread_id get_id();
     }
     
     namespace detail
@@ -208,22 +208,22 @@ namespace boost
             ~restore_interruption();
         };
 
-        inline thread::id get_id()
+        BOOST_THREAD_DECL inline thread::id get_id()
         {
             return thread::id(pthread_self());
         }
 
-        void BOOST_THREAD_DECL interruption_point();
-        bool BOOST_THREAD_DECL interruption_enabled();
-        bool BOOST_THREAD_DECL interruption_requested();
+        BOOST_THREAD_DECL void interruption_point();
+        BOOST_THREAD_DECL bool interruption_enabled();
+        BOOST_THREAD_DECL bool interruption_requested();
 
-        inline void yield()
+        BOOST_THREAD_DECL inline void yield()
         {
             thread::yield();
         }
         
         template<typename TimeDuration>
-        inline void sleep(TimeDuration const& rel_time)
+        BOOST_THREAD_DECL inline void sleep(TimeDuration const& rel_time)
         {
             thread::sleep(get_system_time()+rel_time);
         }
@@ -254,13 +254,13 @@ namespace boost
             }
         };
         
-        void add_thread_exit_function(thread_exit_function_base*);
+        BOOST_THREAD_DECL void add_thread_exit_function(thread_exit_function_base*);
     }
     
     namespace this_thread
     {
         template<typename F>
-        void at_thread_exit(F f)
+        inline void at_thread_exit(F f)
         {
             detail::thread_exit_function_base* const thread_exit_func=new detail::thread_exit_function<F>(f);
             detail::add_thread_exit_function(thread_exit_func);
