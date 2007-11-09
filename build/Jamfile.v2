@@ -39,6 +39,8 @@ import path ;
 project boost/thread
     : source-location ../src
     : requirements <threading>multi
+      <toolset-gcc:flavor>mingw:<link>shared
+      <toolset>borland:<link>shared
       <link>static:<define>BOOST_THREAD_BUILD_LIB=1
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
