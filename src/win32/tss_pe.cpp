@@ -1,4 +1,6 @@
+// $Id$
 // (C) Copyright Aaron W. LaFramboise, Roland Schwarz, Michael Glassford 2004.
+// (C) Copyright 2007 Roland Schwarz
 // (C) Copyright 2007 Anthony Williams
 // (C) Copyright 2007 David Deakins
 // Use, modification and distribution are subject to the
@@ -7,7 +9,75 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#if defined(BOOST_THREAD_BUILD_LIB) && defined(_MSC_VER) && !defined(UNDER_CE)
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
+
+#if defined(__MINGW32__) && !defined(_WIN64)
+
+#include <boost/thread/detail/tss_hooks.hpp>
+
+#include <windows.h>
+
+#include <cstdlib>
+
+extern "C" void tss_cleanup_implemented(void) {}
+
+namespace {
+    void NTAPI on_tls_callback(void* h, DWORD dwReason, PVOID pv)
+    {
+        switch (dwReason)
+        {
+            case DLL_THREAD_DETACH:
+            {
+                on_thread_exit();
+                break;
+            }
+        }
+    }
+
+    void on_after_ctors(void)
+    {
+        on_process_enter();
+    }
+    
+    void on_before_dtors(void)
+    {
+        on_thread_exit();
+    }
+    
+    void on_after_dtors(void)
+    {
+        on_process_exit();        
+    }
+}
+
+extern "C" {
+
+    void (* after_ctors )(void) __attribute__((section(".ctors")))     = on_after_ctors;
+    void (* before_dtors)(void) __attribute__((section(".dtors")))     = on_before_dtors;
+    void (* after_dtors )(void) __attribute__((section(".dtors.zzz"))) = on_after_dtors;
+
+    ULONG __tls_index__ = 0;
+    char __tls_end__ __attribute__((section(".tls$zzz"))) = 0;
+    char __tls_start__ __attribute__((section(".tls"))) = 0;
+
+
+    PIMAGE_TLS_CALLBACK __crt_xl_start__ __attribute__ ((section(".CRT$XLA"))) = 0;
+    PIMAGE_TLS_CALLBACK __crt_xl_tls_callback__ __attribute__ ((section(".CRT$XLB"))) = on_tls_callback;
+    PIMAGE_TLS_CALLBACK __crt_xl_end__ __attribute__ ((section(".CRT$XLZ"))) = 0;
+}
+
+extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata$T"))) =
+{
+        (DWORD) &__tls_start__,
+        (DWORD) &__tls_end__,
+        (DWORD) &__tls_index__,
+        (DWORD) (&__crt_xl_start__+1),
+        (DWORD) 0,
+        (DWORD) 0
+};
+
+
+#elif  defined(_MSC_VER) && !defined(UNDER_CE)
 
     #include <boost/thread/detail/tss_hooks.hpp>
 
@@ -177,5 +247,6 @@
         longer needed and can be removed.
         */
     }
+#endif //defined(_MSC_VER) && !defined(UNDER_CE)
 
 #endif //defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)
