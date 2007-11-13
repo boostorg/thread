@@ -27,6 +27,7 @@ namespace boost
     namespace detail
     {
         struct thread_exit_callback_node;
+        struct tss_data_node;
         
         struct thread_data_base
         {
@@ -34,13 +35,14 @@ namespace boost
             detail::win32::handle_manager thread_handle;
             detail::win32::handle_manager interruption_handle;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
+            boost::detail::tss_data_node* tss_data;
             bool interruption_enabled;
             unsigned id;
 
             thread_data_base():
                 count(0),thread_handle(detail::win32::invalid_handle_value),
                 interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
-                thread_exit_callbacks(0),
+                thread_exit_callbacks(0),tss_data(0),
                 interruption_enabled(true),
                 id(0)
             {}
