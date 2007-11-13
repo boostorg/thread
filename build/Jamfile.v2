@@ -180,8 +180,6 @@ alias thread_sources
     : ## win32 sources ##
       win32/thread.cpp
       win32/exceptions.cpp
-      win32/tss.cpp
-      win32/tss_hooks.cpp
       win32/tss_dll.cpp
       win32/tss_pe.cpp
     : ## requirements ##
