@@ -12,7 +12,9 @@
 #endif
 #include <stdio.h>
 #include <boost/thread/once.hpp>
+#include <boost/thread/tss.hpp>
 #include <boost/assert.hpp>
+#include <boost/thread/detail/tss_hooks.hpp>
 
 namespace boost
 {
@@ -130,6 +132,19 @@ namespace boost
             {}
         };
 
+        struct tss_data_node
+        {
+            void const* key;
+            boost::detail::tss_cleanup_function func;
+            void* value;
+            tss_data_node* next;
+
+            tss_data_node(void const* key_,boost::detail::tss_cleanup_function func_,void* value_,
+                          tss_data_node* next_):
+                key(key_),func(func_),value(value_),next(next_)
+            {}
+        };
+
     }
 
     namespace
@@ -139,17 +154,31 @@ namespace boost
             boost::intrusive_ptr<detail::thread_data_base> current_thread_data(get_current_thread_data(),false);
             if(current_thread_data)
             {
-                while(current_thread_data->thread_exit_callbacks)
+                while(current_thread_data->tss_data || current_thread_data->thread_exit_callbacks)
                 {
-                    detail::thread_exit_callback_node* const current_node=current_thread_data->thread_exit_callbacks;
-                    current_thread_data->thread_exit_callbacks=current_node->next;
-                    if(current_node->func)
+                    while(current_thread_data->thread_exit_callbacks)
                     {
-                        (*current_node->func)();
-                        boost::detail::heap_delete(current_node->func);
+                        detail::thread_exit_callback_node* const current_node=current_thread_data->thread_exit_callbacks;
+                        current_thread_data->thread_exit_callbacks=current_node->next;
+                        if(current_node->func)
+                        {
+                            (*current_node->func)();
+                            boost::detail::heap_delete(current_node->func);
+                        }
+                        boost::detail::heap_delete(current_node);
                     }
-                    boost::detail::heap_delete(current_node);
+                    while(current_thread_data->tss_data)
+                    {
+                        detail::tss_data_node* const current_node=current_thread_data->tss_data;
+                        current_thread_data->tss_data=current_node->next;
+                        if(current_node->func)
+                        {
+                            (*current_node->func)(current_node->key,current_node->value);
+                        }
+                        boost::detail::heap_delete(current_node);
+                    }
                 }
+                
             }
             set_current_thread_data(0);
         }
@@ -210,14 +239,20 @@ namespace boost
             void run()
             {}
         };
+
+        void make_external_thread_data()
+        {
+            externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
+            set_current_thread_data(me);
+        }
+        
     }
 
     thread thread::self()
     {
         if(!get_current_thread_data())
         {
-            externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
-            set_current_thread_data(me);
+            make_external_thread_data();
         }
         return thread(boost::intrusive_ptr<detail::thread_data_base>(get_current_thread_data()));
     }
@@ -450,49 +485,83 @@ namespace boost
         }
     }
 
-    namespace
-    {
-        void NTAPI thread_exit_func_callback(HINSTANCE, DWORD, PVOID);
-        typedef void (NTAPI* tls_callback)(HINSTANCE, DWORD, PVOID);
-        
-#ifdef _MSC_VER
-        extern "C"
-        {
-            extern DWORD _tls_used; //the tls directory (located in .rdata segment)
-            extern tls_callback __xl_a[], __xl_z[];    //tls initializers */
-        }
-        
-#if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
-#   pragma data_seg(push, old_seg)
-#endif
-        
-#pragma data_seg(".CRT$XLB")
-        tls_callback p_thread_callback = thread_exit_func_callback;
-#pragma data_seg()
-        
-#if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
-#   pragma data_seg(pop, old_seg)
-#endif
-#endif
-
-        void NTAPI thread_exit_func_callback(HINSTANCE h, DWORD dwReason, PVOID pv)
-        {
-            if((dwReason==DLL_THREAD_DETACH) || (dwReason==DLL_PROCESS_DETACH))
-            {
-                run_thread_exit_callbacks();
-            }
-        }
-    }
-
     namespace detail
     {
         void add_thread_exit_function(thread_exit_function_base* func)
         {
+            detail::thread_data_base* const current_thread_data(get_current_thread_data());
             thread_exit_callback_node* const new_node=
                 heap_new<thread_exit_callback_node>(func,
-                                                    get_current_thread_data()->thread_exit_callbacks);
-            get_current_thread_data()->thread_exit_callbacks=new_node;
+                                                    current_thread_data->thread_exit_callbacks);
+            current_thread_data->thread_exit_callbacks=new_node;
+        }
+
+        tss_data_node* find_tss_data(void const* key)
+        {
+            detail::thread_data_base* const current_thread_data(get_current_thread_data());
+            if(current_thread_data)
+            {
+                detail::tss_data_node* current_node=current_thread_data->tss_data;
+                while(current_node)
+                {
+                    if(current_node->key==key)
+                    {
+                        return current_node;
+                    }
+                    current_node=current_node->next;
+                }
+            }
+            return NULL;
+        }
+
+        void* get_tss_data(void const* key)
+        {
+            if(tss_data_node* const current_node=find_tss_data(key))
+            {
+                return current_node->value;
+            }
+            return NULL;
+        }
+        
+        void set_tss_data(void const* key,tss_cleanup_function func,void* tss_data,bool cleanup_existing)
+        {
+            tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
+            if(tss_data_node* const current_node=find_tss_data(key))
+            {
+                if(cleanup_existing && current_node->func)
+                {
+                    (current_node->func)(current_node->key,current_node->value);
+                }
+                current_node->func=func;
+                current_node->value=tss_data;
+            }
+            else
+            {
+                detail::thread_data_base* current_thread_data(get_current_thread_data());
+                if(!current_thread_data)
+                {
+                    make_external_thread_data();
+                    current_thread_data=get_current_thread_data();
+                }
+                tss_data_node* const new_node=heap_new<tss_data_node>(key,func,tss_data,current_thread_data->tss_data);
+                current_thread_data->tss_data=new_node;
+            }
         }
     }
+}
+
+
+extern "C" BOOST_THREAD_DECL void on_process_enter()
+{}
+
+extern "C" BOOST_THREAD_DECL void on_thread_enter()
+{}
+
+extern "C" BOOST_THREAD_DECL void on_process_exit()
+{}
+
+extern "C" BOOST_THREAD_DECL void on_thread_exit()
+{
+    boost::run_thread_exit_callbacks();
 }
 
