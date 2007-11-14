@@ -277,6 +277,7 @@ namespace boost
         void add_thread(thread* thrd);
         void remove_thread(thread* thrd);
         void join_all();
+        void interrupt_all();
         int size() const;
 
     private:

@@ -100,9 +100,19 @@ void do_test_tss()
 
     const int NUMTHREADS=5;
     boost::thread_group threads;
-    for (int i=0; i<NUMTHREADS; ++i)
-        threads.create_thread(&test_tss_thread);
-    threads.join_all();
+    try
+    {
+        for (int i=0; i<NUMTHREADS; ++i)
+            threads.create_thread(&test_tss_thread);
+        threads.join_all();
+    }
+    catch(...)
+    {
+        threads.interrupt_all();
+        threads.join_all();
+        throw;
+    }
+
 
     std::cout
         << "tss_instances = " << tss_instances
