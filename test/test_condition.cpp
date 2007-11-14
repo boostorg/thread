@@ -112,17 +112,27 @@ void do_test_condition_notify_all()
     boost::thread_group threads;
     condition_test_data data;
 
-    for (int i = 0; i < NUMTHREADS; ++i)
-        threads.create_thread(bind(&condition_test_thread, &data));
-
+    try
     {
-        boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock ? true : false);
-        data.notified++;
-        data.condition.notify_all();
+        for (int i = 0; i < NUMTHREADS; ++i)
+            threads.create_thread(bind(&condition_test_thread, &data));
+
+        {
+            boost::mutex::scoped_lock lock(data.mutex);
+            BOOST_CHECK(lock ? true : false);
+            data.notified++;
+            data.condition.notify_all();
+        }
+
+        threads.join_all();
+    }
+    catch(...)
+    {
+        threads.interrupt_all();
+        threads.join_all();
+        throw;
     }
 
-    threads.join_all();
     BOOST_CHECK_EQUAL(data.awoken, NUMTHREADS);
 }
 

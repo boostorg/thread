@@ -40,12 +40,22 @@ void test_call_once()
 {
     unsigned const num_threads=20;
     boost::thread_group group;
-    
-    for(unsigned i=0;i<num_threads;++i)
+
+    try
     {
-        group.create_thread(&call_once_thread);
+        for(unsigned i=0;i<num_threads;++i)
+        {
+            group.create_thread(&call_once_thread);
+        }
+        group.join_all();
     }
-    group.join_all();
+    catch(...)
+    {
+        group.interrupt_all();
+        group.join_all();
+        throw;
+    }
+
     BOOST_CHECK_EQUAL(var_to_init,1);
 }
 
@@ -88,11 +98,21 @@ void test_call_once_arbitrary_functor()
     unsigned const num_threads=20;
     boost::thread_group group;
 
-    for(unsigned i=0;i<num_threads;++i)
+    try
     {
-        group.create_thread(&call_once_with_functor);
+        for(unsigned i=0;i<num_threads;++i)
+        {
+            group.create_thread(&call_once_with_functor);
+        }
+        group.join_all();
     }
-    group.join_all();
+    catch(...)
+    {
+        group.interrupt_all();
+        group.join_all();
+        throw;
+    }
+
     BOOST_CHECK_EQUAL(var_to_init_with_functor,1);
 }
 
@@ -137,11 +157,21 @@ void test_call_once_retried_on_exception()
     unsigned const num_threads=20;
     boost::thread_group group;
 
-    for(unsigned i=0;i<num_threads;++i)
+    try
     {
-        group.create_thread(&call_once_with_exception);
+        for(unsigned i=0;i<num_threads;++i)
+        {
+            group.create_thread(&call_once_with_exception);
+        }
+        group.join_all();
     }
-    group.join_all();
+    catch(...)
+    {
+        group.interrupt_all();
+        group.join_all();
+        throw;
+    }
+
     BOOST_CHECK_EQUAL(throw_before_third_pass::pass_counter,3u);
     BOOST_CHECK_EQUAL(exception_counter,2u);
 }

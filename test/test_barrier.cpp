@@ -39,26 +39,19 @@ void test_barrier()
     boost::thread_group g;
     global_parameter = 0;
 
-    std::vector<boost::thread*> threads;
-    threads.reserve(N_THREADS);
-    
     try
     {
         for (int i = 0; i < N_THREADS; ++i)
-            threads.push_back(g.create_thread(&barrier_thread));
+            g.create_thread(&barrier_thread);
+        g.join_all();
     }
     catch(...)
     {
-        for(unsigned i=0;i<threads.size();++i)
-        {
-            threads[i]->interrupt();
-        }
+        g.interrupt_all();
         g.join_all();
         throw;
     }
     
-    g.join_all();
-
     BOOST_CHECK(global_parameter == 5);
 }
 
