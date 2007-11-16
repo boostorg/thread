@@ -14,42 +14,72 @@
 #include <pthread.h>
 #include <boost/assert.hpp>
 #include "pthread_mutex_scoped_lock.hpp"
+#include <boost/cstdint.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 
 namespace boost {
 
     struct once_flag
     {
-        pthread_mutex_t mutex;
-        unsigned long flag;
+        boost::uintmax_t epoch;
     };
 
-#define BOOST_ONCE_INIT {PTHREAD_MUTEX_INITIALIZER,0}
+    namespace detail
+    {
+        BOOST_THREAD_DECL boost::uintmax_t& get_once_per_thread_epoch();
+        extern BOOST_THREAD_DECL boost::uintmax_t once_global_epoch;
+        extern BOOST_THREAD_DECL pthread_mutex_t once_epoch_mutex;
+        extern BOOST_THREAD_DECL pthread_cond_t once_epoch_cv;
+    }
+    
+#define BOOST_ONCE_INITIAL_FLAG_VALUE -1
+#define BOOST_ONCE_INIT {BOOST_ONCE_INITIAL_FLAG_VALUE}
 
+
+    // Based on Mike Burrows fast_pthread_once algorithm as described in
+    // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2444.html
     template<typename Function>
     void call_once(once_flag& flag,Function f)
     {
-        unsigned long const function_complete_flag_value=0xc15730e2ul;
-
-#ifdef BOOST_PTHREAD_HAS_ATOMICS
-        if(::boost::detail::interlocked_read_acquire(&flag.flag)!=function_complete_flag_value)
+        static boost::uintmax_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+        static boost::uintmax_t const being_initialized=uninitialized_flag-1;
+        boost::uintmax_t const epoch=flag.epoch;
+        boost::uintmax_t& this_thread_epoch=detail::get_once_per_thread_epoch();
+        
+        if(epoch>this_thread_epoch)
         {
-#endif
-            pthread::pthread_mutex_scoped_lock const lock(&flag.mutex);
-            if(flag.flag!=function_complete_flag_value)
-            {
-                f();
-#ifdef BOOST_PTHREAD_HAS_ATOMICS
-                ::boost::detail::interlocked_write_release(&flag.flag,function_complete_flag_value);
-#else
-                flag.flag=function_complete_flag_value;
-#endif
-            }
-#ifdef BOOST_PTHREAD_HAS_ATOMICS
-        }
-#endif
-    }
-    
+            pthread::pthread_mutex_scoped_lock lk(&detail::once_epoch_mutex);
 
+            while(flag.epoch>=being_initialized)
+            {
+                if(flag.epoch==uninitialized_flag)
+                {
+                    flag.epoch=being_initialized;
+                    try
+                    {
+                        pthread::pthread_mutex_scoped_unlock relocker(&detail::once_epoch_mutex);
+                        f();
+                    }
+                    catch(...)
+                    {
+                        flag.epoch=uninitialized_flag;
+                        BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
+                        throw;
+                    }
+                    flag.epoch=++detail::once_global_epoch;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
+                }
+                else
+                {
+                    while(flag.epoch==being_initialized)
+                    {
+                        BOOST_VERIFY(!pthread_cond_wait(&detail::once_epoch_cv,&detail::once_epoch_mutex));
+                    }
+                }
+            }
+            this_thread_epoch=detail::once_global_epoch;
+        }
+    }
 }
 
 #endif

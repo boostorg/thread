@@ -28,6 +28,22 @@ namespace boost
             }
             
         };
+
+        class pthread_mutex_scoped_unlock
+        {
+            pthread_mutex_t* m;
+        public:
+            explicit pthread_mutex_scoped_unlock(pthread_mutex_t* m_):
+                m(m_)
+            {
+                BOOST_VERIFY(!pthread_mutex_unlock(m));
+            }
+            ~pthread_mutex_scoped_unlock()
+            {
+                BOOST_VERIFY(!pthread_mutex_lock(m));
+            }
+            
+        };
     }
 }
 
