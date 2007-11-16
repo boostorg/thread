@@ -491,6 +491,19 @@ namespace boost
         }
     }
 
+    void thread_group::interrupt_all()
+    {
+        boost::lock_guard<mutex> guard(m_mutex);
+            
+        for(std::list<thread*>::iterator it=m_threads.begin(),end=m_threads.end();
+            it!=end;
+            ++it)
+        {
+            (*it)->interrupt();
+        }
+    }
+        
+
     int thread_group::size() const
     {
         return m_threads.size();
