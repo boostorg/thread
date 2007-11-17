@@ -191,6 +191,7 @@ alias thread_sources
       pthread/thread.cpp
       pthread/exceptions.cpp
       pthread/tss.cpp
+      pthread/once.cpp
     : ## requirements ##
       <threadapi>pthread
     ;
