@@ -120,6 +120,16 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         //The .CRT$Xxx information is taken from Codeguru:
         //http://www.codeguru.com/Cpp/misc/misc/threadsprocesses/article.php/c6945__2/
 
+#if (_MSC_VER >= 1400)
+#pragma section(".CRT$XIU",long,read)
+#pragma section(".CRT$XCU",long,read)
+#pragma section(".CRT$XTU",long,read)
+#pragma section(".CRT$XLC",long,read)
+        static __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
+        static __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
+        static __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
+        static __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
+#else
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
         #endif
@@ -144,7 +154,6 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             #pragma data_seg(".CRT$XLB")
             _TLSCB p_thread_callback = on_tls_callback;
             #pragma data_seg()
-
             //Callback for termination.
 
             #pragma data_seg(".CRT$XTU")
@@ -153,6 +162,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(pop, old_seg)
         #endif
+#endif
 
         PVAPI on_tls_prepare(void)
         {
