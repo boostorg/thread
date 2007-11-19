@@ -1,13 +1,21 @@
 #ifndef BOOST_THREAD_WIN32_TSS_HPP
 #define BOOST_THREAD_WIN32_TSS_HPP
+#include <boost/shared_ptr.hpp>
+#include "thread_heap_alloc.hpp"
 
 namespace boost
 {
     namespace detail
     {
-        typedef void(*tss_cleanup_function)(void const* key,void* value);
+        struct tss_cleanup_function
+        {
+            virtual ~tss_cleanup_function()
+            {}
+            
+            virtual void operator()(void* data)=0;
+        };
         
-        BOOST_THREAD_DECL void set_tss_data(void const* key,tss_cleanup_function func,void* tss_data,bool cleanup_existing);
+        BOOST_THREAD_DECL void set_tss_data(void const* key,boost::shared_ptr<tss_cleanup_function> func,void* tss_data,bool cleanup_existing);
         BOOST_THREAD_DECL void* get_tss_data(void const* key);
     }
 
@@ -18,31 +26,39 @@ namespace boost
         thread_specific_ptr(thread_specific_ptr&);
         thread_specific_ptr& operator=(thread_specific_ptr&);
 
-        static void delete_data(void const* self,void* value)
+        struct delete_data:
+            detail::tss_cleanup_function
         {
-            static_cast<thread_specific_ptr const*>(self)->cleanup((T*)value);
-        }
+            void operator()(void* data)
+            {
+                delete static_cast<T*>(data);
+            }
+        };
         
-        void cleanup(T* data) const
+        struct run_custom_cleanup_function:
+            detail::tss_cleanup_function
         {
-            if(func)
+            void (*cleanup_function)(T*);
+            
+            explicit run_custom_cleanup_function(void (*cleanup_function_)(T*)):
+                cleanup_function(cleanup_function_)
+            {}
+            
+            void operator()(void* data)
             {
-                func(data);
+                cleanup_function(data);
             }
-            else
-            {
-                delete data;
-            }
-        }
+        };
 
-        void (*func)(T*);
+
+        boost::shared_ptr<detail::tss_cleanup_function> cleanup;
         
     public:
         thread_specific_ptr():
-            func(0)
+            cleanup(detail::heap_new<delete_data>(),detail::do_heap_delete<delete_data>())
         {}
         explicit thread_specific_ptr(void (*func_)(T*)):
-            func(func_)
+            cleanup(detail::heap_new<run_custom_cleanup_function>(func_),detail::do_heap_delete<run_custom_cleanup_function>())
         {}
         ~thread_specific_ptr()
         {
@@ -72,7 +88,7 @@ namespace boost
             T* const current_value=get();
             if(current_value!=new_value)
             {
-                detail::set_tss_data(this,delete_data,new_value,true);
+                detail::set_tss_data(this,cleanup,new_value,true);
             }
         }
     };
