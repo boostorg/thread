@@ -20,28 +20,6 @@ namespace boost
 {
     namespace
     {
-#if defined(_MSC_VER) && !defined(UNDER_CE)
-        __declspec(thread) detail::thread_data_base* current_thread_data=0;
-        detail::thread_data_base* get_current_thread_data()
-        {
-            return current_thread_data;
-        }
-        void set_current_thread_data(detail::thread_data_base* new_data)
-        {
-            current_thread_data=new_data;
-        }
-#elif defined(__BORLANDC__)
-        detail::thread_data_base* __thread current_thread_data=0;
-        detail::thread_data_base* get_current_thread_data()
-        {
-            return current_thread_data;
-        }
-        void set_current_thread_data(detail::thread_data_base* new_data)
-        {
-            current_thread_data=new_data;
-        }
-#else
-
         boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
         DWORD current_thread_tls_key=0;
 
@@ -62,7 +40,6 @@ namespace boost
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
             BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
         }
-#endif
 
 #ifdef BOOST_NO_THREADEX
 // Windows CE doesn't define _beginthreadex
@@ -135,11 +112,11 @@ namespace boost
         struct tss_data_node
         {
             void const* key;
-            boost::detail::tss_cleanup_function func;
+            boost::shared_ptr<boost::detail::tss_cleanup_function> func;
             void* value;
             tss_data_node* next;
 
-            tss_data_node(void const* key_,boost::detail::tss_cleanup_function func_,void* value_,
+            tss_data_node(void const* key_,boost::shared_ptr<boost::detail::tss_cleanup_function> func_,void* value_,
                           tss_data_node* next_):
                 key(key_),func(func_),value(value_),next(next_)
             {}
@@ -173,7 +150,7 @@ namespace boost
                         current_thread_data->tss_data=current_node->next;
                         if(current_node->func)
                         {
-                            (*current_node->func)(current_node->key,current_node->value);
+                            (*current_node->func)(current_node->value);
                         }
                         boost::detail::heap_delete(current_node);
                     }
@@ -489,7 +466,12 @@ namespace boost
     {
         void add_thread_exit_function(thread_exit_function_base* func)
         {
-            detail::thread_data_base* const current_thread_data(get_current_thread_data());
+            detail::thread_data_base* current_thread_data(get_current_thread_data());
+            if(!current_thread_data)
+            {
+                make_external_thread_data();
+                current_thread_data=get_current_thread_data();
+            }
             thread_exit_callback_node* const new_node=
                 heap_new<thread_exit_callback_node>(func,
                                                     current_thread_data->thread_exit_callbacks);
@@ -523,14 +505,14 @@ namespace boost
             return NULL;
         }
         
-        void set_tss_data(void const* key,tss_cleanup_function func,void* tss_data,bool cleanup_existing)
+        void set_tss_data(void const* key,boost::shared_ptr<tss_cleanup_function> func,void* tss_data,bool cleanup_existing)
         {
             tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             if(tss_data_node* const current_node=find_tss_data(key))
             {
                 if(cleanup_existing && current_node->func)
                 {
-                    (current_node->func)(current_node->key,current_node->value);
+                    (*current_node->func)(current_node->value);
                 }
                 current_node->func=func;
                 current_node->value=tss_data;

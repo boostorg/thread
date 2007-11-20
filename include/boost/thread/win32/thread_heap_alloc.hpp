@@ -156,25 +156,13 @@ namespace boost
         }
 
         template<typename T>
-        struct do_delete
+        struct do_heap_delete
         {
-            T* data;
-            
-            do_delete(T* data_):
-                data(data_)
-            {}
-            
-            void operator()() const
+            void operator()(T* data) const
             {
                 detail::heap_delete(data);
             }
         };
-
-        template<typename T>
-        do_delete<T> make_heap_deleter(T* data)
-        {
-            return do_delete<T>(data);
-        }
     }
 }
 
