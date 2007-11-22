@@ -128,7 +128,7 @@ namespace boost
     {
         void run_thread_exit_callbacks()
         {
-            boost::intrusive_ptr<detail::thread_data_base> current_thread_data(get_current_thread_data(),false);
+            detail::thread_data_ptr current_thread_data(get_current_thread_data(),false);
             if(current_thread_data)
             {
                 while(current_thread_data->tss_data || current_thread_data->thread_exit_callbacks)
@@ -197,7 +197,7 @@ namespace boost
         ResumeThread(thread_info->thread_handle);
     }
 
-    thread::thread(boost::intrusive_ptr<detail::thread_data_base> data):
+    thread::thread(detail::thread_data_ptr data):
         thread_info(data)
     {}
 
@@ -210,7 +210,6 @@ namespace boost
             {
                 ++count;
                 interruption_enabled=false;
-                thread_handle=detail::win32::duplicate_handle(detail::win32::GetCurrentThread());
             }
             
             void run()
@@ -222,18 +221,20 @@ namespace boost
             externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
             set_current_thread_data(me);
         }
+
+        detail::thread_data_base* get_or_make_current_thread_data()
+        {
+            detail::thread_data_base* current_thread_data(get_current_thread_data());
+            if(!current_thread_data)
+            {
+                make_external_thread_data();
+                current_thread_data=get_current_thread_data();
+            }
+            return current_thread_data;
+        }
         
     }
 
-    thread thread::self()
-    {
-        if(!get_current_thread_data())
-        {
-            make_external_thread_data();
-        }
-        return thread(boost::intrusive_ptr<detail::thread_data_base>(get_current_thread_data()));
-    }
-    
     thread::~thread()
     {
         detach();
@@ -273,16 +274,9 @@ namespace boost
 
     thread::id thread::get_id() const
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
-        return local_thread_info?thread::id(local_thread_info->id):thread::id();
+        return thread::id(get_thread_info());
     }
 
-    thread::interruption_handle thread::get_interruption_handle() const
-    {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
-        return local_thread_info?thread::interruption_handle(local_thread_info->interruption_handle.duplicate()):thread::interruption_handle();
-    }
-    
     bool thread::joinable() const
     {
         return get_thread_info();
@@ -290,7 +284,7 @@ namespace boost
 
     void thread::join()
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             this_thread::interruptible_wait(local_thread_info->thread_handle,detail::win32::infinite);
@@ -300,7 +294,7 @@ namespace boost
 
     bool thread::timed_join(boost::system_time const& wait_until)
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             if(!this_thread::interruptible_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
@@ -325,16 +319,16 @@ namespace boost
     
     void thread::interrupt()
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            detail::win32::SetEvent(local_thread_info->interruption_handle);
+            local_thread_info->interrupt();
         }
     }
     
     bool thread::interruption_requested() const
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=get_thread_info();
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
     }
     
@@ -347,11 +341,11 @@ namespace boost
     
     thread::native_handle_type thread::native_handle()
     {
-        boost::intrusive_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=get_thread_info();
         return local_thread_info?(detail::win32::handle)local_thread_info->thread_handle:detail::win32::invalid_handle_value;
     }
 
-    boost::intrusive_ptr<detail::thread_data_base> thread::get_thread_info() const
+    detail::thread_data_ptr thread::get_thread_info() const
     {
         boost::mutex::scoped_lock l(thread_info_mutex);
         return thread_info;
@@ -359,11 +353,6 @@ namespace boost
 
     namespace this_thread
     {
-        thread::interruption_handle get_interruption_handle()
-        {
-            return get_current_thread_data()?thread::interruption_handle(get_current_thread_data()->interruption_handle.duplicate()):thread::interruption_handle();
-        }
-
         bool interruptible_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds)
         {
             detail::win32::handle handles[2]={0};
@@ -401,7 +390,7 @@ namespace boost
 
         thread::id get_id()
         {
-            return thread::id(detail::win32::GetCurrentThreadId());
+            return thread::id(get_or_make_current_thread_data());
         }
 
         void interruption_point()
@@ -466,12 +455,7 @@ namespace boost
     {
         void add_thread_exit_function(thread_exit_function_base* func)
         {
-            detail::thread_data_base* current_thread_data(get_current_thread_data());
-            if(!current_thread_data)
-            {
-                make_external_thread_data();
-                current_thread_data=get_current_thread_data();
-            }
+            detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
             thread_exit_callback_node* const new_node=
                 heap_new<thread_exit_callback_node>(func,
                                                     current_thread_data->thread_exit_callbacks);
@@ -519,12 +503,7 @@ namespace boost
             }
             else
             {
-                detail::thread_data_base* current_thread_data(get_current_thread_data());
-                if(!current_thread_data)
-                {
-                    make_external_thread_data();
-                    current_thread_data=get_current_thread_data();
-                }
+                detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
                 tss_data_node* const new_node=heap_new<tss_data_node>(key,func,tss_data,current_thread_data->tss_data);
                 current_thread_data->tss_data=new_node;
             }

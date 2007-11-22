@@ -15,6 +15,7 @@
 #include "thread_primitives.hpp"
 #include "thread_heap_alloc.hpp"
 #include <boost/utility.hpp>
+#include <boost/assert.hpp>
 #include <list>
 #include <algorithm>
 #include <boost/ref.hpp>
@@ -62,8 +63,16 @@ namespace boost
                 }
             }
 
+            void interrupt()
+            {
+                BOOST_VERIFY(detail::win32::SetEvent(interruption_handle)!=0);
+            }
+            
+
             virtual void run()=0;
         };
+
+        typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
     }
 
     class BOOST_THREAD_DECL thread
@@ -94,15 +103,15 @@ namespace boost
         };
         
         mutable boost::mutex thread_info_mutex;
-        boost::intrusive_ptr<detail::thread_data_base> thread_info;
+        detail::thread_data_ptr thread_info;
 
         static unsigned __stdcall thread_start_function(void* param);
 
         void start_thread();
         
-        explicit thread(boost::intrusive_ptr<detail::thread_data_base> data);
+        explicit thread(detail::thread_data_ptr data);
 
-        boost::intrusive_ptr<detail::thread_data_base> get_thread_info() const;
+        detail::thread_data_ptr get_thread_info() const;
     public:
         thread();
         ~thread();
@@ -155,12 +164,8 @@ namespace boost
         static void sleep(const system_time& xt);
 
         // extensions
-        class interruption_handle;
-        interruption_handle get_interruption_handle() const;
         void interrupt();
         bool interruption_requested() const;
-
-        static thread self();
     };
 
     template<typename F>
@@ -214,7 +219,6 @@ namespace boost
         void BOOST_THREAD_DECL interruption_point();
         bool BOOST_THREAD_DECL interruption_enabled();
         bool BOOST_THREAD_DECL interruption_requested();
-        thread::interruption_handle BOOST_THREAD_DECL get_interruption_handle();
 
         void BOOST_THREAD_DECL yield();
         template<typename TimeDuration>
@@ -227,54 +231,63 @@ namespace boost
     class thread::id
     {
     private:
-        unsigned thread_id;
+        detail::thread_data_ptr thread_data;
             
-        id(unsigned thread_id_):
-            thread_id(thread_id_)
+        id(detail::thread_data_ptr thread_data_):
+            thread_data(thread_data_)
         {}
         friend class thread;
         friend id this_thread::get_id();
     public:
         id():
-            thread_id(0)
+            thread_data(0)
         {}
             
         bool operator==(const id& y) const
         {
-            return thread_id==y.thread_id;
+            return thread_data==y.thread_data;
         }
         
         bool operator!=(const id& y) const
         {
-            return thread_id!=y.thread_id;
+            return thread_data!=y.thread_data;
         }
         
         bool operator<(const id& y) const
         {
-            return thread_id<y.thread_id;
+            return thread_data<y.thread_data;
         }
         
         bool operator>(const id& y) const
         {
-            return thread_id>y.thread_id;
+            return y.thread_data<thread_data;
         }
         
         bool operator<=(const id& y) const
         {
-            return thread_id<=y.thread_id;
+            return !(y.thread_data<thread_data);
         }
         
         bool operator>=(const id& y) const
         {
-            return thread_id>=y.thread_id;
+            return !(thread_data<y.thread_data);
         }
 
         template<class charT, class traits>
         friend std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
         {
-            return os<<x.thread_id;
+            return os<<x.thread_data;
         }
+
+        void interrupt()
+        {
+            if(thread_data)
+            {
+                thread_data->interrupt();
+            }
+        }
+        
     };
 
     inline bool thread::operator==(const thread& other) const
@@ -286,56 +299,6 @@ namespace boost
     {
         return get_id()!=other.get_id();
     }
-
-    class thread::interruption_handle
-    {
-    private:
-        boost::detail::win32::handle_manager handle;
-        friend class thread;
-        friend interruption_handle this_thread::get_interruption_handle();
-
-        interruption_handle(detail::win32::handle h_):
-            handle(h_)
-        {}
-    public:
-        interruption_handle(interruption_handle const& other):
-            handle(other.handle.duplicate())
-        {}
-        interruption_handle():
-            handle(0)
-        {}
-
-        void swap(interruption_handle& other)
-        {
-            handle.swap(other.handle);
-        }
-        
-        interruption_handle& operator=(interruption_handle const& other)
-        {
-            interruption_handle temp(other);
-            swap(temp);
-            return *this;
-        }
-
-        void reset()
-        {
-            handle=0;
-        }
-
-        void interrupt()
-        {
-            if(handle)
-            {
-                detail::win32::SetEvent(handle);
-            }
-        }
-
-        typedef void(interruption_handle::*bool_type)();
-        operator bool_type() const
-        {
-            return handle?&interruption_handle::interrupt:0;
-        }
-    };
         
     namespace detail
     {
