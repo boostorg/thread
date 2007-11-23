@@ -62,7 +62,7 @@ void test_tss_thread()
     }
 }
 
-#if defined(BOOST_HAS_WINTHREADS)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
     typedef HANDLE native_thread_t;
 
     DWORD WINAPI test_tss_thread_native(LPVOID lpParameter)
@@ -90,6 +90,33 @@ void test_tss_thread()
 
         res = CloseHandle(thread);
         BOOST_CHECK(SUCCEEDED(res));
+    }
+#elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
+    typedef pthread_t native_thread_t;
+
+extern "C"
+{
+    void* test_tss_thread_native(void* lpParameter)
+    {
+        test_tss_thread();
+        return 0;
+    }
+}
+
+    native_thread_t create_native_thread()
+    {
+        native_thread_t thread_handle;
+        
+        int const res = pthread_create(&thread_handle, 0, &test_tss_thread_native, 0);
+        BOOST_CHECK(!res);
+        return thread_handle;
+    }
+
+    void join_native_thread(native_thread_t thread)
+    {
+        void* result=0;
+        int const res=pthread_join(thread,&result);
+        BOOST_CHECK(!res);
     }
 #endif
 
@@ -123,44 +150,42 @@ void do_test_tss()
     BOOST_CHECK_EQUAL(tss_instances, 0);
     BOOST_CHECK_EQUAL(tss_total, 5);
 
-    #if defined(BOOST_HAS_WINTHREADS)
-        tss_instances = 0;
-        tss_total = 0;
+    tss_instances = 0;
+    tss_total = 0;
 
-        native_thread_t thread1 = create_native_thread();
-        BOOST_CHECK(thread1 != 0);
+    native_thread_t thread1 = create_native_thread();
+    BOOST_CHECK(thread1 != 0);
 
-        native_thread_t thread2 = create_native_thread();
-        BOOST_CHECK(thread2 != 0);
+    native_thread_t thread2 = create_native_thread();
+    BOOST_CHECK(thread2 != 0);
 
-        native_thread_t thread3 = create_native_thread();
-        BOOST_CHECK(thread3 != 0);
+    native_thread_t thread3 = create_native_thread();
+    BOOST_CHECK(thread3 != 0);
 
-        native_thread_t thread4 = create_native_thread();
-        BOOST_CHECK(thread3 != 0);
+    native_thread_t thread4 = create_native_thread();
+    BOOST_CHECK(thread3 != 0);
 
-        native_thread_t thread5 = create_native_thread();
-        BOOST_CHECK(thread3 != 0);
+    native_thread_t thread5 = create_native_thread();
+    BOOST_CHECK(thread3 != 0);
 
-        join_native_thread(thread5);
-        join_native_thread(thread4);
-        join_native_thread(thread3);
-        join_native_thread(thread2);
-        join_native_thread(thread1);
+    join_native_thread(thread5);
+    join_native_thread(thread4);
+    join_native_thread(thread3);
+    join_native_thread(thread2);
+    join_native_thread(thread1);
 
-        std::cout
-            << "tss_instances = " << tss_instances
-            << "; tss_total = " << tss_total
-            << "\n";
-        std::cout.flush();
+    std::cout
+        << "tss_instances = " << tss_instances
+        << "; tss_total = " << tss_total
+        << "\n";
+    std::cout.flush();
 
-        // The following is not really an error. TSS cleanup support still is available for boost threads.
-        // Also this usually will be triggered only when bound to the static version of thread lib.
-        // 2006-10-02 Roland Schwarz
-        //BOOST_CHECK_EQUAL(tss_instances, 0);
-        BOOST_CHECK_MESSAGE(tss_instances == 0, "Support of automatic tss cleanup for native threading API not available");
-        BOOST_CHECK_EQUAL(tss_total, 5);
-    #endif
+    // The following is not really an error. TSS cleanup support still is available for boost threads.
+    // Also this usually will be triggered only when bound to the static version of thread lib.
+    // 2006-10-02 Roland Schwarz
+    //BOOST_CHECK_EQUAL(tss_instances, 0);
+    BOOST_CHECK_MESSAGE(tss_instances == 0, "Support of automatic tss cleanup for native threading API not available");
+    BOOST_CHECK_EQUAL(tss_total, 5);
 }
 
 void test_tss()
