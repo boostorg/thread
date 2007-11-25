@@ -1,7 +1,7 @@
-#ifndef BOOST_THREAD_MUTEX_HPP
-#define BOOST_THREAD_MUTEX_HPP
+#ifndef BOOST_THREAD_CONDITION_VARIABLE_HPP
+#define BOOST_THREAD_CONDITION_VARIABLE_HPP
 
-//  mutex.hpp
+//  condition_variable.hpp
 //
 //  (C) Copyright 2007 Anthony Williams 
 //
@@ -11,9 +11,9 @@
 
 #include <boost/thread/detail/platform.hpp>
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-#include <boost/thread/win32/mutex.hpp>
+#include <boost/thread/win32/condition_variable.hpp>
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
-#include <boost/thread/pthread/mutex.hpp>
+#include <boost/thread/pthread/condition_variable.hpp>
 #else
 #error "Boost threads unavailable on this platform"
 #endif
