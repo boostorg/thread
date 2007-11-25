@@ -103,7 +103,7 @@ void do_test_condition_notify_one()
 
 void test_condition_notify_one()
 {
-    timed_test(&do_test_condition_notify_one, 2, execution_monitor::use_mutex);
+    timed_test(&do_test_condition_notify_one, 100, execution_monitor::use_mutex);
 }
 
 void do_test_condition_notify_all()
@@ -112,17 +112,27 @@ void do_test_condition_notify_all()
     boost::thread_group threads;
     condition_test_data data;
 
-    for (int i = 0; i < NUMTHREADS; ++i)
-        threads.create_thread(bind(&condition_test_thread, &data));
-
+    try
     {
-        boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock ? true : false);
-        data.notified++;
-        data.condition.notify_all();
+        for (int i = 0; i < NUMTHREADS; ++i)
+            threads.create_thread(bind(&condition_test_thread, &data));
+
+        {
+            boost::mutex::scoped_lock lock(data.mutex);
+            BOOST_CHECK(lock ? true : false);
+            data.notified++;
+            data.condition.notify_all();
+        }
+
+        threads.join_all();
+    }
+    catch(...)
+    {
+        threads.interrupt_all();
+        threads.join_all();
+        throw;
     }
 
-    threads.join_all();
     BOOST_CHECK_EQUAL(data.awoken, NUMTHREADS);
 }
 
@@ -131,7 +141,7 @@ void test_condition_notify_all()
     // We should have already tested notify_one here, so
     // a timed test with the default execution_monitor::use_condition
     // should be OK, and gives the fastest performance
-    timed_test(&do_test_condition_notify_all, 3);
+    timed_test(&do_test_condition_notify_all, 100);
 }
 
 void do_test_condition_waits()
@@ -189,6 +199,24 @@ void test_condition_waits()
     timed_test(&do_test_condition_waits, 12);
 }
 
+void do_test_condition_wait_is_a_interruption_point()
+{
+    condition_test_data data;
+
+    boost::thread thread(bind(&condition_test_thread, &data));
+
+    thread.interrupt();
+    thread.join();
+    BOOST_CHECK_EQUAL(data.awoken,0);
+}
+
+
+void test_condition_wait_is_a_interruption_point()
+{
+    timed_test(&do_test_condition_wait_is_a_interruption_point, 1);
+}
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -197,6 +225,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_condition_notify_one));
     test->add(BOOST_TEST_CASE(&test_condition_notify_all));
     test->add(BOOST_TEST_CASE(&test_condition_waits));
+    test->add(BOOST_TEST_CASE(&test_condition_wait_is_a_interruption_point));
 
     return test;
 }
