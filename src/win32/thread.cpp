@@ -494,7 +494,7 @@ namespace boost
             tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             if(tss_data_node* const current_node=find_tss_data(key))
             {
-                if(cleanup_existing && current_node->func)
+                if(cleanup_existing && current_node->func.get())
                 {
                     (*current_node->func)(current_node->value);
                 }
