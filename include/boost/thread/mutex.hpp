@@ -10,6 +10,12 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/platform.hpp>
-#include BOOST_THREAD_PLATFORM(mutex.hpp)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#include <boost/thread/win32/mutex.hpp>
+#elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#include <boost/thread/pthread/mutex.hpp>
+#else
+#error "Boost threads unavailable on this platform"
+#endif
 
 #endif

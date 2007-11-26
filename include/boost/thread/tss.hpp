@@ -7,6 +7,12 @@
 #define BOOST_THREAD_TSS_HPP
 
 #include <boost/thread/detail/platform.hpp>
-#include BOOST_THREAD_PLATFORM(tss.hpp)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#include <boost/thread/win32/tss.hpp>
+#elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#include <boost/thread/pthread/tss.hpp>
+#else
+#error "Boost threads unavailable on this platform"
+#endif
 
 #endif

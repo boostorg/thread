@@ -27,9 +27,9 @@ namespace boost {
     namespace detail
     {
         BOOST_THREAD_DECL boost::uintmax_t& get_once_per_thread_epoch();
-        extern BOOST_THREAD_DECL boost::uintmax_t once_global_epoch;
-        extern BOOST_THREAD_DECL pthread_mutex_t once_epoch_mutex;
-        extern BOOST_THREAD_DECL pthread_cond_t once_epoch_cv;
+        BOOST_THREAD_DECL extern boost::uintmax_t once_global_epoch;
+        BOOST_THREAD_DECL extern pthread_mutex_t once_epoch_mutex;
+        BOOST_THREAD_DECL extern pthread_cond_t once_epoch_cv;
     }
     
 #define BOOST_ONCE_INITIAL_FLAG_VALUE -1

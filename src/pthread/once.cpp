@@ -12,9 +12,9 @@ namespace boost
 {
     namespace detail
     {
-        boost::uintmax_t once_global_epoch=0;
-        pthread_mutex_t once_epoch_mutex=PTHREAD_MUTEX_INITIALIZER;
-        pthread_cond_t once_epoch_cv = PTHREAD_COND_INITIALIZER;
+        BOOST_THREAD_DECL boost::uintmax_t once_global_epoch=0;
+        BOOST_THREAD_DECL pthread_mutex_t once_epoch_mutex=PTHREAD_MUTEX_INITIALIZER;
+        BOOST_THREAD_DECL pthread_cond_t once_epoch_cv = PTHREAD_COND_INITIALIZER;
 
         namespace
         {
@@ -45,7 +45,6 @@ namespace boost
             }
             return *static_cast<boost::uintmax_t*>(data);
         }
-
     }
     
 }
