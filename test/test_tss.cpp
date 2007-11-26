@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -73,7 +74,7 @@ void test_tss_thread()
 
     native_thread_t create_native_thread(void)
     {
-        return CreateThread(
+        native_thread_t const res=CreateThread(
             0, //security attributes (0 = not inheritable)
             0, //stack size (0 = default) 
             &test_tss_thread_native, //function to execute
@@ -81,6 +82,8 @@ void test_tss_thread()
             0, //creation flags (0 = run immediately)
             0  //thread id (0 = thread id not returned)
             );
+        BOOST_CHECK(res!=0);
+        return res;
     }
 
     void join_native_thread(native_thread_t thread)
@@ -154,19 +157,10 @@ void do_test_tss()
     tss_total = 0;
 
     native_thread_t thread1 = create_native_thread();
-    BOOST_CHECK(thread1 != 0);
-
     native_thread_t thread2 = create_native_thread();
-    BOOST_CHECK(thread2 != 0);
-
     native_thread_t thread3 = create_native_thread();
-    BOOST_CHECK(thread3 != 0);
-
     native_thread_t thread4 = create_native_thread();
-    BOOST_CHECK(thread3 != 0);
-
     native_thread_t thread5 = create_native_thread();
-    BOOST_CHECK(thread3 != 0);
 
     join_native_thread(thread5);
     join_native_thread(thread4);
