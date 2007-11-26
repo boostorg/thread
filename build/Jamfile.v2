@@ -157,6 +157,7 @@ rule usage-requirements ( properties * )
 rule requirements ( properties * )
 {
     local result ;
+
     if <threadapi>pthread in $(properties)
     {
         result += <define>BOOST_THREAD_POSIX ;
@@ -201,5 +202,7 @@ lib boost_thread
     : thread_sources
     : <conditional>@requirements
     :
-    : <conditional>@usage-requirements
+    : <link>shared:<define>BOOST_THREAD_USE_DLL=1
+      <link>static:<define>BOOST_THREAD_USE_LIB=1
+      <conditional>@usage-requirements
     ;

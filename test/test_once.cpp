@@ -19,6 +19,7 @@ void initialize_variable()
     ++var_to_init;
 }
 
+
 void call_once_thread()
 {
     unsigned const loop_count=100;
