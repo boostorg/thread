@@ -44,6 +44,12 @@ namespace boost
             return true;
         }
 
+        template<typename duration_type,typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return timed_wait(m,get_system_time()+wait_duration,pred);
+        }
+
         void notify_one();
         void notify_all();
     };
