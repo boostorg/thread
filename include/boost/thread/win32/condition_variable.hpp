@@ -13,6 +13,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/thread_time.hpp>
 #include "interlocked_read.hpp"
+#include <boost/cstdint.hpp>
+#include <boost/thread/xtime.hpp>
 
 namespace boost
 {
@@ -111,8 +113,78 @@ namespace boost
             
 
         protected:
+            struct timeout
+            {
+                unsigned long start;
+                uintmax_t milliseconds;
+                bool relative;
+                boost::system_time abs_time;
+
+                static unsigned long const max_non_infinite_wait=0xfffffffe;
+
+                timeout(uintmax_t milliseconds_):
+                    start(win32::GetTickCount()),
+                    milliseconds(milliseconds_),
+                    relative(true),
+                    abs_time(boost::get_system_time())
+                {}
+
+                timeout(boost::system_time const& abs_time_):
+                    start(win32::GetTickCount()),
+                    milliseconds(0),
+                    relative(false),
+                    abs_time(abs_time_)
+                {}
+
+                struct remaining_time
+                {
+                    bool more;
+                    unsigned long milliseconds;
+
+                    remaining_time(uintmax_t remaining):
+                        more(remaining>max_non_infinite_wait),
+                        milliseconds(more?max_non_infinite_wait:(unsigned long)remaining)
+                    {}
+                };
+
+                remaining_time remaining_milliseconds() const
+                {
+                    if(milliseconds==~uintmax_t(0))
+                    {
+                        return remaining_time(win32::infinite);
+                    }
+                    else if(relative)
+                    {
+                        unsigned long const now=win32::GetTickCount();
+                        unsigned long const elapsed=now-start;
+                        return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
+                    }
+                    else
+                    {
+                        system_time const now=get_system_time();
+                        if(abs_time<now)
+                        {
+                            return remaining_time(0);
+                        }
+                        return remaining_time((abs_time-get_system_time()).total_milliseconds()+1);
+                    }
+                }
+
+                static timeout sentinel()
+                {
+                    return timeout(sentinel_type());
+                }
+            private:
+                struct sentinel_type
+                {};
+                
+                explicit timeout(sentinel_type):
+                    start(0),milliseconds(~uintmax_t(0)),relative(true)
+                {}
+            };
+
             template<typename lock_type>
-            bool do_wait(lock_type& lock,::boost::system_time const& wait_until)
+            bool do_wait(lock_type& lock,timeout wait_until)
             {
                 detail::win32::handle_manager local_wake_sem;
                 detail::win32::handle_manager sem;
@@ -155,9 +227,21 @@ namespace boost
                         ++generations[0].count;
                         sem=detail::win32::duplicate_handle(generations[0].semaphore);
                     }
-                    if(!this_thread::interruptible_wait(sem,::boost::detail::get_milliseconds_until(wait_until)))
+                    while(true)
                     {
-                        break;
+                        timeout::remaining_time const remaining=wait_until.remaining_milliseconds();
+                        if(this_thread::interruptible_wait(sem,remaining.milliseconds))
+                        {
+                            break;
+                        }
+                        else if(!remaining.more)
+                        {
+                            return false;
+                        }
+                        if(wait_until.relative)
+                        {
+                            wait_until.milliseconds-=timeout::max_non_infinite_wait;
+                        }
                     }
                 
                     unsigned long const woken_result=detail::win32::WaitForSingleObject(local_wake_sem,0);
@@ -166,6 +250,17 @@ namespace boost
                     woken=(woken_result==0);
                 }
                 return woken;
+            }
+
+            template<typename lock_type,typename predicate_type>
+            bool do_wait(lock_type& m,timeout const& wait_until,predicate_type pred)
+            {
+                while (!pred())
+                {
+                    if(!do_wait(m, wait_until))
+                        return false;
+                }
+                return true;
             }
         
             basic_condition_variable(const basic_condition_variable& other);
@@ -238,7 +333,7 @@ namespace boost
     public:
         void wait(unique_lock<mutex>& m)
         {
-            do_wait(m,::boost::detail::get_system_time_sentinel());
+            do_wait(m,timeout::sentinel());
         }
 
         template<typename predicate_type>
@@ -256,12 +351,17 @@ namespace boost
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until,predicate_type pred)
         {
-            while (!pred())
-            {
-                if(!timed_wait(m, wait_until))
-                    return false;
-            }
-            return true;
+            return do_wait(m,wait_until,pred);
+        }
+        template<typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,boost::xtime const& wait_until,predicate_type pred)
+        {
+            return do_wait(m,system_time(wait_until),pred);
+        }
+        template<typename duration_type,typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
     };
     
@@ -272,7 +372,7 @@ namespace boost
         template<typename lock_type>
         void wait(lock_type& m)
         {
-            do_wait(m,::boost::detail::get_system_time_sentinel());
+            do_wait(m,timeout::sentinel());
         }
 
         template<typename lock_type,typename predicate_type>
@@ -290,12 +390,19 @@ namespace boost
         template<typename lock_type,typename predicate_type>
         bool timed_wait(lock_type& m,boost::system_time const& wait_until,predicate_type pred)
         {
-            while (!pred())
-            {
-                if(!timed_wait(m, wait_until))
-                    return false;
-            }
-            return true;
+            return do_wait(m,wait_until,pred);
+        }
+
+        template<typename lock_type,typename predicate_type>
+        bool timed_wait(lock_type& m,boost::xtime const& wait_until,predicate_type pred)
+        {
+            return do_wait(m,system_time(wait_until),pred);
+        }
+
+        template<typename lock_type,typename duration_type,typename predicate_type>
+        bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return timed_wait(m,wait_duration.total_milliseconds(),pred);
         }
     };
 

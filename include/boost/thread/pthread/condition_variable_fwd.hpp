@@ -6,8 +6,10 @@
 // (C) Copyright 2007 Anthony Williams
 
 #include <pthread.h>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/thread_time.hpp>
+#include <boost/thread/xtime.hpp>
 
 namespace boost
 {
@@ -42,6 +44,18 @@ namespace boost
                     return false;
             }
             return true;
+        }
+
+        template<typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,xtime const& wait_until,predicate_type pred)
+        {
+            return timed_wait(m,system_time(wait_until),pred);
+        }
+
+        template<typename duration_type,typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 
         void notify_one();
