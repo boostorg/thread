@@ -53,6 +53,7 @@ namespace boost
             using ::SleepEx;
             using ::Sleep;
             using ::QueueUserAPC;
+            using ::GetTickCount;
         }
     }
 }
@@ -119,6 +120,8 @@ namespace boost
                 __declspec(dllimport) void __stdcall Sleep(unsigned long);
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+
+                __declspec(dllimport) unsigned long __stdcall GetTickCount();
 
 # ifndef UNDER_CE
                 __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
