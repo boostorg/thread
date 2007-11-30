@@ -13,7 +13,6 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/thread_time.hpp>
 #include "interlocked_read.hpp"
-#include <boost/cstdint.hpp>
 #include <boost/thread/xtime.hpp>
 
 namespace boost
@@ -112,136 +111,65 @@ namespace boost
             };
             
 
-        protected:
-            struct timeout
+            template<typename lock_type>
+            void start_wait_loop_first_time(relocker<lock_type>& locker,
+                                            detail::win32::handle_manager& local_wake_sem)
             {
-                unsigned long start;
-                uintmax_t milliseconds;
-                bool relative;
-                boost::system_time abs_time;
-
-                static unsigned long const max_non_infinite_wait=0xfffffffe;
-
-                timeout(uintmax_t milliseconds_):
-                    start(win32::GetTickCount()),
-                    milliseconds(milliseconds_),
-                    relative(true),
-                    abs_time(boost::get_system_time())
-                {}
-
-                timeout(boost::system_time const& abs_time_):
-                    start(win32::GetTickCount()),
-                    milliseconds(0),
-                    relative(false),
-                    abs_time(abs_time_)
-                {}
-
-                struct remaining_time
+                locker.unlock();
+                if(!wake_sem)
                 {
-                    bool more;
-                    unsigned long milliseconds;
-
-                    remaining_time(uintmax_t remaining):
-                        more(remaining>max_non_infinite_wait),
-                        milliseconds(more?max_non_infinite_wait:(unsigned long)remaining)
-                    {}
-                };
-
-                remaining_time remaining_milliseconds() const
-                {
-                    if(milliseconds==~uintmax_t(0))
-                    {
-                        return remaining_time(win32::infinite);
-                    }
-                    else if(relative)
-                    {
-                        unsigned long const now=win32::GetTickCount();
-                        unsigned long const elapsed=now-start;
-                        return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
-                    }
-                    else
-                    {
-                        system_time const now=get_system_time();
-                        if(abs_time<now)
-                        {
-                            return remaining_time(0);
-                        }
-                        return remaining_time((abs_time-get_system_time()).total_milliseconds()+1);
-                    }
+                    wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+                    BOOST_ASSERT(wake_sem);
                 }
-
-                static timeout sentinel()
+                local_wake_sem=detail::win32::duplicate_handle(wake_sem);
+                        
+                if(generations[0].notified)
                 {
-                    return timeout(sentinel_type());
+                    shift_generations_down();
                 }
-            private:
-                struct sentinel_type
-                {};
-                
-                explicit timeout(sentinel_type):
-                    start(0),milliseconds(~uintmax_t(0)),relative(true)
-                {}
-            };
+                else if(!active_generation_count)
+                {
+                    active_generation_count=1;
+                }
+            }
+            
+            template<typename lock_type>
+            void start_wait_loop(relocker<lock_type>& locker,
+                                 detail::win32::handle_manager& local_wake_sem,
+                                 detail::win32::handle_manager& sem)
+            {
+                boost::mutex::scoped_lock internal_lock(internal_mutex);
+                detail::interlocked_write_release(&total_count,total_count+1);
+                if(!local_wake_sem)
+                {
+                    start_wait_loop_first_time(locker,local_wake_sem);
+                }
+                if(!generations[0].semaphore)
+                {
+                    generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+                    BOOST_ASSERT(generations[0].semaphore);
+                }
+                ++generations[0].count;
+                sem=detail::win32::duplicate_handle(generations[0].semaphore);
+            }
 
+        protected:
             template<typename lock_type>
             bool do_wait(lock_type& lock,timeout wait_until)
             {
                 detail::win32::handle_manager local_wake_sem;
                 detail::win32::handle_manager sem;
-                bool first_loop=true;
                 bool woken=false;
 
                 relocker<lock_type> locker(lock);
             
                 while(!woken)
                 {
+                    start_wait_loop(locker,local_wake_sem,sem);
+                    
+                    if(!this_thread::interruptible_wait(sem,wait_until))
                     {
-                        boost::mutex::scoped_lock internal_lock(internal_mutex);
-                        detail::interlocked_write_release(&total_count,total_count+1);
-                        if(first_loop)
-                        {
-                            locker.unlock();
-                            if(!wake_sem)
-                            {
-                                wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                                BOOST_ASSERT(wake_sem);
-                            }
-                            local_wake_sem=detail::win32::duplicate_handle(wake_sem);
-                        
-                            if(generations[0].notified)
-                            {
-                                shift_generations_down();
-                            }
-                            else if(!active_generation_count)
-                            {
-                                active_generation_count=1;
-                            }
-                        
-                            first_loop=false;
-                        }
-                        if(!generations[0].semaphore)
-                        {
-                            generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                            BOOST_ASSERT(generations[0].semaphore);
-                        }
-                        ++generations[0].count;
-                        sem=detail::win32::duplicate_handle(generations[0].semaphore);
-                    }
-                    while(true)
-                    {
-                        timeout::remaining_time const remaining=wait_until.remaining_milliseconds();
-                        if(this_thread::interruptible_wait(sem,remaining.milliseconds))
-                        {
-                            break;
-                        }
-                        else if(!remaining.more)
-                        {
-                            return false;
-                        }
-                        if(wait_until.relative)
-                        {
-                            wait_until.milliseconds-=timeout::max_non_infinite_wait;
-                        }
+                        return false;
                     }
                 
                     unsigned long const woken_result=detail::win32::WaitForSingleObject(local_wake_sem,0);
@@ -333,7 +261,7 @@ namespace boost
     public:
         void wait(unique_lock<mutex>& m)
         {
-            do_wait(m,timeout::sentinel());
+            do_wait(m,detail::timeout::sentinel());
         }
 
         template<typename predicate_type>
@@ -372,7 +300,7 @@ namespace boost
         template<typename lock_type>
         void wait(lock_type& m)
         {
-            do_wait(m,timeout::sentinel());
+            do_wait(m,detail::timeout::sentinel());
         }
 
         template<typename lock_type,typename predicate_type>

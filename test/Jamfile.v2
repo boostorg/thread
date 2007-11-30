@@ -1,4 +1,5 @@
 #  (C) Copyright William E. Kempf 2001. 
+#  (C) Copyright 2007 Anthony Williams. 
 #  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 #  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
@@ -35,6 +36,9 @@ rule thread-run ( sources )
     test-suite "threads"
         : [ thread-run test_thread.cpp ]
           [ thread-run test_mutex.cpp ]
+          [ thread-run test_condition_notify_one.cpp ]
+          [ thread-run test_condition_timed_wait_times_out.cpp ]
+          [ thread-run test_condition_notify_all.cpp ]
           [ thread-run test_condition.cpp ]
           [ thread-run test_tss.cpp ]
           [ thread-run test_once.cpp ]

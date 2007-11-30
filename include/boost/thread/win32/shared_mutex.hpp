@@ -48,10 +48,10 @@ namespace boost
         }
 
         state_data state;
-        void* semaphores[2];
-        void* &unlock_sem;
-        void* &exclusive_sem;
-        void* upgrade_sem;
+        detail::win32::handle semaphores[2];
+        detail::win32::handle &unlock_sem;
+        detail::win32::handle &exclusive_sem;
+        detail::win32::handle upgrade_sem;
 
         void release_waiters(state_data old_state)
         {

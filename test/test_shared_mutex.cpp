@@ -466,7 +466,7 @@ void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
     unsigned unblocked_count=0;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
     boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
-    boost::thread::sleep(delay(1));
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
 
     bool const try_succeeded=rw_mutex.try_lock_shared();

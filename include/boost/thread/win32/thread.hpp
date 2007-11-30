@@ -19,6 +19,7 @@
 #include <list>
 #include <algorithm>
 #include <boost/ref.hpp>
+#include <boost/cstdint.hpp>
 
 namespace boost
 {
@@ -73,6 +74,82 @@ namespace boost
         };
 
         typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
+
+        struct timeout
+        {
+            unsigned long start;
+            uintmax_t milliseconds;
+            bool relative;
+            boost::system_time abs_time;
+
+            static unsigned long const max_non_infinite_wait=0xfffffffe;
+
+            timeout(uintmax_t milliseconds_):
+                start(win32::GetTickCount()),
+                milliseconds(milliseconds_),
+                relative(true),
+                abs_time(boost::get_system_time())
+            {}
+
+            timeout(boost::system_time const& abs_time_):
+                start(win32::GetTickCount()),
+                milliseconds(0),
+                relative(false),
+                abs_time(abs_time_)
+            {}
+
+            struct remaining_time
+            {
+                bool more;
+                unsigned long milliseconds;
+
+                remaining_time(uintmax_t remaining):
+                    more(remaining>max_non_infinite_wait),
+                    milliseconds(more?max_non_infinite_wait:(unsigned long)remaining)
+                {}
+            };
+
+            remaining_time remaining_milliseconds() const
+            {
+                if(is_sentinel())
+                {
+                    return remaining_time(win32::infinite);
+                }
+                else if(relative)
+                {
+                    unsigned long const now=win32::GetTickCount();
+                    unsigned long const elapsed=now-start;
+                    return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
+                }
+                else
+                {
+                    system_time const now=get_system_time();
+                    if(abs_time<=now)
+                    {
+                        return remaining_time(0);
+                    }
+                    return remaining_time((abs_time-now).total_milliseconds()+1);
+                }
+            }
+
+            bool is_sentinel() const
+            {
+                return milliseconds==~uintmax_t(0);
+            }
+            
+
+            static timeout sentinel()
+            {
+                return timeout(sentinel_type());
+            }
+        private:
+            struct sentinel_type
+            {};
+                
+            explicit timeout(sentinel_type):
+                start(0),milliseconds(~uintmax_t(0)),relative(true)
+            {}
+        };
     }
 
     class BOOST_THREAD_DECL thread
@@ -210,7 +287,7 @@ namespace boost
 
         thread::id BOOST_THREAD_DECL get_id();
 
-        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds);
+        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
         inline bool interruptible_wait(unsigned long milliseconds)
         {
             return interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
