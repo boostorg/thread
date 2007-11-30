@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -153,6 +154,26 @@ template <typename F, typename T>
 thread_binder<F, T> bind(const F& func, const T& param)
 {
     return thread_binder<F, T>(func, param);
+}
+
+template <typename R, typename T>
+class thread_member_binder
+{
+public:
+    thread_member_binder(R (T::*func)(), T& param)
+        : func(func), param(param) { }
+    void operator()() const { (param.*func)(); }
+
+private:
+    R (T::*func)();
+    T& param;
+};
+
+
+template <typename R, typename T>
+thread_member_binder<R, T> bind(R (T::*func)(), T& param)
+{
+    return thread_member_binder<R, T>(func, param);
 }
 } // namespace
 

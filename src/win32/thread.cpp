@@ -4,6 +4,9 @@
 // (C) Copyright 2007 Anthony Williams
 // (C) Copyright 2007 David Deakins
 
+#define _WIN32_WINNT 0x400
+#define WINVER 0x400
+
 #include <boost/thread/thread.hpp>
 #include <algorithm>
 #include <windows.h>
@@ -15,6 +18,7 @@
 #include <boost/thread/tss.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/detail/tss_hooks.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
 
 namespace boost
 {
@@ -63,11 +67,11 @@ namespace boost
         typedef void* uintptr_t;
 
         inline uintptr_t const _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
-            void* arglist, unsigned initflag, unsigned* thrdaddr)
+                                              void* arglist, unsigned initflag, unsigned* thrdaddr)
         {
             DWORD threadID;
             HANDLE hthread=CreateThread(static_cast<LPSECURITY_ATTRIBUTES>(security),stack_size,ThreadProxy,
-                new ThreadProxyData(start_address,arglist),initflag,&threadID);
+                                        new ThreadProxyData(start_address,arglist),initflag,&threadID);
             if (hthread!=0)
                 *thrdaddr=threadID;
             return reinterpret_cast<uintptr_t const>(hthread);
@@ -287,7 +291,7 @@ namespace boost
         detail::thread_data_ptr local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            this_thread::interruptible_wait(local_thread_info->thread_handle,detail::win32::infinite);
+            this_thread::interruptible_wait(local_thread_info->thread_handle,detail::timeout::sentinel());
             release_handle();
         }
     }
@@ -353,13 +357,57 @@ namespace boost
 
     namespace this_thread
     {
-        bool interruptible_wait(detail::win32::handle handle_to_wait_for,unsigned long milliseconds)
+        namespace
         {
-            detail::win32::handle handles[2]={0};
+            LARGE_INTEGER get_due_time(detail::timeout const&  target_time)
+            {
+                LARGE_INTEGER due_time={0};
+                if(target_time.relative)
+                {
+                    unsigned long const elapsed_milliseconds=GetTickCount()-target_time.start;
+                    LONGLONG const remaining_milliseconds=(target_time.milliseconds-elapsed_milliseconds);
+                    LONGLONG const hundred_nanoseconds_in_one_millisecond=10000;
+
+                    if(remaining_milliseconds>0)
+                    {
+                        due_time.QuadPart=-(remaining_milliseconds*hundred_nanoseconds_in_one_millisecond);
+                    }
+                }
+                else
+                {
+                    SYSTEMTIME target_system_time={0};
+                    target_system_time.wYear=target_time.abs_time.date().year();
+                    target_system_time.wMonth=target_time.abs_time.date().month();
+                    target_system_time.wDay=target_time.abs_time.date().day();
+                    target_system_time.wHour=target_time.abs_time.time_of_day().hours();
+                    target_system_time.wMinute=target_time.abs_time.time_of_day().minutes();
+                    target_system_time.wSecond=target_time.abs_time.time_of_day().seconds();
+
+                    if(!SystemTimeToFileTime(&target_system_time,((FILETIME*)&due_time)))
+                    {
+                        due_time.QuadPart=0;
+                    }
+                    else
+                    {
+                        long const hundred_nanoseconds_in_one_second=10000000;
+                        due_time.QuadPart+=target_time.abs_time.time_of_day().fractional_seconds()*(hundred_nanoseconds_in_one_second/target_time.abs_time.time_of_day().ticks_per_second());
+                    }
+                }
+                return due_time;
+            }
+        }
+        
+
+        bool interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time)
+        {
+            detail::win32::handle handles[3]={0};
             unsigned handle_count=0;
+            unsigned wait_handle_index=~0U;
             unsigned interruption_index=~0U;
+            unsigned timeout_index=~0U;
             if(handle_to_wait_for!=detail::win32::invalid_handle_value)
             {
+                wait_handle_index=handle_count;
                 handles[handle_count++]=handle_to_wait_for;
             }
             if(get_current_thread_data() && get_current_thread_data()->interruption_enabled)
@@ -367,24 +415,79 @@ namespace boost
                 interruption_index=handle_count;
                 handles[handle_count++]=get_current_thread_data()->interruption_handle;
             }
+
+            detail::win32::handle_manager timer_handle;
+            
+#ifndef UNDER_CE
+            unsigned const min_timer_wait_period=20;
+            
+            if(!target_time.is_sentinel())
+            {
+                detail::timeout::remaining_time const time_left=target_time.remaining_milliseconds();
+                if(time_left.milliseconds > min_timer_wait_period)
+                {
+                    // for a long-enough timeout, use a waitable timer (which tracks clock changes)
+                    timer_handle=CreateWaitableTimer(NULL,false,NULL);
+                    if(timer_handle!=0)
+                    {
+                        LARGE_INTEGER due_time=get_due_time(target_time);
+                        
+                        bool const set_time_succeeded=SetWaitableTimer(timer_handle,&due_time,0,0,0,false)!=0;
+                        if(set_time_succeeded)
+                        {
+                            timeout_index=handle_count;
+                            handles[handle_count++]=timer_handle;
+                        }
+                    }
+                }
+                else if(!target_time.relative)
+                {
+                    // convert short absolute-time timeouts into relative ones, so we don't race against clock changes
+                    target_time=detail::timeout(time_left.milliseconds);
+                }
+            }
+#endif
         
-            if(handle_count)
+            bool const using_timer=timeout_index!=~0u;
+            detail::timeout::remaining_time time_left(0);
+            
+            do
             {
-                unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,milliseconds);
-                if((handle_to_wait_for!=detail::win32::invalid_handle_value) && !notified_index)
+                if(!using_timer)
                 {
-                    return true;
+                    time_left=target_time.remaining_milliseconds();
                 }
-                else if(notified_index==interruption_index)
+                
+                if(handle_count)
                 {
-                    detail::win32::ResetEvent(get_current_thread_data()->interruption_handle);
-                    throw thread_interrupted();
+                    unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds);
+                    if(notified_index<handle_count)
+                    {
+                        if(notified_index==wait_handle_index)
+                        {
+                            return true;
+                        }
+                        else if(notified_index==interruption_index)
+                        {
+                            detail::win32::ResetEvent(get_current_thread_data()->interruption_handle);
+                            throw thread_interrupted();
+                        }
+                        else if(notified_index==timeout_index)
+                        {
+                            return false;
+                        }
+                    }
+                }
+                else
+                {
+                    detail::win32::Sleep(time_left.milliseconds);
+                }
+                if(target_time.relative)
+                {
+                    target_time.milliseconds-=detail::timeout::max_non_infinite_wait;
                 }
             }
-            else
-            {
-                detail::win32::Sleep(milliseconds);
-            }
+            while(time_left.more);
             return false;
         }
 
