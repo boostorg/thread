@@ -230,13 +230,10 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 
         void NTAPI on_tls_callback(HINSTANCE h, DWORD dwReason, PVOID pv)
         {
-            OutputDebugString("on_tls_callback\n");
-            
             switch (dwReason)
             {
                 case DLL_THREAD_DETACH:
                 {
-                    OutputDebugString("on_tls_callback: thread_exit\n");
                     on_thread_exit();
                     break;
                 }

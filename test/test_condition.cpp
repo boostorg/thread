@@ -94,66 +94,6 @@ void condition_test_waits(condition_test_data* data)
     data->condition.notify_one();
 }
 
-void do_test_condition_notify_one()
-{
-    condition_test_data data;
-
-    boost::thread thread(bind(&condition_test_thread, &data));
-
-    {
-        boost::mutex::scoped_lock lock(data.mutex);
-        BOOST_CHECK(lock ? true : false);
-        data.notified++;
-        data.condition.notify_one();
-    }
-
-    thread.join();
-    BOOST_CHECK_EQUAL(data.awoken, 1);
-}
-
-void test_condition_notify_one()
-{
-    timed_test(&do_test_condition_notify_one, 100, execution_monitor::use_mutex);
-}
-
-void do_test_condition_notify_all()
-{
-    const int NUMTHREADS = 5;
-    boost::thread_group threads;
-    condition_test_data data;
-
-    try
-    {
-        for (int i = 0; i < NUMTHREADS; ++i)
-            threads.create_thread(bind(&condition_test_thread, &data));
-
-        {
-            boost::mutex::scoped_lock lock(data.mutex);
-            BOOST_CHECK(lock ? true : false);
-            data.notified++;
-            data.condition.notify_all();
-        }
-
-        threads.join_all();
-    }
-    catch(...)
-    {
-        threads.interrupt_all();
-        threads.join_all();
-        throw;
-    }
-
-    BOOST_CHECK_EQUAL(data.awoken, NUMTHREADS);
-}
-
-void test_condition_notify_all()
-{
-    // We should have already tested notify_one here, so
-    // a timed test with the default execution_monitor::use_condition
-    // should be OK, and gives the fastest performance
-    timed_test(&do_test_condition_notify_all, 100);
-}
-
 void do_test_condition_waits()
 {
     condition_test_data data;
@@ -235,43 +175,13 @@ void test_condition_wait_is_a_interruption_point()
     timed_test(&do_test_condition_wait_is_a_interruption_point, 1);
 }
 
-bool fake_predicate()
-{
-    return false;
-}
-
-
-void do_test_timed_wait_times_out()
-{
-    boost::condition_variable cond;
-    boost::mutex m;
-
-    boost::posix_time::seconds const delay(5);
-    boost::mutex::scoped_lock lock(m);
-    boost::system_time const start=boost::get_system_time();
-    bool const res=cond.timed_wait(lock,delay,fake_predicate);
-    boost::system_time const end=boost::get_system_time();
-    BOOST_CHECK(!res);
-    BOOST_CHECK((delay-boost::posix_time::milliseconds(10))<=(end-start));
-}
-
-
-void test_timed_wait_times_out()
-{
-    timed_test(&do_test_timed_wait_times_out, 15);
-}
-
-
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: condition test suite");
 
-    test->add(BOOST_TEST_CASE(&test_condition_notify_one));
-    test->add(BOOST_TEST_CASE(&test_condition_notify_all));
     test->add(BOOST_TEST_CASE(&test_condition_waits));
     test->add(BOOST_TEST_CASE(&test_condition_wait_is_a_interruption_point));
-    test->add(BOOST_TEST_CASE(&test_timed_wait_times_out));
 
     return test;
 }

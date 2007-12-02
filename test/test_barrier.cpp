@@ -52,7 +52,7 @@ void test_barrier()
         throw;
     }
     
-    BOOST_CHECK(global_parameter == 5);
+    BOOST_CHECK_EQUAL(global_parameter,5);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
