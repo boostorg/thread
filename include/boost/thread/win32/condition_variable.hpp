@@ -186,7 +186,7 @@ namespace boost
                 while (!pred())
                 {
                     if(!do_wait(m, wait_until))
-                        return false;
+                        return pred();
                 }
                 return true;
             }
