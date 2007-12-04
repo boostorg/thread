@@ -379,9 +379,9 @@ namespace boost
                     target_system_time.wYear=target_time.abs_time.date().year();
                     target_system_time.wMonth=target_time.abs_time.date().month();
                     target_system_time.wDay=target_time.abs_time.date().day();
-                    target_system_time.wHour=target_time.abs_time.time_of_day().hours();
-                    target_system_time.wMinute=target_time.abs_time.time_of_day().minutes();
-                    target_system_time.wSecond=target_time.abs_time.time_of_day().seconds();
+                    target_system_time.wHour=(WORD)target_time.abs_time.time_of_day().hours();
+                    target_system_time.wMinute=(WORD)target_time.abs_time.time_of_day().minutes();
+                    target_system_time.wSecond=(WORD)target_time.abs_time.time_of_day().seconds();
 
                     if(!SystemTimeToFileTime(&target_system_time,((FILETIME*)&due_time)))
                     {
