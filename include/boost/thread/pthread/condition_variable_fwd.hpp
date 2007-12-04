@@ -41,7 +41,7 @@ namespace boost
             while (!pred())
             {
                 if(!timed_wait(m, wait_until))
-                    return false;
+                    return pred();
             }
             return true;
         }
