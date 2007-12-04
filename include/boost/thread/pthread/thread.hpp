@@ -208,7 +208,7 @@ namespace boost
             ~restore_interruption();
         };
 
-        BOOST_THREAD_DECL inline thread::id get_id()
+        inline thread::id get_id()
         {
             return thread::id(pthread_self());
         }
@@ -217,13 +217,13 @@ namespace boost
         BOOST_THREAD_DECL bool interruption_enabled();
         BOOST_THREAD_DECL bool interruption_requested();
 
-        BOOST_THREAD_DECL inline void yield()
+        inline void yield()
         {
             thread::yield();
         }
         
         template<typename TimeDuration>
-        BOOST_THREAD_DECL inline void sleep(TimeDuration const& rel_time)
+        inline void sleep(TimeDuration const& rel_time)
         {
             thread::sleep(get_system_time()+rel_time);
         }
