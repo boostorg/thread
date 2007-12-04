@@ -10,10 +10,10 @@ class locking_thread
 {
     boost::shared_mutex& rw_mutex;
     unsigned& unblocked_count;
+    boost::condition_variable& unblocked_condition;
     unsigned& simultaneous_running_count;
     unsigned& max_simultaneous_running;
     boost::mutex& unblocked_count_mutex;
-    boost::condition_variable& unblocked_condition;
     boost::mutex& finish_mutex;
 public:
     locking_thread(boost::shared_mutex& rw_mutex_,
