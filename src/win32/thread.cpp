@@ -244,7 +244,7 @@ namespace boost
         detach();
     }
     
-    thread::thread(boost::move_t<thread> x)
+    thread::thread(detail::thread_move_t<thread> x)
     {
         {
             boost::mutex::scoped_lock l(x->thread_info_mutex);
@@ -253,21 +253,21 @@ namespace boost
         x->release_handle();
     }
     
-    thread& thread::operator=(boost::move_t<thread> x)
+    thread& thread::operator=(detail::thread_move_t<thread> x)
     {
         thread new_thread(x);
         swap(new_thread);
         return *this;
     }
         
-    thread::operator boost::move_t<thread>()
+    thread::operator detail::thread_move_t<thread>()
     {
         return move();
     }
 
-    boost::move_t<thread> thread::move()
+    detail::thread_move_t<thread> thread::move()
     {
-        boost::move_t<thread> x(*this);
+        detail::thread_move_t<thread> x(*this);
         return x;
     }
 

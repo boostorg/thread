@@ -169,7 +169,7 @@ namespace boost
             thread_data(F f_):
                 f(f_)
             {}
-            thread_data(boost::move_t<F> f_):
+            thread_data(detail::thread_move_t<F> f_):
                 f(f_)
             {}
             
@@ -200,16 +200,16 @@ namespace boost
             start_thread();
         }
         template <class F>
-        explicit thread(boost::move_t<F> f):
+        explicit thread(detail::thread_move_t<F> f):
             thread_info(detail::heap_new<thread_data<F> >(f))
         {
             start_thread();
         }
 
-        thread(boost::move_t<thread> x);
-        thread& operator=(boost::move_t<thread> x);
-        operator boost::move_t<thread>();
-        boost::move_t<thread> move();
+        thread(detail::thread_move_t<thread> x);
+        thread& operator=(detail::thread_move_t<thread> x);
+        operator detail::thread_move_t<thread>();
+        detail::thread_move_t<thread> move();
 
         void swap(thread& x);
 
