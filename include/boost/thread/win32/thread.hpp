@@ -200,7 +200,7 @@ namespace boost
             start_thread();
         }
         template <class F>
-        explicit thread(detail::thread_move_t<F> f):
+        thread(detail::thread_move_t<F> f):
             thread_info(detail::heap_new<thread_data<F> >(f))
         {
             start_thread();

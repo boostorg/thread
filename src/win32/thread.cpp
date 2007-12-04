@@ -246,11 +246,9 @@ namespace boost
     
     thread::thread(detail::thread_move_t<thread> x)
     {
-        {
-            boost::mutex::scoped_lock l(x->thread_info_mutex);
-            thread_info=x->thread_info;
-        }
-        x->release_handle();
+        lock_guard<mutex> lock(x->thread_info_mutex);
+        thread_info=x->thread_info;
+        x->thread_info=0;
     }
     
     thread& thread::operator=(detail::thread_move_t<thread> x)
@@ -317,7 +315,7 @@ namespace boost
 
     void thread::release_handle()
     {
-        boost::mutex::scoped_lock l1(thread_info_mutex);
+        lock_guard<mutex> l1(thread_info_mutex);
         thread_info=0;
     }
     
