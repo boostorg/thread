@@ -241,8 +241,9 @@ void test_timed_lock_shared_times_out_if_write_lock_held()
 
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+boost::posix_time::milliseconds(2000);
+    boost::posix_time::milliseconds const timeout_resolution(20);
     bool const timed_lock_succeeded=rw_mutex.timed_lock_shared(timeout);
-    BOOST_CHECK(in_range(boost::get_xtime(timeout),1));
+    BOOST_CHECK((timeout-timeout_resolution)<boost::get_system_time());
     BOOST_CHECK(!timed_lock_succeeded);
     if(timed_lock_succeeded)
     {

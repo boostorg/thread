@@ -102,6 +102,11 @@ struct test_timedlock
     typedef M mutex_type;
     typedef typename M::scoped_timed_lock timed_lock_type;
 
+    static bool fake_predicate()
+    {
+        return false;
+    }
+
     void operator()()
     {
         mutex_type mutex;
@@ -123,14 +128,17 @@ struct test_timedlock
         BOOST_CHECK(lock ? true : false);
 
         // Construct and initialize an xtime for a fast time out.
-        boost::xtime xt = delay(0, 100);
+        boost::system_time timeout = boost::get_system_time()+boost::posix_time::milliseconds(100);
 
         // Test the lock and the mutex with condition variables.
         // No one is going to notify this condition variable.  We expect to
         // time out.
-        BOOST_CHECK(!condition.timed_wait(lock, xt));
+        BOOST_CHECK(!condition.timed_wait(lock, timeout, fake_predicate));
         BOOST_CHECK(lock ? true : false);
-        BOOST_CHECK(in_range(xt));
+
+        boost::system_time now=boost::get_system_time();
+        boost::posix_time::milliseconds const timeout_resolution(20);
+        BOOST_CHECK((now-timeout_resolution)<timeout);
 
         // Test the lock, unlock and timedlock methods.
         lock.unlock();
