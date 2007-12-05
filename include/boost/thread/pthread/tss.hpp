@@ -6,6 +6,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
 
+#include <boost/thread/detail/config.hpp>
 #include <boost/shared_ptr.hpp>
 
 namespace boost
