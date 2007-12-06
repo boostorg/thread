@@ -97,7 +97,7 @@ namespace boost
             thread_data(F f_):
                 f(f_)
             {}
-            thread_data(boost::move_t<F> f_):
+            thread_data(detail::thread_move_t<F> f_):
                 f(f_)
             {}
             
@@ -127,16 +127,16 @@ namespace boost
             start_thread();
         }
         template <class F>
-        thread(boost::move_t<F> f):
+        thread(detail::thread_move_t<F> f):
             thread_info(new thread_data<F>(f))
         {
             start_thread();
         }
 
-        explicit thread(boost::move_t<thread> x);
-        thread& operator=(boost::move_t<thread> x);
-        operator boost::move_t<thread>();
-        boost::move_t<thread> move();
+        thread(detail::thread_move_t<thread> x);
+        thread& operator=(detail::thread_move_t<thread> x);
+        operator detail::thread_move_t<thread>();
+        detail::thread_move_t<thread> move();
 
         void swap(thread& x);
 
@@ -208,7 +208,7 @@ namespace boost
             ~restore_interruption();
         };
 
-        BOOST_THREAD_DECL inline thread::id get_id()
+        inline thread::id get_id()
         {
             return thread::id(pthread_self());
         }
@@ -217,13 +217,13 @@ namespace boost
         BOOST_THREAD_DECL bool interruption_enabled();
         BOOST_THREAD_DECL bool interruption_requested();
 
-        BOOST_THREAD_DECL inline void yield()
+        inline void yield()
         {
             thread::yield();
         }
         
         template<typename TimeDuration>
-        BOOST_THREAD_DECL inline void sleep(TimeDuration const& rel_time)
+        inline void sleep(TimeDuration const& rel_time)
         {
             thread::sleep(get_system_time()+rel_time);
         }

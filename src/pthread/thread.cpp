@@ -188,6 +188,37 @@ namespace boost
         detach();
     }
 
+    thread::thread(detail::thread_move_t<thread> x)
+    {
+        lock_guard<mutex> lock(x->thread_info_mutex);
+        thread_info=x->thread_info;
+        x->thread_info.reset();
+    }
+    
+    thread& thread::operator=(detail::thread_move_t<thread> x)
+    {
+        thread new_thread(x);
+        swap(new_thread);
+        return *this;
+    }
+        
+    thread::operator detail::thread_move_t<thread>()
+    {
+        return move();
+    }
+
+    detail::thread_move_t<thread> thread::move()
+    {
+        detail::thread_move_t<thread> x(*this);
+        return x;
+    }
+
+    void thread::swap(thread& x)
+    {
+        thread_info.swap(x.thread_info);
+    }
+
+
     bool thread::operator==(const thread& other) const
     {
         return get_id()==other.get_id();

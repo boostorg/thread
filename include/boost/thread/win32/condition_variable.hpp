@@ -330,7 +330,7 @@ namespace boost
         template<typename lock_type,typename duration_type,typename predicate_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
         {
-            return timed_wait(m,wait_duration.total_milliseconds(),pred);
+            return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
     };
 
