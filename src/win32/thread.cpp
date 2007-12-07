@@ -244,30 +244,28 @@ namespace boost
         detach();
     }
     
-    thread::thread(boost::move_t<thread> x)
+    thread::thread(detail::thread_move_t<thread> x)
     {
-        {
-            boost::mutex::scoped_lock l(x->thread_info_mutex);
-            thread_info=x->thread_info;
-        }
-        x->release_handle();
+        lock_guard<mutex> lock(x->thread_info_mutex);
+        thread_info=x->thread_info;
+        x->thread_info=0;
     }
     
-    thread& thread::operator=(boost::move_t<thread> x)
+    thread& thread::operator=(detail::thread_move_t<thread> x)
     {
         thread new_thread(x);
         swap(new_thread);
         return *this;
     }
         
-    thread::operator boost::move_t<thread>()
+    thread::operator detail::thread_move_t<thread>()
     {
         return move();
     }
 
-    boost::move_t<thread> thread::move()
+    detail::thread_move_t<thread> thread::move()
     {
-        boost::move_t<thread> x(*this);
+        detail::thread_move_t<thread> x(*this);
         return x;
     }
 
@@ -317,7 +315,7 @@ namespace boost
 
     void thread::release_handle()
     {
-        boost::mutex::scoped_lock l1(thread_info_mutex);
+        lock_guard<mutex> l1(thread_info_mutex);
         thread_info=0;
     }
     
@@ -379,9 +377,9 @@ namespace boost
                     target_system_time.wYear=target_time.abs_time.date().year();
                     target_system_time.wMonth=target_time.abs_time.date().month();
                     target_system_time.wDay=target_time.abs_time.date().day();
-                    target_system_time.wHour=target_time.abs_time.time_of_day().hours();
-                    target_system_time.wMinute=target_time.abs_time.time_of_day().minutes();
-                    target_system_time.wSecond=target_time.abs_time.time_of_day().seconds();
+                    target_system_time.wHour=(WORD)target_time.abs_time.time_of_day().hours();
+                    target_system_time.wMinute=(WORD)target_time.abs_time.time_of_day().minutes();
+                    target_system_time.wSecond=(WORD)target_time.abs_time.time_of_day().seconds();
 
                     if(!SystemTimeToFileTime(&target_system_time,((FILETIME*)&due_time)))
                     {
