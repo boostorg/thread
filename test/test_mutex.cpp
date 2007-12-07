@@ -138,7 +138,7 @@ struct test_timedlock
 
         boost::system_time now=boost::get_system_time();
         boost::posix_time::milliseconds const timeout_resolution(20);
-        BOOST_CHECK((now-timeout_resolution)<timeout);
+        BOOST_CHECK((timeout-timeout_resolution)<now);
 
         // Test the lock, unlock and timedlock methods.
         lock.unlock();
