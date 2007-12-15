@@ -23,12 +23,6 @@ namespace boost
                 return &t;
             }
         };
-
-        template<typename T>
-        thread_move_t<T> thread_move(T& t)
-        {
-            return thread_move_t<T>(t);
-        }
     }
     
 }
