@@ -276,6 +276,16 @@ namespace boost
             return do_wait(m,wait_until);
         }
 
+        bool timed_wait(unique_lock<mutex>& m,boost::xtime const& wait_until)
+        {
+            return do_wait(m,system_time(wait_until));
+        }
+        template<typename duration_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration)
+        {
+            return do_wait(m,wait_duration.total_milliseconds());
+        }
+
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until,predicate_type pred)
         {
@@ -313,6 +323,18 @@ namespace boost
         bool timed_wait(lock_type& m,boost::system_time const& wait_until)
         {
             return do_wait(m,wait_until);
+        }
+
+        template<typename lock_type>
+        bool timed_wait(lock_type& m,boost::xtime const& wait_until)
+        {
+            return do_wait(m,system_time(wait_until));
+        }
+
+        template<typename lock_type,typename duration_type>
+        bool timed_wait(lock_type& m,duration_type const& wait_duration)
+        {
+            return do_wait(m,wait_duration.total_milliseconds());
         }
 
         template<typename lock_type,typename predicate_type>
