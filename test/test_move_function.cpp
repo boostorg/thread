@@ -12,21 +12,17 @@ void test_thread_move_from_lvalue_on_construction()
 {
     boost::thread src(do_nothing);
     boost::thread::id src_id=src.get_id();
-    boost::thread dest=boost::move(src);
+    boost::thread dest(boost::move(src));
     boost::thread::id dest_id=dest.get_id();
     BOOST_CHECK(src_id==dest_id);
     BOOST_CHECK(src.get_id()==boost::thread::id());
     dest.join();
 }
 
-boost::thread make_thread()
+void test_thread_move_from_rvalue()
 {
-    return boost::thread(do_nothing);
-}
-
-void test_thread_move_from_function_return()
-{
-    boost::thread x=boost::move(make_thread());
+    boost::thread x(boost::move(boost::thread(do_nothing)));
+    BOOST_CHECK(x.get_id()!=boost::thread::id());
     x.join();
 }
 
@@ -37,6 +33,6 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
         BOOST_TEST_SUITE("Boost.Threads: thread move test suite");
 
     test->add(BOOST_TEST_CASE(test_thread_move_from_lvalue_on_construction));
-    test->add(BOOST_TEST_CASE(test_thread_move_from_function_return));
+    test->add(BOOST_TEST_CASE(test_thread_move_from_rvalue));
     return test;
 }
