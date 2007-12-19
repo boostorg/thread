@@ -13,6 +13,9 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#endif
 
 #include "timeconv.inl"
 
@@ -408,7 +411,13 @@ namespace boost
 
     unsigned thread::hardware_concurrency()
     {
-        return 1;
+#if defined(PTW32_VERSION) || defined(__hpux)
+        return pthread_num_processors_np();
+#elif defined(__linux__)
+        return get_nprocs;
+#else
+        return 0;
+#endif
     }
 
     thread::id thread::get_id() const
