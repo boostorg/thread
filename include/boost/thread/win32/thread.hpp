@@ -245,6 +245,16 @@ namespace boost
         bool interruption_requested() const;
     };
 
+    inline detail::thread_move_t<thread> move(thread& x)
+    {
+        return x.move();
+    }
+    
+    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> x)
+    {
+        return x;
+    }
+
     template<typename F>
     struct thread::thread_data<boost::reference_wrapper<F> >:
         detail::thread_data_base
@@ -354,7 +364,14 @@ namespace boost
         friend std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
         {
-            return os<<x.thread_data;
+            if(x.thread_data)
+            {
+                return os<<x.thread_data;
+            }
+            else
+            {
+                return os<<"{Not-any-thread}";
+            }
         }
 
         void interrupt()
