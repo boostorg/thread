@@ -40,44 +40,62 @@ namespace boost
     {
         class thread_id
         {
-            boost::optional<pthread_t> id;
-
+        private:
+            detail::thread_data_ptr thread_data;
+            
+            thread_id(detail::thread_data_ptr thread_data_):
+                thread_data(thread_data_)
+            {}
             friend class boost::thread;
-
             friend thread_id this_thread::get_id();
-
-            thread_id(pthread_t id_):
-                id(id_)
-            {}
-        
         public:
-            thread_id()
+            thread_id():
+                thread_data()
             {}
-
+            
             bool operator==(const thread_id& y) const
             {
-                return (id && y.id) && (pthread_equal(*id,*y.id)!=0);
+                return thread_data==y.thread_data;
             }
         
             bool operator!=(const thread_id& y) const
             {
-                return !(*this==y);
+                return thread_data!=y.thread_data;
+            }
+        
+            bool operator<(const thread_id& y) const
+            {
+                return thread_data<y.thread_data;
+            }
+        
+            bool operator>(const thread_id& y) const
+            {
+                return y.thread_data<thread_data;
+            }
+        
+            bool operator<=(const thread_id& y) const
+            {
+                return !(y.thread_data<thread_data);
+            }
+        
+            bool operator>=(const thread_id& y) const
+            {
+                return !(thread_data<y.thread_data);
             }
 
             template<class charT, class traits>
             friend std::basic_ostream<charT, traits>& 
             operator<<(std::basic_ostream<charT, traits>& os, const thread_id& x)
             {
-                if(x.id)
+                if(x.thread_data)
                 {
-                    return os<<*x.id;
+                    return os<<x.thread_data;
                 }
                 else
                 {
                     return os<<"{Not-any-thread}";
                 }
             }
-        
         };
     }
 
@@ -108,13 +126,13 @@ namespace boost
         };
         
         mutable boost::mutex thread_info_mutex;
-        boost::shared_ptr<detail::thread_data_base> thread_info;
+        detail::thread_data_ptr thread_info;
 
         void start_thread();
         
-        explicit thread(boost::shared_ptr<detail::thread_data_base> data);
+        explicit thread(detail::thread_data_ptr data);
 
-        boost::shared_ptr<detail::thread_data_base> get_thread_info() const;
+        detail::thread_data_ptr get_thread_info() const;
         
     public:
         thread();
@@ -219,10 +237,7 @@ namespace boost
             ~restore_interruption();
         };
 
-        inline thread::id get_id()
-        {
-            return thread::id(pthread_self());
-        }
+        BOOST_THREAD_DECL thread::id get_id();
 
         BOOST_THREAD_DECL void interruption_point();
         BOOST_THREAD_DECL bool interruption_enabled();
