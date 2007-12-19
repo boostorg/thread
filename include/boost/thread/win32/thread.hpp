@@ -364,7 +364,14 @@ namespace boost
         friend std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
         {
-            return os<<x.thread_data;
+            if(x.thread_data)
+            {
+                return os<<x.thread_data;
+            }
+            else
+            {
+                return os<<"{Not-any-thread}";
+            }
         }
 
         void interrupt()
