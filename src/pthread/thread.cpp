@@ -414,7 +414,7 @@ namespace boost
 #if defined(PTW32_VERSION) || defined(__hpux)
         return pthread_num_processors_np();
 #elif defined(__linux__)
-        return get_nprocs;
+        return get_nprocs();
 #else
         return 0;
 #endif
