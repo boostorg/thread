@@ -98,21 +98,23 @@ void test_thread_ids_have_a_total_order()
         BOOST_CHECK(false);
     }
 
-    BOOST_CHECK(boost::thread::id() < t.get_id());
-    BOOST_CHECK(boost::thread::id() < t2.get_id());
-    BOOST_CHECK(boost::thread::id() < t3.get_id());
+    boost::thread::id default_id;
 
-    BOOST_CHECK(boost::thread::id() <= t.get_id());
-    BOOST_CHECK(boost::thread::id() <= t2.get_id());
-    BOOST_CHECK(boost::thread::id() <= t3.get_id());
+    BOOST_CHECK(default_id < t.get_id());
+    BOOST_CHECK(default_id < t2.get_id());
+    BOOST_CHECK(default_id < t3.get_id());
 
-    BOOST_CHECK(!(boost::thread::id() > t.get_id()));
-    BOOST_CHECK(!(boost::thread::id() > t2.get_id()));
-    BOOST_CHECK(!(boost::thread::id() > t2.get_id()));
+    BOOST_CHECK(default_id <= t.get_id());
+    BOOST_CHECK(default_id <= t2.get_id());
+    BOOST_CHECK(default_id <= t3.get_id());
+
+    BOOST_CHECK(!(default_id > t.get_id()));
+    BOOST_CHECK(!(default_id > t2.get_id()));
+    BOOST_CHECK(!(default_id > t3.get_id()));
     
-    BOOST_CHECK(!(boost::thread::id() >= t.get_id()));
-    BOOST_CHECK(!(boost::thread::id() >= t2.get_id()));
-    BOOST_CHECK(!(boost::thread::id() >= t2.get_id()));
+    BOOST_CHECK(!(default_id >= t.get_id()));
+    BOOST_CHECK(!(default_id >= t2.get_id()));
+    BOOST_CHECK(!(default_id >= t3.get_id()));
 
     t.join();
     t2.join();
