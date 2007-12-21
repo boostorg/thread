@@ -7,6 +7,7 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/optional.hpp>
 #include <pthread.h>
@@ -21,10 +22,14 @@ namespace boost
     {
         struct thread_exit_callback_node;
         struct tss_data_node;
+
+        struct thread_data_base;
+        typedef boost::shared_ptr<thread_data_base> thread_data_ptr;
         
-        struct thread_data_base
+        struct thread_data_base:
+            enable_shared_from_this<thread_data_base>
         {
-            boost::shared_ptr<thread_data_base> self;
+            thread_data_ptr self;
             pthread_t thread_handle;
             boost::mutex data_mutex;
             boost::condition_variable done_condition;

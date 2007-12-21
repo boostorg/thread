@@ -5,11 +5,9 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
 
-#include <boost/thread/mutex.hpp>
 #include <limits.h>
 #include <boost/assert.hpp>
 #include <algorithm>
-#include <boost/thread/thread_time.hpp>
 #include <pthread.h>
 #include "timespec.hpp"
 #include "pthread_mutex_scoped_lock.hpp"
@@ -145,9 +143,21 @@ namespace boost
             while (!pred())
             {
                 if(!timed_wait(m, wait_until))
-                    return false;
+                    return pred();
             }
             return true;
+        }
+
+        template<typename lock_type,typename predicate_type>
+        bool timed_wait(lock_type& m,xtime const& wait_until,predicate_type pred)
+        {
+            return timed_wait(m,system_time(wait_until),pred);
+        }
+
+        template<typename lock_type,typename duration_type,typename predicate_type>
+        bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 
         void notify_one()

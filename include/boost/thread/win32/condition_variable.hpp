@@ -13,6 +13,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/thread_time.hpp>
 #include "interlocked_read.hpp"
+#include <boost/thread/xtime.hpp>
 
 namespace boost
 {
@@ -110,54 +111,65 @@ namespace boost
             };
             
 
+            template<typename lock_type>
+            void start_wait_loop_first_time(relocker<lock_type>& locker,
+                                            detail::win32::handle_manager& local_wake_sem)
+            {
+                locker.unlock();
+                if(!wake_sem)
+                {
+                    wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+                    BOOST_ASSERT(wake_sem);
+                }
+                local_wake_sem=detail::win32::duplicate_handle(wake_sem);
+                        
+                if(generations[0].notified)
+                {
+                    shift_generations_down();
+                }
+                else if(!active_generation_count)
+                {
+                    active_generation_count=1;
+                }
+            }
+            
+            template<typename lock_type>
+            void start_wait_loop(relocker<lock_type>& locker,
+                                 detail::win32::handle_manager& local_wake_sem,
+                                 detail::win32::handle_manager& sem)
+            {
+                boost::mutex::scoped_lock internal_lock(internal_mutex);
+                detail::interlocked_write_release(&total_count,total_count+1);
+                if(!local_wake_sem)
+                {
+                    start_wait_loop_first_time(locker,local_wake_sem);
+                }
+                if(!generations[0].semaphore)
+                {
+                    generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+                    BOOST_ASSERT(generations[0].semaphore);
+                }
+                ++generations[0].count;
+                sem=detail::win32::duplicate_handle(generations[0].semaphore);
+            }
+
         protected:
             template<typename lock_type>
-            bool do_wait(lock_type& lock,::boost::system_time const& wait_until)
+            bool do_wait(lock_type& lock,timeout wait_until)
             {
                 detail::win32::handle_manager local_wake_sem;
                 detail::win32::handle_manager sem;
-                bool first_loop=true;
                 bool woken=false;
 
                 relocker<lock_type> locker(lock);
             
                 while(!woken)
                 {
+                    start_wait_loop(locker,local_wake_sem,sem);
+                    
+                    if(!this_thread::interruptible_wait(sem,wait_until))
                     {
-                        boost::mutex::scoped_lock internal_lock(internal_mutex);
-                        detail::interlocked_write_release(&total_count,total_count+1);
-                        if(first_loop)
-                        {
-                            locker.unlock();
-                            if(!wake_sem)
-                            {
-                                wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                                BOOST_ASSERT(wake_sem);
-                            }
-                            local_wake_sem=detail::win32::duplicate_handle(wake_sem);
-                        
-                            if(generations[0].notified)
-                            {
-                                shift_generations_down();
-                            }
-                            else if(!active_generation_count)
-                            {
-                                active_generation_count=1;
-                            }
-                        
-                            first_loop=false;
-                        }
-                        if(!generations[0].semaphore)
-                        {
-                            generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                            BOOST_ASSERT(generations[0].semaphore);
-                        }
-                        ++generations[0].count;
-                        sem=detail::win32::duplicate_handle(generations[0].semaphore);
-                    }
-                    if(!this_thread::interruptible_wait(sem,::boost::detail::get_milliseconds_until(wait_until)))
-                    {
-                        break;
+                        return false;
                     }
                 
                     unsigned long const woken_result=detail::win32::WaitForSingleObject(local_wake_sem,0);
@@ -166,6 +178,17 @@ namespace boost
                     woken=(woken_result==0);
                 }
                 return woken;
+            }
+
+            template<typename lock_type,typename predicate_type>
+            bool do_wait(lock_type& m,timeout const& wait_until,predicate_type pred)
+            {
+                while (!pred())
+                {
+                    if(!do_wait(m, wait_until))
+                        return pred();
+                }
+                return true;
             }
         
             basic_condition_variable(const basic_condition_variable& other);
@@ -238,7 +261,7 @@ namespace boost
     public:
         void wait(unique_lock<mutex>& m)
         {
-            do_wait(m,::boost::detail::get_system_time_sentinel());
+            do_wait(m,detail::timeout::sentinel());
         }
 
         template<typename predicate_type>
@@ -253,15 +276,30 @@ namespace boost
             return do_wait(m,wait_until);
         }
 
+        bool timed_wait(unique_lock<mutex>& m,boost::xtime const& wait_until)
+        {
+            return do_wait(m,system_time(wait_until));
+        }
+        template<typename duration_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration)
+        {
+            return do_wait(m,wait_duration.total_milliseconds());
+        }
+
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until,predicate_type pred)
         {
-            while (!pred())
-            {
-                if(!timed_wait(m, wait_until))
-                    return false;
-            }
-            return true;
+            return do_wait(m,wait_until,pred);
+        }
+        template<typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,boost::xtime const& wait_until,predicate_type pred)
+        {
+            return do_wait(m,system_time(wait_until),pred);
+        }
+        template<typename duration_type,typename predicate_type>
+        bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
     };
     
@@ -272,7 +310,7 @@ namespace boost
         template<typename lock_type>
         void wait(lock_type& m)
         {
-            do_wait(m,::boost::detail::get_system_time_sentinel());
+            do_wait(m,detail::timeout::sentinel());
         }
 
         template<typename lock_type,typename predicate_type>
@@ -287,15 +325,34 @@ namespace boost
             return do_wait(m,wait_until);
         }
 
+        template<typename lock_type>
+        bool timed_wait(lock_type& m,boost::xtime const& wait_until)
+        {
+            return do_wait(m,system_time(wait_until));
+        }
+
+        template<typename lock_type,typename duration_type>
+        bool timed_wait(lock_type& m,duration_type const& wait_duration)
+        {
+            return do_wait(m,wait_duration.total_milliseconds());
+        }
+
         template<typename lock_type,typename predicate_type>
         bool timed_wait(lock_type& m,boost::system_time const& wait_until,predicate_type pred)
         {
-            while (!pred())
-            {
-                if(!timed_wait(m, wait_until))
-                    return false;
-            }
-            return true;
+            return do_wait(m,wait_until,pred);
+        }
+
+        template<typename lock_type,typename predicate_type>
+        bool timed_wait(lock_type& m,boost::xtime const& wait_until,predicate_type pred)
+        {
+            return do_wait(m,system_time(wait_until),pred);
+        }
+
+        template<typename lock_type,typename duration_type,typename predicate_type>
+        bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
+        {
+            return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
     };
 

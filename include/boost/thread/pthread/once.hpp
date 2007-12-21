@@ -14,8 +14,8 @@
 #include <pthread.h>
 #include <boost/assert.hpp>
 #include "pthread_mutex_scoped_lock.hpp"
-#include <boost/cstdint.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#include <boost/cstdint.hpp>
 
 namespace boost {
 
@@ -27,12 +27,12 @@ namespace boost {
     namespace detail
     {
         BOOST_THREAD_DECL boost::uintmax_t& get_once_per_thread_epoch();
-        extern BOOST_THREAD_DECL boost::uintmax_t once_global_epoch;
-        extern BOOST_THREAD_DECL pthread_mutex_t once_epoch_mutex;
-        extern BOOST_THREAD_DECL pthread_cond_t once_epoch_cv;
+        BOOST_THREAD_DECL extern boost::uintmax_t once_global_epoch;
+        BOOST_THREAD_DECL extern pthread_mutex_t once_epoch_mutex;
+        BOOST_THREAD_DECL extern pthread_cond_t once_epoch_cv;
     }
     
-#define BOOST_ONCE_INITIAL_FLAG_VALUE -1
+#define BOOST_ONCE_INITIAL_FLAG_VALUE 0
 #define BOOST_ONCE_INIT {BOOST_ONCE_INITIAL_FLAG_VALUE}
 
 
@@ -42,15 +42,15 @@ namespace boost {
     void call_once(once_flag& flag,Function f)
     {
         static boost::uintmax_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
-        static boost::uintmax_t const being_initialized=uninitialized_flag-1;
+        static boost::uintmax_t const being_initialized=uninitialized_flag+1;
         boost::uintmax_t const epoch=flag.epoch;
         boost::uintmax_t& this_thread_epoch=detail::get_once_per_thread_epoch();
         
-        if(epoch>this_thread_epoch)
+        if(epoch<this_thread_epoch)
         {
             pthread::pthread_mutex_scoped_lock lk(&detail::once_epoch_mutex);
 
-            while(flag.epoch>=being_initialized)
+            while(flag.epoch<=being_initialized)
             {
                 if(flag.epoch==uninitialized_flag)
                 {
@@ -66,7 +66,7 @@ namespace boost {
                         BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
                         throw;
                     }
-                    flag.epoch=++detail::once_global_epoch;
+                    flag.epoch=--detail::once_global_epoch;
                     BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
                 }
                 else

@@ -8,25 +8,23 @@
 
 namespace boost
 {
-    template<typename T>
-    struct move_t
+    namespace detail
     {
-        T& t;
-        move_t(T& t_):
-            t(t_)
-        {}
-
-        T* operator->() const
+        template<typename T>
+        struct thread_move_t
         {
-            return &t;
-        }
-    };
+            T& t;
+            thread_move_t(T& t_):
+                t(t_)
+            {}
 
-    template<typename T>
-    move_t<T> move(T& t)
-    {
-        return move_t<T>(t);
+            T* operator->() const
+            {
+                return &t;
+            }
+        };
     }
+    
 }
 
 

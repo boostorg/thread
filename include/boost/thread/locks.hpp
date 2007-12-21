@@ -86,21 +86,32 @@ namespace boost
         {
             timed_lock(target_time);
         }
-        unique_lock(boost::move_t<unique_lock<Mutex> > other):
+        unique_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
+            other->m=0;
         }
-        unique_lock(boost::move_t<upgrade_lock<Mutex> > other);
+        unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other);
 
-        unique_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
+        operator detail::thread_move_t<unique_lock<Mutex> >()
+        {
+            return move();
+        }
+
+        detail::thread_move_t<unique_lock<Mutex> > move()
+        {
+            return detail::thread_move_t<unique_lock<Mutex> >(*this);
+        }
+
+        unique_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             unique_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        unique_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
+        unique_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)
         {
             unique_lock temp(other);
             swap(temp);
@@ -112,7 +123,7 @@ namespace boost
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
-        void swap(boost::move_t<unique_lock<Mutex> > other)
+        void swap(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
@@ -197,6 +208,18 @@ namespace boost
     };
 
     template<typename Mutex>
+    inline detail::thread_move_t<unique_lock<Mutex> > move(unique_lock<Mutex> & x)
+    {
+        return x.move();
+    }
+    
+    template<typename Mutex>
+    inline detail::thread_move_t<unique_lock<Mutex> > move(detail::thread_move_t<unique_lock<Mutex> > x)
+    {
+        return x;
+    }
+
+    template<typename Mutex>
     class shared_lock
     {
     protected:
@@ -228,13 +251,13 @@ namespace boost
             timed_lock(target_time);
         }
 
-        shared_lock(boost::move_t<shared_lock<Mutex> > other):
+        shared_lock(detail::thread_move_t<shared_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
         }
 
-        shared_lock(boost::move_t<unique_lock<Mutex> > other):
+        shared_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
@@ -244,7 +267,7 @@ namespace boost
             }
         }
 
-        shared_lock(boost::move_t<upgrade_lock<Mutex> > other):
+        shared_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
@@ -254,21 +277,32 @@ namespace boost
             }
         }
 
-        shared_lock& operator=(boost::move_t<shared_lock<Mutex> > other)
+        operator detail::thread_move_t<shared_lock<Mutex> >()
+        {
+            return move();
+        }
+
+        detail::thread_move_t<shared_lock<Mutex> > move()
+        {
+            return detail::thread_move_t<shared_lock<Mutex> >(*this);
+        }
+
+
+        shared_lock& operator=(detail::thread_move_t<shared_lock<Mutex> > other)
         {
             shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        shared_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
+        shared_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        shared_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
+        shared_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)
         {
             shared_lock temp(other);
             swap(temp);
@@ -342,6 +376,19 @@ namespace boost
     };
 
     template<typename Mutex>
+    inline detail::thread_move_t<shared_lock<Mutex> > move(shared_lock<Mutex> & x)
+    {
+        return x.move();
+    }
+    
+    template<typename Mutex>
+    inline detail::thread_move_t<shared_lock<Mutex> > move(detail::thread_move_t<shared_lock<Mutex> > x)
+    {
+        return x;
+    }
+
+
+    template<typename Mutex>
     class upgrade_lock
     {
     protected:
@@ -364,13 +411,13 @@ namespace boost
                 lock();
             }
         }
-        upgrade_lock(boost::move_t<upgrade_lock<Mutex> > other):
+        upgrade_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
         }
 
-        upgrade_lock(boost::move_t<unique_lock<Mutex> > other):
+        upgrade_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
@@ -380,14 +427,25 @@ namespace boost
             }
         }
 
-        upgrade_lock& operator=(boost::move_t<upgrade_lock<Mutex> > other)
+        operator detail::thread_move_t<upgrade_lock<Mutex> >()
+        {
+            return move();
+        }
+
+        detail::thread_move_t<upgrade_lock<Mutex> > move()
+        {
+            return detail::thread_move_t<upgrade_lock<Mutex> >(*this);
+        }
+
+
+        upgrade_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)
         {
             upgrade_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        upgrade_lock& operator=(boost::move_t<unique_lock<Mutex> > other)
+        upgrade_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             upgrade_lock temp(other);
             swap(temp);
@@ -452,8 +510,21 @@ namespace boost
         friend class unique_lock<Mutex>;
     };
 
+
     template<typename Mutex>
-    unique_lock<Mutex>::unique_lock(boost::move_t<upgrade_lock<Mutex> > other):
+    inline detail::thread_move_t<upgrade_lock<Mutex> > move(upgrade_lock<Mutex> & x)
+    {
+        return x.move();
+    }
+    
+    template<typename Mutex>
+    inline detail::thread_move_t<upgrade_lock<Mutex> > move(detail::thread_move_t<upgrade_lock<Mutex> > x)
+    {
+        return x;
+    }
+
+    template<typename Mutex>
+    unique_lock<Mutex>::unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
         m(other->m),is_locked(other->is_locked)
     {
         other->is_locked=false;
@@ -474,23 +545,23 @@ namespace boost
         upgrade_to_unique_lock& operator=(upgrade_to_unique_lock&);
     public:
         explicit upgrade_to_unique_lock(upgrade_lock<Mutex>& m_):
-            source(&m_),exclusive(boost::move(*source))
+            source(&m_),exclusive(move(*source))
         {}
         ~upgrade_to_unique_lock()
         {
             if(source)
             {
-                *source=boost::move(exclusive);
+                *source=move(exclusive);
             }
         }
 
-        upgrade_to_unique_lock(boost::move_t<upgrade_to_unique_lock<Mutex> > other):
-            source(other->source),exclusive(boost::move(other->exclusive))
+        upgrade_to_unique_lock(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other):
+            source(other->source),exclusive(move(other->exclusive))
         {
             other->source=0;
         }
         
-        upgrade_to_unique_lock& operator=(boost::move_t<upgrade_to_unique_lock<Mutex> > other)
+        upgrade_to_unique_lock& operator=(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other)
         {
             upgrade_to_unique_lock temp(other);
             swap(temp);
@@ -515,6 +586,7 @@ namespace boost
             return exclusive.owns_lock();
         }
     };
+
 }
 
 #endif
