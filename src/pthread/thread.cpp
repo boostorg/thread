@@ -13,6 +13,14 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
+#ifdef __linux__
+#include <sys/sysinfo.h>
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+#include <sys/types.h>
+#include <sys/sysctl.h>
+#elif defined(__sun)
+#include <unistd.h>
+#endif
 
 #include "timeconv.inl"
 
@@ -229,7 +237,7 @@ namespace boost
         return !operator==(other);
     }
 
-    boost::shared_ptr<detail::thread_data_base> thread::get_thread_info() const
+    detail::thread_data_ptr thread::get_thread_info() const
     {
         lock_guard<mutex> l(thread_info_mutex);
         return thread_info;
@@ -237,7 +245,7 @@ namespace boost
 
     void thread::join()
     {
-        boost::shared_ptr<detail::thread_data_base> const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             bool do_join=false;
@@ -281,7 +289,7 @@ namespace boost
 
     bool thread::timed_join(system_time const& wait_until)
     {
-        boost::shared_ptr<detail::thread_data_base> const local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             bool do_join=false;
@@ -335,7 +343,7 @@ namespace boost
 
     void thread::detach()
     {
-        boost::shared_ptr<detail::thread_data_base> local_thread_info;
+        detail::thread_data_ptr local_thread_info;
         {
             lock_guard<mutex> l1(thread_info_mutex);
             thread_info.swap(local_thread_info);
@@ -408,15 +416,28 @@ namespace boost
 
     unsigned thread::hardware_concurrency()
     {
-        return 1;
+#if defined(PTW32_VERSION) || defined(__hpux)
+        return pthread_num_processors_np();
+#elif defined(__linux__)
+        return get_nprocs();
+#elif defined(__APPLE__) || defined(__FreeBSD__)
+        int count;
+        size_t size=sizeof(count);
+        return sysctlbyname("hw.ncpu",&count,&size,NULL,0)?0:count;
+#elif defined(__sun)
+        int const count=sysconf(_SC_NPROCESSORS_ONLN);
+        return (count>0)?count:0;
+#else
+        return 0;
+#endif
     }
 
     thread::id thread::get_id() const
     {
-        boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=get_thread_info();
         if(local_thread_info)
         {
-            return id(local_thread_info->thread_handle);
+            return id(local_thread_info);
         }
         else
         {
@@ -426,7 +447,7 @@ namespace boost
 
     void thread::interrupt()
     {
-        boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
@@ -440,7 +461,7 @@ namespace boost
 
     bool thread::interruption_requested() const
     {
-        boost::shared_ptr<detail::thread_data_base> local_thread_info=get_thread_info();
+        detail::thread_data_ptr const local_thread_info=get_thread_info();
         if(local_thread_info)
         {
             lock_guard<mutex> lk(local_thread_info->data_mutex);
@@ -455,6 +476,12 @@ namespace boost
 
     namespace this_thread
     {
+        thread::id get_id()
+        {
+            boost::detail::thread_data_base* const thread_info=get_or_make_current_thread_data();
+            return thread::id(thread_info?thread_info->shared_from_this():detail::thread_data_ptr());
+        }
+
         void interruption_point()
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
