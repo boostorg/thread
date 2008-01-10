@@ -57,12 +57,12 @@ namespace boost
         {
             if(old_state.exclusive_waiting)
             {
-                BOOST_VERIFY(detail::win32::ReleaseSemaphore(exclusive_sem,1,NULL)!=0);
+                BOOST_VERIFY(detail::win32::ReleaseSemaphore(exclusive_sem,1,0)!=0);
             }
                         
             if(old_state.shared_waiting || old_state.exclusive_waiting)
             {
-                BOOST_VERIFY(detail::win32::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),NULL)!=0);
+                BOOST_VERIFY(detail::win32::ReleaseSemaphore(unlock_sem,old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
             }
         }
         
@@ -215,7 +215,7 @@ namespace boost
                     {
                         if(old_state.upgrade)
                         {
-                            BOOST_VERIFY(detail::win32::ReleaseSemaphore(upgrade_sem,1,NULL)!=0);
+                            BOOST_VERIFY(detail::win32::ReleaseSemaphore(upgrade_sem,1,0)!=0);
                         }
                         else
                         {
