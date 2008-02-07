@@ -104,6 +104,12 @@ namespace boost
                 return true;
             }
 
+            template<typename Duration>
+            bool timed_lock(Duration const& timeout)
+            {
+                return timed_lock(get_system_time()+timeout);
+            }
+
             long get_active_count()
             {
                 return ::boost::detail::interlocked_read_acquire(&active_count);
