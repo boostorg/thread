@@ -181,9 +181,9 @@ namespace boost
             inline handle create_anonymous_semaphore(long initial_count,long max_count)
             {
 #if !defined(BOOST_NO_ANSI_APIS)  
-                handle const res=CreateSemaphoreA(NULL,initial_count,max_count,NULL);
+                handle const res=CreateSemaphoreA(0,initial_count,max_count,0);
 #else
-                handle const res=CreateSemaphoreW(NULL,initial_count,max_count,NULL);
+                handle const res=CreateSemaphoreW(0,initial_count,max_count,0);
 #endif               
                 if(!res)
                 {
