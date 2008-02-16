@@ -45,7 +45,7 @@ last-revision="$Date$">
   <biblioentry id="thread.bib.Boost">
     <abbrev id="thread.bib.Boost.abbrev">Boost</abbrev>
     <bibliomisc>The <emphasis>Boost</emphasis> world wide web site.
-	<ulink url="http:/www.boost.org">http://www.boost.org</ulink></bibliomisc>
+	<ulink url="http://www.boost.org">http://www.boost.org</ulink></bibliomisc>
 	<para>&Boost.Thread; is one of many Boost libraries. The Boost web
     site includes a great deal of documentation and general information which
     applies to all Boost libraries. Current copies of the libraries including
