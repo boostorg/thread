@@ -6,7 +6,7 @@
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
-     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
+     (See accompanying file LICENSE_1_0.txt or  http://www.boost.org/LICENSE_1_0.txt)
 -->
 <library name="Thread" dirname="thread" id="thread"
 last-revision="$Date$"
@@ -25,7 +25,7 @@ xmlns:xi="http://www.w3.org/2001/XInclude">
     </copyright>
     <legalnotice>
       <para>Subject to the Boost Software License, Version 1.0. 
-     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)</para>
+     (See accompanying file LICENSE_1_0.txt or  http://www.boost.org/LICENSE_1_0.txt)</para>
     </legalnotice>
     <librarypurpose>Portable C++ multi-threading</librarypurpose>
     <librarycategory name="category:concurrent" />
