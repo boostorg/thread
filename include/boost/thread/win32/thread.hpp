@@ -20,6 +20,7 @@
 #include <algorithm>
 #include <boost/ref.hpp>
 #include <boost/cstdint.hpp>
+#include <boost/bind.hpp>
 
 namespace boost
 {
@@ -189,19 +190,44 @@ namespace boost
         explicit thread(detail::thread_data_ptr data);
 
         detail::thread_data_ptr get_thread_info() const;
+
+        template<typename F>
+        static inline detail::thread_data_ptr make_thread_info(F f)
+        {
+            return detail::heap_new<thread_data<F> >(f);
+        }
     public:
         thread();
         ~thread();
 
         template <class F>
         explicit thread(F f):
-            thread_info(detail::heap_new<thread_data<F> >(f))
+            thread_info(make_thread_info(f))
         {
             start_thread();
         }
         template <class F>
         thread(detail::thread_move_t<F> f):
-            thread_info(detail::heap_new<thread_data<F> >(f))
+            thread_info(make_thread_info(f))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1>
+        thread(F f,A1 a1):
+            thread_info(make_thread_info(boost::bind<void>(f,a1)))
+        {
+            start_thread();
+        }
+        template <class F,class A1,class A2>
+        thread(F f,A1 a1,A2 a2):
+            thread_info(make_thread_info(boost::bind<void>(f,a1,a2)))
+        {
+            start_thread();
+        }
+        template <class F,class A1,class A2,class A3>
+        thread(F f,A1 a1,A2 a2,A3 a3):
+            thread_info(make_thread_info(boost::bind<void>(f,a1,a2,a3)))
         {
             start_thread();
         }
