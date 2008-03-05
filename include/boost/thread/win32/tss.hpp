@@ -51,7 +51,7 @@ namespace boost
             
             void operator()(void* data)
             {
-                cleanup_function(data);
+                cleanup_function(static_cast<T*>(data));
             }
         };
 
