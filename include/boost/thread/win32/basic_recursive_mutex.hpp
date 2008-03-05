@@ -56,6 +56,12 @@ namespace boost
                 long const current_thread_id=win32::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_timed_lock(current_thread_id,target);
             }
+            template<typename Duration>
+            bool timed_lock(Duration const& timeout)
+            {
+                return timed_lock(get_system_time()+timeout);
+            }
+
             long get_active_count()
             {
                 return mutex.get_active_count();

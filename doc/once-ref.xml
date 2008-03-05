@@ -6,7 +6,7 @@
 ]>
 <!-- Copyright (c) 2002-2003 William E. Kempf, Michael Glassford
      Subject to the Boost Software License, Version 1.0. 
-     (See accompanying file LICENSE-1.0 or  http://www.boost.org/LICENSE-1.0)
+     (See accompanying file LICENSE_1_0.txt or  http://www.boost.org/LICENSE_1_0.txt)
 -->
 <header name="boost/thread/once.hpp"
 	last-revision="$Date$">

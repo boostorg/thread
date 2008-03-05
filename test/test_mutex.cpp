@@ -150,6 +150,17 @@ struct test_timedlock
         boost::system_time target = boost::get_system_time()+boost::posix_time::milliseconds(100);
         BOOST_CHECK(lock.timed_lock(target));
         BOOST_CHECK(lock ? true : false);
+        lock.unlock();
+        BOOST_CHECK(!lock);
+
+        BOOST_CHECK(mutex.timed_lock(boost::posix_time::milliseconds(100)));
+        mutex.unlock();
+
+        BOOST_CHECK(lock.timed_lock(boost::posix_time::milliseconds(100)));
+        BOOST_CHECK(lock ? true : false);
+        lock.unlock();
+        BOOST_CHECK(!lock);
+        
     }
 };
 
