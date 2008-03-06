@@ -37,7 +37,8 @@ bool callable_no_args::called=false;
 
 void test_thread_callable_object_no_arguments()
 {
-    boost::thread callable((callable_no_args()));
+    callable_no_args func;
+    boost::thread callable(func);
     callable.join();
     BOOST_CHECK(callable_no_args::called);
 }
