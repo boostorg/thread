@@ -228,6 +228,41 @@ void test_tss_with_custom_cleanup()
     timed_test(&do_test_tss_with_custom_cleanup, 2);
 }
 
+Dummy* tss_object=new Dummy;
+
+void tss_thread_with_custom_cleanup_and_release()
+{
+    tss_with_cleanup.reset(tss_object);
+    tss_with_cleanup.release();
+}
+
+void do_test_tss_does_no_cleanup_after_release()
+{
+    tss_cleanup_called=false;
+    boost::thread t(tss_thread_with_custom_cleanup_and_release);
+    try
+    {
+        t.join();
+    }
+    catch(...)
+    {
+        t.interrupt();
+        t.join();
+        throw;
+    }
+
+    BOOST_CHECK(!tss_cleanup_called);
+    if(!tss_cleanup_called)
+    {
+        delete tss_object;
+    }
+}
+
+void test_tss_does_no_cleanup_after_release()
+{
+    timed_test(&do_test_tss_does_no_cleanup_after_release, 2);
+}
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -235,6 +270,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_tss));
     test->add(BOOST_TEST_CASE(test_tss_with_custom_cleanup));
+    test->add(BOOST_TEST_CASE(test_tss_does_no_cleanup_after_release));
 
     return test;
 }
