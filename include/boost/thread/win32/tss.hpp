@@ -85,7 +85,7 @@ namespace boost
         T* release()
         {
             T* const temp=get();
-            detail::set_tss_data(this,0,0,false);
+            detail::set_tss_data(this,boost::shared_ptr<detail::tss_cleanup_function>(),0,false);
             return temp;
         }
         void reset(T* new_value=0)
