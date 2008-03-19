@@ -33,7 +33,14 @@ namespace boost
 
             void destroy()
             {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4312)
+#endif
                 void* const old_event=BOOST_INTERLOCKED_EXCHANGE_POINTER(&event,0);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
                 if(old_event)
                 {
                     win32::CloseHandle(old_event);
@@ -64,7 +71,14 @@ namespace boost
             bool timed_lock(::boost::system_time const& wait_until)
             {
                 long old_count=active_count;
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                 while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
                 {
                     long const current_count=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,(old_count+1)|lock_flag_value,old_count);
                     if(current_count==old_count)
@@ -139,7 +153,15 @@ namespace boost
                 if(!current_event)
                 {
                     void* const new_event=win32::create_anonymous_event(win32::auto_reset_event,win32::event_initially_reset);
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4311)
+#pragma warning(disable:4312)
+#endif
                     void* const old_event=BOOST_INTERLOCKED_COMPARE_EXCHANGE_POINTER(&event,new_event,0);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
                     if(old_event!=0)
                     {
                         win32::CloseHandle(new_event);
