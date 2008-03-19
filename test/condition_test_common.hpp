@@ -34,6 +34,8 @@ struct wait_for_flag
         {
             return flag;
         }
+    private:
+        void operator=(check_flag&);
     };
 
         

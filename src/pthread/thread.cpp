@@ -683,7 +683,7 @@ namespace boost
     }
         
 
-    int thread_group::size() const
+    size_t thread_group::size() const
     {
         return m_threads.size();
     }

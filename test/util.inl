@@ -1,6 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
-// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -123,6 +123,7 @@ public:
 private:
     F func;
     execution_monitor& monitor;
+    void operator=(indirect_adapter&);
 };
 
 template <typename F>
@@ -165,6 +166,8 @@ public:
     void operator()() const { (param.*func)(); }
 
 private:
+    void operator=(thread_member_binder&);
+    
     R (T::*func)();
     T& param;
 };

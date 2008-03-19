@@ -1,6 +1,12 @@
 #ifndef SHARED_MUTEX_LOCKING_THREAD_HPP
 #define SHARED_MUTEX_LOCKING_THREAD_HPP
 
+//  (C) Copyright 2008 Anthony Williams
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -56,6 +62,8 @@ public:
             --simultaneous_running_count;
         }
     }
+private:
+    void operator=(locking_thread&);
 };
 
 

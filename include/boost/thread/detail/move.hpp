@@ -22,6 +22,8 @@ namespace boost
             {
                 return &t;
             }
+        private:
+            void operator=(thread_move_t&);
         };
     }
     

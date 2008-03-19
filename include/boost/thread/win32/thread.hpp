@@ -21,6 +21,13 @@
 #include <boost/ref.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
+#include <stdlib.h>
+#include <memory>
+
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4251)
+#endif
 
 namespace boost
 {
@@ -476,9 +483,9 @@ namespace boost
         thread* create_thread(F threadfunc)
         {
             boost::lock_guard<mutex> guard(m);
-            thread* const new_thread=new thread(threadfunc);
-            threads.push_back(new_thread);
-            return new_thread;
+            std::auto_ptr<thread> new_thread(new thread(threadfunc));
+            threads.push_back(new_thread.get());
+            return new_thread.release();
         }
         
         void add_thread(thread* thrd)
@@ -524,7 +531,7 @@ namespace boost
             }
         }
         
-        int size() const
+        size_t size() const
         {
             boost::lock_guard<mutex> guard(m);
             return threads.size();
@@ -535,5 +542,9 @@ namespace boost
         mutable mutex m;
     };
 }
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
 #endif

@@ -1,7 +1,7 @@
 #ifndef BOOST_THREAD_WIN32_SHARED_MUTEX_HPP
 #define BOOST_THREAD_WIN32_SHARED_MUTEX_HPP
 
-//  (C) Copyright 2006-7 Anthony Williams
+//  (C) Copyright 2006-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -104,7 +104,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             return !(old_state.exclusive| old_state.exclusive_waiting_blocked);
         }
 
@@ -115,7 +122,14 @@ namespace boost
 
         bool timed_lock_shared(boost::system_time const& wait_until)
         {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 state_data old_state=state;
                 do
@@ -137,7 +151,14 @@ namespace boost
                     }
                     old_state=current_state;
                 }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                 while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
                 if(!(old_state.exclusive| old_state.exclusive_waiting_blocked))
                 {
@@ -169,7 +190,14 @@ namespace boost
                         }
                         old_state=current_state;
                     }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                     while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
                     if(!(old_state.exclusive| old_state.exclusive_waiting_blocked))
                     {
@@ -226,7 +254,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
         }
 
         void lock()
@@ -236,7 +271,14 @@ namespace boost
 
         bool timed_lock(boost::system_time const& wait_until)
         {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 state_data old_state=state;
 
@@ -260,7 +302,14 @@ namespace boost
                     }
                     old_state=current_state;
                 }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                 while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
                 if(!old_state.shared_count && !old_state.exclusive)
                 {
@@ -291,7 +340,14 @@ namespace boost
                         }
                         old_state=current_state;
                     }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                     while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
                     if(!old_state.shared_count && !old_state.exclusive)
                     {
                         return true;
@@ -323,13 +379,27 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             release_waiters(old_state);
         }
 
         void lock_upgrade()
         {
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 state_data old_state=state;
                 do
@@ -352,7 +422,14 @@ namespace boost
                     }
                     old_state=current_state;
                 }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
                 while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
                 if(!(old_state.exclusive|| old_state.exclusive_waiting_blocked|| old_state.upgrade))
                 {
@@ -393,7 +470,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
         }
 
         void unlock_upgrade_and_lock()
@@ -421,7 +505,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
         }
 
         void unlock_and_lock_upgrade()
@@ -447,7 +538,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             release_waiters(old_state);
         }
         
@@ -473,7 +571,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             release_waiters(old_state);
         }
         
@@ -498,7 +603,14 @@ namespace boost
                 }
                 old_state=current_state;
             }
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             release_waiters(old_state);
         }
         
