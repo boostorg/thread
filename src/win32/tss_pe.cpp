@@ -164,6 +164,10 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         #endif
 #endif
 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4189)
+#endif
         PVAPI on_tls_prepare(void)
         {
             //The following line has an important side effect:
@@ -201,6 +205,9 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 
             return INIRETSUCCESS;
         }
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
         PVAPI on_process_init(void)
         {
@@ -228,7 +235,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             return INIRETSUCCESS;
         }
 
-        void NTAPI on_tls_callback(HINSTANCE h, DWORD dwReason, PVOID pv)
+        void NTAPI on_tls_callback(HINSTANCE /*h*/, DWORD dwReason, PVOID /*pv*/)
         {
             switch (dwReason)
             {

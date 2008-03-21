@@ -21,6 +21,12 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/shared_ptr.hpp>
 #include "thread_data.hpp"
+#include <stdlib.h>
+
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4251)
+#endif
 
 namespace boost
 {
@@ -293,7 +299,7 @@ namespace boost
         }
     }
 
-    class BOOST_THREAD_DECL thread_group : private noncopyable
+    class BOOST_THREAD_DECL thread_group
     {
     public:
         thread_group();
@@ -304,13 +310,20 @@ namespace boost
         void remove_thread(thread* thrd);
         void join_all();
         void interrupt_all();
-        int size() const;
+        size_t size() const;
 
     private:
+        thread_group(thread_group&);
+        void operator=(thread_group&);
+        
         std::list<thread*> m_threads;
         mutex m_mutex;
     };
 } // namespace boost
+
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
 
 
 #endif

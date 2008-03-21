@@ -55,10 +55,17 @@ namespace boost
                 }
                 else
                 {
-                    active_generation_count=(last_active_entry-generations)+1;
+                    active_generation_count=unsigned(last_active_entry-generations)+1;
                 }
-            
+
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4996)
+#endif
                 std::copy_backward(generations,generations+active_generation_count-1,generations+active_generation_count);
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
                 generations[0]=list_entry();
             }
 
@@ -108,6 +115,8 @@ namespace boost
                     }
                     
                 }
+            private:
+                void operator=(relocker&);
             };
             
 
