@@ -27,9 +27,6 @@ namespace boost
     class shared_lock;
 
     template<typename Mutex>
-    class exclusive_lock;
-
-    template<typename Mutex>
     class upgrade_lock;
 
     template<typename Mutex>
