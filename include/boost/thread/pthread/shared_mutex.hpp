@@ -57,7 +57,14 @@ namespace boost
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(!state.exclusive && !state.exclusive_waiting_blocked)
                 {
@@ -89,7 +96,14 @@ namespace boost
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(!state.exclusive && !state.exclusive_waiting_blocked)
                 {
@@ -130,7 +144,14 @@ namespace boost
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(state.shared_count || state.exclusive)
                 {
@@ -150,7 +171,14 @@ namespace boost
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
                 
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(state.shared_count || state.exclusive)
                 {
@@ -196,7 +224,14 @@ namespace boost
         {
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(!state.exclusive && !state.exclusive_waiting_blocked && !state.upgrade)
                 {
@@ -213,7 +248,14 @@ namespace boost
         {
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(!state.exclusive && !state.exclusive_waiting_blocked && !state.upgrade)
                 {
@@ -262,7 +304,14 @@ namespace boost
             boost::this_thread::disable_interruption do_not_disturb;
             boost::mutex::scoped_lock lock(state_change);
             --state.shared_count;
+#ifdef BOOST_MSVC
+#pragma warning(push)
+#pragma warning(disable:4127)
+#endif
             while(true)
+#ifdef BOOST_MSVC
+#pragma warning(pop)
+#endif
             {
                 if(!state.shared_count)
                 {

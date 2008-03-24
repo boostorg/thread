@@ -116,6 +116,8 @@ namespace
         boost::mutex& unblocked_mutex;
         unsigned& unblocked_count;
         
+        void operator=(simple_writing_thread&);
+        
     public:
         simple_writing_thread(boost::shared_mutex& rwm_,
                               boost::mutex& finish_mutex_,
@@ -181,6 +183,8 @@ namespace
         boost::mutex& finish_mutex;
         boost::mutex& unblocked_mutex;
         unsigned& unblocked_count;
+        
+        void operator=(simple_reading_thread&);
         
     public:
         simple_reading_thread(boost::shared_mutex& rwm_,

@@ -72,6 +72,7 @@ namespace boost
                 }
             }
             
+            void operator=(interruption_checker&);
         public:
             explicit interruption_checker(pthread_cond_t* cond):
                 thread_info(detail::get_current_thread_data())

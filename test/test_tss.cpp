@@ -66,7 +66,7 @@ void test_tss_thread()
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
     typedef HANDLE native_thread_t;
 
-    DWORD WINAPI test_tss_thread_native(LPVOID lpParameter)
+    DWORD WINAPI test_tss_thread_native(LPVOID /*lpParameter*/)
     {
         test_tss_thread();
         return 0;

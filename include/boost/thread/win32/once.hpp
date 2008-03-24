@@ -46,6 +46,8 @@ namespace boost
             {
                 BOOST_VERIFY(win32::ReleaseMutex(mutex_handle)!=0);
             }
+        private:
+            void operator=(win32_mutex_scoped_lock&);
         };
 
 #ifdef BOOST_NO_ANSI_APIS
