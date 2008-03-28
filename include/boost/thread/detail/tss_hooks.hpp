@@ -59,7 +59,7 @@
             //a method for doing so has been discovered.
         //May be omitted; may be called multiple times.
 
-    extern "C" BOOST_THREAD_DECL void on_thread_exit(void);
+    extern "C" BOOST_THREAD_DECL void __cdecl on_thread_exit(void);
         //Function to be called just be fore a thread ends
             //in an exe or dll that uses Boost.Threads.
         //Must be called in the context of the thread
