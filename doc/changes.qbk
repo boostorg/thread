@@ -44,6 +44,8 @@ functions.
 but did not lock it on construction. This facility has now been replaced with the constructor that takes a
 `boost::defer_lock_type` as the second parameter: ``boost::mutex::scoped_lock some_lock(some_mutex,boost::defer_lock);``
 
+* The `locked()` member function of the `scoped_lock` types has been renamed to __owns_lock_ref__.
+
 * The broken `boost::read_write_mutex` has been replaced with __shared_mutex__.
 
 
