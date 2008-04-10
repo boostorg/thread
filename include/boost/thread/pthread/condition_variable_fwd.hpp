@@ -58,6 +58,12 @@ namespace boost
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 
+        typedef pthread_cond_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &cond;
+        }
+
         void notify_one();
         void notify_all();
     };
