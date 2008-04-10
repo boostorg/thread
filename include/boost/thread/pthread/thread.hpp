@@ -214,6 +214,9 @@ namespace boost
         static void sleep(const system_time& xt);
         static void yield();
 
+        typedef pthread_t native_handle_type;
+        native_handle_type native_handle();
+
         // extensions
         void interrupt();
         bool interruption_requested() const;
