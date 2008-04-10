@@ -118,6 +118,12 @@ namespace boost
             }
         }
 
+        template<typename TimeDuration>
+        bool timed_lock_shared(TimeDuration const & relative_time)
+        {
+            return timed_lock_shared(get_system_time()+relative_time);
+        }
+
         void unlock_shared()
         {
             boost::mutex::scoped_lock lock(state_change);
@@ -196,6 +202,12 @@ namespace boost
             }
         }
 
+        template<typename TimeDuration>
+        bool timed_lock(TimeDuration const & relative_time)
+        {
+            return timed_lock(get_system_time()+relative_time);
+        }
+
         bool try_lock()
         {
             boost::mutex::scoped_lock lock(state_change);
@@ -269,6 +281,12 @@ namespace boost
                     return false;
                 }
             }
+        }
+
+        template<typename TimeDuration>
+        bool timed_lock_upgrade(TimeDuration const & relative_time)
+        {
+            return timed_lock(get_system_time()+relative_time);
         }
 
         bool try_lock_upgrade()

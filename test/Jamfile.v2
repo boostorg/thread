@@ -51,6 +51,7 @@ rule thread-run ( sources )
           [ thread-run test_barrier.cpp ]		   
           [ thread-run test_shared_mutex.cpp ]
           [ thread-run test_shared_mutex_part_2.cpp ]
+          [ thread-run test_shared_mutex_timed_locks.cpp ]
           [ thread-run test_lock_concept.cpp ]
     ;
 }
