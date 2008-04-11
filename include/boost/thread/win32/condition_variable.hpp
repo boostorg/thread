@@ -35,9 +35,9 @@ namespace boost
                     semaphore(0),count(0),notified(0)
                 {}
 
-                void release(unsigned count=1)
+                void release(unsigned count_to_release=1)
                 {
-                    detail::win32::ReleaseSemaphore(semaphore,count,0);
+                    detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
                 }
                 
             };
@@ -46,6 +46,13 @@ namespace boost
 
             list_entry generations[generation_count];
             detail::win32::handle wake_sem;
+
+            void wake_waiters(long count_to_wake)
+            {
+                detail::interlocked_write_release(&total_count,total_count-count_to_wake);
+                detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
+            }
+            
 
             static bool no_waiters(list_entry const& entry)
             {
@@ -57,7 +64,7 @@ namespace boost
                 list_entry* const last_active_entry=std::remove_if(generations,generations+generation_count,no_waiters);
                 if(last_active_entry==generations+generation_count)
                 {
-                    broadcast_entry(generations[generation_count-1],false);
+                    broadcast_entry(generations[generation_count-1]);
                 }
                 else
                 {
@@ -75,15 +82,9 @@ namespace boost
                 generations[0]=list_entry();
             }
 
-            void broadcast_entry(list_entry& entry,bool wake)
+            void broadcast_entry(list_entry& entry)
             {
-                long const count_to_wake=entry.count;
-                detail::interlocked_write_release(&total_count,total_count-count_to_wake);
-                if(wake)
-                {
-                    detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
-                }
-                entry.release(count_to_wake);
+                entry.release(entry.count);
                 entry.count=0;
                 dispose_entry(entry);
             }
@@ -237,8 +238,7 @@ namespace boost
                     {
                         return;
                     }
-                    detail::win32::ReleaseSemaphore(wake_sem,1,0);
-                    detail::interlocked_write_release(&total_count,total_count-1);
+                    wake_waiters(1);
                     
                     unsigned waiting_count=0;
                     
@@ -262,6 +262,7 @@ namespace boost
                     }
                     if(waiting_count<=total_count)
                     {
+                        shift_generations_down();
                         ensure_generation_present();
                         generations[0].release();
                     }
@@ -273,13 +274,22 @@ namespace boost
                 if(detail::interlocked_read_acquire(&total_count))
                 {
                     boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    long waiting_count=total_count;
+                    
+                    wake_waiters(total_count);
                     for(unsigned generation=active_generation_count;generation!=0;--generation)
                     {
                         list_entry& entry=generations[generation-1];
                         if(entry.count)
                         {
-                            broadcast_entry(entry,true);
+                            waiting_count-=entry.count;
+                            broadcast_entry(entry);
                         }
+                    }
+                    if(waiting_count)
+                    {
+                        ensure_generation_present();
+                        generations[0].release(waiting_count);
                     }
                     active_generation_count=0;
                 }
