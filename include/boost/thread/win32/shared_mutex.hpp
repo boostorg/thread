@@ -120,6 +120,12 @@ namespace boost
             BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
         }
 
+        template<typename TimeDuration>
+        bool timed_lock_shared(TimeDuration const & relative_time)
+        {
+            return timed_lock_shared(get_system_time()+relative_time);
+        }
+
         bool timed_lock_shared(boost::system_time const& wait_until)
         {
 #ifdef BOOST_MSVC
@@ -267,6 +273,12 @@ namespace boost
         void lock()
         {
             BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
+        }
+
+        template<typename TimeDuration>
+        bool timed_lock(TimeDuration const & relative_time)
+        {
+            return timed_lock(get_system_time()+relative_time);
         }
 
         bool timed_lock(boost::system_time const& wait_until)

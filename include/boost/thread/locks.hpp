@@ -400,13 +400,16 @@ namespace boost
         {
             lock();
         }
-        upgrade_lock(Mutex& m_,bool do_lock):
+        upgrade_lock(Mutex& m_,adopt_lock_t):
+            m(&m_),is_locked(true)
+        {}
+        upgrade_lock(Mutex& m_,defer_lock_t):
+            m(&m_),is_locked(false)
+        {}
+        upgrade_lock(Mutex& m_,try_to_lock_t):
             m(&m_),is_locked(false)
         {
-            if(do_lock)
-            {
-                lock();
-            }
+            try_lock();
         }
         upgrade_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)

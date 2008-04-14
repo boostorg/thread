@@ -34,12 +34,25 @@ namespace boost
                 list_entry():
                     semaphore(0),count(0),notified(0)
                 {}
+
+                void release(unsigned count_to_release=1)
+                {
+                    detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
+                }
+                
             };
 
             BOOST_STATIC_CONSTANT(unsigned,generation_count=3);
 
             list_entry generations[generation_count];
             detail::win32::handle wake_sem;
+
+            void wake_waiters(long count_to_wake)
+            {
+                detail::interlocked_write_release(&total_count,total_count-count_to_wake);
+                detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
+            }
+            
 
             static bool no_waiters(list_entry const& entry)
             {
@@ -51,7 +64,7 @@ namespace boost
                 list_entry* const last_active_entry=std::remove_if(generations,generations+generation_count,no_waiters);
                 if(last_active_entry==generations+generation_count)
                 {
-                    broadcast_entry(generations[generation_count-1],false);
+                    broadcast_entry(generations[generation_count-1]);
                 }
                 else
                 {
@@ -69,15 +82,9 @@ namespace boost
                 generations[0]=list_entry();
             }
 
-            void broadcast_entry(list_entry& entry,bool wake)
+            void broadcast_entry(list_entry& entry)
             {
-                long const count_to_wake=entry.count;
-                detail::interlocked_write_release(&total_count,total_count-count_to_wake);
-                if(wake)
-                {
-                    detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
-                }
-                detail::win32::ReleaseSemaphore(entry.semaphore,count_to_wake,0);
+                entry.release(entry.count);
                 entry.count=0;
                 dispose_entry(entry);
             }
@@ -124,6 +131,7 @@ namespace boost
             void start_wait_loop_first_time(relocker<lock_type>& locker,
                                             detail::win32::handle_manager& local_wake_sem)
             {
+                detail::interlocked_write_release(&total_count,total_count+1);
                 locker.unlock();
                 if(!wake_sem)
                 {
@@ -141,6 +149,15 @@ namespace boost
                     active_generation_count=1;
                 }
             }
+
+            void ensure_generation_present()
+            {
+                if(!generations[0].semaphore)
+                {
+                    generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
+                    BOOST_ASSERT(generations[0].semaphore);
+                }
+            }
             
             template<typename lock_type>
             void start_wait_loop(relocker<lock_type>& locker,
@@ -148,16 +165,11 @@ namespace boost
                                  detail::win32::handle_manager& sem)
             {
                 boost::mutex::scoped_lock internal_lock(internal_mutex);
-                detail::interlocked_write_release(&total_count,total_count+1);
                 if(!local_wake_sem)
                 {
                     start_wait_loop_first_time(locker,local_wake_sem);
                 }
-                if(!generations[0].semaphore)
-                {
-                    generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                    BOOST_ASSERT(generations[0].semaphore);
-                }
+                ensure_generation_present();
                 ++generations[0].count;
                 sem=detail::win32::duplicate_handle(generations[0].semaphore);
             }
@@ -222,15 +234,22 @@ namespace boost
                 if(detail::interlocked_read_acquire(&total_count))
                 {
                     boost::mutex::scoped_lock internal_lock(internal_mutex);
-                    detail::win32::ReleaseSemaphore(wake_sem,1,0);
+                    if(!total_count)
+                    {
+                        return;
+                    }
+                    wake_waiters(1);
+                    
+                    unsigned waiting_count=0;
+                    
                     for(unsigned generation=active_generation_count;generation!=0;--generation)
                     {
                         list_entry& entry=generations[generation-1];
+                        waiting_count+=entry.count;
                         if(entry.count)
                         {
-                            detail::interlocked_write_release(&total_count,total_count-1);
                             entry.notified=true;
-                            detail::win32::ReleaseSemaphore(entry.semaphore,1,0);
+                            entry.release();
                             if(!--entry.count)
                             {
                                 dispose_entry(entry);
@@ -241,6 +260,12 @@ namespace boost
                             }
                         }
                     }
+                    if(waiting_count<=total_count)
+                    {
+                        shift_generations_down();
+                        ensure_generation_present();
+                        generations[0].release();
+                    }
                 }
             }
         
@@ -249,13 +274,22 @@ namespace boost
                 if(detail::interlocked_read_acquire(&total_count))
                 {
                     boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    long waiting_count=total_count;
+                    
+                    wake_waiters(total_count);
                     for(unsigned generation=active_generation_count;generation!=0;--generation)
                     {
                         list_entry& entry=generations[generation-1];
                         if(entry.count)
                         {
-                            broadcast_entry(entry,true);
+                            waiting_count-=entry.count;
+                            broadcast_entry(entry);
                         }
+                    }
+                    if(waiting_count)
+                    {
+                        ensure_generation_present();
+                        generations[0].release(waiting_count);
                     }
                     active_generation_count=0;
                 }
@@ -265,9 +299,18 @@ namespace boost
     }
 
     class condition_variable:
-        public detail::basic_condition_variable
+        private detail::basic_condition_variable
     {
+    private:
+        condition_variable(condition_variable&);
+        void operator=(condition_variable&);
     public:
+        condition_variable()
+        {}
+        
+        using detail::basic_condition_variable::notify_one;
+        using detail::basic_condition_variable::notify_all;
+        
         void wait(unique_lock<mutex>& m)
         {
             do_wait(m,detail::timeout::sentinel());
@@ -313,9 +356,18 @@ namespace boost
     };
     
     class condition_variable_any:
-        public detail::basic_condition_variable
+        private detail::basic_condition_variable
     {
+    private:
+        condition_variable_any(condition_variable_any&);
+        void operator=(condition_variable_any&);
     public:
+        condition_variable_any()
+        {}
+        
+        using detail::basic_condition_variable::notify_one;
+        using detail::basic_condition_variable::notify_all;
+        
         template<typename lock_type>
         void wait(lock_type& m)
         {

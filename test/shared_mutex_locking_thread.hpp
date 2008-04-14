@@ -66,5 +66,67 @@ private:
     void operator=(locking_thread&);
 };
 
+class simple_writing_thread
+{
+    boost::shared_mutex& rwm;
+    boost::mutex& finish_mutex;
+    boost::mutex& unblocked_mutex;
+    unsigned& unblocked_count;
+        
+    void operator=(simple_writing_thread&);
+        
+public:
+    simple_writing_thread(boost::shared_mutex& rwm_,
+                          boost::mutex& finish_mutex_,
+                          boost::mutex& unblocked_mutex_,
+                          unsigned& unblocked_count_):
+        rwm(rwm_),finish_mutex(finish_mutex_),
+        unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
+    {}
+        
+    void operator()()
+    {
+        boost::unique_lock<boost::shared_mutex>  lk(rwm);
+            
+        {
+            boost::mutex::scoped_lock ulk(unblocked_mutex);
+            ++unblocked_count;
+        }
+            
+        boost::mutex::scoped_lock flk(finish_mutex);
+    }
+};
+
+class simple_reading_thread
+{
+    boost::shared_mutex& rwm;
+    boost::mutex& finish_mutex;
+    boost::mutex& unblocked_mutex;
+    unsigned& unblocked_count;
+        
+    void operator=(simple_reading_thread&);
+        
+public:
+    simple_reading_thread(boost::shared_mutex& rwm_,
+                          boost::mutex& finish_mutex_,
+                          boost::mutex& unblocked_mutex_,
+                          unsigned& unblocked_count_):
+        rwm(rwm_),finish_mutex(finish_mutex_),
+        unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
+    {}
+        
+    void operator()()
+    {
+        boost::shared_lock<boost::shared_mutex>  lk(rwm);
+            
+        {
+            boost::mutex::scoped_lock ulk(unblocked_mutex);
+            ++unblocked_count;
+        }
+            
+        boost::mutex::scoped_lock flk(finish_mutex);
+    }
+};
+
 
 #endif
