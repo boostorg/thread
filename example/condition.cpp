@@ -46,11 +46,16 @@ private:
 
 bounded_buffer buf(2);
 
+boost::mutex io_mutex;
+
 void sender() {
     int n = 0;
     while (n < 100) {
         buf.send(n);
-        std::cout << "sent: " << n << std::endl;
+        {
+            boost::mutex::scoped_lock io_lock(io_mutex);
+            std::cout << "sent: " << n << std::endl;
+        }
         ++n;
     }
     buf.send(-1);
@@ -60,7 +65,10 @@ void receiver() {
     int n;
     do {
         n = buf.receive();
-        std::cout << "received: " << n << std::endl;
+        {
+            boost::mutex::scoped_lock io_lock(io_mutex);
+            std::cout << "received: " << n << std::endl;
+        }
     } while (n != -1); // -1 indicates end of buffer
 }
 
