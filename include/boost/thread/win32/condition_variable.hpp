@@ -14,6 +14,8 @@
 #include <boost/thread/thread_time.hpp>
 #include "interlocked_read.hpp"
 #include <boost/thread/xtime.hpp>
+#include <vector>
+#include <boost/intrusive_ptr.hpp>
 
 namespace boost
 {
@@ -27,25 +29,43 @@ namespace boost
 
             struct list_entry
             {
-                detail::win32::handle semaphore;
-                long count;
+                detail::win32::handle_manager semaphore;
+                detail::win32::handle_manager wake_sem;
+                long waiters;
                 bool notified;
+                long references;
 
                 list_entry():
-                    semaphore(0),count(0),notified(0)
+                    semaphore(detail::win32::create_anonymous_semaphore(0,LONG_MAX)),
+                    wake_sem(0),
+                    waiters(1),notified(false),references(0)
                 {}
 
-                void release(unsigned count_to_release=1)
+                void release(unsigned count_to_release)
                 {
+                    notified=true;
                     detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
                 }
-                
+
+                friend void intrusive_ptr_add_ref(list_entry * p)
+                {
+                    BOOST_INTERLOCKED_INCREMENT(&p->references);
+                }
+            
+                friend void intrusive_ptr_release(list_entry * p)
+                {
+                    if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
+                    {
+                        delete p;
+                    }
+                }
             };
 
-            BOOST_STATIC_CONSTANT(unsigned,generation_count=3);
+            typedef boost::intrusive_ptr<list_entry> entry_ptr;
+            typedef std::vector<entry_ptr> generation_list;
 
-            list_entry generations[generation_count];
-            detail::win32::handle wake_sem;
+            generation_list generations;
+            detail::win32::handle_manager wake_sem;
 
             void wake_waiters(long count_to_wake)
             {
@@ -53,53 +73,6 @@ namespace boost
                 detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
             }
             
-
-            static bool no_waiters(list_entry const& entry)
-            {
-                return entry.count==0;
-            }
-
-            void shift_generations_down()
-            {
-                list_entry* const last_active_entry=std::remove_if(generations,generations+generation_count,no_waiters);
-                if(last_active_entry==generations+generation_count)
-                {
-                    broadcast_entry(generations[generation_count-1]);
-                }
-                else
-                {
-                    active_generation_count=unsigned(last_active_entry-generations)+1;
-                }
-
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable:4996)
-#endif
-                std::copy_backward(generations,generations+active_generation_count-1,generations+active_generation_count);
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
-                generations[0]=list_entry();
-            }
-
-            void broadcast_entry(list_entry& entry)
-            {
-                entry.release(entry.count);
-                entry.count=0;
-                dispose_entry(entry);
-            }
-        
-
-            void dispose_entry(list_entry& entry)
-            {
-                if(entry.semaphore)
-                {
-                    BOOST_VERIFY(detail::win32::CloseHandle(entry.semaphore));
-                    entry.semaphore=0;
-                }
-                entry.notified=false;
-            }
-
             template<typename lock_type>
             struct relocker
             {
@@ -123,77 +96,79 @@ namespace boost
                     
                 }
             private:
+                relocker(relocker&);
                 void operator=(relocker&);
             };
             
 
-            template<typename lock_type>
-            void start_wait_loop_first_time(relocker<lock_type>& locker,
-                                            detail::win32::handle_manager& local_wake_sem)
+            entry_ptr get_wait_entry()
             {
-                detail::interlocked_write_release(&total_count,total_count+1);
-                locker.unlock();
+                boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
+
                 if(!wake_sem)
                 {
                     wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
                     BOOST_ASSERT(wake_sem);
                 }
-                local_wake_sem=detail::win32::duplicate_handle(wake_sem);
-                        
-                if(generations[0].notified)
-                {
-                    shift_generations_down();
-                }
-                else if(!active_generation_count)
-                {
-                    active_generation_count=1;
-                }
-            }
 
-            void ensure_generation_present()
-            {
-                if(!generations[0].semaphore)
+                detail::interlocked_write_release(&total_count,total_count+1);
+                if(generations.empty() || generations.back()->notified)
                 {
-                    generations[0].semaphore=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
-                    BOOST_ASSERT(generations[0].semaphore);
+                    entry_ptr new_entry(new list_entry);
+                    new_entry->wake_sem=wake_sem.duplicate();
+                    generations.push_back(new_entry);
+                    return new_entry;
+                }
+                else
+                {
+                    BOOST_INTERLOCKED_INCREMENT(&generations.back()->waiters);
+                    return generations.back();
                 }
             }
             
-            template<typename lock_type>
-            void start_wait_loop(relocker<lock_type>& locker,
-                                 detail::win32::handle_manager& local_wake_sem,
-                                 detail::win32::handle_manager& sem)
+            struct entry_manager
             {
-                boost::mutex::scoped_lock internal_lock(internal_mutex);
-                if(!local_wake_sem)
+                entry_ptr const entry;
+                    
+                entry_manager(entry_ptr const& entry_):
+                    entry(entry_)
+                {}
+                    
+                ~entry_manager()
                 {
-                    start_wait_loop_first_time(locker,local_wake_sem);
+                    BOOST_INTERLOCKED_DECREMENT(&entry->waiters);
                 }
-                ensure_generation_present();
-                ++generations[0].count;
-                sem=detail::win32::duplicate_handle(generations[0].semaphore);
-            }
+
+                list_entry* operator->()
+                {
+                    return entry.get();
+                }
+
+            private:
+                void operator=(entry_manager&);
+                entry_manager(entry_manager&);
+            };
+                
 
         protected:
             template<typename lock_type>
             bool do_wait(lock_type& lock,timeout wait_until)
             {
-                detail::win32::handle_manager local_wake_sem;
-                detail::win32::handle_manager sem;
-                bool woken=false;
-
                 relocker<lock_type> locker(lock);
-            
+                
+                entry_manager entry=get_wait_entry();
+
+                locker.unlock();
+
+                bool woken=false;
                 while(!woken)
                 {
-                    start_wait_loop(locker,local_wake_sem,sem);
-                    
-                    if(!this_thread::interruptible_wait(sem,wait_until))
+                    if(!this_thread::interruptible_wait(entry->semaphore,wait_until))
                     {
                         return false;
                     }
                 
-                    unsigned long const woken_result=detail::win32::WaitForSingleObject(local_wake_sem,0);
+                    unsigned long const woken_result=detail::win32::WaitForSingleObject(entry->wake_sem,0);
                     BOOST_ASSERT(woken_result==detail::win32::timeout || woken_result==0);
 
                     woken=(woken_result==0);
@@ -214,21 +189,19 @@ namespace boost
         
             basic_condition_variable(const basic_condition_variable& other);
             basic_condition_variable& operator=(const basic_condition_variable& other);
+
+            static bool no_waiters(entry_ptr const& entry)
+            {
+                return !detail::interlocked_read_acquire(&entry->waiters);
+            }
         public:
             basic_condition_variable():
                 total_count(0),active_generation_count(0),wake_sem(0)
             {}
             
             ~basic_condition_variable()
-            {
-                for(unsigned i=0;i<generation_count;++i)
-                {
-                    dispose_entry(generations[i]);
-                }
-                detail::win32::CloseHandle(wake_sem);
-            }
+            {}
 
-        
             void notify_one()
             {
                 if(detail::interlocked_read_acquire(&total_count))
@@ -239,33 +212,14 @@ namespace boost
                         return;
                     }
                     wake_waiters(1);
-                    
-                    unsigned waiting_count=0;
-                    
-                    for(unsigned generation=active_generation_count;generation!=0;--generation)
+
+                    for(generation_list::iterator it=generations.begin(),
+                            end=generations.end();
+                        it!=end;++it)
                     {
-                        list_entry& entry=generations[generation-1];
-                        waiting_count+=entry.count;
-                        if(entry.count)
-                        {
-                            entry.notified=true;
-                            entry.release();
-                            if(!--entry.count)
-                            {
-                                dispose_entry(entry);
-                                if(generation==active_generation_count)
-                                {
-                                    --active_generation_count;
-                                }
-                            }
-                        }
+                        (*it)->release(1);
                     }
-                    if(waiting_count<=total_count)
-                    {
-                        shift_generations_down();
-                        ensure_generation_present();
-                        generations[0].release();
-                    }
+                    generations.erase(std::remove_if(generations.begin(),generations.end(),no_waiters),generations.end());
                 }
             }
         
@@ -274,24 +228,18 @@ namespace boost
                 if(detail::interlocked_read_acquire(&total_count))
                 {
                     boost::mutex::scoped_lock internal_lock(internal_mutex);
-                    long waiting_count=total_count;
-                    
+                    if(!total_count)
+                    {
+                        return;
+                    }
                     wake_waiters(total_count);
-                    for(unsigned generation=active_generation_count;generation!=0;--generation)
+                    for(generation_list::iterator it=generations.begin(),
+                            end=generations.end();
+                        it!=end;++it)
                     {
-                        list_entry& entry=generations[generation-1];
-                        if(entry.count)
-                        {
-                            waiting_count-=entry.count;
-                            broadcast_entry(entry);
-                        }
+                        (*it)->release(detail::interlocked_read_acquire(&(*it)->waiters));
                     }
-                    if(waiting_count)
-                    {
-                        ensure_generation_present();
-                        generations[0].release(waiting_count);
-                    }
-                    active_generation_count=0;
+                    wake_sem=detail::win32::handle(0);
                 }
             }
         

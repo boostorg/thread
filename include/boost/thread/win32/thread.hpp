@@ -185,6 +185,9 @@ namespace boost
             {
                 f();
             }
+        private:
+            void operator=(thread_data&);
+            thread_data(thread_data&);
         };
         
         mutable boost::mutex thread_info_mutex;
