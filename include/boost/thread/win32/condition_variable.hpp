@@ -156,7 +156,7 @@ namespace boost
             {
                 relocker<lock_type> locker(lock);
                 
-                entry_manager entry=get_wait_entry();
+                entry_manager entry(get_wait_entry());
 
                 locker.unlock();
 
