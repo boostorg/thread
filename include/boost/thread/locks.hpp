@@ -606,7 +606,7 @@ namespace boost
                 base(m_,defer_lock)
             {}
             try_lock_wrapper(Mutex& m_,try_to_lock_t):
-                base(m,try_to_lock)
+                base(m_,try_to_lock)
             {}
             try_lock_wrapper(detail::thread_move_t<try_lock_wrapper<Mutex> > other):
                 base(detail::thread_move_t<base>(*other))
@@ -645,12 +645,8 @@ namespace boost
             using base::operator!;
             using base::mutex;
             using base::release;
-        
-            typedef void (unique_lock::*bool_type)();
-            operator bool_type() const
-            {
-                return owns_lock()?&unique_lock::lock:0;
-            }
+            typedef typename base::bool_type bool_type;
+            using base::operator bool_type;
         };
     }
 }
