@@ -587,6 +587,72 @@ namespace boost
         }
     };
 
+    namespace detail
+    {
+        template<typename Mutex>
+        class try_lock_wrapper:
+            private unique_lock<Mutex>
+        {
+            typedef unique_lock<Mutex> base;
+        public:
+            explicit try_lock_wrapper(Mutex& m):
+                base(m,try_to_lock)
+            {}
+
+            try_lock_wrapper(Mutex& m_,adopt_lock_t):
+                base(m_,adopt_lock)
+            {}
+            try_lock_wrapper(Mutex& m_,defer_lock_t):
+                base(m_,defer_lock)
+            {}
+            try_lock_wrapper(Mutex& m_,try_to_lock_t):
+                base(m,try_to_lock)
+            {}
+            try_lock_wrapper(detail::thread_move_t<try_lock_wrapper<Mutex> > other):
+                base(detail::thread_move_t<base>(*other))
+            {}
+
+            operator detail::thread_move_t<try_lock_wrapper<Mutex> >()
+            {
+                return move();
+            }
+
+            detail::thread_move_t<try_lock_wrapper<Mutex> > move()
+            {
+                return detail::thread_move_t<try_lock_wrapper<Mutex> >(*this);
+            }
+
+            try_lock_wrapper& operator=(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
+            {
+                try_lock_wrapper temp(other);
+                swap(temp);
+                return *this;
+            }
+
+            void swap(try_lock_wrapper& other)
+            {
+                base::swap(other);
+            }
+            void swap(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
+            {
+                base::swap(*other);
+            }
+
+            using base::lock;
+            using base::try_lock;
+            using base::unlock;
+            using base::owns_lock;
+            using base::operator!;
+            using base::mutex;
+            using base::release;
+        
+            typedef void (unique_lock::*bool_type)();
+            operator bool_type() const
+            {
+                return owns_lock()?&unique_lock::lock:0;
+            }
+        };
+    }
 }
 
 #endif

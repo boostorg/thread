@@ -18,6 +18,11 @@ namespace boost
                 t(t_)
             {}
 
+            T& operator*() const
+            {
+                return t;
+            }
+
             T* operator->() const
             {
                 return &t;
