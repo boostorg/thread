@@ -7,7 +7,9 @@
 #include <boost/test/test_case_template.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 
 template<typename Mutex,typename Lock>
 struct test_initially_locked
@@ -19,6 +21,64 @@ struct test_initially_locked
         
         BOOST_CHECK(lock);
         BOOST_CHECK(lock.owns_lock());
+    }
+};
+
+template<typename Mutex,typename Lock>
+struct test_initially_unlocked_if_other_thread_has_lock
+{
+    Mutex m;
+    boost::mutex done_mutex;
+    bool done;
+    bool locked;
+    boost::condition_variable done_cond;
+    
+    test_initially_unlocked_if_other_thread_has_lock():
+        done(false),locked(false)
+    {}
+
+    void locking_thread()
+    {
+        Lock lock(m);
+
+        boost::lock_guard<boost::mutex> lk(done_mutex);
+        locked=lock.owns_lock();
+        done=true;
+        done_cond.notify_one();
+    }
+
+    bool is_done() const
+    {
+        return done;
+    }
+    
+
+    void operator()()
+    {
+        Lock lock(m);
+
+        typedef test_initially_unlocked_if_other_thread_has_lock<Mutex,Lock> this_type;
+
+        boost::thread t(&this_type::locking_thread,this);
+
+        try
+        {
+            {
+                boost::mutex::scoped_lock lk(done_mutex);
+                BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
+                                                 boost::bind(&this_type::is_done,this)));
+                BOOST_CHECK(!locked);
+            }
+            
+            lock.unlock();
+            t.join();
+        }
+        catch(...)
+        {
+            lock.unlock();
+            t.join();
+            throw;
+        }
     }
 };
 
@@ -144,6 +204,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
     typedef typename Mutex::scoped_try_lock Lock;
     
     test_initially_locked<Mutex,Lock>()();
+    test_initially_unlocked_if_other_thread_has_lock<Mutex,Lock>()();
     test_initially_unlocked_with_defer_lock_parameter<Mutex,Lock>()();
     test_initially_locked_with_adopt_lock_parameter<Mutex,Lock>()();
     test_unlocked_after_unlock_called<Mutex,Lock>()();

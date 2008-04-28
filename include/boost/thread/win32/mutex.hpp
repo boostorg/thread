@@ -32,7 +32,7 @@ namespace boost
         }
 
         typedef unique_lock<mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<mutex> scoped_try_lock;
     };
 
     typedef mutex try_mutex;
@@ -53,7 +53,7 @@ namespace boost
         }
 
         typedef unique_lock<timed_mutex> scoped_timed_lock;
-        typedef scoped_timed_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<timed_mutex> scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
     };
 }
