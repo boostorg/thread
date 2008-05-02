@@ -77,7 +77,7 @@ namespace boost
             return !res;
         }
         typedef unique_lock<recursive_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<recursive_mutex> scoped_try_lock;
     };
 
     typedef recursive_mutex recursive_try_mutex;
@@ -239,7 +239,7 @@ namespace boost
 #endif
 
         typedef unique_lock<recursive_timed_mutex> scoped_timed_lock;
-        typedef scoped_timed_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<recursive_timed_mutex> scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
     };
 
