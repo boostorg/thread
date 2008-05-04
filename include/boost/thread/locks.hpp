@@ -205,18 +205,6 @@ namespace boost
     };
 
     template<typename Mutex>
-    inline detail::thread_move_t<unique_lock<Mutex> > move(unique_lock<Mutex> & x)
-    {
-        return x.move();
-    }
-    
-    template<typename Mutex>
-    inline detail::thread_move_t<unique_lock<Mutex> > move(detail::thread_move_t<unique_lock<Mutex> > x)
-    {
-        return x;
-    }
-
-    template<typename Mutex>
     class shared_lock
     {
     protected:
@@ -373,19 +361,6 @@ namespace boost
     };
 
     template<typename Mutex>
-    inline detail::thread_move_t<shared_lock<Mutex> > move(shared_lock<Mutex> & x)
-    {
-        return x.move();
-    }
-    
-    template<typename Mutex>
-    inline detail::thread_move_t<shared_lock<Mutex> > move(detail::thread_move_t<shared_lock<Mutex> > x)
-    {
-        return x;
-    }
-
-
-    template<typename Mutex>
     class upgrade_lock
     {
     protected:
@@ -510,18 +485,6 @@ namespace boost
         friend class unique_lock<Mutex>;
     };
 
-
-    template<typename Mutex>
-    inline detail::thread_move_t<upgrade_lock<Mutex> > move(upgrade_lock<Mutex> & x)
-    {
-        return x.move();
-    }
-    
-    template<typename Mutex>
-    inline detail::thread_move_t<upgrade_lock<Mutex> > move(detail::thread_move_t<upgrade_lock<Mutex> > x)
-    {
-        return x;
-    }
 
     template<typename Mutex>
     unique_lock<Mutex>::unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
