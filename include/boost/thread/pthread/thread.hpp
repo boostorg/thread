@@ -222,16 +222,10 @@ namespace boost
         bool interruption_requested() const;
     };
 
-    inline detail::thread_move_t<thread> move(thread& x)
+    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
     {
-        return x.move();
+        return t;
     }
-    
-    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> x)
-    {
-        return x;
-    }
-
 
     template<typename F>
     struct thread::thread_data<boost::reference_wrapper<F> >:
