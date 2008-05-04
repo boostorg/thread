@@ -13,6 +13,7 @@
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/detail/interlocked.hpp>
 #include <algorithm>
 
 #if defined( BOOST_USE_WINDOWS_H )
@@ -276,6 +277,114 @@ namespace boost
         }
     }
 }
+
+#if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)
+#if MSC_VER>=1400
+extern "C" unsigned char _interlockedbittestandset(long *a,long b);
+extern "C" unsigned char _interlockedbittestandreset(long *a,long b);
+
+#pragma intrinsic(_interlockedbittestandset)
+#pragma intrinsic(_interlockedbittestandreset)
+
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                return _interlockedbittestandset(x,bit);
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                return _interlockedbittestandreset(x,bit);
+            }
+            
+        }
+    }
+}
+#define BOOST_THREAD_BTS_DEFINED
+#elif defined(_M_IX86)
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                __asm {
+                    mov eax,bit;
+                    mov edx,x;
+                    lock bts [edx],eax;
+                    setc al;
+                };          
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                __asm {
+                    mov eax,bit;
+                    mov edx,x;
+                    lock btr [edx],eax;
+                    setc al;
+                };          
+            }
+            
+        }
+    }
+}
+#define BOOST_THREAD_BTS_DEFINED
+#endif
+#endif
+
+#ifndef BOOST_THREAD_BTS_DEFINED
+
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                long const value=1<<bit;
+                long old=*x;
+                do
+                {
+                    long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,old|value,old);
+                    if(current==old)
+                    {
+                        break;
+                    }
+                    old=current;
+                }
+                while(true);
+                return (old&value)!=0;
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                long const value=1<<bit;
+                long old=*x;
+                do
+                {
+                    long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,old&~value,old);
+                    if(current==old)
+                    {
+                        break;
+                    }
+                    old=current;
+                }
+                while(true);
+                return (old&value)!=0;
+            }
+        }
+    }
+}
+#endif
 
 
 #endif
