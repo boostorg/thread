@@ -185,11 +185,22 @@ struct test_throws_if_unlock_called_when_already_unlocked
         BOOST_CHECK_THROW( lock.unlock(), boost::lock_error );
     }
 };
+template<typename Lock>
+struct test_default_constructed_has_no_mutex_and_unlocked
+{
+    void operator()() const
+    {
+        Lock l;
+        BOOST_CHECK(!l.mutex());
+        BOOST_CHECK(!l.owns_lock());
+    };
+};
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_lock_concept,Mutex)
 {
     typedef typename Mutex::scoped_lock Lock;
     
+    test_default_constructed_has_no_mutex_and_unlocked<Lock>()();
     test_initially_locked<Mutex,Lock>()();
     test_initially_unlocked_with_defer_lock_parameter<Mutex,Lock>()();
     test_initially_locked_with_adopt_lock_parameter<Mutex,Lock>()();
@@ -203,6 +214,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
 {
     typedef typename Mutex::scoped_try_lock Lock;
     
+    test_default_constructed_has_no_mutex_and_unlocked<Lock>()();
     test_initially_locked<Mutex,Lock>()();
     test_initially_unlocked_if_other_thread_has_lock<Mutex,Lock>()();
     test_initially_unlocked_with_defer_lock_parameter<Mutex,Lock>()();
