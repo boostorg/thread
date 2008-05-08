@@ -364,6 +364,22 @@ or 0 if this information is not available.]]
 
 [endsect]
 
+[section:nativehandle Member function `native_handle()`]
+
+    typedef platform-specific-type native_handle_type;
+    native_handle_type native_handle();
+
+[variablelist
+
+[[Effects:] [Returns an instance of `native_handle_type` that can be used with platform-specific APIs to manipulate the underlying
+implementation. If no such instance exists, `native_handle()` and `native_handle_type` are not present.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
 [section:equals `operator==`]
 
     bool operator==(const thread& other) const;

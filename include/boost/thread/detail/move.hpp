@@ -6,6 +6,9 @@
 #ifndef BOOST_THREAD_MOVE_HPP
 #define BOOST_THREAD_MOVE_HPP
 
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_convertible.hpp>
+
 namespace boost
 {
     namespace detail
@@ -14,7 +17,7 @@ namespace boost
         struct thread_move_t
         {
             T& t;
-            thread_move_t(T& t_):
+            explicit thread_move_t(T& t_):
                 t(t_)
             {}
 
@@ -30,6 +33,18 @@ namespace boost
         private:
             void operator=(thread_move_t&);
         };
+    }
+
+    template<typename T>
+    typename enable_if<boost::is_convertible<T&,detail::thread_move_t<T> >, detail::thread_move_t<T> >::type move(T& t)
+    {
+        return t;
+    }
+    
+    template<typename T>
+    detail::thread_move_t<T> move(detail::thread_move_t<T> t)
+    {
+        return t;
     }
     
 }

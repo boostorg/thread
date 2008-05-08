@@ -139,6 +139,13 @@ namespace boost
             BOOST_ASSERT(!res || res==ETIMEDOUT);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
+
 #else
         void lock()
         {
