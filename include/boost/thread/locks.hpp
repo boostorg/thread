@@ -62,6 +62,10 @@ namespace boost
         explicit unique_lock(unique_lock&);
         unique_lock& operator=(unique_lock&);
     public:
+        unique_lock():
+            m(0),is_locked(false)
+        {}
+        
         explicit unique_lock(Mutex& m_):
             m(&m_),is_locked(false)
         {
@@ -214,6 +218,10 @@ namespace boost
         explicit shared_lock(shared_lock&);
         shared_lock& operator=(shared_lock&);
     public:
+        shared_lock():
+            m(0),is_locked(false)
+        {}
+        
         explicit shared_lock(Mutex& m_):
             m(&m_),is_locked(false)
         {
@@ -240,26 +248,29 @@ namespace boost
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
+            other->m=0;
         }
 
         shared_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
-            other->is_locked=false;
             if(is_locked)
             {
                 m->unlock_and_lock_shared();
             }
+            other->is_locked=false;
+            other->m=0;
         }
 
         shared_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
-            other->is_locked=false;
             if(is_locked)
             {
                 m->unlock_upgrade_and_lock_shared();
             }
+            other->is_locked=false;
+            other->m=0;
         }
 
         operator detail::thread_move_t<shared_lock<Mutex> >()
@@ -370,6 +381,10 @@ namespace boost
         explicit upgrade_lock(upgrade_lock&);
         upgrade_lock& operator=(upgrade_lock&);
     public:
+        upgrade_lock():
+            m(0),is_locked(false)
+        {}
+        
         explicit upgrade_lock(Mutex& m_):
             m(&m_),is_locked(false)
         {
@@ -390,16 +405,18 @@ namespace boost
             m(other->m),is_locked(other->is_locked)
         {
             other->is_locked=false;
+            other->m=0;
         }
 
         upgrade_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
-            other->is_locked=false;
             if(is_locked)
             {
                 m->unlock_and_lock_upgrade();
             }
+            other->is_locked=false;
+            other->m=0;
         }
 
         operator detail::thread_move_t<upgrade_lock<Mutex> >()
@@ -558,6 +575,9 @@ namespace boost
         {
             typedef unique_lock<Mutex> base;
         public:
+            try_lock_wrapper()
+            {}
+            
             explicit try_lock_wrapper(Mutex& m):
                 base(m,try_to_lock)
             {}
