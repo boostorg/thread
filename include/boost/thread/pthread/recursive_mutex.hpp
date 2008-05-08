@@ -76,6 +76,13 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
+
         typedef unique_lock<recursive_mutex> scoped_lock;
         typedef detail::try_lock_wrapper<recursive_mutex> scoped_try_lock;
     };
@@ -171,6 +178,13 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
+
 #else
         void lock()
         {
