@@ -218,6 +218,9 @@ namespace boost
             
             void run()
             {}
+        private:
+            externally_launched_thread(externally_launched_thread&);
+            void operator=(externally_launched_thread&);
         };
 
         void make_external_thread_data()

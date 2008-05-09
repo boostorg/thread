@@ -67,14 +67,7 @@ namespace boost
                     return true;
                 }
                 long old_count=active_count;
-#ifdef BOOST_MSVC
-#pragma warning(push)
-#pragma warning(disable:4127)
-#endif
-                while(true)
-#ifdef BOOST_MSVC
-#pragma warning(pop)
-#endif
+                for(;;)
                 {
                     long const new_count=(old_count&lock_flag_value)?(old_count+1):(old_count|lock_flag_value);
                     long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,new_count,old_count);
@@ -99,7 +92,7 @@ namespace boost
                         }
                         old_count&=~lock_flag_value;
                         old_count|=event_set_flag_value;
-                        while(true)
+                        for(;;)
                         {
                             long const new_count=((old_count&lock_flag_value)?old_count:((old_count-1)|lock_flag_value))&~event_set_flag_value;
                             long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,new_count,old_count);
