@@ -218,6 +218,38 @@ void test_timed_lock_times_out_if_read_lock_held()
     reader.join();
 }
 
+void test_timed_lock_times_out_but_read_lock_succeeds_if_read_lock_held()
+{
+    boost::shared_mutex rw_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex unblocked_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::thread reader(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
+
+    boost::system_time const start=boost::get_system_time();
+    boost::system_time const timeout=start+boost::posix_time::milliseconds(500);
+    bool timed_lock_succeeded=rw_mutex.timed_lock(timeout);
+    BOOST_CHECK(!timed_lock_succeeded);
+    if(timed_lock_succeeded)
+    {
+        rw_mutex.unlock();
+    }
+    
+    boost::posix_time::milliseconds const wait_duration(500);
+    timed_lock_succeeded=rw_mutex.timed_lock_shared(wait_duration);
+    BOOST_CHECK(timed_lock_succeeded);
+    if(timed_lock_succeeded)
+    {
+        rw_mutex.unlock_shared();
+    }
+
+    finish_lock.unlock();
+    reader.join();
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -230,6 +262,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_timed_lock_times_out_if_write_lock_held));
     test->add(BOOST_TEST_CASE(&test_timed_lock_times_out_if_read_lock_held));
     test->add(BOOST_TEST_CASE(&test_timed_lock_succeeds_if_no_lock_held));
+    test->add(BOOST_TEST_CASE(&test_timed_lock_times_out_but_read_lock_succeeds_if_read_lock_held));
 
     return test;
 }
