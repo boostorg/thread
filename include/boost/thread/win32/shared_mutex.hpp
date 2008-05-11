@@ -23,12 +23,12 @@ namespace boost
     private:
         struct state_data
         {
-            unsigned shared_count:11;
-            unsigned shared_waiting:11;
-            unsigned exclusive:1;
-            unsigned upgrade:1;
-            unsigned exclusive_waiting:7;
-            unsigned exclusive_waiting_blocked:1;
+            unsigned shared_count:11,
+                shared_waiting:11,
+                exclusive:1,
+                upgrade:1,
+                exclusive_waiting:7,
+                exclusive_waiting_blocked:1;
 
             friend bool operator==(state_data const& lhs,state_data const& rhs)
             {
@@ -337,7 +337,10 @@ namespace boost
                         {
                             if(new_state.exclusive_waiting)
                             {
-                                --new_state.exclusive_waiting;
+                                if(!--new_state.exclusive_waiting)
+                                {
+                                    new_state.exclusive_waiting_blocked=false;
+                                }
                             }
                         }
                         else
