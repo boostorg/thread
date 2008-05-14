@@ -43,11 +43,21 @@ __boost_thread__ must ensure that the referred-to object outlives the newly-crea
       // this leads to undefined behaviour
 
 If you wish to construct an instance of __thread__ with a function or callable object that requires arguments to be supplied,
-this can be done using `boost::bind`:
+this can be done by passing additional arguments to the __thread__ constructor:
 
     void find_the_question(int the_answer);
 
-    boost::thread deep_thought_2(boost::bind(find_the_question,42));
+    boost::thread deep_thought_2(find_the_question,42);
+
+The arguments are ['copied] into the internal thread structure: if a reference is required, use `boost::ref`, just as for references
+to callable functions.
+
+There is an unspecified limit on the number of additional arguments that can be passed.
+
+[heading Exceptions in thread functions]
+
+If the function or callable object passed to the __thread__ constructor propagates an exception when invoked that is not of type
+__thread_interrupted__, `std::terminate()` is called. 
 
 [heading Joining and detaching]
 
@@ -212,7 +222,9 @@ __thread_id__ yield a total order for every non-equal thread ID.
 
 [[Preconditions:] [`Callable` must by copyable.]]
 
-[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created thread of execution.]]
+[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
+thread of execution. If this invocation results in an exception being propagated into the internals of the thread library that is
+not of type __thread_interrupted__, then `std::terminate()` will be called.]]
 
 [[Postconditions:] [`*this` refers to the newly created thread of execution.]]
 
