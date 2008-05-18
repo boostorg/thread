@@ -631,6 +631,264 @@ namespace boost
             typedef typename base::bool_type bool_type;
             using base::operator bool_type;
         };
+        
+        template<typename MutexType1,typename MutexType2>
+        unsigned try_lock_internal(MutexType1& m1,MutexType2& m2)
+        {
+            boost::unique_lock<MutexType1> l1(m1,boost::try_to_lock);
+            if(!l1)
+            {
+                return 1;
+            }
+            if(!m2.try_lock())
+            {
+                return 2;
+            }
+            l1.release();
+            return 0;
+        }
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3>
+        unsigned try_lock_internal(MutexType1& m1,MutexType2& m2,MutexType3& m3)
+        {
+            boost::unique_lock<MutexType1> l1(m1,boost::try_to_lock);
+            if(!l1)
+            {
+                return 1;
+            }
+            if(unsigned const failed_lock=try_lock_internal(m2,m3))
+            {
+                return failed_lock+1;
+            }
+            l1.release();
+            return 0;
+        }
+
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3,
+                 typename MutexType4>
+        unsigned try_lock_internal(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+                                   MutexType4& m4)
+        {
+            boost::unique_lock<MutexType1> l1(m1,boost::try_to_lock);
+            if(!l1)
+            {
+                return 1;
+            }
+            if(unsigned const failed_lock=try_lock_internal(m2,m3,m4))
+            {
+                return failed_lock+1;
+            }
+            l1.release();
+            return 0;
+        }
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3,
+                 typename MutexType4,typename MutexType5>
+        unsigned try_lock_internal(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+                                   MutexType4& m4,MutexType5& m5)
+        {
+            boost::unique_lock<MutexType1> l1(m1,boost::try_to_lock);
+            if(!l1)
+            {
+                return 1;
+            }
+            if(unsigned const failed_lock=try_lock_internal(m2,m3,m4,m5))
+            {
+                return failed_lock+1;
+            }
+            l1.release();
+            return 0;
+        }
+
+
+        template<typename MutexType1,typename MutexType2>
+        unsigned lock_helper(MutexType1& m1,MutexType2& m2)
+        {
+            boost::unique_lock<MutexType1> l1(m1);
+            if(!m2.try_lock())
+            {
+                return 1;
+            }
+            l1.release();
+            return 0;
+        }
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3>
+        unsigned lock_helper(MutexType1& m1,MutexType2& m2,MutexType3& m3)
+        {
+            boost::unique_lock<MutexType1> l1(m1);
+            if(unsigned const failed_lock=try_lock_internal(m2,m3))
+            {
+                return failed_lock;
+            }
+            l1.release();
+            return 0;
+        }
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3,
+                 typename MutexType4>
+        unsigned lock_helper(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+                             MutexType4& m4)
+        {
+            boost::unique_lock<MutexType1> l1(m1);
+            if(unsigned const failed_lock=try_lock_internal(m2,m3,m4))
+            {
+                return failed_lock;
+            }
+            l1.release();
+            return 0;
+        }
+
+        template<typename MutexType1,typename MutexType2,typename MutexType3,
+                 typename MutexType4,typename MutexType5>
+        unsigned lock_helper(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+                             MutexType4& m4,MutexType5& m5)
+        {
+            boost::unique_lock<MutexType1> l1(m1);
+            if(unsigned const failed_lock=try_lock_internal(m2,m3,m4,m5))
+            {
+                return failed_lock;
+            }
+            l1.release();
+            return 0;
+        }
+    }
+
+    template<typename MutexType1,typename MutexType2>
+    void lock(MutexType1& m1,MutexType2& m2)
+    {
+        unsigned const lock_count=2;
+        unsigned lock_first=0;
+        while(true)
+        {
+            switch(lock_first)
+            {
+            case 0:
+                lock_first=detail::lock_helper(m1,m2);
+                if(!lock_first)
+                    return;
+                break;
+            case 1:
+                lock_first=detail::lock_helper(m2,m1);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+1)%lock_count;
+                break;
+            }
+        }
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3>
+    void lock(MutexType1& m1,MutexType2& m2,MutexType3& m3)
+    {
+        unsigned const lock_count=3;
+        unsigned lock_first=0;
+        while(true)
+        {
+            switch(lock_first)
+            {
+            case 0:
+                lock_first=detail::lock_helper(m1,m2,m3);
+                if(!lock_first)
+                    return;
+                break;
+            case 1:
+                lock_first=detail::lock_helper(m2,m3,m1);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+1)%lock_count;
+                break;
+            case 2:
+                lock_first=detail::lock_helper(m3,m1,m2);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+2)%lock_count;
+                break;
+            }
+        }
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3,
+             typename MutexType4>
+    void lock(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+              MutexType4& m4)
+    {
+        unsigned const lock_count=4;
+        unsigned lock_first=0;
+        while(true)
+        {
+            switch(lock_first)
+            {
+            case 0:
+                lock_first=detail::lock_helper(m1,m2,m3,m4);
+                if(!lock_first)
+                    return;
+                break;
+            case 1:
+                lock_first=detail::lock_helper(m2,m3,m4,m1);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+1)%lock_count;
+                break;
+            case 2:
+                lock_first=detail::lock_helper(m3,m4,m1,m2);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+2)%lock_count;
+                break;
+            case 3:
+                lock_first=detail::lock_helper(m4,m1,m2,m3);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+3)%lock_count;
+                break;
+            }
+        }
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3,
+             typename MutexType4,typename MutexType5>
+    void lock(MutexType1& m1,MutexType2& m2,MutexType3& m3,
+              MutexType4& m4,MutexType5& m5)
+    {
+        unsigned const lock_count=5;
+        unsigned lock_first=0;
+        while(true)
+        {
+            switch(lock_first)
+            {
+            case 0:
+                lock_first=detail::lock_helper(m1,m2,m3,m4,m5);
+                if(!lock_first)
+                    return;
+                break;
+            case 1:
+                lock_first=detail::lock_helper(m2,m3,m4,m5,m1);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+1)%lock_count;
+                break;
+            case 2:
+                lock_first=detail::lock_helper(m3,m4,m5,m1,m2);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+2)%lock_count;
+                break;
+            case 3:
+                lock_first=detail::lock_helper(m4,m5,m1,m2,m3);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+3)%lock_count;
+                break;
+            case 4:
+                lock_first=detail::lock_helper(m5,m1,m2,m3,m4);
+                if(!lock_first)
+                    return;
+                lock_first=(lock_first+4)%lock_count;
+                break;
+            }
+        }
     }
 }
 
