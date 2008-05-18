@@ -84,6 +84,23 @@ namespace boost
             }
         }
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        template<typename T,typename A1>
+        T* heap_new(A1&& a1)
+        {
+            void* const heap_memory=allocate_raw_heap_memory(sizeof(T));
+            try
+            {
+                T* const data=new (heap_memory) T(static_cast<A1&&>(a1));
+                return data;
+            }
+            catch(...)
+            {
+                free_raw_heap_memory(heap_memory);
+                throw;
+            }
+        }
+#else
         template<typename T,typename A1>
         T* heap_new(A1 a1)
         {
@@ -99,7 +116,7 @@ namespace boost
                 throw;
             }
         }
-        
+#endif        
         template<typename T,typename A1,typename A2>
         T* heap_new(A1 a1,A2 a2)
         {
