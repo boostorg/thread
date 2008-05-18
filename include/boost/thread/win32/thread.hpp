@@ -174,13 +174,18 @@ namespace boost
         {
             F f;
 
+#ifdef BOOST_HAS_RVALUE_REFS
+            thread_data(F&& f_):
+                f(static_cast<F&&>(f_))
+            {}
+#else
             thread_data(F f_):
                 f(f_)
             {}
             thread_data(detail::thread_move_t<F> f_):
                 f(f_)
             {}
-            
+#endif            
             void run()
             {
                 f();
@@ -201,27 +206,50 @@ namespace boost
 
         detail::thread_data_ptr get_thread_info() const;
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        template<typename F>
+        static inline detail::thread_data_ptr make_thread_info(F&& f)
+        {
+            return detail::heap_new<thread_data<F> >(static_cast<F&&>(f));
+        }
+#else
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f)
         {
             return detail::heap_new<thread_data<F> >(f);
         }
+        template<typename F>
+        static inline detail::thread_data_ptr make_thread_info(boost::detail::thread_move_t<F> f)
+        {
+            return detail::heap_new<thread_data<F> >(f);
+        }
+#endif
     public:
         thread();
         ~thread();
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        template <class F>
+        thread(F&& f):
+            thread_info(make_thread_info(static_cast<F&&>(f)))
+        {
+            start_thread();
+        }
+#else
         template <class F>
         explicit thread(F f):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
+
         template <class F>
         thread(detail::thread_move_t<F> f):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
+#endif
 
         template <class F,class A1>
         thread(F f,A1 a1):
