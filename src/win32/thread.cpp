@@ -247,9 +247,9 @@ namespace boost
         detach();
     }
     
+#ifndef BOOST_HAS_RVALUE_REFS
     thread::thread(detail::thread_move_t<thread> x)
     {
-        lock_guard<mutex> lock(x->thread_info_mutex);
         thread_info=x->thread_info;
         x->thread_info=0;
     }
@@ -271,6 +271,7 @@ namespace boost
         detail::thread_move_t<thread> x(*this);
         return x;
     }
+#endif
 
     void thread::swap(thread& x)
     {
