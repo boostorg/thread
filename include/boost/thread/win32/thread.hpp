@@ -3,8 +3,8 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007 Anthony Williams
-
+// (C) Copyright 2007-8 Anthony Williams
+ 
 #include <exception>
 #include <boost/thread/exceptions.hpp>
 #include <ostream>
@@ -38,6 +38,10 @@ namespace boost
     {
         struct thread_exit_callback_node;
         struct tss_data_node;
+
+        struct thread_data_base;
+        void intrusive_ptr_add_ref(thread_data_base * p);
+        void intrusive_ptr_release(thread_data_base * p);
         
         struct thread_data_base
         {
@@ -235,6 +239,24 @@ namespace boost
         {
             start_thread();
         }
+
+        thread(thread&& other)
+        {
+            thread_info.swap(other.thread_info);
+        }
+        
+        thread& operator=(thread&& other)
+        {
+            thread_info=other.thread_info;
+            other.thread_info.reset();
+            return *this;
+        }
+
+        thread&& move()
+        {
+            return static_cast<thread&&>(*this);
+        }
+        
 #else
         template <class F>
         explicit thread(F f):
@@ -249,6 +271,12 @@ namespace boost
         {
             start_thread();
         }
+
+        thread(detail::thread_move_t<thread> x);
+        thread& operator=(detail::thread_move_t<thread> x);
+        operator detail::thread_move_t<thread>();
+        detail::thread_move_t<thread> move();
+
 #endif
 
         template <class F,class A1>
@@ -257,7 +285,6 @@ namespace boost
         {
             start_thread();
         }
-
         template <class F,class A1,class A2>
         thread(F f,A1 a1,A2 a2):
             thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2)))
@@ -314,11 +341,6 @@ namespace boost
             start_thread();
         }
 
-        thread(detail::thread_move_t<thread> x);
-        thread& operator=(detail::thread_move_t<thread> x);
-        operator detail::thread_move_t<thread>();
-        detail::thread_move_t<thread> move();
-
         void swap(thread& x);
 
         class id;
@@ -353,10 +375,17 @@ namespace boost
         bool interruption_requested() const;
     };
 
+#ifdef BOOST_HAS_RVALUE_REFS
+    inline thread&& move(thread&& t)
+    {
+        return t;
+    }
+#else
     inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
     {
         return t;
     }
+#endif
 
     template<typename F>
     struct thread::thread_data<boost::reference_wrapper<F> >:
@@ -365,6 +394,22 @@ namespace boost
         F& f;
         
         thread_data(boost::reference_wrapper<F> f_):
+            f(f_)
+        {}
+        
+        void run()
+        {
+            f();
+        }
+    };
+
+    template<typename F>
+    struct thread::thread_data<const boost::reference_wrapper<F> >:
+        detail::thread_data_base
+    {
+        F& f;
+        
+        thread_data(const boost::reference_wrapper<F> f_):
             f(f_)
         {}
         
