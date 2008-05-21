@@ -166,19 +166,63 @@ namespace boost
 
         template <class F,class A1>
         thread(F f,A1 a1):
-            thread_info(make_thread_info(boost::bind<void>(f,a1)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1)))
         {
             start_thread();
         }
+
         template <class F,class A1,class A2>
         thread(F f,A1 a1,A2 a2):
-            thread_info(make_thread_info(boost::bind<void>(f,a1,a2)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2)))
         {
             start_thread();
         }
+
         template <class F,class A1,class A2,class A3>
         thread(F f,A1 a1,A2 a2,A3 a3):
-            thread_info(make_thread_info(boost::bind<void>(f,a1,a2,a3)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8,class A9>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8,A9 a9):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8,a9)))
         {
             start_thread();
         }
