@@ -206,7 +206,7 @@ namespace boost
             {
                 if(detail::interlocked_read_acquire(&total_count))
                 {
-                    boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     if(!total_count)
                     {
                         return;
@@ -227,7 +227,7 @@ namespace boost
             {
                 if(detail::interlocked_read_acquire(&total_count))
                 {
-                    boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     if(!total_count)
                     {
                         return;
@@ -239,6 +239,7 @@ namespace boost
                     {
                         (*it)->release(detail::interlocked_read_acquire(&(*it)->waiters));
                     }
+                    generations.clear();
                     wake_sem=detail::win32::handle(0);
                 }
             }
