@@ -134,10 +134,29 @@ namespace boost
             start_thread();
         }
 
-        thread(detail::thread_move_t<thread> x);
-        thread& operator=(detail::thread_move_t<thread> x);
-        operator detail::thread_move_t<thread>();
-        detail::thread_move_t<thread> move();
+        thread(detail::thread_move_t<thread> x)
+        {
+            thread_info=x->thread_info;
+            x->thread_info=0;
+        }
+        
+        thread& operator=(detail::thread_move_t<thread> x)
+            {
+                thread new_thread(x);
+                swap(new_thread);
+                return *this;
+            }
+        
+        operator detail::thread_move_t<thread>()
+        {
+            return move();
+        }
+        
+        detail::thread_move_t<thread> move()
+        {
+            detail::thread_move_t<thread> x(*this);
+            return x;
+        }
 
 #endif
 
@@ -203,7 +222,10 @@ namespace boost
             start_thread();
         }
 
-        void swap(thread& x);
+        void swap(thread& x)
+        {
+            thread_info.swap(x.thread_info);
+        }
 
         class id;
         id get_id() const;

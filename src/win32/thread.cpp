@@ -226,37 +226,6 @@ namespace boost
         detach();
     }
     
-#ifndef BOOST_HAS_RVALUE_REFS
-    thread::thread(detail::thread_move_t<thread> x)
-    {
-        thread_info=x->thread_info;
-        x->thread_info=0;
-    }
-    
-    thread& thread::operator=(detail::thread_move_t<thread> x)
-    {
-        thread new_thread(x);
-        swap(new_thread);
-        return *this;
-    }
-        
-    thread::operator detail::thread_move_t<thread>()
-    {
-        return move();
-    }
-
-    detail::thread_move_t<thread> thread::move()
-    {
-        detail::thread_move_t<thread> x(*this);
-        return x;
-    }
-#endif
-
-    void thread::swap(thread& x)
-    {
-        thread_info.swap(x.thread_info);
-    }
-
     thread::id thread::get_id() const
     {
         return thread::id(get_thread_info());
