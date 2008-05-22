@@ -81,25 +81,6 @@ namespace boost
 
     }
 
-    void thread::yield()
-    {
-        this_thread::yield();
-    }
-    
-    void thread::sleep(const system_time& target)
-    {
-        system_time const now(get_system_time());
-        
-        if(target<=now)
-        {
-            this_thread::yield();
-        }
-        else
-        {
-            this_thread::sleep(target-now);
-        }
-    }
-
     namespace detail
     {
         struct thread_exit_callback_node
@@ -164,26 +145,24 @@ namespace boost
             set_current_thread_data(0);
         }
         
-    }
-    
-
-    unsigned __stdcall thread::thread_start_function(void* param)
-    {
-        detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(param));
-        set_current_thread_data(thread_info);
-        try
+        unsigned __stdcall thread_start_function(void* param)
         {
-            thread_info->run();
+            detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(param));
+            set_current_thread_data(thread_info);
+            try
+            {
+                thread_info->run();
+            }
+            catch(thread_interrupted const&)
+            {
+            }
+            catch(...)
+            {
+                std::terminate();
+            }
+            run_thread_exit_callbacks();
+            return 0;
         }
-        catch(thread_interrupted const&)
-        {
-        }
-        catch(...)
-        {
-            std::terminate();
-        }
-        run_thread_exit_callbacks();
-        return 0;
     }
 
     thread::thread()

@@ -6,6 +6,7 @@
 // (C) Copyright 2007 Anthony Williams
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/exceptions.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/thread/mutex.hpp>
@@ -15,9 +16,8 @@
 
 namespace boost
 {
-    class thread_interrupted
-    {};
-
+    class thread;
+    
     namespace detail
     {
         struct thread_exit_callback_node;
@@ -26,7 +26,7 @@ namespace boost
         struct thread_data_base;
         typedef boost::shared_ptr<thread_data_base> thread_data_ptr;
         
-        struct thread_data_base:
+        struct BOOST_THREAD_DECL thread_data_base:
             enable_shared_from_this<thread_data_base>
         {
             thread_data_ptr self;
@@ -51,8 +51,9 @@ namespace boost
                 interrupt_requested(false),
                 current_cond(0)
             {}
-            virtual ~thread_data_base()
-            {}
+            virtual ~thread_data_base();
+
+            typedef pthread_t native_handle_type;
 
             virtual void run()=0;
         };
@@ -94,6 +95,19 @@ namespace boost
                 }
             }
         };
+    }
+
+    namespace this_thread
+    {
+        void BOOST_THREAD_DECL yield();
+        
+        void BOOST_THREAD_DECL sleep(system_time const& abs_time);
+        
+        template<typename TimeDuration>
+        inline void sleep(TimeDuration const& rel_time)
+        {
+            this_thread::sleep(get_system_time()+rel_time);
+        }
     }
 }
 
