@@ -19,7 +19,11 @@
 #include <string>
 #include <stdexcept>
 
-namespace boost {
+namespace boost
+{
+
+    class BOOST_THREAD_DECL thread_interrupted
+    {};
 
 class BOOST_THREAD_DECL thread_exception : public std::exception
 {
