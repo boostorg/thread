@@ -137,15 +137,15 @@ namespace boost
         thread(detail::thread_move_t<thread> x)
         {
             thread_info=x->thread_info;
-            x->thread_info=0;
+            x->thread_info.reset();
         }
         
         thread& operator=(detail::thread_move_t<thread> x)
-            {
-                thread new_thread(x);
-                swap(new_thread);
-                return *this;
-            }
+        {
+            thread new_thread(x);
+            swap(new_thread);
+            return *this;
+        }
         
         operator detail::thread_move_t<thread>()
         {
