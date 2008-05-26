@@ -96,7 +96,8 @@ int callable_one_arg::called_arg=0;
 
 void test_thread_callable_object_one_argument()
 {
-    boost::thread callable(callable_one_arg(),42);
+    callable_one_arg func;
+    boost::thread callable(func,42);
     callable.join();
     BOOST_CHECK(callable_one_arg::called);
     BOOST_CHECK_EQUAL(callable_one_arg::called_arg,42);
