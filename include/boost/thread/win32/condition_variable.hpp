@@ -235,12 +235,12 @@ namespace boost
             }
         
         };
-        void intrusive_ptr_add_ref(basic_condition_variable::list_entry * p)
+        inline void intrusive_ptr_add_ref(basic_condition_variable::list_entry * p)
         {
             BOOST_INTERLOCKED_INCREMENT(&p->references);
         }
             
-        void intrusive_ptr_release(basic_condition_variable::list_entry * p)
+        inline void intrusive_ptr_release(basic_condition_variable::list_entry * p)
         {
             if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
             {
