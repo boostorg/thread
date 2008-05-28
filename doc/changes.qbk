@@ -52,4 +52,6 @@ been moved to __thread_id__.
 
 * The broken `boost::read_write_mutex` has been replaced with __shared_mutex__.
 
+* __mutex__ is now never recursive. For Boost releases prior to 1.35 __mutex__ was recursive on Windows and not on POSIX platforms.
+
 [endsect]

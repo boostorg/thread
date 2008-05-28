@@ -1,4 +1,4 @@
-// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -21,6 +21,20 @@ void test_thread_function_no_arguments()
     boost::thread function(normal_function);
     function.join();
     BOOST_CHECK(normal_function_called);
+}
+
+int nfoa_res=0;
+
+void normal_function_one_arg(int i)
+{
+    nfoa_res=i;
+}
+
+void test_thread_function_one_argument()
+{
+    boost::thread function(normal_function_one_arg,42);
+    function.join();
+    BOOST_CHECK_EQUAL(42,nfoa_res);
 }
 
 struct callable_no_args
@@ -82,7 +96,8 @@ int callable_one_arg::called_arg=0;
 
 void test_thread_callable_object_one_argument()
 {
-    boost::thread callable(callable_one_arg(),42);
+    callable_one_arg func;
+    boost::thread callable(func,42);
     callable.join();
     BOOST_CHECK(callable_one_arg::called);
     BOOST_CHECK_EQUAL(callable_one_arg::called_arg,42);
@@ -150,6 +165,47 @@ void test_thread_callable_object_multiple_arguments()
     BOOST_CHECK_EQUAL(callable_multiple_arg::called_two_arg2,dbl);
 }
 
+struct X
+{
+    bool function_called;
+    int arg_value;
+
+    X():
+        function_called(false),
+        arg_value(0)
+    {}
+    
+
+    void f0()
+    {
+        function_called=true;
+    }
+
+    void f1(int i)
+    {
+        arg_value=i;
+    }
+
+};
+
+void test_thread_member_function_no_arguments()
+{
+    X x;
+    
+    boost::thread function(&X::f0,&x);
+    function.join();
+    BOOST_CHECK(x.function_called);
+}
+
+
+void test_thread_member_function_one_argument()
+{
+    X x;
+    boost::thread function(&X::f1,&x,42);
+    function.join();
+    BOOST_CHECK_EQUAL(42,x.arg_value);
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -157,9 +213,12 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
         BOOST_TEST_SUITE("Boost.Threads: thread launching test suite");
 
     test->add(BOOST_TEST_CASE(test_thread_function_no_arguments));
+    test->add(BOOST_TEST_CASE(test_thread_function_one_argument));
     test->add(BOOST_TEST_CASE(test_thread_callable_object_no_arguments));
     test->add(BOOST_TEST_CASE(test_thread_callable_object_ref_no_arguments));
     test->add(BOOST_TEST_CASE(test_thread_callable_object_one_argument));
     test->add(BOOST_TEST_CASE(test_thread_callable_object_multiple_arguments));
+    test->add(BOOST_TEST_CASE(test_thread_member_function_no_arguments));
+    test->add(BOOST_TEST_CASE(test_thread_member_function_one_argument));
     return test;
 }

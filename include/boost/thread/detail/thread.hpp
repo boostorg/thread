@@ -1,19 +1,16 @@
-#ifndef BOOST_THREAD_THREAD_WIN32_HPP
-#define BOOST_THREAD_THREAD_WIN32_HPP
+#ifndef BOOST_THREAD_THREAD_COMMON_HPP
+#define BOOST_THREAD_THREAD_COMMON_HPP
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007 Anthony Williams
-
-#include <exception>
+// (C) Copyright 2007-8 Anthony Williams
+ 
 #include <boost/thread/exceptions.hpp>
 #include <ostream>
 #include <boost/thread/detail/move.hpp>
-#include <boost/intrusive_ptr.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/thread_time.hpp>
-#include "thread_primitives.hpp"
-#include "thread_heap_alloc.hpp"
+#include <boost/thread/xtime.hpp>
+#include <boost/thread/detail/thread_heap_alloc.hpp>
 #include <boost/utility.hpp>
 #include <boost/assert.hpp>
 #include <list>
@@ -31,135 +28,6 @@
 
 namespace boost
 {
-    class thread_interrupted
-    {};
-
-    namespace detail
-    {
-        struct thread_exit_callback_node;
-        struct tss_data_node;
-        
-        struct thread_data_base
-        {
-            long count;
-            detail::win32::handle_manager thread_handle;
-            detail::win32::handle_manager interruption_handle;
-            boost::detail::thread_exit_callback_node* thread_exit_callbacks;
-            boost::detail::tss_data_node* tss_data;
-            bool interruption_enabled;
-            unsigned id;
-
-            thread_data_base():
-                count(0),thread_handle(detail::win32::invalid_handle_value),
-                interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
-                thread_exit_callbacks(0),tss_data(0),
-                interruption_enabled(true),
-                id(0)
-            {}
-            virtual ~thread_data_base()
-            {}
-
-            friend void intrusive_ptr_add_ref(thread_data_base * p)
-            {
-                BOOST_INTERLOCKED_INCREMENT(&p->count);
-            }
-            
-            friend void intrusive_ptr_release(thread_data_base * p)
-            {
-                if(!BOOST_INTERLOCKED_DECREMENT(&p->count))
-                {
-                    detail::heap_delete(p);
-                }
-            }
-
-            void interrupt()
-            {
-                BOOST_VERIFY(detail::win32::SetEvent(interruption_handle)!=0);
-            }
-            
-
-            virtual void run()=0;
-        };
-
-        typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
-
-        struct timeout
-        {
-            unsigned long start;
-            uintmax_t milliseconds;
-            bool relative;
-            boost::system_time abs_time;
-
-            static unsigned long const max_non_infinite_wait=0xfffffffe;
-
-            timeout(uintmax_t milliseconds_):
-                start(win32::GetTickCount()),
-                milliseconds(milliseconds_),
-                relative(true),
-                abs_time(boost::get_system_time())
-            {}
-
-            timeout(boost::system_time const& abs_time_):
-                start(win32::GetTickCount()),
-                milliseconds(0),
-                relative(false),
-                abs_time(abs_time_)
-            {}
-
-            struct remaining_time
-            {
-                bool more;
-                unsigned long milliseconds;
-
-                remaining_time(uintmax_t remaining):
-                    more(remaining>max_non_infinite_wait),
-                    milliseconds(more?max_non_infinite_wait:(unsigned long)remaining)
-                {}
-            };
-
-            remaining_time remaining_milliseconds() const
-            {
-                if(is_sentinel())
-                {
-                    return remaining_time(win32::infinite);
-                }
-                else if(relative)
-                {
-                    unsigned long const now=win32::GetTickCount();
-                    unsigned long const elapsed=now-start;
-                    return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
-                }
-                else
-                {
-                    system_time const now=get_system_time();
-                    if(abs_time<=now)
-                    {
-                        return remaining_time(0);
-                    }
-                    return remaining_time((abs_time-now).total_milliseconds()+1);
-                }
-            }
-
-            bool is_sentinel() const
-            {
-                return milliseconds==~uintmax_t(0);
-            }
-            
-
-            static timeout sentinel()
-            {
-                return timeout(sentinel_type());
-            }
-        private:
-            struct sentinel_type
-            {};
-                
-            explicit timeout(sentinel_type):
-                start(0),milliseconds(~uintmax_t(0)),relative(true)
-            {}
-        };
-    }
-
     class BOOST_THREAD_DECL thread
     {
     private:
@@ -198,8 +66,6 @@ namespace boost
         mutable boost::mutex thread_info_mutex;
         detail::thread_data_ptr thread_info;
 
-        static unsigned __stdcall thread_start_function(void* param);
-
         void start_thread();
         
         explicit thread(detail::thread_data_ptr data);
@@ -210,18 +76,18 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
-            return detail::heap_new<thread_data<F> >(static_cast<F&&>(f));
+            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(static_cast<F&&>(f)));
         }
 #else
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f)
         {
-            return detail::heap_new<thread_data<F> >(f);
+            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(f));
         }
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(boost::detail::thread_move_t<F> f)
         {
-            return detail::heap_new<thread_data<F> >(f);
+            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(f));
         }
 #endif
     public:
@@ -235,6 +101,24 @@ namespace boost
         {
             start_thread();
         }
+
+        thread(thread&& other)
+        {
+            thread_info.swap(other.thread_info);
+        }
+        
+        thread& operator=(thread&& other)
+        {
+            thread_info=other.thread_info;
+            other.thread_info.reset();
+            return *this;
+        }
+
+        thread&& move()
+        {
+            return static_cast<thread&&>(*this);
+        }
+        
 #else
         template <class F>
         explicit thread(F f):
@@ -249,33 +133,99 @@ namespace boost
         {
             start_thread();
         }
+
+        thread(detail::thread_move_t<thread> x)
+        {
+            thread_info=x->thread_info;
+            x->thread_info.reset();
+        }
+        
+        thread& operator=(detail::thread_move_t<thread> x)
+        {
+            thread new_thread(x);
+            swap(new_thread);
+            return *this;
+        }
+        
+        operator detail::thread_move_t<thread>()
+        {
+            return move();
+        }
+        
+        detail::thread_move_t<thread> move()
+        {
+            detail::thread_move_t<thread> x(*this);
+            return x;
+        }
+
 #endif
 
         template <class F,class A1>
         thread(F f,A1 a1):
-            thread_info(make_thread_info(boost::bind<void>(f,a1)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1)))
         {
             start_thread();
         }
         template <class F,class A1,class A2>
         thread(F f,A1 a1,A2 a2):
-            thread_info(make_thread_info(boost::bind<void>(f,a1,a2)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2)))
         {
             start_thread();
         }
+
         template <class F,class A1,class A2,class A3>
         thread(F f,A1 a1,A2 a2,A3 a3):
-            thread_info(make_thread_info(boost::bind<void>(f,a1,a2,a3)))
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3)))
         {
             start_thread();
         }
 
-        thread(detail::thread_move_t<thread> x);
-        thread& operator=(detail::thread_move_t<thread> x);
-        operator detail::thread_move_t<thread>();
-        detail::thread_move_t<thread> move();
+        template <class F,class A1,class A2,class A3,class A4>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4)))
+        {
+            start_thread();
+        }
 
-        void swap(thread& x);
+        template <class F,class A1,class A2,class A3,class A4,class A5>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8)))
+        {
+            start_thread();
+        }
+
+        template <class F,class A1,class A2,class A3,class A4,class A5,class A6,class A7,class A8,class A9>
+        thread(F f,A1 a1,A2 a2,A3 a3,A4 a4,A5 a5,A6 a6,A7 a7,A8 a8,A9 a9):
+            thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1,a2,a3,a4,a5,a6,a7,a8,a9)))
+        {
+            start_thread();
+        }
+
+        void swap(thread& x)
+        {
+            thread_info.swap(x.thread_info);
+        }
 
         class id;
         id get_id() const;
@@ -294,25 +244,39 @@ namespace boost
 
         static unsigned hardware_concurrency();
 
-        typedef detail::win32::handle native_handle_type;
+        typedef detail::thread_data_base::native_handle_type native_handle_type;
         native_handle_type native_handle();
 
         // backwards compatibility
         bool operator==(const thread& other) const;
         bool operator!=(const thread& other) const;
 
-        static void yield();
-        static void sleep(const system_time& xt);
+        static inline void yield()
+        {
+            this_thread::yield();
+        }
+        
+        static inline void sleep(const system_time& xt)
+        {
+            this_thread::sleep(xt);
+        }
 
         // extensions
         void interrupt();
         bool interruption_requested() const;
     };
 
+#ifdef BOOST_HAS_RVALUE_REFS
+    inline thread&& move(thread&& t)
+    {
+        return t;
+    }
+#else
     inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
     {
         return t;
     }
+#endif
 
     template<typename F>
     struct thread::thread_data<boost::reference_wrapper<F> >:
@@ -321,6 +285,22 @@ namespace boost
         F& f;
         
         thread_data(boost::reference_wrapper<F> f_):
+            f(f_)
+        {}
+        
+        void run()
+        {
+            f();
+        }
+    };
+
+    template<typename F>
+    struct thread::thread_data<const boost::reference_wrapper<F> >:
+        detail::thread_data_base
+    {
+        F& f;
+        
+        thread_data(const boost::reference_wrapper<F> f_):
             f(f_)
         {}
         
@@ -356,21 +336,13 @@ namespace boost
 
         thread::id BOOST_THREAD_DECL get_id();
 
-        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
-        inline bool interruptible_wait(unsigned long milliseconds)
-        {
-            return interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
-        }
-
         void BOOST_THREAD_DECL interruption_point();
         bool BOOST_THREAD_DECL interruption_enabled();
         bool BOOST_THREAD_DECL interruption_requested();
 
-        void BOOST_THREAD_DECL yield();
-        template<typename TimeDuration>
-        void sleep(TimeDuration const& rel_time)
+        inline void sleep(xtime const& abs_time)
         {
-            interruptible_wait(static_cast<unsigned long>(rel_time.total_milliseconds()));
+            sleep(system_time(abs_time));
         }
     }
 
@@ -386,7 +358,7 @@ namespace boost
         friend id this_thread::get_id();
     public:
         id():
-            thread_data(0)
+            thread_data()
         {}
             
         bool operator==(const id& y) const
@@ -432,15 +404,6 @@ namespace boost
                 return os<<"{Not-any-thread}";
             }
         }
-
-        void interrupt()
-        {
-            if(thread_data)
-            {
-                thread_data->interrupt();
-            }
-        }
-        
     };
 
     inline bool thread::operator==(const thread& other) const

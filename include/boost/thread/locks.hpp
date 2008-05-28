@@ -625,11 +625,19 @@ namespace boost
             using base::try_lock;
             using base::unlock;
             using base::owns_lock;
-            using base::operator!;
             using base::mutex;
             using base::release;
+            
+            bool operator!() const
+            {
+                return !this->owns_lock();
+            }
+
             typedef typename base::bool_type bool_type;
-            using base::operator bool_type;
+            operator bool_type() const
+            {
+                return static_cast<base const&>(*this);
+            }
         };
         
         template<typename MutexType1,typename MutexType2>

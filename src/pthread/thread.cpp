@@ -28,6 +28,9 @@ namespace boost
 {
     namespace detail
     {
+        thread_data_base::~thread_data_base()
+        {}
+
         struct thread_exit_callback_node
         {
             boost::detail::thread_exit_function_base* func;
@@ -119,7 +122,7 @@ namespace boost
         {
             void* thread_proxy(void* param)
             {
-                boost::shared_ptr<boost::detail::thread_data_base> thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
+                boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
                 try
@@ -153,6 +156,10 @@ namespace boost
             
             void run()
             {}
+
+        private:
+            externally_launched_thread(externally_launched_thread&);
+            void operator=(externally_launched_thread&);
         };
 
         detail::thread_data_base* make_external_thread_data()
@@ -194,47 +201,6 @@ namespace boost
     thread::~thread()
     {
         detach();
-    }
-
-    thread::thread(detail::thread_move_t<thread> x)
-    {
-        lock_guard<mutex> lock(x->thread_info_mutex);
-        thread_info=x->thread_info;
-        x->thread_info.reset();
-    }
-    
-    thread& thread::operator=(detail::thread_move_t<thread> x)
-    {
-        thread new_thread(x);
-        swap(new_thread);
-        return *this;
-    }
-        
-    thread::operator detail::thread_move_t<thread>()
-    {
-        return move();
-    }
-
-    detail::thread_move_t<thread> thread::move()
-    {
-        detail::thread_move_t<thread> x(*this);
-        return x;
-    }
-
-    void thread::swap(thread& x)
-    {
-        thread_info.swap(x.thread_info);
-    }
-
-
-    bool thread::operator==(const thread& other) const
-    {
-        return get_id()==other.get_id();
-    }
-
-    bool thread::operator!=(const thread& other) const
-    {
-        return !operator==(other);
     }
 
     detail::thread_data_ptr thread::get_thread_info() const
@@ -361,57 +327,61 @@ namespace boost
         }
     }
 
-    void thread::sleep(const system_time& st)
+    namespace this_thread
     {
-        detail::thread_data_base* const thread_info=detail::get_current_thread_data();
         
-        if(thread_info)
+        void sleep(const system_time& st)
         {
-            unique_lock<mutex> lk(thread_info->sleep_mutex);
-            while(thread_info->sleep_condition.timed_wait(lk,st));
-        }
-        else
-        {
-            xtime const xt=get_xtime(st);
-            
-            for (int foo=0; foo < 5; ++foo)
+            detail::thread_data_base* const thread_info=detail::get_current_thread_data();
+        
+            if(thread_info)
             {
+                unique_lock<mutex> lk(thread_info->sleep_mutex);
+                while(thread_info->sleep_condition.timed_wait(lk,st));
+            }
+            else
+            {
+                xtime const xt=get_xtime(st);
+            
+                for (int foo=0; foo < 5; ++foo)
+                {
 #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                timespec ts;
-                to_timespec_duration(xt, ts);
-                BOOST_VERIFY(!pthread_delay_np(&ts));
+                    timespec ts;
+                    to_timespec_duration(xt, ts);
+                    BOOST_VERIFY(!pthread_delay_np(&ts));
 #   elif defined(BOOST_HAS_NANOSLEEP)
-                timespec ts;
-                to_timespec_duration(xt, ts);
+                    timespec ts;
+                    to_timespec_duration(xt, ts);
                 
-                //  nanosleep takes a timespec that is an offset, not
-                //  an absolute time.
-                nanosleep(&ts, 0);
+                    //  nanosleep takes a timespec that is an offset, not
+                    //  an absolute time.
+                    nanosleep(&ts, 0);
 #   else
-                mutex mx;
-                mutex::scoped_lock lock(mx);
-                condition cond;
-                cond.timed_wait(lock, xt);
+                    mutex mx;
+                    mutex::scoped_lock lock(mx);
+                    condition cond;
+                    cond.timed_wait(lock, xt);
 #   endif
-                xtime cur;
-                xtime_get(&cur, TIME_UTC);
-                if (xtime_cmp(xt, cur) <= 0)
-                    return;
+                    xtime cur;
+                    xtime_get(&cur, TIME_UTC);
+                    if (xtime_cmp(xt, cur) <= 0)
+                        return;
+                }
             }
         }
-    }
 
-    void thread::yield()
-    {
+        void yield()
+        {
 #   if defined(BOOST_HAS_SCHED_YIELD)
-        BOOST_VERIFY(!sched_yield());
+            BOOST_VERIFY(!sched_yield());
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
-        BOOST_VERIFY(!pthread_yield());
+            BOOST_VERIFY(!pthread_yield());
 #   else
-        xtime xt;
-        xtime_get(&xt, TIME_UTC);
-        sleep(xt);
+            xtime xt;
+            xtime_get(&xt, TIME_UTC);
+            sleep(xt);
 #   endif
+        }
     }
 
     unsigned thread::hardware_concurrency()
@@ -622,85 +592,85 @@ namespace boost
         }
     }
 
-    thread_group::thread_group()
-    {
-    }
+//     thread_group::thread_group()
+//     {
+//     }
 
-    thread_group::~thread_group()
-    {
-        // We shouldn't have to scoped_lock here, since referencing this object
-        // from another thread while we're deleting it in the current thread is
-        // going to lead to undefined behavior any way.
-        for (std::list<thread*>::iterator it = m_threads.begin();
-             it != m_threads.end(); ++it)
-        {
-            delete (*it);
-        }
-    }
+//     thread_group::~thread_group()
+//     {
+//         // We shouldn't have to scoped_lock here, since referencing this object
+//         // from another thread while we're deleting it in the current thread is
+//         // going to lead to undefined behavior any way.
+//         for (std::list<thread*>::iterator it = m_threads.begin();
+//              it != m_threads.end(); ++it)
+//         {
+//             delete (*it);
+//         }
+//     }
 
-    thread* thread_group::create_thread(const function0<void>& threadfunc)
-    {
-        // No scoped_lock required here since the only "shared data" that's
-        // modified here occurs inside add_thread which does scoped_lock.
-        std::auto_ptr<thread> thrd(new thread(threadfunc));
-        add_thread(thrd.get());
-        return thrd.release();
-    }
+//     thread* thread_group::create_thread(const function0<void>& threadfunc)
+//     {
+//         // No scoped_lock required here since the only "shared data" that's
+//         // modified here occurs inside add_thread which does scoped_lock.
+//         std::auto_ptr<thread> thrd(new thread(threadfunc));
+//         add_thread(thrd.get());
+//         return thrd.release();
+//     }
 
-    void thread_group::add_thread(thread* thrd)
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
+//     void thread_group::add_thread(thread* thrd)
+//     {
+//         mutex::scoped_lock scoped_lock(m_mutex);
 
-        // For now we'll simply ignore requests to add a thread object multiple
-        // times. Should we consider this an error and either throw or return an
-        // error value?
-        std::list<thread*>::iterator it = std::find(m_threads.begin(),
-                                                    m_threads.end(), thrd);
-        BOOST_ASSERT(it == m_threads.end());
-        if (it == m_threads.end())
-            m_threads.push_back(thrd);
-    }
+//         // For now we'll simply ignore requests to add a thread object multiple
+//         // times. Should we consider this an error and either throw or return an
+//         // error value?
+//         std::list<thread*>::iterator it = std::find(m_threads.begin(),
+//                                                     m_threads.end(), thrd);
+//         BOOST_ASSERT(it == m_threads.end());
+//         if (it == m_threads.end())
+//             m_threads.push_back(thrd);
+//     }
 
-    void thread_group::remove_thread(thread* thrd)
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
+//     void thread_group::remove_thread(thread* thrd)
+//     {
+//         mutex::scoped_lock scoped_lock(m_mutex);
 
-        // For now we'll simply ignore requests to remove a thread object that's
-        // not in the group. Should we consider this an error and either throw or
-        // return an error value?
-        std::list<thread*>::iterator it = std::find(m_threads.begin(),
-                                                    m_threads.end(), thrd);
-        BOOST_ASSERT(it != m_threads.end());
-        if (it != m_threads.end())
-            m_threads.erase(it);
-    }
+//         // For now we'll simply ignore requests to remove a thread object that's
+//         // not in the group. Should we consider this an error and either throw or
+//         // return an error value?
+//         std::list<thread*>::iterator it = std::find(m_threads.begin(),
+//                                                     m_threads.end(), thrd);
+//         BOOST_ASSERT(it != m_threads.end());
+//         if (it != m_threads.end())
+//             m_threads.erase(it);
+//     }
 
-    void thread_group::join_all()
-    {
-        mutex::scoped_lock scoped_lock(m_mutex);
-        for (std::list<thread*>::iterator it = m_threads.begin();
-             it != m_threads.end(); ++it)
-        {
-            (*it)->join();
-        }
-    }
+//     void thread_group::join_all()
+//     {
+//         mutex::scoped_lock scoped_lock(m_mutex);
+//         for (std::list<thread*>::iterator it = m_threads.begin();
+//              it != m_threads.end(); ++it)
+//         {
+//             (*it)->join();
+//         }
+//     }
 
-    void thread_group::interrupt_all()
-    {
-        boost::lock_guard<mutex> guard(m_mutex);
+//     void thread_group::interrupt_all()
+//     {
+//         boost::lock_guard<mutex> guard(m_mutex);
             
-        for(std::list<thread*>::iterator it=m_threads.begin(),end=m_threads.end();
-            it!=end;
-            ++it)
-        {
-            (*it)->interrupt();
-        }
-    }
+//         for(std::list<thread*>::iterator it=m_threads.begin(),end=m_threads.end();
+//             it!=end;
+//             ++it)
+//         {
+//             (*it)->interrupt();
+//         }
+//     }
         
 
-    size_t thread_group::size() const
-    {
-        return m_threads.size();
-    }
+//     size_t thread_group::size() const
+//     {
+//         return m_threads.size();
+//     }
 
 }

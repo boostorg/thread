@@ -46,20 +46,10 @@ namespace boost
                     notified=true;
                     detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
                 }
-
-                friend void intrusive_ptr_add_ref(list_entry * p)
-                {
-                    BOOST_INTERLOCKED_INCREMENT(&p->references);
-                }
-            
-                friend void intrusive_ptr_release(list_entry * p)
-                {
-                    if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
-                    {
-                        delete p;
-                    }
-                }
             };
+
+            friend void intrusive_ptr_add_ref(list_entry * p);
+            friend void intrusive_ptr_release(list_entry * p);
 
             typedef boost::intrusive_ptr<list_entry> entry_ptr;
             typedef std::vector<entry_ptr> generation_list;
@@ -206,7 +196,7 @@ namespace boost
             {
                 if(detail::interlocked_read_acquire(&total_count))
                 {
-                    boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     if(!total_count)
                     {
                         return;
@@ -227,7 +217,7 @@ namespace boost
             {
                 if(detail::interlocked_read_acquire(&total_count))
                 {
-                    boost::mutex::scoped_lock internal_lock(internal_mutex);
+                    boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     if(!total_count)
                     {
                         return;
@@ -239,11 +229,26 @@ namespace boost
                     {
                         (*it)->release(detail::interlocked_read_acquire(&(*it)->waiters));
                     }
+                    generations.clear();
                     wake_sem=detail::win32::handle(0);
                 }
             }
         
         };
+        inline void intrusive_ptr_add_ref(basic_condition_variable::list_entry * p)
+        {
+            BOOST_INTERLOCKED_INCREMENT(&p->references);
+        }
+            
+        inline void intrusive_ptr_release(basic_condition_variable::list_entry * p)
+        {
+            if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
+            {
+                delete p;
+            }
+        }
+        
+
     }
 
     class condition_variable:

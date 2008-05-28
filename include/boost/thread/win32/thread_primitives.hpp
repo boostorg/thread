@@ -279,9 +279,14 @@ namespace boost
 }
 
 #if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)
-#if MSC_VER>=1400
+#if _MSC_VER>=1400
+#if _MSC_VER==1400
 extern "C" unsigned char _interlockedbittestandset(long *a,long b);
 extern "C" unsigned char _interlockedbittestandreset(long *a,long b);
+#else
+extern "C" unsigned char _interlockedbittestandset(volatile long *a,long b);
+extern "C" unsigned char _interlockedbittestandreset(volatile long *a,long b);
+#endif
 
 #pragma intrinsic(_interlockedbittestandset)
 #pragma intrinsic(_interlockedbittestandreset)
@@ -294,12 +299,12 @@ namespace boost
         {
             inline bool interlocked_bit_test_and_set(long* x,long bit)
             {
-                return _interlockedbittestandset(x,bit);
+                return _interlockedbittestandset(x,bit)!=0;
             }
 
             inline bool interlocked_bit_test_and_reset(long* x,long bit)
             {
-                return _interlockedbittestandreset(x,bit);
+                return _interlockedbittestandreset(x,bit)!=0;
             }
             
         }

@@ -80,7 +80,7 @@ void test_unique_lock_move_from_rvalue_on_construction()
     BOOST_CHECK(l.mutex()==&m);
 }
 
-namespace user
+namespace user_test_ns
 {
     template<typename T>
     T move(T& t)
@@ -103,9 +103,9 @@ namespace user
 
 void test_move_for_user_defined_type_unaffected()
 {
-    user::nc src;
-    user::nc dest=move(src);
-    BOOST_CHECK(user::move_called);
+    user_test_ns::nc src;
+    user_test_ns::nc dest=move(src);
+    BOOST_CHECK(user_test_ns::move_called);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
