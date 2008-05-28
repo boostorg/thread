@@ -17,6 +17,13 @@ allows the details of thread creation to be wrapped in a function.
         some_thread.join();
     }
 
+[Note: On compilers that support rvalue references, __thread__ provides a proper move constructor and move-assignment operator, and
+therefore meets the C++0x ['MoveConstructible] and ['MoveAssignable] concepts. With such compilers, __thread__ can therefore be used
+with containers that support those concepts.
+
+For other compilers, move support is provided with a move emulation layer, so containers must explicitly detect that move emulation
+layer. See <boost/thread/detail/move.hpp> for details.]
+
 [heading Launching threads]
 
 A new thread is launched by passing an object of a callable type that can be invoked with no parameters to the constructor. The
