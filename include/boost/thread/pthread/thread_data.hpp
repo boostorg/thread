@@ -14,6 +14,8 @@
 #include <pthread.h>
 #include "condition_variable_fwd.hpp"
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     class thread;
@@ -111,5 +113,6 @@ namespace boost
     }
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif

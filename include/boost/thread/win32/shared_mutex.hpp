@@ -15,6 +15,8 @@
 #include <boost/utility.hpp>
 #include <boost/thread/thread_time.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     class shared_mutex:
@@ -632,5 +634,6 @@ namespace boost
     };
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif

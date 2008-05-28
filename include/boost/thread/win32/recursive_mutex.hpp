@@ -15,6 +15,8 @@
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/locks.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     class recursive_mutex:
@@ -57,5 +59,6 @@ namespace boost
     };
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif

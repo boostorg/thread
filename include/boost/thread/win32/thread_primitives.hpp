@@ -18,6 +18,7 @@
 
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
+
 namespace boost
 {
     namespace detail
@@ -146,6 +147,8 @@ namespace boost
 #else
 # error "Win32 functions not available"
 #endif
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -391,5 +394,6 @@ namespace boost
 }
 #endif
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif

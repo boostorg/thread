@@ -21,6 +21,8 @@
 #include <stdlib.h>
 #include <memory>
 
+#include <boost/config/abi_prefix.hpp>
+
 #ifdef BOOST_MSVC
 #pragma warning(push)
 #pragma warning(disable:4251)
@@ -535,5 +537,7 @@ namespace boost
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

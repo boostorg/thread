@@ -3,7 +3,7 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2007-8 Anthony Williams
 
 #include <boost/thread/mutex.hpp>
 #include "thread_primitives.hpp"
@@ -16,6 +16,8 @@
 #include <boost/thread/xtime.hpp>
 #include <vector>
 #include <boost/intrusive_ptr.hpp>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -371,5 +373,7 @@ namespace boost
     };
 
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif
