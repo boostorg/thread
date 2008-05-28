@@ -325,7 +325,7 @@ unchanged.]]
 
 [variablelist
 
-[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and longer has an associated __thread__ object.]]
+[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and no longer has an associated __thread__ object.]]
 
 [[Postconditions:] [`*this` no longer refers to any thread of execution.]]
 
