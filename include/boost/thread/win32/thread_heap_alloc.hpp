@@ -49,6 +49,8 @@ namespace boost
 
 #endif
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     namespace detail
@@ -388,6 +390,8 @@ namespace boost
         };
     }
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 
 #endif

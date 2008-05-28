@@ -10,6 +10,8 @@
 #include <algorithm>
 #include <boost/thread/thread_time.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     struct defer_lock_t
@@ -899,5 +901,7 @@ namespace boost
         }
     }
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

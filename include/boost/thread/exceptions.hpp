@@ -1,6 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
-// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,8 @@
 
 #include <string>
 #include <stdexcept>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -102,6 +104,8 @@ public:
 };
 
 } // namespace boost
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif // BOOST_THREAD_CONFIG_PDM070801_H
 

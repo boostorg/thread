@@ -3,7 +3,7 @@
 
 //  basic_timed_mutex_win32.hpp
 //
-//  (C) Copyright 2006 Anthony Williams 
+//  (C) Copyright 2006-8 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -14,6 +14,8 @@
 #include "interlocked_read.hpp"
 #include <boost/thread/thread_time.hpp>
 #include <boost/detail/interlocked.hpp>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -174,5 +176,7 @@ namespace boost
 }
 
 #define BOOST_BASIC_TIMED_MUTEX_INITIALIZER {0}
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif
