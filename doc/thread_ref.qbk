@@ -506,7 +506,7 @@ otherwise.]]
 
 [variablelist
 
-[[Returns:] [`true` if `*this` and `y` represent the different threads of execution, or one represents a thread of execution, and
+[[Returns:] [`true` if `*this` and `y` represent different threads of execution, or one represents a thread of execution, and
 the other represent __not_a_thread__, `false` otherwise.]]
 
 [[Throws:] [Nothing]]
