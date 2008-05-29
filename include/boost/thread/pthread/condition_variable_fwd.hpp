@@ -5,6 +5,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-8 Anthony Williams
 
+#include <boost/assert.hpp>
 #include <pthread.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
@@ -24,8 +25,18 @@ namespace boost
         condition_variable& operator=(condition_variable&);
 
     public:
-        condition_variable();
-        ~condition_variable();
+        condition_variable()
+        {
+            int const res=pthread_cond_init(&cond,NULL);
+            if(res)
+            {
+                throw thread_resource_error();
+            }
+        }
+        ~condition_variable()
+        {
+            BOOST_VERIFY(!pthread_cond_destroy(&cond));
+        }
 
         void wait(unique_lock<mutex>& m);
 
