@@ -8,6 +8,10 @@
 
 #include <boost/thread/thread_time.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
+#include <pthread.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
