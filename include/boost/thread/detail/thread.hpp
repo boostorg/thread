@@ -30,20 +30,13 @@
 
 namespace boost
 {
-    class BOOST_THREAD_DECL thread
+    namespace detail
     {
-    private:
-        thread(thread&);
-        thread& operator=(thread&);
-
-        void release_handle();
-
         template<typename F>
-        struct thread_data:
-            detail::thread_data_base
+        class thread_data:
+            public detail::thread_data_base
         {
-            F f;
-
+        public:
 #ifdef BOOST_HAS_RVALUE_REFS
             thread_data(F&& f_):
                 f(static_cast<F&&>(f_))
@@ -61,9 +54,59 @@ namespace boost
                 f();
             }
         private:
+            F f;
+
             void operator=(thread_data&);
             thread_data(thread_data&);
         };
+
+        template<typename F>
+        class thread_data<boost::reference_wrapper<F> >:
+            public detail::thread_data_base
+        {
+        private:
+            F& f;
+
+            void operator=(thread_data&);
+            thread_data(thread_data&);
+        public:
+            thread_data(boost::reference_wrapper<F> f_):
+                f(f_)
+            {}
+            
+            void run()
+            {
+                f();
+            }
+        };
+
+        template<typename F>
+        class thread_data<const boost::reference_wrapper<F> >:
+            public detail::thread_data_base
+        {
+        private:
+            F& f;
+            void operator=(thread_data&);
+            thread_data(thread_data&);
+        public:
+            thread_data(const boost::reference_wrapper<F> f_):
+                f(f_)
+            {}
+            
+            void run()
+            {
+                f();
+            }
+        };
+    }
+    
+    class BOOST_THREAD_DECL thread
+    {
+    private:
+        thread(thread&);
+        thread& operator=(thread&);
+
+        void release_handle();
         
         mutable boost::mutex thread_info_mutex;
         detail::thread_data_ptr thread_info;
@@ -78,18 +121,18 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
-            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(static_cast<F&&>(f)));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(static_cast<F&&>(f)));
         }
 #else
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f)
         {
-            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(f));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(boost::detail::thread_move_t<F> f)
         {
-            return detail::thread_data_ptr(detail::heap_new<thread_data<F> >(f));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
 #endif
     public:
@@ -279,39 +322,6 @@ namespace boost
         return t;
     }
 #endif
-
-    template<typename F>
-    struct thread::thread_data<boost::reference_wrapper<F> >:
-        detail::thread_data_base
-    {
-        F& f;
-        
-        thread_data(boost::reference_wrapper<F> f_):
-            f(f_)
-        {}
-        
-        void run()
-        {
-            f();
-        }
-    };
-
-    template<typename F>
-    struct thread::thread_data<const boost::reference_wrapper<F> >:
-        detail::thread_data_base
-    {
-        F& f;
-        
-        thread_data(const boost::reference_wrapper<F> f_):
-            f(f_)
-        {}
-        
-        void run()
-        {
-            f();
-        }
-    };
-    
 
     namespace this_thread
     {
