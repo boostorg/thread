@@ -143,8 +143,10 @@ void test_thread_callable_object_multiple_arguments()
     {
         x.push_back(i*i);
     }
+
+    callable_multiple_arg func;
     
-    boost::thread callable3(callable_multiple_arg(),"hello",x,1.2);
+    boost::thread callable3(func,"hello",x,1.2);
     callable3.join();
     BOOST_CHECK(callable_multiple_arg::called_three);
     BOOST_CHECK_EQUAL(callable_multiple_arg::called_three_arg1,"hello");
@@ -158,7 +160,7 @@ void test_thread_callable_object_multiple_arguments()
 
     double const dbl=1.234;
     
-    boost::thread callable2(callable_multiple_arg(),19,dbl);
+    boost::thread callable2(func,19,dbl);
     callable2.join();
     BOOST_CHECK(callable_multiple_arg::called_two);
     BOOST_CHECK_EQUAL(callable_multiple_arg::called_two_arg1,19);
