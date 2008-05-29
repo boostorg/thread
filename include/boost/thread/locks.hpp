@@ -688,13 +688,30 @@ namespace boost
                 base::swap(*other);
             }
 
-            using base::lock;
-            using base::try_lock;
-            using base::unlock;
-            using base::owns_lock;
-            using base::mutex;
-            using base::release;
-            
+            void lock()
+            {
+                base::lock();
+            }
+            bool try_lock()
+            {
+                return base::try_lock();
+            }
+            void unlock()
+            {
+                base::unlock();
+            }
+            bool owns_lock() const
+            {
+                return base::owns_lock();
+            }
+            Mutex* mutex() const
+            {
+                return base::mutex();
+            }
+            Mutex* release()
+            {
+                return base::release();
+            }
             bool operator!() const
             {
                 return !this->owns_lock();
