@@ -8,10 +8,77 @@
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <algorithm>
+#include <iterator>
 #include <boost/thread/thread_time.hpp>
+#include <boost/utility/enable_if.hpp>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+    namespace detail
+    {
+        template<typename T>
+        struct has_member_lock
+        {
+            typedef char true_type;
+            struct false_type
+            {
+                true_type dummy[2];
+            };
+            
+            template<typename U>
+            static true_type has_member(U*,void (U::*dummy)()=&U::lock);
+            static false_type has_member(void*);
+            
+            BOOST_STATIC_CONSTANT(bool, value=sizeof(has_member_lock<T>::has_member((T*)NULL))==sizeof(true_type));
+        };
+
+        template<typename T>
+        struct has_member_unlock
+        {
+            typedef char true_type;
+            struct false_type
+            {
+                true_type dummy[2];
+            };
+            
+            template<typename U>
+            static true_type has_member(U*,void (U::*dummy)()=&U::unlock);
+            static false_type has_member(void*);
+            
+            BOOST_STATIC_CONSTANT(bool, value=sizeof(has_member_unlock<T>::has_member((T*)NULL))==sizeof(true_type));
+        };
+        
+        template<typename T>
+        struct has_member_try_lock
+        {
+            typedef char true_type;
+            struct false_type
+            {
+                true_type dummy[2];
+            };
+            
+            template<typename U>
+            static true_type has_member(U*,bool (U::*dummy)()=&U::try_lock);
+            static false_type has_member(void*);
+            
+            BOOST_STATIC_CONSTANT(bool, value=sizeof(has_member_try_lock<T>::has_member((T*)NULL))==sizeof(true_type));
+        };
+
+    }
+    
+
+    template<typename T>
+    struct is_mutex_type
+    {
+        BOOST_STATIC_CONSTANT(bool, value = detail::has_member_lock<T>::value &&
+                              detail::has_member_unlock<T>::value &&
+                              detail::has_member_try_lock<T>::value);
+        
+    };
+    
+
     struct defer_lock_t
     {};
     struct try_to_lock_t
@@ -621,13 +688,30 @@ namespace boost
                 base::swap(*other);
             }
 
-            using base::lock;
-            using base::try_lock;
-            using base::unlock;
-            using base::owns_lock;
-            using base::mutex;
-            using base::release;
-            
+            void lock()
+            {
+                base::lock();
+            }
+            bool try_lock()
+            {
+                return base::try_lock();
+            }
+            void unlock()
+            {
+                base::unlock();
+            }
+            bool owns_lock() const
+            {
+                return base::owns_lock();
+            }
+            Mutex* mutex() const
+            {
+                return base::mutex();
+            }
+            Mutex* release()
+            {
+                return base::release();
+            }
             bool operator!() const
             {
                 return !this->owns_lock();
@@ -764,7 +848,7 @@ namespace boost
     }
 
     template<typename MutexType1,typename MutexType2>
-    void lock(MutexType1& m1,MutexType2& m2)
+    typename enable_if<is_mutex_type<MutexType1>, void>::type lock(MutexType1& m1,MutexType2& m2)
     {
         unsigned const lock_count=2;
         unsigned lock_first=0;
@@ -898,6 +982,142 @@ namespace boost
             }
         }
     }
+
+    template<typename MutexType1,typename MutexType2>
+    typename enable_if<is_mutex_type<MutexType1>, int>::type try_lock(MutexType1& m1,MutexType2& m2)
+    {
+        return ((int)detail::try_lock_internal(m1,m2))-1;
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3>
+    int try_lock(MutexType1& m1,MutexType2& m2,MutexType3& m3)
+    {
+        return ((int)detail::try_lock_internal(m1,m2,m3))-1;
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3,typename MutexType4>
+    int try_lock(MutexType1& m1,MutexType2& m2,MutexType3& m3,MutexType4& m4)
+    {
+        return ((int)detail::try_lock_internal(m1,m2,m3,m4))-1;
+    }
+
+    template<typename MutexType1,typename MutexType2,typename MutexType3,typename MutexType4,typename MutexType5>
+    int try_lock(MutexType1& m1,MutexType2& m2,MutexType3& m3,MutexType4& m4,MutexType5& m5)
+    {
+        return ((int)detail::try_lock_internal(m1,m2,m3,m4,m5))-1;
+    }
+    
+
+    template<typename Iterator>
+    typename disable_if<is_mutex_type<Iterator>, void>::type lock(Iterator begin,Iterator end);
+    
+    namespace detail
+    {
+        template<typename Iterator>
+        struct range_lock_guard
+        {
+            Iterator begin;
+            Iterator end;
+            
+            range_lock_guard(Iterator begin_,Iterator end_):
+                begin(begin_),end(end_)
+            {
+                lock(begin,end);
+            }
+            
+            void release()
+            {
+                begin=end;
+            }
+
+            ~range_lock_guard()
+            {
+                for(;begin!=end;++begin)
+                {
+                    begin->unlock();
+                }
+            }
+        };
+    }
+
+    template<typename Iterator>
+    typename disable_if<is_mutex_type<Iterator>, Iterator>::type try_lock(Iterator begin,Iterator end)
+    {
+        if(begin==end)
+        {
+            return end;
+        }
+        typedef typename std::iterator_traits<Iterator>::value_type lock_type;
+        unique_lock<lock_type> guard(*begin,try_to_lock);
+        
+        if(!guard.owns_lock())
+        {
+            return begin;
+        }
+        Iterator const failed=try_lock(++begin,end);
+        if(failed==end)
+        {
+            guard.release();
+        }
+        
+        return failed;
+    }
+
+    template<typename Iterator>
+    typename disable_if<is_mutex_type<Iterator>, void>::type lock(Iterator begin,Iterator end)
+    {
+        typedef typename std::iterator_traits<Iterator>::value_type lock_type;
+        
+        if(begin==end)
+        {
+            return;
+        }
+        bool start_with_begin=true;
+        Iterator second=begin;
+        ++second;
+        Iterator next=second;
+        
+        for(;;)
+        {
+            unique_lock<lock_type> begin_lock(*begin,defer_lock);
+            if(start_with_begin)
+            {
+                begin_lock.lock();
+                Iterator const failed_lock=try_lock(next,end);
+                if(failed_lock==end)
+                {
+                    begin_lock.release();
+                    return;
+                }
+                start_with_begin=false;
+                next=failed_lock;
+            }
+            else
+            {
+                detail::range_lock_guard<Iterator> guard(next,end);
+                if(begin_lock.try_lock())
+                {
+                    Iterator const failed_lock=try_lock(second,next);
+                    if(failed_lock==next)
+                    {
+                        begin_lock.release();
+                        guard.release();
+                        return;
+                    }
+                    start_with_begin=false;
+                    next=failed_lock;
+                }
+                else
+                {
+                    start_with_begin=true;
+                    next=second;
+                }
+            }
+        }
+    }
+    
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

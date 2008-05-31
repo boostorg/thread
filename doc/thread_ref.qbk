@@ -17,6 +17,13 @@ allows the details of thread creation to be wrapped in a function.
         some_thread.join();
     }
 
+[Note: On compilers that support rvalue references, __thread__ provides a proper move constructor and move-assignment operator, and
+therefore meets the C++0x ['MoveConstructible] and ['MoveAssignable] concepts. With such compilers, __thread__ can therefore be used
+with containers that support those concepts.
+
+For other compilers, move support is provided with a move emulation layer, so containers must explicitly detect that move emulation
+layer. See <boost/thread/detail/move.hpp> for details.]
+
 [heading Launching threads]
 
 A new thread is launched by passing an object of a callable type that can be invoked with no parameters to the constructor. The
@@ -318,7 +325,7 @@ unchanged.]]
 
 [variablelist
 
-[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and longer has an associated __thread__ object.]]
+[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and no longer has an associated __thread__ object.]]
 
 [[Postconditions:] [`*this` no longer refers to any thread of execution.]]
 
@@ -499,7 +506,7 @@ otherwise.]]
 
 [variablelist
 
-[[Returns:] [`true` if `*this` and `y` represent the different threads of execution, or one represents a thread of execution, and
+[[Returns:] [`true` if `*this` and `y` represent different threads of execution, or one represents a thread of execution, and
 the other represent __not_a_thread__, `false` otherwise.]]
 
 [[Throws:] [Nothing]]

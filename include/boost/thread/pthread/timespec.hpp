@@ -1,6 +1,6 @@
 #ifndef BOOST_THREAD_PTHREAD_TIMESPEC_HPP
 #define BOOST_THREAD_PTHREAD_TIMESPEC_HPP
-//  (C) Copyright 2007 Anthony Williams 
+//  (C) Copyright 2007-8 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -8,6 +8,12 @@
 
 #include <boost/thread/thread_time.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
+#include <pthread.h>
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -24,5 +30,7 @@ namespace boost
         }
     }
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

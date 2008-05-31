@@ -3,32 +3,17 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2007-8 Anthony Williams
 
-#include <limits.h>
-#include <boost/assert.hpp>
-#include <algorithm>
-#include <pthread.h>
 #include "timespec.hpp"
 #include "pthread_mutex_scoped_lock.hpp"
 #include "thread_data.hpp"
 #include "condition_variable_fwd.hpp"
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
-    inline condition_variable::condition_variable()
-    {
-        int const res=pthread_cond_init(&cond,NULL);
-        if(res)
-        {
-            throw thread_resource_error();
-        }
-    }
-    inline condition_variable::~condition_variable()
-    {
-        BOOST_VERIFY(!pthread_cond_destroy(&cond));
-    }
-
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
         detail::interruption_checker check_for_interruption(&cond);
@@ -174,5 +159,7 @@ namespace boost
     };
 
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

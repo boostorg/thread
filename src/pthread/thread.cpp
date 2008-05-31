@@ -1,6 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
-// Copyright (C) 2007 Anthony Williams
+// Copyright (C) 2007-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,7 +18,7 @@
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#elif defined(__sun)
+#elif defined(__sun) || defined(__CYGWIN__)
 #include <unistd.h>
 #endif
 
@@ -394,7 +394,7 @@ namespace boost
         int count;
         size_t size=sizeof(count);
         return sysctlbyname("hw.ncpu",&count,&size,NULL,0)?0:count;
-#elif defined(__sun)
+#elif defined(__sun) || defined(__CYGWIN__)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
 #else

@@ -1,7 +1,7 @@
 #ifndef BOOST_THREAD_PTHREAD_SHARED_MUTEX_HPP
 #define BOOST_THREAD_PTHREAD_SHARED_MUTEX_HPP
 
-//  (C) Copyright 2006-7 Anthony Williams
+//  (C) Copyright 2006-8 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -12,6 +12,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -296,5 +298,6 @@ namespace boost
     };
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif

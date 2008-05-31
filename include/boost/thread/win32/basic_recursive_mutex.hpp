@@ -3,7 +3,7 @@
 
 //  basic_recursive_mutex.hpp
 //
-//  (C) Copyright 2006-7 Anthony Williams 
+//  (C) Copyright 2006-8 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -11,6 +11,8 @@
 
 #include "thread_primitives.hpp"
 #include "basic_timed_mutex.hpp"
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -122,5 +124,7 @@ namespace boost
 }
 
 #define BOOST_BASIC_RECURSIVE_MUTEX_INITIALIZER {0}
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif
