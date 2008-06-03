@@ -23,35 +23,96 @@ namespace boost
 {
     namespace detail
     {
+        class basic_cv_list_entry;
+        void intrusive_ptr_add_ref(basic_cv_list_entry * p);
+        void intrusive_ptr_release(basic_cv_list_entry * p);
+        
+        class basic_cv_list_entry
+        {
+        private:
+            detail::win32::handle_manager semaphore;
+            detail::win32::handle_manager wake_sem;
+            long waiters;
+            bool notified;
+            long references;
+
+            basic_cv_list_entry(basic_cv_list_entry&);
+            void operator=(basic_cv_list_entry&);
+            
+        public:
+            explicit basic_cv_list_entry(detail::win32::handle_manager const& wake_sem_):
+                semaphore(detail::win32::create_anonymous_semaphore(0,LONG_MAX)),
+                wake_sem(wake_sem_.duplicate()),
+                waiters(1),notified(false),references(0)
+            {}
+
+            static bool no_waiters(boost::intrusive_ptr<basic_cv_list_entry> const& entry)
+            {
+                return !detail::interlocked_read_acquire(&entry->waiters);
+            }
+
+            void add_waiter()
+            {
+                BOOST_INTERLOCKED_INCREMENT(&waiters);
+            }
+            
+            void remove_waiter()
+            {
+                BOOST_INTERLOCKED_DECREMENT(&waiters);
+            }
+
+            void release(unsigned count_to_release)
+            {
+                notified=true;
+                detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
+            }
+
+            void release_waiters()
+            {
+                release(detail::interlocked_read_acquire(&waiters));
+            }
+
+            bool is_notified() const
+            {
+                return notified;
+            }
+
+            bool wait(timeout wait_until)
+            {
+                return this_thread::interruptible_wait(semaphore,wait_until);
+            }
+
+            bool woken()
+            {
+                unsigned long const woken_result=detail::win32::WaitForSingleObject(wake_sem,0);
+                BOOST_ASSERT((woken_result==detail::win32::timeout) || (woken_result==0));
+                return woken_result==0;
+            }
+
+            friend void intrusive_ptr_add_ref(basic_cv_list_entry * p);
+            friend void intrusive_ptr_release(basic_cv_list_entry * p);
+        };
+
+        inline void intrusive_ptr_add_ref(basic_cv_list_entry * p)
+        {
+            BOOST_INTERLOCKED_INCREMENT(&p->references);
+        }
+            
+        inline void intrusive_ptr_release(basic_cv_list_entry * p)
+        {
+            if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
+            {
+                delete p;
+            }
+        }
+
         class basic_condition_variable
         {
             boost::mutex internal_mutex;
             long total_count;
             unsigned active_generation_count;
 
-            struct list_entry
-            {
-                detail::win32::handle_manager semaphore;
-                detail::win32::handle_manager wake_sem;
-                long waiters;
-                bool notified;
-                long references;
-
-                list_entry():
-                    semaphore(detail::win32::create_anonymous_semaphore(0,LONG_MAX)),
-                    wake_sem(0),
-                    waiters(1),notified(false),references(0)
-                {}
-
-                void release(unsigned count_to_release)
-                {
-                    notified=true;
-                    detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
-                }
-            };
-
-            friend void intrusive_ptr_add_ref(list_entry * p);
-            friend void intrusive_ptr_release(list_entry * p);
+            typedef basic_cv_list_entry list_entry;
 
             typedef boost::intrusive_ptr<list_entry> entry_ptr;
             typedef std::vector<entry_ptr> generation_list;
@@ -104,16 +165,15 @@ namespace boost
                 }
 
                 detail::interlocked_write_release(&total_count,total_count+1);
-                if(generations.empty() || generations.back()->notified)
+                if(generations.empty() || generations.back()->is_notified())
                 {
-                    entry_ptr new_entry(new list_entry);
-                    new_entry->wake_sem=wake_sem.duplicate();
+                    entry_ptr new_entry(new list_entry(wake_sem));
                     generations.push_back(new_entry);
                     return new_entry;
                 }
                 else
                 {
-                    BOOST_INTERLOCKED_INCREMENT(&generations.back()->waiters);
+                    generations.back()->add_waiter();
                     return generations.back();
                 }
             }
@@ -128,7 +188,7 @@ namespace boost
                     
                 ~entry_manager()
                 {
-                    BOOST_INTERLOCKED_DECREMENT(&entry->waiters);
+                    entry->remove_waiter();
                 }
 
                 list_entry* operator->()
@@ -155,15 +215,12 @@ namespace boost
                 bool woken=false;
                 while(!woken)
                 {
-                    if(!this_thread::interruptible_wait(entry->semaphore,wait_until))
+                    if(!entry->wait(wait_until))
                     {
                         return false;
                     }
                 
-                    unsigned long const woken_result=detail::win32::WaitForSingleObject(entry->wake_sem,0);
-                    BOOST_ASSERT(woken_result==detail::win32::timeout || woken_result==0);
-
-                    woken=(woken_result==0);
+                    woken=entry->woken();
                 }
                 return woken;
             }
@@ -182,10 +239,6 @@ namespace boost
             basic_condition_variable(const basic_condition_variable& other);
             basic_condition_variable& operator=(const basic_condition_variable& other);
 
-            static bool no_waiters(entry_ptr const& entry)
-            {
-                return !detail::interlocked_read_acquire(&entry->waiters);
-            }
         public:
             basic_condition_variable():
                 total_count(0),active_generation_count(0),wake_sem(0)
@@ -211,7 +264,7 @@ namespace boost
                     {
                         (*it)->release(1);
                     }
-                    generations.erase(std::remove_if(generations.begin(),generations.end(),no_waiters),generations.end());
+                    generations.erase(std::remove_if(generations.begin(),generations.end(),&basic_cv_list_entry::no_waiters),generations.end());
                 }
             }
         
@@ -229,7 +282,7 @@ namespace boost
                             end=generations.end();
                         it!=end;++it)
                     {
-                        (*it)->release(detail::interlocked_read_acquire(&(*it)->waiters));
+                        (*it)->release_waiters();
                     }
                     generations.clear();
                     wake_sem=detail::win32::handle(0);
@@ -237,20 +290,6 @@ namespace boost
             }
         
         };
-        inline void intrusive_ptr_add_ref(basic_condition_variable::list_entry * p)
-        {
-            BOOST_INTERLOCKED_INCREMENT(&p->references);
-        }
-            
-        inline void intrusive_ptr_release(basic_condition_variable::list_entry * p)
-        {
-            if(!BOOST_INTERLOCKED_DECREMENT(&p->references))
-            {
-                delete p;
-            }
-        }
-        
-
     }
 
     class condition_variable:
