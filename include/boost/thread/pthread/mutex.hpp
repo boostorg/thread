@@ -11,9 +11,6 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/assert.hpp>
-#ifndef _WIN32
-#include <unistd.h>
-#endif
 #include <errno.h>
 #include "timespec.hpp"
 #include "pthread_mutex_scoped_lock.hpp"
