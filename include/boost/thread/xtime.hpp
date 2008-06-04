@@ -58,7 +58,7 @@ struct xtime
 
 inline xtime get_xtime(boost::system_time const& abs_time)
 {
-    xtime res={0};
+    xtime res;
     boost::posix_time::time_duration const time_since_epoch=abs_time-boost::posix_time::from_time_t(0);
             
     res.sec=static_cast<xtime::xtime_sec_t>(time_since_epoch.total_seconds());
