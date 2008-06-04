@@ -206,6 +206,8 @@ __thread_id__ yield a total order for every non-equal thread ID.
         static void sleep(const system_time& xt);
     };
 
+    void swap(thread& lhs,thread& rhs);
+
 [section:default_constructor Default Constructor]
 
     thread();
@@ -446,6 +448,36 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 [variablelist
 
 [[Effects:] [See [link thread.thread_management.this_thread.yield `boost::this_thread::yield()`].]]
+
+]
+
+[endsect]
+
+[section:swap Member function `swap()`]
+
+    void swap(thread& other);
+
+[variablelist
+
+[[Effects:] [Exchanges the threads of execution associated with `*this` and `other`, so `*this` is associated with the thread of
+execution associated with `other` prior to the call, and vice-versa.]]
+
+[[Postconditions:] [`this->get_id()` returns the same value as `other.get_id()` prior to the call. `other.get_id()` returns the same
+value as `this->get_id()` prior to the call.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:non_member_swap Non-member function `swap()`]
+
+    void swap(thread& lhs,thread& rhs);
+
+[variablelist
+
+[[Effects:] [[link thread.thread_management.thread.swap `lhs.swap(rhs)`].]]
 
 ]
 
