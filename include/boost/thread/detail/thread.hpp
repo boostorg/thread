@@ -311,6 +311,11 @@ namespace boost
         bool interruption_requested() const;
     };
 
+    inline void swap(thread& lhs,thread& rhs)
+    {
+        return lhs.swap(rhs);
+    }
+    
 #ifdef BOOST_HAS_RVALUE_REFS
     inline thread&& move(thread&& t)
     {
