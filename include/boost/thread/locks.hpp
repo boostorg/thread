@@ -276,6 +276,12 @@ namespace boost
     };
 
     template<typename Mutex>
+    void swap(unique_lock<Mutex>& lhs,unique_lock<Mutex>& rhs)
+    {
+        lhs.swap(rhs);
+    }
+
+    template<typename Mutex>
     class shared_lock
     {
     protected:
