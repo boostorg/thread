@@ -729,6 +729,12 @@ namespace boost
                 return static_cast<base const&>(*this);
             }
         };
+
+        template<typename Mutex>
+        void swap(try_lock_wrapper<Mutex>& lhs,try_lock_wrapper<Mutex>& rhs)
+        {
+            lhs.swap(rhs);
+        }
         
         template<typename MutexType1,typename MutexType2>
         unsigned try_lock_internal(MutexType1& m1,MutexType2& m2)
