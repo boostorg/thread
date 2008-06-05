@@ -1,4 +1,4 @@
-// (C) Copyright 2006-7 Anthony Williams
+// (C) Copyright 2006-8 Anthony Williams
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -255,6 +255,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
     test_throws_if_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_try_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
+    test_locks_can_be_swapped<Mutex,Lock>()();
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
