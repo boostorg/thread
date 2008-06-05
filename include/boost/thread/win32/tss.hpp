@@ -64,9 +64,13 @@ namespace boost
         thread_specific_ptr():
             cleanup(detail::heap_new<delete_data>(),detail::do_heap_delete<delete_data>())
         {}
-        explicit thread_specific_ptr(void (*func_)(T*)):
-            cleanup(detail::heap_new<run_custom_cleanup_function>(func_),detail::do_heap_delete<run_custom_cleanup_function>())
-        {}
+        explicit thread_specific_ptr(void (*func_)(T*))
+        {
+            if(func_)
+            {
+                cleanup.reset(detail::heap_new<run_custom_cleanup_function>(func_),detail::do_heap_delete<run_custom_cleanup_function>());
+            }
+        }
         ~thread_specific_ptr()
         {
             reset();
