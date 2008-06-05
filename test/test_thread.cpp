@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2008 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -198,6 +199,22 @@ void test_timed_join()
     timed_test(&do_test_timed_join, 10);
 }
 
+void test_swap()
+{
+    boost::thread t(simple_thread);
+    boost::thread t2(simple_thread);
+    boost::thread::id id1=t.get_id();
+    boost::thread::id id2=t2.get_id();
+
+    t.swap(t2);
+    BOOST_CHECK(t.get_id()==id2);
+    BOOST_CHECK(t2.get_id()==id1);
+    
+    swap(t,t2);
+    BOOST_CHECK(t.get_id()==id1);
+    BOOST_CHECK(t2.get_id()==id2);
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -211,6 +228,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point));
     test->add(BOOST_TEST_CASE(test_creation_through_reference_wrapper));
     test->add(BOOST_TEST_CASE(test_timed_join));
+    test->add(BOOST_TEST_CASE(test_swap));
 
     return test;
 }

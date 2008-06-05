@@ -21,7 +21,7 @@ namespace boost
     {
         inline struct timespec get_timespec(boost::system_time const& abs_time)
         {
-            struct timespec timeout={0};
+            struct timespec timeout={0,0};
             boost::posix_time::time_duration const time_since_epoch=abs_time-boost::posix_time::from_time_t(0);
             
             timeout.tv_sec=time_since_epoch.total_seconds();
