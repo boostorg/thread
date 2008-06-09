@@ -20,6 +20,7 @@
 #include <boost/bind.hpp>
 #include <stdlib.h>
 #include <memory>
+#include <boost/utility/enable_if.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -134,6 +135,8 @@ namespace boost
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
+
+        struct dummy;
 #endif
     public:
         thread();
@@ -166,12 +169,12 @@ namespace boost
         
 #else
         template <class F>
-        explicit thread(F f):
+        explicit thread(F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
-
+        
         template <class F>
         thread(detail::thread_move_t<F> f):
             thread_info(make_thread_info(f))
