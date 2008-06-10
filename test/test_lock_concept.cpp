@@ -1,4 +1,4 @@
-// (C) Copyright 2006-7 Anthony Williams
+// (C) Copyright 2006-8 Anthony Williams
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -196,6 +196,35 @@ struct test_default_constructed_has_no_mutex_and_unlocked
     };
 };
 
+
+template<typename Mutex,typename Lock>
+struct test_locks_can_be_swapped
+{
+    void operator()() const
+    {
+        Mutex m1;
+        Mutex m2;
+        Lock l1(m1);
+        Lock l2(m2);
+
+        BOOST_CHECK_EQUAL(l1.mutex(),&m1);
+        BOOST_CHECK_EQUAL(l2.mutex(),&m2);
+
+        l1.swap(l2);
+        
+        BOOST_CHECK_EQUAL(l1.mutex(),&m2);
+        BOOST_CHECK_EQUAL(l2.mutex(),&m1);
+        
+        swap(l1,l2);
+
+        BOOST_CHECK_EQUAL(l1.mutex(),&m1);
+        BOOST_CHECK_EQUAL(l2.mutex(),&m2);
+        
+    }
+};
+
+
+
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_lock_concept,Mutex)
 {
     typedef typename Mutex::scoped_lock Lock;
@@ -208,6 +237,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_lock_concept,Mutex)
     test_locked_after_lock_called<Mutex,Lock>()();
     test_throws_if_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
+    test_locks_can_be_swapped<Mutex,Lock>()();
 }
 
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
@@ -225,6 +255,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
     test_throws_if_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_try_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
+    test_locks_can_be_swapped<Mutex,Lock>()();
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])

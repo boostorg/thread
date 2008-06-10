@@ -20,6 +20,8 @@
 #include <boost/bind.hpp>
 #include <stdlib.h>
 #include <memory>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -121,7 +123,11 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
-            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(static_cast<F&&>(f)));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(static_cast<F&&>(f)));
+        }
+        static inline detail::thread_data_ptr make_thread_info(void (*f)())
+        {
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(f));
         }
 #else
         template<typename F>
@@ -134,6 +140,8 @@ namespace boost
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
+
+        struct dummy;
 #endif
     public:
         thread();
@@ -166,12 +174,12 @@ namespace boost
         
 #else
         template <class F>
-        explicit thread(F f):
+        explicit thread(F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
-
+        
         template <class F>
         thread(detail::thread_move_t<F> f):
             thread_info(make_thread_info(f))
