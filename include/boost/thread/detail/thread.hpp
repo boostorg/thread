@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <memory>
 #include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -122,7 +123,11 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
-            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(static_cast<F&&>(f)));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(static_cast<F&&>(f)));
+        }
+        static inline detail::thread_data_ptr make_thread_info(void (*f)())
+        {
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(f));
         }
 #else
         template<typename F>
