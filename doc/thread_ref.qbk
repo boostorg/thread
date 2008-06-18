@@ -17,6 +17,13 @@ allows the details of thread creation to be wrapped in a function.
         some_thread.join();
     }
 
+[Note: On compilers that support rvalue references, __thread__ provides a proper move constructor and move-assignment operator, and
+therefore meets the C++0x ['MoveConstructible] and ['MoveAssignable] concepts. With such compilers, __thread__ can therefore be used
+with containers that support those concepts.
+
+For other compilers, move support is provided with a move emulation layer, so containers must explicitly detect that move emulation
+layer. See <boost/thread/detail/move.hpp> for details.]
+
 [heading Launching threads]
 
 A new thread is launched by passing an object of a callable type that can be invoked with no parameters to the constructor. The
@@ -43,11 +50,21 @@ __boost_thread__ must ensure that the referred-to object outlives the newly-crea
       // this leads to undefined behaviour
 
 If you wish to construct an instance of __thread__ with a function or callable object that requires arguments to be supplied,
-this can be done using `boost::bind`:
+this can be done by passing additional arguments to the __thread__ constructor:
 
     void find_the_question(int the_answer);
 
-    boost::thread deep_thought_2(boost::bind(find_the_question,42));
+    boost::thread deep_thought_2(find_the_question,42);
+
+The arguments are ['copied] into the internal thread structure: if a reference is required, use `boost::ref`, just as for references
+to callable functions.
+
+There is an unspecified limit on the number of additional arguments that can be passed.
+
+[heading Exceptions in thread functions]
+
+If the function or callable object passed to the __thread__ constructor propagates an exception when invoked that is not of type
+__thread_interrupted__, `std::terminate()` is called. 
 
 [heading Joining and detaching]
 
@@ -189,6 +206,8 @@ __thread_id__ yield a total order for every non-equal thread ID.
         static void sleep(const system_time& xt);
     };
 
+    void swap(thread& lhs,thread& rhs);
+
 [section:default_constructor Default Constructor]
 
     thread();
@@ -212,7 +231,9 @@ __thread_id__ yield a total order for every non-equal thread ID.
 
 [[Preconditions:] [`Callable` must by copyable.]]
 
-[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created thread of execution.]]
+[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
+thread of execution. If this invocation results in an exception being propagated into the internals of the thread library that is
+not of type __thread_interrupted__, then `std::terminate()` will be called.]]
 
 [[Postconditions:] [`*this` refers to the newly created thread of execution.]]
 
@@ -306,7 +327,7 @@ unchanged.]]
 
 [variablelist
 
-[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and longer has an associated __thread__ object.]]
+[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and no longer has an associated __thread__ object.]]
 
 [[Postconditions:] [`*this` no longer refers to any thread of execution.]]
 
@@ -364,6 +385,22 @@ or 0 if this information is not available.]]
 
 [endsect]
 
+[section:nativehandle Member function `native_handle()`]
+
+    typedef platform-specific-type native_handle_type;
+    native_handle_type native_handle();
+
+[variablelist
+
+[[Effects:] [Returns an instance of `native_handle_type` that can be used with platform-specific APIs to manipulate the underlying
+implementation. If no such instance exists, `native_handle()` and `native_handle_type` are not present.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
 [section:equals `operator==`]
 
     bool operator==(const thread& other) const;
@@ -411,6 +448,36 @@ or 0 if this information is not available.]]
 [variablelist
 
 [[Effects:] [See [link thread.thread_management.this_thread.yield `boost::this_thread::yield()`].]]
+
+]
+
+[endsect]
+
+[section:swap Member function `swap()`]
+
+    void swap(thread& other);
+
+[variablelist
+
+[[Effects:] [Exchanges the threads of execution associated with `*this` and `other`, so `*this` is associated with the thread of
+execution associated with `other` prior to the call, and vice-versa.]]
+
+[[Postconditions:] [`this->get_id()` returns the same value as `other.get_id()` prior to the call. `other.get_id()` returns the same
+value as `this->get_id()` prior to the call.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:non_member_swap Non-member function `swap()`]
+
+    void swap(thread& lhs,thread& rhs);
+
+[variablelist
+
+[[Effects:] [[link thread.thread_management.thread.swap `lhs.swap(rhs)`].]]
 
 ]
 
@@ -471,7 +538,7 @@ otherwise.]]
 
 [variablelist
 
-[[Returns:] [`true` if `*this` and `y` represent the different threads of execution, or one represents a thread of execution, and
+[[Returns:] [`true` if `*this` and `y` represent different threads of execution, or one represents a thread of execution, and
 the other represent __not_a_thread__, `false` otherwise.]]
 
 [[Throws:] [Nothing]]

@@ -22,22 +22,24 @@ project
     : requirements <library>/boost/test//boost_unit_test_framework/<link>static
                    <threading>multi
     ;
-    
+
 rule thread-run ( sources )
 {
     return 
-	[ run $(sources) ../build//boost_thread ]
-	[ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static 
-	    : : : : $(sources[1]:B)_lib ]
-	;
+    [ run $(sources) ../build//boost_thread ]
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static 
+        : : : : $(sources[1]:B)_lib ]
+    ;
 }    
-    
+
 {
     test-suite "threads"
         : [ thread-run test_thread.cpp ]
           [ thread-run test_thread_id.cpp ]
           [ thread-run test_hardware_concurrency.cpp ]
           [ thread-run test_thread_move.cpp ]
+          [ thread-run test_thread_launching.cpp ]
+          [ thread-run test_thread_mf.cpp ]
           [ thread-run test_move_function.cpp ]
           [ thread-run test_mutex.cpp ]
           [ thread-run test_condition_notify_one.cpp ]
@@ -47,9 +49,13 @@ rule thread-run ( sources )
           [ thread-run test_tss.cpp ]
           [ thread-run test_once.cpp ]
           [ thread-run test_xtime.cpp ]
-          [ thread-run test_barrier.cpp ]		   
+          [ thread-run test_barrier.cpp ]
           [ thread-run test_shared_mutex.cpp ]
           [ thread-run test_shared_mutex_part_2.cpp ]
+          [ thread-run test_shared_mutex_timed_locks.cpp ]
           [ thread-run test_lock_concept.cpp ]
+          [ thread-run test_generic_locks.cpp ]
+          [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
+          [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
     ;
 }

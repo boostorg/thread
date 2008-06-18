@@ -44,7 +44,14 @@ functions.
 but did not lock it on construction. This facility has now been replaced with the constructor that takes a
 `boost::defer_lock_type` as the second parameter: ``boost::mutex::scoped_lock some_lock(some_mutex,boost::defer_lock);``
 
+* The `locked()` member function of the `scoped_lock` types has been renamed to __owns_lock_ref__.
+
+* You can no longer obtain a __thread__ instance representing the current thread: a default-constructed __thread__ object is not
+associated with any thread. The only use for such a thread object was to support the comparison operators: this functionality has
+been moved to __thread_id__.
+
 * The broken `boost::read_write_mutex` has been replaced with __shared_mutex__.
 
+* __mutex__ is now never recursive. For Boost releases prior to 1.35 __mutex__ was recursive on Windows and not on POSIX platforms.
 
 [endsect]

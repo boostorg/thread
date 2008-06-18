@@ -258,9 +258,56 @@ void do_test_tss_does_no_cleanup_after_release()
     }
 }
 
+struct dummy_class_tracks_deletions
+{
+    static unsigned deletions;
+    
+    ~dummy_class_tracks_deletions()
+    {
+        ++deletions;
+    }
+    
+};
+
+unsigned dummy_class_tracks_deletions::deletions=0;
+
+boost::thread_specific_ptr<dummy_class_tracks_deletions> tss_with_null_cleanup(NULL);
+
+void tss_thread_with_null_cleanup(dummy_class_tracks_deletions* delete_tracker)
+{
+    tss_with_null_cleanup.reset(delete_tracker);
+}
+
+void do_test_tss_does_no_cleanup_with_null_cleanup_function()
+{
+    dummy_class_tracks_deletions* delete_tracker=new dummy_class_tracks_deletions;
+    boost::thread t(tss_thread_with_null_cleanup,delete_tracker);
+    try
+    {
+        t.join();
+    }
+    catch(...)
+    {
+        t.interrupt();
+        t.join();
+        throw;
+    }
+
+    BOOST_CHECK(!dummy_class_tracks_deletions::deletions);
+    if(!dummy_class_tracks_deletions::deletions)
+    {
+        delete delete_tracker;
+    }
+}
+
 void test_tss_does_no_cleanup_after_release()
 {
     timed_test(&do_test_tss_does_no_cleanup_after_release, 2);
+}
+
+void test_tss_does_no_cleanup_with_null_cleanup_function()
+{
+    timed_test(&do_test_tss_does_no_cleanup_with_null_cleanup_function, 2);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
@@ -271,6 +318,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(test_tss));
     test->add(BOOST_TEST_CASE(test_tss_with_custom_cleanup));
     test->add(BOOST_TEST_CASE(test_tss_does_no_cleanup_after_release));
+    test->add(BOOST_TEST_CASE(test_tss_does_no_cleanup_with_null_cleanup_function));
 
     return test;
 }

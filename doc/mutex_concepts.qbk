@@ -373,6 +373,7 @@ object passed to the constructor.]]
     class unique_lock
     {
     public:
+        unique_lock();
         explicit unique_lock(Lockable& m_);
         unique_lock(Lockable& m_,adopt_lock_t);
         unique_lock(Lockable& m_,defer_lock_t);
@@ -425,6 +426,20 @@ is destroyed, then the destructor will invoke [unlock_ref_link `mutex()->unlock(
 The member functions of __unique_lock__ are not thread-safe. In particular, __unique_lock__ is intended to model the ownership of a
 __lockable_concept_type__ object by a particular thread, and the member functions that release ownership of the lock state
 (including the destructor) must be called by the same thread that acquired ownership of the lock state.
+
+[section:defaultconstructor `unique_lock()`]
+
+[variablelist
+
+[[Effects:] [Creates a lock object with no associated mutex.]]
+
+[[Postcondition:] [__owns_lock_ref__ returns `false`. __mutex_func_ref__ returns `NULL`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
 
 [section:constructor `unique_lock(Lockable & m)`]
 
@@ -599,6 +614,7 @@ __owns_lock_ref__ returns `false`.]]
     class shared_lock
     {
     public:
+        shared_lock();
         explicit shared_lock(Lockable& m_);
         shared_lock(Lockable& m_,adopt_lock_t);
         shared_lock(Lockable& m_,defer_lock_t);
@@ -643,6 +659,20 @@ is destroyed, then the destructor will invoke [unlock_shared_ref_link `mutex()->
 The member functions of __shared_lock__ are not thread-safe. In particular, __shared_lock__ is intended to model the shared
 ownership of a __lockable_concept_type__ object by a particular thread, and the member functions that release ownership of the lock
 state (including the destructor) must be called by the same thread that acquired ownership of the lock state.
+
+[section:defaultconstructor `shared_lock()`]
+
+[variablelist
+
+[[Effects:] [Creates a lock object with no associated mutex.]]
+
+[[Postcondition:] [__owns_lock_ref__ returns `false`. __mutex_func_ref__ returns `NULL`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
 
 [section:constructor `shared_lock(Lockable & m)`]
 

@@ -15,6 +15,8 @@
 #include <boost/utility.hpp>
 #include <boost/thread/thread_time.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
     class shared_mutex:
@@ -23,12 +25,12 @@ namespace boost
     private:
         struct state_data
         {
-            unsigned shared_count:11;
-            unsigned shared_waiting:11;
-            unsigned exclusive:1;
-            unsigned upgrade:1;
-            unsigned exclusive_waiting:7;
-            unsigned exclusive_waiting_blocked:1;
+            unsigned shared_count:11,
+                shared_waiting:11,
+                exclusive:1,
+                upgrade:1,
+                exclusive_waiting:7,
+                exclusive_waiting_blocked:1;
 
             friend bool operator==(state_data const& lhs,state_data const& rhs)
             {
@@ -118,6 +120,12 @@ namespace boost
         void lock_shared()
         {
             BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
+        }
+
+        template<typename TimeDuration>
+        bool timed_lock_shared(TimeDuration const & relative_time)
+        {
+            return timed_lock_shared(get_system_time()+relative_time);
         }
 
         bool timed_lock_shared(boost::system_time const& wait_until)
@@ -269,6 +277,12 @@ namespace boost
             BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
         }
 
+        template<typename TimeDuration>
+        bool timed_lock(TimeDuration const & relative_time)
+        {
+            return timed_lock(get_system_time()+relative_time);
+        }
+
         bool timed_lock(boost::system_time const& wait_until)
         {
 #ifdef BOOST_MSVC
@@ -325,7 +339,10 @@ namespace boost
                         {
                             if(new_state.exclusive_waiting)
                             {
-                                --new_state.exclusive_waiting;
+                                if(!--new_state.exclusive_waiting)
+                                {
+                                    new_state.exclusive_waiting_blocked=false;
+                                }
                             }
                         }
                         else
@@ -617,5 +634,6 @@ namespace boost
     };
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif
