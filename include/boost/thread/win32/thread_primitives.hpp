@@ -64,7 +64,7 @@ namespace boost
 # ifdef UNDER_CE
 #  ifndef WINAPI
 #   ifndef _WIN32_WCE_EMULATION
-#    define WINAPI  __cdecl	// Note this doesn't match the desktop definition
+#    define WINAPI  __cdecl     // Note this doesn't match the desktop definition
 #   else
 #    define WINAPI  __stdcall
 #   endif
