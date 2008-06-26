@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:mutex_concepts Mutex Concepts]
 
 A mutex object facilitates protection against data races and allows thread-safe synchronization of data between threads. A thread

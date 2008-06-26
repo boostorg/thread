@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:barriers Barriers]
 
 A barrier is a simple concept. Also known as a ['rendezvous], it is a synchronization point between multiple threads. The barrier is
