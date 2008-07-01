@@ -398,6 +398,32 @@ namespace boost
             }
         }
 
+        bool try_lock_upgrade()
+        {
+            state_data old_state=state;
+            for(;;)
+            {
+                state_data new_state=old_state;
+                if(new_state.exclusive || new_state.exclusive_waiting_blocked || new_state.upgrade)
+                {
+                    return false;
+                }
+                else
+                {
+                    ++new_state.shared_count;
+                    new_state.upgrade=true;
+                }
+                
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+            }
+            return true;
+        }
+
         void unlock_upgrade()
         {
             state_data old_state=state;
