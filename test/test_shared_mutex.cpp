@@ -17,7 +17,7 @@
 
 void test_multiple_readers()
 {
-    unsigned const number_of_threads=100;
+    unsigned const number_of_threads=10;
     
     boost::thread_group pool;
 
@@ -64,7 +64,7 @@ void test_multiple_readers()
 
 void test_only_one_writer_permitted()
 {
-    unsigned const number_of_threads=100;
+    unsigned const number_of_threads=10;
     
     boost::thread_group pool;
 
@@ -164,7 +164,7 @@ void test_unlocking_writer_unblocks_all_readers()
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
 
-    unsigned const reader_count=100;
+    unsigned const reader_count=10;
 
     try
     {
@@ -218,8 +218,8 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     boost::mutex finish_writing_mutex;
     boost::mutex::scoped_lock finish_writing_lock(finish_writing_mutex);
 
-    unsigned const reader_count=100;
-    unsigned const writer_count=100;
+    unsigned const reader_count=10;
+    unsigned const writer_count=10;
 
     try
     {
