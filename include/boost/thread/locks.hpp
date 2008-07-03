@@ -126,8 +126,10 @@ namespace boost
     private:
         Mutex* m;
         bool is_locked;
-        explicit unique_lock(unique_lock&);
+        unique_lock(unique_lock&);
+        explicit unique_lock(upgrade_lock<Mutex>&);
         unique_lock& operator=(unique_lock&);
+        unique_lock& operator=(upgrade_lock<Mutex>& other);
     public:
         unique_lock():
             m(0),is_locked(false)
@@ -154,6 +156,35 @@ namespace boost
         {
             timed_lock(target_time);
         }
+#ifdef BOOST_HAS_RVALUE_REFS
+        unique_lock(unique_lock&& other):
+            m(other.m),is_locked(other.is_locked)
+        {
+            other.is_locked=false;
+            other.m=0;
+        }
+        explicit unique_lock(upgrade_lock<Mutex>&& other);
+
+        unique_lock<Mutex>&& move()
+        {
+            return static_cast<unique_lock<Mutex>&&>(*this);
+        }
+
+
+        unique_lock& operator=(unique_lock<Mutex>&& other)
+        {
+            unique_lock temp(other);
+            swap(temp);
+            return *this;
+        }
+
+        unique_lock& operator=(upgrade_lock<Mutex>&& other)
+        {
+            unique_lock temp(other);
+            swap(temp);
+            return *this;
+        }
+#else
         unique_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
@@ -185,7 +216,7 @@ namespace boost
             swap(temp);
             return *this;
         }
-
+#endif
         void swap(unique_lock& other)
         {
             std::swap(m,other.m);
@@ -280,6 +311,14 @@ namespace boost
     {
         lhs.swap(rhs);
     }
+
+#ifdef BOOST_HAS_RVALUE_REFS
+    template<typename Mutex>
+    inline unique_lock<Mutex>&& move(unique_lock<Mutex>&& ul)
+    {
+        return ul;
+    }
+#endif
 
     template<typename Mutex>
     class shared_lock
@@ -576,6 +615,18 @@ namespace boost
     };
 
 
+#ifdef BOOST_HAS_RVALUE_REFS
+    template<typename Mutex>
+    unique_lock<Mutex>::unique_lock(upgrade_lock<Mutex>&& other):
+        m(other.m),is_locked(other.is_locked)
+    {
+        other.is_locked=false;
+        if(is_locked)
+        {
+            m.unlock_upgrade_and_lock();
+        }
+    }
+#else
     template<typename Mutex>
     unique_lock<Mutex>::unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
         m(other->m),is_locked(other->is_locked)
@@ -586,7 +637,7 @@ namespace boost
             m->unlock_upgrade_and_lock();
         }
     }
-
+#endif
     template <class Mutex>
     class upgrade_to_unique_lock
     {
