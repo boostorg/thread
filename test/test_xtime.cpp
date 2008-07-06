@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2008 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying 
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -9,6 +10,8 @@
 #include <boost/thread/xtime.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition.hpp>
 
 void test_xtime_cmp()
 {
@@ -53,6 +56,45 @@ void test_xtime_get()
     }
 }
 
+void test_xtime_mutex_backwards_compatibility()
+{
+    boost::timed_mutex m;
+    BOOST_CHECK(m.timed_lock(boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10))));
+    m.unlock();
+    boost::timed_mutex::scoped_timed_lock lk(m,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));
+    BOOST_CHECK(lk.owns_lock());
+    if(lk.owns_lock())
+    {
+        lk.unlock();
+    }
+    BOOST_CHECK(lk.timed_lock(boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10))));
+    if(lk.owns_lock())
+    {
+        lk.unlock();
+    }
+}
+
+bool predicate()
+{
+    return false;
+}
+
+
+void test_xtime_condvar_backwards_compatibility()
+{
+    boost::condition_variable cond;
+    boost::condition_variable_any cond_any;
+    boost::mutex m;
+    
+    boost::mutex::scoped_lock lk(m);
+    cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));
+    cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)),predicate);
+    cond_any.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));
+    cond_any.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)),predicate);
+}
+
+
+
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
     boost::unit_test_framework::test_suite* test =
@@ -60,6 +102,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(&test_xtime_cmp));
     test->add(BOOST_TEST_CASE(&test_xtime_get));
+    test->add(BOOST_TEST_CASE(&test_xtime_mutex_backwards_compatibility));
+    test->add(BOOST_TEST_CASE(&test_xtime_condvar_backwards_compatibility));
 
     return test;
 }
