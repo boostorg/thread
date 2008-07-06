@@ -16,6 +16,8 @@
 
 namespace boost
 {
+    struct xtime;
+    
     namespace detail
     {
         template<typename T>
@@ -261,6 +263,11 @@ namespace boost
         }
         
         bool timed_lock(::boost::system_time const& absolute_time)
+        {
+            is_locked=m->timed_lock(absolute_time);
+            return is_locked;
+        }
+        bool timed_lock(::boost::xtime const& absolute_time)
         {
             is_locked=m->timed_lock(absolute_time);
             return is_locked;
