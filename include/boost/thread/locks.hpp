@@ -186,6 +186,11 @@ namespace boost
             swap(temp);
             return *this;
         }
+        void swap(unique_lock&& other)
+        {
+            std::swap(m,other.m);
+            std::swap(is_locked,other.is_locked);
+        }
 #else
         unique_lock(detail::thread_move_t<unique_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
@@ -218,7 +223,6 @@ namespace boost
             swap(temp);
             return *this;
         }
-#endif
         void swap(unique_lock& other)
         {
             std::swap(m,other.m);
@@ -229,6 +233,7 @@ namespace boost
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
         }
+#endif
         
         ~unique_lock()
         {
@@ -313,11 +318,19 @@ namespace boost
         friend class upgrade_lock<Mutex>;
     };
 
+#ifdef BOOST_HAS_RVALUE_REFS
+    template<typename Mutex>
+    void swap(unique_lock<Mutex>&& lhs,unique_lock<Mutex>&& rhs)
+    {
+        lhs.swap(rhs);
+    }
+#else
     template<typename Mutex>
     void swap(unique_lock<Mutex>& lhs,unique_lock<Mutex>& rhs)
     {
         lhs.swap(rhs);
     }
+#endif
 
 #ifdef BOOST_HAS_RVALUE_REFS
     template<typename Mutex>
@@ -424,10 +437,28 @@ namespace boost
             return *this;
         }
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        void swap(shared_lock&& other)
+        {
+            std::swap(m,other.m);
+            std::swap(is_locked,other.is_locked);
+        }
+#else
         void swap(shared_lock& other)
         {
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
+        }
+        void swap(boost::detail::thread_move_t<shared_lock> other)
+        {
+            std::swap(m,other->m);
+            std::swap(is_locked,other->is_locked);
+        }
+#endif
+
+        Mutex* mutex() const
+        {
+            return m;
         }
         
         ~shared_lock()
@@ -489,6 +520,20 @@ namespace boost
         }
 
     };
+
+#ifdef BOOST_HAS_RVALUE_REFS
+    template<typename Mutex>
+    void swap(shared_lock<Mutex>&& lhs,shared_lock<Mutex>&& rhs)
+    {
+        lhs.swap(rhs);
+    }
+#else
+    template<typename Mutex>
+    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs)
+    {
+        lhs.swap(rhs);
+    }
+#endif
 
     template<typename Mutex>
     class upgrade_lock
@@ -743,6 +788,12 @@ namespace boost
                 return *this;
             }
 
+#ifdef BOOST_HAS_RVALUE_REFS
+            void swap(try_lock_wrapper&& other)
+            {
+                base::swap(other);
+            }
+#else
             void swap(try_lock_wrapper& other)
             {
                 base::swap(other);
@@ -751,6 +802,7 @@ namespace boost
             {
                 base::swap(*other);
             }
+#endif
 
             void lock()
             {
@@ -788,11 +840,19 @@ namespace boost
             }
         };
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        template<typename Mutex>
+        void swap(try_lock_wrapper<Mutex>&& lhs,try_lock_wrapper<Mutex>&& rhs)
+        {
+            lhs.swap(rhs);
+        }
+#else
         template<typename Mutex>
         void swap(try_lock_wrapper<Mutex>& lhs,try_lock_wrapper<Mutex>& rhs)
         {
             lhs.swap(rhs);
         }
+#endif
         
         template<typename MutexType1,typename MutexType2>
         unsigned try_lock_internal(MutexType1& m1,MutexType2& m2)
@@ -1189,5 +1249,6 @@ namespace boost
 }
 
 #include <boost/config/abi_suffix.hpp>
+#include <boost/mpl/identity.hpp>
 
 #endif
