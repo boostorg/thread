@@ -454,6 +454,68 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
     test_locks_can_be_swapped<Mutex,Lock>()();
 }
 
+struct dummy_shared_mutex
+{
+    bool locked;
+    bool shared_locked;
+    bool shared_unlocked;
+    bool shared_timed_locked_relative;
+    bool shared_timed_locked_absolute;
+    bool timed_locked_relative;
+    bool timed_locked_absolute;
+
+    dummy_shared_mutex():
+        locked(false),shared_locked(false),shared_unlocked(false),
+        shared_timed_locked_relative(false),
+        shared_timed_locked_absolute(false),
+        timed_locked_relative(false),
+        timed_locked_absolute(false)
+    {}
+    
+    void lock()
+    {
+        locked=true;
+    }
+    
+    void lock_shared()
+    {
+        shared_locked=true;
+    }
+    
+    void unlock()
+    {}
+    
+    void unlock_shared()
+    {
+        shared_unlocked=true;
+    }
+    
+    bool timed_lock_shared(boost::system_time)
+    {
+        shared_timed_locked_absolute=true;
+        return false;
+    }
+    template<typename Duration>
+    bool timed_lock_shared(Duration)
+    {
+        shared_timed_locked_relative=true;
+        return false;
+    }
+    bool timed_lock(boost::system_time)
+    {
+        timed_locked_absolute=true;
+        return false;
+    }
+    template<typename Duration>
+    bool timed_lock(Duration)
+    {
+        timed_locked_relative=true;
+        return false;
+    }
+    
+};
+
+
 void test_shared_lock()
 {
     typedef boost::shared_mutex Mutex;
@@ -472,6 +534,16 @@ void test_shared_lock()
     test_throws_if_try_lock_called_when_already_locked<Mutex,Lock>()();
     test_throws_if_unlock_called_when_already_unlocked<Mutex,Lock>()();
     test_locks_can_be_swapped<Mutex,Lock>()();
+
+    dummy_shared_mutex dummy;
+    boost::shared_lock<dummy_shared_mutex> lk(dummy);
+    BOOST_CHECK(dummy.shared_locked);
+    lk.unlock();
+    BOOST_CHECK(dummy.shared_unlocked);
+    lk.timed_lock(boost::posix_time::milliseconds(5));
+    BOOST_CHECK(dummy.shared_timed_locked_relative);
+    lk.timed_lock(boost::get_system_time());
+    BOOST_CHECK(dummy.shared_timed_locked_absolute);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])

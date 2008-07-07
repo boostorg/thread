@@ -495,6 +495,16 @@ namespace boost
             is_locked=m->timed_lock_shared(target_time);
             return is_locked;
         }
+        template<typename Duration>
+        bool timed_lock(Duration const& target_time)
+        {
+            if(owns_lock())
+            {
+                throw boost::lock_error();
+            }
+            is_locked=m->timed_lock_shared(target_time);
+            return is_locked;
+        }
         void unlock()
         {
             if(!owns_lock())
