@@ -15,10 +15,41 @@
         BOOST_CHECK_EQUAL(value,expected_value);                     \
     }
 
+class simple_upgrade_thread
+{
+    boost::shared_mutex& rwm;
+    boost::mutex& finish_mutex;
+    boost::mutex& unblocked_mutex;
+    unsigned& unblocked_count;
+        
+    void operator=(simple_upgrade_thread&);
+        
+public:
+    simple_upgrade_thread(boost::shared_mutex& rwm_,
+                          boost::mutex& finish_mutex_,
+                          boost::mutex& unblocked_mutex_,
+                          unsigned& unblocked_count_):
+        rwm(rwm_),finish_mutex(finish_mutex_),
+        unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
+    {}
+        
+    void operator()()
+    {
+        boost::upgrade_lock<boost::shared_mutex> lk(rwm);
+            
+        {
+            boost::mutex::scoped_lock ulk(unblocked_mutex);
+            ++unblocked_count;
+        }
+            
+        boost::mutex::scoped_lock flk(finish_mutex);
+    }
+};
+
 
 void test_only_one_upgrade_lock_permitted()
 {
-    unsigned const number_of_threads=100;
+    unsigned const number_of_threads=10;
     
     boost::thread_group pool;
 
@@ -71,7 +102,7 @@ void test_can_lock_upgrade_if_currently_locked_shared()
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
 
-    unsigned const reader_count=100;
+    unsigned const reader_count=10;
 
     try
     {
@@ -130,6 +161,29 @@ void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
     writer.join();
 }
 
+void test_if_other_thread_has_write_lock_try_lock_upgrade_returns_false()
+{
+
+    boost::shared_mutex rw_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex unblocked_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
+
+    bool const try_succeeded=rw_mutex.try_lock_upgrade();
+    BOOST_CHECK(!try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_upgrade();
+    }
+
+    finish_lock.unlock();
+    writer.join();
+}
+
 void test_if_no_thread_has_lock_try_lock_shared_returns_true()
 {
     boost::shared_mutex rw_mutex;
@@ -138,6 +192,17 @@ void test_if_no_thread_has_lock_try_lock_shared_returns_true()
     if(try_succeeded)
     {
         rw_mutex.unlock_shared();
+    }
+}
+
+void test_if_no_thread_has_lock_try_lock_upgrade_returns_true()
+{
+    boost::shared_mutex rw_mutex;
+    bool const try_succeeded=rw_mutex.try_lock_upgrade();
+    BOOST_CHECK(try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_upgrade();
     }
 }
 
@@ -158,6 +223,52 @@ void test_if_other_thread_has_shared_lock_try_lock_shared_returns_true()
     if(try_succeeded)
     {
         rw_mutex.unlock_shared();
+    }
+
+    finish_lock.unlock();
+    writer.join();
+}
+
+void test_if_other_thread_has_shared_lock_try_lock_upgrade_returns_true()
+{
+
+    boost::shared_mutex rw_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex unblocked_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::thread writer(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
+    boost::thread::sleep(delay(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
+
+    bool const try_succeeded=rw_mutex.try_lock_upgrade();
+    BOOST_CHECK(try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_upgrade();
+    }
+
+    finish_lock.unlock();
+    writer.join();
+}
+
+void test_if_other_thread_has_upgrade_lock_try_lock_upgrade_returns_false()
+{
+
+    boost::shared_mutex rw_mutex;
+    boost::mutex finish_mutex;
+    boost::mutex unblocked_mutex;
+    unsigned unblocked_count=0;
+    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::thread writer(simple_upgrade_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
+    boost::this_thread::sleep(boost::posix_time::seconds(1));
+    CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
+
+    bool const try_succeeded=rw_mutex.try_lock_upgrade();
+    BOOST_CHECK(!try_succeeded);
+    if(try_succeeded)
+    {
+        rw_mutex.unlock_upgrade();
     }
 
     finish_lock.unlock();

@@ -163,7 +163,7 @@ namespace boost
         thread& operator=(thread&& other)
         {
             thread_info=other.thread_info;
-            other.thread_info.reset((detail::thread_data_base*)0);
+            other.thread_info.reset();
             return *this;
         }
 
@@ -190,7 +190,7 @@ namespace boost
         thread(detail::thread_move_t<thread> x)
         {
             thread_info=x->thread_info;
-            x->thread_info.reset((detail::thread_data_base*)0);
+            x->thread_info.reset();
         }
         
         thread& operator=(detail::thread_move_t<thread> x)
