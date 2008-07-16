@@ -449,7 +449,7 @@ namespace boost
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
-        void swap(boost::detail::thread_move_t<shared_lock> other)
+        void swap(boost::detail::thread_move_t<shared_lock<Mutex> > other)
         {
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
@@ -515,7 +515,7 @@ namespace boost
             is_locked=false;
         }
             
-        typedef void (shared_lock::*bool_type)();
+        typedef void (shared_lock<Mutex>::*bool_type)();
         operator bool_type() const
         {
             return is_locked?&shared_lock::lock:0;
@@ -846,7 +846,7 @@ namespace boost
             typedef typename base::bool_type bool_type;
             operator bool_type() const
             {
-                return static_cast<base const&>(*this);
+                return base::operator bool_type();
             }
         };
 
