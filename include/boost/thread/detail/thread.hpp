@@ -173,7 +173,7 @@ namespace boost
         }
         
 #else
-#ifdef __BORLANDC__
+#ifdef BOOST_NO_SFINAE
         template <class F>
         explicit thread(F f):
             thread_info(make_thread_info(f))
