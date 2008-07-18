@@ -17,7 +17,7 @@ namespace boost
 {
     struct xtime;
 
-#ifndef __BORLANDC__    
+#ifndef BOOST_NO_SFINAE
     namespace detail
     {
         template<typename T>
@@ -113,7 +113,7 @@ namespace boost
         class try_lock_wrapper;
     }
     
-#ifdef __BORLANDC__
+#ifdef BOOST_NO_SFINAE
     template<typename T>
     struct is_mutex_type<unique_lock<T> >
     {
