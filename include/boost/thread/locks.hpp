@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <iterator>
 #include <boost/thread/thread_time.hpp>
+#include <boost/detail/workaround.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -17,7 +18,13 @@ namespace boost
 {
     struct xtime;
 
-#ifndef BOOST_NO_SFINAE
+#if defined(BOOST_NO_SFINAE) ||                           \
+    BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600)) || \
+    BOOST_WORKAROUND(__SUNPRO_CC, BOOST_TESTED_AT(0x590))
+#define BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES
+#endif
+
+#ifndef BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES
     namespace detail
     {
         template<typename T>
@@ -113,7 +120,7 @@ namespace boost
         class try_lock_wrapper;
     }
     
-#ifdef BOOST_NO_SFINAE
+#ifdef BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES
     template<typename T>
     struct is_mutex_type<unique_lock<T> >
     {
