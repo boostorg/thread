@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:overview Overview]
 
 __boost_thread__ enables the use of multiple threads of execution with shared data in portable C++ code. It provides classes and

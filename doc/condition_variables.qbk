@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:condvar_ref Condition Variables]
 
 [heading Synopsis]
@@ -74,6 +81,9 @@ optimizations in some cases, based on the knowledge of the mutex type;
         public:
             condition_variable();
             ~condition_variable();
+
+            void notify_one();
+            void notify_all();
 
             void wait(boost::unique_lock<boost::mutex>& lock);
 
@@ -291,6 +301,9 @@ return true;
         public:
             condition_variable_any();
             ~condition_variable_any();
+
+            void notify_one();
+            void notify_all();
 
             template<typename lock_type>
             void wait(lock_type& lock);
