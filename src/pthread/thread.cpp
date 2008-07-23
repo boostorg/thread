@@ -18,7 +18,7 @@
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/types.h>
 #include <sys/sysctl.h>
-#elif defined(__sun) || defined(__CYGWIN__)
+#elif defined BOOST_HAS_UNISTD_H
 #include <unistd.h>
 #endif
 
@@ -394,7 +394,7 @@ namespace boost
         int count;
         size_t size=sizeof(count);
         return sysctlbyname("hw.ncpu",&count,&size,NULL,0)?0:count;
-#elif defined(__sun) || defined(__CYGWIN__)
+#elif defined(BOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
 #else
