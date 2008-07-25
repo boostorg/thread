@@ -11,6 +11,8 @@
 
 [section:once_flag Typedef `once_flag`]
 
+    #include <boost/thread/once.hpp>
+
     typedef platform-specific-type once_flag;
     #define BOOST_ONCE_INIT platform-specific-initializer
 
@@ -21,6 +23,8 @@ Objects of type `boost::once_flag` shall be initialized with `BOOST_ONCE_INIT`:
 [endsect]
 
 [section:call_once Non-member function `call_once`]
+
+    #include <boost/thread/once.hpp>
 
     template<typename Callable>
     void call_once(once_flag& flag,Callable func);

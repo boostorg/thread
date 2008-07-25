@@ -165,6 +165,8 @@ __thread_id__ yield a total order for every non-equal thread ID.
 
 [section:thread Class `thread`]
 
+    #include <boost/thread/thread.hpp>
+
     class thread
     {
     public:
@@ -480,6 +482,8 @@ value as `this->get_id()` prior to the call.]]
 
 [section:non_member_swap Non-member function `swap()`]
 
+    #include <boost/thread/thread.hpp>
+
     void swap(thread& lhs,thread& rhs);
 
 [variablelist
@@ -492,6 +496,8 @@ value as `this->get_id()` prior to the call.]]
 
 
 [section:id Class `boost::thread::id`]
+
+    #include <boost/thread/thread.hpp>
 
     class thread::id
     {
@@ -641,6 +647,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [section:get_id Non-member function `get_id()`]
 
+    #include <boost/thread/thread.hpp>
+
     namespace this_thread
     {
         thread::id get_id();
@@ -657,6 +665,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 [endsect]
 
 [section:interruption_point Non-member function `interruption_point()`]
+
+    #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
@@ -675,6 +685,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [section:interruption_requested Non-member function `interruption_requested()`]
 
+    #include <boost/thread/thread.hpp>
+
     namespace this_thread
     {
         bool interruption_requested();
@@ -692,6 +704,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [section:interruption_enabled Non-member function `interruption_enabled()`]
 
+    #include <boost/thread/thread.hpp>
+
     namespace this_thread
     {
         bool interruption_enabled();
@@ -708,6 +722,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 [endsect]
 
 [section:sleep Non-member function `sleep()`]
+
+    #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
@@ -729,6 +745,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [section:yield Non-member function `yield()`]
 
+    #include <boost/thread/thread.hpp>
+
     namespace this_thread
     {
         void yield();
@@ -745,6 +763,8 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 [endsect]
 
 [section:disable_interruption Class `disable_interruption`]
+
+    #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
@@ -796,6 +816,8 @@ interruption state on destruction. Instances of `disable_interruption` cannot be
 [endsect]
 
 [section:restore_interruption Class `restore_interruption`]
+
+    #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
@@ -851,6 +873,8 @@ is destroyed, interruption is again disabled. Instances of `restore_interruption
 
 [section:atthreadexit Non-member function template `at_thread_exit()`]
 
+    #include <boost/thread/thread.hpp>
+
     template<typename Callable>
     void at_thread_exit(Callable func);
 
@@ -870,6 +894,8 @@ error occurs within the thread library. Any exception thrown whilst copying `fun
 [endsect]
 
 [section:threadgroup Class `thread_group`]
+
+    #include <boost/thread/thread.hpp>
 
     class thread_group:
         private noncopyable
