@@ -974,3 +974,146 @@ call [try_lock_ref_link `m.try_lock()`] rather than `m.lock()`.
 [endsect]
 
 [endsect]
+
+[section:lock_functions Lock functions]
+
+[section:lock_multiple Non-member function `lock(Lockable1,Lockable2,...)`]
+
+    template<typename Lockable1,typename Lockable2>
+    void lock(Lockable1& l1,Lockable2& l2);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4,typename Lockable5>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4,Lockable5& l5);
+
+[variablelist
+
+[[Effects:] [Locks the __lockable_concept_type__ objects supplied as
+arguments in an unspecified and indeterminate order in a way that
+avoids deadlock. It is safe to call this function concurrently from
+multiple threads with the same mutexes (or other lockable objects) in
+different orders without risk of deadlock. If any of the __lock_ref__
+or __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Throws:] [Any exceptions thrown by calling __lock_ref__ or
+__try_lock_ref__ on the supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [All the supplied __lockable_concept_type__ objects
+are locked by the calling thread.]]
+
+]
+
+[endsect]
+
+[section:lock_range Non-member function `lock(begin,end)`]
+
+    template<typename ForwardIterator>
+    void lock(ForwardIterator begin,ForwardIterator end);
+
+[variablelist
+
+[[Preconditions:] [The `value_type` of `ForwardIterator` must implement the __lockable_concept__]]
+
+[[Effects:] [Locks all the __lockable_concept_type__ objects in the
+supplied range in an unspecified and indeterminate order in a way that
+avoids deadlock. It is safe to call this function concurrently from
+multiple threads with the same mutexes (or other lockable objects) in
+different orders without risk of deadlock. If any of the __lock_ref__
+or __try_lock_ref__ operations on the __lockable_concept_type__
+objects in the supplied range throws an exception any locks acquired
+by the function will be released before the function exits.]]
+
+[[Throws:] [Any exceptions thrown by calling __lock_ref__ or
+__try_lock_ref__ on the supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [All the __lockable_concept_type__ objects in the
+supplied range are locked by the calling thread.]]
+
+]
+
+[endsect]
+
+[section:try_lock_multiple Non-member function `try_lock(Lockable1,Lockable2,...)`]
+
+    template<typename Lockable1,typename Lockable2>
+    int try_lock(Lockable1& l1,Lockable2& l2);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4,typename Lockable5>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4,Lockable5& l5);
+
+[variablelist
+
+[[Effects:] [Calls __try_lock_ref__ on each of the
+__lockable_concept_type__ objects supplied as arguments. If any of the
+calls to __try_lock_ref__ returns `false` then all locks acquired are
+released and the zero-based index of the failed lock is returned.
+
+If any of the __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Returns:] [`-1` if all the supplied __lockable_concept_type__ objects
+are now locked by the calling thread, the zero-based index of the
+object which could not be locked otherwise.]]
+
+[[Throws:] [Any exceptions thrown by calling __try_lock_ref__ on the
+supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [If the function returns `-1`, all the supplied
+__lockable_concept_type__ objects are locked by the calling
+thread. Otherwise any locks acquired by this function will have been
+released.]]
+
+]
+
+[endsect]
+
+[section:try_lock_range Non-member function `try_lock(begin,end)`]
+
+    template<typename ForwardIterator>
+    ForwardIterator try_lock(ForwardIterator begin,ForwardIterator end);
+
+[variablelist
+
+[[Preconditions:] [The `value_type` of `ForwardIterator` must implement the __lockable_concept__]]
+
+[[Effects:] [Calls __try_lock_ref__ on each of the
+__lockable_concept_type__ objects in the supplied range. If any of the
+calls to __try_lock_ref__ returns `false` then all locks acquired are
+released and an iterator referencing the failed lock is returned.
+
+If any of the __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Returns:] [`end` if all the supplied __lockable_concept_type__
+objects are now locked by the calling thread, an iterator referencing
+the object which could not be locked otherwise.]]
+
+[[Throws:] [Any exceptions thrown by calling __try_lock_ref__ on the
+supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [If the function returns `end` then all the
+__lockable_concept_type__ objects in the supplied range are locked by
+the calling thread, otherwise all locks acquired by the function have
+been released.]]
+
+]
+
+[endsect]
+
+
+[endsect]
