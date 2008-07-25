@@ -176,6 +176,9 @@ __thread_id__ yield a total order for every non-equal thread ID.
         template <class F>
         explicit thread(F f);
 
+        template <class F,class A1,class A2,...>
+        thread(F f,A1 a1,A2 a2,...);
+
         template <class F>
         thread(detail::thread_move_t<F> f);
 
@@ -243,6 +246,28 @@ __thread_id__ yield a total order for every non-equal thread ID.
 [[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
 thread of execution. If this invocation results in an exception being propagated into the internals of the thread library that is
 not of type __thread_interrupted__, then `std::terminate()` will be called.]]
+
+[[Postconditions:] [`*this` refers to the newly created thread of execution.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs.]]
+
+]
+
+[endsect]
+
+[section:multiple_argument_constructor Thread Constructor with arguments]
+
+    template <class F,class A1,class A2,...>
+    thread(F f,A1 a1,A2 a2,...);
+
+[variablelist
+
+[[Preconditions:] [`F` and each `A`n must by copyable or movable.]]
+
+[[Effects:] [As if [link
+thread.thread_management.thread.callable_constructor
+`thread(boost::bind(f,a1,a2,...))`. Consequently, `f` and each `a`n
+are copied into internal storage for access by the new thread.]]]
 
 [[Postconditions:] [`*this` refers to the newly created thread of execution.]]
 
