@@ -273,6 +273,8 @@ are copied into internal storage for access by the new thread.]]]
 
 [[Throws:] [__thread_resource_error__ if an error occurs.]]
 
+[[Note:] [Currently up to nine additional arguments `a1` to `a9` can be specified in addition to the function `f`.]]
+
 ]
 
 [endsect]
