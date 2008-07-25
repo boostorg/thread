@@ -880,7 +880,9 @@ is destroyed, interruption is again disabled. Instances of `restore_interruption
 
 [variablelist
 
-[[Effects:] [A copy of `func` is taken and stored to in thread-specific storage. This copy is invoked when the current thread exits.]]
+[[Effects:] [A copy of `func` is placed in
+thread-specific storage. This copy is invoked when the current thread
+exits (even if the thread has been interrupted).]]
 
 [[Postconditions:] [A copy of `func` has been saved for invocation on thread exit.]]
 
