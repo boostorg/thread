@@ -312,6 +312,8 @@ without blocking.]]
 
 [section:lock_guard Class template `lock_guard`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class lock_guard
     {
@@ -375,6 +377,8 @@ object passed to the constructor.]]
 [endsect]
 
 [section:unique_lock Class template `unique_lock`]
+
+    #include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class unique_lock
@@ -617,6 +621,8 @@ __owns_lock_ref__ returns `false`.]]
 
 [section:shared_lock Class template `shared_lock`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class shared_lock
     {
@@ -850,6 +856,8 @@ __owns_lock_shared_ref__ returns `false`.]]
 
 [section:upgrade_lock Class template `upgrade_lock`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class upgrade_lock
     {
@@ -896,6 +904,8 @@ state (including the destructor) must be called by the same thread that acquired
 [endsect]
 
 [section:upgrade_to_unique_lock Class template `upgrade_to_unique_lock`]
+
+    #include <boost/thread/locks.hpp>
 
     template <class Lockable>
     class upgrade_to_unique_lock

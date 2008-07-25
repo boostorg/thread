@@ -9,6 +9,8 @@
 
 [section:mutex Class `mutex`]
 
+    #include <boost/thread/mutex.hpp>
+
     class mutex:
         boost::noncopyable
     {
@@ -51,6 +53,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:try_mutex Typedef `try_mutex`]
 
+    #include <boost/thread/mutex.hpp>
+
     typedef mutex try_mutex;
 
 __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility with previous releases of boost.
@@ -58,6 +62,8 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
 [endsect]
 
 [section:timed_mutex Class `timed_mutex`]
+
+    #include <boost/thread/mutex.hpp>
 
     class timed_mutex:
         boost::noncopyable
@@ -106,6 +112,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:recursive_mutex Class `recursive_mutex`]
 
+    #include <boost/thread/recursive_mutex.hpp>
+
     class recursive_mutex:
         boost::noncopyable
     {
@@ -150,6 +158,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:recursive_try_mutex Typedef `recursive_try_mutex`]
 
+    #include <boost/thread/recursive_mutex.hpp>
+
     typedef recursive_mutex recursive_try_mutex;
 
 __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for backwards compatibility with previous releases of boost.
@@ -157,6 +167,8 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
 [endsect]
 
 [section:recursive_timed_mutex Class `recursive_timed_mutex`]
+
+    #include <boost/thread/recursive_mutex.hpp>
 
     class recursive_timed_mutex:
         boost::noncopyable
