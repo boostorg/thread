@@ -101,8 +101,10 @@
 [def __recursive_timed_mutex__ [link thread.synchronization.mutex_types.recursive_timed_mutex `boost::recursive_timed_mutex`]]
 [def __shared_mutex__ [link thread.synchronization.mutex_types.shared_mutex `boost::shared_mutex`]]
 
+[template unique_lock_link[link_text] [link thread.synchronization.locks.unique_lock [link_text]]]
+
 [def __lock_guard__ [link thread.synchronization.locks.lock_guard `boost::lock_guard`]]
-[def __unique_lock__ [link thread.synchronization.locks.unique_lock `boost::unique_lock`]]
+[def __unique_lock__ [unique_lock_link `boost::unique_lock`]]
 [def __shared_lock__ [link thread.synchronization.locks.shared_lock `boost::shared_lock`]]
 [def __upgrade_lock__ [link thread.synchronization.locks.upgrade_lock `boost::upgrade_lock`]]
 [def __upgrade_to_unique_lock__ [link thread.synchronization.locks.upgrade_to_unique_lock `boost::upgrade_to_unique_lock`]]

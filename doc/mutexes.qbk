@@ -26,7 +26,7 @@
         native_handle_type native_handle();
         
         typedef unique_lock<mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
     };
 
 __mutex__ implements the __lockable_concept__ to provide an exclusive-ownership mutex. At most one thread can own the lock on a given
@@ -84,7 +84,7 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
         native_handle_type native_handle();
 
         typedef unique_lock<timed_mutex> scoped_timed_lock;
-        typedef scoped_timed_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
     };
 
@@ -129,7 +129,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
         native_handle_type native_handle();
         
         typedef unique_lock<recursive_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
     };
 
 __recursive_mutex__ implements the __lockable_concept__ to provide an exclusive-ownership recursive mutex. At most one thread can
@@ -190,7 +190,7 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
         native_handle_type native_handle();
         
         typedef unique_lock<recursive_timed_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
         typedef scoped_lock scoped_timed_lock;
     };
 
