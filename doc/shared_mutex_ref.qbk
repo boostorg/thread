@@ -7,6 +7,8 @@
 
 [section:shared_mutex Class `shared_mutex`]
 
+    #include <boost/thread/shared_mutex.hpp>
+
     class shared_mutex
     {
     public:
