@@ -272,6 +272,16 @@ struct dummy_mutex
     }
 };
 
+namespace boost
+{
+    template<>
+    struct is_mutex_type<dummy_mutex>
+    {
+        BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+}
+
+
 
 void test_lock_five_in_range()
 {

@@ -1,6 +1,15 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:mutex_types Mutex Types]
 
 [section:mutex Class `mutex`]
+
+    #include <boost/thread/mutex.hpp>
 
     class mutex:
         boost::noncopyable
@@ -17,7 +26,7 @@
         native_handle_type native_handle();
         
         typedef unique_lock<mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
     };
 
 __mutex__ implements the __lockable_concept__ to provide an exclusive-ownership mutex. At most one thread can own the lock on a given
@@ -44,6 +53,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:try_mutex Typedef `try_mutex`]
 
+    #include <boost/thread/mutex.hpp>
+
     typedef mutex try_mutex;
 
 __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility with previous releases of boost.
@@ -51,6 +62,8 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
 [endsect]
 
 [section:timed_mutex Class `timed_mutex`]
+
+    #include <boost/thread/mutex.hpp>
 
     class timed_mutex:
         boost::noncopyable
@@ -71,7 +84,7 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
         native_handle_type native_handle();
 
         typedef unique_lock<timed_mutex> scoped_timed_lock;
-        typedef scoped_timed_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
     };
 
@@ -99,6 +112,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:recursive_mutex Class `recursive_mutex`]
 
+    #include <boost/thread/recursive_mutex.hpp>
+
     class recursive_mutex:
         boost::noncopyable
     {
@@ -114,7 +129,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
         native_handle_type native_handle();
         
         typedef unique_lock<recursive_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
     };
 
 __recursive_mutex__ implements the __lockable_concept__ to provide an exclusive-ownership recursive mutex. At most one thread can
@@ -143,6 +158,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:recursive_try_mutex Typedef `recursive_try_mutex`]
 
+    #include <boost/thread/recursive_mutex.hpp>
+
     typedef recursive_mutex recursive_try_mutex;
 
 __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for backwards compatibility with previous releases of boost.
@@ -150,6 +167,8 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
 [endsect]
 
 [section:recursive_timed_mutex Class `recursive_timed_mutex`]
+
+    #include <boost/thread/recursive_mutex.hpp>
 
     class recursive_timed_mutex:
         boost::noncopyable
@@ -171,7 +190,7 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
         native_handle_type native_handle();
         
         typedef unique_lock<recursive_timed_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef unspecified-type scoped_try_lock;
         typedef scoped_lock scoped_timed_lock;
     };
 

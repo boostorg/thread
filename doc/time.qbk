@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:time Date and Time Requirements]
 
 As of Boost 1.35.0, the __boost_thread__ library uses the [link date_time Boost.Date_Time] library for all operations that require a
@@ -40,6 +47,8 @@ date_time.posix_time.time_duration Boost.Date_Time Time Duration requirements] c
 
 [section:system_time Typedef `system_time`]
 
+    #include <boost/thread/thread_time.hpp>
+
     typedef boost::posix_time::ptime system_time;
 
 See the documentation for [link date_time.posix_time.ptime_class `boost::posix_time::ptime`] in the Boost.Date_Time library.
@@ -47,6 +56,8 @@ See the documentation for [link date_time.posix_time.ptime_class `boost::posix_t
 [endsect]
 
 [section:get_system_time Non-member function `get_system_time()`]
+
+    #include <boost/thread/thread_time.hpp>
 
     system_time get_system_time();
 

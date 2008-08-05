@@ -45,92 +45,90 @@ struct X
 
 int main()
 {
-    using namespace boost;
-
     X x;
 
     // 0
 
-    thread( &X::f0, &x ).join();
-    thread( &X::f0, ref(x) ).join();
+    boost::thread( &X::f0, &x ).join();
+    boost::thread( &X::f0, boost::ref(x) ).join();
 
-    thread( &X::g0, &x ).join();
-    thread( &X::g0, x ).join();
-    thread( &X::g0, ref(x) ).join();
+    boost::thread( &X::g0, &x ).join();
+    boost::thread( &X::g0, x ).join();
+    boost::thread( &X::g0, boost::ref(x) ).join();
 
     // 1
 
-    thread( &X::f1, &x, 1 ).join();
-    thread( &X::f1, ref(x), 1 ).join();
+    boost::thread( &X::f1, &x, 1 ).join();
+    boost::thread( &X::f1, boost::ref(x), 1 ).join();
 
-    thread( &X::g1, &x, 1 ).join();
-    thread( &X::g1, x, 1 ).join();
-    thread( &X::g1, ref(x), 1 ).join();
+    boost::thread( &X::g1, &x, 1 ).join();
+    boost::thread( &X::g1, x, 1 ).join();
+    boost::thread( &X::g1, boost::ref(x), 1 ).join();
 
     // 2
 
-    thread( &X::f2, &x, 1, 2 ).join();
-    thread( &X::f2, ref(x), 1, 2 ).join();
+    boost::thread( &X::f2, &x, 1, 2 ).join();
+    boost::thread( &X::f2, boost::ref(x), 1, 2 ).join();
 
-    thread( &X::g2, &x, 1, 2 ).join();
-    thread( &X::g2, x, 1, 2 ).join();
-    thread( &X::g2, ref(x), 1, 2 ).join();
+    boost::thread( &X::g2, &x, 1, 2 ).join();
+    boost::thread( &X::g2, x, 1, 2 ).join();
+    boost::thread( &X::g2, boost::ref(x), 1, 2 ).join();
 
     // 3
 
-    thread( &X::f3, &x, 1, 2, 3 ).join();
-    thread( &X::f3, ref(x), 1, 2, 3 ).join();
+    boost::thread( &X::f3, &x, 1, 2, 3 ).join();
+    boost::thread( &X::f3, boost::ref(x), 1, 2, 3 ).join();
 
-    thread( &X::g3, &x, 1, 2, 3 ).join();
-    thread( &X::g3, x, 1, 2, 3 ).join();
-    thread( &X::g3, ref(x), 1, 2, 3 ).join();
+    boost::thread( &X::g3, &x, 1, 2, 3 ).join();
+    boost::thread( &X::g3, x, 1, 2, 3 ).join();
+    boost::thread( &X::g3, boost::ref(x), 1, 2, 3 ).join();
 
     // 4
 
-    thread( &X::f4, &x, 1, 2, 3, 4 ).join();
-    thread( &X::f4, ref(x), 1, 2, 3, 4 ).join();
+    boost::thread( &X::f4, &x, 1, 2, 3, 4 ).join();
+    boost::thread( &X::f4, boost::ref(x), 1, 2, 3, 4 ).join();
 
-    thread( &X::g4, &x, 1, 2, 3, 4 ).join();
-    thread( &X::g4, x, 1, 2, 3, 4 ).join();
-    thread( &X::g4, ref(x), 1, 2, 3, 4 ).join();
+    boost::thread( &X::g4, &x, 1, 2, 3, 4 ).join();
+    boost::thread( &X::g4, x, 1, 2, 3, 4 ).join();
+    boost::thread( &X::g4, boost::ref(x), 1, 2, 3, 4 ).join();
 
     // 5
 
-    thread( &X::f5, &x, 1, 2, 3, 4, 5 ).join();
-    thread( &X::f5, ref(x), 1, 2, 3, 4, 5 ).join();
+    boost::thread( &X::f5, &x, 1, 2, 3, 4, 5 ).join();
+    boost::thread( &X::f5, boost::ref(x), 1, 2, 3, 4, 5 ).join();
 
-    thread( &X::g5, &x, 1, 2, 3, 4, 5 ).join();
-    thread( &X::g5, x, 1, 2, 3, 4, 5 ).join();
-    thread( &X::g5, ref(x), 1, 2, 3, 4, 5 ).join();
+    boost::thread( &X::g5, &x, 1, 2, 3, 4, 5 ).join();
+    boost::thread( &X::g5, x, 1, 2, 3, 4, 5 ).join();
+    boost::thread( &X::g5, boost::ref(x), 1, 2, 3, 4, 5 ).join();
 
     // 6
 
-    thread( &X::f6, &x, 1, 2, 3, 4, 5, 6 ).join();
-    thread( &X::f6, ref(x), 1, 2, 3, 4, 5, 6 ).join();
+    boost::thread( &X::f6, &x, 1, 2, 3, 4, 5, 6 ).join();
+    boost::thread( &X::f6, boost::ref(x), 1, 2, 3, 4, 5, 6 ).join();
 
-    thread( &X::g6, &x, 1, 2, 3, 4, 5, 6 ).join();
-    thread( &X::g6, x, 1, 2, 3, 4, 5, 6 ).join();
-    thread( &X::g6, ref(x), 1, 2, 3, 4, 5, 6 ).join();
+    boost::thread( &X::g6, &x, 1, 2, 3, 4, 5, 6 ).join();
+    boost::thread( &X::g6, x, 1, 2, 3, 4, 5, 6 ).join();
+    boost::thread( &X::g6, boost::ref(x), 1, 2, 3, 4, 5, 6 ).join();
 
     // 7
 
-    thread( &X::f7, &x, 1, 2, 3, 4, 5, 6, 7).join();
-    thread( &X::f7, ref(x), 1, 2, 3, 4, 5, 6, 7).join();
+    boost::thread( &X::f7, &x, 1, 2, 3, 4, 5, 6, 7).join();
+    boost::thread( &X::f7, boost::ref(x), 1, 2, 3, 4, 5, 6, 7).join();
 
-    thread( &X::g7, &x, 1, 2, 3, 4, 5, 6, 7).join();
-    thread( &X::g7, x, 1, 2, 3, 4, 5, 6, 7).join();
-    thread( &X::g7, ref(x), 1, 2, 3, 4, 5, 6, 7).join();
+    boost::thread( &X::g7, &x, 1, 2, 3, 4, 5, 6, 7).join();
+    boost::thread( &X::g7, x, 1, 2, 3, 4, 5, 6, 7).join();
+    boost::thread( &X::g7, boost::ref(x), 1, 2, 3, 4, 5, 6, 7).join();
 
     // 8
 
-    thread( &X::f8, &x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
-    thread( &X::f8, ref(x), 1, 2, 3, 4, 5, 6, 7, 8 ).join();
+    boost::thread( &X::f8, &x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
+    boost::thread( &X::f8, boost::ref(x), 1, 2, 3, 4, 5, 6, 7, 8 ).join();
 
-    thread( &X::g8, &x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
-    thread( &X::g8, x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
-    thread( &X::g8, ref(x), 1, 2, 3, 4, 5, 6, 7, 8 ).join();
+    boost::thread( &X::g8, &x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
+    boost::thread( &X::g8, x, 1, 2, 3, 4, 5, 6, 7, 8 ).join();
+    boost::thread( &X::g8, boost::ref(x), 1, 2, 3, 4, 5, 6, 7, 8 ).join();
 
     BOOST_TEST( x.hash == 23558 );
 
-    return report_errors();
+    return boost::report_errors();
 }

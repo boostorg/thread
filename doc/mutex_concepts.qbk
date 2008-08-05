@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section:mutex_concepts Mutex Concepts]
 
 A mutex object facilitates protection against data races and allows thread-safe synchronization of data between threads. A thread
@@ -305,6 +312,8 @@ without blocking.]]
 
 [section:lock_guard Class template `lock_guard`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class lock_guard
     {
@@ -368,6 +377,8 @@ object passed to the constructor.]]
 [endsect]
 
 [section:unique_lock Class template `unique_lock`]
+
+    #include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class unique_lock
@@ -610,6 +621,8 @@ __owns_lock_ref__ returns `false`.]]
 
 [section:shared_lock Class template `shared_lock`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class shared_lock
     {
@@ -843,6 +856,8 @@ __owns_lock_shared_ref__ returns `false`.]]
 
 [section:upgrade_lock Class template `upgrade_lock`]
 
+    #include <boost/thread/locks.hpp>
+
     template<typename Lockable>
     class upgrade_lock
     {
@@ -890,6 +905,8 @@ state (including the destructor) must be called by the same thread that acquired
 
 [section:upgrade_to_unique_lock Class template `upgrade_to_unique_lock`]
 
+    #include <boost/thread/locks.hpp>
+
     template <class Lockable>
     class upgrade_to_unique_lock
     {
@@ -913,5 +930,190 @@ ownership is upgraded to exclusive ownership. When the __upgrade_to_unique_lock_
 __lockable_concept_type__ is downgraded back to ['upgrade ownership].
 
 [endsect]
+
+[section:scoped_try_lock Mutex-specific class `scoped_try_lock`]
+
+    class MutexType::scoped_try_lock
+    {
+    private:
+        MutexType::scoped_try_lock(MutexType::scoped_try_lock<MutexType>& other);
+        MutexType::scoped_try_lock& operator=(MutexType::scoped_try_lock<MutexType>& other);
+    public:
+        MutexType::scoped_try_lock();
+        explicit MutexType::scoped_try_lock(MutexType& m);
+        MutexType::scoped_try_lock(MutexType& m_,adopt_lock_t);
+        MutexType::scoped_try_lock(MutexType& m_,defer_lock_t);
+        MutexType::scoped_try_lock(MutexType& m_,try_to_lock_t);
+
+        MutexType::scoped_try_lock(MutexType::scoped_try_lock<MutexType>&& other);
+        MutexType::scoped_try_lock& operator=(MutexType::scoped_try_lock<MutexType>&& other);
+
+        void swap(MutexType::scoped_try_lock&& other);
+
+        void lock();
+        bool try_lock();
+        void unlock();
+        bool owns_lock() const;
+
+        MutexType* mutex() const;
+        MutexType* release();
+        bool operator!() const;
+
+        typedef ``['unspecified-bool-type]`` bool_type;
+        operator bool_type() const;
+    };
+
+The member typedef `scoped_try_lock` is provided for each distinct
+`MutexType` as a typedef to a class with the preceding definition. The
+semantics of each constructor and member function are identical to
+those of [unique_lock_link `boost::unique_lock<MutexType>`] for the same `MutexType`, except
+that the constructor that takes a single reference to a mutex will
+call [try_lock_ref_link `m.try_lock()`] rather than `m.lock()`.
+
+
+[endsect]
+
+[endsect]
+
+[section:lock_functions Lock functions]
+
+[section:lock_multiple Non-member function `lock(Lockable1,Lockable2,...)`]
+
+    template<typename Lockable1,typename Lockable2>
+    void lock(Lockable1& l1,Lockable2& l2);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4,typename Lockable5>
+    void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4,Lockable5& l5);
+
+[variablelist
+
+[[Effects:] [Locks the __lockable_concept_type__ objects supplied as
+arguments in an unspecified and indeterminate order in a way that
+avoids deadlock. It is safe to call this function concurrently from
+multiple threads with the same mutexes (or other lockable objects) in
+different orders without risk of deadlock. If any of the __lock_ref__
+or __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Throws:] [Any exceptions thrown by calling __lock_ref__ or
+__try_lock_ref__ on the supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [All the supplied __lockable_concept_type__ objects
+are locked by the calling thread.]]
+
+]
+
+[endsect]
+
+[section:lock_range Non-member function `lock(begin,end)`]
+
+    template<typename ForwardIterator>
+    void lock(ForwardIterator begin,ForwardIterator end);
+
+[variablelist
+
+[[Preconditions:] [The `value_type` of `ForwardIterator` must implement the __lockable_concept__]]
+
+[[Effects:] [Locks all the __lockable_concept_type__ objects in the
+supplied range in an unspecified and indeterminate order in a way that
+avoids deadlock. It is safe to call this function concurrently from
+multiple threads with the same mutexes (or other lockable objects) in
+different orders without risk of deadlock. If any of the __lock_ref__
+or __try_lock_ref__ operations on the __lockable_concept_type__
+objects in the supplied range throws an exception any locks acquired
+by the function will be released before the function exits.]]
+
+[[Throws:] [Any exceptions thrown by calling __lock_ref__ or
+__try_lock_ref__ on the supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [All the __lockable_concept_type__ objects in the
+supplied range are locked by the calling thread.]]
+
+]
+
+[endsect]
+
+[section:try_lock_multiple Non-member function `try_lock(Lockable1,Lockable2,...)`]
+
+    template<typename Lockable1,typename Lockable2>
+    int try_lock(Lockable1& l1,Lockable2& l2);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4);
+
+    template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4,typename Lockable5>
+    int try_lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4,Lockable5& l5);
+
+[variablelist
+
+[[Effects:] [Calls __try_lock_ref__ on each of the
+__lockable_concept_type__ objects supplied as arguments. If any of the
+calls to __try_lock_ref__ returns `false` then all locks acquired are
+released and the zero-based index of the failed lock is returned.
+
+If any of the __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Returns:] [`-1` if all the supplied __lockable_concept_type__ objects
+are now locked by the calling thread, the zero-based index of the
+object which could not be locked otherwise.]]
+
+[[Throws:] [Any exceptions thrown by calling __try_lock_ref__ on the
+supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [If the function returns `-1`, all the supplied
+__lockable_concept_type__ objects are locked by the calling
+thread. Otherwise any locks acquired by this function will have been
+released.]]
+
+]
+
+[endsect]
+
+[section:try_lock_range Non-member function `try_lock(begin,end)`]
+
+    template<typename ForwardIterator>
+    ForwardIterator try_lock(ForwardIterator begin,ForwardIterator end);
+
+[variablelist
+
+[[Preconditions:] [The `value_type` of `ForwardIterator` must implement the __lockable_concept__]]
+
+[[Effects:] [Calls __try_lock_ref__ on each of the
+__lockable_concept_type__ objects in the supplied range. If any of the
+calls to __try_lock_ref__ returns `false` then all locks acquired are
+released and an iterator referencing the failed lock is returned.
+
+If any of the __try_lock_ref__ operations on the supplied
+__lockable_concept_type__ objects throws an exception any locks
+acquired by the function will be released before the function exits.]]
+
+[[Returns:] [`end` if all the supplied __lockable_concept_type__
+objects are now locked by the calling thread, an iterator referencing
+the object which could not be locked otherwise.]]
+
+[[Throws:] [Any exceptions thrown by calling __try_lock_ref__ on the
+supplied __lockable_concept_type__ objects.]]
+
+[[Postcondition:] [If the function returns `end` then all the
+__lockable_concept_type__ objects in the supplied range are locked by
+the calling thread, otherwise all locks acquired by the function have
+been released.]]
+
+]
+
+[endsect]
+
 
 [endsect]

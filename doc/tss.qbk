@@ -1,3 +1,10 @@
+[/
+  (C) Copyright 2007-8 Anthony Williams.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
 [section Thread Local Storage]
 
 [heading Synopsis]
@@ -36,6 +43,8 @@ cleaned up, that value is added to the cleanup list. Cleanup finishes when there
 
 
 [section:thread_specific_ptr Class `thread_specific_ptr`]
+
+    #include <boost/thread/tss.hpp>
 
     template <typename T>
     class thread_specific_ptr
