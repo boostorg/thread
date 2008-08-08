@@ -933,7 +933,8 @@ error occurs within the thread library. Any exception thrown whilst copying `fun
         thread_group();
         ~thread_group();
 
-        thread* create_thread(const function0<void>& threadfunc);
+        template<typename F>
+        thread* create_thread(F threadfunc);
         void add_thread(thread* thrd);
         void remove_thread(thread* thrd);
         void join_all();
@@ -970,7 +971,8 @@ error occurs within the thread library. Any exception thrown whilst copying `fun
 
 [section:create_thread Member function `create_thread()`]
 
-    thread* create_thread(const function0<void>& threadfunc);
+    template<typename F>
+    thread* create_thread(F threadfunc);
 
 [variablelist
 
