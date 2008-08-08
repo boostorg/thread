@@ -38,6 +38,12 @@
 [template lock_ref_link[link_text] [link thread.synchronization.mutex_concepts.lockable.lock [link_text]]]
 [def __lock_ref__ [lock_ref_link `lock()`]]
 
+[template lock_multiple_ref_link[link_text] [link thread.synchronization.lock_functions.lock_multiple [link_text]]]
+[def __lock_multiple_ref__ [lock_multiple_ref_link `lock()`]]
+
+[template try_lock_multiple_ref_link[link_text] [link thread.synchronization.lock_functions.try_lock_multiple [link_text]]]
+[def __try_lock_multiple_ref__ [try_lock_multiple_ref_link `try_lock()`]]
+
 [template unlock_ref_link[link_text] [link thread.synchronization.mutex_concepts.lockable.unlock [link_text]]]
 [def __unlock_ref__ [unlock_ref_link `unlock()`]]
 
