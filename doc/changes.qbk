@@ -5,7 +5,23 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:changes Changes since boost 1.34]
+[section:changes Changes since boost 1.35]
+
+The 1.36.0 release of Boost includes a few new features in the thread library:
+
+* New generic __lock_multiple_ref__ and __try_lock_multiple_ref__ functions for locking multiple mutexes at once.
+
+* Rvalue reference support for move semantics where the compilers supports it.
+
+* A few bugs fixed and missing functions added (including the serious win32 condition variable bug).
+
+* `scoped_try_lock` types are now backwards-compatible with Boost 1.34.0 and previous releases.
+
+* Support for passing function arguments to the thread function by supplying additional arguments to the __thread__ constructor.
+
+* Backwards-compatibility overloads added for `timed_lock` and `timed_wait` functions to allow use of `xtime` for timeouts.
+
+[heading Changes since boost 1.34]
 
 Almost every line of code in __boost_thread__ has been changed since the 1.34 release of boost. However, most of the interface
 changes have been extensions, so the new code is largely backwards-compatible with the old code. The new features and breaking
