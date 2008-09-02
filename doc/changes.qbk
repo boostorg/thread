@@ -77,4 +77,7 @@ been moved to __thread_id__.
 
 * __mutex__ is now never recursive. For Boost releases prior to 1.35 __mutex__ was recursive on Windows and not on POSIX platforms.
 
+* When using a __recursive_mutex__ with a call to [cond_any_wait_link `boost::condition_variable_any::wait()`], the mutex is only
+  unlocked one level, and not completely. This prior behaviour was not guaranteed and did not feature in the tests.
+
 [endsect]
