@@ -26,11 +26,11 @@ namespace {
     {
         switch (dwReason)
         {
-            case DLL_THREAD_DETACH:
-            {
-                on_thread_exit();
-                break;
-            }
+        case DLL_THREAD_DETACH:
+        {
+            on_thread_exit();
+            break;
+        }
         }
     }
 
@@ -125,10 +125,10 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma section(".CRT$XCU",long,read)
 #pragma section(".CRT$XTU",long,read)
 #pragma section(".CRT$XLC",long,read)
-        static __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
-        static __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
-        static __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
-        static __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
+        __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
+        __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
+        __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
+        __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
 #else
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
@@ -168,6 +168,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma warning(push)
 #pragma warning(disable:4189)
 #endif
+
         PVAPI on_tls_prepare(void)
         {
             //The following line has an important side effect:
@@ -239,14 +240,31 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
         {
             switch (dwReason)
             {
-                case DLL_THREAD_DETACH:
-                {
-                    on_thread_exit();
-                    break;
-                }
+            case DLL_THREAD_DETACH:
+                on_thread_exit();
+                break;
             }
         }
+
+        BOOL WINAPI dll_callback(HANDLE, DWORD dwReason, LPVOID)
+        {
+            switch (dwReason)
+            {
+            case DLL_THREAD_DETACH:
+                on_thread_exit();
+                break;
+            case DLL_PROCESS_DETACH:
+                on_process_exit();
+                break;
+            }
+            return true;
+        }
     } //namespace
+
+extern "C"
+{
+    extern BOOL (WINAPI * const _pRawDllMain)(HANDLE, DWORD, LPVOID)=&dll_callback;
+}
 
     extern "C" void tss_cleanup_implemented(void)
     {
