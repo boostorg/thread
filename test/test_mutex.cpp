@@ -7,6 +7,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/condition.hpp>
@@ -96,6 +97,86 @@ struct test_trylock
     }
 };
 
+template<typename Mutex>
+struct test_lock_times_out_if_other_thread_has_lock
+{
+    typedef boost::unique_lock<Mutex> Lock;
+    
+    Mutex m;
+    boost::mutex done_mutex;
+    bool done;
+    bool locked;
+    boost::condition_variable done_cond;
+    
+    test_lock_times_out_if_other_thread_has_lock():
+        done(false),locked(false)
+    {}
+
+    void locking_thread()
+    {
+        Lock lock(m,boost::defer_lock);
+        lock.timed_lock(boost::posix_time::milliseconds(50));
+
+        boost::lock_guard<boost::mutex> lk(done_mutex);
+        locked=lock.owns_lock();
+        done=true;
+        done_cond.notify_one();
+    }
+
+    void locking_thread_through_constructor()
+    {
+        Lock lock(m,boost::posix_time::milliseconds(50));
+
+        boost::lock_guard<boost::mutex> lk(done_mutex);
+        locked=lock.owns_lock();
+        done=true;
+        done_cond.notify_one();
+    }
+
+    bool is_done() const
+    {
+        return done;
+    }
+
+    typedef test_lock_times_out_if_other_thread_has_lock<Mutex> this_type;
+    
+    void do_test(void (this_type::*test_func)())
+    {
+        Lock lock(m);
+
+        locked=false;
+        done=false;
+        
+        boost::thread t(test_func,this);
+
+        try
+        {
+            {
+                boost::mutex::scoped_lock lk(done_mutex);
+                BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
+                                                 boost::bind(&this_type::is_done,this)));
+                BOOST_CHECK(!locked);
+            }
+            
+            lock.unlock();
+            t.join();
+        }
+        catch(...)
+        {
+            lock.unlock();
+            t.join();
+            throw;
+        }
+    }
+    
+
+    void operator()()
+    {
+        do_test(&this_type::locking_thread);
+        do_test(&this_type::locking_thread_through_constructor);
+    }
+};
+
 template <typename M>
 struct test_timedlock
 {
@@ -109,6 +190,8 @@ struct test_timedlock
 
     void operator()()
     {
+        test_lock_times_out_if_other_thread_has_lock<mutex_type>()();
+        
         mutex_type mutex;
         boost::condition condition;
 
@@ -177,6 +260,7 @@ struct test_recursive_lock
         lock_type lock2(mx);
     }
 };
+
 
 void do_test_mutex()
 {
