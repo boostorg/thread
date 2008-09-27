@@ -3,7 +3,7 @@
 
 //  basic_recursive_mutex.hpp
 //
-//  (C) Copyright 2006-7 Anthony Williams 
+//  (C) Copyright 2006-8 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -11,6 +11,8 @@
 
 #include "thread_primitives.hpp"
 #include "basic_timed_mutex.hpp"
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -56,9 +58,10 @@ namespace boost
                 long const current_thread_id=win32::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_timed_lock(current_thread_id,target);
             }
-            long get_active_count()
+            template<typename Duration>
+            bool timed_lock(Duration const& timeout)
             {
-                return mutex.get_active_count();
+                return timed_lock(get_system_time()+timeout);
             }
 
             void unlock()
@@ -70,11 +73,6 @@ namespace boost
                 }
             }
 
-            bool locked()
-            {
-                return mutex.locked();
-            }
-            
         private:
             bool try_recursive_lock(long current_thread_id)
             {
@@ -116,5 +114,7 @@ namespace boost
 }
 
 #define BOOST_BASIC_RECURSIVE_MUTEX_INITIALIZER {0}
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

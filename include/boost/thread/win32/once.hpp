@@ -18,6 +18,8 @@
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 #ifdef BOOST_NO_STDC_NAMESPACE
 namespace std
 {
@@ -40,14 +42,14 @@ namespace boost
             explicit win32_mutex_scoped_lock(void* mutex_handle_):
                 mutex_handle(mutex_handle_)
             {
-                unsigned long const res=win32::WaitForSingleObject(mutex_handle,win32::infinite);
-                BOOST_ASSERT(!res);
+                BOOST_VERIFY(!win32::WaitForSingleObject(mutex_handle,win32::infinite));
             }
             ~win32_mutex_scoped_lock()
             {
-                bool const success=win32::ReleaseMutex(mutex_handle)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(win32::ReleaseMutex(mutex_handle)!=0);
             }
+        private:
+            void operator=(win32_mutex_scoped_lock&);
         };
 
 #ifdef BOOST_NO_ANSI_APIS
@@ -96,9 +98,9 @@ namespace boost
             detail::int_to_string(win32::GetCurrentProcessId(), mutex_name + once_mutex_name_fixed_length + sizeof(void*)*2);
 
 #ifdef BOOST_NO_ANSI_APIS
-            return win32::CreateMutexW(NULL, 0, mutex_name);
+            return win32::CreateMutexW(0, 0, mutex_name);
 #else
-            return win32::CreateMutexA(NULL, 0, mutex_name);
+            return win32::CreateMutexA(0, 0, mutex_name);
 #endif
         }
 
@@ -128,5 +130,7 @@ namespace boost
         }
     }
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

@@ -10,7 +10,15 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/platform.hpp>
-#include BOOST_THREAD_PLATFORM(once.hpp)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#include <boost/thread/win32/once.hpp>
+#elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#include <boost/thread/pthread/once.hpp>
+#else
+#error "Boost threads unavailable on this platform"
+#endif
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -19,5 +27,7 @@ namespace boost
         call_once(flag,func);
     }
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

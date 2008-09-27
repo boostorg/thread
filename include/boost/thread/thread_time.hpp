@@ -1,7 +1,15 @@
 #ifndef BOOST_THREAD_TIME_HPP
 #define BOOST_THREAD_TIME_HPP
+//  (C) Copyright 2007 Anthony Williams 
+//
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
+
 #include <boost/date_time/microsec_time_clock.hpp>
 #include <boost/date_time/posix_time/posix_time_types.hpp>
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -19,22 +27,24 @@ namespace boost
             return system_time(boost::posix_time::pos_infin);
         }
 
-        inline unsigned get_milliseconds_until(system_time const& target_time)
+        inline unsigned long get_milliseconds_until(system_time const& target_time)
         {
             if(target_time.is_pos_infinity())
             {
-                return ~0u;
+                return ~(unsigned long)0;
             }
             system_time const now=get_system_time();
             if(target_time<=now)
             {
                 return 0;
             }
-            return (target_time-now).total_milliseconds()+1;
+            return static_cast<unsigned long>((target_time-now).total_milliseconds()+1);
         }
 
     }
     
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

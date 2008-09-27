@@ -8,6 +8,8 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 #if defined(BOOST_HAS_WINTHREADS)
 
     typedef void (__cdecl *thread_exit_handler)(void);
@@ -59,7 +61,7 @@
             //a method for doing so has been discovered.
         //May be omitted; may be called multiple times.
 
-    extern "C" BOOST_THREAD_DECL void on_thread_exit(void);
+    extern "C" BOOST_THREAD_DECL void __cdecl on_thread_exit(void);
         //Function to be called just be fore a thread ends
             //in an exe or dll that uses Boost.Threads.
         //Must be called in the context of the thread
@@ -67,12 +69,14 @@
         //Called automatically by Boost.Threads when
             //a method for doing so has been discovered.
         //Must not be omitted; may be called multiple times.
-
+    
     extern "C" void tss_cleanup_implemented(void);
         //Dummy function used both to detect whether tss cleanup
             //cleanup has been implemented and to force
             //it to be linked into the Boost.Threads library.
 
 #endif //defined(BOOST_HAS_WINTHREADS)
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif //!defined(BOOST_TLS_HOOKS_HPP)

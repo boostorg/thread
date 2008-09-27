@@ -3,7 +3,8 @@
 
 //  win32_thread_primitives.hpp
 //
-//  (C) Copyright 2005-6 Anthony Williams 
+//  (C) Copyright 2005-7 Anthony Williams 
+//  (C) Copyright 2007 David Deakins 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -12,9 +13,12 @@
 #include <boost/config.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/detail/interlocked.hpp>
+#include <algorithm>
 
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
+
 namespace boost
 {
     namespace detail
@@ -25,10 +29,17 @@ namespace boost
             typedef HANDLE handle;
             unsigned const infinite=INFINITE;
             unsigned const timeout=WAIT_TIMEOUT;
+            handle const invalid_handle_value=INVALID_HANDLE_VALUE;
 
+# ifdef BOOST_NO_ANSI_APIS
+            using ::CreateMutexW;
+            using ::CreateEventW;
+            using ::CreateSemaphoreW;
+# else
             using ::CreateMutexA;
             using ::CreateEventA;
             using ::CreateSemaphoreA;
+# endif
             using ::CloseHandle;
             using ::ReleaseMutex;
             using ::ReleaseSemaphore;
@@ -42,11 +53,36 @@ namespace boost
             using ::GetCurrentProcess;
             using ::DuplicateHandle;
             using ::SleepEx;
+            using ::Sleep;
             using ::QueueUserAPC;
+            using ::GetTickCount;
         }
     }
 }
 #elif defined( WIN32 ) || defined( _WIN32 ) || defined( __WIN32__ )
+
+# ifdef UNDER_CE
+#  ifndef WINAPI
+#   ifndef _WIN32_WCE_EMULATION
+#    define WINAPI  __cdecl     // Note this doesn't match the desktop definition
+#   else
+#    define WINAPI  __stdcall
+#   endif
+#  endif
+
+#  ifdef __cplusplus
+extern "C" {
+#  endif
+typedef int BOOL;
+typedef unsigned long DWORD;
+typedef void* HANDLE;
+
+#  include <kfuncs.h>
+#  ifdef __cplusplus
+}
+#  endif
+# endif
+
 namespace boost
 {
     namespace detail
@@ -62,28 +98,48 @@ namespace boost
             typedef void* handle;
             unsigned const infinite=~0U;
             unsigned const timeout=258U;
+            handle const invalid_handle_value=(handle)(-1);
 
             extern "C"
             {
                 struct _SECURITY_ATTRIBUTES;
+# ifdef BOOST_NO_ANSI_APIS
+                __declspec(dllimport) void* __stdcall CreateMutexW(_SECURITY_ATTRIBUTES*,int,wchar_t const*);
+                __declspec(dllimport) void* __stdcall CreateSemaphoreW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*);
+                __declspec(dllimport) void* __stdcall CreateEventW(_SECURITY_ATTRIBUTES*,int,int,wchar_t const*);
+# else
                 __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreA(_SECURITY_ATTRIBUTES*,long,long,char const*);
                 __declspec(dllimport) void* __stdcall CreateEventA(_SECURITY_ATTRIBUTES*,int,int,char const*);
+# endif
                 __declspec(dllimport) int __stdcall CloseHandle(void*);
                 __declspec(dllimport) int __stdcall ReleaseMutex(void*);
-                __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
-                __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
                 __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
+                __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
                 __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
-                __declspec(dllimport) void* __stdcall GetCurrentThread();
-                __declspec(dllimport) void* __stdcall GetCurrentProcess();
                 __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
                 __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
+                __declspec(dllimport) void __stdcall Sleep(unsigned long);
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+
+                __declspec(dllimport) unsigned long __stdcall GetTickCount();
+
+# ifndef UNDER_CE
+                __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
+                __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
+                __declspec(dllimport) void* __stdcall GetCurrentThread();
+                __declspec(dllimport) void* __stdcall GetCurrentProcess();
                 __declspec(dllimport) int __stdcall SetEvent(void*);
                 __declspec(dllimport) int __stdcall ResetEvent(void*);
-                __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
+# else
+                using ::GetCurrentProcessId;
+                using ::GetCurrentThreadId;
+                using ::GetCurrentThread;
+                using ::GetCurrentProcess;
+                using ::SetEvent;
+                using ::ResetEvent;
+# endif
             }
         }
     }
@@ -91,6 +147,8 @@ namespace boost
 #else
 # error "Win32 functions not available"
 #endif
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -112,7 +170,11 @@ namespace boost
             
             inline handle create_anonymous_event(event_type type,initial_event_state state)
             {
+#if !defined(BOOST_NO_ANSI_APIS)  
                 handle const res=win32::CreateEventA(0,type,state,0);
+#else
+                handle const res=win32::CreateEventW(0,type,state,0);
+#endif                
                 if(!res)
                 {
                     throw thread_resource_error();
@@ -122,7 +184,11 @@ namespace boost
 
             inline handle create_anonymous_semaphore(long initial_count,long max_count)
             {
-                handle const res=CreateSemaphoreA(NULL,initial_count,max_count,NULL);
+#if !defined(BOOST_NO_ANSI_APIS)  
+                handle const res=CreateSemaphoreA(0,initial_count,max_count,0);
+#else
+                handle const res=CreateSemaphoreW(0,initial_count,max_count,0);
+#endif               
                 if(!res)
                 {
                     throw thread_resource_error();
@@ -145,8 +211,7 @@ namespace boost
 
             inline void release_semaphore(handle semaphore,long count)
             {
-                bool const success=ReleaseSemaphore(semaphore,count,0)!=0;
-                BOOST_ASSERT(success);
+                BOOST_VERIFY(ReleaseSemaphore(semaphore,count,0)!=0);
             }
 
             class handle_manager
@@ -158,10 +223,9 @@ namespace boost
 
                 void cleanup()
                 {
-                    if(handle_to_manage)
+                    if(handle_to_manage && handle_to_manage!=invalid_handle_value)
                     {
-                        unsigned long result=CloseHandle(handle_to_manage);
-                        BOOST_ASSERT(result);
+                        BOOST_VERIFY(CloseHandle(handle_to_manage));
                     }
                 }
                 
@@ -183,6 +247,16 @@ namespace boost
                 operator handle() const
                 {
                     return handle_to_manage;
+                }
+
+                handle duplicate() const
+                {
+                    return duplicate_handle(handle_to_manage);
+                }
+
+                void swap(handle_manager& other)
+                {
+                    std::swap(handle_to_manage,other.handle_to_manage);
                 }
 
                 handle release()
@@ -207,5 +281,118 @@ namespace boost
     }
 }
 
+#if defined(BOOST_MSVC) && (_MSC_VER>=1400)  && !defined(UNDER_CE)
+
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+#if _MSC_VER==1400
+            extern "C" unsigned char _interlockedbittestandset(long *a,long b);
+            extern "C" unsigned char _interlockedbittestandreset(long *a,long b);
+#else
+            extern "C" unsigned char _interlockedbittestandset(volatile long *a,long b);
+            extern "C" unsigned char _interlockedbittestandreset(volatile long *a,long b);
+#endif
+
+#pragma intrinsic(_interlockedbittestandset)
+#pragma intrinsic(_interlockedbittestandreset)
+
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                return _interlockedbittestandset(x,bit)!=0;
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                return _interlockedbittestandreset(x,bit)!=0;
+            }
+            
+        }
+    }
+}
+#define BOOST_THREAD_BTS_DEFINED
+#elif (defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)) && defined(_M_IX86)
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                __asm {
+                    mov eax,bit;
+                    mov edx,x;
+                    lock bts [edx],eax;
+                    setc al;
+                };          
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                __asm {
+                    mov eax,bit;
+                    mov edx,x;
+                    lock btr [edx],eax;
+                    setc al;
+                };          
+            }
+            
+        }
+    }
+}
+#define BOOST_THREAD_BTS_DEFINED
+#endif
+
+#ifndef BOOST_THREAD_BTS_DEFINED
+
+namespace boost
+{
+    namespace detail
+    {
+        namespace win32
+        {
+            inline bool interlocked_bit_test_and_set(long* x,long bit)
+            {
+                long const value=1<<bit;
+                long old=*x;
+                do
+                {
+                    long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,old|value,old);
+                    if(current==old)
+                    {
+                        break;
+                    }
+                    old=current;
+                }
+                while(true);
+                return (old&value)!=0;
+            }
+
+            inline bool interlocked_bit_test_and_reset(long* x,long bit)
+            {
+                long const value=1<<bit;
+                long old=*x;
+                do
+                {
+                    long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(x,old&~value,old);
+                    if(current==old)
+                    {
+                        break;
+                    }
+                    old=current;
+                }
+                while(true);
+                return (old&value)!=0;
+            }
+        }
+    }
+}
+#endif
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

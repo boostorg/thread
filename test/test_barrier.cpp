@@ -10,6 +10,7 @@
 #include <boost/thread/barrier.hpp>
 
 #include <boost/test/unit_test.hpp>
+#include <vector>
 
 namespace {
 
@@ -38,12 +39,20 @@ void test_barrier()
     boost::thread_group g;
     global_parameter = 0;
 
-    for (int i = 0; i < N_THREADS; ++i)
-        g.create_thread(&barrier_thread);
-
-    g.join_all();
-
-    BOOST_CHECK(global_parameter == 5);
+    try
+    {
+        for (int i = 0; i < N_THREADS; ++i)
+            g.create_thread(&barrier_thread);
+        g.join_all();
+    }
+    catch(...)
+    {
+        g.interrupt_all();
+        g.join_all();
+        throw;
+    }
+    
+    BOOST_CHECK_EQUAL(global_parameter,5);
 }
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])

@@ -1,6 +1,6 @@
 #ifndef BOOST_THREAD_PTHREAD_RECURSIVE_MUTEX_HPP
 #define BOOST_THREAD_PTHREAD_RECURSIVE_MUTEX_HPP
-// (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2007-8 Anthony Williams
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -11,16 +11,21 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/assert.hpp>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <errno.h>
 #include "timespec.hpp"
+#include "pthread_mutex_scoped_lock.hpp"
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
 #define BOOST_PTHREAD_HAS_TIMEDLOCK
 #endif
 #endif
+
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -50,25 +55,21 @@ namespace boost
             {
                 throw thread_resource_error();
             }
-            int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-            BOOST_ASSERT(!destroy_attr_res);
+            BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
         }
         ~recursive_mutex()
         {
-            int const res=pthread_mutex_destroy(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_destroy(&m));
         }
         
         void lock()
         {
-            int const res=pthread_mutex_lock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            int const res=pthread_mutex_unlock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -77,8 +78,15 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
+
         typedef unique_lock<recursive_mutex> scoped_lock;
-        typedef scoped_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<recursive_mutex> scoped_try_lock;
     };
 
     typedef recursive_mutex recursive_try_mutex;
@@ -93,25 +101,6 @@ namespace boost
         bool is_locked;
         pthread_t owner;
         unsigned count;
-
-        struct pthread_mutex_scoped_lock
-        {
-            pthread_mutex_t* m;
-            explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_):
-                m(m_)
-            {
-                int const res=pthread_mutex_lock(m);
-                BOOST_ASSERT(!res);
-            }
-            ~pthread_mutex_scoped_lock()
-            {
-                int const res=pthread_mutex_unlock(m);
-                BOOST_ASSERT(!res);
-            }
-            
-        };
-        
-            
 #endif
     public:
         recursive_timed_mutex()
@@ -133,12 +122,10 @@ namespace boost
             int const res=pthread_mutex_init(&m,&attr);
             if(res)
             {
-                int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-                BOOST_ASSERT(!destroy_attr_res);
+                BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
                 throw thread_resource_error();
             }
-            int const destroy_attr_res=pthread_mutexattr_destroy(&attr);
-            BOOST_ASSERT(!destroy_attr_res);
+            BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
 #else
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
@@ -148,8 +135,7 @@ namespace boost
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
-                int const destroy_res=pthread_mutex_destroy(&m);
-                BOOST_ASSERT(!destroy_res);
+                BOOST_VERIFY(!pthread_mutex_destroy(&m));
                 throw thread_resource_error();
             }
             is_locked=false;
@@ -158,11 +144,9 @@ namespace boost
         }
         ~recursive_timed_mutex()
         {
-            int const res=pthread_mutex_destroy(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_destroy(&m));
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
-            int const res2=pthread_cond_destroy(&cond);
-            BOOST_ASSERT(!res2);
+            BOOST_VERIFY(!pthread_cond_destroy(&cond));
 #endif
         }
 
@@ -175,14 +159,12 @@ namespace boost
 #ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
         void lock()
         {
-            int const res=pthread_mutex_lock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_lock(&m));
         }
 
         void unlock()
         {
-            int const res=pthread_mutex_unlock(&m);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
         
         bool try_lock()
@@ -198,11 +180,18 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
+
 #else
         void lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
-            if(is_locked && owner==pthread_self())
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+            if(is_locked && pthread_equal(owner,pthread_self()))
             {
                 ++count;
                 return;
@@ -210,8 +199,7 @@ namespace boost
             
             while(is_locked)
             {
-                int const cond_res=pthread_cond_wait(&cond,&m);
-                BOOST_ASSERT(!cond_res);
+                BOOST_VERIFY(!pthread_cond_wait(&cond,&m));
             }
             is_locked=true;
             ++count;
@@ -220,19 +208,18 @@ namespace boost
 
         void unlock()
         {
-            pthread_mutex_scoped_lock const _(&m);
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(!--count)
             {
                 is_locked=false;
             }
-            int const res=pthread_cond_signal(&cond);
-            BOOST_ASSERT(!res);
+            BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
         
         bool try_lock()
         {
-            pthread_mutex_scoped_lock const _(&m);
-            if(is_locked && owner!=pthread_self())
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+            if(is_locked && !pthread_equal(owner,pthread_self()))
             {
                 return false;
             }
@@ -245,8 +232,8 @@ namespace boost
         bool timed_lock(system_time const & abs_time)
         {
             struct timespec const timeout=detail::get_timespec(abs_time);
-            pthread_mutex_scoped_lock const _(&m);
-            if(is_locked && owner==pthread_self())
+            boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
+            if(is_locked && pthread_equal(owner,pthread_self()))
             {
                 ++count;
                 return true;
@@ -268,11 +255,12 @@ namespace boost
 #endif
 
         typedef unique_lock<recursive_timed_mutex> scoped_timed_lock;
-        typedef scoped_timed_lock scoped_try_lock;
+        typedef detail::try_lock_wrapper<recursive_timed_mutex> scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
     };
 
 }
 
+#include <boost/config/abi_suffix.hpp>
 
 #endif
