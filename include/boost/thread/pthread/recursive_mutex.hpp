@@ -177,7 +177,7 @@ namespace boost
         {
             struct timespec const timeout=detail::get_timespec(abs_time);
             int const res=pthread_mutex_timedlock(&m,&timeout);
-            BOOST_ASSERT(!res || res==EBUSY);
+            BOOST_ASSERT(!res || res==ETIMEDOUT);
             return !res;
         }
 
