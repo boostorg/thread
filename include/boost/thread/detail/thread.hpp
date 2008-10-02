@@ -339,9 +339,9 @@ namespace boost
         return t;
     }
 #else
-    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
+    inline thread move(detail::thread_move_t<thread> t)
     {
-        return t;
+        return thread(t);
     }
 #endif
 
