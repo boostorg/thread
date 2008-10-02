@@ -25,6 +25,18 @@ void test_move_from_function_return()
     x.join();
 }
 
+boost::thread make_thread_return_lvalue()
+{
+    boost::thread t(do_nothing);
+    return boost::move(t);
+}
+
+void test_move_from_function_return_lvalue()
+{
+    boost::thread x=make_thread_return_lvalue();
+    x.join();
+}
+
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -33,5 +45,6 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_move_on_construction));
     test->add(BOOST_TEST_CASE(test_move_from_function_return));
+    test->add(BOOST_TEST_CASE(test_move_from_function_return_lvalue));
     return test;
 }
