@@ -5,26 +5,59 @@
 #include <boost/thread/thread.hpp>
 #include <boost/test/unit_test.hpp>
 
-void do_nothing()
-{}
+void do_nothing(boost::thread::id* my_id)
+{
+    *my_id=boost::this_thread::get_id();
+}
 
 void test_move_on_construction()
 {
-    boost::thread x=boost::thread(do_nothing);
+    boost::thread::id the_id;
+    boost::thread x=boost::thread(do_nothing,&the_id);
+    boost::thread::id x_id=x.get_id();
     x.join();
+    BOOST_CHECK_EQUAL(the_id,x_id);
 }
 
-boost::thread make_thread()
+boost::thread make_thread(boost::thread::id* the_id)
 {
-    return boost::thread(do_nothing);
+    return boost::thread(do_nothing,the_id);
 }
 
 void test_move_from_function_return()
 {
-    boost::thread x=make_thread();
+    boost::thread::id the_id;
+    boost::thread x=make_thread(&the_id);
+    boost::thread::id x_id=x.get_id();
     x.join();
+    BOOST_CHECK_EQUAL(the_id,x_id);
 }
 
+boost::thread make_thread_return_lvalue(boost::thread::id* the_id)
+{
+    boost::thread t(do_nothing,the_id);
+    return boost::move(t);
+}
+
+void test_move_from_function_return_lvalue()
+{
+    boost::thread::id the_id;
+    boost::thread x=make_thread_return_lvalue(&the_id);
+    boost::thread::id x_id=x.get_id();
+    x.join();
+    BOOST_CHECK_EQUAL(the_id,x_id);
+}
+
+void test_move_assign()
+{
+    boost::thread::id the_id;
+    boost::thread x(do_nothing,&the_id);
+    boost::thread y;
+    y=boost::move(x);
+    boost::thread::id y_id=y.get_id();
+    y.join();
+    BOOST_CHECK_EQUAL(the_id,y_id);
+}
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 {
@@ -33,5 +66,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(test_move_on_construction));
     test->add(BOOST_TEST_CASE(test_move_from_function_return));
+    test->add(BOOST_TEST_CASE(test_move_from_function_return_lvalue));
+    test->add(BOOST_TEST_CASE(test_move_assign));
     return test;
 }
