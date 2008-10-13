@@ -29,13 +29,26 @@ namespace boost
 
         void create_current_thread_tls_key()
         {
+            tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             current_thread_tls_key=TlsAlloc();
             BOOST_ASSERT(current_thread_tls_key!=TLS_OUT_OF_INDEXES);
         }
 
+        void cleanup_tls_key()
+        {
+            if(current_thread_tls_key)
+            {
+                TlsFree(current_thread_tls_key);
+                current_thread_tls_key=0;
+            }
+        }
+
         detail::thread_data_base* get_current_thread_data()
         {
-            boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
+            if(!current_thread_tls_key)
+            {
+                return 0;
+            }
             return (detail::thread_data_base*)TlsGetValue(current_thread_tls_key);
         }
 
@@ -141,8 +154,8 @@ namespace boost
                     }
                 }
                 
+                set_current_thread_data(0);
             }
-            set_current_thread_data(0);
         }
         
         unsigned __stdcall thread_start_function(void* param)
@@ -544,7 +557,6 @@ namespace boost
         
         void set_tss_data(void const* key,boost::shared_ptr<tss_cleanup_function> func,void* tss_data,bool cleanup_existing)
         {
-            tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             if(tss_data_node* const current_node=find_tss_data(key))
             {
                 if(cleanup_existing && current_node->func.get())
@@ -572,7 +584,9 @@ extern "C" BOOST_THREAD_DECL void on_thread_enter()
 {}
 
 extern "C" BOOST_THREAD_DECL void on_process_exit()
-{}
+{
+    boost::cleanup_tls_key();
+}
 
 extern "C" BOOST_THREAD_DECL void on_thread_exit()
 {
