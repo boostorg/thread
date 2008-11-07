@@ -1,3 +1,7 @@
+boost_additional_test_dependencies(thread BOOST_DEPENDS test )
+
+
+
 set(TESTS 
 test_thread
 test_thread_id
