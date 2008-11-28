@@ -112,7 +112,7 @@ int main(int argc, char* argv[])
         std::cout << "---Noise ON..." << std::endl;
     }
 
-    for (int i = 0; i < 1000000; ++i)
+    for (int i = 0; i < 1000000000; ++i)
         cond.notify_all();
 
     {
