@@ -20,6 +20,7 @@ struct thread_alarm
         boost::thread::sleep(xt);
 
         std::cout << "alarm sounded..." << std::endl;
+        throw "foo";
     }
 
     int m_secs;
