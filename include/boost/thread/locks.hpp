@@ -214,6 +214,9 @@ namespace boost
         unique_lock& operator=(unique_lock&);
         unique_lock& operator=(upgrade_lock<Mutex>& other);
     public:
+#ifdef __SUNPRO_CC 
+        unique_lock(const volatile unique_lock&); 
+#endif
         unique_lock():
             m(0),is_locked(false)
         {}
@@ -297,12 +300,20 @@ namespace boost
             return detail::thread_move_t<unique_lock<Mutex> >(*this);
         }
 
+#ifdef __SUNPRO_CC
+        unique_lock& operator=(unique_lock<Mutex> other) 
+        { 
+            swap(other); 
+            return *this; 
+        } 
+#else
         unique_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             unique_lock temp(other);
             swap(temp);
             return *this;
         }
+#endif
 
         unique_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)
         {
