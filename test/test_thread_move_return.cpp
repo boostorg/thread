@@ -19,7 +19,7 @@ boost::thread make_thread_move_return(boost::thread::id* the_id)
 void test_move_from_function_move_return()
 {
     boost::thread::id the_id;
-    boost::thread x=make_thread_return_local(&the_id);
+    boost::thread x=make_thread_move_return(&the_id);
     boost::thread::id x_id=x.get_id();
     x.join();
     BOOST_CHECK_EQUAL(the_id,x_id);
