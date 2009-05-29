@@ -38,6 +38,8 @@ rule thread-run ( sources )
           [ thread-run test_thread_id.cpp ]
           [ thread-run test_hardware_concurrency.cpp ]
           [ thread-run test_thread_move.cpp ]
+          [ thread-run test_thread_return_local.cpp ]
+          [ thread-run test_thread_move_return.cpp ]
           [ thread-run test_thread_launching.cpp ]
           [ thread-run test_thread_mf.cpp ]
           [ thread-run test_move_function.cpp ]
