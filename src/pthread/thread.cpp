@@ -380,7 +380,7 @@ namespace boost
     {
 #if defined(PTW32_VERSION) || defined(__hpux)
         return pthread_num_processors_np();
-#elif defined(__linux__)
+#elif defined(_GNU_SOURCE)
         return get_nprocs();
 #elif defined(__APPLE__) || defined(__FreeBSD__)
         int count;
