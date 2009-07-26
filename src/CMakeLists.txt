@@ -1,3 +1,9 @@
+#
+# Copyright Troy D. Straszheim
+#
+# Distributed under the Boost Software License, Version 1.0.
+# See http://www.boost.org/LICENSE_1_0.txt
+#
 if (WIN32)
   set(THREAD_SOURCES win32/thread.cpp win32/exceptions.cpp win32/tss_dll.cpp
                      win32/tss_pe.cpp)
