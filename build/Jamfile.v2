@@ -180,7 +180,6 @@ rule requirements ( properties * )
 alias thread_sources
     : ## win32 sources ##
       win32/thread.cpp
-      win32/exceptions.cpp
       win32/tss_dll.cpp
       win32/tss_pe.cpp
     : ## requirements ##
@@ -190,7 +189,6 @@ alias thread_sources
 alias thread_sources
     : ## pthread sources ##
       pthread/thread.cpp
-      pthread/exceptions.cpp
       pthread/once.cpp
     : ## requirements ##
       <threadapi>pthread
