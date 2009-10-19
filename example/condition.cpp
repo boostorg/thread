@@ -50,8 +50,9 @@ boost::mutex io_mutex;
 
 void sender() {
     int n = 0;
-    while (n < 100) {
+    while (n < 1000000) {
         buf.send(n);
+        if(!(n%10000))
         {
             boost::mutex::scoped_lock io_lock(io_mutex);
             std::cout << "sent: " << n << std::endl;
@@ -65,18 +66,24 @@ void receiver() {
     int n;
     do {
         n = buf.receive();
+        if(!(n%10000))
         {
             boost::mutex::scoped_lock io_lock(io_mutex);
             std::cout << "received: " << n << std::endl;
         }
     } while (n != -1); // -1 indicates end of buffer
+    buf.send(-1);
 }
 
 int main(int, char*[])
 {
     boost::thread thrd1(&sender);
     boost::thread thrd2(&receiver);
+    boost::thread thrd3(&receiver);
+    boost::thread thrd4(&receiver);
     thrd1.join();
     thrd2.join();
+    thrd3.join();
+    thrd4.join();
     return 0;
 }

@@ -144,6 +144,9 @@ namespace boost
         struct dummy;
 #endif
     public:
+#ifdef __SUNPRO_CC 
+        thread(const volatile thread&); 
+#endif 
         thread();
         ~thread();
 
@@ -201,14 +204,21 @@ namespace boost
             thread_info=x->thread_info;
             x->thread_info.reset();
         }
-        
+       
+#ifdef __SUNPRO_CC 
+        thread& operator=(thread x) 
+        { 
+            swap(x); 
+            return *this; 
+        } 
+#else
         thread& operator=(detail::thread_move_t<thread> x)
         {
             thread new_thread(x);
             swap(new_thread);
             return *this;
         }
-        
+#endif   
         operator detail::thread_move_t<thread>()
         {
             return move();
@@ -339,9 +349,9 @@ namespace boost
         return t;
     }
 #else
-    inline thread move(detail::thread_move_t<thread> t)
+    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
     {
-        return thread(t);
+        return t;
     }
 #endif
 
