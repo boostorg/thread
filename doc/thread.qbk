@@ -158,6 +158,7 @@
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]
+[include futures.qbk]
 [endsect]
 
 [include tss.qbk]
