@@ -57,6 +57,7 @@ rule thread-run ( sources )
           [ thread-run test_shared_mutex_timed_locks.cpp ]
           [ thread-run test_lock_concept.cpp ]
           [ thread-run test_generic_locks.cpp ]
+          [ thread-run test_futures.cpp ]
           [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
           [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
     ;
