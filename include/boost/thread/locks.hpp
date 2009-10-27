@@ -265,14 +265,14 @@ namespace boost
 
         unique_lock& operator=(unique_lock<Mutex>&& other)
         {
-            unique_lock temp(other);
+            unique_lock temp(std::move(other));
             swap(temp);
             return *this;
         }
 
         unique_lock& operator=(upgrade_lock<Mutex>&& other)
         {
-            unique_lock temp(other);
+            unique_lock temp(std::move(other));
             swap(temp);
             return *this;
         }
