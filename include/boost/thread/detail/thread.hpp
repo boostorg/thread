@@ -357,27 +357,6 @@ namespace boost
 
     namespace this_thread
     {
-        class BOOST_THREAD_DECL disable_interruption
-        {
-            disable_interruption(const disable_interruption&);
-            disable_interruption& operator=(const disable_interruption&);
-            
-            bool interruption_was_enabled;
-            friend class restore_interruption;
-        public:
-            disable_interruption();
-            ~disable_interruption();
-        };
-
-        class BOOST_THREAD_DECL restore_interruption
-        {
-            restore_interruption(const restore_interruption&);
-            restore_interruption& operator=(const restore_interruption&);
-        public:
-            explicit restore_interruption(disable_interruption& d);
-            ~restore_interruption();
-        };
-
         thread::id BOOST_THREAD_DECL get_id();
 
         void BOOST_THREAD_DECL interruption_point();
@@ -497,83 +476,6 @@ namespace boost
             detail::add_thread_exit_function(thread_exit_func);
         }
     }
-
-    class thread_group:
-        private noncopyable
-    {
-    public:
-        ~thread_group()
-        {
-            for(std::list<thread*>::iterator it=threads.begin(),end=threads.end();
-                it!=end;
-                ++it)
-            {
-                delete *it;
-            }
-        }
-
-        template<typename F>
-        thread* create_thread(F threadfunc)
-        {
-            boost::lock_guard<mutex> guard(m);
-            std::auto_ptr<thread> new_thread(new thread(threadfunc));
-            threads.push_back(new_thread.get());
-            return new_thread.release();
-        }
-        
-        void add_thread(thread* thrd)
-        {
-            if(thrd)
-            {
-                boost::lock_guard<mutex> guard(m);
-                threads.push_back(thrd);
-            }
-        }
-            
-        void remove_thread(thread* thrd)
-        {
-            boost::lock_guard<mutex> guard(m);
-            std::list<thread*>::iterator const it=std::find(threads.begin(),threads.end(),thrd);
-            if(it!=threads.end())
-            {
-                threads.erase(it);
-            }
-        }
-        
-        void join_all()
-        {
-            boost::lock_guard<mutex> guard(m);
-            
-            for(std::list<thread*>::iterator it=threads.begin(),end=threads.end();
-                it!=end;
-                ++it)
-            {
-                (*it)->join();
-            }
-        }
-        
-        void interrupt_all()
-        {
-            boost::lock_guard<mutex> guard(m);
-            
-            for(std::list<thread*>::iterator it=threads.begin(),end=threads.end();
-                it!=end;
-                ++it)
-            {
-                (*it)->interrupt();
-            }
-        }
-        
-        size_t size() const
-        {
-            boost::lock_guard<mutex> guard(m);
-            return threads.size();
-        }
-        
-    private:
-        std::list<thread*> threads;
-        mutable mutex m;
-    };
 }
 
 #ifdef BOOST_MSVC
