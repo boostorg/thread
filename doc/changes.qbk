@@ -5,7 +5,11 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:changes Changes since boost 1.35]
+[section:changes Changes since boost 1.40]
+
+The 1.41.0 release of Boost adds futures to the thread library. There are also a few minor changes.
+
+[heading Changes since boost 1.35]
 
 The 1.36.0 release of Boost includes a few new features in the thread library:
 
