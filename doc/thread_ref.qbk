@@ -916,6 +916,13 @@ exits (even if the thread has been interrupted).]]
 [[Throws:] [`std::bad_alloc` if memory cannot be allocated for the copy of the function, __thread_resource_error__ if any other
 error occurs within the thread library. Any exception thrown whilst copying `func` into internal storage.]]
 
+[[Note:] [This function is *not* called if the thread was terminated
+forcefully using platform-specific APIs, or if the thread is
+terminated due to a call to `exit()`, `abort()` or
+`std::terminate()`. In particular, returning from `main()` is
+equivalent to call to `exit()`, so will not call any functions
+registered with `at_thread_exit()`]]
+
 ]
 
 [endsect]
