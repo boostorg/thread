@@ -45,8 +45,14 @@ all subsequent `call_once` invocations on the same `once_flag` object. ]]
 
 [[Throws:] [`thread_resource_error` when the effects cannot be achieved. or any exception propagated from `func`.]]
 
-[[Note:] [If the function passed to `call_once` also calls `call_once`
-passing the same `once_flag` object then deadlock will occur.]]
+[[Note:] [The function passed to `call_once` must not also call
+`call_once` passing the same `once_flag` object. This may cause
+deadlock, or invoking the passed function a second time. The
+alternative is to allow the second call to return immediately, but
+that assumes the code knows it has been called recursively, and can
+proceed even though the call to `call_once` didn't actually call the
+function, in which case it could also avoid calling `call_once`
+recursively.]]
 
 ]
 
