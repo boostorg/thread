@@ -45,6 +45,9 @@ all subsequent `call_once` invocations on the same `once_flag` object. ]]
 
 [[Throws:] [`thread_resource_error` when the effects cannot be achieved. or any exception propagated from `func`.]]
 
+[[Note:] [If the function passed to `call_once` also calls `call_once`
+passing the same `once_flag` object then deadlock will occur.]]
+
 ]
 
     void call_once(void (*func)(),once_flag& flag);
