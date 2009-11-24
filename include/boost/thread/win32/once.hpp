@@ -36,6 +36,20 @@ namespace boost
         long count;
         long throw_count;
         void* event_handle;
+
+        ~once_flag()
+        {
+            if(count)
+            {
+                BOOST_ASSERT(count==throw_count);
+            }
+            
+            void* const old_event=BOOST_INTERLOCKED_EXCHANGE_POINTER(&event_handle,0);
+            if(old_event)
+            {
+                ::boost::detail::win32::CloseHandle(old_event);
+            }
+        }
     };
 
 #define BOOST_ONCE_INIT {0,0,0,0}
@@ -80,6 +94,14 @@ namespace boost
             {
                 try
                 {
+                    if(!event_handle)
+                    {
+                        event_handle=::boost::detail::interlocked_read_acquire(&flag.event_handle);
+                    }
+                    if(event_handle)
+                    {
+                        ::boost::detail::win32::ResetEvent(event_handle);
+                    }
                     f();
                     if(!counted)
                     {
@@ -106,6 +128,14 @@ namespace boost
                         BOOST_INTERLOCKED_INCREMENT(&flag.throw_count);
                     }
                     BOOST_INTERLOCKED_EXCHANGE(&flag.status,0);
+                    if(!event_handle)
+                    {
+                        event_handle=::boost::detail::interlocked_read_acquire(&flag.event_handle);
+                    }
+                    if(event_handle)
+                    {
+                        ::boost::detail::win32::SetEvent(event_handle);
+                    }
                     throw;
                 }
             }
@@ -130,7 +160,7 @@ namespace boost
         }
         if(counted || throw_count)
         {
-            if(!BOOST_INTERLOCKED_EXCHANGE_ADD(&flag.count,(counted?1:0)+throw_count))
+            if(!BOOST_INTERLOCKED_EXCHANGE_ADD(&flag.count,(counted?-1:0)-throw_count))
             {
                 if(!event_handle)
                 {
@@ -143,7 +173,6 @@ namespace boost
                 }
             }
         }
-        
     }
 }
 
