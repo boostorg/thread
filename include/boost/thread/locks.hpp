@@ -344,7 +344,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->lock();
             is_locked=true;
@@ -353,7 +353,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             is_locked=m->try_lock();
             return is_locked;
@@ -379,7 +379,7 @@ namespace boost
         {
             if(!owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->unlock();
             is_locked=false;
@@ -570,7 +570,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->lock_shared();
             is_locked=true;
@@ -579,7 +579,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             is_locked=m->try_lock_shared();
             return is_locked;
@@ -588,7 +588,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             is_locked=m->timed_lock_shared(target_time);
             return is_locked;
@@ -598,7 +598,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             is_locked=m->timed_lock_shared(target_time);
             return is_locked;
@@ -607,7 +607,7 @@ namespace boost
         {
             if(!owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->unlock_shared();
             is_locked=false;
@@ -733,7 +733,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->lock_upgrade();
             is_locked=true;
@@ -742,7 +742,7 @@ namespace boost
         {
             if(owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             is_locked=m->try_lock_upgrade();
             return is_locked;
@@ -751,7 +751,7 @@ namespace boost
         {
             if(!owns_lock())
             {
-                throw boost::lock_error();
+                boost::throw_exception(boost::lock_error());
             }
             m->unlock_upgrade();
             is_locked=false;

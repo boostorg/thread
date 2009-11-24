@@ -16,6 +16,7 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/config.hpp>
+#include <boost/throw_exception.hpp>
 #include <algorithm>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
@@ -673,7 +674,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
 
             return future->get();
@@ -709,7 +710,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
             future->wait(false);
         }
@@ -724,7 +725,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
             return future->timed_wait_until(abs_time);
         }
@@ -830,7 +831,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
 
             return future->get();
@@ -866,7 +867,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
             future->wait(false);
         }
@@ -881,7 +882,7 @@ namespace boost
         {
             if(!future)
             {
-                throw future_uninitialized();
+                boost::throw_exception(future_uninitialized());
             }
             return future->timed_wait_until(abs_time);
         }
@@ -974,7 +975,7 @@ namespace boost
             lazy_init();
             if(future_obtained)
             {
-                throw future_already_retrieved();
+                boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
             return unique_future<R>(future);
@@ -986,7 +987,7 @@ namespace boost
             boost::lock_guard<boost::mutex> lock(future->mutex);
             if(future->done)
             {
-                throw promise_already_satisfied();
+                boost::throw_exception(promise_already_satisfied());
             }
             future->mark_finished_with_result_internal(r);
         }
@@ -998,7 +999,7 @@ namespace boost
             boost::lock_guard<boost::mutex> lock(future->mutex);
             if(future->done)
             {
-                throw promise_already_satisfied();
+                boost::throw_exception(promise_already_satisfied());
             }
             future->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r));
         }
@@ -1009,7 +1010,7 @@ namespace boost
             boost::lock_guard<boost::mutex> lock(future->mutex);
             if(future->done)
             {
-                throw promise_already_satisfied();
+                boost::throw_exception(promise_already_satisfied());
             }
             future->mark_exceptional_finish_internal(p);
         }
@@ -1109,7 +1110,7 @@ namespace boost
             
             if(future_obtained)
             {
-                throw future_already_retrieved();
+                boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
             return unique_future<void>(future);
@@ -1121,7 +1122,7 @@ namespace boost
             boost::lock_guard<boost::mutex> lock(future->mutex);
             if(future->done)
             {
-                throw promise_already_satisfied();
+                boost::throw_exception(promise_already_satisfied());
             }
             future->mark_finished_with_result_internal();
         }
@@ -1132,7 +1133,7 @@ namespace boost
             boost::lock_guard<boost::mutex> lock(future->mutex);
             if(future->done)
             {
-                throw promise_already_satisfied();
+                boost::throw_exception(promise_already_satisfied());
             }
             future->mark_exceptional_finish_internal(p);
         }
@@ -1164,7 +1165,7 @@ namespace boost
                     boost::lock_guard<boost::mutex> lk(this->mutex);
                     if(started)
                     {
-                        throw task_already_started();
+                        boost::throw_exception(task_already_started());
                     }
                     started=true;
                 }
@@ -1326,7 +1327,7 @@ namespace boost
         {
             if(!task)
             {
-                throw task_moved();
+                boost::throw_exception(task_moved());
             }
             else if(!future_obtained)
             {
@@ -1335,7 +1336,7 @@ namespace boost
             }
             else
             {
-                throw future_already_retrieved();
+                boost::throw_exception(future_already_retrieved());
             }
         }
         
@@ -1345,7 +1346,7 @@ namespace boost
         {
             if(!task)
             {
-                throw task_moved();
+                boost::throw_exception(task_moved());
             }
             task->run();
         }
