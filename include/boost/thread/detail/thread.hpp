@@ -445,7 +445,7 @@ namespace boost
         {
             virtual ~thread_exit_function_base()
             {}
-            virtual void operator()() const=0;
+            virtual void operator()()=0;
         };
         
         template<typename F>
@@ -458,7 +458,7 @@ namespace boost
                 f(f_)
             {}
             
-            void operator()() const
+            void operator()()
             {
                 f();
             }
