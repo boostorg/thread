@@ -156,7 +156,8 @@ namespace boost
                     continue;
                 }
             }
-            
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             event_handle,::boost::detail::win32::infinite));
         }
         if(counted || throw_count)
         {
