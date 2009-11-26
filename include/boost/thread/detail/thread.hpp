@@ -464,7 +464,7 @@ namespace boost
             }
         };
         
-        void add_thread_exit_function(thread_exit_function_base*);
+        void BOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
     }
     
     namespace this_thread
