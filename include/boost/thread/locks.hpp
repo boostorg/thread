@@ -248,7 +248,7 @@ namespace boost
         {
             timed_lock(target_time);
         }
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         unique_lock(unique_lock&& other):
             m(other.m),is_locked(other.is_locked)
         {
@@ -416,7 +416,7 @@ namespace boost
         friend class upgrade_lock<Mutex>;
     };
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     void swap(unique_lock<Mutex>&& lhs,unique_lock<Mutex>&& rhs)
     {
@@ -430,7 +430,7 @@ namespace boost
     }
 #endif
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     inline unique_lock<Mutex>&& move(unique_lock<Mutex>&& ul)
     {
@@ -535,7 +535,7 @@ namespace boost
             return *this;
         }
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         void swap(shared_lock&& other)
         {
             std::swap(m,other.m);
@@ -629,7 +629,7 @@ namespace boost
 
     };
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     void swap(shared_lock<Mutex>&& lhs,shared_lock<Mutex>&& rhs)
     {
@@ -775,7 +775,7 @@ namespace boost
     };
 
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     unique_lock<Mutex>::unique_lock(upgrade_lock<Mutex>&& other):
         m(other.m),is_locked(other.is_locked)
@@ -875,7 +875,7 @@ namespace boost
             try_lock_wrapper(Mutex& m_,try_to_lock_t):
                 base(m_,try_to_lock)
             {}
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
             try_lock_wrapper(try_lock_wrapper&& other):
                 base(other.move())
             {}
@@ -963,7 +963,7 @@ namespace boost
             }
         };
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         template<typename Mutex>
         void swap(try_lock_wrapper<Mutex>&& lhs,try_lock_wrapper<Mutex>&& rhs)
         {

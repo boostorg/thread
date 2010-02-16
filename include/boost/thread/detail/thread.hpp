@@ -39,7 +39,7 @@ namespace boost
             public detail::thread_data_base
         {
         public:
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
             thread_data(F&& f_):
                 f(static_cast<F&&>(f_))
             {}
@@ -119,7 +119,7 @@ namespace boost
 
         detail::thread_data_ptr get_thread_info() const;
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
@@ -150,7 +150,7 @@ namespace boost
         thread();
         ~thread();
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         template <class F>
         thread(F&& f):
             thread_info(make_thread_info(static_cast<F&&>(f)))
@@ -343,7 +343,7 @@ namespace boost
         return lhs.swap(rhs);
     }
     
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     inline thread&& move(thread&& t)
     {
         return t;
