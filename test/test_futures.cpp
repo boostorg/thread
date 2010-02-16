@@ -14,7 +14,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename T>
     typename boost::remove_reference<T>::type&& cast_to_rval(T&& t)
     {
@@ -41,7 +41,7 @@ public:
     X():
         i(42)
     {}
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
     X(X&& other):
         i(other.i)
     {

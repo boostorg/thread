@@ -219,7 +219,7 @@ namespace boost
         struct future_traits
         {
             typedef boost::scoped_ptr<T> storage_type;
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
             typedef T const& source_reference_type;
             struct dummy;
             typedef typename boost::mpl::if_<boost::is_fundamental<T>,dummy&,T&&>::type rvalue_source_type;
@@ -633,7 +633,7 @@ namespace boost
         ~unique_future()
         {}
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         unique_future(unique_future && other)
         {
             future.swap(other.future);
@@ -768,7 +768,7 @@ namespace boost
             future=other.future;
             return *this;
         }
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         shared_future(shared_future && other)
         {
             future.swap(other.future);
@@ -930,7 +930,7 @@ namespace boost
         }
 
         // Assignment
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         promise(promise && rhs):
             future_obtained(rhs.future_obtained)
         {
@@ -1064,7 +1064,7 @@ namespace boost
         }
 
         // Assignment
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         promise(promise && rhs):
             future_obtained(rhs.future_obtained)
         {
@@ -1284,7 +1284,7 @@ namespace boost
         }
 
         // assignment
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         packaged_task(packaged_task&& other):
             future_obtained(other.future_obtained)
         {
