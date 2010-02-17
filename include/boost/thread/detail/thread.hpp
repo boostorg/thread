@@ -344,9 +344,13 @@ namespace boost
     }
     
 #ifndef BOOST_NO_RVALUE_REFERENCES
+    inline thread&& move(thread& t)
+    {
+        return static_cast<thread&&>(t);
+    }
     inline thread&& move(thread&& t)
     {
-        return t;
+        return static_cast<thread&&>(t);
     }
 #else
     inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
