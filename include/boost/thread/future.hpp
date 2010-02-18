@@ -404,13 +404,14 @@ namespace boost
             
             struct all_futures_lock
             {
-                unsigned count;
+                typedef std::vector<registered_waiter>::size_type count_type;
+                count_type count;
                 boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
                 
                 all_futures_lock(std::vector<registered_waiter>& futures):
                     count(futures.size()),locks(new boost::unique_lock<boost::mutex>[count])
                 {
-                    for(unsigned i=0;i<count;++i)
+                    for(count_type i=0;i<count;++i)
                     {
                         locks[i]=boost::unique_lock<boost::mutex>(futures[i].future->mutex);
                     }
