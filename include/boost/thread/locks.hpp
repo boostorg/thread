@@ -321,17 +321,17 @@ namespace boost
             swap(temp);
             return *this;
         }
-        void swap(unique_lock& other)
-        {
-            std::swap(m,other.m);
-            std::swap(is_locked,other.is_locked);
-        }
         void swap(detail::thread_move_t<unique_lock<Mutex> > other)
         {
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
         }
 #endif
+        void swap(unique_lock& other)
+        {
+            std::swap(m,other.m);
+            std::swap(is_locked,other.is_locked);
+        }
         
         ~unique_lock()
         {
@@ -422,19 +422,24 @@ namespace boost
     {
         lhs.swap(rhs);
     }
-#else
+#endif
     template<typename Mutex>
     void swap(unique_lock<Mutex>& lhs,unique_lock<Mutex>& rhs)
     {
         lhs.swap(rhs);
     }
-#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     inline unique_lock<Mutex>&& move(unique_lock<Mutex>&& ul)
     {
-        return ul;
+        return static_cast<unique_lock<Mutex>&&>(ul);
+    }
+
+    template<typename Mutex>
+    inline unique_lock<Mutex>&& move(unique_lock<Mutex>& ul)
+    {
+        return static_cast<unique_lock<Mutex>&&>(ul);
     }
 #endif
 
@@ -542,17 +547,17 @@ namespace boost
             std::swap(is_locked,other.is_locked);
         }
 #else
-        void swap(shared_lock& other)
-        {
-            std::swap(m,other.m);
-            std::swap(is_locked,other.is_locked);
-        }
         void swap(boost::detail::thread_move_t<shared_lock<Mutex> > other)
         {
             std::swap(m,other->m);
             std::swap(is_locked,other->is_locked);
         }
 #endif
+        void swap(shared_lock& other)
+        {
+            std::swap(m,other.m);
+            std::swap(is_locked,other.is_locked);
+        }
 
         Mutex* mutex() const
         {
