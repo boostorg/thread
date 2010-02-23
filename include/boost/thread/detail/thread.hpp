@@ -43,6 +43,9 @@ namespace boost
             thread_data(F&& f_):
                 f(static_cast<F&&>(f_))
             {}
+            thread_data(F& f_):
+                f(f_)
+            {}
 #else
             thread_data(F f_):
                 f(f_)
@@ -127,7 +130,7 @@ namespace boost
         }
         static inline detail::thread_data_ptr make_thread_info(void (*f)())
         {
-            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(f));
+            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(static_cast<void(*&&)()>(f)));
         }
 #else
         template<typename F>
@@ -141,8 +144,8 @@ namespace boost
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
 
-        struct dummy;
 #endif
+        struct dummy;
     public:
 #ifdef __SUNPRO_CC 
         thread(const volatile thread&); 
