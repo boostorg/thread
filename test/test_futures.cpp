@@ -1,4 +1,4 @@
-//  (C) Copyright 2008-9 Anthony Williams 
+//  (C) Copyright 2008-10 Anthony Williams 
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -89,7 +89,7 @@ void set_promise_exception_thread(boost::promise<int>* p)
 void test_store_value_from_thread()
 {
     boost::promise<int> pi2;
-    boost::unique_future<int> fi2=pi2.get_future();
+    boost::unique_future<int> fi2(pi2.get_future());
     boost::thread(set_promise_thread,&pi2);
     int j=fi2.get();
     BOOST_CHECK(j==42);
