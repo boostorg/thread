@@ -42,6 +42,7 @@ rule thread-run ( sources )
           [ thread-run test_thread_move_return.cpp ]
           [ thread-run test_thread_launching.cpp ]
           [ thread-run test_thread_mf.cpp ]
+          [ thread-run test_thread_exit.cpp ]
           [ thread-run test_move_function.cpp ]
           [ thread-run test_mutex.cpp ]
           [ thread-run test_condition_notify_one.cpp ]
