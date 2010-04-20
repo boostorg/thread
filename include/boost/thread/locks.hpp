@@ -422,6 +422,12 @@ namespace boost
     {
         lhs.swap(rhs);
     }
+
+    template<typename Mutex>
+    inline upgrade_lock<Mutex>&& move(upgrade_lock<Mutex>&& ul)
+    {
+        return ul;
+    }
 #endif
     template<typename Mutex>
     void swap(unique_lock<Mutex>& lhs,unique_lock<Mutex>& rhs)
@@ -678,6 +684,39 @@ namespace boost
         {
             try_lock();
         }
+#ifdef BOOST_HAS_RVALUE_REFS
+        upgrade_lock(upgrade_lock<Mutex>&& other):
+            m(other.m),is_locked(other.is_locked)
+        {
+            other.is_locked=false;
+            other.m=0;
+        }
+
+        upgrade_lock(unique_lock<Mutex>&& other):
+            m(other.m),is_locked(other.is_locked)
+        {
+            if(is_locked)
+            {
+                m->unlock_and_lock_upgrade();
+            }
+            other.is_locked=false;
+            other.m=0;
+        }
+
+        upgrade_lock& operator=(upgrade_lock<Mutex>&& other)
+        {
+            upgrade_lock temp(other);
+            swap(temp);
+            return *this;
+        }
+
+        upgrade_lock& operator=(unique_lock<Mutex>&& other)
+        {
+            upgrade_lock temp(other);
+            swap(temp);
+            return *this;
+        }
+#else
         upgrade_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
@@ -720,6 +759,7 @@ namespace boost
             swap(temp);
             return *this;
         }
+#endif
 
         void swap(upgrade_lock& other)
         {
@@ -824,6 +864,20 @@ namespace boost
             }
         }
 
+#ifdef BOOST_HAS_RVALUE_REFS
+        upgrade_to_unique_lock(upgrade_to_unique_lock<Mutex>&& other):
+            source(other.source),exclusive(move(other.exclusive))
+        {
+            other.source=0;
+        }
+        
+        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock<Mutex>&& other)
+        {
+            upgrade_to_unique_lock temp(other);
+            swap(temp);
+            return *this;
+        }
+#else
         upgrade_to_unique_lock(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other):
             source(other->source),exclusive(move(other->exclusive))
         {
@@ -836,6 +890,7 @@ namespace boost
             swap(temp);
             return *this;
         }
+#endif
         void swap(upgrade_to_unique_lock& other)
         {
             std::swap(source,other.source);
