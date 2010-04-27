@@ -75,7 +75,7 @@ namespace boost
                             {
                                 current=next;
                                 ++next;
-                                if(current->second.func && current->second.value)
+                                if(current->second.func && (current->second.value!=0))
                                 {
                                     (*current->second.func)(current->second.value);
                                 }
@@ -582,11 +582,11 @@ namespace boost
         {
             if(tss_data_node* const current_node=find_tss_data(key))
             {
-                if(cleanup_existing && current_node->func && current_node->value)
+                if(cleanup_existing && current_node->func && (current_node->value!=0))
                 {
                     (*current_node->func)(current_node->value);
                 }
-                if(func || tss_data)
+                if(func || (tss_data!=0))
                 {
                     current_node->func=func;
                     current_node->value=tss_data;
