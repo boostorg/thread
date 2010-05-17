@@ -381,12 +381,12 @@ namespace boost
     {
 #if defined(PTW32_VERSION) || defined(__hpux)
         return pthread_num_processors_np();
-#elif defined(_GNU_SOURCE)
-        return get_nprocs();
 #elif defined(__APPLE__) || defined(__FreeBSD__)
         int count;
         size_t size=sizeof(count);
         return sysctlbyname("hw.ncpu",&count,&size,NULL,0)?0:count;
+#elif defined(_GNU_SOURCE)
+        return get_nprocs();
 #elif defined(BOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
