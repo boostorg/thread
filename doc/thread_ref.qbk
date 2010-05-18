@@ -219,6 +219,7 @@ __thread_id__ yield a total order for every non-equal thread ID.
     };
 
     void swap(thread& lhs,thread& rhs);
+    detail::thread_move_t<thread> move(detail::thread_move_t<thread> t);
 
 [section:default_constructor Default Constructor]
 
@@ -518,6 +519,26 @@ value as `this->get_id()` prior to the call.]]
 [[Effects:] [[link thread.thread_management.thread.swap `lhs.swap(rhs)`].]]
 
 ]
+
+[endsect]
+
+[section:non_member_move Non-member function `move()`]
+
+    #include <boost/thread/thread.hpp>
+
+    detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
+
+[variablelist
+
+[[Returns:] [`t`.]]
+
+]
+
+Enables moving thread objects. e.g.
+
+    extern void some_func();
+    boost::thread t(some_func);
+    boost::thread t2(boost::move(t)); // transfer thread from t to t2
 
 [endsect]
 
