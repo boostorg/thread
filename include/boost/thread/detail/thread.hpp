@@ -3,10 +3,12 @@
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007-8 Anthony Williams
+// (C) Copyright 2007-10 Anthony Williams
  
 #include <boost/thread/exceptions.hpp>
+#ifndef BOOST_NO_IOSTREAM
 #include <ostream>
+#endif
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
@@ -430,6 +432,7 @@ namespace boost
             return !(thread_data<y.thread_data);
         }
 
+#ifndef BOOST_NO_IOSTREAM
         template<class charT, class traits>
         friend std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
@@ -443,6 +446,7 @@ namespace boost
                 return os<<"{Not-any-thread}";
             }
         }
+#endif
     };
 
     inline bool thread::operator==(const thread& other) const
