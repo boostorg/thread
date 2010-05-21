@@ -48,7 +48,11 @@ namespace boost
         
         void lock()
         {
-            BOOST_VERIFY(!pthread_mutex_lock(&m));
+            int const res=pthread_mutex_lock(&m);
+            if(res)
+            {
+                boost::throw_exception(lock_error(res));
+            }
         }
 
         void unlock()
@@ -59,7 +63,11 @@ namespace boost
         bool try_lock()
         {
             int const res=pthread_mutex_trylock(&m);
-            BOOST_ASSERT(!res || res==EBUSY);
+            if(res && (res!=EBUSY))
+            {
+                boost::throw_exception(lock_error(res));
+            }
+            
             return !res;
         }
 
