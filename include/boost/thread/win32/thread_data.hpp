@@ -145,7 +145,7 @@ namespace boost
             {}
         };
 
-        unsigned long pin_to_zero(long value)
+        inline unsigned long pin_to_zero(long value)
         {
             return (value<0)?0u:(unsigned long)value;
         }
