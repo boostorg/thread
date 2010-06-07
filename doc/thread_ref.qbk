@@ -251,6 +251,24 @@ __thread_id__ yield a total order for every non-equal thread ID.
 
 [endsect]
 
+[section:move_assignment Move assignment operator]
+
+    thread& operator=(detail::thread_move_t<thread> other);
+
+[variablelist
+
+[[Effects:] [Transfers ownership of the thread managed by `other` (if
+any) to `*this`. If there was a thread previously associated with
+`*this` then that thread is detached.]]
+
+[[Postconditions:] [`other->get_id()==thread::id()`]]
+
+[[Throws:] [Nothing]]
+
+]
+
+[endsect]
+
 [section:callable_constructor Thread Constructor]
 
     template<typename Callable>
