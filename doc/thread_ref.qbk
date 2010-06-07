@@ -235,6 +235,22 @@ __thread_id__ yield a total order for every non-equal thread ID.
 
 [endsect]
 
+[section:move_constructor Move Constructor]
+
+    thread(detail::thread_move_t<thread> other);
+
+[variablelist
+
+[[Effects:] [Transfers ownership of the thread managed by `other` (if any) to the newly constructed __thread__ instance.]]
+
+[[Postconditions:] [`other->get_id()==thread::id()`]]
+
+[[Throws:] [Nothing]]
+
+]
+
+[endsect]
+
 [section:callable_constructor Thread Constructor]
 
     template<typename Callable>
