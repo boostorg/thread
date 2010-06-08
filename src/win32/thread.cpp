@@ -356,7 +356,21 @@ namespace boost
                     else
                     {
                         long const hundred_nanoseconds_in_one_second=10000000;
-                        due_time.QuadPart+=target_time.abs_time.time_of_day().fractional_seconds()*(hundred_nanoseconds_in_one_second/target_time.abs_time.time_of_day().ticks_per_second());
+                        long const ticks_per_second=target_time.abs_time.time_of_day().ticks_per_second();
+                        if(ticks_per_second>hundred_nanoseconds_in_one_second)
+                        {
+                            long const ticks_per_hundred_nanoseconds=
+                                ticks_per_second/hundred_nanoseconds_in_one_second;
+                            due_time.QuadPart+=
+                                target_time.abs_time.time_of_day().fractional_seconds()/
+                                ticks_per_hundred_nanoseconds;
+                        }
+                        else
+                        {
+                            due_time.QuadPart+=
+                                target_time.abs_time.time_of_day().fractional_seconds()*
+                                (hundred_nanoseconds_in_one_second/ticks_per_second);
+                        }
                     }
                 }
                 return due_time;
