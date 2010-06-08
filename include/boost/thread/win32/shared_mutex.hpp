@@ -99,6 +99,10 @@ namespace boost
                 if(!new_state.exclusive && !new_state.exclusive_waiting_blocked)
                 {
                     ++new_state.shared_count;
+                    if(!new_state.shared_count)
+                    {
+                        return false;
+                    }
                 }
                 
                 state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
@@ -133,10 +137,18 @@ namespace boost
                     if(new_state.exclusive || new_state.exclusive_waiting_blocked)
                     {
                         ++new_state.shared_waiting;
+                        if(!new_state.shared_waiting)
+                        {
+                            boost::throw_exception(boost::lock_error());
+                        }
                     }
                     else
                     {
                         ++new_state.shared_count;
+                        if(!new_state.shared_count)
+                        {
+                            boost::throw_exception(boost::lock_error());
+                        }
                     }
 
                     state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
@@ -168,6 +180,10 @@ namespace boost
                         else
                         {
                             ++new_state.shared_count;
+                            if(!new_state.shared_count)
+                            {
+                                return false;
+                            }
                         }
 
                         state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
@@ -284,6 +300,11 @@ namespace boost
                     if(new_state.shared_count || new_state.exclusive)
                     {
                         ++new_state.exclusive_waiting;
+                        if(!new_state.exclusive_waiting)
+                        {
+                            boost::throw_exception(boost::lock_error());
+                        }
+                        
                         new_state.exclusive_waiting_blocked=true;
                     }
                     else
@@ -376,10 +397,18 @@ namespace boost
                     if(new_state.exclusive || new_state.exclusive_waiting_blocked || new_state.upgrade)
                     {
                         ++new_state.shared_waiting;
+                        if(!new_state.shared_waiting)
+                        {
+                            boost::throw_exception(boost::lock_error());
+                        }
                     }
                     else
                     {
                         ++new_state.shared_count;
+                        if(!new_state.shared_count)
+                        {
+                            boost::throw_exception(boost::lock_error());
+                        }
                         new_state.upgrade=true;
                     }
 
@@ -413,6 +442,10 @@ namespace boost
                 else
                 {
                     ++new_state.shared_count;
+                    if(!new_state.shared_count)
+                    {
+                        return false;
+                    }
                     new_state.upgrade=true;
                 }
                 
