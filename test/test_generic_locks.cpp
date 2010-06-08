@@ -296,10 +296,80 @@ void test_lock_five_in_range()
     }
 }
 
-void test_lock_ten_in_range()
+class dummy_iterator:
+    public std::iterator<std::forward_iterator_tag,
+                         dummy_mutex>
+{
+private:
+    dummy_mutex* p;
+public:
+    explicit dummy_iterator(dummy_mutex* p_):
+        p(p_)
+    {}
+    
+    bool operator==(dummy_iterator const& other) const
+    {
+        return p==other.p;
+    }
+
+    bool operator!=(dummy_iterator const& other) const
+    {
+        return p!=other.p;
+    }
+
+    bool operator<(dummy_iterator const& other) const
+    {
+        return p<other.p;
+    }
+    
+    dummy_mutex& operator*() const
+    {
+        return *p;
+    }
+
+    dummy_mutex* operator->() const
+    {
+        return p;
+    }
+    
+    dummy_iterator operator++(int)
+    {
+        dummy_iterator temp(*this);
+        ++p;
+        return temp;
+    }
+    
+    dummy_iterator& operator++()
+    {
+        ++p;
+        return *this;
+    }
+    
+};
+    
+
+void test_lock_five_in_range_custom_iterator()
+{
+    unsigned const num_mutexes=5;
+    dummy_mutex mutexes[num_mutexes];
+
+    boost::lock(dummy_iterator(mutexes),dummy_iterator(mutexes+num_mutexes));
+    
+    for(unsigned i=0;i<num_mutexes;++i)
+    {
+        BOOST_CHECK(mutexes[i].is_locked);
+    }
+}
+
+class dummy_mutex2:
+    public dummy_mutex
+{};
+
+
+void test_lock_ten_in_range_inherited_mutex()
 {
     unsigned const num_mutexes=10;
-    dummy_mutex mutexes[num_mutexes];
+    dummy_mutex2 mutexes[num_mutexes];
 
     boost::lock(mutexes,mutexes+num_mutexes);
     
@@ -510,7 +580,8 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_lock_five_other_thread_locks_in_order));
     test->add(BOOST_TEST_CASE(&test_lock_five_other_thread_locks_in_different_order));
     test->add(BOOST_TEST_CASE(&test_lock_five_in_range));
-    test->add(BOOST_TEST_CASE(&test_lock_ten_in_range));
+    test->add(BOOST_TEST_CASE(&test_lock_five_in_range_custom_iterator));
+    test->add(BOOST_TEST_CASE(&test_lock_ten_in_range_inherited_mutex));
     test->add(BOOST_TEST_CASE(&test_lock_ten_other_thread_locks_in_different_order));
     test->add(BOOST_TEST_CASE(&test_try_lock_two_uncontended));
     test->add(BOOST_TEST_CASE(&test_try_lock_two_first_locked));
