@@ -149,7 +149,7 @@ namespace boost
 #endif
         struct dummy;
     public:
-#ifdef __SUNPRO_CC 
+#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         thread(const volatile thread&); 
 #endif 
         thread();
@@ -219,7 +219,7 @@ namespace boost
             x->thread_info.reset();
         }
        
-#ifdef __SUNPRO_CC 
+#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         thread& operator=(thread x) 
         { 
             swap(x); 
