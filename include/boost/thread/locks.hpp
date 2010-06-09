@@ -1234,7 +1234,7 @@ namespace boost
         {
             unsigned const lock_count=2;
             unsigned lock_first=0;
-            while(true)
+            for(;;)
             {
                 switch(lock_first)
                 {
@@ -1287,7 +1287,7 @@ namespace boost
     {
         unsigned const lock_count=3;
         unsigned lock_first=0;
-        while(true)
+        for(;;)
         {
             switch(lock_first)
             {
@@ -1319,7 +1319,7 @@ namespace boost
     {
         unsigned const lock_count=4;
         unsigned lock_first=0;
-        while(true)
+        for(;;)
         {
             switch(lock_first)
             {
@@ -1357,7 +1357,7 @@ namespace boost
     {
         unsigned const lock_count=5;
         unsigned lock_first=0;
-        while(true)
+        for(;;)
         {
             switch(lock_first)
             {
