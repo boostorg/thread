@@ -304,7 +304,7 @@ namespace boost
     
     unsigned thread::hardware_concurrency()
     {
-        SYSTEM_INFO info={0};
+        SYSTEM_INFO info={{0}};
         GetSystemInfo(&info);
         return info.dwNumberOfProcessors;
     }
@@ -327,7 +327,7 @@ namespace boost
         {
             LARGE_INTEGER get_due_time(detail::timeout const&  target_time)
             {
-                LARGE_INTEGER due_time={0};
+                LARGE_INTEGER due_time={{0}};
                 if(target_time.relative)
                 {
                     unsigned long const elapsed_milliseconds=GetTickCount()-target_time.start;
