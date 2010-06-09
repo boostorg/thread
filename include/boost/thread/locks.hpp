@@ -47,7 +47,9 @@ namespace boost
             struct fallback { int member_name; };                       \
             struct derived:                                             \
                 T, fallback                                             \
-            {};                                                         \
+            {                                                           \
+                derived();                                              \
+            };                                                          \
                                                                         \
             template<int fallback::*> struct tester;                    \
                                                                         \
