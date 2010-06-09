@@ -396,7 +396,7 @@ namespace boost
             thread_data(thread_data_)
         {}
         friend class thread;
-        friend id this_thread::get_id();
+        friend id BOOST_THREAD_DECL this_thread::get_id();
     public:
         id():
             thread_data()
