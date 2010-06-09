@@ -20,7 +20,7 @@
 #include "platform.hpp"
 
 // compatibility with the rest of Boost's auto-linking code:
-#if defined(BOOST_THREAD_DYN_DLL) || defined(BOOST_ALL_DYN_LINK)
+#if defined(BOOST_THREAD_DYN_LINK) || defined(BOOST_ALL_DYN_LINK)
 # undef  BOOST_THREAD_USE_LIB
 # define BOOST_THREAD_USE_DLL
 #endif
