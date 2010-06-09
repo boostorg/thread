@@ -115,7 +115,6 @@ namespace boost
 
         void release_handle();
         
-        mutable boost::mutex thread_info_mutex;
         detail::thread_data_ptr thread_info;
 
         void start_thread();
