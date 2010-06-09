@@ -811,11 +811,14 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
     {
         template<typename TimeDuration>
         void sleep(TimeDuration const& rel_time);
+        void sleep(system_time const& abs_time)
     }
 
 [variablelist
 
-[[Effects:] [Suspends the current thread until the specified time has elapsed.]]
+[[Effects:] [Suspends the current thread until the time period
+specified by `rel_time` has elapsed or the time point specified by
+`abs_time` has been reached.]]
 
 [[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
 
