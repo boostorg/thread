@@ -9,6 +9,8 @@
 #include <stdexcept>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/thread_time.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
