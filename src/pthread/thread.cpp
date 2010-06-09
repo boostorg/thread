@@ -198,7 +198,6 @@ namespace boost
 
     detail::thread_data_ptr thread::get_thread_info() const
     {
-        lock_guard<mutex> l(thread_info_mutex);
         return thread_info;
     }
 
@@ -238,7 +237,6 @@ namespace boost
                 local_thread_info->done_condition.notify_all();
             }
             
-            lock_guard<mutex> l1(thread_info_mutex);
             if(thread_info==local_thread_info)
             {
                 thread_info.reset();
@@ -285,7 +283,6 @@ namespace boost
                 local_thread_info->done_condition.notify_all();
             }
             
-            lock_guard<mutex> l1(thread_info_mutex);
             if(thread_info==local_thread_info)
             {
                 thread_info.reset();
@@ -303,10 +300,7 @@ namespace boost
     void thread::detach()
     {
         detail::thread_data_ptr local_thread_info;
-        {
-            lock_guard<mutex> l1(thread_info_mutex);
-            thread_info.swap(local_thread_info);
-        }
+        thread_info.swap(local_thread_info);
         
         if(local_thread_info)
         {

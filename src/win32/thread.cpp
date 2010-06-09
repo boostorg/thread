@@ -283,7 +283,6 @@ namespace boost
 
     void thread::release_handle()
     {
-        lock_guard<mutex> l1(thread_info_mutex);
         thread_info=0;
     }
     
@@ -317,7 +316,6 @@ namespace boost
 
     detail::thread_data_ptr thread::get_thread_info() const
     {
-        boost::mutex::scoped_lock l(thread_info_mutex);
         return thread_info;
     }
 
