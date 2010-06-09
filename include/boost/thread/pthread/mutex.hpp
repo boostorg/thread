@@ -27,10 +27,11 @@
 
 namespace boost
 {
-    class mutex:
-        boost::noncopyable
+    class mutex
     {
     private:
+        mutex(mutex const&);
+        mutex& operator=(mutex const&);        
         pthread_mutex_t m;
     public:
         mutex()
@@ -83,9 +84,11 @@ namespace boost
 
     typedef mutex try_mutex;
 
-    class timed_mutex:
-        boost::noncopyable
+    class timed_mutex
     {
+    private:
+        timed_mutex(timed_mutex const&);
+        timed_mutex& operator=(timed_mutex const&);        
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK

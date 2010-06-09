@@ -30,10 +30,11 @@
 
 namespace boost
 {
-    class recursive_mutex:
-        boost::noncopyable
+    class recursive_mutex
     {
     private:
+        recursive_mutex(recursive_mutex const&);
+        recursive_mutex& operator=(recursive_mutex const&);        
         pthread_mutex_t m;
     public:
         recursive_mutex()
@@ -92,9 +93,11 @@ namespace boost
 
     typedef recursive_mutex recursive_try_mutex;
 
-    class recursive_timed_mutex:
-        boost::noncopyable
+    class recursive_timed_mutex
     {
+    private:
+        recursive_timed_mutex(recursive_timed_mutex const&);
+        recursive_timed_mutex& operator=(recursive_timed_mutex const&);        
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK

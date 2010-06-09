@@ -19,9 +19,11 @@
 
 namespace boost
 {
-    class shared_mutex:
-        private boost::noncopyable
+    class shared_mutex
     {
+    private:
+        shared_mutex(shared_mutex const&);
+        shared_mutex& operator=(shared_mutex const&);        
     private:
         struct state_data
         {
