@@ -591,22 +591,22 @@ namespace boost
             }
         }
     }
+    BOOST_THREAD_DECL void __cdecl on_process_enter()
+    {}
+
+    BOOST_THREAD_DECL void __cdecl on_thread_enter()
+    {}
+
+    BOOST_THREAD_DECL void __cdecl on_process_exit()
+    {
+        boost::cleanup_tls_key();
+    }
+
+    BOOST_THREAD_DECL void __cdecl on_thread_exit()
+    {
+        boost::run_thread_exit_callbacks();
+    }
+
 }
 
-
-extern "C" BOOST_THREAD_DECL void on_process_enter()
-{}
-
-extern "C" BOOST_THREAD_DECL void on_thread_enter()
-{}
-
-extern "C" BOOST_THREAD_DECL void on_process_exit()
-{
-    boost::cleanup_tls_key();
-}
-
-extern "C" BOOST_THREAD_DECL void on_thread_exit()
-{
-    boost::run_thread_exit_callbacks();
-}
 
