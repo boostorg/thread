@@ -43,6 +43,7 @@ project boost/thread
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
       <tag>@$(__name__).tag
+      <toolset>gcc:<cxxflags>-Wno-long-long
     : default-build <threading>multi
     ;
 
