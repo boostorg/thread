@@ -18,7 +18,7 @@
     template<typename T>
     typename boost::remove_reference<T>::type&& cast_to_rval(T&& t)
     {
-        return t;
+        return static_cast<boost::remove_reference<T>::type&&>(t);
     }
 #else
     template<typename T>
