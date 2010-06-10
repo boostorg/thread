@@ -556,7 +556,7 @@ void wait_callback(boost::promise<int>& pi)
     }
 }
 
-void do_nothing_callback(boost::promise<int>& pi)
+void do_nothing_callback(boost::promise<int>& /*pi*/)
 {
     boost::lock_guard<boost::mutex> lk(callback_mutex);
     ++callback_called;
