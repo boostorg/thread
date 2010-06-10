@@ -432,6 +432,7 @@ namespace boost
         }
 
 #ifndef BOOST_NO_IOSTREAM
+#ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
         template<class charT, class traits>
         friend std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
@@ -445,8 +446,33 @@ namespace boost
                 return os<<"{Not-any-thread}";
             }
         }
+#else
+        template<class charT, class traits>
+        std::basic_ostream<charT, traits>& 
+        print(std::basic_ostream<charT, traits>& os)
+        {
+            if(thread_data)
+            {
+                return os<<thread_data;
+            }
+            else
+            {
+                return os<<"{Not-any-thread}";
+            }
+        }
+
+#endif
 #endif
     };
+
+#if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
+    template<class charT, class traits>
+    std::basic_ostream<charT, traits>& 
+    operator<<(std::basic_ostream<charT, traits>& os, const id& x)
+    {
+        return x.print(os);
+    }
+#endif
 
     inline bool thread::operator==(const thread& other) const
     {
