@@ -40,9 +40,9 @@ namespace {
 
 extern "C" {
 
-    void (* after_ctors )(void) __attribute__((section(".ctors")))     = boost::on_process_enter;
-    void (* before_dtors)(void) __attribute__((section(".dtors")))     = boost::on_thread_exit;
-    void (* after_dtors )(void) __attribute__((section(".dtors.zzz"))) = boost::on_process_exit;
+    void (* after_ctors )() __attribute__((section(".ctors")))     = boost::on_process_enter;
+    void (* before_dtors)() __attribute__((section(".dtors")))     = boost::on_thread_exit;
+    void (* after_dtors )() __attribute__((section(".dtors.zzz"))) = boost::on_process_exit;
 
     ULONG __tls_index__ = 0;
     char __tls_end__ __attribute__((section(".tls$zzz"))) = 0;
@@ -77,13 +77,13 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
     //Definitions required by implementation
 
     #if (_MSC_VER < 1300) // 1300 == VC++ 7.0
-        typedef void (__cdecl *_PVFV)(void);
+        typedef void (__cdecl *_PVFV)();
         #define INIRETSUCCESS
-        #define PVAPI void
+        #define PVAPI void __cdecl
     #else
-        typedef int (__cdecl *_PVFV)(void);
+        typedef int (__cdecl *_PVFV)();
         #define INIRETSUCCESS 0
-        #define PVAPI int
+        #define PVAPI int __cdecl
     #endif
 
     typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
@@ -100,9 +100,9 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
     {
         //Forward declarations
 
-        static PVAPI on_tls_prepare(void);
-        static PVAPI on_process_init(void);
-        static PVAPI on_process_term(void);
+        static PVAPI on_tls_prepare();
+        static PVAPI on_process_init();
+        static PVAPI on_process_term();
         static void NTAPI on_tls_callback(HINSTANCE, DWORD, PVOID);
 
         //The .CRT$Xxx information is taken from Codeguru:
@@ -157,7 +157,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma warning(disable:4189)
 #endif
 
-        PVAPI on_tls_prepare(void)
+        PVAPI on_tls_prepare()
         {
             //The following line has an important side effect:
             //if the TLS directory is not already there, it will
@@ -198,7 +198,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
 #pragma warning(pop)
 #endif
 
-        PVAPI on_process_init(void)
+        PVAPI on_process_init()
         {
             //Schedule on_thread_exit() to be called for the main
             //thread before destructors of global objects have been
@@ -218,7 +218,7 @@ extern "C" const IMAGE_TLS_DIRECTORY32 _tls_used __attribute__ ((section(".rdata
             return INIRETSUCCESS;
         }
 
-        PVAPI on_process_term(void)
+        PVAPI on_process_term()
         {
             boost::on_process_exit();
             return INIRETSUCCESS;
