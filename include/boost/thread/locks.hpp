@@ -489,7 +489,7 @@ namespace boost
     template<typename Mutex>
     inline upgrade_lock<Mutex>&& move(upgrade_lock<Mutex>&& ul)
     {
-        return ul;
+        return static_cast<upgrade_lock<Mutex>&&>(ul);
     }
 #endif
     template<typename Mutex>
