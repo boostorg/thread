@@ -468,7 +468,7 @@ namespace boost
 #if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template<class charT, class traits>
     std::basic_ostream<charT, traits>& 
-    operator<<(std::basic_ostream<charT, traits>& os, const id& x)
+    operator<<(std::basic_ostream<charT, traits>& os, const thread::id& x)
     {
         return x.print(os);
     }
