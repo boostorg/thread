@@ -244,17 +244,17 @@ namespace boost
     
     thread::id thread::get_id() const
     {
-        return thread::id(get_thread_info());
+        return thread::id((get_thread_info)());
     }
 
     bool thread::joinable() const
     {
-        return get_thread_info();
+        return (get_thread_info)();
     }
 
     void thread::join()
     {
-        detail::thread_data_ptr local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             this_thread::interruptible_wait(local_thread_info->thread_handle,detail::timeout::sentinel());
@@ -264,7 +264,7 @@ namespace boost
 
     bool thread::timed_join(boost::system_time const& wait_until)
     {
-        detail::thread_data_ptr local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             if(!this_thread::interruptible_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
@@ -288,7 +288,7 @@ namespace boost
     
     void thread::interrupt()
     {
-        detail::thread_data_ptr local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             local_thread_info->interrupt();
@@ -297,7 +297,7 @@ namespace boost
     
     bool thread::interruption_requested() const
     {
-        detail::thread_data_ptr local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
     }
     
@@ -310,11 +310,11 @@ namespace boost
     
     thread::native_handle_type thread::native_handle()
     {
-        detail::thread_data_ptr local_thread_info=get_thread_info();
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
         return local_thread_info?(detail::win32::handle)local_thread_info->thread_handle:detail::win32::invalid_handle_value;
     }
 
-    detail::thread_data_ptr thread::get_thread_info() const
+    detail::thread_data_ptr thread::get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const
     {
         return thread_info;
     }
