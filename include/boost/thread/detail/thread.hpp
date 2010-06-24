@@ -121,7 +121,7 @@ namespace boost
         
         explicit thread(detail::thread_data_ptr data);
 
-        detail::thread_data_ptr get_thread_info() const;
+        detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         template<typename F>
