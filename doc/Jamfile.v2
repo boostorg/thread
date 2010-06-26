@@ -26,11 +26,6 @@ boostbook standalone
         <xsl:param>generate.section.toc.level=10
         # Path for links to Boost:
         <xsl:param>boost.root=../../../..
-        # Path for libraries index:
-        <xsl:param>boost.libraries=../../../../libs/libraries.htm
-        # Use the main Boost stylesheet:
-        <xsl:param>html.stylesheet=../../../../doc/html/boostbook.css
-        
     ;
 
 
