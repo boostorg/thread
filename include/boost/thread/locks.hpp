@@ -1041,15 +1041,15 @@ namespace boost
                 return *this;
             }
 
-            void swap(try_lock_wrapper& other)
-            {
-                base::swap(other);
-            }
             void swap(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
             {
                 base::swap(*other);
             }
 #endif
+            void swap(try_lock_wrapper& other)
+            {
+                base::swap(other);
+            }
             void lock()
             {
                 base::lock();
