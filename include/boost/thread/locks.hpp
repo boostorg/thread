@@ -491,6 +491,12 @@ namespace boost
     {
         return static_cast<upgrade_lock<Mutex>&&>(ul);
     }
+
+    template<typename Mutex>
+    inline upgrade_lock<Mutex>&& move(upgrade_lock<Mutex>& ul)
+    {
+        return static_cast<upgrade_lock<Mutex>&&>(ul);
+    }
 #endif
     template<typename Mutex>
     void swap(unique_lock<Mutex>& lhs,unique_lock<Mutex>& rhs)
@@ -768,14 +774,14 @@ namespace boost
 
         upgrade_lock& operator=(upgrade_lock<Mutex>&& other)
         {
-            upgrade_lock temp(other);
+            upgrade_lock temp(static_cast<upgrade_lock<Mutex>&&>(other));
             swap(temp);
             return *this;
         }
 
         upgrade_lock& operator=(unique_lock<Mutex>&& other)
         {
-            upgrade_lock temp(other);
+            upgrade_lock temp(static_cast<unique_lock<Mutex>&&>(other));
             swap(temp);
             return *this;
         }

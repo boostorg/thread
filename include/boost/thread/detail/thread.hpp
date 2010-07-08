@@ -158,7 +158,7 @@ namespace boost
 #ifdef BOOST_MSVC
         template <class F>
         explicit thread(F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
-            thread_info(make_thread_info(f))
+            thread_info(make_thread_info(static_cast<F&&>(f)))
         {
             start_thread();
         }
