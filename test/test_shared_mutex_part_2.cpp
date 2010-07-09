@@ -138,6 +138,14 @@ void test_can_lock_upgrade_if_currently_locked_shared()
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_running,reader_count+1);
 }
 
+void test_can_lock_upgrade_to_unique_if_currently_locked_upgrade()
+{
+    boost::shared_mutex mtx;
+    boost::upgrade_lock<boost::shared_mutex> l(mtx);
+    boost::upgrade_to_unique_lock<boost::shared_mutex> ul(l);
+    BOOST_CHECK(ul.owns_lock());
+}
+
 void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
 {
 
@@ -282,6 +290,7 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
     test->add(BOOST_TEST_CASE(&test_only_one_upgrade_lock_permitted));
     test->add(BOOST_TEST_CASE(&test_can_lock_upgrade_if_currently_locked_shared));
+    test->add(BOOST_TEST_CASE(&test_can_lock_upgrade_to_unique_if_currently_locked_upgrade));
     test->add(BOOST_TEST_CASE(&test_if_other_thread_has_write_lock_try_lock_shared_returns_false));
     test->add(BOOST_TEST_CASE(&test_if_no_thread_has_lock_try_lock_shared_returns_true));
     test->add(BOOST_TEST_CASE(&test_if_other_thread_has_shared_lock_try_lock_shared_returns_true));
