@@ -1041,6 +1041,8 @@ void test_wait_for_any_from_range()
         }
         boost::thread(::cast_to_rval(tasks[i]));
     
+        BOOST_CHECK(boost::wait_for_any(futures,futures)==futures);
+        
         boost::unique_future<int>* const future=boost::wait_for_any(futures,futures+count);
     
         BOOST_CHECK(future==(futures+i));
