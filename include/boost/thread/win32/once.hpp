@@ -34,10 +34,9 @@ namespace boost
     {
         long status;
         long count;
-        long throw_count;
     };
 
-#define BOOST_ONCE_INIT {0,0,0}
+#define BOOST_ONCE_INIT {0,0}
 
     namespace detail
     {
@@ -128,7 +127,6 @@ namespace boost
         long status;
         bool counted=false;
         detail::win32::handle_manager event_handle;
-        long throw_count=0;
         detail::once_char_type mutex_name[detail::once_mutex_name_length];
         mutex_name[0]=0;
 
@@ -164,15 +162,10 @@ namespace boost
                     {
                         ::boost::detail::win32::SetEvent(event_handle);
                     }
-                    throw_count=::boost::detail::interlocked_read_acquire(&flag.throw_count);
                     break;
                 }
                 catch(...)
                 {
-                    if(counted)
-                    {
-                        BOOST_INTERLOCKED_INCREMENT(&flag.throw_count);
-                    }
                     BOOST_INTERLOCKED_EXCHANGE(&flag.status,0);
                     if(!event_handle)
                     {
