@@ -554,6 +554,9 @@ namespace boost
     template<typename Iterator>
     typename boost::disable_if<is_future_type<Iterator>,Iterator>::type wait_for_any(Iterator begin,Iterator end)
     {
+        if(begin==end)
+            return end;
+        
         detail::future_waiter waiter;
         for(Iterator current=begin;current!=end;++current)
         {
