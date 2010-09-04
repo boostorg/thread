@@ -31,6 +31,8 @@
 # bjam msvc-8.0 --with-thread install threadapi=pthread
 #########################################################################
 
+ECHO "THREAD JAMFILE" [ BACKTRACE ] ;
+
 import os ;
 import feature ;
 import indirect ;
