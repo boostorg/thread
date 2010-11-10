@@ -56,7 +56,8 @@ namespace boost
         void set_current_thread_data(detail::thread_data_base* new_data)
         {
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
-            BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
+            if(current_thread_tls_key)
+                BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
         }
 
 #ifdef BOOST_NO_THREADEX
@@ -226,6 +227,10 @@ namespace boost
 
         detail::thread_data_base* get_or_make_current_thread_data()
         {
+            if(!current_thread_tls_key)
+            {
+                throw thread_resource_error();
+            }
             detail::thread_data_base* current_thread_data(get_current_thread_data());
             if(!current_thread_data)
             {
@@ -540,8 +545,8 @@ namespace boost
         {
             detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
             thread_exit_callback_node* const new_node=
-                heap_new<thread_exit_callback_node>(func,
-                                                    current_thread_data->thread_exit_callbacks);
+                heap_new<thread_exit_callback_node>(
+                    func,current_thread_data->thread_exit_callbacks);
             current_thread_data->thread_exit_callbacks=new_node;
         }
 
@@ -583,10 +588,11 @@ namespace boost
                 current_node->func=func;
                 current_node->value=tss_data;
             }
-            else
+            else if(func && tss_data)
             {
                 detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
-                tss_data_node* const new_node=heap_new<tss_data_node>(key,func,tss_data,current_thread_data->tss_data);
+                tss_data_node* const new_node=
+                    heap_new<tss_data_node>(key,func,tss_data,current_thread_data->tss_data);
                 current_thread_data->tss_data=new_node;
             }
         }
