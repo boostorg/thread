@@ -41,6 +41,11 @@ order. If a cleanup routine sets the value of associated with an instance of `bo
 cleaned up, that value is added to the cleanup list. Cleanup finishes when there are no outstanding instances of
 `boost::thread_specific_ptr` with values.
 
+Note: on some platforms, cleanup of thread-specific data is not
+performed for threads created with the platform's native API. On those
+platforms such cleanup is only done for threads that are started with
+`boost::thread` unless `boost::on_thread_exit()` is called manually
+from that thread.
 
 [section:thread_specific_ptr Class `thread_specific_ptr`]
 
