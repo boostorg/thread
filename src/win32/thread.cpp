@@ -58,6 +58,8 @@ namespace boost
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
             if(current_thread_tls_key)
                 BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
+            else
+                boost::throw_exception(thread_resource_error());
         }
 
 #ifdef BOOST_NO_THREADEX
@@ -222,15 +224,19 @@ namespace boost
         void make_external_thread_data()
         {
             externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
-            set_current_thread_data(me);
+            try
+            {
+                set_current_thread_data(me);
+            }
+            catch(...)
+            {
+                detail::heap_delete(me);
+                throw;
+            }
         }
 
         detail::thread_data_base* get_or_make_current_thread_data()
         {
-            if(!current_thread_tls_key)
-            {
-                throw thread_resource_error();
-            }
             detail::thread_data_base* current_thread_data(get_current_thread_data());
             if(!current_thread_data)
             {
