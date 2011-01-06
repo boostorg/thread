@@ -47,12 +47,18 @@ namespace boost
     
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
-        thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
-        detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
-        guard.activate(m);
-        int const res=pthread_cond_wait(&cond,&internal_mutex);
-        BOOST_ASSERT(!res);
-        this_thread::interruption_point();
+        int res=0;
+        {
+            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+            detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+            guard.activate(m);
+            res=pthread_cond_wait(&cond,&internal_mutex);
+            this_thread::interruption_point();
+        }
+        if(res)
+        {
+            boost::throw_exception(condition_error());
+        }
     }
 
     inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
@@ -67,7 +73,10 @@ namespace boost
         {
             return false;
         }
-        BOOST_ASSERT(!cond_res);
+        if(cond_res)
+        {
+            boost::throw_exception(condition_error());
+        }
         return true;
     }
 
