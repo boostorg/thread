@@ -32,7 +32,12 @@ namespace boost
         {
             tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             current_thread_tls_key=TlsAlloc();
-            BOOST_ASSERT(current_thread_tls_key!=TLS_OUT_OF_INDEXES);
+			#if defined(UNDER_CE)
+				// Windows CE does not define the TLS_OUT_OF_INDEXES constant.
+				BOOST_ASSERT(current_thread_tls_key!=0xFFFFFFFF);
+			#else
+				BOOST_ASSERT(current_thread_tls_key!=TLS_OUT_OF_INDEXES);
+			#endif
         }
 
         void cleanup_tls_key()
