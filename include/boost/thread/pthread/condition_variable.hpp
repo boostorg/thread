@@ -53,8 +53,8 @@ namespace boost
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
             guard.activate(m);
             res=pthread_cond_wait(&cond,&internal_mutex);
-            this_thread::interruption_point();
         }
+        this_thread::interruption_point();
         if(res)
         {
             boost::throw_exception(condition_error());
@@ -64,10 +64,13 @@ namespace boost
     inline bool condition_variable::timed_wait(unique_lock<mutex>& m,boost::system_time const& wait_until)
     {
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
-        detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
-        guard.activate(m);
-        struct timespec const timeout=detail::get_timespec(wait_until);
-        int const cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+        int cond_res;
+        {
+            detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+            guard.activate(m);
+            struct timespec const timeout=detail::get_timespec(wait_until);
+            int const cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+        }
         this_thread::interruption_point();
         if(cond_res==ETIMEDOUT)
         {
@@ -130,8 +133,8 @@ namespace boost
                 detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
                 guard.activate(m);
                 res=pthread_cond_wait(&cond,&internal_mutex);
-                this_thread::interruption_point();
             }
+            this_thread::interruption_point();
             if(res)
             {
                 boost::throw_exception(condition_error());
@@ -154,8 +157,8 @@ namespace boost
                 detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
                 guard.activate(m);
                 res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
-                this_thread::interruption_point();
             }
+            this_thread::interruption_point();
             if(res==ETIMEDOUT)
             {
                 return false;
