@@ -69,7 +69,7 @@ namespace boost
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
             guard.activate(m);
             struct timespec const timeout=detail::get_timespec(wait_until);
-            int const cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+            cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
         }
         this_thread::interruption_point();
         if(cond_res==ETIMEDOUT)
