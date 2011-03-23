@@ -11,7 +11,7 @@
 
 #if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
 
-#if #if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__)
+#if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__)
 
 #include <boost/thread/detail/tss_hooks.hpp>
 
