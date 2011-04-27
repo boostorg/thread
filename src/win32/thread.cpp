@@ -67,7 +67,7 @@ namespace boost
                 boost::throw_exception(thread_resource_error());
         }
 
-#ifdef BOOST_NO_THREADEX
+#ifndef BOOST_HAS_THREADEX
 // Windows CE doesn't define _beginthreadex
 
         struct ThreadProxyData
