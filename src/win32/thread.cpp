@@ -9,7 +9,6 @@
 
 #include <boost/thread/thread.hpp>
 #include <algorithm>
-#include <windows.h>
 #ifndef UNDER_CE
 #include <process.h>
 #endif
@@ -20,6 +19,7 @@
 #include <boost/throw_exception.hpp>
 #include <boost/thread/detail/tss_hooks.hpp>
 #include <boost/date_time/posix_time/conversion.hpp>
+#include <windows.h>
 
 namespace boost
 {
@@ -67,7 +67,7 @@ namespace boost
                 boost::throw_exception(thread_resource_error());
         }
 
-#ifdef BOOST_NO_THREADEX
+#ifndef BOOST_HAS_THREADEX
 // Windows CE doesn't define _beginthreadex
 
         struct ThreadProxyData
