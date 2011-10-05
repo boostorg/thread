@@ -251,9 +251,9 @@ void test_timed_lock_times_out_but_read_lock_succeeds_if_read_lock_held()
 }
 
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: shared_mutex test suite");
 
     test->add(BOOST_TEST_CASE(&test_timed_lock_shared_times_out_if_write_lock_held));

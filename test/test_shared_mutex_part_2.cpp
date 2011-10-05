@@ -283,9 +283,9 @@ void test_if_other_thread_has_upgrade_lock_try_lock_upgrade_returns_false()
     writer.join();
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: shared_mutex test suite");
 
     test->add(BOOST_TEST_CASE(&test_only_one_upgrade_lock_permitted));

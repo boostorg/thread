@@ -11,9 +11,9 @@ void test_hardware_concurrency_is_non_zero()
     BOOST_CHECK(boost::thread::hardware_concurrency()!=0);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: hardware concurrency test suite");
 
     test->add(BOOST_TEST_CASE(test_hardware_concurrency_is_non_zero));

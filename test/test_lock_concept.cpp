@@ -546,9 +546,9 @@ void test_shared_lock()
     BOOST_CHECK(dummy.shared_timed_locked_absolute);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: lock concept test suite");
 
     typedef boost::mpl::vector<boost::mutex,boost::try_mutex,boost::timed_mutex,

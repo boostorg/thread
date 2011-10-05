@@ -178,9 +178,9 @@ void test_condition_wait_is_a_interruption_point()
     timed_test(&do_test_condition_wait_is_a_interruption_point, 1);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: condition test suite");
 
     test->add(BOOST_TEST_CASE(&test_condition_waits));
