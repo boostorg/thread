@@ -108,9 +108,9 @@ void test_move_for_user_defined_type_unaffected()
     BOOST_CHECK(user_test_ns::move_called);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: thread move test suite");
 
     test->add(BOOST_TEST_CASE(test_thread_move_from_lvalue_on_construction));
