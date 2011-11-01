@@ -568,9 +568,9 @@ void test_try_lock_five()
 
 
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: generic locks test suite");
 
     test->add(BOOST_TEST_CASE(&test_lock_two_uncontended));
