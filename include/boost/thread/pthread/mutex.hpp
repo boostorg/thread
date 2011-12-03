@@ -14,8 +14,8 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/assert.hpp>
 #include <errno.h>
-#include "timespec.hpp"
-#include "pthread_mutex_scoped_lock.hpp"
+#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
@@ -31,7 +31,7 @@ namespace boost
     {
     private:
         mutex(mutex const&);
-        mutex& operator=(mutex const&);        
+        mutex& operator=(mutex const&);
         pthread_mutex_t m;
     public:
         mutex()
@@ -46,7 +46,7 @@ namespace boost
         {
             BOOST_VERIFY(!pthread_mutex_destroy(&m));
         }
-        
+
         void lock()
         {
             int const res=pthread_mutex_lock(&m);
@@ -60,7 +60,7 @@ namespace boost
         {
             BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
-        
+
         bool try_lock()
         {
             int const res=pthread_mutex_trylock(&m);
@@ -68,7 +68,7 @@ namespace boost
             {
                 boost::throw_exception(lock_error(res));
             }
-            
+
             return !res;
         }
 
@@ -88,7 +88,7 @@ namespace boost
     {
     private:
         timed_mutex(timed_mutex const&);
-        timed_mutex& operator=(timed_mutex const&);        
+        timed_mutex& operator=(timed_mutex const&);
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
@@ -141,7 +141,7 @@ namespace boost
         {
             BOOST_VERIFY(!pthread_mutex_unlock(&m));
         }
-        
+
         bool try_lock()
         {
             int const res=pthread_mutex_trylock(&m);
@@ -179,7 +179,7 @@ namespace boost
             is_locked=false;
             BOOST_VERIFY(!pthread_cond_signal(&cond));
         }
-        
+
         bool try_lock()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);

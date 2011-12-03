@@ -5,10 +5,10 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-10 Anthony Williams
 
-#include "timespec.hpp"
-#include "pthread_mutex_scoped_lock.hpp"
-#include "thread_data.hpp"
-#include "condition_variable_fwd.hpp"
+#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#include <boost/thread/pthread/thread_data.hpp>
+#include <boost/thread/pthread/condition_variable_fwd.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 

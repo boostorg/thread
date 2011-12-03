@@ -17,8 +17,8 @@
 #endif
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <errno.h>
-#include "timespec.hpp"
-#include "pthread_mutex_scoped_lock.hpp"
+#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
