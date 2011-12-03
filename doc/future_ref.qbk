@@ -701,7 +701,7 @@ required for storage of the result cannot be allocated.]]
 
 [variablelist
 
-[[Preconditions:] [The expression `f(t)` where `t` is a lvalue of type __packaged_task__ shall be well-formed. Invoking a copy of
+[[Preconditions:] [The expression `f(t)` where `t` is a lvalue of type __promise__ shall be well-formed. Invoking a copy of
 `f` shall have the same effect as invoking `f`]]
 
 [[Effects:] [Store a copy of `f` with the asynchronous result associated with `*this` as a ['wait callback]. This will replace any
