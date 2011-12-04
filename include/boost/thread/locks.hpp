@@ -715,6 +715,11 @@ namespace boost
     {
         lhs.swap(rhs);
     }
+    template<typename Mutex>
+    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs)
+    {
+        lhs.swap(rhs);
+    }
 #else
     template<typename Mutex>
     void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs)
@@ -1095,6 +1100,11 @@ namespace boost
 #ifndef BOOST_NO_RVALUE_REFERENCES
         template<typename Mutex>
         void swap(try_lock_wrapper<Mutex>&& lhs,try_lock_wrapper<Mutex>&& rhs)
+        {
+            lhs.swap(rhs);
+        }
+        template<typename Mutex>
+        void swap(try_lock_wrapper<Mutex>& lhs,try_lock_wrapper<Mutex>& rhs)
         {
             lhs.swap(rhs);
         }
