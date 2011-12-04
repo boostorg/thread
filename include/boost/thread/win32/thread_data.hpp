@@ -24,7 +24,7 @@ namespace boost
         void intrusive_ptr_add_ref(thread_data_base * p);
         void intrusive_ptr_release(thread_data_base * p);
         
-        struct thread_data_base
+        struct BOOST_SYMBOL_VISIBLE thread_data_base
         {
             long count;
             detail::win32::handle_manager thread_handle;
@@ -69,7 +69,7 @@ namespace boost
 
         typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
 
-        struct timeout
+        struct BOOST_SYMBOL_VISIBLE timeout
         {
             unsigned long start;
             uintmax_t milliseconds;
@@ -92,7 +92,7 @@ namespace boost
                 abs_time(abs_time_)
             {}
 
-            struct remaining_time
+            struct BOOST_SYMBOL_VISIBLE remaining_time
             {
                 bool more;
                 unsigned long milliseconds;
@@ -160,17 +160,17 @@ namespace boost
         {
             interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
         }
-        inline void interruptible_wait(system_time const& abs_time)
+        inline BOOST_SYMBOL_VISIBLE void interruptible_wait(system_time const& abs_time)
         {
             interruptible_wait(detail::win32::invalid_handle_value,abs_time);
         }
 
         template<typename TimeDuration>
-        inline void sleep(TimeDuration const& rel_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
             interruptible_wait(detail::pin_to_zero(rel_time.total_milliseconds()));
         }
-        inline void sleep(system_time const& abs_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
         {
             interruptible_wait(abs_time);
         }

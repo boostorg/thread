@@ -53,12 +53,18 @@
 
 #if defined(BOOST_HAS_DECLSPEC)
 #   if defined(BOOST_THREAD_BUILD_DLL) //Build dll
-#       define BOOST_THREAD_DECL __declspec(dllexport)
+#       define BOOST_THREAD_DECL BOOST_SYMBOL_EXPORT
+//#       define BOOST_THREAD_DECL __declspec(dllexport)
+
 #   elif defined(BOOST_THREAD_USE_DLL) //Use dll
-#       define BOOST_THREAD_DECL __declspec(dllimport)
+#       define BOOST_THREAD_DECL BOOST_SYMBOL_IMPORT
+//#       define BOOST_THREAD_DECL __declspec(dllimport)
 #   else
 #       define BOOST_THREAD_DECL
 #   endif
+#elif (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4) 
+#  define BOOST_THREAD_DECL BOOST_SYMBOL_VISIBLE
+
 #else
 #   define BOOST_THREAD_DECL
 #endif // BOOST_HAS_DECLSPEC
