@@ -144,7 +144,7 @@ namespace boost
         void BOOST_THREAD_DECL sleep(system_time const& abs_time);
 
         template<typename TimeDuration>
-        inline void sleep(TimeDuration const& rel_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
             this_thread::sleep(get_system_time()+rel_time);
         }
