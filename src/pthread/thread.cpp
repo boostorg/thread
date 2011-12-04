@@ -14,7 +14,7 @@
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/throw_exception.hpp>
-#ifdef __linux__
+#ifdef __GLIBC__
 #include <sys/sysinfo.h>
 #elif defined(__APPLE__) || defined(__FreeBSD__)
 #include <sys/types.h>
@@ -386,7 +386,7 @@ namespace boost
 #elif defined(BOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
-#elif defined(_GNU_SOURCE)
+#elif defined(__GLIBC__)
         return get_nprocs();
 #else
         return 0;
