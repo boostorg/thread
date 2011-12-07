@@ -312,7 +312,7 @@ namespace boost
             thread_info.swap(x.thread_info);
         }
 
-        class id;
+        class BOOST_SYMBOL_VISIBLE id;
         id get_id() const;
 
 
@@ -380,13 +380,13 @@ namespace boost
         bool BOOST_THREAD_DECL interruption_enabled();
         bool BOOST_THREAD_DECL interruption_requested();
 
-        inline void sleep(xtime const& abs_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
         {
             sleep(system_time(abs_time));
         }
     }
 
-    class thread::id
+    class BOOST_SYMBOL_VISIBLE thread::id
     {
     private:
         detail::thread_data_ptr thread_data;
@@ -434,7 +434,8 @@ namespace boost
 #ifndef BOOST_NO_IOSTREAM
 #ifndef BOOST_NO_MEMBER_TEMPLATE_FRIENDS
         template<class charT, class traits>
-        friend std::basic_ostream<charT, traits>& 
+        friend BOOST_SYMBOL_VISIBLE
+	std::basic_ostream<charT, traits>& 
         operator<<(std::basic_ostream<charT, traits>& os, const id& x)
         {
             if(x.thread_data)
@@ -448,7 +449,8 @@ namespace boost
         }
 #else
         template<class charT, class traits>
-        std::basic_ostream<charT, traits>& 
+        BOOST_SYMBOL_VISIBLE
+	std::basic_ostream<charT, traits>& 
         print(std::basic_ostream<charT, traits>& os) const
         {
             if(thread_data)
@@ -467,6 +469,7 @@ namespace boost
 
 #if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template<class charT, class traits>
+    BOOST_SYMBOL_VISIBLE
     std::basic_ostream<charT, traits>& 
     operator<<(std::basic_ostream<charT, traits>& os, const thread::id& x)
     {

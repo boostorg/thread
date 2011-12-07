@@ -310,6 +310,25 @@ without blocking.]]
 
 [section:locks Lock Types]
 
+[section:lock_tags Lock option tags] 
+
+  #include <boost/thread/locks.hpp> 
+
+  struct defer_lock_t {}; 
+  struct try_to_lock_t {}; 
+  struct adopt_lock_t {}; 
+  const defer_lock_t defer_lock; 
+  const try_to_lock_t try_to_lock; 
+  const adopt_lock_t adopt_lock; 
+
+These tags are used in scoped locks constructors to specify a specific behavior. 
+
+*`defer_lock_t`: is used to construct the scoped lock without locking it. 
+*`try_to_lock_t`: is used to construct the scoped lock trying to lock it. 
+*`adopt_lock_t`: is used to construct the scoped lock without locking it but adopting ownership. 
+
+[endsect] 
+
 [section:lock_guard Class template `lock_guard`]
 
     #include <boost/thread/locks.hpp>

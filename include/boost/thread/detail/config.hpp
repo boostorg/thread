@@ -1,7 +1,7 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef BOOST_THREAD_CONFIG_WEK01032003_HPP
@@ -53,12 +53,18 @@
 
 #if defined(BOOST_HAS_DECLSPEC)
 #   if defined(BOOST_THREAD_BUILD_DLL) //Build dll
-#       define BOOST_THREAD_DECL __declspec(dllexport)
+#       define BOOST_THREAD_DECL BOOST_SYMBOL_EXPORT
+//#       define BOOST_THREAD_DECL __declspec(dllexport)
+
 #   elif defined(BOOST_THREAD_USE_DLL) //Use dll
-#       define BOOST_THREAD_DECL __declspec(dllimport)
+#       define BOOST_THREAD_DECL BOOST_SYMBOL_IMPORT
+//#       define BOOST_THREAD_DECL __declspec(dllimport)
 #   else
 #       define BOOST_THREAD_DECL
 #   endif
+#elif (__GNUC__ == 4 && __GNUC_MINOR__ >= 1) || (__GNUC__ > 4)
+#  define BOOST_THREAD_DECL BOOST_SYMBOL_VISIBLE
+
 #else
 #   define BOOST_THREAD_DECL
 #endif // BOOST_HAS_DECLSPEC
@@ -69,7 +75,7 @@
 #if !defined(BOOST_ALL_NO_LIB) && !defined(BOOST_THREAD_NO_LIB) && !defined(BOOST_THREAD_BUILD_DLL) && !defined(BOOST_THREAD_BUILD_LIB)
 //
 // Tell the autolink to link dynamically, this will get undef'ed by auto_link.hpp
-// once it's done with it: 
+// once it's done with it:
 //
 #if defined(BOOST_THREAD_USE_DLL)
 #   define BOOST_DYN_LINK
