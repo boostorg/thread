@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -444,6 +445,7 @@ namespace boost
         {
             if(x.thread_data)
             {
+                io::ios_flags_saver  ifs( os );
                 return os<< std::hex << x.thread_data;
             }
             else
