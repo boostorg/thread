@@ -553,7 +553,9 @@ namespace boost
         {
             timed_lock(target_time);
         }
+#ifndef BOOST_NO_RVALUE_REFERENCES
 
+#else
         shared_lock(detail::thread_move_t<shared_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
@@ -614,6 +616,7 @@ namespace boost
             swap(temp);
             return *this;
         }
+#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         void swap(shared_lock&& other)
@@ -758,7 +761,7 @@ namespace boost
         {
             try_lock();
         }
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         upgrade_lock(upgrade_lock<Mutex>&& other):
             m(other.m),is_locked(other.is_locked)
         {
@@ -938,7 +941,7 @@ namespace boost
             }
         }
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         upgrade_to_unique_lock(upgrade_to_unique_lock<Mutex>&& other):
             source(other.source),exclusive(move(other.exclusive))
         {
