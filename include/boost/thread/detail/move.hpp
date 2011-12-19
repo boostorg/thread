@@ -27,7 +27,7 @@ namespace boost
       return static_cast<Up&&>(t);
   }
 
-#else
+#endif
 
     namespace detail
     {
@@ -67,7 +67,6 @@ namespace boost
         return t;
     }
 
-#endif
 
 }
 
