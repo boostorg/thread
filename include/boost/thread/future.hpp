@@ -1226,9 +1226,15 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+                f(f_)
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 
             void do_run()
             {
@@ -1251,9 +1257,15 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+                f(f_)
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 
             void do_run()
             {
@@ -1295,10 +1307,17 @@ namespace boost
             task(new detail::task_object<R,R(*)()>(f)),future_obtained(false)
         {}
 
+#ifndef BOOST_NO_RVALUE_REFERENCES
+        template <class F>
+        explicit packaged_task(F&& f):
+            task(new detail::task_object<R,F>(f)),future_obtained(false)
+        {}
+#else
         template <class F>
         explicit packaged_task(boost::detail::thread_move_t<F> f):
             task(new detail::task_object<R,F>(f)),future_obtained(false)
         {}
+#endif
 
 //         template <class F, class Allocator>
 //         explicit packaged_task(F const& f, Allocator a);
