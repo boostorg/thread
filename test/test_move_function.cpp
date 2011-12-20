@@ -98,7 +98,6 @@ namespace user_test_ns
         nc(nc&&)
         {
             move_called=true;
-            return nc();
         }
 #endif
         nc move()
