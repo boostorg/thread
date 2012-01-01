@@ -28,3 +28,15 @@ each class or function, or include the master thread library header:
 which includes all the other headers in turn.
 
 [endsect]
+
+
+[section:build Using and building the library]
+
+Boost.Thread is configured following the conventions used to build [@http://www.boost.org/doc/libs/1_48_0/libs/config/doc/html/boost_config/boost_macro_reference.html#boost_config.boost_macro_reference.macros_for_libraries_with_separate_source_code libraries with separate source code]. Boost.Thread will import/export the code only if the user has specifically asked for it, by defining either BOOST_ALL_DYN_LINK if they want all boost libraries to be dynamically linked, or BOOST_THREAD_DYN_LINK if they want just this one to be dynamically liked.
+
+The definition of these macros determines whether BOOST_THREAD_USE_DLL is defined. If  BOOST_THREAD_USE_DLL is not defined, the library will define BOOST_THREAD_USE_DLL or BOOST_THREAD_USE_LIB depending on whether the platform. On non windows platforms BOOST_THREAD_USE_LIB is defined if is not defined. In windows platforms, BOOST_THREAD_USE_LIB is defined if BOOST_THREAD_USE_DLL and the compiler supports auto-tss cleanup with Boost.Threads (for the time been Msvc and Intel)
+
+The source code compiled when building the library defines a macros BOOST_THREAD_SOURCE that is used to import or export it. The user must not define this macro in any case. 
+
+[endsect]
+

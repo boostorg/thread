@@ -413,13 +413,19 @@ namespace boost
 
             struct all_futures_lock
             {
-                count_type count;
+#ifdef _MANAGED
+                typedef std::ptrdiff_t count_type_portable;
+#else
+                typedef count_type count_type_portable;
+#endif
+                count_type_portable count;
+
                 boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
 
                 all_futures_lock(std::vector<registered_waiter>& futures):
                     count(futures.size()),locks(new boost::unique_lock<boost::mutex>[count])
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
 #if defined __DECCXX || defined __SUNPRO_CC
                         locks[i]=boost::unique_lock<boost::mutex>(futures[i].future->mutex).move();
@@ -436,7 +442,7 @@ namespace boost
 
                 void unlock()
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
                         locks[i].unlock();
                     }
@@ -1220,9 +1226,15 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+                f(f_)
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 
             void do_run()
             {
@@ -1245,9 +1257,15 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+                f(f_)
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 
             void do_run()
             {
@@ -1289,10 +1307,17 @@ namespace boost
             task(new detail::task_object<R,R(*)()>(f)),future_obtained(false)
         {}
 
+#ifndef BOOST_NO_RVALUE_REFERENCES
+        template <class F>
+        explicit packaged_task(F&& f):
+            task(new detail::task_object<R,F>(f)),future_obtained(false)
+        {}
+#else
         template <class F>
         explicit packaged_task(boost::detail::thread_move_t<F> f):
             task(new detail::task_object<R,F>(f)),future_obtained(false)
         {}
+#endif
 
 //         template <class F, class Allocator>
 //         explicit packaged_task(F const& f, Allocator a);
@@ -1341,7 +1366,7 @@ namespace boost
         }
 #endif
 
-        void swap(packaged_task& other)
+    void swap(packaged_task& other)
         {
             task.swap(other.task);
             std::swap(future_obtained,other.future_obtained);

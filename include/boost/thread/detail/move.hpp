@@ -9,12 +9,26 @@
 #ifndef BOOST_NO_SFINAE
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_convertible.hpp>
+#include <boost/type_traits/remove_reference.hpp>
 #endif
 
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+
+#ifndef BOOST_NO_RVALUE_REFERENCES
+
+  template <class T>
+  typename remove_reference<T>::type&&
+  move(T&& t)
+  {
+      typedef typename remove_reference<T>::type Up;
+      return static_cast<Up&&>(t);
+  }
+
+#endif
+
     namespace detail
     {
         template<typename T>
@@ -46,13 +60,14 @@ namespace boost
         return detail::thread_move_t<T>(t);
     }
 #endif
-    
+
     template<typename T>
     detail::thread_move_t<T> move(detail::thread_move_t<T> t)
     {
         return t;
     }
-    
+
+
 }
 
 #include <boost/config/abi_suffix.hpp>

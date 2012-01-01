@@ -201,6 +201,12 @@ The `boost::this_thread` interrupt related functions behave in a degraded mode w
 
 As the single way to interrupt a thread is through a __thread__ instance, `interruption_request()` wiil returns false for the native threads. 
 
+[heading `pthread_exit` POSIX limitation]
+
+`pthread_exit` in glibc/NPTL causes a "forced unwind" that is almost like a C++ exception, but not quite. On Mac OS X, for example, `pthread_exit` unwinds without calling C++ destructors.
+
+This behavior is incompatible with the current Boost.Thread design, so the use of this function in a POSIX thread result in undefined behavior of any Boost.Thread function.
+
 [section:thread Class `thread`]
 
     #include <boost/thread/thread.hpp>
