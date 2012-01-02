@@ -108,6 +108,16 @@ namespace user_test_ns
     };
 }
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+namespace boost
+{
+    template <>
+    struct has_move_emulation_enabled_aux<user_test_ns::nc>
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+}
+#endif
+
 void test_move_for_user_defined_type_unaffected()
 {
     user_test_ns::nc src;
