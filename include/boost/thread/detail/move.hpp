@@ -12,22 +12,14 @@
 #include <boost/type_traits/remove_reference.hpp>
 #endif
 
+#ifndef BOOST_NO_RVALUE_REFERENCES
+#include <boost/move/move.hpp>
+#endif
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
-
-#ifndef BOOST_NO_RVALUE_REFERENCES
-
-  template <class T>
-  typename remove_reference<T>::type&&
-  move(T&& t)
-  {
-      typedef typename remove_reference<T>::type Up;
-      return static_cast<Up&&>(t);
-  }
-
-#endif
 
     namespace detail
     {
@@ -53,20 +45,28 @@ namespace boost
         };
     }
 
+#ifdef BOOST_THREAD_USES_SPECIFIC_MOVE_NS
+namespace threads {
+#endif
+
+
 #ifndef BOOST_NO_SFINAE
     template<typename T>
-    typename enable_if<boost::is_convertible<T&,detail::thread_move_t<T> >, detail::thread_move_t<T> >::type move(T& t)
+    typename enable_if<boost::is_convertible<T&,boost::detail::thread_move_t<T> >, boost::detail::thread_move_t<T> >::type move(T& t)
     {
-        return detail::thread_move_t<T>(t);
+        return boost::detail::thread_move_t<T>(t);
     }
 #endif
 
     template<typename T>
-    detail::thread_move_t<T> move(detail::thread_move_t<T> t)
+    boost::detail::thread_move_t<T> move(boost::detail::thread_move_t<T> t)
     {
         return t;
     }
 
+#ifdef BOOST_THREAD_USES_SPECIFIC_MOVE_NS
+}
+#endif
 
 }
 
