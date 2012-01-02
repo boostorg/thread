@@ -521,6 +521,13 @@ namespace boost
         void BOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
     }
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <>
+    struct has_move_emulation_enabled_aux<thread>
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+
     namespace this_thread
     {
         template<typename F>

@@ -6,15 +6,14 @@
 #ifndef BOOST_THREAD_MOVE_HPP
 #define BOOST_THREAD_MOVE_HPP
 
+#include <boost/thread/detail/config.hpp>
 #ifndef BOOST_NO_SFINAE
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #endif
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
 #include <boost/move/move.hpp>
-#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -45,11 +44,6 @@ namespace boost
         };
     }
 
-#ifdef BOOST_THREAD_USES_SPECIFIC_MOVE_NS
-namespace threads {
-#endif
-
-
 #ifndef BOOST_NO_SFINAE
     template<typename T>
     typename enable_if<boost::is_convertible<T&,boost::detail::thread_move_t<T> >, boost::detail::thread_move_t<T> >::type move(T& t)
@@ -64,9 +58,6 @@ namespace threads {
         return t;
     }
 
-#ifdef BOOST_THREAD_USES_SPECIFIC_MOVE_NS
-}
-#endif
 
 }
 
