@@ -518,6 +518,13 @@ namespace boost
     }
 #endif
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<unique_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+
     template<typename Mutex>
     class shared_lock
     {
@@ -712,6 +719,14 @@ namespace boost
 
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+  template <typename Mutex>
+  struct has_move_emulation_enabled_aux<shared_lock<Mutex> >
+  : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+  {};
+#endif
+
+
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     void swap(shared_lock<Mutex>&& lhs,shared_lock<Mutex>&& rhs)
@@ -896,6 +911,12 @@ namespace boost
         friend class unique_lock<Mutex>;
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<upgrade_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
@@ -987,6 +1008,13 @@ namespace boost
             return exclusive.owns_lock();
         }
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<upgrade_to_unique_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     namespace detail
     {

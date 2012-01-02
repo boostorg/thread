@@ -62,4 +62,12 @@ rule thread-run ( sources )
           [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
           [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
     ;
+
+
+    #explicit tickets ;
+    test-suite tickets
+    : 
+          [ compile test_6170.cpp ]
+    ;
+
 }

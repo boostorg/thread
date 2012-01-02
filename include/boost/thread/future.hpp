@@ -754,6 +754,13 @@ namespace boost
 
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<unique_future<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+
     template <typename R>
     class shared_future
     {
@@ -911,6 +918,13 @@ namespace boost
         }
 
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<shared_future<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     template <typename R>
     class promise
@@ -1178,6 +1192,13 @@ namespace boost
 
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<promise<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+
     namespace detail
     {
         template<typename R>
@@ -1408,6 +1429,13 @@ namespace boost
         }
 
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<packaged_task<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
 }
 
