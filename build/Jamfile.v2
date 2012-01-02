@@ -44,7 +44,7 @@ project boost/thread
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
-    : default-build <threading>multi
+    # : default-build <threading>multi
     ;
 
 local rule default_threadapi ( )
