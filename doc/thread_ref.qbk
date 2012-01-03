@@ -1,5 +1,6 @@
 [/
   (C) Copyright 2007-8 Anthony Williams.
+  (C) Copyright 2011 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -8,6 +9,30 @@
 [section:thread_management Thread Management]
 
 [heading Synopsis]
+
+  namespace boost 
+  {
+    class thread;
+    void swap(thread& lhs,thread& rhs);
+    namespace this_thread 
+    {
+      thread::id get_id() noexcept;
+      template<typename TimeDuration>
+      void sleep(TimeDuration const& rel_time); // DEPRECATED
+      void sleep(system_time const& abs_time)  // DEPRECATED
+      void yield() noexcept;
+      template <class Clock, class Duration>
+      void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+      template <class Rep, class Period>
+      void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+
+      void interruption_point();
+      bool interruption_requested();
+      bool interruption_enabled();
+      class disable_interruption;
+      class restore_interruption;
+    }
+  }
 
 The __thread__ class is responsible for launching and managing threads. Each __thread__ object represents a single thread of execution,
 or __not_a_thread__, and at most one __thread__ object represents a given thread of execution: objects of type __thread__ are not
@@ -142,13 +167,20 @@ The following functions are ['interruption points], which will throw __thread_in
 current thread, and interruption is requested for the current thread:
 
 * [join_link `boost::thread::join()`]
-* [timed_join_link `boost::thread::timed_join()`]
+* [timed_join_link `boost::thread::timed_join()` DEPRECATED V2]
+* `thread::__try_join_for()`,
+* `thread::__try_join_until()`,
 * [cond_wait_link `boost::condition_variable::wait()`]
-* [cond_timed_wait_link `boost::condition_variable::timed_wait()`]
+* [cond_timed_wait_link `boost::condition_variable::timed_wait()` DEPRECATED V2]
+* `__condition_variable::__wait_for()`
+* `__condition_variable::__wait_until()`
 * [cond_any_wait_link `boost::condition_variable_any::wait()`]
-* [cond_any_timed_wait_link `boost::condition_variable_any::timed_wait()`]
-* [link thread.thread_management.thread.sleep `boost::thread::sleep()`]
-* __sleep__
+* [cond_any_timed_wait_link `boost::condition_variable_any::timed_wait()` DEPRECATED V2]
+* `__condition_variable_any::__wait_for()`
+* `__condition_variable_any::__wait_until()`
+* [link thread.thread_management.thread.sleep `boost::thread::sleep()` DEPRECATED V2]
+* `this_thread::__sleep_for()`
+* `this_thread::__sleep_until()`
 * __interruption_point__
 
 [heading Thread IDs]
@@ -185,12 +217,12 @@ Any thread of execution created using the native interface is called a native th
 
 The first example of a native thread of execution is the main thread.  
 
-The user can access to some synchronization functions related to the native current thread using the `boost::this_thread` `yield`, `sleep`, functions. 
+The user can access to some synchronization functions related to the native current thread using the `boost::this_thread` `yield`, `sleep`, __sleep_for, __sleep_until, functions. 
 
 
   int main() { 
     // ... 
-    boost::this_thread::sleep(); 
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(10)); 
     // ... 
   } 
 
@@ -214,7 +246,12 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
     class thread
     {
     public:
-        thread();
+        thread() noexcept;
+        thread(const thread&) = delete;
+        thread& operator=(const thread&) = delete;
+
+        thread(thread&&) noexcept;
+        thread& operator=(thread&&) noexcept;
         ~thread();
 
         template <class F>
@@ -226,27 +263,32 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         template <class F>
         thread(detail::thread_move_t<F> f);
 
+        template <class F, class ...Args> explicit thread(F&& f, Args&&... args);
+
         // move support
         thread(detail::thread_move_t<thread> x);
         thread& operator=(detail::thread_move_t<thread> x);
         operator detail::thread_move_t<thread>();
         detail::thread_move_t<thread> move();
 
-        void swap(thread& x);
+        void swap(thread& x) noexcept;
 
         class id;
-        id get_id() const;
+        id get_id() const noexcept;
 
-        bool joinable() const;
+        bool joinable() const noexcept;
         void join();
-        bool timed_join(const system_time& wait_until);
-
+        bool timed_join(const system_time& wait_until); // DEPRECATED V2
         template<typename TimeDuration>
-        bool timed_join(TimeDuration const& rel_time);
+        bool timed_join(TimeDuration const& rel_time);  // DEPRECATED V2
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+        bool try_join_until(const chrono::time_point<Clock, Duration>& t);
 
         void detach();
 
-        static unsigned hardware_concurrency();
+        static unsigned hardware_concurrency() noexcept;
 
         typedef platform-specific-type native_handle_type;
         native_handle_type native_handle();
@@ -255,19 +297,20 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         bool interruption_requested() const;
 
         // backwards compatibility
-        bool operator==(const thread& other) const;
-        bool operator!=(const thread& other) const;
+        bool operator==(const thread& other) const; // DEPRECATED V2
+        bool operator!=(const thread& other) const; // DEPRECATED V2
 
-        static void yield();
-        static void sleep(const system_time& xt);
+        static void yield(); // DEPRECATED V2
+        static void sleep(const system_time& xt); // DEPRECATED V2
+
     };
 
-    void swap(thread& lhs,thread& rhs);
+    void swap(thread& lhs,thread& rhs) noexcep;
     detail::thread_move_t<thread> move(detail::thread_move_t<thread> t);
 
 [section:default_constructor Default Constructor]
 
-    thread();
+    thread() noexcep;
 
 [variablelist
 
@@ -281,6 +324,7 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
 [section:move_constructor Move Constructor]
 
+    thread(thread&& other) noexcept;
     thread(detail::thread_move_t<thread> other);
 
 [variablelist
@@ -297,6 +341,7 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
 [section:move_assignment Move assignment operator]
 
+    thread& operator=(thread&& other) noexcept;
     thread& operator=(detail::thread_move_t<thread> other);
 
 [variablelist
@@ -328,7 +373,13 @@ not of type __thread_interrupted__, then `std::terminate()` will be called.]]
 
 [[Postconditions:] [`*this` refers to the newly created thread of execution.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__thread_resource_error__ if an error occurs. ]]
+
+[[Error Conditions:] [
+
+[*resource_unavailable_try_again] : the system lacked the necessary resources to create an- other thread, or the system-imposed limit on the number of threads in a process would be exceeded. 
+
+]]
 
 ]
 
@@ -352,6 +403,12 @@ are copied into internal storage for access by the new thread.]]]
 
 [[Throws:] [__thread_resource_error__ if an error occurs.]]
 
+[[Error Conditions:] [
+
+[*resource_unavailable_try_again] : the system lacked the necessary resources to create an- other thread, or the system-imposed limit on the number of threads in a process would be exceeded. 
+
+]]
+
 [[Note:] [Currently up to nine additional arguments `a1` to `a9` can be specified in addition to the function `f`.]]
 
 ]
@@ -374,7 +431,7 @@ are copied into internal storage for access by the new thread.]]]
 
 [section:joinable Member function `joinable()`]
 
-    bool joinable() const;
+    bool joinable() const noexcept;
 
 [variablelist
 
@@ -399,7 +456,19 @@ are copied into internal storage for access by the new thread.]]]
 
 [[Postconditions:] [If `*this` refers to a thread of execution on entry, that thread of execution has completed. `*this` no longer refers to any thread of execution.]]
 
-[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
+[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted or `system_error`]]
+
+[[Error Conditions:] [
+
+[*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == std::this_thread::get_id().
+
+[/
+[*no_such_process]: if the thread is not valid.
+
+[*invalid_argument]: if the thread is not joinable.
+] 
+
+]]
 
 [[Notes:] [`join()` is one of the predefined __interruption_points__.]]
 
@@ -407,7 +476,7 @@ are copied into internal storage for access by the new thread.]]]
 
 [endsect]
 
-[section:timed_join Member function `timed_join()`]
+[section:timed_join Member function `timed_join()` DEPRECATED V2]
 
     bool timed_join(const system_time& wait_until);
 
@@ -428,13 +497,105 @@ times out, `false` otherwise.]]
 has completed, and `*this` no longer refers to any thread of execution. If this call to `timed_join` returns `false`, `*this` is
 unchanged.]]
 
-[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
+[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted or `system_error`]]
+
+[[Error Conditions:] [
+
+[*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == std::this_thread::get_id().
+
+[/
+[*no_such_process]: if the thread is not valid.
+
+[*invalid_argument]: if the thread is not joinable.
+] 
+
+]]
 
 [[Notes:] [`timed_join()` is one of the predefined __interruption_points__.]]
 
 ]
 
 [endsect]
+
+[section:try_join_for Member function `try_join_for()`]
+
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time);
+
+[variablelist
+
+[[Preconditions:] [`this->get_id()!=boost::this_thread::get_id()`]]
+
+[[Effects:] [If `*this` refers to a thread of execution, waits for that thread of execution to complete, 
+the specified duration `rel_time` has elapsed. If `*this` doesn't refer to a thread of execution, returns immediately.]]
+
+[[Returns:] [`true` if `*this` refers to a thread of execution on entry, and that thread of execution has completed before the call
+times out, `false` otherwise.]]
+
+[[Postconditions:] [If `*this` refers to a thread of execution on entry, and `try_join_for` returns `true`, that thread of execution
+has completed, and `*this` no longer refers to any thread of execution. If this call to `try_join_for` returns `false`, `*this` is
+unchanged.]]
+
+[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted or `system_error`]]
+
+[[Error Conditions:] [
+
+[*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == std::this_thread::get_id().
+
+[/
+[*no_such_process]: if the thread is not valid.
+
+[*invalid_argument]: if the thread is not joinable.
+] 
+
+]]
+
+[[Notes:] [`try_join_for()` is one of the predefined __interruption_points__.]]
+
+]
+
+[endsect]
+
+[section:try_join_until Member function `try_join_until()`]
+
+        template <class Clock, class Duration>
+        bool try_join_until(const chrono::time_point<Clock, Duration>& abs_time);
+
+[variablelist
+
+[[Preconditions:] [`this->get_id()!=boost::this_thread::get_id()`]]
+
+[[Effects:] [If `*this` refers to a thread of execution, waits for that thread of execution to complete, the time `abs_time` has
+been reach. If `*this` doesn't refer to a thread of execution, returns immediately.]]
+
+[[Returns:] [`true` if `*this` refers to a thread of execution on entry, and that thread of execution has completed before the call
+times out, `false` otherwise.]]
+
+[[Postconditions:] [If `*this` refers to a thread of execution on entry, and `try_join_until` returns `true`, that thread of execution
+has completed, and `*this` no longer refers to any thread of execution. If this call to `try_join_until` returns `false`, `*this` is
+unchanged.]]
+
+[[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted or `system_error`]]
+
+[[Error Conditions:] [
+
+[*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == std::this_thread::get_id().
+
+[/
+[*no_such_process]: if the thread is not valid.
+
+[*invalid_argument]: if the thread is not joinable.
+] 
+
+]]
+
+[[Notes:] [`try_join_until()` is one of the predefined __interruption_points__.]]
+
+]
+
+[endsect]
+
+
 
 [section:detach Member function `detach()`]
 
@@ -455,7 +616,7 @@ unchanged.]]
 
 [section:get_id Member function `get_id()`]
 
-    thread::id get_id() const;
+    thread::id get_id() const noexcept;
 
 [variablelist
 
@@ -487,7 +648,7 @@ predefined __interruption_points__ with interruption enabled .]]
 
 [section:hardware_concurrency Static member function `hardware_concurrency()`]
 
-    unsigned hardware_concurrency();
+    unsigned hardware_concurrency() noexecpt;
 
 [variablelist
 
@@ -540,7 +701,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:sleep Static member function `sleep()`]
+[section:sleep Static member function `sleep()` DEPRECATED V2]
 
     void sleep(system_time const& abs_time);
 
@@ -556,7 +717,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:yield Static member function `yield()`]
+[section:yield Static member function `yield()` DEPRECATED V2]
 
     void yield();
 
@@ -570,7 +731,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [section:swap Member function `swap()`]
 
-    void swap(thread& other);
+    void swap(thread& other) noexcept;
 
 [variablelist
 
@@ -590,7 +751,7 @@ value as `this->get_id()` prior to the call.]]
 
     #include <boost/thread/thread.hpp>
 
-    void swap(thread& lhs,thread& rhs);
+    void swap(thread& lhs,thread& rhs) noexcept;
 
 [variablelist
 
@@ -628,14 +789,14 @@ Enables moving thread objects. e.g.
     class thread::id
     {
     public:
-        id();
+        id() noexcept;
 
-        bool operator==(const id& y) const;
-        bool operator!=(const id& y) const;
-        bool operator<(const id& y) const;
-        bool operator>(const id& y) const;
-        bool operator<=(const id& y) const;
-        bool operator>=(const id& y) const;
+        bool operator==(const id& y) const noexcept;
+        bool operator!=(const id& y) const noexcept;
+        bool operator<(const id& y) const noexcept;
+        bool operator>(const id& y) const noexcept;
+        bool operator<=(const id& y) const noexcept;
+        bool operator>=(const id& y) const noexcept;
 
         template<class charT, class traits>
         friend std::basic_ostream<charT, traits>& 
@@ -644,7 +805,7 @@ Enables moving thread objects. e.g.
 
 [section:constructor Default constructor]
 
-    id();
+    id() noexcept;
 
 [variablelist
 
@@ -658,7 +819,7 @@ Enables moving thread objects. e.g.
 
 [section:is_equal `operator==`]
 
-    bool operator==(const id& y) const;
+    bool operator==(const id& y) const noexcept;
 
 [variablelist
 
@@ -673,7 +834,7 @@ otherwise.]]
 
 [section:not_equal `operator!=`]
 
-    bool operator!=(const id& y) const;
+    bool operator!=(const id& y) const noexcept;
 
 [variablelist
 
@@ -688,7 +849,7 @@ the other represent __not_a_thread__, `false` otherwise.]]
 
 [section:less_than `operator<`]
 
-    bool operator<(const id& y) const;
+    bool operator<(const id& y) const noexcept;
 
 [variablelist
 
@@ -707,7 +868,7 @@ execution.]]
 
 [section:greater_than `operator>`]
 
-    bool operator>(const id& y) const;
+    bool operator>(const id& y) const noexcept;
 
 [variablelist
 
@@ -721,7 +882,7 @@ execution.]]
 
 [section:less_than_or_equal `operator<=`]
 
-    bool operator<=(const id& y) const;
+    bool operator<=(const id& y) const noexcept;
 
 [variablelist
 
@@ -735,7 +896,7 @@ execution.]]
 
 [section:greater_than_or_equal `operator>=`]
 
-    bool operator>=(const id& y) const;
+    bool operator>=(const id& y) const noexcept;
 
 [variablelist
 
@@ -771,13 +932,34 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [section:this_thread Namespace `this_thread`]
 
+
+  namespace boost {
+    namespace this_thread {
+      thread::id get_id() noexcept;
+      template<typename TimeDuration>
+      void sleep(TimeDuration const& rel_time); // DEPRECATED V2
+      void sleep(system_time const& abs_time)  // DEPRECATED V2
+      void yield() noexcept;
+      template <class Clock, class Duration>
+      void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+      template <class Rep, class Period>
+      void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+
+      void interruption_point();
+      bool interruption_requested();
+      bool interruption_enabled();
+      class disable_interruption;
+      class restore_interruption;
+    }
+  }
+
 [section:get_id Non-member function `get_id()`]
 
     #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
-        thread::id get_id();
+        thread::id get_id() noexcept;
     }
 
 [variablelist
@@ -847,7 +1029,7 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [endsect]
 
-[section:sleep Non-member function `sleep()`]
+[section:sleep Non-member function `sleep()` DEPRECATED V2]
 
     #include <boost/thread/thread.hpp>
 
@@ -871,6 +1053,55 @@ specified by `rel_time` has elapsed or the time point specified by
 ]
 
 [endsect]
+
+[section:sleep_until Non-member function `sleep_until()`]
+
+    #include <boost/thread/thread.hpp>
+
+    namespace this_thread
+    {
+      template <class Clock, class Duration>
+      void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+    }
+
+[variablelist
+
+[[Effects:] [Suspends the current thread until the time period
+specified by `rel_time` has elapsed or the time point specified by
+`abs_time` has been reached.]]
+
+[[Throws:] [Nothing if Clock satisfies the TrivialClock requirements and operations of Duration
+do not throw exceptions. __thread_interrupted__ if the current thread of execution is interrupted. ]]
+
+[[Notes:] [`sleep_until()` is one of the predefined __interruption_points__.]]
+
+]
+
+[endsect]
+
+[section:sleep_for Non-member function `sleep_for()`]
+
+    #include <boost/thread/thread.hpp>
+
+    namespace this_thread
+    {
+      template <class Rep, class Period>
+      void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+    }
+
+[variablelist
+
+[[Effects:] [Suspends the current thread until the time point specified by
+`abs_time` has been reached.]]
+
+[[Throws:] [Nothing if operations of chrono::duration<Rep, Period> do not throw exceptions. __thread_interrupted__ if the current thread of execution is interrupted.]]
+
+[[Notes:] [`sleep_for()` is one of the predefined __interruption_points__.]]
+
+]
+
+[endsect]
+
 
 [section:yield Non-member function `yield()`]
 

@@ -1,5 +1,6 @@
 [/
   (C) Copyright 2007-8 Anthony Williams.
+  (C) Copyright 2011 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -8,6 +9,17 @@
 [section:condvar_ref Condition Variables]
 
 [heading Synopsis]
+
+  namespace boost 
+  {
+    enum class cv_status;
+    {
+      no_timeout,
+      timeout
+    };
+    class condition_variable;
+    class condition_variable_any;
+  }
 
 The classes `condition_variable` and `condition_variable_any` provide a
 mechanism for one thread to wait for notification from another thread that a
@@ -84,31 +96,57 @@ optimizations in some cases, based on the knowledge of the mutex type;
             condition_variable();
             ~condition_variable();
 
-            void notify_one();
-            void notify_all();
+            void notify_one() noexcept;
+            void notify_all() noexcept;
 
             void wait(boost::unique_lock<boost::mutex>& lock);
 
             template<typename predicate_type>
             void wait(boost::unique_lock<boost::mutex>& lock,predicate_type predicate);
 
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time); // DEPRECATED V2
 
             template<typename duration_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time); // DEPRECATED V2
 
             template<typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate); // DEPRECATED V2
 
             template<typename duration_type,typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate); // DEPRECATED V2
+
+            template <class Clock, class Duration>
+            typename cv_status::type
+            wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class Clock, class Duration, class Predicate>
+            bool
+            wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<Clock, Duration>& t,
+                Predicate pred);
+
+            template <class Rep, class Period>
+            typename cv_status::type
+            wait_for(
+                unique_lock<mutex>& lock,
+                const chrono::duration<Rep, Period>& d);
+
+            template <class Rep, class Period, class Predicate>
+            bool
+            wait_for(
+                unique_lock<mutex>& lock,
+                const chrono::duration<Rep, Period>& d,
+                Predicate pred);
 
         // backwards compatibility
 
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time); // DEPRECATED V2
 
             template<typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate); // DEPRECATED V2
         };
     }
 
@@ -208,7 +246,7 @@ while(!pred())
 
 [endsect]
 
-[section:timed_wait `bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time)`]
+[section:timed_wait `bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time)` DEPRECATED V2]
 
 [variablelist
 
@@ -239,7 +277,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_rel `template<typename duration_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time)`]
+[section:timed_wait_rel `template<typename duration_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time)` DEPRECATED V2]
 
 [variablelist
 
@@ -272,7 +310,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_predicate `template<typename predicate_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock, boost::system_time const& abs_time, predicate_type pred)`]
+[section:timed_wait_predicate `template<typename predicate_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock, boost::system_time const& abs_time, predicate_type pred)` DEPRECATED V2]
 
 [variablelist
 
@@ -290,6 +328,114 @@ return true;
 ]
 
 [endsect]
+
+
+[section:wait_until `template <class Clock, class Duration> cv_status wait_until(boost::unique_lock<boost::mutex>& lock, const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `wait_for` or `wait_until`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [Atomically call `lock.unlock()` and blocks the current thread. The
+thread will unblock when notified by a call to `this->notify_one()` or
+`this->notify_all()`, when the time as reported by `Clock::now()`
+would be equal to or later than the specified `abs_time`, or spuriously. When
+the thread is unblocked (for whatever reason), the lock is reacquired by
+invoking `lock.lock()` before the call to `wait` returns. The lock is also
+reacquired by invoking `lock.lock()` if the function exits with an exception.]]
+
+[[Returns:] [`cv_status::no_timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class Rep, class Period> cv_status wait_for(boost::unique_lock<boost::mutex>& lock, const chrono::duration<Rep, Period>& rel_time)`]
+
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `wait_until` or `wait_for`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [Atomically call `lock.unlock()` and blocks the current thread. The
+thread will unblock when notified by a call to `this->notify_one()` or
+`this->notify_all()`, after the period of time indicated by the `rel_time`
+argument has elapsed, or spuriously. When the thread is unblocked (for whatever
+reason), the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.]]
+
+[[Returns:] [`cv_status::no_timeout ` if the call is returning because the time period specified
+by `rel_time` has elapsed, `cv_status::timeout ` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:wait_until_predicate `template <class Clock, class Duration, class Predicate> bool wait_until(boost::unique_lock<boost::mutex>& lock, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred)`]
+
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!wait_until(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[section:wait_for_predicate `template <class Rep, class Period, class Predicate> bool wait_for(boost::unique_lock<boost::mutex>& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred)`]
+
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!wait_for(lock,rel_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+
 
 
 [endsect]
@@ -316,24 +462,47 @@ return true;
             void wait(lock_type& lock,predicate_type predicate);
 
             template<typename lock_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time);
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time) // DEPRECATED V2;
 
             template<typename lock_type,typename duration_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time);
+            bool timed_wait(lock_type& lock,duration_type const& rel_time) // DEPRECATED V2;
 
             template<typename lock_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate);
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate) // DEPRECATED V2;
 
             template<typename lock_type,typename duration_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate);
+            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate) // DEPRECATED V2;
+
+            template <class lock_type, class Clock, class Duration>
+            cv_status wait_until(
+                lock_type& lock,
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class lock_type, class Clock, class Duration, class Predicate>
+            bool wait_until(
+                lock_type& lock,
+                const chrono::time_point<Clock, Duration>& t,
+                Predicate pred);
+
+
+            template <class lock_type, class Rep, class Period>
+            cv_status wait_for(
+                lock_type& lock,
+                const chrono::duration<Rep, Period>& d);
+
+            template <class lock_type, class Rep, class Period, class Predicate>
+            bool wait_for(
+                lock_type& lock,
+                const chrono::duration<Rep, Period>& d,
+                Predicate pred);
 
         // backwards compatibility
 
             template<typename lock_type>
-            bool timed_wait(lock_type>& lock,boost::xtime const& abs_time);
+            bool timed_wait(lock_type>& lock,boost::xtime const& abs_time) // DEPRECATED V2;
 
             template<typename lock_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate);
+            bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate) // DEPRECATED V2;
         };
     }
 
@@ -427,7 +596,7 @@ while(!pred())
 
 [endsect]
 
-[section:timed_wait `template<typename lock_type> bool timed_wait(lock_type& lock,boost::system_time const& abs_time)`]
+[section:timed_wait `template<typename lock_type> bool timed_wait(lock_type& lock,boost::system_time const& abs_time)` DEPRECATED V2]
 
 [variablelist
 
@@ -452,7 +621,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_rel `template<typename lock_type,typename duration_type> bool timed_wait(lock_type& lock,duration_type const& rel_time)`]
+[section:timed_wait_rel `template<typename lock_type,typename duration_type> bool timed_wait(lock_type& lock,duration_type const& rel_time)` DEPRECATED V2]
 
 [variablelist
 
@@ -479,7 +648,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_predicate `template<typename lock_type,typename predicate_type> bool timed_wait(lock_type& lock, boost::system_time const& abs_time, predicate_type pred)`]
+[section:timed_wait_predicate `template<typename lock_type,typename predicate_type> bool timed_wait(lock_type& lock, boost::system_time const& abs_time, predicate_type pred)` DEPRECATED V2]
 
 [variablelist
 
