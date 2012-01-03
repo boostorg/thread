@@ -55,9 +55,9 @@ void test_barrier()
     BOOST_CHECK_EQUAL(global_parameter,5);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: barrier test suite");
 
     test->add(BOOST_TEST_CASE(&test_barrier));

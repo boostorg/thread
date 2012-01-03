@@ -343,9 +343,9 @@ void test_tss_cleanup_not_called_for_null_pointer()
 
 
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: tss test suite");
 
     test->add(BOOST_TEST_CASE(test_tss));

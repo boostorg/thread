@@ -163,6 +163,44 @@ Each instance of __thread_id__ either refers to some thread, or __not_a_thread__
 compare equal to each other, but not equal to any instances that refer to an actual thread of execution. The comparison operators on
 __thread_id__ yield a total order for every non-equal thread ID.
 
+[heading Using native interfaces with Boost.Thread resources] 
+
+
+__thread__ class has members `native_handle_type` and `native_handle` providing access to the underlying native handle.  
+	 
+This native handle can be used to change for example the scheduling. 
+
+
+In general, it is not safe to use this handle with operations that can conflict with the ones provided by Boost.Thread. An example of bad usage could be detaching a thread directly as it will not change the internals of the __thread__ instance, so for example the joinable function will continue to return true, while the native thread is no more joinable. 
+
+  thread t(fct); 
+  thread::native_handle_type hnd=t.native_handle(); 
+  pthread_detach(hnd); 
+  assert(t.joinable()); 
+
+[heading Using Boost.Thread interfaces in a native thread] 
+ 
+
+Any thread of execution created using the native interface is called a native thread in this documentation. 
+
+The first example of a native thread of execution is the main thread.  
+
+The user can access to some synchronization functions related to the native current thread using the `boost::this_thread` `yield`, `sleep`, functions. 
+
+
+  int main() { 
+    // ... 
+    boost::this_thread::sleep(); 
+    // ... 
+  } 
+
+
+Of course all the synchronization facilities provided by Boost.Thread are also available on native threads. 
+
+The `boost::this_thread` interrupt related functions behave in a degraded mode when called from a thread created using the native interface, i.e. `boost::this_thread::interruption_enabled()` returns false. As consequence the use of `boost::this_thread::disable_interruption` and `boost::this_thread::restore_interruption` will do nothing and calls to `boost::this_thread::interrupt_point()` will be just ignored.  
+
+As the single way to interrupt a thread is through a __thread__ instance, `interruption_request()` wiil returns false for the native threads. 
+
 [section:thread Class `thread`]
 
     #include <boost/thread/thread.hpp>
@@ -675,7 +713,7 @@ execution.]]
 
 [endsect]
 
-[section:less_than_or_equal `operator>=`]
+[section:less_than_or_equal `operator<=`]
 
     bool operator<=(const id& y) const;
 

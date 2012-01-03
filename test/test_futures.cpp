@@ -1157,9 +1157,9 @@ void test_wait_for_all_five_futures()
 }
 
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: futures test suite");
 
     test->add(BOOST_TEST_CASE(test_initial_state));

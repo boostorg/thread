@@ -5,7 +5,41 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:changes Changes since boost 1.40]
+[section:changes Changes since]
+
+[heading Changes since boost 1.41]
+
+Fixed Bugs:
+
+* [@http://svn.boost.org/trac/boost/ticket/2309 #2309] Lack of g++ symbol visibility support in Boost.Thread. 
+* [@http://svn.boost.org/trac/boost/ticket/2639 #2639] documentation should be extended(defer_lock, try_to_lock, ...).
+
+* [@http://svn.boost.org/trac/boost/ticket/3639 #3639] Boost.Thread doesn't build with Sun-5.9 on Linux.
+* [@http://svn.boost.org/trac/boost/ticket/3762 #3762] Thread can't be compiled with winscw (Codewarrior by Nokia).
+* [@http://svn.boost.org/trac/boost/ticket/3885 #3885] document about mix usage of boost.thread and native thread api.
+* [@http://svn.boost.org/trac/boost/ticket/3975 #3975] Incorrect precondition for promise::set_wait_callback().
+
+* [@http://svn.boost.org/trac/boost/ticket/4048 #4048] thread::id formatting involves locale
+* [@http://svn.boost.org/trac/boost/ticket/4315 #4315] gcc 4.4 Warning: inline ... declared as dllimport: attribute ignored. 
+* [@http://svn.boost.org/trac/boost/ticket/4480 #4480] OpenVMS patches for compiler issues workarounds.
+* [@http://svn.boost.org/trac/boost/ticket/4819 #4819] boost.thread's documentation misprints.
+
+* [@http://svn.boost.org/trac/boost/ticket/5423 #5423] thread issues with C++0x.
+* [@http://svn.boost.org/trac/boost/ticket/5617 #5617] boost::thread::id copy ctor.
+* [@http://svn.boost.org/trac/boost/ticket/5739 #5739] set-but-not-used warnings with gcc-4.6.
+* [@http://svn.boost.org/trac/boost/ticket/5826 #5826] threads.cpp: resource leak on threads creation failure.
+* [@http://svn.boost.org/trac/boost/ticket/5839 #5839] thread.cpp: ThreadProxy leaks on exceptions.
+* [@http://svn.boost.org/trac/boost/ticket/5859 #5859] win32 shared_mutex constructor leaks on exceptions. 
+
+* [@http://svn.boost.org/trac/boost/ticket/6100 #6100] Compute hardware_concurrency() using get_nprocs() on GLIBC systems.
+* [@http://svn.boost.org/trac/boost/ticket/6168 #6168] recursive_mutex is using wrong config symbol (possible typo).
+* [@http://svn.boost.org/trac/boost/ticket/6175 #6175] Compile error with SunStudio.
+* [@http://svn.boost.org/trac/boost/ticket/6200 #6200] patch to have condition_variable and mutex error better handle EINTR. 
+* [@http://svn.boost.org/trac/boost/ticket/6207 #6207] shared_lock swap compiler error on clang 3.0 c++11. 
+* [@http://svn.boost.org/trac/boost/ticket/6208 #6208] try_lock_wrapper swap compiler error on clang 3.0 c++11. 
+
+
+[heading Changes since boost 1.40]
 
 The 1.41.0 release of Boost adds futures to the thread library. There are also a few minor changes.
 
@@ -85,3 +119,22 @@ been moved to __thread_id__.
   unlocked one level, and not completely. This prior behaviour was not guaranteed and did not feature in the tests.
 
 [endsect]
+
+[section:future Future]
+
+The following features will be included in next releases. By order of priority:
+
+* [@http://svn.boost.org/trac/boost/ticket/6194 #6194] Adapt to Boost.Move. 
+* [@http://svn.boost.org/trac/boost/ticket/4710 #4710] Missing async(). 
+* [@http://svn.boost.org/trac/boost/ticket/6195 #6195] Provide the standard time related interface using Boost.Chrono. 
+  * [@http://svn.boost.org/trac/boost/ticket/2637 #2637] shared mutex lock
+* Lock guards
+  * [@http://svn.boost.org/trac/boost/ticket/1850 #1850]	request for unlock_guard (and/or unique_unlock) to compliment lock_guard/unique_lock
+  * [@http://svn.boost.org/trac/boost/ticket/3567 #3567] 	Request for shared_lock_guard
+* [@http://svn.boost.org/trac/boost/ticket/2741 #2741] Proposal to manage portable and non portable thread attributes. 
+  * #2880 	Request for Thread scheduler support for boost ..
+  * #3696 	Boost Thread library lacks any way to set priority of threads
+  * #5956 	Add optional stack_size argument to thread::start_thread()
+
+[endsect]
+

@@ -270,9 +270,9 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     CHECK_LOCKED_VALUE_EQUAL(unblocked_count_mutex,max_simultaneous_writers,1u);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
+boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 {
-    boost::unit_test_framework::test_suite* test =
+    boost::unit_test::test_suite* test =
         BOOST_TEST_SUITE("Boost.Threads: shared_mutex test suite");
 
     test->add(BOOST_TEST_CASE(&test_multiple_readers));
