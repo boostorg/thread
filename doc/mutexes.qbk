@@ -75,10 +75,14 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
         void lock();
         void unlock();
         bool try_lock();
-        bool timed_lock(system_time const & abs_time);
-
+        bool timed_lock(system_time const & abs_time); // DEPRECATED V2
         template<typename TimeDuration>
-        bool timed_lock(TimeDuration const & relative_time);
+        bool timed_lock(TimeDuration const & relative_time); // DEPRECATED V2
+
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& t);
 
         typedef platform-specific-type native_handle_type;
         native_handle_type native_handle();
@@ -181,10 +185,14 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
         bool try_lock();
         void unlock();
 
-        bool timed_lock(system_time const & abs_time);
-
+        bool timed_lock(system_time const & abs_time); // DEPRECATED V2 
         template<typename TimeDuration>
-        bool timed_lock(TimeDuration const & relative_time);
+        bool timed_lock(TimeDuration const & relative_time); // DEPRECATED V2
+
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& t);
 
         typedef platform-specific-type native_handle_type;
         native_handle_type native_handle();
