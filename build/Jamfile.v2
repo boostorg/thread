@@ -44,7 +44,17 @@ project boost/thread
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
+      <define>BOOST_SYSTEM_NO_DEPRECATED
+      <library>/boost/chrono//boost_chrono
+      <library>/boost/system//boost_system
+
     # : default-build <threading>multi
+    : usage-requirements  # pass these requirement to dependents (i.e. users)
+      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+      <define>BOOST_SYSTEM_NO_DEPRECATED
+      <library>/boost/chrono//boost_chrono
+      <library>/boost/system//boost_system
     ;
 
 local rule default_threadapi ( )
