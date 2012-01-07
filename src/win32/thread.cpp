@@ -81,7 +81,7 @@ namespace boost
 
         DWORD WINAPI ThreadProxy(LPVOID args)
         {
-            autp_ptr<ThreadProxyData> data=reinterpret_cast<ThreadProxyData*>(args);
+            std::auto_ptr<ThreadProxyData> data(reinterpret_cast<ThreadProxyData*>(args));
             DWORD ret=data->start_address_(data->arglist_);
             return ret;
         }
