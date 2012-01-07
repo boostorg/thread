@@ -518,6 +518,13 @@ namespace boost
     }
 #endif
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<unique_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+
     template<typename Mutex>
     class shared_lock
     {
@@ -553,7 +560,9 @@ namespace boost
         {
             timed_lock(target_time);
         }
+#ifndef BOOST_NO_RVALUE_REFERENCES
 
+#else
         shared_lock(detail::thread_move_t<shared_lock<Mutex> > other):
             m(other->m),is_locked(other->is_locked)
         {
@@ -614,6 +623,7 @@ namespace boost
             swap(temp);
             return *this;
         }
+#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         void swap(shared_lock&& other)
@@ -709,6 +719,14 @@ namespace boost
 
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+  template <typename Mutex>
+  struct has_move_emulation_enabled_aux<shared_lock<Mutex> >
+  : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+  {};
+#endif
+
+
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
     void swap(shared_lock<Mutex>&& lhs,shared_lock<Mutex>&& rhs)
@@ -758,7 +776,7 @@ namespace boost
         {
             try_lock();
         }
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         upgrade_lock(upgrade_lock<Mutex>&& other):
             m(other.m),is_locked(other.is_locked)
         {
@@ -893,6 +911,12 @@ namespace boost
         friend class unique_lock<Mutex>;
     };
 
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<upgrade_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
@@ -938,7 +962,7 @@ namespace boost
             }
         }
 
-#ifdef BOOST_HAS_RVALUE_REFS
+#ifndef BOOST_NO_RVALUE_REFERENCES
         upgrade_to_unique_lock(upgrade_to_unique_lock<Mutex>&& other):
             source(other.source),exclusive(move(other.exclusive))
         {
@@ -984,6 +1008,13 @@ namespace boost
             return exclusive.owns_lock();
         }
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename Mutex>
+    struct has_move_emulation_enabled_aux<upgrade_to_unique_lock<Mutex> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     namespace detail
     {

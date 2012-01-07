@@ -24,6 +24,7 @@
 #include <memory>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
+#include <boost/io/ios_state.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -444,6 +445,7 @@ namespace boost
         {
             if(x.thread_data)
             {
+                io::ios_flags_saver  ifs( os );
                 return os<< std::hex << x.thread_data;
             }
             else
@@ -518,6 +520,13 @@ namespace boost
 
         void BOOST_THREAD_DECL add_thread_exit_function(thread_exit_function_base*);
     }
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <>
+    struct has_move_emulation_enabled_aux<thread>
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     namespace this_thread
     {

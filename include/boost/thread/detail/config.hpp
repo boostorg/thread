@@ -10,6 +10,15 @@
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 
+
+#if !defined BOOST_THREAD_VERSION
+#define BOOST_THREAD_VERSION 1
+#else
+#if BOOST_THREAD_VERSION!=1  && BOOST_THREAD_VERSION!=2
+#error "BOOST_THREAD_VERSION must be 1 or 2"
+#endif
+#endif
+
 #if BOOST_WORKAROUND(__BORLANDC__, < 0x600)
 #  pragma warn -8008 // Condition always true/false
 #  pragma warn -8080 // Identifier declared but never used

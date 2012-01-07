@@ -62,4 +62,29 @@ rule thread-run ( sources )
           [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
           [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
     ;
+
+
+    #explicit tickets ;
+    test-suite tickets
+    : 
+          [ thread-run test_6170.cpp ]
+    ;
+
+
+    explicit oth_tickets ;
+    test-suite oth_tickets
+    : 
+          [ thread-run test_2501.cpp ]
+          [ thread-run test_4521.cpp ]
+          [ thread-run test_4648.cpp ]
+          [ thread-run test_4882.cpp ]
+          [ thread-run test_5351.cpp ]
+          [ thread-run test_5502.cpp ]
+          [ thread-run test_5542_1.cpp ]
+          [ thread-run test_5542_2.cpp ]
+          [ thread-run test_5542_3.cpp ]
+          [ thread-run test_6130.cpp ]
+          [ thread-run test_6174.cpp ]
+    ;
+
 }
