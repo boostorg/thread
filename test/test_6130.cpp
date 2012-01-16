@@ -2,13 +2,16 @@
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #include <unistd.h>
-
+#endif
 boost::mutex mtx;
 boost::condition_variable cv;
 
 int main()
 {
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+
          for (int i=0; i<3; ++i) {
                  const time_t wait_time = ::time(0)+1;
 
@@ -18,5 +21,6 @@ int main()
                  assert(end_time >= wait_time);
                  std::cerr << end_time - wait_time << " OK\n";
          }
+#endif
          return 0;
 }

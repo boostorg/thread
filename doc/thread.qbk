@@ -1,14 +1,16 @@
 [/
-  (C) Copyright 2007-8 Anthony Williams.
+  (C) Copyright 2008-11 Anthony Williams
+  (C) Copyright 2011-12 Vicente J. Botet Escriba
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
 [article Thread
-    [quickbook 1.4]
-    [authors [Williams, Anthony]]
-    [copyright 2007-8 Anthony Williams]
+    [quickbook 1.5]
+    [authors [Williams, Anthony] [Botet Escriba, Vicente J.]]
+    [copyright 2007-11 Anthony Williams]
+    [copyright 2011-12 Vicente J. Botet Escriba]
     [purpose C++ Library for launching threads and synchronizing data between them]
     [category text]
     [license
@@ -52,6 +54,9 @@
 
 [template timed_lock_ref_link[link_text] [link thread.synchronization.mutex_concepts.timed_lockable.timed_lock [link_text]]]
 [def __timed_lock_ref__ [timed_lock_ref_link `timed_lock()`]]
+
+[def __try_lock_for [link thread.synchronization.mutex_concepts.timed_lockable.try_lock_for `try_lock_for`]]
+[def __try_lock_until [link thread.synchronization.mutex_concepts.timed_lockable.try_lock_until `try_lock_until`]]
 
 [template timed_lock_duration_ref_link[link_text] [link thread.synchronization.mutex_concepts.timed_lockable.timed_lock_duration [link_text]]]
 [def __timed_lock_duration_ref__ [timed_lock_duration_ref_link `timed_lock()`]]
@@ -117,14 +122,22 @@
 
 
 [def __thread__ [link thread.thread_management.thread `boost::thread`]]
+[def __thread [link thread.thread_management.thread `boost::thread`]]
 [def __thread_id__ [link thread.thread_management.thread.id `boost::thread::id`]]
 [template join_link[link_text] [link thread.thread_management.thread.join [link_text]]]
 [def __join__ [join_link `join()`]]
+
+[def __try_join_for [link thread.thread_management.thread.try_join_for `try_join_for`]]
+[def __try_join_until [link thread.thread_management.thread.try_join_until `try_join_until`]]
+
+
 [template timed_join_link[link_text] [link thread.thread_management.thread.timed_join [link_text]]]
 [def __timed_join__ [timed_join_link `timed_join()`]]
 [def __detach__ [link thread.thread_management.thread.detach `detach()`]]
 [def __interrupt__ [link thread.thread_management.thread.interrupt `interrupt()`]]
 [def __sleep__ [link thread.thread_management.this_thread.sleep `boost::this_thread::sleep()`]]
+[def __sleep_for [link thread.thread_management.this_thread.sleep_for `sleep_for`]]
+[def __sleep_until [link thread.thread_management.this_thread.sleep_until `sleep_until`]]
 
 [def __interruption_enabled__ [link thread.thread_management.this_thread.interruption_enabled `boost::this_thread::interruption_enabled()`]]
 [def __interruption_requested__ [link thread.thread_management.this_thread.interruption_requested `boost::this_thread::interruption_requested()`]]
@@ -140,10 +153,20 @@
 [def __cond_wait__ [cond_wait_link `wait()`]]
 [template cond_timed_wait_link[link_text] [link thread.synchronization.condvar_ref.condition_variable.timed_wait [link_text]]]
 [def __cond_timed_wait__ [cond_timed_wait_link `timed_wait()`]]
+
+[def __condition_variable [link thread.synchronization.condvar_ref.condition_variable `condition_variable`]]
+[def __wait_for [link thread.synchronization.condvar_ref.condition_variable.wait_for `wait_for`]]
+[def __wait_until [link thread.synchronization.condvar_ref.condition_variable.wait_until `wait_until`]]
+
+
 [template cond_any_wait_link[link_text] [link thread.synchronization.condvar_ref.condition_variable_any.wait [link_text]]]
 [def __cond_any_wait__ [cond_any_wait_link `wait()`]]
 [template cond_any_timed_wait_link[link_text] [link thread.synchronization.condvar_ref.condition_variable_any.timed_wait [link_text]]]
 [def __cond_any_timed_wait__ [cond_any_timed_wait_link `timed_wait()`]]
+
+[def __condition_variable_any [link thread.synchronization.condvar_ref.condition_variable_any `condition_variable_any`]]
+[def __cvany_wait_for [link thread.synchronization.condvar_ref.condition_variable_any.wait_for `wait_for`]]
+[def __cvany_wait_until [link thread.synchronization.condvar_ref.condition_variable_any.wait_until `wait_until`]]
 
 [def __blocked__ ['blocked]]
 

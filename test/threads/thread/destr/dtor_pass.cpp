@@ -69,10 +69,10 @@ int main()
     BOOST_TEST(!G::op_run);
     boost::thread t( (G()));
     boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
-    //boost::this_thread::sleep(boost::posix_time::milliseconds(250));
-
   }
+#if 0
   BOOST_TEST(false);
+#endif
   return boost::report_errors();
 }
 

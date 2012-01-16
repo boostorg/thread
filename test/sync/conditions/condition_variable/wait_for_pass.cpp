@@ -17,6 +17,7 @@
 
 // condition_variable(const condition_variable&) = delete;
 
+#include <iostream>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -32,15 +33,16 @@ int runs = 0;
 
 void f()
 {
-  typedef boost::chrono::system_clock Clock;
+  typedef boost::chrono::steady_clock Clock;
   typedef boost::chrono::milliseconds milliseconds;
   boost::unique_lock<boost::mutex> lk(mut);
   BOOST_TEST(test2 == 0);
   test1 = 1;
   cv.notify_one();
   Clock::time_point t0 = Clock::now();
+  int count=0;
   while (test2 == 0 && cv.wait_for(lk, milliseconds(250)) == boost::cv_status::no_timeout)
-    ;
+    count++;
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
@@ -49,7 +51,7 @@ void f()
   }
   else
   {
-    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(5));
+    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(count*250+5));
     BOOST_TEST(test2 == 0);
   }
   ++runs;

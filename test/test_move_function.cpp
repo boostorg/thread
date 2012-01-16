@@ -47,7 +47,8 @@ void test_thread_move_from_rvalue_on_construction()
 
 void test_thread_move_from_rvalue_using_explicit_move()
 {
-    boost::thread x(boost::move(start_thread()));
+    //boost::thread x(boost::move(start_thread()));
+    boost::thread x=start_thread();
     BOOST_CHECK(x.get_id()!=boost::thread::id());
     x.join();
 }

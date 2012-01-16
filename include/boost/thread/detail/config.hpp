@@ -19,6 +19,8 @@
 #endif
 #endif
 
+#define BOOST_THREAD_USES_MOVE
+
 #ifdef BOOST_NO_SCOPED_ENUMS
 #define BOOST_DECLARE_STRONG_ENUM_BEGIN(x) \
   struct x { \
@@ -35,9 +37,9 @@
     friend inline bool operator !=(int lhs, x rhs)  {return lhs!=rhs.v_;} \
   };
 
-#define BOOST_STRONG_ENUM_NATIVE(x) x::type
+#define BOOST_STRONG_ENUM_NATIVE(x) x::enum_type
 #else  // BOOST_NO_SCOPED_ENUMS
-#define BOOST_DECLARE_STRONG_ENUM_BEGIN(x) enum class BOOST_SYMBOL_VISIBLE x
+#define BOOST_DECLARE_STRONG_ENUM_BEGIN(x) enum class x
 #define BOOST_DECLARE_STRONG_ENUM_END(x)
 #define BOOST_STRONG_ENUM_NATIVE(x) x
 #endif  // BOOST_NO_SCOPED_ENUMS

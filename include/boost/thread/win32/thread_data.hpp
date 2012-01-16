@@ -10,11 +10,50 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
+#include <boost/chrono/system_clocks.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+  class thread_attributes {
+  public:
+      thread_attributes() {
+        val_.stack_size = 0;
+        //val_.lpThreadAttributes=0;
+      }
+      ~thread_attributes() {
+      }
+      // stack size
+      void set_stack_size(std::size_t size) {
+        val_.stack_size = size;
+      }
+
+      std::size_t get_stack_size() const {
+          return val_.stack_size;
+      }
+
+      //void set_security(LPSECURITY_ATTRIBUTES lpThreadAttributes)
+      //{
+      //  val_.lpThreadAttributes=lpThreadAttributes;
+      //}
+      //LPSECURITY_ATTRIBUTES get_security()
+      //{
+      //  return val_.lpThreadAttributes;
+      //}
+
+      struct win_attrs {
+        std::size_t stack_size;
+        //LPSECURITY_ATTRIBUTES lpThreadAttributes;
+      };
+      typedef win_attrs native_handle_type;
+      native_handle_type* native_handle() {return &val_;}
+      const native_handle_type* native_handle() const {return &val_;}
+
+  private:
+      win_attrs val_;
+  };
+
     namespace detail
     {
         struct thread_exit_callback_node;
@@ -153,7 +192,7 @@ namespace boost
 
     namespace this_thread
     {
-        void BOOST_THREAD_DECL yield();
+        void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
         bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
         inline void interruptible_wait(uintmax_t milliseconds)
@@ -173,6 +212,10 @@ namespace boost
         inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
         {
             interruptible_wait(abs_time);
+        }
+        inline void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
+        {
+          interruptible_wait(chrono::duration_cast<chrono::milliseconds>(ns).count());
         }
     }
 

@@ -1,4 +1,5 @@
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/locks.hpp>
 
 int main() {
 

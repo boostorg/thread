@@ -16,7 +16,6 @@ namespace boost
   namespace this_thread
   {
 
-    void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns);
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)

@@ -66,6 +66,7 @@ int main()
     BOOST_TEST(t0.get_id() == id1);
     BOOST_TEST(t1.get_id() == id0);
     t1.join();
+    return boost::report_errors();
   }
 }
 

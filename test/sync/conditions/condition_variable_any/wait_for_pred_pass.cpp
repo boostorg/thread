@@ -67,7 +67,7 @@ void f()
   }
   else
   {
-    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(5));
+    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(250+5));
     BOOST_TEST(test2 == 0);
   }
   ++runs;
