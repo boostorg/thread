@@ -1,6 +1,6 @@
-#  (C) Copyright William E. Kempf 2001. 
-#  (C) Copyright 2007 Anthony Williams. 
-#  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+#  (C) Copyright William E. Kempf 2001.
+#  (C) Copyright 2007 Anthony Williams.
+#  Distributed under the Boost Software License, Version 1.0. (See accompanying
 #  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
 # Boost.Threads test Jamfile
@@ -25,25 +25,25 @@ project
 
 rule thread-run ( sources )
 {
-    return 
+    return
     [ run $(sources) ../build//boost_thread ]
-    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static 
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
         : : : : $(sources[1]:B)_lib ]
     ;
-}    
+}
 
 rule thread-run2 ( sources : name )
 {
-    return 
+    return
     [ run $(sources) ../build//boost_thread : : : : $(name) ]
-    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static 
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
         : : : : $(name)_lib ]
     ;
-}    
+}
 
 {
     test-suite threads
-    : 
+    :
           [ thread-run test_thread.cpp ]
           [ thread-run test_thread_id.cpp ]
           [ thread-run test_hardware_concurrency.cpp ]
@@ -74,33 +74,37 @@ rule thread-run2 ( sources : name )
     ;
 
 
-    explicit tickets ;
+    #explicit tickets ;
     test-suite tickets
-    : 
-          [ compile test_6170.cpp ]
+    :
+          [ thread-run test_2309.cpp ]
+          [ thread-run test_2501.cpp ]
+          [ thread-run test_2741.cpp ]
+          [ thread-run test_4521.cpp ]
+          [ thread-run test_4648.cpp ]
+          [ thread-run test_4882.cpp ]
+          [ thread-run test_5542_1.cpp ]
+          [ thread-run test_5542_2.cpp ]
+          [ thread-run test_5542_3.cpp ]
+          [ thread-run test_5891.cpp ]
+          [ thread-run test_6130.cpp ]
+          [ thread-run test_6170.cpp ]
+          [ thread-run test_6174.cpp ]
     ;
 
 
     explicit oth_tickets ;
     test-suite oth_tickets
-    : 
-          [ thread-run test_6174.cpp ]
-          [ thread-run test_2501.cpp ]
-          [ thread-run test_4521.cpp ]
-          [ thread-run test_4648.cpp ]
-          [ thread-run test_4882.cpp ]
+    :
           [ thread-run test_5351.cpp ]
           [ thread-run test_5502.cpp ]
-          [ thread-run test_5542_1.cpp ]
-          [ thread-run test_5542_2.cpp ]
-          [ thread-run test_5542_3.cpp ]
-          [ thread-run test_6130.cpp ]
-
     ;
 
-    explicit conditions ;
+
+
+    #explicit conditions ;
     test-suite conditions
-    : 
+    :
           [ compile-fail ./sync/conditions/condition_variable/assign_fail.cpp : : conditions__condition_variable__assign_fail ]
           [ compile-fail ./sync/conditions/condition_variable/copy_fail.cpp : : conditions__condition_variable__copy_fail ]
           [ thread-run2 ./sync/conditions/condition_variable/default_pass.cpp : conditions__condition_variable__default_pass ]
@@ -123,14 +127,23 @@ rule thread-run2 ( sources : name )
     ;
 
     #explicit futures ;
-    #test-suite futures
-    #: 
+    test-suite futures
+    :
     #      [ thread-run2 ./sync/futures/async/async_pass.cpp : futures__async__async_pass ]
-    #;
+          [ thread-run2 ./sync/futures/promise/default_pass.cpp : futures__promise__default_pass ]
+          [ thread-run2 ./sync/futures/promise/dtor_pass.cpp : futures__promise__dtor_pass ]
+          [ thread-run2 ./sync/futures/promise/get_future_pass.cpp : futures__promise__get_future_pass ]
+    ;
 
-    explicit mutual_exclusion ;
+    explicit tt ;
+    test-suite tt
+    :
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/try_to_lock_pass.cpp : xmutual_exclusion__locks__unique_lock__cons__try_to_lock_pass ]
+    ;
+
+    #explicit mutual_exclusion ;
     test-suite mutual_exclusion
-    : 
+    :
 
           [ compile-fail ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_assign_fail ]
           [ compile-fail ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_ctor_fail ]
@@ -190,26 +203,26 @@ rule thread-run2 ( sources : name )
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : mutual_exclusion__timed_mutex__try_lock_until_pass ]
     ;
 
-    explicit this_thread ;
+    #explicit this_thread ;
     test-suite this_thread
-    : 
+    :
           [ thread-run2 ./threads/this_thread/get_id/get_id_pass.cpp : this_thread__get_id__get_id_pass ]
           [ thread-run2 ./threads/this_thread/sleep_for/sleep_for_pass.cpp : this_thread__sleep_for__sleep_for_pass ]
           [ thread-run2 ./threads/this_thread/sleep_until/sleep_until_pass.cpp : this_thread__sleep_until__sleep_until_pass ]
     ;
 
-    explicit thread ;
+    #explicit thread ;
     test-suite thread
-    : 
+    :
           [ compile-fail ./threads/thread/assign/copy_fail.cpp : : thread__assign__copy_fail ]
-          #[ thread-run2 ./threads/thread/assign/move_pass.cpp : thread__assign__move_pass ]
+          [ thread-run2 ./threads/thread/assign/move_pass.cpp : thread__assign__move_pass ]
           [ compile-fail ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_fail ]
           [ thread-run2 ./threads/thread/constr/default_pass.cpp : thread__constr__default_pass ]
           [ thread-run2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_pass ]
-          #[ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_pass ]
+          [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_pass ]
           #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_pass ]
-          #[ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_pass ]
-          #[ thread-run2 ./threads/thread/destr/dtor_pass.cpp : thread__destr__dtor_pass ]
+          [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_pass ]
+          [ thread-run2 ./threads/thread/destr/dtor_pass.cpp : thread__destr__dtor_pass ]
           [ thread-run2 ./threads/thread/id/hash_pass.cpp : thread__id__hash_pass ]
           [ thread-run2 ./threads/thread/members/detach_pass.cpp : thread__members__detach_pass ]
           [ thread-run2 ./threads/thread/members/get_id_pass.cpp : thread__members__get_id_pass ]

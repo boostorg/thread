@@ -253,6 +253,8 @@ namespace boost
             {
                 state.exclusive_waiting_blocked=false;
                 release_waiters();
+            } else {
+              shared_cond.notify_all();
             }
         }
 
@@ -296,6 +298,7 @@ namespace boost
             release_waiters();
         }
     };
+
 }
 
 #include <boost/config/abi_suffix.hpp>

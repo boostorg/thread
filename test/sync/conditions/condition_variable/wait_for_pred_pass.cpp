@@ -54,7 +54,9 @@ void f()
   test1 = 1;
   cv.notify_one();
   Clock::time_point t0 = Clock::now();
+  int count=0;
   bool r = cv.wait_for(lk, milliseconds(250), Pred(test2));
+  count++;
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
@@ -63,7 +65,7 @@ void f()
   }
   else
   {
-    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(2));
+    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(count*250+2));
     BOOST_TEST(test2 == 0);
   }
   ++runs;

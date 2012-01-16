@@ -1,6 +1,6 @@
 // Copyright (C) 2009 Anthony Williams
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #include <boost/thread/thread.hpp>
 #include <boost/test/unit_test.hpp>
@@ -13,7 +13,7 @@ void do_nothing(boost::thread::id* my_id)
 boost::thread make_thread_return_local(boost::thread::id* the_id)
 {
     boost::thread t(do_nothing,the_id);
-    return t;
+    return boost::move(t);
 }
 
 void test_move_from_function_return_local()

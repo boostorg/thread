@@ -27,12 +27,19 @@ boost::mutex m;
 
 int main()
 {
+  {
   boost::unique_lock<boost::mutex> lk0(m);
   boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
+  }
+  {
+  boost::unique_lock<boost::mutex> lk( (boost::unique_lock<boost::mutex>(m)));
+  BOOST_TEST(lk.mutex() == &m);
+  BOOST_TEST(lk.owns_lock() == true);
+  }
 
   return boost::report_errors();
 }

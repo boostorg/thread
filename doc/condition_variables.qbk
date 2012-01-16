@@ -1,6 +1,6 @@
 [/
-  (C) Copyright 2007-8 Anthony Williams.
-  (C) Copyright 2011 Vicente J. Botet Escriba.
+  (C) Copyright 2007-11 Anthony Williams.
+  (C) Copyright 2011-12 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -656,6 +656,96 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 while(!pred())
 {
     if(!timed_wait(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[section:wait_until `template <class lock_type, class Clock, class Duration> cv_status wait_until(lock_type& lock, const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Effects:] [Atomically call `lock.unlock()` and blocks the current thread. The
+thread will unblock when notified by a call to `this->notify_one()` or
+`this->notify_all()`, when the time as reported by `Clock::now()`
+would be equal to or later than the specified `abs_time`, or spuriously. When
+the thread is unblocked (for whatever reason), the lock is reacquired by
+invoking `lock.lock()` before the call to `wait` returns. The lock is also
+reacquired by invoking `lock.lock()` if the function exits with an exception.]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class lock_type, class Rep, class Period> cv_status wait_for(lock_type& lock, const chrono::duration<Rep, Period>& rel_time)`]
+
+[variablelist
+
+[[Effects:] [Atomically call `lock.unlock()` and blocks the current thread. The
+thread will unblock when notified by a call to `this->notify_one()` or
+`this->notify_all()`, after the period of time indicated by the `rel_time`
+argument has elapsed, or spuriously. When the thread is unblocked (for whatever
+reason), the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:wait_until_predicate `template <class lock_type, class Clock, class Duration, class Predicate> bool wait_until(lock_type& lock, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!__cvany_wait_until(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[section:wait_for_predicate `template <class lock_type, class Rep, class Period, class Predicate> bool wait_until(lock_type& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!__cvany_wait_for(lock,rel_time))
     {
         return pred();
     }

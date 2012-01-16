@@ -1,6 +1,6 @@
 [/
   (C) Copyright 2007-8 Anthony Williams.
-  (C) Copyright 2011 Vicente J. Botet Escriba.
+  (C) Copyright 2011-12 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -8,7 +8,7 @@
 
 [section:thread_management Thread Management]
 
-[heading Synopsis]
+[section:synopsis Synopsis]
 
   namespace boost 
   {
@@ -34,6 +34,10 @@
     }
   }
 
+[endsect] [/section:synopsis Synopsis]
+
+[section:tutorial Tutorial]
+
 The __thread__ class is responsible for launching and managing threads. Each __thread__ object represents a single thread of execution,
 or __not_a_thread__, and at most one __thread__ object represents a given thread of execution: objects of type __thread__ are not
 copyable.
@@ -49,14 +53,14 @@ allows the details of thread creation to be wrapped in a function.
         some_thread.join();
     }
 
-[Note: On compilers that support rvalue references, __thread__ provides a proper move constructor and move-assignment operator, and
+[note On compilers that support rvalue references, __thread__ provides a proper move constructor and move-assignment operator, and
 therefore meets the C++0x ['MoveConstructible] and ['MoveAssignable] concepts. With such compilers, __thread__ can therefore be used
 with containers that support those concepts.
 
 For other compilers, move support is provided with a move emulation layer, so containers must explicitly detect that move emulation
 layer. See <boost/thread/detail/move.hpp> for details.]
 
-[heading Launching threads]
+[section:launching Launching threads]
 
 A new thread is launched by passing an object of a callable type that can be invoked with no parameters to the constructor. The
 object is then copied into internal storage, and invoked on the newly-created thread of execution. If the object must not (or
@@ -93,12 +97,99 @@ to callable functions.
 
 There is an unspecified limit on the number of additional arguments that can be passed.
 
-[heading Exceptions in thread functions]
+[endsect]
+
+[section:attributes Thread attributes]
+
+Thread launched in this way are created with implementation defined thread attributes as stack size, scheduling, 
+priority, ... or any platform specific attributes. It is not evident how to provide a portable interface that allows 
+the user to set the platform specific attributes. Boost.Thread stay in the middle road through the class 
+thread::attributes which allows to set at least in a portable way the stack size as follows:
+
+  boost::thread::attributes attrs;
+  attrs.set_size(4096*10);
+  boost::thread deep_thought_2(attrs, find_the_question, 42);
+
+Even for this simple attribute there could be portable issues as some platforms could require that the stack size 
+should have a minimal size and/or be a multiple of a given page size. 
+The library adapts the requested size to the platform constraints so that the user doesn't need to take care of it.
+
+This is the single attribute that is provided in a portable way. In order to set any other thread attribute at 
+construction time the user needs to use non portable code.
+
+On PThread platforms the user will need to get the thread attributes handle and use it for whatever attribute.
+
+Next follows how the user could set the stack size and the scheduling policy on PThread platforms.
+
+    boost::thread::attributes attrs;
+    // set portable attributes
+    // ...
+    attr.set_stack_size(4096*10);
+    #if defined(BOOST_THREAD_PLATFORM_WIN32)
+        // ... window version
+    #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
+        // ... pthread version
+        pthread_attr_setschedpolicy(attr.get_native_handle(), SCHED_RR);
+    #else
+    #error "Boost threads unavailable on this platform"
+    #endif
+    boost::thread th(attrs, find_the_question, 42);
+        
+On Windows platforms it is not so simple as there is no type that compiles the thread attributes. 
+There is a linked to the creation of a thread on Windows that is emulated via the thread::attributes class. This is the LPSECURITY_ATTRIBUTES lpThreadAttributes.
+Boost.Thread provides a non portable set_security function so that the user can provide it before the thread creation as follows
+  
+[/Boost.Thread creates Windows threads that are suspended. Then it calls to the virtual function set_attributes and last it resumes the thread. 
+The user needs to define a class that inherits from the class thread::attributes that defines a virtual function set_attributes to set any specific Windows thread attribute.
+
+
+    class MyWinTthreadAttributes : boost::thread::attributes
+    {
+    public:
+      void set_attributes(boost::thread::native_handle_type h)
+      {
+        // use any specific windows thread setting
+        
+      }
+    };
+    #if defined(BOOST_THREAD_PLATFORM_WIN32)
+    
+      MyWinTthreadAttributes attrs;
+      // set portable attributes
+      // ...
+      attr.set_stack_size(4096*10);
+      boost::thread th(attrs, find_the_question, 42);
+    #else
+    #error "Platform not supported"
+    #endif
+
+]
+
+    #if defined(BOOST_THREAD_PLATFORM_WIN32)
+      boost::thread::attributes attrs;
+      // set portable attributes
+      attr.set_stack_size(4096*10);
+      // set non portable attribute
+      LPSECURITY_ATTRIBUTES sec;
+      // init sec 
+      attr.set_security(sec);
+      boost::thread th(attrs, find_the_question, 42);
+      // Set other thread attributes using the native_handle_type.
+      //...
+    #else
+    #error "Platform not supported"
+    #endif
+
+[endsect]
+
+[section:exceptions Exceptions in thread functions]
 
 If the function or callable object passed to the __thread__ constructor propagates an exception when invoked that is not of type
 __thread_interrupted__, `std::terminate()` is called. 
 
-[heading Joining and detaching]
+[endsect]
+
+[section:join Joining and detaching]
 
 When the __thread__ object that represents a thread of execution is destroyed the thread becomes ['detached]. Once a thread is
 detached, it will continue executing until the invocation of the function or callable object supplied on construction has completed,
@@ -111,7 +202,9 @@ execution represented by the __thread__ object has already completed, or the __t
 returns immediately. __timed_join__ is similar, except that a call to __timed_join__ will also return if the thread being waited for
 does not complete when the specified time has elapsed.
 
-[heading Interruption]
+[endsect]
+
+[section:interruption Interruption]
 
 A running thread can be ['interrupted] by invoking the __interrupt__ member function of the corresponding __thread__ object. When the
 interrupted thread next executes one of the specified __interruption_points__ (or if it is currently __blocked__ whilst executing one)
@@ -168,22 +261,24 @@ current thread, and interruption is requested for the current thread:
 
 * [join_link `boost::thread::join()`]
 * [timed_join_link `boost::thread::timed_join()` DEPRECATED V2]
-* `thread::__try_join_for()`,
-* `thread::__try_join_until()`,
+* `boost::__thread::__try_join_for()`,
+* `boost::__thread::__try_join_until()`,
 * [cond_wait_link `boost::condition_variable::wait()`]
 * [cond_timed_wait_link `boost::condition_variable::timed_wait()` DEPRECATED V2]
-* `__condition_variable::__wait_for()`
-* `__condition_variable::__wait_until()`
+* `boost::__condition_variable::__wait_for()`
+* `boost::__condition_variable::__wait_until()`
 * [cond_any_wait_link `boost::condition_variable_any::wait()`]
 * [cond_any_timed_wait_link `boost::condition_variable_any::timed_wait()` DEPRECATED V2]
-* `__condition_variable_any::__wait_for()`
-* `__condition_variable_any::__wait_until()`
+* `boost::__condition_variable_any::__cvany_wait_for()`
+* `boost::__condition_variable_any::__cvany_wait_until()`
 * [link thread.thread_management.thread.sleep `boost::thread::sleep()` DEPRECATED V2]
-* `this_thread::__sleep_for()`
-* `this_thread::__sleep_until()`
+* `boost::this_thread::__sleep_for()`
+* `boost::this_thread::__sleep_until()`
 * __interruption_point__
 
-[heading Thread IDs]
+[endsect]
+
+[section:id Thread IDs]
 
 Objects of class __thread_id__ can be used to identify threads. Each running thread of execution has a unique ID obtainable
 from the corresponding __thread__ by calling the `get_id()` member function, or by calling `boost::this_thread::get_id()` from
@@ -195,13 +290,14 @@ Each instance of __thread_id__ either refers to some thread, or __not_a_thread__
 compare equal to each other, but not equal to any instances that refer to an actual thread of execution. The comparison operators on
 __thread_id__ yield a total order for every non-equal thread ID.
 
-[heading Using native interfaces with Boost.Thread resources] 
+[endsect]
+
+[section:native_in Using native interfaces with Boost.Thread resources] 
 
 
 __thread__ class has members `native_handle_type` and `native_handle` providing access to the underlying native handle.  
 	 
 This native handle can be used to change for example the scheduling. 
-
 
 In general, it is not safe to use this handle with operations that can conflict with the ones provided by Boost.Thread. An example of bad usage could be detaching a thread directly as it will not change the internals of the __thread__ instance, so for example the joinable function will continue to return true, while the native thread is no more joinable. 
 
@@ -210,7 +306,9 @@ In general, it is not safe to use this handle with operations that can conflict 
   pthread_detach(hnd); 
   assert(t.joinable()); 
 
-[heading Using Boost.Thread interfaces in a native thread] 
+[endsect]
+
+[section:native_from Using Boost.Thread interfaces in a native thread] 
  
 
 Any thread of execution created using the native interface is called a native thread in this documentation. 
@@ -238,6 +336,10 @@ As the single way to interrupt a thread is through a __thread__ instance, `inter
 `pthread_exit` in glibc/NPTL causes a "forced unwind" that is almost like a C++ exception, but not quite. On Mac OS X, for example, `pthread_exit` unwinds without calling C++ destructors.
 
 This behavior is incompatible with the current Boost.Thread design, so the use of this function in a POSIX thread result in undefined behavior of any Boost.Thread function.
+
+[endsect]
+
+[endsect] [/section:tutorial Tutorial]
 
 [section:thread Class `thread`]
 

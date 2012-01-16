@@ -1,4 +1,4 @@
-//  (C) Copyright 2008-10 Anthony Williams 
+//  (C) Copyright 2008-10 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -21,23 +21,31 @@
         return static_cast<typename boost::remove_reference<T>::type&&>(t);
     }
 #else
+#if defined BOOST_THREAD_USES_MOVE
+    template<typename T>
+    boost::rv<T>& cast_to_rval(T& t)
+    {
+        return boost::move(t);
+    }
+#else
     template<typename T>
     boost::detail::thread_move_t<T> cast_to_rval(T& t)
     {
         return boost::move(t);
     }
 #endif
+#endif
 
 struct X
 {
 private:
-    
+
     X(X& other);
-    
+
 public:
-    
+
     int i;
-    
+
     X():
         i(42)
     {}
@@ -46,6 +54,21 @@ public:
         i(other.i)
     {
         other.i=0;
+    }
+#else
+#if defined BOOST_THREAD_USES_MOVE
+    X(boost::rv<X>& other):
+        i(other.i)
+    {
+        other.i=0;
+    }
+    operator ::boost::rv<X>&()
+    {
+      return *static_cast< ::boost::rv<X>* >(this);
+    }
+    operator const ::boost::rv<X>&() const
+    {
+      return *static_cast<const ::boost::rv<X>* >(this);
     }
 #else
     X(boost::detail::thread_move_t<X> other):
@@ -57,6 +80,7 @@ public:
     {
         return boost::detail::thread_move_t<X>(*this);
     }
+#endif
 #endif
     ~X()
     {}
@@ -114,7 +138,7 @@ void test_store_exception()
     {
         BOOST_CHECK(true);
     }
-    
+
     BOOST_CHECK(fi3.is_ready());
     BOOST_CHECK(!fi3.has_value());
     BOOST_CHECK(fi3.has_exception());
@@ -177,7 +201,7 @@ void test_set_value_updates_future_state()
     fi=pi.get_future();
 
     pi.set_value(42);
-    
+
     BOOST_CHECK(fi.is_ready());
     BOOST_CHECK(fi.has_value());
     BOOST_CHECK(!fi.has_exception());
@@ -191,7 +215,7 @@ void test_set_value_can_be_retrieved()
     fi=pi.get_future();
 
     pi.set_value(42);
-    
+
     int i=0;
     BOOST_CHECK(i=fi.get());
     BOOST_CHECK(i==42);
@@ -208,7 +232,7 @@ void test_set_value_can_be_moved()
 //     fi=pi.get_future();
 
 //     pi.set_value(42);
-    
+
 //     int i=0;
 //     BOOST_CHECK(i=fi.get());
 //     BOOST_CHECK(i==42);
@@ -302,7 +326,7 @@ void test_task_stores_exception_if_function_throws()
     {
         BOOST_CHECK(!"Unknown exception thrown");
     }
-    
+
 }
 
 void test_void_promise()
@@ -474,7 +498,7 @@ void test_can_get_a_second_future_from_a_moved_promise()
 {
     boost::promise<int> pi;
     boost::unique_future<int> fi=pi.get_future();
-    
+
     boost::promise<int> pi2(::cast_to_rval(pi));
     boost::unique_future<int> fi2=pi.get_future();
 
@@ -491,7 +515,7 @@ void test_can_get_a_second_future_from_a_moved_void_promise()
 {
     boost::promise<void> pi;
     boost::unique_future<void> fi=pi.get_future();
-    
+
     boost::promise<void> pi2(::cast_to_rval(pi));
     boost::unique_future<void> fi2=pi.get_future();
 
@@ -525,7 +549,7 @@ void test_unique_future_for_string()
     fi=pt2.get_future();
 
     std::string const s="goodbye";
-    
+
     pt2.set_value(s);
     res=fi.get();
     BOOST_CHECK(res=="goodbye");
@@ -534,7 +558,7 @@ void test_unique_future_for_string()
     fi=pt3.get_future();
 
     std::string s2="foo";
-    
+
     pt3.set_value(s2);
     res=fi.get();
     BOOST_CHECK(res=="foo");
@@ -634,7 +658,7 @@ void test_packaged_task_can_be_moved()
     boost::unique_future<int> fi=pt.get_future();
 
     BOOST_CHECK(!fi.is_ready());
-    
+
     boost::packaged_task<int> pt2(::cast_to_rval(pt));
 
     BOOST_CHECK(!fi.is_ready());
@@ -650,14 +674,14 @@ void test_packaged_task_can_be_moved()
     BOOST_CHECK(!fi.is_ready());
 
     pt2();
-    
+
     BOOST_CHECK(fi.is_ready());
 }
 
 void test_destroying_a_promise_stores_broken_promise()
 {
     boost::unique_future<int> f;
-    
+
     {
         boost::promise<int> p;
         f=p.get_future();
@@ -676,7 +700,7 @@ void test_destroying_a_promise_stores_broken_promise()
 void test_destroying_a_packaged_task_stores_broken_promise()
 {
     boost::unique_future<int> f;
-    
+
     {
         boost::packaged_task<int> p(make_int);
         f=p.get_future();
@@ -704,11 +728,11 @@ void test_wait_for_either_of_two_futures_1()
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
     boost::unique_future<int> f2(pt2.get_future());
-    
+
     boost::thread(::cast_to_rval(pt));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2);
-    
+
     BOOST_CHECK(future==0);
     BOOST_CHECK(f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -721,11 +745,11 @@ void test_wait_for_either_of_two_futures_2()
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
     boost::unique_future<int> f2(pt2.get_future());
-    
+
     boost::thread(::cast_to_rval(pt2));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2);
-    
+
     BOOST_CHECK(future==1);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(f2.is_ready());
@@ -740,11 +764,11 @@ void test_wait_for_either_of_three_futures_1()
     boost::unique_future<int> f2(pt2.get_future());
     boost::packaged_task<int> pt3(make_int_slowly);
     boost::unique_future<int> f3(pt3.get_future());
-    
+
     boost::thread(::cast_to_rval(pt));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3);
-    
+
     BOOST_CHECK(future==0);
     BOOST_CHECK(f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -760,11 +784,11 @@ void test_wait_for_either_of_three_futures_2()
     boost::unique_future<int> f2(pt2.get_future());
     boost::packaged_task<int> pt3(make_int_slowly);
     boost::unique_future<int> f3(pt3.get_future());
-    
+
     boost::thread(::cast_to_rval(pt2));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3);
-    
+
     BOOST_CHECK(future==1);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(f2.is_ready());
@@ -780,11 +804,11 @@ void test_wait_for_either_of_three_futures_3()
     boost::unique_future<int> f2(pt2.get_future());
     boost::packaged_task<int> pt3(make_int_slowly);
     boost::unique_future<int> f3(pt3.get_future());
-    
+
     boost::thread(::cast_to_rval(pt3));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3);
-    
+
     BOOST_CHECK(future==2);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -802,11 +826,11 @@ void test_wait_for_either_of_four_futures_1()
     boost::unique_future<int> f3(pt3.get_future());
     boost::packaged_task<int> pt4(make_int_slowly);
     boost::unique_future<int> f4(pt4.get_future());
-    
+
     boost::thread(::cast_to_rval(pt));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4);
-    
+
     BOOST_CHECK(future==0);
     BOOST_CHECK(f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -825,11 +849,11 @@ void test_wait_for_either_of_four_futures_2()
     boost::unique_future<int> f3(pt3.get_future());
     boost::packaged_task<int> pt4(make_int_slowly);
     boost::unique_future<int> f4(pt4.get_future());
-    
+
     boost::thread(::cast_to_rval(pt2));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4);
-    
+
     BOOST_CHECK(future==1);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(f2.is_ready());
@@ -848,11 +872,11 @@ void test_wait_for_either_of_four_futures_3()
     boost::unique_future<int> f3(pt3.get_future());
     boost::packaged_task<int> pt4(make_int_slowly);
     boost::unique_future<int> f4(pt4.get_future());
-    
+
     boost::thread(::cast_to_rval(pt3));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4);
-    
+
     BOOST_CHECK(future==2);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -871,11 +895,11 @@ void test_wait_for_either_of_four_futures_4()
     boost::unique_future<int> f3(pt3.get_future());
     boost::packaged_task<int> pt4(make_int_slowly);
     boost::unique_future<int> f4(pt4.get_future());
-    
+
     boost::thread(::cast_to_rval(pt4));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4);
-    
+
     BOOST_CHECK(future==3);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -896,11 +920,11 @@ void test_wait_for_either_of_five_futures_1()
     boost::unique_future<int> f4(pt4.get_future());
     boost::packaged_task<int> pt5(make_int_slowly);
     boost::unique_future<int> f5(pt5.get_future());
-    
+
     boost::thread(::cast_to_rval(pt));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4,f5);
-    
+
     BOOST_CHECK(future==0);
     BOOST_CHECK(f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -922,11 +946,11 @@ void test_wait_for_either_of_five_futures_2()
     boost::unique_future<int> f4(pt4.get_future());
     boost::packaged_task<int> pt5(make_int_slowly);
     boost::unique_future<int> f5(pt5.get_future());
-    
+
     boost::thread(::cast_to_rval(pt2));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4,f5);
-    
+
     BOOST_CHECK(future==1);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(f2.is_ready());
@@ -947,11 +971,11 @@ void test_wait_for_either_of_five_futures_3()
     boost::unique_future<int> f4(pt4.get_future());
     boost::packaged_task<int> pt5(make_int_slowly);
     boost::unique_future<int> f5(pt5.get_future());
-    
+
     boost::thread(::cast_to_rval(pt3));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4,f5);
-    
+
     BOOST_CHECK(future==2);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -972,11 +996,11 @@ void test_wait_for_either_of_five_futures_4()
     boost::unique_future<int> f4(pt4.get_future());
     boost::packaged_task<int> pt5(make_int_slowly);
     boost::unique_future<int> f5(pt5.get_future());
-    
+
     boost::thread(::cast_to_rval(pt4));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4,f5);
-    
+
     BOOST_CHECK(future==3);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -997,11 +1021,11 @@ void test_wait_for_either_of_five_futures_5()
     boost::unique_future<int> f4(pt4.get_future());
     boost::packaged_task<int> pt5(make_int_slowly);
     boost::unique_future<int> f5(pt5.get_future());
-    
+
     boost::thread(::cast_to_rval(pt5));
-    
+
     unsigned const future=boost::wait_for_any(f1,f2,f3,f4,f5);
-    
+
     BOOST_CHECK(future==4);
     BOOST_CHECK(!f1.is_ready());
     BOOST_CHECK(!f2.is_ready());
@@ -1021,7 +1045,7 @@ void test_wait_for_either_invokes_callbacks()
     pt.set_wait_callback(wait_callback_for_task);
 
     boost::thread(::cast_to_rval(pt));
-    
+
     boost::wait_for_any(fi,fi2);
     BOOST_CHECK(callback_called==1);
     BOOST_CHECK(fi.get()==42);
@@ -1040,11 +1064,11 @@ void test_wait_for_any_from_range()
             futures[j]=tasks[j].get_future();
         }
         boost::thread(::cast_to_rval(tasks[i]));
-    
+
         BOOST_CHECK(boost::wait_for_any(futures,futures)==futures);
-        
+
         boost::unique_future<int>* const future=boost::wait_for_any(futures,futures+count);
-    
+
         BOOST_CHECK(future==(futures+i));
         for(unsigned j=0;j<count;++j)
         {
@@ -1071,9 +1095,9 @@ void test_wait_for_all_from_range()
         futures[j]=task.get_future();
         boost::thread(::cast_to_rval(task));
     }
-    
+
     boost::wait_for_all(futures,futures+count);
-    
+
     for(unsigned j=0;j<count;++j)
     {
         BOOST_CHECK(futures[j].is_ready());
@@ -1090,9 +1114,9 @@ void test_wait_for_all_two_futures()
         futures[j]=task.get_future();
         boost::thread(::cast_to_rval(task));
     }
-    
+
     boost::wait_for_all(futures[0],futures[1]);
-    
+
     for(unsigned j=0;j<count;++j)
     {
         BOOST_CHECK(futures[j].is_ready());
@@ -1109,9 +1133,9 @@ void test_wait_for_all_three_futures()
         futures[j]=task.get_future();
         boost::thread(::cast_to_rval(task));
     }
-    
+
     boost::wait_for_all(futures[0],futures[1],futures[2]);
-    
+
     for(unsigned j=0;j<count;++j)
     {
         BOOST_CHECK(futures[j].is_ready());
@@ -1128,9 +1152,9 @@ void test_wait_for_all_four_futures()
         futures[j]=task.get_future();
         boost::thread(::cast_to_rval(task));
     }
-    
+
     boost::wait_for_all(futures[0],futures[1],futures[2],futures[3]);
-    
+
     for(unsigned j=0;j<count;++j)
     {
         BOOST_CHECK(futures[j].is_ready());
@@ -1147,9 +1171,9 @@ void test_wait_for_all_five_futures()
         futures[j]=task.get_future();
         boost::thread(::cast_to_rval(task));
     }
-    
+
     boost::wait_for_all(futures[0],futures[1],futures[2],futures[3],futures[4]);
-    
+
     for(unsigned j=0;j<count;++j)
     {
         BOOST_CHECK(futures[j].is_ready());

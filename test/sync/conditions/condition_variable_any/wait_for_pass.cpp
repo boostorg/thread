@@ -42,10 +42,11 @@ void f()
     BOOST_TEST(test2 == 0);
     test1 = 1;
     cv.notify_one();
+    int count=0;
     Clock::time_point t0 = Clock::now();
     while (test2 == 0 &&
            cv.wait_for(lk, milliseconds(250)) == boost::cv_status::no_timeout)
-        ;
+        count++;
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {
@@ -54,7 +55,7 @@ void f()
     }
     else
     {
-        BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(5));
+        BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(count*250+5));
         BOOST_TEST(test2 == 0);
     }
     ++runs;

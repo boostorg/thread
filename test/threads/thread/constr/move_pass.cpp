@@ -76,7 +76,9 @@ int main()
     BOOST_TEST(t1.get_id() == id);
     BOOST_TEST(t0.get_id() == boost::thread::id());
     t1.join();
+#if 0
     BOOST_TEST(G::n_alive == 0);
+#endif
     BOOST_TEST(G::op_run);
   }
   return boost::report_errors();

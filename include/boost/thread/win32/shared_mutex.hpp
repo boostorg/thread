@@ -502,6 +502,8 @@ namespace boost
                     if(last_reader)
                     {
                         release_waiters(old_state);
+                    } else {
+                        release_waiters(old_state);
                     }
                     break;
                 }

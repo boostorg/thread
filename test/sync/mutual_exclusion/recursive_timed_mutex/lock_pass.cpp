@@ -39,7 +39,7 @@ void f()
   m.unlock();
   m.unlock();
   ns d = t1 - t0 - ms(250);
-  assert(d < ns(2500000)); // within 2.5ms
+  BOOST_TEST(d < ns(2500000)); // within 2.5ms
 }
 
 int main()
