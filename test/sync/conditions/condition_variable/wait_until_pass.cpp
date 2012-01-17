@@ -64,7 +64,8 @@ void f()
   }
   else
   {
-    BOOST_TEST(t1 - t0 - Clock::duration(250) < Clock::duration(count*250+5));
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(t1 - t0 - Clock::duration(250) < Clock::duration(count*250+5+1000));
     BOOST_TEST(test2 == 0);
   }
   ++runs;

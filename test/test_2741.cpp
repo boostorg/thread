@@ -33,18 +33,12 @@ void test_native_handle()
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
   // ... window version
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
-
-//  pthread_attr_t ats;
-//  int jj = pthread_attr_init(&ats);
-//  std::cout << jj << std::endl;
-//  int kk = pthread_attr_setstacksize(&ats, 0x4000);
-//  std::cout << kk << std::endl;
-  int k = pthread_attr_setstacksize(h, 0x4000);
+  int k = pthread_attr_setstacksize(h, 4*0x4000);
   std::cout << k << std::endl;
-  BOOST_CHECK(!pthread_attr_setstacksize(h, 0x4000));
+  BOOST_CHECK(!pthread_attr_setstacksize(h, 4*0x4000));
   std::size_t res;
   BOOST_CHECK(!pthread_attr_getstacksize(h, &res));
-  BOOST_CHECK(res >= 0x4000);
+  BOOST_CHECK(res >= (4*0x4000));
 #else
 #error "Boost thread unavailable on this platform"
 #endif
