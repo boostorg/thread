@@ -54,7 +54,7 @@ namespace boost
       typename decay<T>::type
       decay_copy(T&& t)
       {
-          return forward<T>(t);
+          return boost::forward<T>(t);
       }
   }
 #endif
@@ -68,7 +68,7 @@ namespace boost
         public:
 #ifndef BOOST_NO_RVALUE_REFERENCES
             thread_data(F&& f_):
-              f(forward<F>(f_))
+              f(boost::forward<F>(f_))
             {}
 // This overloading must be removed if we want the packaged_task's tests to pass.
 //            thread_data(F& f_):
@@ -184,12 +184,12 @@ namespace boost
         static inline detail::thread_data_ptr make_thread_info(F&& f)
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(
-                forward<F>(f)));
+                boost::forward<F>(f)));
         }
         static inline detail::thread_data_ptr make_thread_info(void (*f)())
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(
-                forward<void(*)()>(f)));
+                boost::forward<void(*)()>(f)));
         }
 #else
         template<typename F>
@@ -237,7 +237,7 @@ namespace boost
         explicit thread(F&& f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
         ):
-          thread_info(make_thread_info(thread_detail::decay_copy(forward<F>(f))))
+          thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
         {
             start_thread();
         }
@@ -248,7 +248,7 @@ namespace boost
         thread(attributes& attrs, F&& f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
         ):
-          thread_info(make_thread_info(thread_detail::decay_copy(forward<F>(f))))
+          thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
         {
             start_thread(attrs);
         }
