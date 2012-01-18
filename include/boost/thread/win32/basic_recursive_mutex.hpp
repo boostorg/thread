@@ -11,8 +11,10 @@
 
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/basic_timed_mutex.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -66,6 +68,7 @@ namespace boost
                 return timed_lock(get_system_time()+timeout);
             }
 
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
@@ -78,7 +81,7 @@ namespace boost
                 long const current_thread_id=win32::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_timed_lock_until(current_thread_id,t);
         }
-
+#endif
             void unlock()
             {
                 if(!--recursion_count)

@@ -18,6 +18,10 @@
 #include <boost/thread/xtime.hpp>
 #include <vector>
 #include <boost/intrusive_ptr.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -350,6 +354,8 @@ namespace boost
             return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+
         template <class Clock, class Duration>
         cv_status
         wait_until(
@@ -398,6 +404,7 @@ namespace boost
         {
             return wait_until(lock, chrono::steady_clock::now() + d, pred);
         }
+#endif
     };
 
     class condition_variable_any:
@@ -460,6 +467,7 @@ namespace boost
         {
             return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
 
         template <class lock_type, class Clock, class Duration>
         cv_status
@@ -510,7 +518,7 @@ namespace boost
         {
             return wait_until(lock, chrono::steady_clock::now() + d, pred);
         }
-
+#endif
     };
 
 }

@@ -7,7 +7,9 @@
 #define BOOST_THREAD_V2_THREAD_HPP
 
 #include <boost/thread/detail/config.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
+#endif
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
 
@@ -16,6 +18,7 @@ namespace boost
   namespace this_thread
   {
 
+#ifdef BOOST_THREAD_USES_CHRONO
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
@@ -44,6 +47,8 @@ namespace boost
       using namespace chrono;
       sleep_for(t - steady_clock::now());
     }
+
+#endif
   }
 }
 

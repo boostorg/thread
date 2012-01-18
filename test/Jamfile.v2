@@ -35,9 +35,21 @@ rule thread-run ( sources )
 rule thread-run2 ( sources : name )
 {
     return
-    [ run $(sources) ../build//boost_thread : : : : $(name) ]
+    [ run $(sources) ../build//boost_thread : : : 
+      : $(name) ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
-        : : : : $(name)_lib ]
+        : : : 
+      : $(name)_lib ]
+    ;
+}
+
+
+rule thread-compile-fail-V2 ( sources : reqs * : name )
+{
+    return
+    [ compile-fail $(sources)
+        : $(reqs) 
+        : $(name) ]
     ;
 }
 
@@ -105,8 +117,8 @@ rule thread-run2 ( sources : name )
     #explicit conditions ;
     test-suite conditions
     :
-          [ compile-fail ./sync/conditions/condition_variable/assign_fail.cpp : : conditions__condition_variable__assign_fail ]
-          [ compile-fail ./sync/conditions/condition_variable/copy_fail.cpp : : conditions__condition_variable__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/conditions/condition_variable/assign_fail.cpp : : conditions__condition_variable__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/conditions/condition_variable/copy_fail.cpp : : conditions__condition_variable__copy_fail ]
           [ thread-run2 ./sync/conditions/condition_variable/default_pass.cpp : conditions__condition_variable__default_pass ]
           [ thread-run2 ./sync/conditions/condition_variable/dtor_pass.cpp : conditions__condition_variable__dtor_pass ]
           [ thread-run2 ./sync/conditions/condition_variable/native_handle_pass.cpp : conditions__condition_variable__native_handle_pass ]
@@ -115,8 +127,8 @@ rule thread-run2 ( sources : name )
           [ thread-run2 ./sync/conditions/condition_variable/wait_until_pass.cpp : conditions__condition_variable__wait_until_pass ]
           [ thread-run2 ./sync/conditions/condition_variable/wait_until_pred_pass.cpp : conditions__condition_variable__wait_until_pred_pass ]
 
-          [ compile-fail ./sync/conditions/condition_variable_any/assign_fail.cpp : : conditions__condition_variable_any__assign_fail ]
-          [ compile-fail ./sync/conditions/condition_variable_any/copy_fail.cpp : : conditions__condition_variable_any__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/conditions/condition_variable_any/assign_fail.cpp : : conditions__condition_variable_any__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/conditions/condition_variable_any/copy_fail.cpp : : conditions__condition_variable_any__copy_fail ]
           [ thread-run2 ./sync/conditions/condition_variable_any/default_pass.cpp : conditions__condition_variable_any__default_pass ]
           [ thread-run2 ./sync/conditions/condition_variable_any/dtor_pass.cpp : conditions__condition_variable_any__dtor_pass ]
           [ thread-run2 ./sync/conditions/condition_variable_any/wait_for_pass.cpp : conditions__condition_variable_any__wait_for_pass ]
@@ -145,8 +157,8 @@ rule thread-run2 ( sources : name )
     test-suite mutual_exclusion
     :
 
-          [ compile-fail ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_assign_fail ]
-          [ compile-fail ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_ctor_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : mutual_exclusion__locks__unique_lock__cons__copy_ctor_fail ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/adopt_lock_pass.cpp : mutual_exclusion__locks__unique_lock__cons__adopt_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/default_pass.cpp : mutual_exclusion__locks__unique_lock__cons__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/defer_lock_pass.cpp : mutual_exclusion__locks__unique_lock__cons__defer_lock_pass ]
@@ -169,22 +181,22 @@ rule thread-run2 ( sources : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/owns_lock_pass.cpp : mutual_exclusion__locks__unique_lock__obs__owns_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : mutual_exclusion__locks__unique_lock__types_pass ]
 
-          [ compile-fail ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutual_exclusion__mutex__assign_fail ]
-          [ compile-fail ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutual_exclusion__mutex__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutual_exclusion__mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutual_exclusion__mutex__copy_fail ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/default_pass.cpp : mutual_exclusion__mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/lock_pass.cpp : mutual_exclusion__mutex__lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutual_exclusion__mutex__native_handle_pass ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/try_lock_pass.cpp : mutual_exclusion__mutex__try_lock_pass ]
 
-          [ compile-fail ./sync/mutual_exclusion/recursive_mutex/assign_fail.cpp : : mutual_exclusion__recursive_mutex__assign_fail ]
-          [ compile-fail ./sync/mutual_exclusion/recursive_mutex/copy_fail.cpp : : mutual_exclusion__recursive_mutex__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/assign_fail.cpp : : mutual_exclusion__recursive_mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/copy_fail.cpp : : mutual_exclusion__recursive_mutex__copy_fail ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/default_pass.cpp : mutual_exclusion__recursive_mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/lock_pass.cpp : mutual_exclusion__recursive_mutex__lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/native_handle_pass.cpp : mutual_exclusion__recursive_mutex__native_handle_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/try_lock_pass.cpp : mutual_exclusion__recursive_mutex__try_lock_pass ]
 
-          [ compile-fail ./sync/mutual_exclusion/recursive_timed_mutex/assign_fail.cpp : : mutual_exclusion__recursive_timed_mutex__assign_fail ]
-          [ compile-fail ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : mutual_exclusion__recursive_timed_mutex__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/assign_fail.cpp : : mutual_exclusion__recursive_timed_mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : mutual_exclusion__recursive_timed_mutex__copy_fail ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/default_pass.cpp : mutual_exclusion__recursive_timed_mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/lock_pass.cpp : mutual_exclusion__recursive_timed_mutex__lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/native_handle_pass.cpp : mutual_exclusion__recursive_timed_mutex__native_handle_pass ]
@@ -192,8 +204,8 @@ rule thread-run2 ( sources : name )
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_pass.cpp : mutual_exclusion__recursive_timed_mutex__try_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_until_pass.cpp : mutual_exclusion__recursive_timed_mutex__try_lock_until_pass ]
 
-          [ compile-fail ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : mutual_exclusion__timed_mutex__assign_fail ]
-          [ compile-fail ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : mutual_exclusion__timed_mutex__copy_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : mutual_exclusion__timed_mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : mutual_exclusion__timed_mutex__copy_fail ]
 
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/default_pass.cpp : mutual_exclusion__timed_mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/lock_pass.cpp : mutual_exclusion__timed_mutex__lock_pass ]
@@ -214,9 +226,9 @@ rule thread-run2 ( sources : name )
     #explicit thread ;
     test-suite thread
     :
-          [ compile-fail ./threads/thread/assign/copy_fail.cpp : : thread__assign__copy_fail ]
+          [ thread-compile-fail-V2 ./threads/thread/assign/copy_fail.cpp : : thread__assign__copy_fail ]
           [ thread-run2 ./threads/thread/assign/move_pass.cpp : thread__assign__move_pass ]
-          [ compile-fail ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_fail ]
+          [ thread-compile-fail-V2 ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_fail ]
           [ thread-run2 ./threads/thread/constr/default_pass.cpp : thread__constr__default_pass ]
           [ thread-run2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_pass ]
           [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_pass ]

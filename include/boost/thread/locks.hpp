@@ -12,8 +12,10 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/type_traits/is_class.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/time_point.hpp>
 #include <boost/chrono/duration.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -339,6 +341,7 @@ namespace boost
             timed_lock(target_time);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         unique_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t)
                 : m(&mtx), is_locked(mtx.try_lock_until(t))
@@ -349,7 +352,7 @@ namespace boost
                 : m(&mtx), is_locked(mtx.try_lock_for(d))
         {
         }
-
+#endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         unique_lock(unique_lock&& other) BOOST_NOEXCEPT:
@@ -550,6 +553,9 @@ namespace boost
             is_locked=m->timed_lock(absolute_time);
             return is_locked;
         }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
@@ -578,6 +584,8 @@ namespace boost
           is_locked=m->try_lock_until(abs_time);
           return is_locked;
         }
+#endif
+
         void unlock()
         {
           if(m==0)

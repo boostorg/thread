@@ -31,7 +31,9 @@
 #include <boost/next_prior.hpp>
 #include <vector>
 #include <boost/system/error_code.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
+#endif
 
 #if BOOST_THREAD_VERSION==1
 #define BOOST_THREAD_FUTURE unique_future
@@ -290,6 +292,8 @@ namespace boost
                 return true;
             }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+
             template <class Clock, class Duration>
             future_status
             wait_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -306,6 +310,7 @@ namespace boost
               }
               return future_status::ready;
             }
+#endif
             void mark_exceptional_finish_internal(boost::exception_ptr const& e)
             {
                 exception=e;
@@ -939,6 +944,7 @@ namespace boost
             }
             return future_->timed_wait_until(abs_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         future_status
         wait_for(const chrono::duration<Rep, Period>& rel_time) const
@@ -956,7 +962,7 @@ namespace boost
           }
           return future_->wait_until(abs_time);
         }
-
+#endif
     };
 
 #ifdef BOOST_NO_RVALUE_REFERENCES
@@ -1155,6 +1161,8 @@ namespace boost
             }
             return future_->timed_wait_until(abs_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
+
         template <class Rep, class Period>
         future_status
         wait_for(const chrono::duration<Rep, Period>& rel_time) const
@@ -1172,6 +1180,7 @@ namespace boost
           }
           return future_->wait_until(abs_time);
         }
+#endif
     };
 
 #ifdef BOOST_NO_RVALUE_REFERENCES

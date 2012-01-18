@@ -10,6 +10,10 @@
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/pthread/thread_data.hpp>
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -202,6 +206,7 @@ namespace boost
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class lock_type,class Duration>
         cv_status
         wait_until(
@@ -289,6 +294,7 @@ namespace boost
             ts.tv_nsec = static_cast<long>((d - s).count());
             do_timed_wait(lk, ts);
         }
+#endif
 
         void notify_one() BOOST_NOEXCEPT
         {

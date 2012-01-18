@@ -317,6 +317,7 @@ namespace boost
         return true;
     }
 
+#ifdef BOOST_THREAD_USES_CHRONO
     bool thread::do_try_join_for(chrono::milliseconds const &rel_time_in_milliseconds) {
       if (this_thread::get_id() == get_id())
       {
@@ -334,6 +335,7 @@ namespace boost
       return true;
 
     }
+#endif
 
     void thread::detach()
     {
