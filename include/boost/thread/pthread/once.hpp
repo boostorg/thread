@@ -21,7 +21,7 @@
 namespace boost
 {
 
-#if BOOST_THREAD_VERSION==2
+#if BOOST_THREAD_VERSION==3
 
   struct once_flag
   {
@@ -42,7 +42,7 @@ namespace boost
 
   };
 
-#else // BOOST_THREAD_VERSION==2
+#else // BOOST_THREAD_VERSION==3
 
     struct once_flag
     {
@@ -52,7 +52,7 @@ namespace boost
 #define BOOST_ONCE_INITIAL_FLAG_VALUE 0
 #define BOOST_ONCE_INIT {BOOST_ONCE_INITIAL_FLAG_VALUE}
 
-#endif // BOOST_THREAD_VERSION==2
+#endif // BOOST_THREAD_VERSION==3
 
     namespace detail
     {

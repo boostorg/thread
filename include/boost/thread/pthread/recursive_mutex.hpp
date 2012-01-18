@@ -19,8 +19,10 @@
 #include <errno.h>
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
+#endif
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
@@ -352,6 +354,7 @@ namespace boost
             return do_try_lock_until(ts);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
@@ -382,6 +385,7 @@ namespace boost
           ts.tv_nsec = static_cast<long>((d - s).count());
           return do_try_lock_until(ts);
         }
+#endif
 
         typedef pthread_mutex_t* native_handle_type;
         native_handle_type native_handle()

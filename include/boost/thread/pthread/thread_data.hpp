@@ -16,7 +16,9 @@
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 #include <map>
 #include <unistd.h>
-
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -170,8 +172,9 @@ namespace boost
 
     namespace this_thread
     {
+#ifdef BOOST_THREAD_USES_CHRONO
         void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns);
-
+#endif
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
 #ifdef __DECXXX

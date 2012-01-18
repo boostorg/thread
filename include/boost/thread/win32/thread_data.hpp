@@ -10,8 +10,9 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
-
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -213,10 +214,12 @@ namespace boost
         {
             interruptible_wait(abs_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         inline void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
         {
           interruptible_wait(chrono::duration_cast<chrono::milliseconds>(ns).count());
         }
+#endif
     }
 
 }

@@ -422,6 +422,7 @@ namespace boost
             }
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
         void
         sleep_for(const chrono::nanoseconds& ns)
         {
@@ -446,6 +447,7 @@ namespace boost
 #   endif
             }
         }
+#endif
 
         void yield() BOOST_NOEXCEPT
         {
@@ -460,7 +462,6 @@ namespace boost
 #   endif
         }
     }
-
     unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
     {
 #if defined(PTW32_VERSION) || defined(__hpux)

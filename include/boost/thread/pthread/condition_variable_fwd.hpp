@@ -14,8 +14,10 @@
 #include <boost/thread/locks.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/xtime.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -122,6 +124,8 @@ namespace boost
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+
         template <class Duration>
         cv_status
         wait_until(
@@ -195,6 +199,7 @@ namespace boost
           }
           return true;
         }
+#endif
 
         typedef pthread_cond_t* native_handle_type;
         native_handle_type native_handle()
@@ -205,6 +210,7 @@ namespace boost
         void notify_one() BOOST_NOEXCEPT;
         void notify_all() BOOST_NOEXCEPT;
 
+#ifdef BOOST_THREAD_USES_CHRONO
         inline void wait_until(
             unique_lock<mutex>& lk,
             chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
@@ -217,7 +223,7 @@ namespace boost
             ts.tv_nsec = static_cast<long>((d - s).count());
             do_timed_wait(lk, ts);
         }
-
+#endif
         //private: // used by boost::thread::try_join_until
 
         inline bool do_timed_wait(

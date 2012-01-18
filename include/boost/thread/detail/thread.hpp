@@ -34,8 +34,10 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/decay.hpp>
 #include <boost/functional/hash.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -497,6 +499,7 @@ namespace boost
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
         bool timed_join(const system_time& abs_time);
 
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
@@ -509,8 +512,11 @@ namespace boost
           typename Clock::time_point  c_now = Clock::now();
           return try_join_for(chrono::ceil<chrono::milliseconds>(t - c_now));
         }
+#endif
     private:
+#ifdef BOOST_THREAD_USES_CHRONO
       bool do_try_join_for(chrono::milliseconds const &rel_time_in_milliseconds);
+#endif
     public:
 
 #else
@@ -518,6 +524,7 @@ namespace boost
           struct timespec const ts=detail::get_timespec(abs_time);
           return do_try_join_until(ts);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
@@ -548,6 +555,7 @@ namespace boost
           ts.tv_nsec = static_cast<long>((d - s).count());
           return do_try_join_until(ts);
         }
+#endif
       private:
         bool do_try_join_until(struct timespec const &timeout);
       public:

@@ -15,9 +15,10 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/detail/interlocked.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
-
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost

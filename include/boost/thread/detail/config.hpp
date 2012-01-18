@@ -19,6 +19,10 @@
 #endif
 #endif
 
+#if ! defined BOOST_THREAD_DONT_USE_CHRONO
+#define BOOST_THREAD_USES_CHRONO
+#endif
+
 #define BOOST_THREAD_USES_MOVE
 
 #ifdef BOOST_NO_SCOPED_ENUMS
