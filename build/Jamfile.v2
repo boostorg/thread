@@ -45,7 +45,6 @@ project boost/thread
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
       <define>BOOST_SYSTEM_NO_DEPRECATED
-      <library>/boost/chrono//boost_chrono
       <library>/boost/system//boost_system
 
     # : default-build <threading>multi
@@ -53,7 +52,6 @@ project boost/thread
       <link>static:<define>BOOST_THREAD_BUILD_LIB=1
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
       <define>BOOST_SYSTEM_NO_DEPRECATED
-      <library>/boost/chrono//boost_chrono
       <library>/boost/system//boost_system
     ;
 
@@ -162,6 +160,16 @@ rule usage-requirements ( properties * )
             # in that case?
         }
     }
+
+    if <toolset>vacpp in $(properties)
+    {
+        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    } 
+    else 
+    {
+        result += <library>/boost/chrono//boost_chrono ;
+    }
+
     return $(result) ;
 }
 
@@ -185,6 +193,15 @@ rule requirements ( properties * )
             }
         }
     }
+    if <toolset>vacpp in $(properties)
+    {
+        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    } 
+    else 
+    {
+        result += <library>/boost/chrono//boost_chrono ;
+    }
+
     return $(result) ;
 }
 
