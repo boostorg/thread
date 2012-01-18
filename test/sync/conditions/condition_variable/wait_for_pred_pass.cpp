@@ -60,7 +60,8 @@ void f()
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
-    BOOST_TEST(t1 - t0 < milliseconds(250));
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(t1 - t0 < milliseconds(250+1000));
     BOOST_TEST(test2 != 0);
   }
   else
