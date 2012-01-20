@@ -18,7 +18,11 @@
 #include <libs/thread/test/util.inl>
 
 int test_value;
-
+#ifdef PTHREAD_STACK_MIN
+#define MY_PTHREAD_STACK PTHREAD_STACK_MIN
+#else
+#define MY_PTHREAD_STACK 4*0x4000
+#endif
 void simple_thread()
 {
   test_value = 999;
@@ -33,12 +37,13 @@ void test_native_handle()
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
   // ... window version
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
-  int k = pthread_attr_setstacksize(h, 4*0x4000);
+
+  int k = pthread_attr_setstacksize(h, MY_PTHREAD_STACK);
   std::cout << k << std::endl;
-  BOOST_CHECK(!pthread_attr_setstacksize(h, 4*0x4000));
+  BOOST_CHECK(!pthread_attr_setstacksize(h, MY_PTHREAD_STACK));
   std::size_t res;
   BOOST_CHECK(!pthread_attr_getstacksize(h, &res));
-  BOOST_CHECK(res >= (4*0x4000));
+  BOOST_CHECK(res >= (MY_PTHREAD_STACK));
 #else
 #error "Boost thread unavailable on this platform"
 #endif
