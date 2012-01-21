@@ -19,6 +19,35 @@
 #endif
 #endif
 
+#if ! defined BOOST_THREAD_DONT_USE_CHRONO
+#define BOOST_THREAD_USES_CHRONO
+#endif
+
+#define BOOST_THREAD_USES_MOVE
+
+#ifdef BOOST_NO_SCOPED_ENUMS
+#define BOOST_DECLARE_STRONG_ENUM_BEGIN(x) \
+  struct x { \
+    enum enum_type
+
+#define BOOST_DECLARE_STRONG_ENUM_END(x) \
+    enum_type v_; \
+    inline x()  {} \
+    inline x(enum_type v) : v_(v) {} \
+    inline operator int() const {return v_;} \
+    friend inline bool operator ==(x lhs, int rhs)  {return lhs.v_==rhs;} \
+    friend inline bool operator ==(int lhs, x rhs)  {return lhs==rhs.v_;} \
+    friend inline bool operator !=(x lhs, int rhs)  {return lhs.v_!=rhs;} \
+    friend inline bool operator !=(int lhs, x rhs)  {return lhs!=rhs.v_;} \
+  };
+
+#define BOOST_STRONG_ENUM_NATIVE(x) x::enum_type
+#else  // BOOST_NO_SCOPED_ENUMS
+#define BOOST_DECLARE_STRONG_ENUM_BEGIN(x) enum class x
+#define BOOST_DECLARE_STRONG_ENUM_END(x)
+#define BOOST_STRONG_ENUM_NATIVE(x) x
+#endif  // BOOST_NO_SCOPED_ENUMS
+
 #if BOOST_WORKAROUND(__BORLANDC__, < 0x600)
 #  pragma warn -8008 // Condition always true/false
 #  pragma warn -8080 // Identifier declared but never used

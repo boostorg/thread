@@ -1,13 +1,54 @@
 [/
-  (C) Copyright 2007-8 Anthony Williams.
+  (C) Copyright 2007-11 Anthony Williams.
+  (C) Copyright 2011-12 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:changes Changes since]
+[section:changes History]
 
-[heading Changes since boost 1.41]
+[heading Version 2.0.0 - boost 1.50]
+
+New Features:
+
+* [@http://svn.boost.org/trac/boost/ticket/2741 #2741] Proposal to manage portable and non portable thread attributes. 
+* [@http://svn.boost.org/trac/boost/ticket/6195 #6195] c++11 compliance: Provide the standard time related interface using Boost.Chrono. 
+* [@http://svn.boost.org/trac/boost/ticket/6224 #6224] c++11 compliance: Add the use of standard noexcept on compilers supporting them. 
+* [@http://svn.boost.org/trac/boost/ticket/6226 #6226] c++11 compliance: Add explicit bool conversion from locks. 
+* [@http://svn.boost.org/trac/boost/ticket/6230 #6230] c++11 compliance: Follows the exception reporting mechanism as defined in the c++11. 
+* [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
+* [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
+* [@http://svn.boost.org/trac/boost/ticket/6194 #6194] Adapt to Boost.Move. 
+ 	
+Fixed Bugs:
+
+* [@http://svn.boost.org/trac/boost/ticket/2575 #2575] Bug- Boost 1.36.0 on Itanium platform.
+* [@http://svn.boost.org/trac/boost/ticket/4921 #4921] BOOST_THREAD_USE_DLL and BOOST_THREAD_USE_LIB are crucial and need to be documented.
+* [@http://svn.boost.org/trac/boost/ticket/5013 #5013] documentation: boost::thread: pthreas_exit causes terminate().
+
+* [@http://svn.boost.org/trac/boost/ticket/5351 #5351] interrupt a future get boost::unknown_exception.
+* [@http://svn.boost.org/trac/boost/ticket/5516 #5516] Upgrade lock is not acquired when previous upgrade lock releases if another read lock is present. 
+* [@http://svn.boost.org/trac/boost/ticket/5990 #5990] shared_future<T>::get() has wrong return type. 
+* [@http://svn.boost.org/trac/boost/ticket/6174 #6174] packaged_task doesn't correctly handle moving results.
+ 	
+[/
+
+Deprecated features since boost 1.50 available only until boost 1.55:
+
+These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+
+* Time related functions don't using the Boost.Chrono library, use the chrono overloads instead.
+
+Breaking changes:
+
+There are some new features which share the same interface but with different behavior. These breaking features are not provided by default when BOOST_THREAD_VERSION is 2, but the user can however choose the version 1 behavior by defining the corresponding macro. As for the deprecated features, these broken features will be only available until boost 1.55.
+
+*  #6266 	c++11 compliance: thread destructor should call terminate if joinable
+*  #6269 	c++11 compliance: thread move assignment should call terminate if joinable
+]
+
+[heading boost 1.49]
 
 Fixed Bugs:
 
@@ -37,7 +78,6 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/6200 #6200] patch to have condition_variable and mutex error better handle EINTR. 
 * [@http://svn.boost.org/trac/boost/ticket/6207 #6207] shared_lock swap compiler error on clang 3.0 c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6208 #6208] try_lock_wrapper swap compiler error on clang 3.0 c++11. 
-
 
 [heading Changes since boost 1.40]
 
@@ -124,17 +164,13 @@ been moved to __thread_id__.
 
 The following features will be included in next releases. By order of priority:
 
-* [@http://svn.boost.org/trac/boost/ticket/6194 #6194] Adapt to Boost.Move. 
 * [@http://svn.boost.org/trac/boost/ticket/4710 #4710] Missing async(). 
-* [@http://svn.boost.org/trac/boost/ticket/6195 #6195] Provide the standard time related interface using Boost.Chrono. 
-  * [@http://svn.boost.org/trac/boost/ticket/2637 #2637] shared mutex lock
 * Lock guards
   * [@http://svn.boost.org/trac/boost/ticket/1850 #1850]	request for unlock_guard (and/or unique_unlock) to compliment lock_guard/unique_lock
   * [@http://svn.boost.org/trac/boost/ticket/3567 #3567] 	Request for shared_lock_guard
-* [@http://svn.boost.org/trac/boost/ticket/2741 #2741] Proposal to manage portable and non portable thread attributes. 
-  * #2880 	Request for Thread scheduler support for boost ..
-  * #3696 	Boost Thread library lacks any way to set priority of threads
-  * #5956 	Add optional stack_size argument to thread::start_thread()
+* #2880 	Request for Thread scheduler support for boost ..
+* #3696 	Boost Thread library lacks any way to set priority of threads
+* #5956 	Add optional stack_size argument to thread::start_thread()
 
 [endsect]
 

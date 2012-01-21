@@ -193,7 +193,7 @@ namespace boost
         }
     }
 
-    thread::thread()
+    thread::thread() BOOST_NOEXCEPT
     {}
 
     void thread::start_thread()
@@ -206,6 +206,19 @@ namespace boost
         intrusive_ptr_add_ref(thread_info.get());
         thread_info->thread_handle=(detail::win32::handle)(new_thread);
         ResumeThread(thread_info->thread_handle);
+    }
+
+    void thread::start_thread(const attributes& attr)
+    {
+      //uintptr_t const new_thread=_beginthreadex(attr.get_security(),attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
+      uintptr_t const new_thread=_beginthreadex(0,attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
+      if(!new_thread)
+      {
+          boost::throw_exception(thread_resource_error());
+      }
+      intrusive_ptr_add_ref(thread_info.get());
+      thread_info->thread_handle=(detail::win32::handle)(new_thread);
+      ResumeThread(thread_info->thread_handle);
     }
 
     thread::thread(detail::thread_data_ptr data):
@@ -262,18 +275,22 @@ namespace boost
         detach();
     }
 
-    thread::id thread::get_id() const
+    thread::id thread::get_id() const BOOST_NOEXCEPT
     {
         return thread::id((get_thread_info)());
     }
 
-    bool thread::joinable() const
+    bool thread::joinable() const BOOST_NOEXCEPT
     {
         return (get_thread_info)();
     }
 
     void thread::join()
     {
+        if (this_thread::get_id() == get_id())
+        {
+            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+        }
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
@@ -284,6 +301,10 @@ namespace boost
 
     bool thread::timed_join(boost::system_time const& wait_until)
     {
+        if (this_thread::get_id() == get_id())
+        {
+            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+        }
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
@@ -295,6 +316,26 @@ namespace boost
         }
         return true;
     }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+    bool thread::do_try_join_for(chrono::milliseconds const &rel_time_in_milliseconds) {
+      if (this_thread::get_id() == get_id())
+      {
+        boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+      }
+      detail::thread_data_ptr local_thread_info=(get_thread_info)();
+      if(local_thread_info)
+      {
+          if(!this_thread::interruptible_wait(local_thread_info->thread_handle,rel_time_in_milliseconds.count()))
+          {
+              return false;
+          }
+          release_handle();
+      }
+      return true;
+
+    }
+#endif
 
     void thread::detach()
     {
@@ -321,7 +362,7 @@ namespace boost
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
     }
 
-    unsigned thread::hardware_concurrency()
+    unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
     {
         SYSTEM_INFO info={{0}};
         GetSystemInfo(&info);
@@ -491,7 +532,7 @@ namespace boost
             return false;
         }
 
-        thread::id get_id()
+        thread::id get_id() BOOST_NOEXCEPT
         {
             return thread::id(get_or_make_current_thread_data());
         }
@@ -515,7 +556,7 @@ namespace boost
             return get_current_thread_data() && (detail::win32::WaitForSingleObject(get_current_thread_data()->interruption_handle,0)==0);
         }
 
-        void yield()
+        void yield() BOOST_NOEXCEPT
         {
             detail::win32::Sleep(0);
         }

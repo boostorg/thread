@@ -98,7 +98,9 @@ private:
     wait_type type;
     int secs;
 };
-
+}
+namespace thread_detail_anon
+{
 template <typename F>
 class indirect_adapter
 {
@@ -126,17 +128,27 @@ private:
     void operator=(indirect_adapter&);
 };
 
+}
+// boostinspect:nounnamed
+namespace 
+{
+
 template <typename F>
 void timed_test(F func, int secs,
     execution_monitor::wait_type type=DEFAULT_EXECUTION_MONITOR_TYPE)
 {
     execution_monitor monitor(type, secs);
-    indirect_adapter<F> ifunc(func, monitor);
+    thread_detail_anon::indirect_adapter<F> ifunc(func, monitor);
     monitor.start();
     boost::thread thrd(ifunc);
     BOOST_REQUIRE_MESSAGE(monitor.wait(),
         "Timed test didn't complete in time, possible deadlock.");
 }
+
+}
+
+namespace thread_detail_anon
+{
 
 template <typename F, typename T>
 class thread_binder
@@ -151,11 +163,20 @@ private:
     T param;
 };
 
-template <typename F, typename T>
-thread_binder<F, T> bind(const F& func, const T& param)
-{
-    return thread_binder<F, T>(func, param);
 }
+
+// boostinspect:nounnamed
+namespace 
+{
+template <typename F, typename T>
+thread_detail_anon::thread_binder<F, T> bind(const F& func, const T& param)
+{
+    return thread_detail_anon::thread_binder<F, T>(func, param);
+}
+}
+
+namespace thread_detail_anon
+{
 
 template <typename R, typename T>
 class thread_member_binder
@@ -172,11 +193,15 @@ private:
     T& param;
 };
 
+}
 
-template <typename R, typename T>
-thread_member_binder<R, T> bind(R (T::*func)(), T& param)
+// boostinspect:nounnamed
+namespace 
 {
-    return thread_member_binder<R, T>(func, param);
+template <typename R, typename T>
+thread_detail_anon::thread_member_binder<R, T> bind(R (T::*func)(), T& param)
+{
+    return thread_detail_anon::thread_member_binder<R, T>(func, param);
 }
 } // namespace
 

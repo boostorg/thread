@@ -15,11 +15,55 @@
 #include <boost/assert.hpp>
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 #include <map>
-
+#include <unistd.h>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+    class thread_attributes {
+    public:
+        thread_attributes() {
+            int res = pthread_attr_init(&val_);
+            BOOST_VERIFY(!res && "pthread_attr_init failed");
+        }
+        ~thread_attributes() {
+          int res = pthread_attr_destroy(&val_);
+          BOOST_VERIFY(!res && "pthread_attr_destroy failed");
+        }
+        // stack
+        void set_stack_size(std::size_t size) {
+          if (size==0) return;
+          std::size_t page_size = getpagesize();
+#ifdef PTHREAD_STACK_MIN
+          if (size<PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;
+#endif
+          size = ((size+page_size-1)/page_size)*page_size;
+          int res = pthread_attr_setstacksize(&val_, size);
+          BOOST_VERIFY(!res && "pthread_attr_setstacksize failed");
+        }
+
+        std::size_t get_stack_size() const {
+            std::size_t size;
+            int res = pthread_attr_getstacksize(&val_, &size);
+            BOOST_VERIFY(!res && "pthread_attr_getstacksize failed");
+            return size;
+        }
+
+        typedef pthread_attr_t native_handle_type;
+        native_handle_type* native_handle() {
+          return &val_;
+        }
+        const native_handle_type* native_handle() const {
+          return &val_;
+        }
+
+    private:
+        pthread_attr_t val_;
+    };
+
     class thread;
 
     namespace detail
@@ -128,7 +172,10 @@ namespace boost
 
     namespace this_thread
     {
-        void BOOST_THREAD_DECL yield();
+#ifdef BOOST_THREAD_USES_CHRONO
+        void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns);
+#endif
+        void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution

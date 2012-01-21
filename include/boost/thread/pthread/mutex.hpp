@@ -16,6 +16,10 @@
 #include <errno.h>
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0 && _POSIX_C_SOURCE>=200112L
@@ -29,9 +33,16 @@ namespace boost
 {
     class mutex
     {
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+      mutex(mutex const&) = delete;
+      mutex& operator=(mutex const&) = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+  private:
+      mutex(mutex const&);
+      mutex& operator=(mutex const&);
+#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
-        mutex(mutex const&);
-        mutex& operator=(mutex const&);
         pthread_mutex_t m;
     public:
         mutex()
@@ -39,7 +50,7 @@ namespace boost
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
             {
-                boost::throw_exception(thread_resource_error());
+                boost::throw_exception(thread_resource_error(res, "boost:: mutex constructor failed in pthread_mutex_init"));
             }
         }
         ~mutex()
@@ -58,9 +69,9 @@ namespace boost
             {
                 res = pthread_mutex_lock(&m);
             } while (res == EINTR);
-            if(res)
+            if (res)
             {
-                boost::throw_exception(lock_error(res));
+                boost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
             }
         }
 
@@ -83,7 +94,11 @@ namespace boost
             } while (res == EINTR);
             if(res && (res!=EBUSY))
             {
-                boost::throw_exception(lock_error(res));
+                // The following throw_exception has been replaced by an assertion and just return false,
+                // as this is an internal error and the user can do nothing with the exception.
+                //boost::throw_exception(lock_error(res,"boost: mutex try_lock failed in pthread_mutex_trylock"));
+                BOOST_ASSERT(false && "boost: mutex try_lock failed in pthread_mutex_trylock");
+                return false;
             }
 
             return !res;
@@ -103,9 +118,16 @@ namespace boost
 
     class timed_mutex
     {
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+      timed_mutex(timed_mutex const&) = delete;
+      timed_mutex& operator=(timed_mutex const&) = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
     private:
-        timed_mutex(timed_mutex const&);
-        timed_mutex& operator=(timed_mutex const&);
+      timed_mutex(timed_mutex const&);
+      timed_mutex& operator=(timed_mutex const&);
+    public:
+#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
@@ -118,14 +140,14 @@ namespace boost
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
             {
-                boost::throw_exception(thread_resource_error());
+                boost::throw_exception(thread_resource_error(res, "boost:: timed_mutex constructor failed in pthread_mutex_init"));
             }
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&m));
-                boost::throw_exception(thread_resource_error());
+                boost::throw_exception(thread_resource_error(res2, "boost:: timed_mutex constructor failed in pthread_cond_init"));
             }
             is_locked=false;
 #endif
@@ -165,19 +187,16 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
-        bool timed_lock(system_time const & abs_time)
-        {
-            struct timespec const timeout=detail::get_timespec(abs_time);
-            int const res=pthread_mutex_timedlock(&m,&timeout);
-            BOOST_ASSERT(!res || res==ETIMEDOUT);
-            return !res;
-        }
 
-        typedef pthread_mutex_t* native_handle_type;
-        native_handle_type native_handle()
+
+    private:
+        bool do_try_lock_until(struct timespec const &timeout)
         {
-            return &m;
+          int const res=pthread_mutex_timedlock(&m,&timeout);
+          BOOST_ASSERT(!res || res==ETIMEDOUT);
+          return !res;
         }
+    public:
 
 #else
         void lock()
@@ -208,9 +227,9 @@ namespace boost
             return true;
         }
 
-        bool timed_lock(system_time const & abs_time)
+    private:
+        bool do_try_lock_until(struct timespec const &timeout)
         {
-            struct timespec const timeout=detail::get_timespec(abs_time);
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             while(is_locked)
             {
@@ -224,7 +243,53 @@ namespace boost
             is_locked=true;
             return true;
         }
+    public:
 #endif
+
+        bool timed_lock(system_time const & abs_time)
+        {
+            struct timespec const ts=detail::get_timespec(abs_time);
+            return do_try_lock_until(ts);
+        }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
+        {
+          using namespace chrono;
+          system_clock::time_point     s_now = system_clock::now();
+          typename Clock::time_point  c_now = Clock::now();
+          return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
+        }
+        template <class Duration>
+        bool try_lock_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+          using namespace chrono;
+          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+          return try_lock_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+        }
+        bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+        {
+          using namespace chrono;
+          nanoseconds d = tp.time_since_epoch();
+          timespec ts;
+          seconds s = duration_cast<seconds>(d);
+          ts.tv_sec = static_cast<long>(s.count());
+          ts.tv_nsec = static_cast<long>((d - s).count());
+          return do_try_lock_until(ts);
+        }
+#endif
+
+        typedef pthread_mutex_t* native_handle_type;
+        native_handle_type native_handle()
+        {
+            return &m;
+        }
 
         typedef unique_lock<timed_mutex> scoped_timed_lock;
         typedef detail::try_lock_wrapper<timed_mutex> scoped_try_lock;

@@ -47,7 +47,8 @@ void test_thread_move_from_rvalue_on_construction()
 
 void test_thread_move_from_rvalue_using_explicit_move()
 {
-    boost::thread x(boost::move(start_thread()));
+    //boost::thread x(boost::move(start_thread()));
+    boost::thread x=start_thread();
     BOOST_CHECK(x.get_id()!=boost::thread::id());
     x.join();
 }
@@ -107,6 +108,16 @@ namespace user_test_ns
         }
     };
 }
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+namespace boost
+{
+    template <>
+    struct has_move_emulation_enabled_aux<user_test_ns::nc>
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+}
+#endif
 
 void test_move_for_user_defined_type_unaffected()
 {

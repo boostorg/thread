@@ -44,7 +44,15 @@ project boost/thread
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
-    : default-build <threading>multi
+      <define>BOOST_SYSTEM_NO_DEPRECATED
+      <library>/boost/system//boost_system
+
+    # : default-build <threading>multi
+    : usage-requirements  # pass these requirement to dependents (i.e. users)
+      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
+      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+      <define>BOOST_SYSTEM_NO_DEPRECATED
+      <library>/boost/system//boost_system
     ;
 
 local rule default_threadapi ( )
@@ -152,6 +160,16 @@ rule usage-requirements ( properties * )
             # in that case?
         }
     }
+
+    if <toolset>vacpp in $(properties)
+    {
+        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    } 
+    else 
+    {
+        result += <library>/boost/chrono//boost_chrono ;
+    }
+
     return $(result) ;
 }
 
@@ -175,6 +193,15 @@ rule requirements ( properties * )
             }
         }
     }
+    if <toolset>vacpp in $(properties)
+    {
+        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    } 
+    else 
+    {
+        result += <library>/boost/chrono//boost_chrono ;
+    }
+
     return $(result) ;
 }
 
@@ -198,7 +225,7 @@ alias thread_sources
 explicit thread_sources ;
 
 lib boost_thread
-    : thread_sources
+    : thread_sources future.cpp
     : <conditional>@requirements
     :
     : <link>shared:<define>BOOST_THREAD_USE_DLL=1

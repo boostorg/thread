@@ -15,7 +15,10 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/detail/interlocked.hpp>
-
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -142,6 +145,34 @@ namespace boost
                 }
                 return true;
             }
+            bool try_lock_for(chrono::milliseconds const& rel_time)
+            {
+                if(try_lock())
+                {
+                    return true;
+                }
+                long old_count=active_count;
+                mark_waiting_and_try_lock(old_count);
+
+                if(old_count&lock_flag_value)
+                {
+                    bool lock_acquired=false;
+                    void* const sem=get_event();
+
+                    do
+                    {
+                        if(win32::WaitForSingleObject(sem,static_cast<unsigned long>(rel_time.count()))!=0)
+                        {
+                            BOOST_INTERLOCKED_DECREMENT(&active_count);
+                            return false;
+                        }
+                        clear_waiting_and_try_lock(old_count);
+                        lock_acquired=!(old_count&lock_flag_value);
+                    }
+                    while(!lock_acquired);
+                }
+                return true;
+            }
 
             template<typename Duration>
             bool timed_lock(Duration const& timeout)
@@ -153,6 +184,20 @@ namespace boost
             {
                 return timed_lock(system_time(timeout));
             }
+
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          using namespace chrono;
+          return try_lock_for(ceil<milliseconds>(rel_time));
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
+        {
+          using namespace chrono;
+          typename Clock::time_point  c_now = Clock::now();
+          return try_lock_for(ceil<milliseconds>(t - c_now));
+        }
 
             void unlock()
             {

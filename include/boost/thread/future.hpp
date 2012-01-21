@@ -6,6 +6,8 @@
 
 #ifndef BOOST_THREAD_FUTURE_HPP
 #define BOOST_THREAD_FUTURE_HPP
+
+#include <boost/thread/detail/config.hpp>
 #include <stdexcept>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/thread_time.hpp>
@@ -28,59 +30,157 @@
 #include <list>
 #include <boost/next_prior.hpp>
 #include <vector>
+#include <boost/system/error_code.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#endif
+
+#if BOOST_THREAD_VERSION==1
+#define BOOST_THREAD_FUTURE unique_future
+#else
+#define BOOST_THREAD_FUTURE future
+#endif
 
 namespace boost
 {
-    class future_uninitialized:
-        public std::logic_error
+
+  //enum class future_errc
+  BOOST_DECLARE_STRONG_ENUM_BEGIN(future_errc)
+  {
+      broken_promise,
+      future_already_retrieved,
+      promise_already_satisfied,
+      no_state
+  };
+  BOOST_DECLARE_STRONG_ENUM_END(future_errc)
+
+  namespace system
+  {
+    template <>
+    struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc> : public true_type {};
+
+    #ifdef BOOST_NO_SCOPED_ENUMS
+    template <>
+    struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc::enum_type> : public true_type { };
+    #endif
+  }
+
+  //enum class launch
+  BOOST_DECLARE_STRONG_ENUM_BEGIN(launch)
+  {
+      async = 1,
+      deferred = 2,
+      any = async | deferred
+  };
+  BOOST_DECLARE_STRONG_ENUM_END(launch)
+
+  //enum class future_status
+  BOOST_DECLARE_STRONG_ENUM_BEGIN(future_status)
+  {
+      ready,
+      timeout,
+      deferred
+  };
+  BOOST_DECLARE_STRONG_ENUM_END(future_status)
+
+  BOOST_THREAD_DECL
+  const system::error_category& future_category();
+
+  namespace system
+  {
+    inline BOOST_THREAD_DECL
+    error_code
+    make_error_code(future_errc e)
+    {
+        return error_code(static_cast<int>(e), boost::future_category());
+    }
+
+    inline BOOST_THREAD_DECL
+    error_condition
+    make_error_condition(future_errc e)
+    {
+        return error_condition(static_cast<int>(e), future_category());
+    }
+  }
+
+  class BOOST_THREAD_DECL future_error
+      : public std::logic_error
+  {
+      system::error_code ec_;
+  public:
+      future_error(system::error_code ec);
+
+      BOOST_SYMBOL_VISIBLE
+      const system::error_code& code() const BOOST_NOEXCEPT
+      {
+        return ec_;
+      }
+
+      //virtual ~future_error() BOOST_NOEXCEPT;
+  };
+
+    class BOOST_SYMBOL_VISIBLE future_uninitialized:
+        public future_error
     {
     public:
         future_uninitialized():
-            std::logic_error("Future Uninitialized")
+          future_error(system::make_error_code(future_errc::no_state))
         {}
     };
-    class broken_promise:
-        public std::logic_error
+    class BOOST_SYMBOL_VISIBLE broken_promise:
+        public future_error
     {
     public:
         broken_promise():
-            std::logic_error("Broken promise")
+          future_error(system::make_error_code(future_errc::broken_promise))
         {}
     };
-    class future_already_retrieved:
-        public std::logic_error
+    class BOOST_SYMBOL_VISIBLE future_already_retrieved:
+        public future_error
     {
     public:
         future_already_retrieved():
-            std::logic_error("Future already retrieved")
+          future_error(system::make_error_code(future_errc::future_already_retrieved))
         {}
     };
-    class promise_already_satisfied:
-        public std::logic_error
+    class BOOST_SYMBOL_VISIBLE promise_already_satisfied:
+        public future_error
     {
     public:
         promise_already_satisfied():
-            std::logic_error("Promise already satisfied")
+          future_error(system::make_error_code(future_errc::promise_already_satisfied))
         {}
     };
 
-    class task_already_started:
-        public std::logic_error
+    class BOOST_SYMBOL_VISIBLE task_already_started:
+        public future_error
     {
     public:
         task_already_started():
-            std::logic_error("Task already started")
+        future_error(system::make_error_code(future_errc::promise_already_satisfied))
+            //std::logic_error("Task already started")
         {}
     };
 
-    class task_moved:
-        public std::logic_error
-    {
-    public:
-        task_moved():
-            std::logic_error("Task moved")
-        {}
-    };
+        class BOOST_SYMBOL_VISIBLE task_moved:
+            public future_error
+        {
+        public:
+            task_moved():
+              future_error(system::make_error_code(future_errc::no_state))
+                //std::logic_error("Task moved")
+            {}
+        };
+
+            class promise_moved:
+                public future_error
+            {
+            public:
+                  promise_moved():
+                  future_error(system::make_error_code(future_errc::no_state))
+                    //std::logic_error("Promise moved")
+                {}
+            };
 
     namespace future_state
     {
@@ -93,6 +193,7 @@ namespace boost
         {
             boost::exception_ptr exception;
             bool done;
+            bool thread_was_interrupted;
             boost::mutex mutex;
             boost::condition_variable waiters;
             typedef std::list<boost::condition_variable_any*> waiter_list;
@@ -100,7 +201,8 @@ namespace boost
             boost::function<void()> callback;
 
             future_object_base():
-                done(false)
+                done(false),
+                thread_was_interrupted(false)
             {}
             virtual ~future_object_base()
             {}
@@ -165,6 +267,10 @@ namespace boost
                 {
                     waiters.wait(lock);
                 }
+                if(rethrow && thread_was_interrupted)
+                {
+                    throw boost::thread_interrupted();
+                }
                 if(rethrow && exception)
                 {
                     boost::rethrow_exception(exception);
@@ -186,6 +292,25 @@ namespace boost
                 return true;
             }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+
+            template <class Clock, class Duration>
+            future_status
+            wait_until(const chrono::time_point<Clock, Duration>& abs_time)
+            {
+              boost::unique_lock<boost::mutex> lock(mutex);
+              do_callback(lock);
+              while(!done)
+              {
+                  cv_status const st=waiters.wait_until(lock,abs_time);
+                  if(st==cv_status::timeout && !done)
+                  {
+                    return future_status::timeout;
+                  }
+              }
+              return future_status::ready;
+            }
+#endif
             void mark_exceptional_finish_internal(boost::exception_ptr const& e)
             {
                 exception=e;
@@ -196,16 +321,21 @@ namespace boost
                 boost::lock_guard<boost::mutex> lock(mutex);
                 mark_exceptional_finish_internal(boost::current_exception());
             }
-
+            void mark_interrupted_finish()
+            {
+                boost::lock_guard<boost::mutex> lock(mutex);
+                thread_was_interrupted=true;
+                mark_finished_internal();
+            }
             bool has_value()
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
-                return done && !exception;
+                return done && !(exception || thread_was_interrupted);
             }
             bool has_exception()
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
-                return done && exception;
+                return done && (exception || thread_was_interrupted);
             }
 
             template<typename F,typename U>
@@ -229,10 +359,17 @@ namespace boost
             typedef typename boost::mpl::if_<boost::is_fundamental<T>,dummy&,T&&>::type rvalue_source_type;
             typedef typename boost::mpl::if_<boost::is_fundamental<T>,T,T&&>::type move_dest_type;
 #else
+#if defined BOOST_THREAD_USES_MOVE
+            typedef T& source_reference_type;
+            typedef typename boost::mpl::if_<boost::has_move_emulation_enabled<T>,::boost::rv<T>&,T const&>::type rvalue_source_type;
+            typedef typename boost::mpl::if_<boost::has_move_emulation_enabled<T>,::boost::rv<T>&,T>::type move_dest_type;
+#else
             typedef T& source_reference_type;
             typedef typename boost::mpl::if_<boost::is_convertible<T&,boost::detail::thread_move_t<T> >,boost::detail::thread_move_t<T>,T const&>::type rvalue_source_type;
             typedef typename boost::mpl::if_<boost::is_convertible<T&,boost::detail::thread_move_t<T> >,boost::detail::thread_move_t<T>,T>::type move_dest_type;
 #endif
+#endif
+            typedef const T& shared_future_get_result_type;
 
             static void init(storage_type& storage,source_reference_type t)
             {
@@ -241,7 +378,7 @@ namespace boost
 
             static void init(storage_type& storage,rvalue_source_type t)
             {
-                storage.reset(new T(static_cast<rvalue_source_type>(t)));
+              storage.reset(new T(static_cast<rvalue_source_type>(t)));
             }
 
             static void cleanup(storage_type& storage)
@@ -258,6 +395,7 @@ namespace boost
             struct rvalue_source_type
             {};
             typedef T& move_dest_type;
+            typedef T& shared_future_get_result_type;
 
             static void init(storage_type& storage,T& t)
             {
@@ -275,6 +413,7 @@ namespace boost
         {
             typedef bool storage_type;
             typedef void move_dest_type;
+            typedef void shared_future_get_result_type;
 
             static void init(storage_type& storage)
             {
@@ -296,6 +435,7 @@ namespace boost
             typedef typename future_traits<T>::source_reference_type source_reference_type;
             typedef typename future_traits<T>::rvalue_source_type rvalue_source_type;
             typedef typename future_traits<T>::move_dest_type move_dest_type;
+            typedef typename future_traits<T>::shared_future_get_result_type shared_future_get_result_type;
 
             storage_type result;
 
@@ -322,13 +462,30 @@ namespace boost
             void mark_finished_with_result(rvalue_source_type result_)
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
+#if defined BOOST_THREAD_USES_MOVEXX
+                mark_finished_with_result_internal(static_cast<rvalue_source_type>(result_));
+#else
                 mark_finished_with_result_internal(result_);
+#endif
             }
 
+#if defined BOOST_THREAD_USES_MOVEXX
+            T& get()
+            {
+                wait();
+                return *result;             }
+#else
             move_dest_type get()
             {
                 wait();
                 return static_cast<move_dest_type>(*result);
+            }
+#endif
+
+            shared_future_get_result_type get_sh()
+            {
+                wait();
+                return static_cast<shared_future_get_result_type>(*result);
             }
 
             future_state::state get_state()
@@ -353,7 +510,7 @@ namespace boost
         struct future_object<void>:
             detail::future_object_base
         {
-          typedef void move_dest_type;
+          typedef void shared_future_get_result_type;
 
             future_object()
             {}
@@ -373,7 +530,10 @@ namespace boost
             {
                 wait();
             }
-
+            void get_sh()
+            {
+                wait();
+            }
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -399,38 +559,32 @@ namespace boost
 
             struct registered_waiter
             {
-                boost::shared_ptr<detail::future_object_base> future;
+                boost::shared_ptr<detail::future_object_base> future_;
                 detail::future_object_base::waiter_list::iterator wait_iterator;
                 count_type index;
 
-                registered_waiter(boost::shared_ptr<detail::future_object_base> const& future_,
+                registered_waiter(boost::shared_ptr<detail::future_object_base> const& a_future,
                                   detail::future_object_base::waiter_list::iterator wait_iterator_,
                                   count_type index_):
-                    future(future_),wait_iterator(wait_iterator_),index(index_)
+                    future_(a_future),wait_iterator(wait_iterator_),index(index_)
                 {}
 
             };
 
             struct all_futures_lock
             {
-#ifdef _MANAGED
-                typedef std::ptrdiff_t count_type_portable;
-#else
-                typedef count_type count_type_portable;
-#endif
-                count_type_portable count;
-
+                count_type count;
                 boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
 
                 all_futures_lock(std::vector<registered_waiter>& futures):
                     count(futures.size()),locks(new boost::unique_lock<boost::mutex>[count])
                 {
-                    for(count_type_portable i=0;i<count;++i)
+                    for(count_type i=0;i<count;++i)
                     {
 #if defined __DECCXX || defined __SUNPRO_CC
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future->mutex).move();
+                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
 #else
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future->mutex);
+                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex);
 #endif
                     }
                 }
@@ -442,7 +596,7 @@ namespace boost
 
                 void unlock()
                 {
-                    for(count_type_portable i=0;i<count;++i)
+                    for(count_type i=0;i<count;++i)
                     {
                         locks[i].unlock();
                     }
@@ -461,9 +615,9 @@ namespace boost
             template<typename F>
             void add(F& f)
             {
-                if(f.future)
+                if(f.future_)
                 {
-                    futures.push_back(registered_waiter(f.future,f.future->register_external_waiter(cv),future_count));
+                    futures.push_back(registered_waiter(f.future_,f.future_->register_external_waiter(cv),future_count));
                 }
                 ++future_count;
             }
@@ -475,7 +629,7 @@ namespace boost
                 {
                     for(count_type i=0;i<futures.size();++i)
                     {
-                        if(futures[i].future->done)
+                        if(futures[i].future_->done)
                         {
                             return futures[i].index;
                         }
@@ -488,7 +642,7 @@ namespace boost
             {
                 for(count_type i=0;i<futures.size();++i)
                 {
-                    futures[i].future->remove_external_waiter(futures[i].wait_iterator);
+                    futures[i].future_->remove_external_waiter(futures[i].wait_iterator);
                 }
             }
 
@@ -497,7 +651,7 @@ namespace boost
     }
 
     template <typename R>
-    class unique_future;
+    class BOOST_THREAD_FUTURE;
 
     template <typename R>
     class shared_future;
@@ -509,7 +663,7 @@ namespace boost
     };
 
     template<typename T>
-    struct is_future_type<unique_future<T> >
+    struct is_future_type<BOOST_THREAD_FUTURE<T> >
     {
         BOOST_STATIC_CONSTANT(bool, value=true);
     };
@@ -626,14 +780,24 @@ namespace boost
     class packaged_task;
 
     template <typename R>
-    class unique_future
+    class BOOST_THREAD_FUTURE
     {
-        unique_future(unique_future & rhs);// = delete;
-        unique_future& operator=(unique_future& rhs);// = delete;
+
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+      BOOST_THREAD_FUTURE(BOOST_THREAD_FUTURE & rhs) = delete;
+      BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_FUTURE& rhs) = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+    private:
+      BOOST_THREAD_FUTURE(BOOST_THREAD_FUTURE & rhs);// = delete;
+      BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_FUTURE& rhs);// = delete;
+#endif // BOOST_NO_DELETED_FUNCTIONS
+
+    private:
 
         typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
 
-        future_ptr future;
+        future_ptr future_;
 
         friend class shared_future<R>;
         friend class promise<R>;
@@ -642,74 +806,97 @@ namespace boost
 
         typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
 
-        unique_future(future_ptr future_):
-            future(future_)
+        BOOST_THREAD_FUTURE(future_ptr a_future):
+            future_(a_future)
         {}
 
     public:
         typedef future_state::state state;
 
-        unique_future()
+        BOOST_THREAD_FUTURE()
         {}
 
-        ~unique_future()
+        ~BOOST_THREAD_FUTURE()
         {}
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-        unique_future(unique_future && other)
+        BOOST_THREAD_FUTURE(BOOST_THREAD_FUTURE && other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
         }
-        unique_future& operator=(unique_future && other)
+        BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_FUTURE && other)
         {
-            future=other.future;
-            other.future.reset();
+            future_=other.future_;
+            other.future_.reset();
             return *this;
         }
 #else
-        unique_future(boost::detail::thread_move_t<unique_future> other):
-            future(other->future)
+#if defined BOOST_THREAD_USES_MOVE
+        BOOST_THREAD_FUTURE(boost::rv<BOOST_THREAD_FUTURE>& other):
+            future_(other.future_)
         {
-            other->future.reset();
+            other.future_.reset();
         }
 
-        unique_future& operator=(boost::detail::thread_move_t<unique_future> other)
+        BOOST_THREAD_FUTURE& operator=(boost::rv<BOOST_THREAD_FUTURE>& other)
         {
-            future=other->future;
-            other->future.reset();
+            future_=other.future_;
+            other.future_.reset();
+            return *this;
+        }
+        operator ::boost::rv<BOOST_THREAD_FUTURE>&()
+        {
+          return *static_cast< ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
+        }
+        operator const ::boost::rv<BOOST_THREAD_FUTURE>&() const
+        {
+          return *static_cast<const ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
+        }
+#else
+        BOOST_THREAD_FUTURE(boost::detail::thread_move_t<BOOST_THREAD_FUTURE> other):
+            future_(other->future_)
+        {
+            other->future_.reset();
+        }
+
+        BOOST_THREAD_FUTURE& operator=(boost::detail::thread_move_t<BOOST_THREAD_FUTURE> other)
+        {
+            future_=other->future_;
+            other->future_.reset();
             return *this;
         }
 
-        operator boost::detail::thread_move_t<unique_future>()
+        operator boost::detail::thread_move_t<BOOST_THREAD_FUTURE>()
         {
-            return boost::detail::thread_move_t<unique_future>(*this);
+            return boost::detail::thread_move_t<BOOST_THREAD_FUTURE>(*this);
         }
 #endif
+#endif
 
-        void swap(unique_future& other)
+        void swap(BOOST_THREAD_FUTURE& other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
         }
 
         // retrieving the value
         move_dest_type get()
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
 
-            return future->get();
+            return future_->get();
         }
 
         // functions to check state, and wait for ready
         state get_state() const
         {
-            if(!future)
+            if(!future_)
             {
                 return future_state::uninitialized;
             }
-            return future->get_state();
+            return future_->get_state();
         }
 
 
@@ -720,21 +907,27 @@ namespace boost
 
         bool has_exception() const
         {
-            return future && future->has_exception();
+            return future_ && future_->has_exception();
         }
 
         bool has_value() const
         {
-            return future && future->has_value();
+            return future_ && future_->has_value();
         }
+
+        bool valid() const
+        {
+            return future_ != 0;
+        }
+
 
         void wait() const
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            future->wait(false);
+            future_->wait(false);
         }
 
         template<typename Duration>
@@ -745,36 +938,61 @@ namespace boost
 
         bool timed_wait_until(boost::system_time const& abs_time) const
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            return future->timed_wait_until(abs_time);
+            return future_->timed_wait_until(abs_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        future_status
+        wait_for(const chrono::duration<Rep, Period>& rel_time) const
+        {
+          return wait_until(chrono::steady_clock::now() + rel_time);
 
+        }
+        template <class Clock, class Duration>
+        future_status
+        wait_until(const chrono::time_point<Clock, Duration>& abs_time) const
+        {
+          if(!future_)
+          {
+              boost::throw_exception(future_uninitialized());
+          }
+          return future_->wait_until(abs_time);
+        }
+#endif
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<BOOST_THREAD_FUTURE<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     template <typename R>
     class shared_future
     {
         typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
 
-        future_ptr future;
+        future_ptr future_;
 
-//         shared_future(const unique_future<R>& other);
-//         shared_future& operator=(const unique_future<R>& other);
+//         shared_future(const BOOST_THREAD_FUTURE<R>& other);
+//         shared_future& operator=(const BOOST_THREAD_FUTURE<R>& other);
 
         friend class detail::future_waiter;
         friend class promise<R>;
         friend class packaged_task<R>;
 
-        shared_future(future_ptr future_):
-            future(future_)
+        shared_future(future_ptr a_future):
+            future_(a_future)
         {}
 
     public:
         shared_future(shared_future const& other):
-            future(other.future)
+            future_(other.future_)
         {}
 
         typedef future_state::state state;
@@ -787,52 +1005,87 @@ namespace boost
 
         shared_future& operator=(shared_future const& other)
         {
-            future=other.future;
+            future_=other.future_;
             return *this;
         }
 #ifndef BOOST_NO_RVALUE_REFERENCES
         shared_future(shared_future && other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
         }
-        shared_future(unique_future<R> && other)
+        shared_future(BOOST_THREAD_FUTURE<R> && other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
         }
         shared_future& operator=(shared_future && other)
         {
-            future.swap(other.future);
-            other.future.reset();
+            future_.swap(other.future_);
+            other.future_.reset();
             return *this;
         }
-        shared_future& operator=(unique_future<R> && other)
+        shared_future& operator=(BOOST_THREAD_FUTURE<R> && other)
         {
-            future.swap(other.future);
-            other.future.reset();
+            future_.swap(other.future_);
+            other.future_.reset();
             return *this;
         }
 #else
-        shared_future(boost::detail::thread_move_t<shared_future> other):
-            future(other->future)
+#if defined BOOST_THREAD_USES_MOVE
+        shared_future(boost::rv<shared_future>& other):
+            future_(other.future_)
         {
-            other->future.reset();
+            other.future_.reset();
         }
-//         shared_future(const unique_future<R> &) = delete;
-        shared_future(boost::detail::thread_move_t<unique_future<R> > other):
-            future(other->future)
+//         shared_future(const BOOST_THREAD_FUTURE<R> &) = delete;
+        shared_future(boost::rv<BOOST_THREAD_FUTURE<R> >& other):
+            future_(other.future_)
         {
-            other->future.reset();
+            other.future_.reset();
+        }
+        shared_future& operator=(boost::rv<shared_future>& other)
+        {
+            future_.swap(other.future_);
+            other.future_.reset();
+            return *this;
+        }
+        shared_future& operator=(boost::rv<BOOST_THREAD_FUTURE<R> >& other)
+        {
+            future_.swap(other.future_);
+            other.future_.reset();
+            return *this;
+        }
+        operator ::boost::rv<shared_future>&()
+        {
+          return *static_cast< ::boost::rv<shared_future>* >(this);
+        }
+        operator const ::boost::rv<shared_future>&() const
+        {
+          return *static_cast<const ::boost::rv<shared_future>* >(this);
+        }
+
+#else
+
+        shared_future(boost::detail::thread_move_t<shared_future> other):
+            future_(other->future_)
+        {
+            other->future_.reset();
+        }
+//         shared_future(const BOOST_THREAD_FUTURE<R> &) = delete;
+        shared_future(boost::detail::thread_move_t<BOOST_THREAD_FUTURE<R> > other):
+            future_(other->future_)
+        {
+            other->future_.reset();
         }
         shared_future& operator=(boost::detail::thread_move_t<shared_future> other)
         {
-            future.swap(other->future);
-            other->future.reset();
+            future_.swap(other->future_);
+            other->future_.reset();
             return *this;
         }
-        shared_future& operator=(boost::detail::thread_move_t<unique_future<R> > other)
+        shared_future& operator=(boost::detail::thread_move_t<BOOST_THREAD_FUTURE<R> > other)
         {
-            future.swap(other->future);
-            other->future.reset();
+            future_.swap(other->future_);
+            other->future_.reset();
             return *this;
         }
 
@@ -840,34 +1093,33 @@ namespace boost
         {
             return boost::detail::thread_move_t<shared_future>(*this);
         }
-
+#endif
 #endif
 
         void swap(shared_future& other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
         }
 
         // retrieving the value
-        //typename detail::future_object<R>::move_dest_type get()
-        R get()
+        typename detail::future_object<R>::shared_future_get_result_type get()
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
 
-            return future->get();
+            return future_->get_sh();
         }
 
         // functions to check state, and wait for ready
         state get_state() const
         {
-            if(!future)
+            if(!future_)
             {
                 return future_state::uninitialized;
             }
-            return future->get_state();
+            return future_->get_state();
         }
 
 
@@ -878,21 +1130,21 @@ namespace boost
 
         bool has_exception() const
         {
-            return future && future->has_exception();
+            return future_ && future_->has_exception();
         }
 
         bool has_value() const
         {
-            return future && future->has_value();
+            return future_ && future_->has_value();
         }
 
         void wait() const
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            future->wait(false);
+            future_->wait(false);
         }
 
         template<typename Duration>
@@ -903,51 +1155,92 @@ namespace boost
 
         bool timed_wait_until(boost::system_time const& abs_time) const
         {
-            if(!future)
+            if(!future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            return future->timed_wait_until(abs_time);
+            return future_->timed_wait_until(abs_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
 
+        template <class Rep, class Period>
+        future_status
+        wait_for(const chrono::duration<Rep, Period>& rel_time) const
+        {
+          return wait_until(chrono::steady_clock::now() + rel_time);
+
+        }
+        template <class Clock, class Duration>
+        future_status
+        wait_until(const chrono::time_point<Clock, Duration>& abs_time) const
+        {
+          if(!future_)
+          {
+              boost::throw_exception(future_uninitialized());
+          }
+          return future_->wait_until(abs_time);
+        }
+#endif
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<shared_future<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     template <typename R>
     class promise
     {
         typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
 
-        future_ptr future;
+        future_ptr future_;
         bool future_obtained;
 
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+        promise(promise const&  rhs);// = delete;
+        promise & operator=(promise const & rhs);// = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+    private:
         promise(promise & rhs);// = delete;
         promise & operator=(promise & rhs);// = delete;
+#endif // BOOST_NO_DELETED_FUNCTIONS
+    private:
 
         void lazy_init()
         {
-            if(!atomic_load(&future))
+#if BOOST_THREAD_VERSION==1
+            if(!atomic_load(&future_))
             {
                 future_ptr blank;
-                atomic_compare_exchange(&future,&blank,future_ptr(new detail::future_object<R>));
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<R>));
             }
+#endif
         }
 
     public:
 //         template <class Allocator> explicit promise(Allocator a);
 
         promise():
-            future(),future_obtained(false)
+#if BOOST_THREAD_VERSION==1
+            future_(),
+#else
+            future_(new detail::future_object<R>),
+#endif
+            future_obtained(false)
         {}
 
         ~promise()
         {
-            if(future)
+            if(future_)
             {
-                boost::lock_guard<boost::mutex> lock(future->mutex);
+                boost::lock_guard<boost::mutex> lock(future_->mutex);
 
-                if(!future->done)
+                if(!future_->done)
                 {
-                    future->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
+                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
                 }
             }
         }
@@ -955,31 +1248,68 @@ namespace boost
         // Assignment
 #ifndef BOOST_NO_RVALUE_REFERENCES
         promise(promise && rhs):
+#if ! BOOST_THREAD_VERSION==1
+            future_(rhs.future_),
+#endif
             future_obtained(rhs.future_obtained)
         {
-            future.swap(rhs.future);
+#if BOOST_THREAD_VERSION==1
+          future_.swap(rhs.future_);
+#else
+          // we need to release the future as shared_ptr doesn't implements move semantics
+            rhs.future_.reset();
+#endif
             rhs.future_obtained=false;
         }
         promise & operator=(promise&& rhs)
         {
-            future.swap(rhs.future);
+#if BOOST_THREAD_VERSION==1
+            future_.swap(rhs.future_);
             future_obtained=rhs.future_obtained;
-            rhs.future.reset();
+            rhs.future_.reset();
             rhs.future_obtained=false;
+#else
+            promise(boost::move(rhs)).swap(*this);
+#endif
+
             return *this;
         }
 #else
-        promise(boost::detail::thread_move_t<promise> rhs):
-            future(rhs->future),future_obtained(rhs->future_obtained)
+#if defined BOOST_THREAD_USES_MOVE
+        promise(boost::rv<promise>& rhs):
+            future_(rhs.future_),future_obtained(rhs.future_obtained)
         {
-            rhs->future.reset();
+            rhs.future_.reset();
+            rhs.future_obtained=false;
+        }
+        promise & operator=(boost::rv<promise>& rhs)
+        {
+            future_=rhs.future_;
+            future_obtained=rhs.future_obtained;
+            rhs.future_.reset();
+            rhs.future_obtained=false;
+            return *this;
+        }
+        operator ::boost::rv<promise>&()
+        {
+          return *static_cast< ::boost::rv<promise>* >(this);
+        }
+        operator const ::boost::rv<promise>&() const
+        {
+          return *static_cast<const ::boost::rv<promise>* >(this);
+        }
+#else
+        promise(boost::detail::thread_move_t<promise> rhs):
+            future_(rhs->future_),future_obtained(rhs->future_obtained)
+        {
+            rhs->future_.reset();
             rhs->future_obtained=false;
         }
         promise & operator=(boost::detail::thread_move_t<promise> rhs)
         {
-            future=rhs->future;
+            future_=rhs->future_;
             future_obtained=rhs->future_obtained;
-            rhs->future.reset();
+            rhs->future_.reset();
             rhs->future_obtained=false;
             return *this;
         }
@@ -989,64 +1319,75 @@ namespace boost
             return boost::detail::thread_move_t<promise>(*this);
         }
 #endif
+#endif
 
         void swap(promise& other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
             std::swap(future_obtained,other.future_obtained);
         }
 
         // Result retrieval
-        unique_future<R> get_future()
+        BOOST_THREAD_FUTURE<R> get_future()
         {
+          std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             lazy_init();
-            if(future_obtained)
+            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
+            if (future_.get()==0)
             {
+              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
+                boost::throw_exception(promise_moved());
+            }
+            if (future_obtained)
+            {
+              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
                 boost::throw_exception(future_already_retrieved());
             }
+            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             future_obtained=true;
-            return unique_future<R>(future);
+            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
+            return BOOST_THREAD_FUTURE<R>(future_);
         }
 
         void set_value(typename detail::future_traits<R>::source_reference_type r)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future->mutex);
-            if(future->done)
+            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future->mark_finished_with_result_internal(r);
+            future_->mark_finished_with_result_internal(r);
         }
 
 //         void set_value(R && r);
         void set_value(typename detail::future_traits<R>::rvalue_source_type r)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future->mutex);
-            if(future->done)
+            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r));
+            future_->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r));
         }
 
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future->mutex);
-            if(future->done)
+            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future->mark_exceptional_finish_internal(p);
+            future_->mark_exceptional_finish_internal(p);
         }
 
         template<typename F>
         void set_wait_callback(F f)
         {
             lazy_init();
-            future->set_wait_callback(f,this);
+            future_->set_wait_callback(f,this);
         }
 
     };
@@ -1056,36 +1397,44 @@ namespace boost
     {
         typedef boost::shared_ptr<detail::future_object<void> > future_ptr;
 
-        future_ptr future;
+        future_ptr future_;
         bool future_obtained;
 
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+        promise(promise const&  rhs);// = delete;
+        promise & operator=(promise const & rhs);// = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+    private:
         promise(promise & rhs);// = delete;
         promise & operator=(promise & rhs);// = delete;
+#endif // BOOST_NO_DELETED_FUNCTIONS
+    private:
 
         void lazy_init()
         {
-            if(!atomic_load(&future))
+            if(!atomic_load(&future_))
             {
                 future_ptr blank;
-                atomic_compare_exchange(&future,&blank,future_ptr(new detail::future_object<void>));
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<void>));
             }
         }
     public:
 //         template <class Allocator> explicit promise(Allocator a);
 
         promise():
-            future(),future_obtained(false)
+            future_(),future_obtained(false)
         {}
 
         ~promise()
         {
-            if(future)
+            if(future_)
             {
-                boost::lock_guard<boost::mutex> lock(future->mutex);
+                boost::lock_guard<boost::mutex> lock(future_->mutex);
 
-                if(!future->done)
+                if(!future_->done)
                 {
-                    future->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
+                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
                 }
             }
         }
@@ -1095,29 +1444,53 @@ namespace boost
         promise(promise && rhs):
             future_obtained(rhs.future_obtained)
         {
-            future.swap(rhs.future);
+            future_.swap(rhs.future_);
             rhs.future_obtained=false;
         }
         promise & operator=(promise&& rhs)
         {
-            future.swap(rhs.future);
+            future_.swap(rhs.future_);
             future_obtained=rhs.future_obtained;
-            rhs.future.reset();
+            rhs.future_.reset();
             rhs.future_obtained=false;
             return *this;
         }
 #else
-        promise(boost::detail::thread_move_t<promise> rhs):
-            future(rhs->future),future_obtained(rhs->future_obtained)
+#if defined BOOST_THREAD_USES_MOVE
+        promise(boost::rv<promise>& rhs):
+            future_(rhs.future_),future_obtained(rhs.future_obtained)
         {
-            rhs->future.reset();
+            rhs.future_.reset();
+            rhs.future_obtained=false;
+        }
+        promise & operator=(boost::rv<promise>& rhs)
+        {
+            future_=rhs.future_;
+            future_obtained=rhs.future_obtained;
+            rhs.future_.reset();
+            rhs.future_obtained=false;
+            return *this;
+        }
+        operator ::boost::rv<promise>&()
+        {
+          return *static_cast< ::boost::rv<promise>* >(this);
+        }
+        operator const ::boost::rv<promise>&() const
+        {
+          return *static_cast<const ::boost::rv<promise>* >(this);
+        }
+#else
+        promise(boost::detail::thread_move_t<promise> rhs):
+            future_(rhs->future_),future_obtained(rhs->future_obtained)
+        {
+            rhs->future_.reset();
             rhs->future_obtained=false;
         }
         promise & operator=(boost::detail::thread_move_t<promise> rhs)
         {
-            future=rhs->future;
+            future_=rhs->future_;
             future_obtained=rhs->future_obtained;
-            rhs->future.reset();
+            rhs->future_.reset();
             rhs->future_obtained=false;
             return *this;
         }
@@ -1127,15 +1500,16 @@ namespace boost
             return boost::detail::thread_move_t<promise>(*this);
         }
 #endif
+#endif
 
         void swap(promise& other)
         {
-            future.swap(other.future);
+            future_.swap(other.future_);
             std::swap(future_obtained,other.future_obtained);
         }
 
         // Result retrieval
-        unique_future<void> get_future()
+        BOOST_THREAD_FUTURE<void> get_future()
         {
             lazy_init();
 
@@ -1144,39 +1518,46 @@ namespace boost
                 boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
-            return unique_future<void>(future);
+            return BOOST_THREAD_FUTURE<void>(future_);
         }
 
         void set_value()
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future->mutex);
-            if(future->done)
+            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future->mark_finished_with_result_internal();
+            future_->mark_finished_with_result_internal();
         }
 
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future->mutex);
-            if(future->done)
+            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future->mark_exceptional_finish_internal(p);
+            future_->mark_exceptional_finish_internal(p);
         }
 
         template<typename F>
         void set_wait_callback(F f)
         {
             lazy_init();
-            future->set_wait_callback(f,this);
+            future_->set_wait_callback(f,this);
         }
 
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+    template <typename T>
+    struct has_move_emulation_enabled_aux<promise<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
 
     namespace detail
     {
@@ -1231,9 +1612,15 @@ namespace boost
                 f(f_)
             {}
 #else
+#if defined BOOST_THREAD_USES_MOVE
+            task_object(boost::rv<F>& f_):
+                f(boost::move(f_))
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 #endif
 
             void do_run()
@@ -1241,6 +1628,10 @@ namespace boost
                 try
                 {
                     this->mark_finished_with_result(f());
+                }
+                catch(thread_interrupted& it)
+                {
+                    this->mark_interrupted_finish();
                 }
                 catch(...)
                 {
@@ -1262,9 +1653,15 @@ namespace boost
                 f(f_)
             {}
 #else
+#if defined BOOST_THREAD_USES_MOVE
+            task_object(boost::rv<F>& f_):
+                f(boost::move(f_))
+            {}
+#else
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
+#endif
 #endif
 
             void do_run()
@@ -1273,6 +1670,10 @@ namespace boost
                 {
                     f();
                     this->mark_finished_with_result();
+                }
+                catch(thread_interrupted& it)
+                {
+                    this->mark_interrupted_finish();
                 }
                 catch(...)
                 {
@@ -1290,9 +1691,15 @@ namespace boost
         boost::shared_ptr<detail::task_base<R> > task;
         bool future_obtained;
 
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+        packaged_task(packaged_task const&);// = delete;
+        packaged_task& operator=(packaged_task const&);// = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+    private:
         packaged_task(packaged_task&);// = delete;
         packaged_task& operator=(packaged_task&);// = delete;
-
+#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         packaged_task():
             future_obtained(false)
@@ -1313,10 +1720,17 @@ namespace boost
             task(new detail::task_object<R,F>(f)),future_obtained(false)
         {}
 #else
+#if defined BOOST_THREAD_USES_MOVE
+        template <class F>
+        explicit packaged_task(boost::rv<F>& f):
+            task(new detail::task_object<R,F>(boost::move(f))),future_obtained(false)
+        {}
+#else
         template <class F>
         explicit packaged_task(boost::detail::thread_move_t<F> f):
             task(new detail::task_object<R,F>(f)),future_obtained(false)
         {}
+#endif
 #endif
 
 //         template <class F, class Allocator>
@@ -1348,6 +1762,28 @@ namespace boost
             return *this;
         }
 #else
+#if defined BOOST_THREAD_USES_MOVE
+        packaged_task(boost::rv<packaged_task>& other):
+            future_obtained(other.future_obtained)
+        {
+            task.swap(other.task);
+            other.future_obtained=false;
+        }
+        packaged_task& operator=(boost::rv<packaged_task>& other)
+        {
+            packaged_task temp(other);
+            swap(temp);
+            return *this;
+        }
+        operator ::boost::rv<packaged_task>&()
+        {
+          return *static_cast< ::boost::rv<packaged_task>* >(this);
+        }
+        operator const ::boost::rv<packaged_task>&() const
+        {
+          return *static_cast<const ::boost::rv<packaged_task>* >(this);
+        }
+#else
         packaged_task(boost::detail::thread_move_t<packaged_task> other):
             future_obtained(other->future_obtained)
         {
@@ -1365,15 +1801,16 @@ namespace boost
             return boost::detail::thread_move_t<packaged_task>(*this);
         }
 #endif
+#endif
 
-    void swap(packaged_task& other)
+        void swap(packaged_task& other)
         {
             task.swap(other.task);
             std::swap(future_obtained,other.future_obtained);
         }
 
         // result retrieval
-        unique_future<R> get_future()
+        BOOST_THREAD_FUTURE<R> get_future()
         {
             if(!task)
             {
@@ -1382,7 +1819,7 @@ namespace boost
             else if(!future_obtained)
             {
                 future_obtained=true;
-                return unique_future<R>(task);
+                return BOOST_THREAD_FUTURE<R>(task);
             }
             else
             {
@@ -1408,6 +1845,15 @@ namespace boost
         }
 
     };
+
+#ifdef BOOST_NO_RVALUE_REFERENCES
+#if ! defined BOOST_THREAD_USES_MOVE
+    template <typename T>
+    struct has_move_emulation_enabled_aux<packaged_task<T> >
+      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
+    {};
+#endif
+#endif
 
 }
 
