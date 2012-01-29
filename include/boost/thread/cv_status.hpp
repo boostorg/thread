@@ -9,18 +9,18 @@
 #ifndef BOOST_THREAD_CV_STATUS_HPP
 #define BOOST_THREAD_CV_STATUS_HPP
 
-#include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/scoped_enum.hpp>
 
 namespace boost
 {
 
   // enum class cv_status;
-  BOOST_DECLARE_STRONG_ENUM_BEGIN(cv_status)
+  BOOST_SCOPED_ENUM_DECLARE_BEGIN(cv_status)
   {
     no_timeout,
     timeout
-  };
-  BOOST_DECLARE_STRONG_ENUM_END(cv_status)
+  }
+  BOOST_SCOPED_ENUM_DECLARE_END(cv_status)
 }
 
 #endif // header
