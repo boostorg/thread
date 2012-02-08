@@ -611,7 +611,7 @@ namespace boost
             return !owns_lock();
         }
 #else
-        operator bool() const BOOST_NOEXCEPT
+        explicit operator bool() const BOOST_NOEXCEPT
         {
             return owns_lock();
         }
@@ -942,7 +942,7 @@ namespace boost
             return !owns_lock();
         }
 #else
-        operator bool() const
+        explicit operator bool() const
         {
             return owns_lock();
         }
@@ -1183,7 +1183,7 @@ namespace boost
             return !owns_lock();
         }
 #else
-        operator bool() const
+        explicit operator bool() const
         {
             return owns_lock();
         }
@@ -1320,7 +1320,7 @@ namespace boost
             return !owns_lock();
         }
 #else
-        operator bool() const
+        explicit operator bool() const
         {
             return owns_lock();
         }
@@ -1474,7 +1474,7 @@ namespace boost
                 return !this->owns_lock();
             }
 #else
-            operator bool() const
+            explicit operator bool() const
             {
                 return owns_lock();
             }
