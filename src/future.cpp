@@ -28,7 +28,7 @@ namespace boost
     std::string
     future_error_category::message(int ev) const
     {
-        switch (ev)
+        switch (BOOST_SCOPED_ENUM_NATIVE(future_errc)(ev))
         {
         case future_errc::broken_promise:
             return std::string("The associated promise has been destructed prior "
