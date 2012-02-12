@@ -66,12 +66,17 @@ public:
   }
 };
 
+MoveOnly MakeMoveOnly() {
+  MoveOnly x;
+  return boost::move(x);
+}
 int main()
 {
   {
     // FIXME The following fails
-    //boost::thread t1 (( MoveOnly() ));
-    boost::thread t (( boost::move( MoveOnly() ) ));
+    boost::thread t = boost::thread( MoveOnly() );
+    //boost::thread t = boost::thread( MakeMoveOnly() );
+    //boost::thread t (( boost::move( MoveOnly() ) ));
     t.join();
   }
   return boost::report_errors();

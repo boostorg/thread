@@ -24,10 +24,11 @@
 
 int main()
 {
+#if defined BOOST_THREAD_DEFINES_RECURSIVE_TIMED_MUTEX_NATIVE_HANDLE
   boost::recursive_timed_mutex m;
   boost::recursive_timed_mutex::native_handle_type h = m.native_handle();
   BOOST_TEST(h);
-
+#endif
   return boost::report_errors();
 }
 

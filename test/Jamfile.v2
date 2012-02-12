@@ -231,7 +231,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_fail ]
           [ thread-run2 ./threads/thread/constr/default_pass.cpp : thread__constr__default_pass ]
           [ thread-run2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_pass ]
-          [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_pass ]
+          #[ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_pass ]
           #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_pass ]
           [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_pass ]
           [ thread-run2 ./threads/thread/destr/dtor_pass.cpp : thread__destr__dtor_pass ]

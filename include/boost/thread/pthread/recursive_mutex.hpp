@@ -123,6 +123,7 @@ namespace boost
             BOOST_ASSERT(!res || res==EBUSY);
             return !res;
         }
+#define BOOST_THREAD_DEFINES_RECURSIVE_MUTEX_NATIVE_HANDLE
         typedef pthread_mutex_t* native_handle_type;
         native_handle_type native_handle()
         {
@@ -387,6 +388,7 @@ namespace boost
         }
 #endif
 
+#define BOOST_THREAD_DEFINES_RECURSIVE_TIMED_MUTEX_NATIVE_HANDLE
         typedef pthread_mutex_t* native_handle_type;
         native_handle_type native_handle()
         {
