@@ -12,6 +12,10 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/detail/thread_interruption.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -43,7 +47,17 @@ namespace boost
         }
 
 
+#ifndef BOOST_NO_DELETED_FUNCTIONS
     public:
+        shared_mutex(shared_mutex const&) = delete;
+        shared_mutex& operator=(shared_mutex const&) = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
+    private:
+        shared_mutex(shared_mutex const&);
+        shared_mutex& operator=(shared_mutex const&);
+#endif // BOOST_NO_DELETED_FUNCTIONS
+    public:
+
         shared_mutex()
         {
             state_data state_={0,0,0,0};
@@ -102,7 +116,40 @@ namespace boost
         {
             return timed_lock_shared(get_system_time()+relative_time);
         }
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_shared_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
 
+          while(state.exclusive || state.exclusive_waiting_blocked)
+          {
+              if(cv_status::timeout==shared_cond.wait_for(lk,rel_time))
+              {
+                  return false;
+              }
+          }
+          ++state.shared_count;
+          return true;
+        }
+        template <class Clock, class Duration>
+        bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
+
+          while(state.exclusive || state.exclusive_waiting_blocked)
+          {
+              if(cv_status::timeout==shared_cond.wait_until(lk,abs_time))
+              {
+                  return false;
+              }
+          }
+          ++state.shared_count;
+          return true;
+        }
+#endif
         void unlock_shared()
         {
             boost::mutex::scoped_lock lk(state_change);
@@ -165,6 +212,55 @@ namespace boost
         {
             return timed_lock(get_system_time()+relative_time);
         }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
+
+          while(state.shared_count || state.exclusive)
+          {
+              state.exclusive_waiting_blocked=true;
+              if(cv_status::timeout == exclusive_cond.wait_for(lk,rel_time))
+              {
+                  if(state.shared_count || state.exclusive)
+                  {
+                      state.exclusive_waiting_blocked=false;
+                      release_waiters();
+                      return false;
+                  }
+                  break;
+              }
+          }
+          state.exclusive=true;
+          return true;
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
+
+          while(state.shared_count || state.exclusive)
+          {
+              state.exclusive_waiting_blocked=true;
+              if(cv_status::timeout == exclusive_cond.wait_until(lk,abs_time))
+              {
+                  if(state.shared_count || state.exclusive)
+                  {
+                      state.exclusive_waiting_blocked=false;
+                      release_waiters();
+                      return false;
+                  }
+                  break;
+              }
+          }
+          state.exclusive=true;
+          return true;
+        }
+#endif
 
         bool try_lock()
         {
