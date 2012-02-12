@@ -201,6 +201,7 @@ namespace boost
         }
 #endif
 
+#define BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
         typedef pthread_cond_t* native_handle_type;
         native_handle_type native_handle()
         {
