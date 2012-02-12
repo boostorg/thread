@@ -78,6 +78,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run test_shared_mutex.cpp ]
           [ thread-run test_shared_mutex_part_2.cpp ]
           [ thread-run test_shared_mutex_timed_locks.cpp ]
+          #[ thread-run test_shared_mutex_timed_locks_chrono.cpp ]
           [ thread-run test_lock_concept.cpp ]
           [ thread-run test_generic_locks.cpp ]
           [ thread-run test_futures.cpp ]
@@ -206,13 +207,21 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : mutual_exclusion__timed_mutex__assign_fail ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : mutual_exclusion__timed_mutex__copy_fail ]
-
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/default_pass.cpp : mutual_exclusion__timed_mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/lock_pass.cpp : mutual_exclusion__timed_mutex__lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/native_handle_pass.cpp : mutual_exclusion__timed_mutex__native_handle_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_for_pass.cpp : mutual_exclusion__timed_mutex__try_lock_for_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_pass.cpp : mutual_exclusion__timed_mutex__try_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : mutual_exclusion__timed_mutex__try_lock_until_pass ]
+
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/assign_fail.cpp : : mutual_exclusion__shared_mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/copy_fail.cpp : : mutual_exclusion__shared_mutex__copy_fail ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : mutual_exclusion__shared_mutex__default_pass ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/lock_pass.cpp : mutual_exclusion__shared_mutex__lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_for_pass.cpp : mutual_exclusion__shared_mutex__try_lock_for_pass ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_pass.cpp : mutual_exclusion__shared_mutex__try_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_until_pass.cpp : mutual_exclusion__shared_mutex__try_lock_until_pass ]
+
     ;
 
     #explicit this_thread ;
