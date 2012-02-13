@@ -324,6 +324,48 @@ namespace boost
             return timed_lock_upgrade(get_system_time()+relative_time);
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_upgrade_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
+          while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
+          {
+              if(cv_status::no_timeout == shared_cond.wait_for(lk,rel_time))
+              {
+                  if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
+                  {
+                      return false;
+                  }
+                  break;
+              }
+          }
+          ++state.shared_count;
+          state.upgrade=true;
+          return true;
+        }
+        template <class Clock, class Duration>
+        bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+          boost::this_thread::disable_interruption do_not_disturb;
+          boost::mutex::scoped_lock lk(state_change);
+          while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
+          {
+              if(cv_status::no_timeout == shared_cond.wait_until(lk,abs_time))
+              {
+                  if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
+                  {
+                      return false;
+                  }
+                  break;
+              }
+          }
+          ++state.shared_count;
+          state.upgrade=true;
+          return true;
+        }
+#endif
         bool try_lock_upgrade()
         {
             boost::mutex::scoped_lock lk(state_change);
@@ -354,6 +396,7 @@ namespace boost
             }
         }
 
+        // Upgrade <-> Exclusive
         void unlock_upgrade_and_lock()
         {
             boost::this_thread::disable_interruption do_not_disturb;
@@ -377,6 +420,19 @@ namespace boost
             release_waiters();
         }
 
+#if 0 // To be added
+        bool try_unlock_upgrade_and_lock();
+        template <class Rep, class Period>
+            bool
+            try_unlock_upgrade_and_lock_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_upgrade_and_lock_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
+
+        // Shared <-> Exclusive
         void unlock_and_lock_shared()
         {
             boost::mutex::scoped_lock lk(state_change);
@@ -386,6 +442,19 @@ namespace boost
             release_waiters();
         }
 
+#if 0 // To be added
+        bool try_unlock_shared_and_lock();
+        template <class Rep, class Period>
+            bool
+            try_unlock_shared_and_lock_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_shared_and_lock_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
+
+        // Shared <-> Upgrade
         void unlock_upgrade_and_lock_shared()
         {
             boost::mutex::scoped_lock lk(state_change);
@@ -393,6 +462,18 @@ namespace boost
             state.exclusive_waiting_blocked=false;
             release_waiters();
         }
+
+#if 0 // To be added
+        bool try_unlock_shared_and_lock_upgrade();
+        template <class Rep, class Period>
+            bool
+            try_unlock_shared_and_lock_upgrade_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_shared_and_lock_upgrade_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
     };
 
 }
