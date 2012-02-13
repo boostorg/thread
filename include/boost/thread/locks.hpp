@@ -258,8 +258,8 @@ namespace boost
         lock_guard& operator=(lock_guard const&) = delete;
 #else // BOOST_NO_DELETED_FUNCTIONS
     private:
-        lock_guard(lock_guard const&);
-        lock_guard& operator=(lock_guard const&);
+        lock_guard(lock_guard&);
+        lock_guard& operator=(lock_guard&);
 #endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef Mutex mutex_type;
@@ -648,8 +648,8 @@ namespace boost
         shared_lock& operator=(shared_lock const&) = delete;
 #else // BOOST_NO_DELETED_FUNCTIONS
     private:
-        shared_lock(shared_lock const&);
-        shared_lock& operator=(shared_lock const&);
+        shared_lock(shared_lock &);
+        shared_lock& operator=(shared_lock &);
 #endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef Mutex mutex_type;
@@ -679,6 +679,20 @@ namespace boost
         {
             timed_lock(target_time);
         }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Clock, class Duration>
+        shared_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t)
+                : m(&mtx), is_locked(mtx.try_lock_shared_until(t))
+        {
+        }
+        template <class Rep, class Period>
+        shared_lock(Mutex& mtx, const chrono::duration<Rep, Period>& d)
+                : m(&mtx), is_locked(mtx.try_lock_shared_for(d))
+        {
+        }
+#endif
+
 #ifndef BOOST_NO_RVALUE_REFERENCES
         shared_lock(shared_lock<Mutex> && other):
             m(other.m),is_locked(other.is_locked)
@@ -868,6 +882,14 @@ namespace boost
             return m;
         }
 
+        Mutex* release() BOOST_NOEXCEPT
+        {
+            Mutex* const res=m;
+            m=0;
+            is_locked=false;
+            return res;
+        }
+
         ~shared_lock()
         {
             if(owns_lock())
@@ -877,6 +899,10 @@ namespace boost
         }
         void lock()
         {
+            if(m==0)
+            {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+            }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
@@ -886,6 +912,10 @@ namespace boost
         }
         bool try_lock()
         {
+            if(m==0)
+            {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+            }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
@@ -895,6 +925,10 @@ namespace boost
         }
         bool timed_lock(boost::system_time const& target_time)
         {
+            if(m==0)
+            {
+                boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+            }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
@@ -905,6 +939,10 @@ namespace boost
         template<typename Duration>
         bool timed_lock(Duration const& target_time)
         {
+            if(m==0)
+            {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+            }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
@@ -912,8 +950,42 @@ namespace boost
             is_locked=m->timed_lock_shared(target_time);
             return is_locked;
         }
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
+          if(owns_lock())
+          {
+              boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
+          }
+          is_locked=m->try_lock_shared_for(rel_time);
+          return is_locked;
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
+          if(owns_lock())
+          {
+              boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
+          }
+          is_locked=m->try_lock_shared_until(abs_time);
+          return is_locked;
+        }
+#endif
         void unlock()
         {
+            if(m==0)
+            {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+            }
             if(!owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock doesn't own the mutex"));
@@ -967,8 +1039,8 @@ namespace boost
         bool is_locked;
 #ifndef BOOST_NO_DELETED_FUNCTIONS
     public:
-        upgrade_lock(upgrade_lock&) = delete;
-        upgrade_lock& operator=(upgrade_lock&) = delete;
+        upgrade_lock(upgrade_lock const&) = delete;
+        upgrade_lock& operator=(upgrade_lock const&) = delete;
 #else
     private:
         explicit upgrade_lock(upgrade_lock&);
@@ -1235,8 +1307,8 @@ namespace boost
 
 #ifndef BOOST_NO_DELETED_FUNCTIONS
     public:
-        upgrade_to_unique_lock(upgrade_to_unique_lock&) = delete;
-        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock&) = delete;
+        upgrade_to_unique_lock(upgrade_to_unique_lock const&) = delete;
+        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock const&) = delete;
 #else
     private:
         explicit upgrade_to_unique_lock(upgrade_to_unique_lock&);
