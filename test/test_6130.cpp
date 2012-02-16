@@ -18,6 +18,8 @@ int main()
                  boost::mutex::scoped_lock lk(mtx);
                  const bool res = cv.timed_wait(lk, boost::posix_time::from_time_t(wait_time));
                  const time_t end_time = ::time(0);
+                 std::cerr << "end_time=" <<  end_time << " \n";
+                 std::cerr << "wait_time=" << wait_time << " \n";
                  std::cerr << end_time - wait_time << " \n";
                  assert(end_time >= wait_time);
                  std::cerr << " OK\n";
