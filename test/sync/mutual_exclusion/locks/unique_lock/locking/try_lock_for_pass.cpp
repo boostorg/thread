@@ -23,6 +23,9 @@
 //#include <boost/thread/mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
+#if defined BOOST_THREAD_USES_CHRONO
+
+
 bool try_lock_for_called = false;
 
 typedef boost::chrono::milliseconds ms;
@@ -75,4 +78,8 @@ int main()
 
   return boost::report_errors();
 }
+
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif
 

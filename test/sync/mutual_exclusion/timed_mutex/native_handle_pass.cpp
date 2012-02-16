@@ -29,6 +29,8 @@ int main()
   boost::timed_mutex m;
   boost::timed_mutex::native_handle_type h = m.native_handle();
   BOOST_TEST(h);
+#else
+#error "Test not applicable: BOOST_THREAD_DEFINES_TIMED_MUTEX_NATIVE_HANDLE not defined for this platform as not supported"
 #endif
   return boost::report_errors();
 }

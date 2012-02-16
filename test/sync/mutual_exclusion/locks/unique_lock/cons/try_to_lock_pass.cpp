@@ -24,6 +24,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
+#if defined BOOST_THREAD_USES_CHRONO
+
 boost::mutex m;
 
 typedef boost::chrono::system_clock Clock;
@@ -69,4 +71,7 @@ int main()
 
   return boost::report_errors();
 }
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif
 
