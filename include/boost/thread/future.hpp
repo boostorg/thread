@@ -1331,22 +1331,16 @@ namespace boost
         // Result retrieval
         BOOST_THREAD_FUTURE<R> get_future()
         {
-          std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             lazy_init();
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             if (future_.get()==0)
             {
-              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
                 boost::throw_exception(promise_moved());
             }
             if (future_obtained)
             {
-              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
                 boost::throw_exception(future_already_retrieved());
             }
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             future_obtained=true;
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             return BOOST_THREAD_FUTURE<R>(future_);
         }
 
