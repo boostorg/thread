@@ -81,9 +81,9 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           #uncomment the following once these works on windows 
           #[ thread-run test_shared_mutex_timed_locks_chrono.cpp ]
           #uncomment the following once these works on windows 
-          [ thread-run test_v2_shared_mutex.cpp ]
-          [ thread-run test_v2_shared_mutex_part_2.cpp ]
-          [ thread-run test_v2_shared_mutex_timed_locks.cpp ]
+          #[ thread-run test_v2_shared_mutex.cpp ]
+          #[ thread-run test_v2_shared_mutex_part_2.cpp ]
+          #[ thread-run test_v2_shared_mutex_timed_locks.cpp ]
           [ thread-run test_lock_concept.cpp ]
           [ thread-run test_generic_locks.cpp ]
           [ thread-run test_futures.cpp ]
