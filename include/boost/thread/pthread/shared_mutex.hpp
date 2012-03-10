@@ -2,6 +2,7 @@
 #define BOOST_THREAD_PTHREAD_SHARED_MUTEX_HPP
 
 //  (C) Copyright 2006-8 Anthony Williams
+//  (C) Copyright 2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -120,18 +121,7 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_shared_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          boost::this_thread::disable_interruption do_not_disturb;
-          boost::mutex::scoped_lock lk(state_change);
-
-          while(state.exclusive || state.exclusive_waiting_blocked)
-          {
-              if(cv_status::timeout==shared_cond.wait_for(lk,rel_time))
-              {
-                  return false;
-              }
-          }
-          ++state.shared_count;
-          return true;
+          return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -217,25 +207,7 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          boost::this_thread::disable_interruption do_not_disturb;
-          boost::mutex::scoped_lock lk(state_change);
-
-          while(state.shared_count || state.exclusive)
-          {
-              state.exclusive_waiting_blocked=true;
-              if(cv_status::timeout == exclusive_cond.wait_for(lk,rel_time))
-              {
-                  if(state.shared_count || state.exclusive)
-                  {
-                      state.exclusive_waiting_blocked=false;
-                      release_waiters();
-                      return false;
-                  }
-                  break;
-              }
-          }
-          state.exclusive=true;
-          return true;
+          return try_lock_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -328,22 +300,7 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_upgrade_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          boost::this_thread::disable_interruption do_not_disturb;
-          boost::mutex::scoped_lock lk(state_change);
-          while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-          {
-              if(cv_status::no_timeout == shared_cond.wait_for(lk,rel_time))
-              {
-                  if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-                  {
-                      return false;
-                  }
-                  break;
-              }
-          }
-          ++state.shared_count;
-          state.upgrade=true;
-          return true;
+          return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -352,7 +309,7 @@ namespace boost
           boost::mutex::scoped_lock lk(state_change);
           while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
           {
-              if(cv_status::no_timeout == shared_cond.wait_until(lk,abs_time))
+              if(cv_status::timeout == shared_cond.wait_until(lk,abs_time))
               {
                   if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
                   {
