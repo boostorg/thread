@@ -2,6 +2,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 #ifndef BOOST_THREAD_LOCKS_HPP
 #define BOOST_THREAD_LOCKS_HPP
 #include <boost/thread/detail/config.hpp>
@@ -726,21 +727,21 @@ namespace boost
 
         shared_lock& operator=(shared_lock<Mutex> && other)
         {
-            shared_lock temp(other);
+            shared_lock temp(boost::move(other));
             swap(temp);
             return *this;
         }
 
         shared_lock& operator=(unique_lock<Mutex> && other)
         {
-            shared_lock temp(other);
+            shared_lock temp(boost::move(other));
             swap(temp);
             return *this;
         }
 
         shared_lock& operator=(upgrade_lock<Mutex> && other)
         {
-            shared_lock temp(other);
+            shared_lock temp(boost::move(other));
             swap(temp);
             return *this;
         }
@@ -1068,6 +1069,20 @@ namespace boost
         {
             try_lock();
         }
+
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Clock, class Duration>
+        upgrade_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t)
+                : m(&mtx), is_locked(mtx.try_lock_upgrade_until(t))
+        {
+        }
+        template <class Rep, class Period>
+        upgrade_lock(Mutex& mtx, const chrono::duration<Rep, Period>& d)
+                : m(&mtx), is_locked(mtx.try_lock_upgrade_for(d))
+        {
+        }
+#endif
+
 #ifndef BOOST_NO_RVALUE_REFERENCES
         upgrade_lock(upgrade_lock<Mutex>&& other):
             m(other.m),is_locked(other.is_locked)
@@ -1089,14 +1104,14 @@ namespace boost
 
         upgrade_lock& operator=(upgrade_lock<Mutex>&& other)
         {
-            upgrade_lock temp(static_cast<upgrade_lock<Mutex>&&>(other));
+            upgrade_lock temp(boost::move(other));
             swap(temp);
             return *this;
         }
 
         upgrade_lock& operator=(unique_lock<Mutex>&& other)
         {
-            upgrade_lock temp(static_cast<unique_lock<Mutex>&&>(other));
+            upgrade_lock temp(boost::move(other));
             swap(temp);
             return *this;
         }
@@ -1194,7 +1209,18 @@ namespace boost
             std::swap(m,other.m);
             std::swap(is_locked,other.is_locked);
         }
+        Mutex* mutex() const
+        {
+            return m;
+        }
 
+        Mutex* release() BOOST_NOEXCEPT
+        {
+            Mutex* const res=m;
+            m=0;
+            is_locked=false;
+            return res;
+        }
         ~upgrade_lock()
         {
             if(owns_lock())
@@ -1204,6 +1230,10 @@ namespace boost
         }
         void lock()
         {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost upgrade_lock owns already the mutex"));
@@ -1213,6 +1243,10 @@ namespace boost
         }
         bool try_lock()
         {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
             if(owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost upgrade_lock owns already the mutex"));
@@ -1222,6 +1256,10 @@ namespace boost
         }
         void unlock()
         {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
             if(!owns_lock())
             {
               boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost upgrade_lock doesn't own the mutex"));
@@ -1229,7 +1267,36 @@ namespace boost
             m->unlock_upgrade();
             is_locked=false;
         }
-
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
+          if(owns_lock())
+          {
+              boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
+          }
+          is_locked=m->try_lock_upgrade_for(rel_time);
+          return is_locked;
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
+        {
+          if(m==0)
+          {
+              boost::throw_exception(boost::lock_error(system::errc::operation_not_permitted, "boost shared_lock has no mutex"));
+          }
+          if(owns_lock())
+          {
+              boost::throw_exception(boost::lock_error(system::errc::resource_deadlock_would_occur, "boost shared_lock owns already the mutex"));
+          }
+          is_locked=m->try_lock_upgrade_until(abs_time);
+          return is_locked;
+        }
+#endif
 #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
         typedef void (upgrade_lock::*bool_type)();
         operator bool_type() const
@@ -1253,6 +1320,12 @@ namespace boost
         friend class shared_lock<Mutex>;
         friend class unique_lock<Mutex>;
     };
+
+    template<typename Mutex>
+    void swap(upgrade_lock<Mutex>& lhs,upgrade_lock<Mutex>& rhs) BOOST_NOEXCEPT
+    {
+        lhs.swap(rhs);
+    }
 
 #if defined BOOST_NO_RVALUE_REFERENCES && ! defined BOOST_THREAD_USES_MOVE
     template <typename Mutex>
