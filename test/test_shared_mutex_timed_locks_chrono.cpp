@@ -6,7 +6,6 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/shared_mutex.hpp>
-//#include <boost/thread/xtime.hpp>
 #include "util.inl"
 #include "shared_mutex_locking_thread.hpp"
 
