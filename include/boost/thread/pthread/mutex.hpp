@@ -1,6 +1,7 @@
 #ifndef BOOST_THREAD_PTHREAD_MUTEX_HPP
 #define BOOST_THREAD_PTHREAD_MUTEX_HPP
 // (C) Copyright 2007-8 Anthony Williams
+//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
 // Distributed under the Boost Software License, Version 1.0. (See
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
@@ -97,7 +98,7 @@ namespace boost
                 // The following throw_exception has been replaced by an assertion and just return false,
                 // as this is an internal error and the user can do nothing with the exception.
                 //boost::throw_exception(lock_error(res,"boost: mutex try_lock failed in pthread_mutex_trylock"));
-                BOOST_ASSERT(false && "boost: mutex try_lock failed in pthread_mutex_trylock");
+                BOOST_ASSERT_MSG(false ,"boost: mutex try_lock failed in pthread_mutex_trylock");
                 return false;
             }
 
