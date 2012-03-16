@@ -8,6 +8,7 @@
 #define BOOST_THREAD_FUTURE_HPP
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/scoped_enum.hpp>
 #include <stdexcept>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/thread_time.hpp>
@@ -45,14 +46,14 @@ namespace boost
 {
 
   //enum class future_errc
-  BOOST_DECLARE_STRONG_ENUM_BEGIN(future_errc)
+  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_errc)
   {
       broken_promise,
       future_already_retrieved,
       promise_already_satisfied,
       no_state
-  };
-  BOOST_DECLARE_STRONG_ENUM_END(future_errc)
+  }
+  BOOST_SCOPED_ENUM_DECLARE_END(future_errc)
 
   namespace system
   {
@@ -66,22 +67,22 @@ namespace boost
   }
 
   //enum class launch
-  BOOST_DECLARE_STRONG_ENUM_BEGIN(launch)
+  BOOST_SCOPED_ENUM_DECLARE_BEGIN(launch)
   {
       async = 1,
       deferred = 2,
       any = async | deferred
-  };
-  BOOST_DECLARE_STRONG_ENUM_END(launch)
+  }
+  BOOST_SCOPED_ENUM_DECLARE_END(launch)
 
   //enum class future_status
-  BOOST_DECLARE_STRONG_ENUM_BEGIN(future_status)
+  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_status)
   {
       ready,
       timeout,
       deferred
-  };
-  BOOST_DECLARE_STRONG_ENUM_END(future_status)
+  }
+  BOOST_SCOPED_ENUM_DECLARE_END(future_status)
 
   BOOST_THREAD_DECL
   const system::error_category& future_category();
@@ -92,14 +93,14 @@ namespace boost
     error_code
     make_error_code(future_errc e)
     {
-        return error_code(static_cast<int>(e), boost::future_category());
+        return error_code(underlying_cast<int>(e), boost::future_category());
     }
 
     inline BOOST_THREAD_DECL
     error_condition
     make_error_condition(future_errc e)
     {
-        return error_condition(static_cast<int>(e), future_category());
+        return error_condition(underlying_cast<int>(e), future_category());
     }
   }
 
@@ -1330,22 +1331,16 @@ namespace boost
         // Result retrieval
         BOOST_THREAD_FUTURE<R> get_future()
         {
-          std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             lazy_init();
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             if (future_.get()==0)
             {
-              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
                 boost::throw_exception(promise_moved());
             }
             if (future_obtained)
             {
-              std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
                 boost::throw_exception(future_already_retrieved());
             }
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             future_obtained=true;
-            std::cout<< __LINE__ << " " << int(future_obtained) << std::endl;
             return BOOST_THREAD_FUTURE<R>(future_);
         }
 

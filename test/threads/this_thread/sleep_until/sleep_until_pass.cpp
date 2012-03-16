@@ -20,6 +20,8 @@
 
 #include <boost/detail/lightweight_test.hpp>
 
+#if defined BOOST_THREAD_USES_CHRONO
+
 int main()
 {
   typedef boost::chrono::system_clock Clock;
@@ -36,4 +38,8 @@ int main()
   BOOST_TEST(std::abs(static_cast<long>(ns.count())) < (err+boost::chrono::milliseconds(1000)).count());
 
 }
+
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif
 

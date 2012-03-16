@@ -24,10 +24,13 @@
 
 int main()
 {
+#if defined BOOST_THREAD_DEFINES_MUTEX_NATIVE_HANDLE
   boost::mutex m;
   boost::mutex::native_handle_type h = m.native_handle();
   BOOST_TEST(h);
-
+#else
+#error "Test not applicable: BOOST_THREAD_DEFINES_MUTEX_NATIVE_HANDLE not defined for this platform as not supported"
+#endif
   return boost::report_errors();
 }
 

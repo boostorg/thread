@@ -363,15 +363,13 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         thread(F f,A1 a1,A2 a2,...);
 
         template <class F>
-        thread(detail::thread_move_t<F> f);
+        thread(F &&f);
 
         template <class F, class ...Args> explicit thread(F&& f, Args&&... args);
 
         // move support
-        thread(detail::thread_move_t<thread> x);
-        thread& operator=(detail::thread_move_t<thread> x);
-        operator detail::thread_move_t<thread>();
-        detail::thread_move_t<thread> move();
+        thread(thread && x);
+        thread& operator=(thread && x);
 
         void swap(thread& x) noexcept;
 
@@ -408,7 +406,6 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
     };
 
     void swap(thread& lhs,thread& rhs) noexcep;
-    detail::thread_move_t<thread> move(detail::thread_move_t<thread> t);
 
 [section:default_constructor Default Constructor]
 
@@ -427,7 +424,6 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 [section:move_constructor Move Constructor]
 
     thread(thread&& other) noexcept;
-    thread(detail::thread_move_t<thread> other);
 
 [variablelist
 
@@ -444,7 +440,6 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 [section:move_assignment Move assignment operator]
 
     thread& operator=(thread&& other) noexcept;
-    thread& operator=(detail::thread_move_t<thread> other);
 
 [variablelist
 
@@ -863,6 +858,7 @@ value as `this->get_id()` prior to the call.]]
 
 [endsect]
 
+[/
 [section:non_member_move Non-member function `move()`]
 
     #include <boost/thread/thread.hpp>
@@ -882,7 +878,7 @@ Enables moving thread objects. e.g.
     boost::thread t2(boost::move(t)); // transfer thread from t to t2
 
 [endsect]
-
+]
 
 [section:id Class `boost::thread::id`]
 

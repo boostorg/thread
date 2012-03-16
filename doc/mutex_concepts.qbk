@@ -445,6 +445,7 @@ object passed to the constructor.]]
     class unique_lock
     {
     public:
+        typedef Lockable mutex_type;
         unique_lock() noexcept;
         explicit unique_lock(Lockable& m_);
         unique_lock(Lockable& m_,adopt_lock_t);
@@ -458,20 +459,16 @@ object passed to the constructor.]]
         unique_lock(Mutex& mtx, const chrono::duration<Rep, Period>& d);
         ~unique_lock();
 
+        unique_lock(unique_lock const&) = delete;
+        unique_lock& operator=(unique_lock const&) = delete;
         unique_lock(unique_lock<Lockable>&& other) noexcept;
-        unique_lock(detail::thread_move_t<unique_lock<Lockable> > other) noexcept;
         unique_lock(upgrade_lock<Lockable>&& other) noexcept;
-        unique_lock(detail::thread_move_t<upgrade_lock<Lockable> > other) noexcept;
 
-        operator detail::thread_move_t<unique_lock<Lockable> >();
-        detail::thread_move_t<unique_lock<Lockable> > move();
         unique_lock& operator=(unique_lock<Lockable>&& other) noexcept;
-        unique_lock& operator=(detail::thread_move_t<unique_lock<Lockable> > other) noexcept;
         unique_lock& operator=(upgrade_lock<Lockable>&& other) noexcept;
-        unique_lock& operator=(detail::thread_move_t<upgrade_lock<Lockable> > other) noexcept;
 
         void swap(unique_lock& other) noexcept;
-        void swap(detail::thread_move_t<unique_lock<Lockable> > other) noexcept;
+        Lockable* release() noexcept;
 
         void lock();
         bool try_lock();
@@ -487,12 +484,14 @@ object passed to the constructor.]]
         void unlock();
 
         bool owns_lock() const noexcept;
-        explicit operator bool() const noexcept;
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
         operator ``['unspecified-bool-type]``() const noexcept;
         bool operator!() const noexcept;
+    #else
+        explicit operator bool() const noexcept;
+    #endif
 
         Lockable* mutex() const noexcept;
-        Lockable* release() noexcept;
     };
 
 __unique_lock__ is more complex than __lock_guard__: not only does it provide for RAII-style locking, it also allows for deferring
@@ -500,7 +499,7 @@ acquiring the lock until the __lock_ref__ member function is called explicitly, 
 fashion, or with a timeout. Consequently, __unlock_ref__ is only called in the destructor if the lock object has locked the
 __lockable_concept_type__ object, or otherwise adopted a lock on the __lockable_concept_type__ object.
 
-Specializations of __unique_lock__ model the __timed_lockable_concept__ if the supplied __lockable_concept_type__ type itself models
+Specializations of __unique_lock__ model the __timed_lockable_concept__ if the supplied Lockable type itself models
 __timed_lockable_concept__ (e.g. `boost::unique_lock<boost::timed_mutex>`), or the __lockable_concept__ otherwise
 (e.g. `boost::unique_lock<boost::mutex>`). 
 
@@ -686,6 +685,18 @@ object associated with `*this`.]]
 
 [endsect]
 
+[section:explicit_bool_conversion `explicit operator bool() const`]
+
+[variablelist
+
+[[Returns:] [`__owns_lock_ref__()`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
 [section:bool_conversion `operator unspecified-bool-type() const`]
 
 [variablelist
@@ -700,17 +711,6 @@ boolean contexts.]]
 
 [endsect]
 
-[section:explicit_bool_conversion `explicit operator bool() const`]
-
-[variablelist
-
-[[Returns:] [`__owns_lock_ref__()`.]]
-
-[[Throws:] [Nothing.]]
-
-]
-
-[endsect]
 
 [section:operator_not `bool operator!() const`]
 
@@ -754,24 +754,25 @@ __owns_lock_ref__ returns `false`.]]
     class shared_lock
     {
     public:
+        typedef Lockable mutex_type;
         shared_lock();
         explicit shared_lock(Lockable& m_);
         shared_lock(Lockable& m_,adopt_lock_t);
         shared_lock(Lockable& m_,defer_lock_t);
         shared_lock(Lockable& m_,try_to_lock_t);
         shared_lock(Lockable& m_,system_time const& target_time);
-        shared_lock(detail::thread_move_t<shared_lock<Lockable> > other);
-        shared_lock(detail::thread_move_t<unique_lock<Lockable> > other);
-        shared_lock(detail::thread_move_t<upgrade_lock<Lockable> > other);
-
         ~shared_lock();
 
-        operator detail::thread_move_t<shared_lock<Lockable> >();
-        detail::thread_move_t<shared_lock<Lockable> > move();
+        shared_lock(shared_lock const&) = delete;
+        shared_lock& operator=(shared_lock const&) = delete;
 
-        shared_lock& operator=(detail::thread_move_t<shared_lock<Lockable> > other);
-        shared_lock& operator=(detail::thread_move_t<unique_lock<Lockable> > other);
-        shared_lock& operator=(detail::thread_move_t<upgrade_lock<Lockable> > other);
+        shared_lock(shared_lock<Lockable> && other);
+        shared_lock(unique_lock<Lockable> && other);
+        shared_lock(upgrade_lock<Lockable> && other);
+
+        shared_lock& operator=(shared_lock<Lockable> && other);
+        shared_lock& operator=(unique_lock<Lockable> && other);
+        shared_lock& operator=(upgrade_lock<Lockable> && other);
         void swap(shared_lock& other);
 
         void lock();
@@ -779,8 +780,12 @@ __owns_lock_ref__ returns `false`.]]
         bool timed_lock(boost::system_time const& target_time);
         void unlock();
 
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
         operator ``['unspecified-bool-type]``() const;
         bool operator!() const;
+    #else
+        explicit operator bool() const;
+    #endif
         bool owns_lock() const;
     };
 
@@ -959,6 +964,18 @@ boolean contexts.]]
 
 [endsect]
 
+[section:explicit_operator_bool `explicit operator bool() const`]
+
+[variablelist
+
+[[Returns:] [__owns_lock_shared_ref__.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
 [section:release `Lockable* release()`]
 
 [variablelist
@@ -989,26 +1006,31 @@ __owns_lock_shared_ref__ returns `false`.]]
     class upgrade_lock
     {
     public:
+        typedef Lockable mutex_type;
         explicit upgrade_lock(Lockable& m_);
 
-        upgrade_lock(detail::thread_move_t<upgrade_lock<Lockable> > other);
-        upgrade_lock(detail::thread_move_t<unique_lock<Lockable> > other);
+        upgrade_lock(upgrade_lock<Lockable> && other);
+        upgrade_lock(unique_lock<Lockable> && other);
 
         ~upgrade_lock();
 
-        operator detail::thread_move_t<upgrade_lock<Lockable> >();
-        detail::thread_move_t<upgrade_lock<Lockable> > move();
+        upgrade_lock(const upgrade_lock& other) = delete;
+        upgrade_lock& operator=(const upgrade_lock<Lockable> & other) = delete;
 
-        upgrade_lock& operator=(detail::thread_move_t<upgrade_lock<Lockable> > other);
-        upgrade_lock& operator=(detail::thread_move_t<unique_lock<Lockable> > other);
+        upgrade_lock& operator=(upgrade_lock<Lockable> && other);
+        upgrade_lock& operator=(unique_lock<Lockable> && other);
 
         void swap(upgrade_lock& other);
 
         void lock();
         void unlock();
 
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
         operator ``['unspecified-bool-type]``() const;
         bool operator!() const;
+    #else
+        explicit operator bool() const;
+    #endif
         bool owns_lock() const;
     };
 
@@ -1038,16 +1060,24 @@ state (including the destructor) must be called by the same thread that acquired
     class upgrade_to_unique_lock
     {
     public:
+        typedef Lockable mutex_type;
         explicit upgrade_to_unique_lock(upgrade_lock<Lockable>& m_);
-
         ~upgrade_to_unique_lock();
 
-        upgrade_to_unique_lock(detail::thread_move_t<upgrade_to_unique_lock<Lockable> > other);
-        upgrade_to_unique_lock& operator=(detail::thread_move_t<upgrade_to_unique_lock<Lockable> > other);
+        upgrade_to_unique_lock(upgrade_to_unique_lock const& other) = delete;
+        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock<Lockable> const& other) = delete;
+
+        upgrade_to_unique_lock(upgrade_to_unique_lock<Lockable> && other);
+        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock<Lockable> && other);
+
         void swap(upgrade_to_unique_lock& other);
 
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
         operator ``['unspecified-bool-type]``() const;
         bool operator!() const;
+    #else
+        explicit operator bool() const;
+    #endif
         bool owns_lock() const;
     };
 
@@ -1084,10 +1114,13 @@ __lockable_concept_type__ is downgraded back to ['upgrade ownership].
 
         MutexType* mutex() const;
         MutexType* release();
-        bool operator!() const;
 
-        typedef ``['unspecified-bool-type]`` bool_type;
-        operator bool_type() const;
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
+        operator ``['unspecified-bool-type]``() const;
+        bool operator!() const;
+    #else
+        explicit operator bool() const;
+    #endif
     };
 
 The member typedef `scoped_try_lock` is provided for each distinct

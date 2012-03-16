@@ -68,7 +68,9 @@ int main()
     BOOST_TEST(G::n_alive == 0);
     BOOST_TEST(!G::op_run);
     boost::thread t( (G()));
+#if defined BOOST_THREAD_USES_CHRONO
     boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
+#endif
   }
 #if 0
   BOOST_TEST(false);

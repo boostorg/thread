@@ -47,7 +47,6 @@ public:
   void operator()()
   {
     BOOST_TEST(alive_ == 1);
-    std::cout << n_alive << std::endl;
     BOOST_TEST(n_alive == 1);
     op_run = true;
   }

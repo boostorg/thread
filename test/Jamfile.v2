@@ -78,6 +78,12 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run test_shared_mutex.cpp ]
           [ thread-run test_shared_mutex_part_2.cpp ]
           [ thread-run test_shared_mutex_timed_locks.cpp ]
+          #uncomment the following once these works on windows 
+          #[ thread-run test_shared_mutex_timed_locks_chrono.cpp ]
+          #uncomment the following once these works on windows 
+          #[ thread-run test_v2_shared_mutex.cpp ]
+          #[ thread-run test_v2_shared_mutex_part_2.cpp ]
+          #[ thread-run test_v2_shared_mutex_timed_locks.cpp ]
           [ thread-run test_lock_concept.cpp ]
           [ thread-run test_generic_locks.cpp ]
           [ thread-run test_futures.cpp ]
@@ -147,11 +153,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/promise/get_future_pass.cpp : futures__promise__get_future_pass ]
     ;
 
-    explicit tt ;
-    test-suite tt
-    :
-          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/try_to_lock_pass.cpp : xmutual_exclusion__locks__unique_lock__cons__try_to_lock_pass ]
-    ;
 
     #explicit mutual_exclusion ;
     test-suite mutual_exclusion
@@ -181,6 +182,55 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/owns_lock_pass.cpp : mutual_exclusion__locks__unique_lock__obs__owns_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : mutual_exclusion__locks__unique_lock__types_pass ]
 
+          #uncomment the following once these works on windows 
+          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_assign_fail.cpp : : mutual_exclusion__locks__shared_lock__cons__copy_assign_fail ]
+          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_ctor_fail.cpp : : mutual_exclusion__locks__shared_lock__cons__copy_ctor_fail ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/adopt_lock_pass.cpp : mutual_exclusion__locks__shared_lock__cons__adopt_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/default_pass.cpp : mutual_exclusion__locks__shared_lock__cons__default_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/defer_lock_pass.cpp : mutual_exclusion__locks__shared_lock__cons__defer_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/duration_pass.cpp : mutual_exclusion__locks__shared_lock__cons__duration_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/move_assign_pass.cpp : mutual_exclusion__locks__shared_lock__cons__move_assign_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_pass.cpp : mutual_exclusion__locks__shared_lock__cons__move_ctor_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/mutex_pass.cpp : mutual_exclusion__locks__shared_lock__cons__mutex_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/time_point_pass.cpp : mutual_exclusion__locks__shared_lock__cons__time_point_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/try_to_lock_pass.cpp : mutual_exclusion__locks__shared_lock__cons__try_to_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/lock_pass.cpp : mutual_exclusion__locks__shared_lock__locking__lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/try_lock_for_pass.cpp : mutual_exclusion__locks__shared_lock__locking__try_lock_for_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/try_lock_pass.cpp : mutual_exclusion__locks__shared_lock__locking__try_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/try_lock_until_pass.cpp : mutual_exclusion__locks__shared_lock__locking__try_lock_until_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/unlock_pass.cpp : mutual_exclusion__locks__shared_lock__locking__unlock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/member_swap_pass.cpp : mutual_exclusion__locks__shared_lock__mod__member_swap_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/non_member_swap_pass.cpp : mutual_exclusion__locks__shared_lock__mod__non_member_swap_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/release_pass.cpp : mutual_exclusion__locks__shared_lock__mod__release_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/mutex_pass.cpp : mutual_exclusion__locks__shared_lock__obs__mutex_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/op_bool_pass.cpp : mutual_exclusion__locks__shared_lock__obs__op_bool_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/owns_lock_pass.cpp : mutual_exclusion__locks__shared_lock__obs__owns_lock_pass ]
+
+          #uncomment the following once these works on windows 
+          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_assign_fail.cpp : : mutual_exclusion__locks__upgrade_lock__cons__copy_assign_fail ]
+          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_ctor_fail.cpp : : mutual_exclusion__locks__upgrade_lock__cons__copy_ctor_fail ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/adopt_lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__adopt_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/default_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__default_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/defer_lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__defer_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/duration_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__duration_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_assign_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__move_assign_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__move_ctor_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/mutex_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__mutex_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/time_point_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__time_point_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/try_to_lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__cons__try_to_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/locking/lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__locking__lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/locking/try_lock_for_pass.cpp : mutual_exclusion__locks__upgrade_lock__locking__try_lock_for_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/locking/try_lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__locking__try_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/locking/try_lock_until_pass.cpp : mutual_exclusion__locks__upgrade_lock__locking__try_lock_until_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/locking/unlock_pass.cpp : mutual_exclusion__locks__upgrade_lock__locking__unlock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/mod/member_swap_pass.cpp : mutual_exclusion__locks__upgrade_lock__mod__member_swap_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/mod/non_member_swap_pass.cpp : mutual_exclusion__locks__upgrade_lock__mod__non_member_swap_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/mod/release_pass.cpp : mutual_exclusion__locks__upgrade_lock__mod__release_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/obs/mutex_pass.cpp : mutual_exclusion__locks__upgrade_lock__obs__mutex_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/obs/op_bool_pass.cpp : mutual_exclusion__locks__upgrade_lock__obs__op_bool_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/obs/owns_lock_pass.cpp : mutual_exclusion__locks__upgrade_lock__obs__owns_lock_pass ]
+
+
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutual_exclusion__mutex__assign_fail ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutual_exclusion__mutex__copy_fail ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/default_pass.cpp : mutual_exclusion__mutex__default_pass ]
@@ -206,13 +256,21 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : mutual_exclusion__timed_mutex__assign_fail ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : mutual_exclusion__timed_mutex__copy_fail ]
-
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/default_pass.cpp : mutual_exclusion__timed_mutex__default_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/lock_pass.cpp : mutual_exclusion__timed_mutex__lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/native_handle_pass.cpp : mutual_exclusion__timed_mutex__native_handle_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_for_pass.cpp : mutual_exclusion__timed_mutex__try_lock_for_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_pass.cpp : mutual_exclusion__timed_mutex__try_lock_pass ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : mutual_exclusion__timed_mutex__try_lock_until_pass ]
+
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/assign_fail.cpp : : mutual_exclusion__shared_mutex__assign_fail ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/copy_fail.cpp : : mutual_exclusion__shared_mutex__copy_fail ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : mutual_exclusion__shared_mutex__default_pass ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/lock_pass.cpp : mutual_exclusion__shared_mutex__lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_for_pass.cpp : mutual_exclusion__shared_mutex__try_lock_for_pass ]
+          [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_pass.cpp : mutual_exclusion__shared_mutex__try_lock_pass ]
+          #[ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_until_pass.cpp : mutual_exclusion__shared_mutex__try_lock_until_pass ]
+
     ;
 
     #explicit this_thread ;
@@ -245,4 +303,10 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/thread/non_members/swap_pass.cpp : thread__non_members__swap_pass ]
           [ thread-run2 ./threads/thread/static/hardware_concurrency_pass.cpp : thread__static__hardware_concurrency_pass ]
     ;
+
+    #explicit ttt ;
+    #test-suite ttt
+    #:
+    #;
+
 }

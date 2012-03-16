@@ -24,10 +24,14 @@
 
 int main()
 {
+#if defined BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
   //BOOST_STATIC_ASSERT((boost::is_same<boost::condition_variable::native_handle_type, pthread_cond_t*>::value));
   boost::condition_variable cv;
   boost::condition_variable::native_handle_type h = cv.native_handle();
   BOOST_TEST(h != 0);
+#else
+#error "Test not applicable: BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE not defined for this platform as not supported"
+#endif
   return boost::report_errors();
 }
 
