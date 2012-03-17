@@ -145,8 +145,10 @@ void test_thread_callable_object_multiple_arguments()
     }
 
     callable_multiple_arg func;
-    
-    boost::thread callable3(func,"hello",x,1.2);
+    // Avoid
+    // boost/bind/bind.hpp(392) : warning C4244: 'argument' : conversion from 'double' to 'int', possible loss of data
+
+    boost::thread callable3(func,"hello",x,1);
     callable3.join();
     BOOST_CHECK(callable_multiple_arg::called_three);
     BOOST_CHECK_EQUAL(callable_multiple_arg::called_three_arg1,"hello");
