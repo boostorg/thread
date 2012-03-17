@@ -53,16 +53,4 @@ namespace boost
       return f;
   }
 
-  future_error::future_error(system::error_code ec)
-      : logic_error(ec.message()),
-        ec_(ec)
-  {
-  }
-
-//  future_error::~future_error() //BOOST_NOEXCEPT
-//  {
-//  }
-
-
-
 }

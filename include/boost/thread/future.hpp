@@ -104,14 +104,17 @@ namespace boost
     }
   }
 
-  class BOOST_THREAD_DECL future_error
+  class BOOST_SYMBOL_VISIBLE future_error
       : public std::logic_error
   {
       system::error_code ec_;
   public:
-      future_error(system::error_code ec);
+      future_error(system::error_code ec)
+      : logic_error(ec.message()),
+        ec_(ec)
+      {
+      }
 
-      BOOST_SYMBOL_VISIBLE
       const system::error_code& code() const BOOST_NOEXCEPT
       {
         return ec_;
@@ -1624,7 +1627,7 @@ namespace boost
                 {
                     this->mark_finished_with_result(f());
                 }
-                catch(thread_interrupted& it)
+                catch(thread_interrupted& )
                 {
                     this->mark_interrupted_finish();
                 }
@@ -1666,7 +1669,7 @@ namespace boost
                     f();
                     this->mark_finished_with_result();
                 }
-                catch(thread_interrupted& it)
+                catch(thread_interrupted& )
                 {
                     this->mark_interrupted_finish();
                 }
