@@ -14,6 +14,10 @@
 #include <limits.h>
 #include <boost/utility.hpp>
 #include <boost/thread/thread_time.hpp>
+#ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -21,9 +25,15 @@ namespace boost
 {
     class shared_mutex
     {
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+    public:
+        shared_mutex(shared_mutex const&) = delete;
+        shared_mutex& operator=(shared_mutex const&) = delete;
+#else // BOOST_NO_DELETED_FUNCTIONS
     private:
         shared_mutex(shared_mutex const&);
         shared_mutex& operator=(shared_mutex const&);
+#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         struct state_data
         {
@@ -218,6 +228,113 @@ namespace boost
             }
         }
 
+        template <class Rep, class Period>
+        bool try_lock_shared_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
+        }
+        template <class Clock, class Duration>
+        bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& t)
+        {
+          using namespace chrono;
+          system_clock::time_point     s_now = system_clock::now();
+          typename Clock::time_point  c_now = Clock::now();
+          return try_lock_shared_until(s_now + ceil<system_clock::duration>(t - c_now));
+        }
+        template <class Duration>
+        bool try_lock_shared_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+          using namespace chrono;
+          typedef time_point<chrono::system_clock, chrono::system_clock::duration> sys_tmpt;
+          return try_lock_shared_until(sys_tmpt(chrono::ceil<chrono::system_clock::duration>(t.time_since_epoch())));
+        }
+        bool try_lock_shared_until(const chrono::time_point<chrono::system_clock, chrono::system_clock::duration>& tp)
+        {
+          for(;;)
+          {
+            state_data old_state=state;
+            for(;;)
+            {
+              state_data new_state=old_state;
+              if(new_state.exclusive || new_state.exclusive_waiting_blocked)
+              {
+                  ++new_state.shared_waiting;
+                  if(!new_state.shared_waiting)
+                  {
+                      boost::throw_exception(boost::lock_error());
+                  }
+              }
+              else
+              {
+                  ++new_state.shared_count;
+                  if(!new_state.shared_count)
+                  {
+                      boost::throw_exception(boost::lock_error());
+                  }
+              }
+
+              state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+              if(current_state==old_state)
+              {
+                  break;
+              }
+              old_state=current_state;
+            }
+
+            if(!(old_state.exclusive| old_state.exclusive_waiting_blocked))
+            {
+              return true;
+            }
+
+            chrono::system_clock::time_point n = chrono::system_clock::now();
+            unsigned long res;
+            if (tp>n) {
+              chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-n);
+              res=detail::win32::WaitForSingleObject(semaphores[unlock_sem],
+                static_cast<unsigned long>(rel_time.count()));
+            } else {
+              res=detail::win32::timeout;
+            }
+            if(res==detail::win32::timeout)
+            {
+              for(;;)
+              {
+                state_data new_state=old_state;
+                if(new_state.exclusive || new_state.exclusive_waiting_blocked)
+                {
+                  if(new_state.shared_waiting)
+                  {
+                      --new_state.shared_waiting;
+                  }
+                }
+                else
+                {
+                  ++new_state.shared_count;
+                  if(!new_state.shared_count)
+                  {
+                      return false;
+                  }
+                }
+
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                    break;
+                }
+                old_state=current_state;
+              }
+
+              if(!(old_state.exclusive| old_state.exclusive_waiting_blocked))
+              {
+                return true;
+              }
+              return false;
+            }
+
+            BOOST_ASSERT(res==0);
+          }
+        }
+
         void unlock_shared()
         {
             state_data old_state=state;
@@ -378,6 +495,115 @@ namespace boost
                 }
                 BOOST_ASSERT(wait_res<2);
             }
+        }
+
+
+        template <class Rep, class Period>
+        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          return try_lock_until(chrono::steady_clock::now() + rel_time);
+        }
+        template <class Clock, class Duration>
+        bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
+        {
+          using namespace chrono;
+          system_clock::time_point     s_now = system_clock::now();
+          typename Clock::time_point  c_now = Clock::now();
+          return try_lock_until(s_now + ceil<system_clock::duration>(t - c_now));
+        }
+        template <class Duration>
+        bool try_lock_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+          using namespace chrono;
+          typedef time_point<chrono::system_clock, chrono::system_clock::duration> sys_tmpt;
+          return try_lock_until(sys_tmpt(chrono::ceil<chrono::system_clock::duration>(t.time_since_epoch())));
+        }
+        bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::system_clock::duration>& tp)
+        {
+          for(;;)
+          {
+            state_data old_state=state;
+
+            for(;;)
+            {
+              state_data new_state=old_state;
+              if(new_state.shared_count || new_state.exclusive)
+              {
+                ++new_state.exclusive_waiting;
+                if(!new_state.exclusive_waiting)
+                {
+                    boost::throw_exception(boost::lock_error());
+                }
+
+                new_state.exclusive_waiting_blocked=true;
+              }
+              else
+              {
+                new_state.exclusive=true;
+              }
+
+              state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+              if(current_state==old_state)
+              {
+                break;
+              }
+              old_state=current_state;
+            }
+
+            if(!old_state.shared_count && !old_state.exclusive)
+            {
+                return true;
+            }
+            #ifndef UNDER_CE
+            const bool wait_all = true;
+            #else
+            const bool wait_all = false;
+            #endif
+
+            chrono::system_clock::time_point n = chrono::system_clock::now();
+            unsigned long wait_res;
+            if (tp>n) {
+              chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
+              wait_res=detail::win32::WaitForMultipleObjects(2,semaphores,wait_all,
+                  static_cast<unsigned long>(rel_time.count()));
+            } else {
+              wait_res=detail::win32::timeout;
+            }
+            if(wait_res==detail::win32::timeout)
+            {
+              for(;;)
+              {
+                state_data new_state=old_state;
+                if(new_state.shared_count || new_state.exclusive)
+                {
+                  if(new_state.exclusive_waiting)
+                  {
+                    if(!--new_state.exclusive_waiting)
+                    {
+                      new_state.exclusive_waiting_blocked=false;
+                    }
+                  }
+                }
+                else
+                {
+                  new_state.exclusive=true;
+                }
+
+                state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if(current_state==old_state)
+                {
+                  break;
+                }
+                old_state=current_state;
+              }
+              if(!old_state.shared_count && !old_state.exclusive)
+              {
+                return true;
+              }
+              return false;
+            }
+            BOOST_ASSERT(wait_res<2);
+          }
         }
 
         void unlock()
@@ -563,7 +789,17 @@ namespace boost
             }
             release_waiters(old_state);
         }
-
+#if 0 // To be added
+        bool try_unlock_upgrade_and_lock();
+        template <class Rep, class Period>
+            bool
+            try_unlock_upgrade_and_lock_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_upgrade_and_lock_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
         void unlock_and_lock_shared()
         {
             state_data old_state=state;
@@ -588,7 +824,17 @@ namespace boost
             }
             release_waiters(old_state);
         }
-
+#if 0 // To be added
+        bool try_unlock_shared_and_lock();
+        template <class Rep, class Period>
+            bool
+            try_unlock_shared_and_lock_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_shared_and_lock_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
         void unlock_upgrade_and_lock_shared()
         {
             state_data old_state=state;
@@ -612,7 +858,17 @@ namespace boost
             }
             release_waiters(old_state);
         }
-
+#if 0 // To be added
+        bool try_unlock_shared_and_lock_upgrade();
+        template <class Rep, class Period>
+            bool
+            try_unlock_shared_and_lock_upgrade_for(
+                                const chrono::duration<Rep, Period>& rel_time);
+        template <class Clock, class Duration>
+            bool
+            try_unlock_shared_and_lock_upgrade_until(
+                          const chrono::time_point<Clock, Duration>& abs_time);
+#endif
     };
 }
 
