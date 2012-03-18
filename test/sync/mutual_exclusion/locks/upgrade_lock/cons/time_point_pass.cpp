@@ -14,10 +14,10 @@
 
 // <boost/thread/locks.hpp>
 
-// template <class Mutex> class shared_lock;
+// template <class Mutex> class upgrade_lock;
 
 // template <class Clock, class Duration>
-//   shared_lock(mutex_type& m, const chrono::time_point<Clock, Duration>& abs_time);
+//   upgrade_lock(mutex_type& m, const chrono::time_point<Clock, Duration>& abs_time);
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
@@ -35,7 +35,7 @@ typedef boost::chrono::nanoseconds ns;
 void f1()
 {
   time_point t0 = Clock::now();
-  boost::shared_lock<boost::shared_mutex> lk(m, Clock::now() + ms(300));
+  boost::upgrade_lock<boost::shared_mutex> lk(m, Clock::now() + ms(300));
   BOOST_TEST(lk.owns_lock() == true);
   time_point t1 = Clock::now();
   ns d = t1 - t0 - ms(250);
@@ -45,7 +45,7 @@ void f1()
 void f2()
 {
   time_point t0 = Clock::now();
-  boost::shared_lock<boost::shared_mutex> lk(m, Clock::now() + ms(250));
+  boost::upgrade_lock<boost::shared_mutex> lk(m, Clock::now() + ms(250));
   BOOST_TEST(lk.owns_lock() == false);
   time_point t1 = Clock::now();
   ns d = t1 - t0 - ms(250);

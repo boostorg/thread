@@ -7,7 +7,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Copyright (C) 2011 Vicente J. Botet Escriba
+// Copyright (C) 2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -17,7 +17,7 @@
 // <mutex>
 
 // template <class Mutex>
-// class unique_lock
+// class lock_guard
 // {
 // public:
 //     typedef Mutex mutex_type;
@@ -31,7 +31,7 @@
 
 int main()
 {
-  BOOST_STATIC_ASSERT_MSG((boost::is_same<boost::unique_lock<boost::mutex>::mutex_type,
+  BOOST_STATIC_ASSERT_MSG((boost::is_same<boost::lock_guard<boost::mutex>::mutex_type,
       boost::mutex>::value), "");
 
   return boost::report_errors();

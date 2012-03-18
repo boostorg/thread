@@ -7,56 +7,41 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Copyright (C) 2011 Vicente J. Botet Escriba
+// Copyright (C) 2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // <boost/thread/locks.hpp>
 
-// template <class Mutex> class upgrade_lock;
+// template <class Mutex> class lock_guard;
 
-// upgrade_lock(mutex_type& m, try_to_lock_t);
-
+// lock_guard(mutex_type& m, adopt_lock_t);
 
 #include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-boost::shared_mutex m;
-
-typedef boost::chrono::system_clock Clock;
+typedef boost::chrono::high_resolution_clock Clock;
 typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
 
+boost::mutex m;
+
 void f()
 {
   time_point t0 = Clock::now();
+  time_point t1;
   {
-    boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
-    BOOST_TEST(lk.owns_lock() == false);
+    m.lock();
+    boost::lock_guard<boost::mutex> lg(m, boost::adopt_lock);
+    t1 = Clock::now();
   }
-  {
-    boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
-    BOOST_TEST(lk.owns_lock() == false);
-  }
-  {
-    boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
-    BOOST_TEST(lk.owns_lock() == false);
-  }
-  while (true)
-  {
-    boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
-    if (lk.owns_lock()) break;
-  }
-  time_point t1 = Clock::now();
-  //m.unlock();
   ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
+  BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
 }
 
 int main()
