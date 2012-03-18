@@ -17,7 +17,7 @@
 // <mutex>
 
 // template <class Mutex>
-// class unique_lock
+// class upgrade_lock
 // {
 // public:
 //     typedef Mutex mutex_type;
@@ -25,14 +25,14 @@
 // };
 
 
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int main()
 {
-  BOOST_STATIC_ASSERT_MSG((boost::is_same<boost::unique_lock<boost::mutex>::mutex_type,
-      boost::mutex>::value), "");
+  BOOST_STATIC_ASSERT_MSG((boost::is_same<boost::upgrade_lock<boost::upgrade_mutex>::mutex_type,
+      boost::upgrade_mutex>::value), "");
 
   return boost::report_errors();
 }

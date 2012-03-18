@@ -12,28 +12,24 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/mutex.hpp>
+// <boost/thread/locks.hpp>
 
-// <mutex>
+// template <class Mutex> class lock_guard;
 
-// template <class Mutex>
-// class unique_lock
-// {
-// public:
-//     typedef Mutex mutex_type;
-//     ...
-// };
+// lock_guard& operator=(lock_guard const&) = delete;
 
-
+#include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/static_assert.hpp>
 #include <boost/detail/lightweight_test.hpp>
+
+boost::mutex m0;
+boost::mutex m1;
 
 int main()
 {
-  BOOST_STATIC_ASSERT_MSG((boost::is_same<boost::unique_lock<boost::mutex>::mutex_type,
-      boost::mutex>::value), "");
+  boost::lock_guard<boost::mutex> lk0(m0);
+  boost::lock_guard<boost::mutex> lk1(m1);
+  lk1 = lk0;
 
-  return boost::report_errors();
 }
 
