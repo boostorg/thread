@@ -40,19 +40,6 @@ int main()
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   }
-  {
-  boost::unique_lock<boost::shared_mutex> lk0(m);
-  boost::upgrade_lock<boost::shared_mutex> lk( (boost::move(lk0)));
-  BOOST_TEST(lk.mutex() == &m);
-  BOOST_TEST(lk.owns_lock() == true);
-  BOOST_TEST(lk0.mutex() == 0);
-  BOOST_TEST(lk0.owns_lock() == false);
-  }
-  {
-  boost::upgrade_lock<boost::shared_mutex> lk( (boost::unique_lock<boost::shared_mutex>(m)));
-  BOOST_TEST(lk.mutex() == &m);
-  BOOST_TEST(lk.owns_lock() == true);
-  }
 
   return boost::report_errors();
 }

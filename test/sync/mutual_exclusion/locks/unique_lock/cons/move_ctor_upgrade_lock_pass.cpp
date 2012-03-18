@@ -16,42 +16,42 @@
 
 // template <class Mutex> class unique_lock;
 
-// unique_lock(unique_lock&& u);
+// unique_lock(upgrade_lock&& u);
 
 
 #include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-boost::mutex m;
+boost::upgrade_mutex m;
 
 int main()
 {
   {
-  boost::unique_lock<boost::mutex> lk0(m);
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::upgrade_lock<boost::upgrade_mutex> lk0(m);
+  boost::unique_lock<boost::upgrade_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::unique_lock<boost::mutex> lk( (boost::unique_lock<boost::mutex>(m)));
+  boost::unique_lock<boost::upgrade_mutex> lk( (boost::upgrade_lock<boost::upgrade_mutex>(m)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   }
   {
-  boost::unique_lock<boost::mutex> lk0(m, boost::defer_lock);
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::upgrade_lock<boost::upgrade_mutex> lk0(m, boost::defer_lock);
+  boost::unique_lock<boost::upgrade_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == false);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::unique_lock<boost::mutex> lk0(m, boost::defer_lock);
+  boost::upgrade_lock<boost::upgrade_mutex> lk0(m, boost::defer_lock);
   lk0.release();
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::unique_lock<boost::upgrade_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == 0);
   BOOST_TEST(lk.owns_lock() == false);
   BOOST_TEST(lk0.mutex() == 0);
