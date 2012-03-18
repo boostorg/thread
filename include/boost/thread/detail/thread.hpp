@@ -144,7 +144,7 @@ namespace boost
     class BOOST_THREAD_DECL thread
     {
     public:
-      typedef int boost_move_emulation_t;
+      //typedef int boost_move_emulation_t;
       typedef thread_attributes attributes;
 
 #ifndef BOOST_NO_DELETED_FUNCTIONS
@@ -153,20 +153,8 @@ namespace boost
       thread& operator=(thread const&) = delete;
 #else // BOOST_NO_DELETED_FUNCTIONS
     private:
-//      BOOST_MOVABLE_BUT_NOT_COPYABLE(thread)
-
-#if defined BOOST_THREAD_USES_MOVE
-    private:
-      //thread(thread const&);
-      thread(thread &);
-      //thread& operator=(thread const&);
-      thread& operator=(thread &);
-#else
-    private:
       thread(thread&);
       thread& operator=(thread&);
-#endif
-    public:
 #endif // BOOST_NO_DELETED_FUNCTIONS
     private:
 
@@ -400,6 +388,15 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_USES_MOVE
+        ::boost::rv<thread>& move()
+        {
+          return *static_cast< ::boost::rv<thread>* >(this);
+        }
+        const ::boost::rv<thread>& move() const
+        {
+          return *static_cast<const ::boost::rv<thread>* >(this);
+        }
+
       operator ::boost::rv<thread>&()
       {
         return *static_cast< ::boost::rv<thread>* >(this);
