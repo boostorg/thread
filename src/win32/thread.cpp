@@ -319,7 +319,9 @@ namespace boost
     }
 
 #ifdef BOOST_THREAD_USES_CHRONO
-    bool thread::do_try_join_for(chrono::milliseconds const &rel_time_in_milliseconds) {
+
+    bool thread::try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+    {
       if (this_thread::get_id() == get_id())
       {
         boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
@@ -327,15 +329,16 @@ namespace boost
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
       {
-          if(!this_thread::interruptible_wait(local_thread_info->thread_handle,rel_time_in_milliseconds.count()))
-          {
-              return false;
-          }
-          release_handle();
+        chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
+        if(!this_thread::interruptible_wait(local_thread_info->thread_handle,rel_time.count()))
+        {
+            return false;
+        }
+        release_handle();
       }
       return true;
-
     }
+
 #endif
 
     void thread::detach()
