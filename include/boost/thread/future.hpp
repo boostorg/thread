@@ -856,6 +856,14 @@ namespace boost
         {
           return *static_cast<const ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
         }
+        ::boost::rv<BOOST_THREAD_FUTURE>& move()
+        {
+          return *static_cast< ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
+        }
+        const ::boost::rv<BOOST_THREAD_FUTURE>& move() const
+        {
+          return *static_cast<const ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
+        }
 #else
         BOOST_THREAD_FUTURE(boost::detail::thread_move_t<BOOST_THREAD_FUTURE> other):
             future_(other->future_)
@@ -871,6 +879,10 @@ namespace boost
         }
 
         operator boost::detail::thread_move_t<BOOST_THREAD_FUTURE>()
+        {
+            return boost::detail::thread_move_t<BOOST_THREAD_FUTURE>(*this);
+        }
+        boost::detail::thread_move_t<BOOST_THREAD_FUTURE> move()
         {
             return boost::detail::thread_move_t<BOOST_THREAD_FUTURE>(*this);
         }
@@ -1066,6 +1078,14 @@ namespace boost
         {
           return *static_cast<const ::boost::rv<shared_future>* >(this);
         }
+        ::boost::rv<shared_future>& move()
+        {
+          return *static_cast< ::boost::rv<shared_future>* >(this);
+        }
+        const ::boost::rv<shared_future>& move() const
+        {
+          return *static_cast<const ::boost::rv<shared_future>* >(this);
+        }
 
 #else
 
@@ -1094,6 +1114,10 @@ namespace boost
         }
 
         operator boost::detail::thread_move_t<shared_future>()
+        {
+            return boost::detail::thread_move_t<shared_future>(*this);
+        }
+        boost::detail::thread_move_t<shared_future> move()
         {
             return boost::detail::thread_move_t<shared_future>(*this);
         }
@@ -1302,6 +1326,14 @@ namespace boost
         {
           return *static_cast<const ::boost::rv<promise>* >(this);
         }
+        ::boost::rv<promise>& move()
+        {
+          return *static_cast< ::boost::rv<promise>* >(this);
+        }
+        const ::boost::rv<promise>& move() const
+        {
+          return *static_cast<const ::boost::rv<promise>* >(this);
+        }
 #else
         promise(boost::detail::thread_move_t<promise> rhs):
             future_(rhs->future_),future_obtained(rhs->future_obtained)
@@ -1477,6 +1509,14 @@ namespace boost
         {
           return *static_cast<const ::boost::rv<promise>* >(this);
         }
+        ::boost::rv<promise>& move()
+        {
+          return *static_cast< ::boost::rv<promise>* >(this);
+        }
+        const ::boost::rv<promise>& move() const
+        {
+          return *static_cast<const ::boost::rv<promise>* >(this);
+        }
 #else
         promise(boost::detail::thread_move_t<promise> rhs):
             future_(rhs->future_),future_obtained(rhs->future_obtained)
@@ -1494,6 +1534,10 @@ namespace boost
         }
 
         operator boost::detail::thread_move_t<promise>()
+        {
+            return boost::detail::thread_move_t<promise>(*this);
+        }
+        boost::detail::thread_move_t<promise> move()
         {
             return boost::detail::thread_move_t<promise>(*this);
         }
@@ -1781,6 +1825,14 @@ namespace boost
         {
           return *static_cast<const ::boost::rv<packaged_task>* >(this);
         }
+        ::boost::rv<packaged_task>& move()
+        {
+          return *static_cast< ::boost::rv<packaged_task>* >(this);
+        }
+        const ::boost::rv<packaged_task>& move() const
+        {
+          return *static_cast<const ::boost::rv<packaged_task>* >(this);
+        }
 #else
         packaged_task(boost::detail::thread_move_t<packaged_task> other):
             future_obtained(other->future_obtained)
@@ -1795,6 +1847,10 @@ namespace boost
             return *this;
         }
         operator boost::detail::thread_move_t<packaged_task>()
+        {
+            return boost::detail::thread_move_t<packaged_task>(*this);
+        }
+        boost::detail::thread_move_t<packaged_task> move()
         {
             return boost::detail::thread_move_t<packaged_task>(*this);
         }
