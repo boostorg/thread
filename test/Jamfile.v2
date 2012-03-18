@@ -157,11 +157,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     test-suite mutual_exclusion
     :
           #uncomment the following once these works on windows
-          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
-          #[ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
-          #[ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
-          #[ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
-          #[ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
 
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : unique_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : unique_lock__cons__copy_ctor_f ]
@@ -308,7 +308,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/thread/static/hardware_concurrency_pass.cpp : thread__static__hardware_concurrency_p ]
     ;
 
-    #explicit examples ;
+    explicit examples ;
     test-suite examples
     :
           [ thread-run ../example/monitor.cpp ]
@@ -323,7 +323,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run ../example/tss.cpp ]
           [ thread-run ../example/xtime.cpp ]
           [ thread-run ../example/shared_monitor.cpp ]
-          [ thread-run ../example/shared_mutex.cpp ]
+          #[ thread-run ../example/shared_mutex.cpp ]
           #[ thread-run ../example/v2_shared_monitor.cpp ]
           #[ thread-run ../example/v2_shared_mutex.cpp ]
     ;
