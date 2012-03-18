@@ -503,19 +503,24 @@ namespace boost
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_join_for(chrono::ceil<chrono::milliseconds>(rel_time));
+          return try_join_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
+          system_clock::time_point     s_now = system_clock::now();
           typename Clock::time_point  c_now = Clock::now();
-          return try_join_for(chrono::ceil<chrono::milliseconds>(t - c_now));
+          return try_join_until(s_now + ceil<nanoseconds>(t - c_now));
         }
-#endif
-    private:
-#ifdef BOOST_THREAD_USES_CHRONO
-      bool do_try_join_for(chrono::milliseconds const &rel_time_in_milliseconds);
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+          using namespace chrono;
+          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+          return try_join_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+        }
+        bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp);
 #endif
     public:
 
