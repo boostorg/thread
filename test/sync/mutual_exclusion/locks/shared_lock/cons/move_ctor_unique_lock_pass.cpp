@@ -14,49 +14,51 @@
 
 // <boost/thread/locks.hpp>
 
-// template <class Mutex> class unique_lock;
+// template <class Mutex> class shared_lock;
 
-// unique_lock(unique_lock&& u);
+// shared_lock& operator=(shared_lock&& u);
 
 
 #include <boost/thread/locks.hpp>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/shared_mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-boost::mutex m;
+boost::shared_mutex m;
 
 int main()
 {
+
   {
-  boost::unique_lock<boost::mutex> lk0(m);
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::unique_lock<boost::shared_mutex> lk0(m);
+  boost::shared_lock<boost::shared_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::unique_lock<boost::mutex> lk( (boost::unique_lock<boost::mutex>(m)));
+  boost::shared_lock<boost::shared_mutex> lk( (boost::unique_lock<boost::shared_mutex>(m)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   }
   {
-  boost::unique_lock<boost::mutex> lk0(m, boost::defer_lock);
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::unique_lock<boost::shared_mutex> lk0(m, boost::defer_lock);
+  boost::shared_lock<boost::shared_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == false);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::unique_lock<boost::mutex> lk0(m, boost::defer_lock);
+  boost::unique_lock<boost::shared_mutex> lk0(m, boost::defer_lock);
   lk0.release();
-  boost::unique_lock<boost::mutex> lk( (boost::move(lk0)));
+  boost::shared_lock<boost::shared_mutex> lk( (boost::move(lk0)));
   BOOST_TEST(lk.mutex() == 0);
   BOOST_TEST(lk.owns_lock() == false);
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
+
 
   return boost::report_errors();
 }
