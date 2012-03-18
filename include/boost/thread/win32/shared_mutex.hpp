@@ -789,17 +789,28 @@ namespace boost
             }
             release_waiters(old_state);
         }
-#if 0 // To be added
-        bool try_unlock_upgrade_and_lock();
-        template <class Rep, class Period>
-            bool
-            try_unlock_upgrade_and_lock_for(
-                                const chrono::duration<Rep, Period>& rel_time);
-        template <class Clock, class Duration>
-            bool
-            try_unlock_upgrade_and_lock_until(
-                          const chrono::time_point<Clock, Duration>& abs_time);
-#endif
+//        bool try_unlock_upgrade_and_lock()
+//        {
+//          return false;
+//        }
+//#ifdef BOOST_THREAD_USES_CHRONO
+//        template <class Rep, class Period>
+//        bool
+//        try_unlock_upgrade_and_lock_for(
+//                                const chrono::duration<Rep, Period>& rel_time)
+//        {
+//          return try_unlock_upgrade_and_lock_until(
+//                                 chrono::steady_clock::now() + rel_time);
+//        }
+//        template <class Clock, class Duration>
+//        bool
+//        try_unlock_upgrade_and_lock_until(
+//                          const chrono::time_point<Clock, Duration>& abs_time)
+//        {
+//          return false;
+//        }
+//#endif
+
         void unlock_and_lock_shared()
         {
             state_data old_state=state;
@@ -824,17 +835,6 @@ namespace boost
             }
             release_waiters(old_state);
         }
-#if 0 // To be added
-        bool try_unlock_shared_and_lock();
-        template <class Rep, class Period>
-            bool
-            try_unlock_shared_and_lock_for(
-                                const chrono::duration<Rep, Period>& rel_time);
-        template <class Clock, class Duration>
-            bool
-            try_unlock_shared_and_lock_until(
-                          const chrono::time_point<Clock, Duration>& abs_time);
-#endif
         void unlock_upgrade_and_lock_shared()
         {
             state_data old_state=state;
@@ -858,18 +858,10 @@ namespace boost
             }
             release_waiters(old_state);
         }
-#if 0 // To be added
-        bool try_unlock_shared_and_lock_upgrade();
-        template <class Rep, class Period>
-            bool
-            try_unlock_shared_and_lock_upgrade_for(
-                                const chrono::duration<Rep, Period>& rel_time);
-        template <class Clock, class Duration>
-            bool
-            try_unlock_shared_and_lock_upgrade_until(
-                          const chrono::time_point<Clock, Duration>& abs_time);
-#endif
+
     };
+    typedef shared_mutex upgrade_mutex;
+
 }
 
 #include <boost/config/abi_suffix.hpp>
