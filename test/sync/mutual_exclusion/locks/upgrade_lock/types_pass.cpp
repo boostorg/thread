@@ -25,6 +25,7 @@
 // };
 
 
+#include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/static_assert.hpp>
 #include <boost/detail/lightweight_test.hpp>
