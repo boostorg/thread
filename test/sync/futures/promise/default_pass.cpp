@@ -25,20 +25,25 @@
 
 int main()
 {
+  std::cout << __LINE__ << std::endl;
 
   {
       boost::promise<int> p;
       boost::future<int> f = p.get_future();
       BOOST_TEST(f.valid());
   }
+  std::cout << __LINE__ << std::endl;
   {
       boost::promise<int&> p;
       boost::future<int&> f = p.get_future();
       BOOST_TEST(f.valid());
   }
+  std::cout << __LINE__ << std::endl;
   {
       boost::promise<void> p;
+      std::cout << __LINE__ << std::endl;
       boost::future<void> f = p.get_future();
+      std::cout << __LINE__ << std::endl;
       BOOST_TEST(f.valid());
   }
 
