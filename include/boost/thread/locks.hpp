@@ -490,6 +490,7 @@ namespace boost
               m = ul.release();
             }
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         unique_lock(upgrade_lock<mutex_type>&& ul,
                     const chrono::time_point<Clock, Duration>& abs_time)
@@ -525,7 +526,7 @@ namespace boost
             m = ul.release();
           }
         }
-
+#endif
 #else
 
 #if defined BOOST_THREAD_USES_MOVE
@@ -545,6 +546,7 @@ namespace boost
               m = ul.release();
             }
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         unique_lock(boost::rv<upgrade_lock<mutex_type> > &ul,
                     const chrono::time_point<Clock, Duration>& abs_time)
@@ -580,6 +582,7 @@ namespace boost
             m = ul.release();
           }
         }
+#endif
 #else
         // Conversion from upgrade locking
         unique_lock(detail::thread_move_t<upgrade_lock<mutex_type> > ul, try_to_lock_t)
@@ -597,6 +600,7 @@ namespace boost
               m = ul.release();
             }
         }
+#ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         unique_lock(detail::thread_move_t<upgrade_lock<mutex_type> > ul,
                     const chrono::time_point<Clock, Duration>& abs_time)
@@ -632,6 +636,7 @@ namespace boost
             m = ul.release();
           }
         }
+#endif
 #endif
 #endif
 
@@ -1212,7 +1217,6 @@ namespace boost
   : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
   {};
 #endif
-
 
     template<typename Mutex>
     void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs)
