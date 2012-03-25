@@ -25,14 +25,16 @@
 
 class MoveOnly
 {
-#ifndef BOOST_NO_RVALUE_REFERENCES
-  MoveOnly(const MoveOnly&);
+#ifndef BOOST_NO_DELETED_FUNCTIONS
+  public:
+  MoveOnly(const MoveOnly&)=delete;
+  MoveOnly& operator=(MoveOnly const&);
 #else
+  private:
   MoveOnly(MoveOnly&);
   MoveOnly& operator=(MoveOnly&);
+  public:
 #endif
-public:
-  typedef int boost_move_emulation_t;
   MoveOnly()
   {
   }
@@ -55,6 +57,14 @@ public:
   {
     return *static_cast<const ::boost::rv<MoveOnly>* >(this);
   }
+  ::boost::rv<MoveOnly>& move()
+  {
+    return *static_cast< ::boost::rv<MoveOnly>* >(this);
+  }
+  const ::boost::rv<MoveOnly>& move() const
+  {
+    return *static_cast<const ::boost::rv<MoveOnly>* >(this);
+  }
 #else
   MoveOnly(detail::thread_move_t<MoveOnly>)
   {}
@@ -66,17 +76,17 @@ public:
   }
 };
 
-MoveOnly MakeMoveOnly() {
-  MoveOnly x;
-  return boost::move(x);
-}
 int main()
 {
   {
     // FIXME The following fails
+#if ! defined  BOOST_NO_RVALUE_REFERENCES && ! defined  BOOST_NO_DELETED_FUNCTIONS
     boost::thread t = boost::thread( MoveOnly() );
-    //boost::thread t = boost::thread( MakeMoveOnly() );
-    //boost::thread t (( boost::move( MoveOnly() ) ));
+#elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
+    boost::thread t = boost::thread( MoveOnly() );
+#else
+    boost::thread t = boost::thread( MoveOnly().move() );
+#endif
     t.join();
   }
   return boost::report_errors();
