@@ -212,17 +212,8 @@ namespace boost
         ~thread();
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-#ifdef BOOST_MSVCXX
-        template <class F>
-        explicit thread(F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
-            thread_info(make_thread_info(static_cast<F&&>(f)))
-        {
-            start_thread();
-        }
-#else
         template <
           class F
-          //, class Dummy = typename disable_if< is_same<typename decay<F>::type, thread> >::type
         >
         explicit thread(F&& f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
@@ -233,7 +224,6 @@ namespace boost
         }
         template <
           class F
-          //, class Dummy = typename disable_if< is_same<typename decay<F>::type, thread> >::type
         >
         thread(attributes& attrs, F&& f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
@@ -242,7 +232,6 @@ namespace boost
         {
             start_thread(attrs);
         }
-#endif
 
         thread(thread&& other) BOOST_NOEXCEPT
         {
@@ -258,7 +247,7 @@ namespace boost
 
 //        thread&& move()
 //        {
-//            return static_cast<thread&&>(*this);
+//            return ::boost::move(*this);
 //        }
 
 #else
@@ -320,12 +309,6 @@ namespace boost
 //            start_thread();
 //        }
 //
-//        template <class F>
-//        explicit thread(BOOST_FWD_REF(F) f):
-//            thread_info(make_thread_info(boost::forward<F>(f)))
-//        {
-//            start_thread();
-//        }
 
         template <class F>
         thread(attributes& attrs, boost::rv<F>& f):
@@ -336,7 +319,6 @@ namespace boost
 
 
         thread(boost::rv<thread>& x)
-        //thread(BOOST_RV_REF(thread) x)
         {
             thread_info=x.thread_info;
             x.thread_info.reset();
