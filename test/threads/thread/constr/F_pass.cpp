@@ -17,16 +17,17 @@
 
 // template <class F, class ...Args> thread(F f, Args... args);
 
-#include <boost/thread/thread.hpp>
 #include <new>
 #include <cstdlib>
 #include <cassert>
+#include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 unsigned throw_one = 0xFFFF;
 
 void* operator new(std::size_t s) throw (std::bad_alloc)
 {
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   if (throw_one == 0) throw std::bad_alloc();
   --throw_one;
   return std::malloc(s);
@@ -34,6 +35,7 @@ void* operator new(std::size_t s) throw (std::bad_alloc)
 
 void operator delete(void* p) throw ()
 {
+  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   std::free(p);
 }
 
@@ -96,6 +98,7 @@ int main()
     BOOST_TEST(f_run == true);
   }
   f_run = false;
+#ifndef BOOST_MSVC
   {
     try
     {
@@ -109,6 +112,7 @@ int main()
       BOOST_TEST(!f_run);
     }
   }
+#endif
   {
     BOOST_TEST(G::n_alive == 0);
     BOOST_TEST(!G::op_run);
@@ -118,6 +122,7 @@ int main()
     BOOST_TEST(G::op_run);
   }
   G::op_run = false;
+#ifndef BOOST_MSVC
   {
     try
     {
@@ -131,14 +136,18 @@ int main()
     {
       throw_one = 0xFFFF;
       BOOST_TEST(G::n_alive == 0);
+      std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
       BOOST_TEST(!G::op_run);
     }
   }
+#endif
   {
     BOOST_TEST(G::n_alive == 0);
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
     BOOST_TEST(!G::op_run);
     boost::thread t(G(), 5, 5.5);
     t.join();
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
     BOOST_TEST(G::n_alive == 0);
     BOOST_TEST(G::op_run);
   }

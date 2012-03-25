@@ -43,6 +43,15 @@ rule thread-run2 ( sources : name )
     ;
 }
 
+rule thread-run-lib2 ( sources : name )
+{
+    return
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
+        : : :
+      : $(name)_lib ]
+    ;
+}
+
 
 rule thread-compile-fail-V2 ( sources : reqs * : name )
 {
@@ -309,7 +318,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/thread/assign/move_pass.cpp : thread__assign__move_p ]
           [ thread-compile-fail-V2 ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_f ]
           [ thread-run2 ./threads/thread/constr/default_pass.cpp : thread__constr__default_p ]
-          [ thread-run2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
+          [ thread-run-lib2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
           [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_p ]
           #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
           [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_p ]
@@ -356,4 +365,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     #      [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_for_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_for_p ]
     #      [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_until_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_until_p ]
     #;
+
+
 }
