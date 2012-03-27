@@ -61,6 +61,16 @@ namespace boost
 
 }
 
+#if ! defined  BOOST_NO_RVALUE_REFERENCES
+//&& ! defined  BOOST_NO_DELETED_FUNCTIONS
+#define BOOST_EXPLICIT_MOVE(RVALUE) RVALUE
+#elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
+#define BOOST_EXPLICIT_MOVE(RVALUE) RVALUE
+#else
+#define BOOST_EXPLICIT_MOVE(RVALUE) RVALUE.move()
+#endif
+
+
 #include <boost/config/abi_suffix.hpp>
 
 #endif

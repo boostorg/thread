@@ -65,6 +65,10 @@ public:
 int G::n_alive = 0;
 bool G::op_run = false;
 
+boost::thread make_thread() {
+  return boost::thread(G(), 5, 5.5);
+}
+
 int main()
 {
   {
@@ -76,10 +80,14 @@ int main()
     BOOST_TEST(t1.get_id() == id);
     BOOST_TEST(t0.get_id() == boost::thread::id());
     t1.join();
-#if 0
-    BOOST_TEST(G::n_alive == 0);
-#endif
     BOOST_TEST(G::op_run);
   }
+  BOOST_TEST(G::n_alive == 0);
+  {
+    boost::thread t1((make_thread()));
+    t1.join();
+    BOOST_TEST(G::op_run);
+  }
+  BOOST_TEST(G::n_alive == 0);
   return boost::report_errors();
 }

@@ -76,17 +76,14 @@ class MoveOnly
   }
 };
 
+MoveOnly MakeMoveOnly() {
+  return MoveOnly();
+}
+
 int main()
 {
   {
-    // FIXME The following fails
-#if ! defined  BOOST_NO_RVALUE_REFERENCES && ! defined  BOOST_NO_DELETED_FUNCTIONS
-    boost::thread t = boost::thread( MoveOnly() );
-#elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
-    boost::thread t = boost::thread( MoveOnly() );
-#else
-    boost::thread t = boost::thread( MoveOnly().move() );
-#endif
+    boost::thread t(( BOOST_EXPLICIT_MOVE(MakeMoveOnly()) ));
     t.join();
   }
   return boost::report_errors();
