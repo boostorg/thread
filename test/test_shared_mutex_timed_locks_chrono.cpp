@@ -9,6 +9,8 @@
 #include "util.inl"
 #include "shared_mutex_locking_thread.hpp"
 
+#if defined BOOST_THREAD_USES_CHRONO
+
 #define CHECK_LOCKED_VALUE_EQUAL(mutex_name,value,expected_value)    \
     {                                                                \
         boost::mutex::scoped_lock lock(mutex_name);                  \
@@ -266,3 +268,8 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 
     return test;
 }
+
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif
+

@@ -81,13 +81,7 @@ class MoveOnly
 int main()
 {
   {
-#if ! defined  BOOST_NO_RVALUE_REFERENCES && ! defined  BOOST_NO_DELETED_FUNCTIONS
-    boost::thread t = boost::thread(MoveOnly(), MoveOnly());
-#elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
-    boost::thread t = boost::thread(MoveOnly(), MoveOnly());
-#else
-    boost::thread t = boost::thread(MoveOnly().move(), MoveOnly().move());
-#endif
+    boost::thread t = boost::thread( BOOST_EXPLICIT_MOVE(MoveOnly()), BOOST_EXPLICIT_MOVE(MoveOnly()) );
     t.join();
   }
   return boost::report_errors();
