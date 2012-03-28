@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// Copyright (C) 2011-2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -26,9 +27,9 @@
 #define BOOST_THREAD_USES_CHRONO
 #endif
 
-//#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
-//#define BOOST_THREAD_DONT_USE_MOVE
-//#endif
+#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
+#define BOOST_THREAD_DONT_USE_MOVE
+#endif
 
 //#define BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
 //#define BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
