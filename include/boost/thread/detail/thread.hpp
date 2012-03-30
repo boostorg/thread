@@ -144,7 +144,6 @@ namespace boost
     class BOOST_THREAD_DECL thread
     {
     public:
-      //typedef int boost_move_emulation_t;
       typedef thread_attributes attributes;
 
 #ifndef BOOST_NO_DELETED_FUNCTIONS
@@ -353,14 +352,14 @@ namespace boost
         }
 #else
 #if defined BOOST_THREAD_USES_MOVE
-        thread& operator=(boost::rv<thread>& x)
+        thread& operator=(boost::rv<thread>& x) BOOST_NOEXCEPT
         {
             thread new_thread(boost::move(x));
             swap(new_thread);
             return *this;
         }
 #else
-        thread& operator=(detail::thread_move_t<thread> x)
+        thread& operator=(detail::thread_move_t<thread> x) BOOST_NOEXCEPT
         {
             thread new_thread(x);
             swap(new_thread);
@@ -370,30 +369,30 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_USES_MOVE
-        ::boost::rv<thread>& move()
+        ::boost::rv<thread>& move()  BOOST_NOEXCEPT
         {
           return *static_cast< ::boost::rv<thread>* >(this);
         }
-        const ::boost::rv<thread>& move() const
+        const ::boost::rv<thread>& move() const BOOST_NOEXCEPT
         {
           return *static_cast<const ::boost::rv<thread>* >(this);
         }
 
-      operator ::boost::rv<thread>&()
+      operator ::boost::rv<thread>&()  BOOST_NOEXCEPT
       {
         return *static_cast< ::boost::rv<thread>* >(this);
       }
-      operator const ::boost::rv<thread>&() const
+      operator const ::boost::rv<thread>&() const BOOST_NOEXCEPT
       {
         return *static_cast<const ::boost::rv<thread>* >(this);
       }
 #else
-        operator detail::thread_move_t<thread>()
+        operator detail::thread_move_t<thread>() BOOST_NOEXCEPT
         {
             return move();
         }
 
-        detail::thread_move_t<thread> move()
+        detail::thread_move_t<thread> move() BOOST_NOEXCEPT
         {
             detail::thread_move_t<thread> x(*this);
             return x;
@@ -476,7 +475,7 @@ namespace boost
         bool joinable() const BOOST_NOEXCEPT;
         void join();
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-        bool timed_join(const system_time& abs_time);
+        bool timed_join(const system_time& abs_time); // DEPRECATED V2
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
@@ -504,7 +503,8 @@ namespace boost
     public:
 
 #else
-        bool timed_join(const system_time& abs_time) {
+        bool timed_join(const system_time& abs_time) // DEPRECATED V2
+        {
           struct timespec const ts=detail::get_timespec(abs_time);
           return do_try_join_until(ts);
         }
@@ -547,12 +547,12 @@ namespace boost
 #endif
 
         template<typename TimeDuration>
-        inline bool timed_join(TimeDuration const& rel_time)
+        inline bool timed_join(TimeDuration const& rel_time)  // DEPRECATED V2
         {
             return timed_join(get_system_time()+rel_time);
         }
 
-        void detach();
+        void detach() BOOST_NOEXCEPT;
 
         static unsigned hardware_concurrency() BOOST_NOEXCEPT;
 
@@ -561,22 +561,22 @@ namespace boost
         native_handle_type native_handle();
 
         // backwards compatibility
-        bool operator==(const thread& other) const;
-        bool operator!=(const thread& other) const;
+        bool operator==(const thread& other) const; // DEPRECATED V2
+        bool operator!=(const thread& other) const; // DEPRECATED V2
 
         static inline void yield() BOOST_NOEXCEPT
         {
             this_thread::yield();
         }
 
-        static inline void sleep(const system_time& xt)
+        static inline void sleep(const system_time& xt) // DEPRECATED V2
         {
             this_thread::sleep(xt);
         }
 
         // extensions
         void interrupt();
-        bool interruption_requested() const;
+        bool interruption_requested() const BOOST_NOEXCEPT;
     };
 
     inline void swap(thread& lhs,thread& rhs) BOOST_NOEXCEPT
@@ -585,17 +585,17 @@ namespace boost
     }
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-    inline thread&& move(thread& t)
+    inline thread&& move(thread& t) BOOST_NOEXCEPT
     {
         return static_cast<thread&&>(t);
     }
-    inline thread&& move(thread&& t)
+    inline thread&& move(thread&& t) BOOST_NOEXCEPT
     {
         return static_cast<thread&&>(t);
     }
 #else
 #if !defined BOOST_THREAD_USES_MOVE
-    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
+    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t) BOOST_NOEXCEPT
     {
         return t;
     }
@@ -616,10 +616,10 @@ namespace boost
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
 
         void BOOST_THREAD_DECL interruption_point();
-        bool BOOST_THREAD_DECL interruption_enabled();
-        bool BOOST_THREAD_DECL interruption_requested();
+        bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
+        bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
 
-        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
+        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time) // DEPRECATED V2
         {
             sleep(system_time(abs_time));
         }

@@ -358,7 +358,7 @@ namespace boost
     }
 
 
-    void thread::detach()
+    void thread::detach() BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info;
         thread_info.swap(local_thread_info);
@@ -560,13 +560,13 @@ namespace boost
             }
         }
 
-        bool interruption_enabled()
+        bool interruption_enabled() BOOST_NOEXCEPT
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             return thread_info && thread_info->interrupt_enabled;
         }
 
-        bool interruption_requested()
+        bool interruption_requested() BOOST_NOEXCEPT
         {
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(!thread_info)
@@ -580,7 +580,7 @@ namespace boost
             }
         }
 
-        disable_interruption::disable_interruption():
+        disable_interruption::disable_interruption() BOOST_NOEXCEPT:
             interruption_was_enabled(interruption_enabled())
         {
             if(interruption_was_enabled)
@@ -589,7 +589,7 @@ namespace boost
             }
         }
 
-        disable_interruption::~disable_interruption()
+        disable_interruption::~disable_interruption() BOOST_NOEXCEPT
         {
             if(detail::get_current_thread_data())
             {
@@ -597,7 +597,7 @@ namespace boost
             }
         }
 
-        restore_interruption::restore_interruption(disable_interruption& d)
+        restore_interruption::restore_interruption(disable_interruption& d) BOOST_NOEXCEPT
         {
             if(d.interruption_was_enabled)
             {
@@ -605,7 +605,7 @@ namespace boost
             }
         }
 
-        restore_interruption::~restore_interruption()
+        restore_interruption::~restore_interruption() BOOST_NOEXCEPT
         {
             if(detail::get_current_thread_data())
             {

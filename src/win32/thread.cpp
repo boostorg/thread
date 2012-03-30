@@ -341,7 +341,7 @@ namespace boost
 
 #endif
 
-    void thread::detach()
+    void thread::detach() BOOST_NOEXCEPT
     {
         release_handle();
     }
@@ -360,7 +360,7 @@ namespace boost
         }
     }
 
-    bool thread::interruption_requested() const
+    bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
@@ -550,12 +550,12 @@ namespace boost
             }
         }
 
-        bool interruption_enabled()
+        bool interruption_enabled() BOOST_NOEXCEPT
         {
             return get_current_thread_data() && get_current_thread_data()->interruption_enabled;
         }
 
-        bool interruption_requested()
+        bool interruption_requested() BOOST_NOEXCEPT
         {
             return get_current_thread_data() && (detail::win32::WaitForSingleObject(get_current_thread_data()->interruption_handle,0)==0);
         }
@@ -565,7 +565,7 @@ namespace boost
             detail::win32::Sleep(0);
         }
 
-        disable_interruption::disable_interruption():
+        disable_interruption::disable_interruption() BOOST_NOEXCEPT:
             interruption_was_enabled(interruption_enabled())
         {
             if(interruption_was_enabled)
@@ -574,7 +574,7 @@ namespace boost
             }
         }
 
-        disable_interruption::~disable_interruption()
+        disable_interruption::~disable_interruption() BOOST_NOEXCEPT
         {
             if(get_current_thread_data())
             {
@@ -582,7 +582,7 @@ namespace boost
             }
         }
 
-        restore_interruption::restore_interruption(disable_interruption& d)
+        restore_interruption::restore_interruption(disable_interruption& d) BOOST_NOEXCEPT
         {
             if(d.interruption_was_enabled)
             {
@@ -590,7 +590,7 @@ namespace boost
             }
         }
 
-        restore_interruption::~restore_interruption()
+        restore_interruption::~restore_interruption() BOOST_NOEXCEPT
         {
             if(get_current_thread_data())
             {
