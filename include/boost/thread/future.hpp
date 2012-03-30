@@ -492,7 +492,7 @@ namespace boost
                 return static_cast<shared_future_get_result_type>(*result);
             }
 
-            future_state::state get_state()
+            future_state::state get_state() // DEPRECATED V2
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
                 if(!done)
@@ -538,7 +538,7 @@ namespace boost
             {
                 wait();
             }
-            future_state::state get_state()
+            future_state::state get_state() // DEPRECATED V2
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
                 if(!done)
@@ -910,7 +910,7 @@ namespace boost
         }
 
         // functions to check state, and wait for ready
-        state get_state() const BOOST_NOEXCEPT
+        state get_state() const BOOST_NOEXCEPT // DEPRECATED V2
         {
             if(!future_)
             {
@@ -1145,7 +1145,7 @@ namespace boost
         }
 
         // functions to check state, and wait for ready
-        state get_state() const  BOOST_NOEXCEPT
+        state get_state() const  BOOST_NOEXCEPT // DEPRECATED V2
         {
             if(!future_)
             {
@@ -1904,6 +1904,8 @@ namespace boost
             {
                 boost::throw_exception(future_already_retrieved());
             }
+            return BOOST_THREAD_FUTURE<R>();
+
         }
 
 
