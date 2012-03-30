@@ -23,6 +23,10 @@
 #define BOOST_THREAD_USES_SYSTEM
 #endif
 
+#if defined __IBMCPP__
+#define BOOST_THREAD_DONT_USE_CHRONO
+#endif
+
 #if ! defined BOOST_THREAD_DONT_USE_CHRONO && ! defined BOOST_THREAD_DONT_USE_SYSTEM
 #define BOOST_THREAD_USES_CHRONO
 #endif
