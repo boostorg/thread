@@ -1,0 +1,268 @@
+[/
+  (C) Copyright 20012 Vicente J. Botet Escriba.
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+
+[section:emulations Emulations]
+[section:delete `=delete` emulation]
+
+C++11 allows to delete some implicitly generated functions as constructors and assignment using '= delete' as in
+
+  public:
+    thread(thread const&) = delete;
+
+On compilers not supporting this feature, Boost.Thread relays on a partial simulation, it declares the function as private without definition.
+
+  private:
+    thread(thread &);
+
+The emulation is partial as the private function can be used for overload resolution for some compilers and prefer it to other overloads that need a conversion. See below the consequences on the move semantic emulation.
+
+[endsect]
+
+[section:move Move semantics]
+
+In order to implement MovableOnly classes and move parameters and return types Boost.Thread uses the rvalue reference when the compiler support it.
+On compilers not supporting it Boost.Thread uses the emulation provided by Boost.Move.
+
+
+While Boost.Move is the best C++03 move emulation there are some limitations that impact the way the library can be used. 
+For example, with the following declarations 
+
+  class thread {
+    // ...
+  private:
+    thread(thread &);
+  public:
+    thread(rv<thread>&);
+    // ...
+  };
+
+This could not work on these compilers even if thread is convertible to rv<thread>
+
+  thread mkth() 
+  {
+    return thread(f);
+  }
+
+On these compilers we need to use instead an explicit conversion. The library provides a move member function that allows to workaround the issue.  
+
+  thread mkth() 
+  {
+    return thread(f).move();
+  }
+
+Note that ::boost::move can not be used in this case as thread is not implicitly convertible to thread&.
+
+  thread mkth() 
+  {
+    return ::boost::move(thread(f));
+  }
+
+To make the code portable Boost.Thread uses a macro BOOST_MOVE_RVALUE that can be used as in 
+
+  thread mkth() 
+  {
+    return BOOST_EXPLICIT_MOVE(thread(f));
+  }
+
+See the Boost.Move documentation for a complete description on how to declare new Movable classes and its limitations. 
+
+[section:deprecated Deprecated]
+
+Previous to version 1.50, Boost.Thread make use of its own move semantic emulation which had more limitations than the provided by Boost.Move. In addition, it is of interest of the whole Boost community that Boost.Thread uses Boost.Move so that boost::thread can be stored on Movable aware containers.
+
+To preserve backward compatibility at least during some releases, Boost.Thread allows the user to use the deprecated move semantic emulation defining BOOST_THREAD_DONT_USE_MOVE.
+
+Many aspects of move semantics can be emulated for compilers not supporting rvalue references and Boost.Thread legacy offers tools for that purpose. 
+
+[section:Helper Helpers class and function]
+
+Next follows the interface of the legacy move semantic helper classes and functions. 
+
+  namespace boost
+  {
+    namespace detail
+    {
+        template<typename T>
+        struct thread_move_t
+        {
+          explicit thread_move_t(T& t_);
+          T& operator*() const;
+          T* operator->() const;
+        private:
+          void operator=(thread_move_t&);
+        };
+    }
+    template<typename T>
+    boost::detail::thread_move_t<T> move(boost::detail::thread_move_t<T> t);
+  }
+
+[section:movable Movable emulation]
+
+We can write a MovableOny class as follows. You just need to follow these simple steps:
+
+* Add a conversion to the detail::thread_move_t<classname>
+* Make the copy constructor private.
+* Write a constructor taking the parameter as detail::thread_move_t<classname>
+* Write an assignment taking the parameter as detail::thread_move_t<classname>
+
+
+For example the thread class defines the following:
+
+    class thread 
+    {
+      // ...
+    private:
+        thread(thread&);
+        thread& operator=(thread&);
+    public:
+        detail::thread_move_t<thread> move()
+        {
+            detail::thread_move_t<thread> x(*this);
+            return x;
+        }    
+        operator detail::thread_move_t<thread>()
+        {
+            return move();
+        }
+        thread(detail::thread_move_t<thread> x)
+        {
+            thread_info=x->thread_info;
+            x->thread_info.reset();
+        }
+        thread& operator=(detail::thread_move_t<thread> x)
+        {
+            thread new_thread(x);
+            swap(new_thread);
+            return *this;
+        }
+      // ...
+
+    };
+
+
+
+[endsect]
+
+[endsect]
+
+[endsect]
+
+
+[endsect]
+
+[section:bool_explicit_conversion Bool explicit conversion]
+
+Locks provide an explicit bool conversion operator when the compiler provides them.
+
+  explicit operator bool() const;
+
+The library provides un implicit conversion to an undefined type that can be used as a conditional expression. 
+
+    #if defined(BOOST_NO_EXPLICIT_CONVERSION_OPERATORS)
+        operator ``['unspecified-bool-type]``() const;
+        bool operator!() const;
+    #else
+        explicit operator bool() const;
+    #endif
+
+The user should use the lock.owns_lock() when a explicit conversion is required. 
+
+[section:bool_conversion `operator `['unspecified-bool-type]`() const`]
+
+[variablelist
+
+[[Returns:] [If __owns_lock_ref__ would return `true`, a value that evaluates to
+`true` in boolean contexts, otherwise a value that evaluates to `false` in
+boolean contexts.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[section:operator_not `bool operator!() const`]
+
+[variablelist
+
+[[Returns:] [`!` __owns_lock_ref__.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+ 
+[endsect]
+
+[section:scoped_enums Scoped Enums]
+
+Some of the enumerations defined in the standard library are scoped enums. 
+
+On compilers that don't support them, the library uses a class to wrap the underlying type. Instead of 
+
+  enum class future_errc
+  {
+      broken_promise,
+      future_already_retrieved,
+      promise_already_satisfied,
+      no_state
+  };
+
+the library declare these types as
+
+  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_errc)
+  {
+      broken_promise,
+      future_already_retrieved,
+      promise_already_satisfied,
+      no_state
+  }
+  BOOST_SCOPED_ENUM_DECLARE_END(future_errc)
+
+These macros allows to use 'future_errc' in almost all the cases as an scoped enum.
+
+There are however some limitations:
+
+* The type is not a C++ enum, so 'is_enum<future_errc>' will be false_type.
+* The emulated scoped enum can not be used in switch nor in template arguments. For these cases the user needs to use some macros.
+
+Instead of
+
+        switch (ev)
+        {
+        case future_errc::broken_promise:
+	// ...
+
+use
+
+        switch (BOOST_SCOPED_ENUM_NATIVE(future_errc)(ev))
+        {
+        case future_errc::broken_promise:
+
+And instead of
+
+    #ifdef BOOST_NO_SCOPED_ENUMS
+    template <>
+    struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc> : public true_type { };
+    #endif
+
+use
+
+    #ifdef BOOST_NO_SCOPED_ENUMS
+    template <>
+    struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc::enum_type> : public true_type { };
+    #endif
+
+
+
+[endsect]
+
+[endsect]
