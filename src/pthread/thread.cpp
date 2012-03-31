@@ -508,7 +508,7 @@ namespace boost
         }
     }
 
-    bool thread::interruption_requested() const
+    bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
