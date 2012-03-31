@@ -28,21 +28,10 @@ int main()
 {
   {
     boost::unique_lock<boost::mutex> lk0;
-    BOOST_TEST(bool(lk0) == false);
-    boost::unique_lock<boost::mutex> lk1(m);
-    BOOST_TEST(bool(lk1) == true);
-    lk1.unlock();
-    BOOST_TEST(bool(lk1) == false);
+    int i = int(lk0);
+    BOOST_TEST(i == 0);
   }
 
-  {
-    boost::unique_lock<boost::mutex> lk0;
-    if (lk0) BOOST_TEST(false);
-    boost::unique_lock<boost::mutex> lk1(m);
-    if (!lk1) BOOST_TEST(false);
-    lk1.unlock();
-    if (lk1) BOOST_TEST(false);
-  }
   return boost::report_errors();
 }
 
