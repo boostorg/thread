@@ -11,7 +11,11 @@
 
 #include <boost/thread/detail/platform.hpp>
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
+#if defined(BOOST_THREAD_SHARED_MUTEX_GENERIC)
+#include <boost/thread/pthread/shared_mutex.hpp>
+#else
 #include <boost/thread/win32/shared_mutex.hpp>
+#endif
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #include <boost/thread/pthread/shared_mutex.hpp>
 #else
