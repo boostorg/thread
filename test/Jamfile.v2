@@ -377,4 +377,14 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     #;
 
 
+    #explicit shared_lock_guard ;
+    test-suite shared_lock_guard
+    :
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock_guard/copy_assign_fail.cpp : : shared_lock_guard__cons__copy_assign_f ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock_guard/copy_ctor_fail.cpp : : shared_lock_guard__cons__copy_ctor_f ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock_guard/adopt_lock_pass.cpp : shared_lock_guard__cons__adopt_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock_guard/default_pass.cpp : shared_lock_guard__cons__default_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock_guard/types_pass.cpp : shared_lock_guard__types_p ]
+    ;
+
 }

@@ -1524,6 +1524,8 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
 [endsect]
 [endsect]
 
+]
+
 [section:other_locks Other Lock Types]
 
 
@@ -1591,6 +1593,7 @@ obtained by a call to `m.__lock_shared()`.]]
 
 [endsect]
 
+[/
 [section:reverse_lock Class template `reverse_lock`]
 
     #include <boost/thread/reverse_lock.hpp>
@@ -1639,9 +1642,10 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 
 
 [endsect]
+]
 
 [endsect]
-]
+
 
 [section:lock_functions Lock functions]
 

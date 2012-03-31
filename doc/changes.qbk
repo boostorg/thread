@@ -14,9 +14,9 @@ New Features:
 
 [/
 * [@http://svn.boost.org/trac/boost/ticket/1850 #1850] Request for unlock_guard  to compliment lock_guard.
-* [@http://svn.boost.org/trac/boost/ticket/2637 #2637] Request for shared_mutex duration timed_lock and timed_lock_shared.
 ]
 
+* [@http://svn.boost.org/trac/boost/ticket/2637 #2637] Request for shared_mutex duration timed_lock and timed_lock_shared.
 * [@http://svn.boost.org/trac/boost/ticket/2741 #2741] Proposal to manage portable and non portable thread attributes. 
 * [@http://svn.boost.org/trac/boost/ticket/3567 #3567] Request for shared_lock_guard.
 * [@http://svn.boost.org/trac/boost/ticket/6194 #6194] Adapt to Boost.Move. 
