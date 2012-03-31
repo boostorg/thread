@@ -19,6 +19,8 @@
 // template <class Clock, class Duration>
 //   upgrade_lock(mutex_type& m, const chrono::time_point<Clock, Duration>& abs_time);
 
+#define BOOST_THREAD_SHARED_MUTEX_GENERIC
+
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
