@@ -19,26 +19,92 @@
 // promise& operator=(promise&& rhs);
 
 #define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_FUTURE_USES_ALLOCATORS
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#include <libs/thread/test/sync/futures/test_allocator.hpp>
+#endif
 
 boost::mutex m0;
 boost::mutex m1;
 
 int main()
 {
-  //BOOST_TEST(test_alloc_base::count == 0);
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+  BOOST_TEST(test_alloc_base::count == 0);
   {
-    //boost::promise<int> p0(boost::allocator_arg, test_allocator<int>());
-    //boost::promise<int> p(boost::allocator_arg, test_allocator<int>());
+    boost::promise<int> p0(boost::container::allocator_arg, test_allocator<int>());
+    boost::promise<int> p(boost::container::allocator_arg, test_allocator<int>());
+    BOOST_TEST(test_alloc_base::count == 2);
+    p = boost::move(p0);
+    BOOST_TEST(test_alloc_base::count == 1);
+    boost::future<int> f = p.get_future();
+    BOOST_TEST(test_alloc_base::count == 1);
+    BOOST_TEST(f.valid());
+    try
+    {
+      f = p0.get_future();
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
+    }
+    BOOST_TEST(test_alloc_base::count == 1);
+  }
+  BOOST_TEST(test_alloc_base::count == 0);
+
+  {
+    boost::promise<int&> p0(boost::container::allocator_arg, test_allocator<int>());
+    boost::promise<int&> p(boost::container::allocator_arg, test_allocator<int>());
+    BOOST_TEST(test_alloc_base::count == 2);
+    p = boost::move(p0);
+    BOOST_TEST(test_alloc_base::count == 1);
+    boost::future<int&> f = p.get_future();
+    BOOST_TEST(test_alloc_base::count == 1);
+    BOOST_TEST(f.valid());
+    try
+    {
+      f = p0.get_future();
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
+    }
+    BOOST_TEST(test_alloc_base::count == 1);
+  }
+  BOOST_TEST(test_alloc_base::count == 0);
+  {
+    boost::promise<void> p0(boost::container::allocator_arg, test_allocator<void>());
+    boost::promise<void> p(boost::container::allocator_arg, test_allocator<void>());
+    BOOST_TEST(test_alloc_base::count == 2);
+    p = boost::move(p0);
+    BOOST_TEST(test_alloc_base::count == 1);
+    boost::future<void> f = p.get_future();
+    BOOST_TEST(test_alloc_base::count == 1);
+    BOOST_TEST(f.valid());
+    try
+    {
+      f = p0.get_future();
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
+    }
+    BOOST_TEST(test_alloc_base::count == 1);
+  }
+  BOOST_TEST(test_alloc_base::count == 0);
+
+#endif
+  {
     boost::promise<int> p0;
     boost::promise<int> p;
-    //BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
-    //BOOST_TEST(test_alloc_base::count == 1);
     boost::future<int> f = p.get_future();
-    //BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     try
     {
@@ -49,19 +115,13 @@ int main()
     {
       BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
     }
-    //BOOST_TEST(test_alloc_base::count == 1);
   }
-  //BOOST_TEST(test_alloc_base::count == 0);
+
   {
-    //boost::promise<int&> p0(boost::allocator_arg, test_allocator<int>());
-    //boost::promise<int&> p(boost::allocator_arg, test_allocator<int>());
     boost::promise<int&> p0;
     boost::promise<int&> p;
-    //BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
-    //BOOST_TEST(test_alloc_base::count == 1);
     boost::future<int&> f = p.get_future();
-    //BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     try
     {
@@ -72,19 +132,12 @@ int main()
     {
       BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
     }
-    //BOOST_TEST(test_alloc_base::count == 1);
   }
-  //BOOST_TEST(test_alloc_base::count == 0);
   {
-    //boost::promise<void> p0(boost::allocator_arg, test_allocator<void>());
-    //boost::promise<void> p(boost::allocator_arg, test_allocator<void>());
     boost::promise<void> p0;
     boost::promise<void> p;
-    //BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
-    //BOOST_TEST(test_alloc_base::count == 1);
     boost::future<void> f = p.get_future();
-    //BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     try
     {
@@ -95,9 +148,7 @@ int main()
     {
       BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
     }
-    //BOOST_TEST(test_alloc_base::count == 1);
   }
-  //BOOST_TEST(test_alloc_base::count == 0);
 
   return boost::report_errors();
 

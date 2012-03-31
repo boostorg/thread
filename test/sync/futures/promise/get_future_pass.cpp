@@ -25,25 +25,25 @@
 
 int main()
 {
-//  {
-//      boost::promise<double> p;
-//      boost::future<double> f = p.get_future();
-//      p.set_value(105.5);
-//      BOOST_TEST(f.get() == 105.5);
-//  }
-//  {
-//      boost::promise<double> p;
-//      boost::future<double> f = p.get_future();
-//      try
-//      {
-//          f = p.get_future();
-//          BOOST_TEST(false);
-//      }
-//      catch (const boost::future_error& e)
-//      {
-//          BOOST_TEST(e.code() ==  boost::system::make_error_code(boost::future_errc::future_already_retrieved));
-//      }
-//  }
+  {
+      boost::promise<double> p;
+      boost::future<double> f = p.get_future();
+      p.set_value(105.5);
+      BOOST_TEST(f.get() == 105.5);
+  }
+  {
+      boost::promise<double> p;
+      boost::future<double> f = p.get_future();
+      try
+      {
+          f = p.get_future();
+          BOOST_TEST(false);
+      }
+      catch (const boost::future_error& e)
+      {
+          BOOST_TEST(e.code() ==  boost::system::make_error_code(boost::future_errc::future_already_retrieved));
+      }
+  }
   {
       boost::promise<double> p;
       boost::promise<double> p0 = boost::move(p);

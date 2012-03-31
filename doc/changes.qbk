@@ -21,6 +21,7 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6217 #6217] Enhance Boost.Thread shared mutex interface following Howard Hinnant proposal. 
 * [@http://svn.boost.org/trac/boost/ticket/6224 #6224] c++11 compliance: Add the use of standard noexcept on compilers supporting them. 
 * [@http://svn.boost.org/trac/boost/ticket/6226 #6226] c++11 compliance: Add explicit bool conversion from locks. 
+* [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise constructor with allocator following the standard c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6230 #6230] c++11 compliance: Follows the exception reporting mechanism as defined in the c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
 * [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
@@ -181,7 +182,6 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/6342 #6342] Breaking change: Adapt the one_flag and call_once to the c++11 interface. 
 
   * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
-  * [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise and futures constructor with allocator following the standard c++11. 
   * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] Add thread constructor from movable callable and movable arguments following C++11. 
  	
 

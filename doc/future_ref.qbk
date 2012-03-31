@@ -44,8 +44,10 @@
     template <typename R>
     void swap(promise<R>& x, promise<R>& y) noexcept;
 
-    //template <class R, class Alloc> 
-    //struct uses_allocator<promise<R>, Alloc>; // NOT YET IMPLEMENTED
+    namespace container {
+      template <class R, class Alloc> 
+      struct uses_allocator<promise<R>, Alloc>:: true_type;
+    }
 
     template <typename R>
     class future;
@@ -703,7 +705,8 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
     public:
 
         promise();
-        // template <class Allocator> explicit promise(Allocator a); // NOT YET IMPLEMENTED
+        template <class Allocator> 
+        explicit promise(allocator_arg_t, Allocator a);
         promise & operator=(const promise & rhs);// = delete;
         promise(const promise & rhs);// = delete;
         ~promise();
@@ -743,6 +746,23 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 ]
 
 [endsect]
+
+[section:alloc_constructor Allocator Constructor]
+
+        template <class Allocator> 
+        explicit promise(allocator_arg_t, Allocator a);
+
+[variablelist
+
+[[Effects:] [Constructs a new __promise__ with no associated result using the allocator `a`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
 
 [section:move_constructor Move Constructor]
 
