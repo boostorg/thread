@@ -25,7 +25,6 @@
 
 int main()
 {
-  std::cout << __LINE__ << std::endl;
   {
       typedef int T;
       boost::future<T> f;
@@ -36,7 +35,6 @@ int main()
       }
       BOOST_TEST(f.get() == 3);
   }
-  std::cout << __LINE__ << std::endl;
   {
       typedef int T;
       boost::future<T> f;
@@ -54,8 +52,6 @@ int main()
           BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::broken_promise));
       }
   }
-
-  std::cout << __LINE__ << std::endl;
   {
       typedef int& T;
       int i = 4;
@@ -67,7 +63,6 @@ int main()
       }
       BOOST_TEST(&f.get() == &i);
   }
-  std::cout << __LINE__ << std::endl;
   {
       typedef int& T;
       boost::future<T> f;
@@ -85,8 +80,6 @@ int main()
           BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::broken_promise));
       }
   }
-
-  std::cout << __LINE__ << std::endl;
   {
       typedef void T;
       boost::future<T> f;
@@ -98,7 +91,6 @@ int main()
       f.get();
       BOOST_TEST(true);
   }
-  std::cout << __LINE__ << std::endl;
   {
       typedef void T;
       boost::future<T> f;

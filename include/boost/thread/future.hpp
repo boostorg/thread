@@ -36,6 +36,10 @@
 #include <boost/chrono/system_clocks.hpp>
 #endif
 
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#include <boost/thread/detail/memory.hpp>
+#endif
+
 #if BOOST_THREAD_VERSION==1
 #define BOOST_THREAD_FUTURE unique_future
 #else
@@ -556,6 +560,17 @@ namespace boost
             future_object& operator=(future_object const&);
         };
 
+        template<typename T, typename Allocator>
+        struct future_object_alloc: public future_object<T>
+        {
+          typedef future_object<T> base;
+          Allocator alloc_;
+
+        public:
+          explicit future_object_alloc(const Allocator& a)
+              : alloc_(a) {}
+
+        };
         class future_waiter
         {
             struct registered_waiter;
@@ -1257,13 +1272,23 @@ namespace boost
         }
 
     public:
-//         template <class Allocator> explicit promise(Allocator a);
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+        template <class Allocator>
+        explicit promise(boost::container::allocator_arg_t, Allocator a)
+        {
+          typedef typename Allocator::template rebind<detail::future_object<R> >::other A2;
+          A2 a2(a);
+          typedef thread_detail::allocator_destructor<A2> D;
 
+          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<R>(), D(a2, 1) );
+          future_obtained = false;
+        }
+#endif
         promise():
 #if BOOST_THREAD_VERSION==1
             future_(),
 #else
-            future_(new detail::future_object<R>),
+            future_(new detail::future_object<R>()),
 #endif
             future_obtained(false)
         {}
@@ -1460,8 +1485,18 @@ namespace boost
 #endif
         }
     public:
-//         template <class Allocator> explicit promise(Allocator a);
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+        template <class Allocator>
+        explicit promise(boost::container::allocator_arg_t, Allocator a)
+        {
+          typedef typename Allocator::template rebind<detail::future_object<void> >::other A2;
+          A2 a2(a);
+          typedef thread_detail::allocator_destructor<A2> D;
 
+          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<void>(), D(a2, 1) );
+          future_obtained = false;
+        }
+#endif
         promise():
 #if BOOST_THREAD_VERSION==1
             future_(),

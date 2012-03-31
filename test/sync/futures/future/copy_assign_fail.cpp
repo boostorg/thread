@@ -14,34 +14,23 @@
 
 // <boost/thread/future.hpp>
 
-// class promise<R>
+// class future<R>
 
-// promise();
+// future& operator=(const future&) = delete;
+
 
 #define BOOST_THREAD_VERSION 2
-
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int main()
 {
-
   {
-      boost::promise<int> p;
-      boost::future<int> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<int&> p;
-      boost::future<int&> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<void> p;
-      std::cout << __LINE__ << std::endl;
-      boost::future<void> f = p.get_future();
-      std::cout << __LINE__ << std::endl;
-      BOOST_TEST(f.valid());
+    typedef int T;
+    boost::promise<T> p;
+    boost::future<T> f0 = p.get_future();
+    boost::future<T> f;
+    f = f0;
   }
 
   return boost::report_errors();

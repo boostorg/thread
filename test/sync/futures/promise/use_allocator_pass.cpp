@@ -16,34 +16,32 @@
 
 // class promise<R>
 
-// promise();
+//   promise(allocator_arg_t, const Allocator& a);
 
 #define BOOST_THREAD_VERSION 2
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/static_assert.hpp>
+
+#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#include <libs/thread/test/sync/futures/test_allocator.hpp>
 
 int main()
 {
 
-  {
-      boost::promise<int> p;
-      boost::future<int> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<int&> p;
-      boost::future<int&> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<void> p;
-      std::cout << __LINE__ << std::endl;
-      boost::future<void> f = p.get_future();
-      std::cout << __LINE__ << std::endl;
-      BOOST_TEST(f.valid());
-  }
+  BOOST_STATIC_ASSERT_MSG((boost::container::uses_allocator<boost::promise<int>, test_allocator<int> >::value), "");
+  BOOST_STATIC_ASSERT_MSG((boost::container::uses_allocator<boost::promise<int&>, test_allocator<int> >::value), "");
+  BOOST_STATIC_ASSERT_MSG((boost::container::uses_allocator<boost::promise<void>, test_allocator<void> >::value), "");
 
   return boost::report_errors();
 }
+
+#else
+int main()
+{
+  return boost::report_errors();
+}
+#endif
+
 

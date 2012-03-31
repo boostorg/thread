@@ -13,35 +13,18 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // <boost/thread/future.hpp>
-
 // class promise<R>
-
-// promise();
+// promise& operator=(const promise& rhs) = delete;
 
 #define BOOST_THREAD_VERSION 2
-
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int main()
 {
-
   {
-      boost::promise<int> p;
-      boost::future<int> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<int&> p;
-      boost::future<int&> f = p.get_future();
-      BOOST_TEST(f.valid());
-  }
-  {
-      boost::promise<void> p;
-      std::cout << __LINE__ << std::endl;
-      boost::future<void> f = p.get_future();
-      std::cout << __LINE__ << std::endl;
-      BOOST_TEST(f.valid());
+    boost::promise<int> p0;
+    boost::promise<int> p(p0);
   }
 
   return boost::report_errors();
