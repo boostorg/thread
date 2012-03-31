@@ -18,6 +18,7 @@
 
 // unique_lock(upgrade_lock&& u, try_to_lock);
 
+#define BOOST_THREAD_SHARED_MUTEX_GENERIC
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>
