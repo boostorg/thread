@@ -387,4 +387,13 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock_guard/types_pass.cpp : shared_lock_guard__types_p ]
     ;
 
+    #explicit reverse_lock ;
+    test-suite reverse_lock
+    :
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_assign_fail.cpp : : reverse_lock__copy_assign_f ]
+          [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
+    ;
+
 }
