@@ -19,7 +19,10 @@ closely follow the proposals presented to the C++ Standards Committee, in partic
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2184.html N2184], 
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2139.html N2139], and 
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2006/n2094.html N2094]
-Vicente J. Botet Escriba started in version 2 the adaptation to comply with the accepted Thread C++11 library.
+
+Vicente J. Botet Escriba started in version 2 the adaptation to comply with the accepted Thread C++11 library (Make use of Boost.Chrono and Boost.Move) and the [@http://home.roadrunner.com/~hinnant/bloomington/shared_mutex.html Shared Locking] Howard Hinnant proposal except for the upward conversions.   
+
+[/ as some new features as thread attributes, unlock_guard, shared_guard, ]
 
 In order to use the classes and functions described here, you can
 either include the specific headers specified by the descriptions of

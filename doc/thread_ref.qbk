@@ -10,28 +10,37 @@
 
 [section:synopsis Synopsis]
 
+  #include <boost/thread/thread.hpp>
+
   namespace boost 
   {
     class thread;
-    void swap(thread& lhs,thread& rhs);
+    void swap(thread& lhs,thread& rhs) noexcept;
+
     namespace this_thread 
     {
       thread::id get_id() noexcept;
       template<typename TimeDuration>
-      void sleep(TimeDuration const& rel_time); // DEPRECATED
-      void sleep(system_time const& abs_time)  // DEPRECATED
+      void sleep(TimeDuration const& rel_time); // DEPRECATED V2
+      void sleep(system_time const& abs_time)  // DEPRECATED V2
       void yield() noexcept;
       template <class Clock, class Duration>
       void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
       template <class Rep, class Period>
       void sleep_for(const chrono::duration<Rep, Period>& rel_time);
 
-      void interruption_point();
-      bool interruption_requested();
-      bool interruption_enabled();
-      class disable_interruption;
-      class restore_interruption;
+      template<typename Callable>
+      void at_thread_exit(Callable func); // EXTENSION
+
+      void interruption_point(); // EXTENSION
+      bool interruption_requested() noexcept; // EXTENSION
+      bool interruption_enabled() noexcept; // EXTENSION 
+      class disable_interruption; // EXTENSION
+      class restore_interruption; // EXTENSION
+
     }
+    class thread_group; // EXTENSION
+
   }
 
 [endsect] [/section:synopsis Synopsis]
@@ -358,22 +367,30 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
         template <class F>
         explicit thread(F f);
-
-        template <class F,class A1,class A2,...>
-        thread(F f,A1 a1,A2 a2,...);
-
         template <class F>
         thread(F &&f);
 
-        template <class F, class ...Args> explicit thread(F&& f, Args&&... args);
+        template <class F,class A1,class A2,...>
+        thread(F f,A1 a1,A2 a2,...);
+        // template <class F, class ...Args> 
+        // explicit thread(F&& f, Args&&... args); // NOT YET IMPLEMENTED
+
+        template <class F>
+        explicit thread(attributes& attrs, F f); // EXTENSION
+        template <class F>
+        thread(attributes& attrs, F &&f); // EXTENSION
+        // template <class F, class ...Args> 
+        // explicit thread(attributes& attrs, F&& f, Args&&... args); // NOT YET IMPLEMENTED
 
         // move support
-        thread(thread && x);
-        thread& operator=(thread && x);
+        thread(thread && x) noexcept;
+        thread& operator=(thread && x) noexcept;
 
         void swap(thread& x) noexcept;
 
         class id;
+        class attributes;
+
         id get_id() const noexcept;
 
         bool joinable() const noexcept;
@@ -382,9 +399,9 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         template<typename TimeDuration>
         bool timed_join(TimeDuration const& rel_time);  // DEPRECATED V2
         template <class Rep, class Period>
-        bool try_join_for(const chrono::duration<Rep, Period>& rel_time);
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time); // EXTENSION
         template <class Clock, class Duration>
-        bool try_join_until(const chrono::time_point<Clock, Duration>& t);
+        bool try_join_until(const chrono::time_point<Clock, Duration>& t); // EXTENSION
 
         void detach();
 
@@ -393,10 +410,9 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         typedef platform-specific-type native_handle_type;
         native_handle_type native_handle();
 
-        void interrupt();
-        bool interruption_requested() const;
+        void interrupt(); // EXTENSION
+        bool interruption_requested() const noexcept; // EXTENSION
 
-        // backwards compatibility
         bool operator==(const thread& other) const; // DEPRECATED V2
         bool operator!=(const thread& other) const; // DEPRECATED V2
 
@@ -405,15 +421,17 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
     };
 
-    void swap(thread& lhs,thread& rhs) noexcep;
+    void swap(thread& lhs,thread& rhs) noexcept;
 
 [section:default_constructor Default Constructor]
 
-    thread() noexcep;
+    thread() noexcept;
 
 [variablelist
 
 [[Effects:] [Constructs a __thread__ instance that refers to __not_a_thread__.]]
+
+[[Postconditions:] [`this->get_id()==thread::id()`]]
 
 [[Throws:] [Nothing]]
 
@@ -429,7 +447,7 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
 [[Effects:] [Transfers ownership of the thread managed by `other` (if any) to the newly constructed __thread__ instance.]]
 
-[[Postconditions:] [`other->get_id()==thread::id()`]]
+[[Postconditions:] [`other.get_id()==thread::id()` and `get_id()` returns the value of `other.get_id()` prior to the construction]]
 
 [[Throws:] [Nothing]]
 
@@ -447,7 +465,7 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 any) to `*this`. If there was a thread previously associated with
 `*this` then that thread is detached.]]
 
-[[Postconditions:] [`other->get_id()==thread::id()`]]
+[[Postconditions:] [`other->get_id()==thread::id()` and `get_id()` returns the value of `other.get_id()` prior to the assignment.]]
 
 [[Throws:] [Nothing]]
 
@@ -462,13 +480,13 @@ any) to `*this`. If there was a thread previously associated with
 
 [variablelist
 
-[[Preconditions:] [`Callable` must by copyable.]]
+[[Requires:] [`Callable` must by Copyable and `func()` must be a valid expression.]]
 
 [[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
 thread of execution. If this invocation results in an exception being propagated into the internals of the thread library that is
-not of type __thread_interrupted__, then `std::terminate()` will be called.]]
+not of type __thread_interrupted__, then `std::terminate()` will be called. Any return value from this invocation is ignored.]]
 
-[[Postconditions:] [`*this` refers to the newly created thread of execution.]]
+[[Postconditions:] [`*this` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
 
 [[Throws:] [__thread_resource_error__ if an error occurs. ]]
 
@@ -481,6 +499,90 @@ not of type __thread_interrupted__, then `std::terminate()` will be called.]]
 ]
 
 [endsect]
+
+[section:attr_callable_constructor Thread Attributes Constructor EXTENSION]
+
+    template<typename Callable>
+    thread(attributes& attrs, Callable func);
+
+[variablelist
+
+[[Preconditions:] [`Callable` must by copyable.]]
+
+[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
+thread of execution with the specified attributes. If this invocation results in an exception being propagated into the internals of the thread library that is
+not of type __thread_interrupted__, then `std::terminate()` will be called. Any return value from this invocation is ignored. 
+If the attributes declare the native thread as detached, the boost::thread will be detached.]]
+
+[[Postconditions:] [`*this` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs. ]]
+
+[[Error Conditions:] [
+
+[*resource_unavailable_try_again] : the system lacked the necessary resources to create an- other thread, or the system-imposed limit on the number of threads in a process would be exceeded. 
+
+]]
+
+]
+
+[endsect]
+
+[section:callable_move_constructor Thread Callable Move Constructor]
+
+    template<typename Callable>
+    thread(Callable &&func);
+
+[variablelist
+
+[[Preconditions:] [`Callable` must by Movable.]]
+
+[[Effects:] [`func` is moved into storage managed internally by the thread library, and that copy is invoked on a newly-created
+thread of execution. If this invocation results in an exception being propagated into the internals of the thread library that is
+not of type __thread_interrupted__, then `std::terminate()` will be called. Any return value from this invocation is ignored.]]
+
+[[Postconditions:] [`*this` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs. ]]
+
+[[Error Conditions:] [
+
+[*resource_unavailable_try_again] : the system lacked the necessary resources to create an- other thread, or the system-imposed limit on the number of threads in a process would be exceeded. 
+
+]]
+
+]
+
+[endsect]
+
+[section:attr_callable_move_constructor Thread Attributes Move Constructor EXTENSION]
+
+    template<typename Callable>
+    thread(attributes& attrs, Callable func);
+
+[variablelist
+
+[[Preconditions:] [`Callable` must by copyable.]]
+
+[[Effects:] [`func` is copied into storage managed internally by the thread library, and that copy is invoked on a newly-created
+thread of execution with the specified attributes. If this invocation results in an exception being propagated into the internals of the thread library that is
+not of type __thread_interrupted__, then `std::terminate()` will be called. Any return value from this invocation is ignored. 
+If the attributes declare the native thread as detached, the boost::thread will be detached.]]
+
+[[Postconditions:] [`*this` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs. ]]
+
+[[Error Conditions:] [
+
+[*resource_unavailable_try_again] : the system lacked the necessary resources to create an- other thread, or the system-imposed limit on the number of threads in a process would be exceeded. 
+
+]]
+
+]
+
+[endsect]
+
 
 [section:multiple_argument_constructor Thread Constructor with arguments]
 
@@ -526,6 +628,25 @@ are copied into internal storage for access by the new thread.]]]
 
 [endsect]
 
+[/
+[section:v2_destructor V2 Thread Destructor]
+
+    ~thread();
+
+[variablelist
+
+[[Effects:] [If `*this` has an associated thread of execution, calls terminate. Destroys `*this`.]]
+
+[[Note:] [Either implicitly detaching or joining a `joinable()` thread in its destructor could result in difficult to debug correctness (for `detach`) or performance (for `join`) bugs encountered only when an exception is raised. Thus the programmer must ensure that the destructor is never executed while the thread is still joinable.]]
+
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+]
+
 [section:joinable Member function `joinable()`]
 
     bool joinable() const noexcept;
@@ -547,7 +668,7 @@ are copied into internal storage for access by the new thread.]]]
 
 [variablelist
 
-[[Preconditions:] [`this->get_id()!=boost::this_thread::get_id()`]]
+[[Preconditions:] [the thread is joinable.]]
 
 [[Effects:] [If `*this` refers to a thread of execution, waits for that thread of execution to complete.]]
 
@@ -614,7 +735,7 @@ unchanged.]]
 
 [endsect]
 
-[section:try_join_for Member function `try_join_for()`]
+[section:try_join_for Member function `try_join_for()` EXTENSION]
 
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time);
@@ -653,7 +774,7 @@ unchanged.]]
 
 [endsect]
 
-[section:try_join_until Member function `try_join_until()`]
+[section:try_join_until Member function `try_join_until()` EXTENSION]
 
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& abs_time);
@@ -696,11 +817,13 @@ unchanged.]]
 
 [section:detach Member function `detach()`]
 
-    void detach();
+    void detach() noexcept;
 
 [variablelist
 
-[[Effects:] [If `*this` refers to a thread of execution, that thread of execution becomes detached, and no longer has an associated __thread__ object.]]
+[[Preconditions:] [the thread is joinable.]]
+
+[[Effects:] [The thread of execution becomes detached, and no longer has an associated __thread__ object.]]
 
 [[Postconditions:] [`*this` no longer refers to any thread of execution.]]
 
@@ -774,7 +897,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:equals `operator==`]
+[section:equals `operator==` DEPRECATED V2]
 
     bool operator==(const thread& other) const;
 
@@ -782,17 +905,21 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [[Returns:] [`get_id()==other.get_id()`]]
 
+[[See:] [Use `a.__get_id()==b.__get_id()` instead]]
+
 ]
 
 [endsect]
 
-[section:not_equals `operator!=`]
+[section:not_equals `operator!=` DEPRECATED V2]
 
     bool operator!=(const thread& other) const;
 
 [variablelist
 
 [[Returns:] [`get_id()!=other.get_id()`]]
+
+[[See:] [Use `a.__get_id()!=b.__get_id()` instead`]]
 
 ]
 
@@ -810,6 +937,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [[Notes:] [`sleep()` is one of the predefined __interruption_points__.]]
 
+[[See:] [Use `this_thread::__sleep_for()` or `this_thread::__sleep_until()`]]
+
 ]
 
 [endsect]
@@ -821,6 +950,8 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 [variablelist
 
 [[Effects:] [See [link thread.thread_management.this_thread.yield `boost::this_thread::yield()`].]]
+
+[[See:] [Use `this_thread::__yield()`]]
 
 ]
 
@@ -858,27 +989,6 @@ value as `this->get_id()` prior to the call.]]
 
 [endsect]
 
-[/
-[section:non_member_move Non-member function `move()`]
-
-    #include <boost/thread/thread.hpp>
-
-    detail::thread_move_t<thread> move(detail::thread_move_t<thread> t)
-
-[variablelist
-
-[[Returns:] [`t`.]]
-
-]
-
-Enables moving thread objects. e.g.
-
-    extern void some_func();
-    boost::thread t(some_func);
-    boost::thread t2(boost::move(t)); // transfer thread from t to t2
-
-[endsect]
-]
 
 [section:id Class `boost::thread::id`]
 
@@ -1026,7 +1136,87 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [endsect]
 
+[section:attributes Class `boost::thread::attributes` EXTENSION]
+
+    class thread::attributes {
+    public:
+        attributes() noexcept;
+        ~ attributes()=default;
+        // stack
+        void set_stack_size(std::size_t size) noexcept;
+        std::size_t get_stack_size() const noexcept;
+
+    #if defined BOOST_THREAD_DEFINES_THREAD_ATTRIBUTES_NATIVE_HANDLE
+        typedef platform-specific-type native_handle_type;
+        native_handle_type* native_handle() noexcept;
+        const native_handle_type* native_handle() const noexcept;
+    #endif
+
+    };
+
+[section:constructor Default constructor]
+
+    thread_attributes() noexcept;
+
+[variablelist
+
+[[Effects:] [Constructs a thread atrributes instance with its default values.]]
+
+[[Throws:] [Nothing]]
+
+]
+
 [endsect]
+
+[section: set_stack_size Member function `set_stack_size()`]
+
+        void set_stack_size(std::size_t size) noexcept;
+
+[variablelist
+
+[[Effects:] [Stores the stack size to be used to create a thread. This is an hint that the implementation can choose a better size if to small or too big or not aligned to a page.]]
+
+[[Postconditions:] [`this-> get_stack_size()` returns the chosen stack size.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:get_stack_size Member function `get_stack_size()`]
+
+        std::size_t get_stack_size() const noexcept;
+
+[variablelist
+
+[[Returns:] [The stack size to be used on the creation of a thread. Note that this function can return 0 meaning the default.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:nativehandle Member function `native_handle()`]
+
+    typedef platform-specific-type native_handle_type;
+        typedef platform-specific-type native_handle_type;
+        native_handle_type* native_handle() noexcept;
+        const native_handle_type* native_handle() const noexcept;
+
+[variablelist
+
+[[Effects:] [Returns an instance of `native_handle_type` that can be used with platform-specific APIs to manipulate the underlying
+thread attributes implementation. If no such instance exists, `native_handle()` and `native_handle_type` are not present and `BOOST_THREAD_DEFINES_THREAD_ATTRIBUTES_NATIVE_HANDLE` is not defined.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[endsect] [/ thread::attributes ]
+[endsect] [/ thread ]
 
 [section:this_thread Namespace `this_thread`]
 
@@ -1043,11 +1233,14 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
       template <class Rep, class Period>
       void sleep_for(const chrono::duration<Rep, Period>& rel_time);
 
-      void interruption_point();
-      bool interruption_requested();
-      bool interruption_enabled();
-      class disable_interruption;
-      class restore_interruption;
+      template<typename Callable>
+      void at_thread_exit(Callable func); // EXTENSION
+
+      void interruption_point(); // EXTENSION
+      bool interruption_requested() noexcept; // EXTENSION
+      bool interruption_enabled() noexcept; // EXTENSION
+      class disable_interruption; // EXTENSION
+      class restore_interruption; // EXTENSION
     }
   }
 
@@ -1070,7 +1263,7 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [endsect]
 
-[section:interruption_point Non-member function `interruption_point()`]
+[section:interruption_point Non-member function `interruption_point()` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 
@@ -1089,13 +1282,13 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [endsect]
 
-[section:interruption_requested Non-member function `interruption_requested()`]
+[section:interruption_requested Non-member function `interruption_requested()` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
-        bool interruption_requested();
+        bool interruption_requested() noexcept;
     }
 
 [variablelist
@@ -1108,13 +1301,13 @@ instances of __thread_id__ `a` and `b` is the same if `a==b`, and different if `
 
 [endsect]
 
-[section:interruption_enabled Non-member function `interruption_enabled()`]
+[section:interruption_enabled Non-member function `interruption_enabled()` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 
     namespace this_thread
     {
-        bool interruption_enabled();
+        bool interruption_enabled() noexcept;
     }
 
 [variablelist
@@ -1147,6 +1340,8 @@ specified by `rel_time` has elapsed or the time point specified by
 [[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
 
 [[Notes:] [`sleep()` is one of the predefined __interruption_points__.]]
+
+[[See:] [Use `__sleep_for()` and `__sleep_until()` instead.]]
 
 ]
 
@@ -1207,7 +1402,7 @@ do not throw exceptions. __thread_interrupted__ if the current thread of executi
 
     namespace this_thread
     {
-        void yield();
+        void yield() noexcept;
     }
 
 [variablelist
@@ -1220,7 +1415,7 @@ do not throw exceptions. __thread_interrupted__ if the current thread of executi
 
 [endsect]
 
-[section:disable_interruption Class `disable_interruption`]
+[section:disable_interruption Class `disable_interruption` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 
@@ -1229,8 +1424,10 @@ do not throw exceptions. __thread_interrupted__ if the current thread of executi
         class disable_interruption
         {
         public:
-            disable_interruption();
-            ~disable_interruption();
+            disable_interruption(const disable_interruption&) = delete;
+            disable_interruption& operator=(const disable_interruption&) = delete;
+            disable_interruption() noexcept;
+            ~disable_interruption() noexcept;
         };
     }
 
@@ -1239,7 +1436,7 @@ interruption state on destruction. Instances of `disable_interruption` cannot be
 
 [section:constructor Constructor]
 
-    disable_interruption();
+    disable_interruption() noexcept;
 
 [variablelist
 
@@ -1255,7 +1452,7 @@ interruption state on destruction. Instances of `disable_interruption` cannot be
 
 [section:destructor Destructor]
 
-    ~disable_interruption();
+    ~disable_interruption() noexcept;
 
 [variablelist
 
@@ -1273,7 +1470,7 @@ interruption state on destruction. Instances of `disable_interruption` cannot be
 
 [endsect]
 
-[section:restore_interruption Class `restore_interruption`]
+[section:restore_interruption Class `restore_interruption` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 
@@ -1282,8 +1479,10 @@ interruption state on destruction. Instances of `disable_interruption` cannot be
         class restore_interruption
         {
         public:
-            explicit restore_interruption(disable_interruption& disabler);
-            ~restore_interruption();
+            restore_interruption(const restore_interruption&) = delete;
+            restore_interruption& operator=(const restore_interruption&) = delete;
+            explicit restore_interruption(disable_interruption& disabler) noexcept;
+            ~restore_interruption() noexcept;
         };
     }
 
@@ -1293,7 +1492,7 @@ is destroyed, interruption is again disabled. Instances of `restore_interruption
 
 [section:constructor Constructor]
 
-    explicit restore_interruption(disable_interruption& disabler);
+    explicit restore_interruption(disable_interruption& disabler) noexcept;
 
 [variablelist
 
@@ -1311,7 +1510,7 @@ is destroyed, interruption is again disabled. Instances of `restore_interruption
 
 [section:destructor Destructor]
 
-    ~restore_interruption();
+    ~restore_interruption() noexcept;
 
 [variablelist
 
@@ -1329,7 +1528,7 @@ is destroyed, interruption is again disabled. Instances of `restore_interruption
 
 [endsect]
 
-[section:atthreadexit Non-member function template `at_thread_exit()`]
+[section:atthreadexit Non-member function template `at_thread_exit()` EXTENSION]
 
     #include <boost/thread/thread.hpp>
 

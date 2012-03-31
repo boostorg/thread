@@ -7,12 +7,151 @@
 
 [section:reference Futures Reference]
 
-[section:future_state `state` enum]
+  //#include <boost/thread/futures.hpp>
+
+  namespace boost 
+  {
+    namespace future_state // DEPRECATED V2
+    {
+        enum state {uninitialized, waiting, ready, moved};
+    }
+
+    enum class future_errc
+    {
+      broken_promise,
+      future_already_retrieved,
+      promise_already_satisfied,
+      no_state
+    };
+
+    namespace system
+    {
+      template <>
+      struct is_error_code_enum<future_errc> : public true_type {};
+
+      error_code make_error_code(future_errc e);
+
+      error_condition make_error_condition(future_errc e);
+    }
+
+    const system::error_category& future_category();
+
+    class future_error;
+
+    template <typename R>
+    class promise;
+
+    template <typename R>
+    void swap(promise<R>& x, promise<R>& y) noexcept;
+
+    //template <class R, class Alloc> 
+    //struct uses_allocator<promise<R>, Alloc>; // NOT YET IMPLEMENTED
+
+    template <typename R>
+    class future;
+
+    template <typename R>
+    class shared_future;
+
+    template <typename R>
+    class packaged_task;
+    template <class R> void swap(packaged_task<R>&, packaged_task<R>&) noexcept;
+
+    //template <class R, class Alloc> 
+    //struct uses_allocator<packaged_task <R>, Alloc>; // NOT YET IMPLEMENTED
+
+    // template <class F, class... Args> 
+    // future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type> 
+    // async(F&& f, Args&&... args); // NOT YET IMPLEMENTED
+    // template <class F, class... Args> 
+    // future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type> 
+    // async(launch policy, F&& f, Args&&... args); // NOT YET IMPLEMENTED
+
+
+    template<typename Iterator>
+    void wait_for_all(Iterator begin,Iterator end); // EXTENSION
+
+    template<typename F1,typename... FS>
+    void wait_for_all(F1& f1,Fs&... fs); // EXTENSION
+
+    template<typename Iterator>
+    Iterator wait_for_any(Iterator begin,Iterator end);
+
+    template<typename F1,typename... Fs>
+    unsigned wait_for_any(F1& f1,Fs&... fs);
+
+
+[section:future_state Enumeration `state` DEPRECATED V2]
 
     namespace future_state
     {
-        enum state {uninitialized, waiting, ready};
+        enum state {uninitialized, waiting, ready, moved};
     }
+
+
+[endsect]
+
+
+[section:future_errc Enumeration `future_errc `]
+
+  enum class future_errc
+  {
+    broken_promise,
+    future_already_retrieved,
+    promise_already_satisfied,
+    no_state
+  }
+
+[endsect]
+[section:is_error_code_enum Specialization `is_error_code_enum<future_errc>`]
+
+  namespace system
+  {
+    template <>
+    struct is_error_code_enum<future_errc> : public true_type {};
+
+  }
+
+[endsect]
+[section:make_error_code Non-member function `make_error_code()`]
+
+  namespace system
+  {
+    error_code make_error_code(future_errc e);
+  }
+
+[endsect]
+[section:make_error_condition Non-member function `make_error_condition()`]
+
+  namespace system
+  {
+    error_condition make_error_condition(future_errc e);
+  }
+
+[endsect]
+[section:future_category Non-member function `future_category()`]
+
+  const system::error_category& future_category();
+
+[endsect]
+[section:future_error Class `future_error`]
+
+  class future_error
+      : public std::logic_error
+  {
+  public:
+      future_error(system::error_code ec);
+
+      const system::error_code& code() const no_except;
+  };
+
+[endsect]
+
+[section:future_status Enumeration `future_status`]
+
+  enum class future_status { 
+    ready,  timeout, deferred
+  };
 
 [endsect]
 
@@ -21,35 +160,44 @@
     template <typename R>
     class unique_future
     {
+
+    public:
         unique_future(unique_future & rhs);// = delete;
         unique_future& operator=(unique_future& rhs);// = delete;
 
-    public:
-        typedef future_state::state state;
+        typedef future_state::state state; // DEPRECATED V2
 
-        unique_future();
+        unique_future() noexcept;
         ~unique_future();
 
         // move support
-        unique_future(unique_future && other);
-        unique_future& operator=(unique_future && other);
+        unique_future(unique_future && other) noexcept;
+        unique_future& operator=(unique_future && other) noexcept;
+	shared_future<R> share();
 
-        void swap(unique_future& other);
+        void swap(unique_future& other) noexcept; // EXTENSION
 
         // retrieving the value
         R&& get();        
 
         // functions to check state
-        state get_state() const;
-        bool is_ready() const;        
-        bool has_exception() const;        
-        bool has_value() const;        
+        state get_state() const; //DEPRECATED V2
+        bool valid() const;        
+        bool is_ready() const; // EXTENSION        
+        bool has_exception() const; // EXTENSION        
+        bool has_value() const; // EXTENSION        
 
         // waiting for the result to be ready
-        void wait() const;        
+        void wait() const;       
+        template <class Rep, class Period>
+        future_status wait_for(const chrono::duration<Rep, Period>& rel_time) const;
+        template <class Clock, class Duration>
+        future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
+
         template<typename Duration>
-        bool timed_wait(Duration const& rel_time) const;
-        bool timed_wait_until(boost::system_time const& abs_time) const;
+        bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
+        bool timed_wait_until(boost::system_time const& abs_time) const;  // DEPRECATED V2
+
     };
 
 [section:default_constructor Default Constructor]
@@ -126,7 +274,7 @@ result prior to the call, that result no longer has an associated __unique_futur
 
 [section:swap Member function `swap()`]
 
-    void swap(unique_future & other);
+    void swap(unique_future & other) no_except;
 
 [variablelist
 
@@ -193,7 +341,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_duration Member function `timed_wait()`]
+[section:timed_wait_duration Member function `timed_wait()` DEPRECATED V2]
 
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
@@ -220,7 +368,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_absolute Member function `timed_wait()`]
+[section:timed_wait_absolute Member function `timed_wait()` DEPRECATED V2]
 
     bool timed_wait(boost::system_time const& wait_timeout);
 
@@ -247,7 +395,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 [endsect]
 
 
-[section:is_ready Member function `is_ready()`]
+[section:is_ready Member function `is_ready()` EXTENSION]
 
     bool is_ready();
 
@@ -264,7 +412,7 @@ otherwise.]]
 
 [endsect]
 
-[section:has_value Member function `has_value()`]
+[section:has_value Member function `has_value()` EXTENSION]
 
     bool has_value();
 
@@ -281,7 +429,7 @@ stored value, `false` otherwise.]]
 
 [endsect]
 
-[section:has_exception Member function `has_exception()`]
+[section:has_exception Member function `has_exception()` EXTENSION]
 
     bool has_exception();
 
@@ -298,7 +446,7 @@ stored exception, `false` otherwise.]]
 
 [endsect]
 
-[section:get_state Member function `get_state()`]
+[section:get_state Member function `get_state()` DEPRECATED V2]
 
     future_state::state get_state();
 
@@ -324,9 +472,9 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
     class shared_future
     {
     public:
-        typedef future_state::state state;
+        typedef future_state::state state; // EXTENSION
 
-        shared_future();
+        shared_future() noexcept;
         ~shared_future();
 
         // copy support
@@ -334,10 +482,10 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         shared_future& operator=(shared_future const& other);
 
         // move support
-        shared_future(shared_future && other);
-        shared_future(unique_future<R> && other);
-        shared_future& operator=(shared_future && other);
-        shared_future& operator=(unique_future<R> && other);
+        shared_future(shared_future && other) noexcept;
+        shared_future(unique_future<R> && other) noexcept;
+        shared_future& operator=(shared_future && other) noexcept;
+        shared_future& operator=(unique_future<R> && other) noexcept;
 
         void swap(shared_future& other);
 
@@ -345,16 +493,22 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         R get();
         
         // functions to check state, and wait for ready
-        state get_state() const;
-        bool is_ready() const;
-        bool has_exception() const;
-        bool has_value() const;
+        state get_state() const noexcept; // DEPRECATED V2
+        bool valid() const noexcept;
+        bool is_ready() const noexcept; // EXTENSION
+        bool has_exception() const noexcept; // EXTENSION
+        bool has_value() const noexcept; // EXTENSION
 
         // waiting for the result to be ready
         void wait() const;        
+        template <class Rep, class Period>
+        future_status wait_for(const chrono::duration<Rep, Period>& rel_time) const;
+        template <class Clock, class Duration>
+        future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
+
         template<typename Duration>
-        bool timed_wait(Duration const& rel_time) const;
-        bool timed_wait_until(boost::system_time const& abs_time) const;        
+        bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
+        bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED V2
     };
 
 [section:default_constructor Default Constructor]
@@ -417,7 +571,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_duration Member function `timed_wait()`]
+[section:timed_wait_duration Member function `timed_wait()` DEPRECATED V2]
 
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
@@ -444,7 +598,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_absolute Member function `timed_wait()`]
+[section:timed_wait_absolute Member function `timed_wait()` DEPRECATED V2]
 
     bool timed_wait(boost::system_time const& wait_timeout);
 
@@ -470,7 +624,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:is_ready Member function `is_ready()`]
+[section:is_ready Member function `is_ready()` EXTENSION]
 
     bool is_ready();
 
@@ -487,7 +641,7 @@ otherwise.]]
 
 [endsect]
 
-[section:has_value Member function `has_value()`]
+[section:has_value Member function `has_value()` EXTENSION]
 
     bool has_value();
 
@@ -504,7 +658,7 @@ stored value, `false` otherwise.]]
 
 [endsect]
 
-[section:has_exception Member function `has_exception()`]
+[section:has_exception Member function `has_exception()` EXTENSION]
 
     bool has_exception();
 
@@ -521,7 +675,7 @@ stored exception, `false` otherwise.]]
 
 [endsect]
 
-[section:get_state Member function `get_state()`]
+[section:get_state Member function `get_state()` DEPRECATED V2]
 
     future_state::state get_state();
 
@@ -546,19 +700,19 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
     template <typename R>
     class promise
     {
-        promise(promise & rhs);// = delete;
-        promise & operator=(promise & rhs);// = delete;
     public:
-        // template <class Allocator> explicit promise(Allocator a);
 
         promise();
+        // template <class Allocator> explicit promise(Allocator a); // NOT YET IMPLEMENTED
+        promise & operator=(const promise & rhs);// = delete;
+        promise(const promise & rhs);// = delete;
         ~promise();
 
         // Move support
-        promise(promise && rhs);
-        promise & operator=(promise&& rhs);
+        promise(promise && rhs) noexcept;;
+        promise & operator=(promise&& rhs) noexcept;;
         
-        void swap(promise& other);
+        void swap(promise& other) noexcept;
         // Result retrieval
         unique_future<R> get_future();
 
@@ -567,8 +721,13 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         void set_value(R&& r);
         void set_exception(boost::exception_ptr e);
 
+        // setting the result with deferred notification
+        // void set_value_at_thread_exit(const R& r); // NOT YET IMPLEMENTED
+        // void set_value_at_thread_exit(see below); // NOT YET IMPLEMENTED
+        // void set_exception_at_thread_exit(exception_ptr p); // NOT YET IMPLEMENTED
+
         template<typename F>
-        void set_wait_callback(F f);        
+        void set_wait_callback(F f); // EXTENSION       
     };
 
 [section:default_constructor Default Constructor]
@@ -718,14 +877,18 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 
 [section:packaged_task `packaged_task` class template]
 
-    template<typename R>
+    template<typename R
+      // , class... ArgTypes // NOT YET IMPLEMENTED
+    >
     class packaged_task
     {
+    public:
         packaged_task(packaged_task&);// = delete;
         packaged_task& operator=(packaged_task&);// = delete;
-        
-    public:
+
         // construction and destruction
+        packaged_task() noexcept;
+
         template <class F>
         explicit packaged_task(F const& f);
 
@@ -735,24 +898,27 @@ or __shared_future__ associated with this result, and the result is not ['ready]
         explicit packaged_task(F&& f);
 
         // template <class F, class Allocator>
-        // explicit packaged_task(F const& f, Allocator a);
-        // template <class F, class Allocator>
-        // explicit packaged_task(F&& f, Allocator a);
+        // explicit packaged_task(allocator_arg_t, Allocator a, F&& f); // NOT YET IMPLEMENTED
 
         ~packaged_task()
         {}
 
         // move support
-        packaged_task(packaged_task&& other);
-        packaged_task& operator=(packaged_task&& other);
+        packaged_task(packaged_task&& other) noexcept;
+        packaged_task& operator=(packaged_task&& other) noexcept;
 
-        void swap(packaged_task& other);
+        void swap(packaged_task& other) noexcept;
+
+        bool valid() const noexcept;
         // result retrieval
         unique_future<R> get_future();        
 
         // execution
         void operator()();
+        // void operator()(ArgTypes... );  // NOT YET IMPLEMENTED
+        // void make_ready_at_thread_exit(ArgTypes...); // NOT YET IMPLEMENTED
 
+        // void reset();  // NOT YET IMPLEMENTED
         template<typename F>
         void set_wait_callback(F f);        
     };
