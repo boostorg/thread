@@ -12,10 +12,7 @@
 
 New Features:
 
-[/
 * [@http://svn.boost.org/trac/boost/ticket/1850 #1850] Request for unlock_guard  to compliment lock_guard.
-]
-
 * [@http://svn.boost.org/trac/boost/ticket/2637 #2637] Request for shared_mutex duration timed_lock and timed_lock_shared.
 * [@http://svn.boost.org/trac/boost/ticket/2741 #2741] Proposal to manage portable and non portable thread attributes. 
 * [@http://svn.boost.org/trac/boost/ticket/3567 #3567] Request for shared_lock_guard.
@@ -187,11 +184,6 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise and futures constructor with allocator following the standard c++11. 
   * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] Add thread constructor from movable callable and movable arguments following C++11. 
  	
-
-# Add some complementary locks
-
-  * [@http://svn.boost.org/trac/boost/ticket/1850 #1850]	Request for unlock_guard (and/or unique_unlock) to compliment lock_guard/unique_lock.
-  * [@http://svn.boost.org/trac/boost/ticket/3567 #3567] 	Request for shared_lock_guard.
 
 # Add the shared locking upward conversions.
 
