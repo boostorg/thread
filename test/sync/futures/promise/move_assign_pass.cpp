@@ -35,8 +35,8 @@ int main()
 #if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
   BOOST_TEST(test_alloc_base::count == 0);
   {
-    boost::promise<int> p0(boost::container::allocator_arg, test_allocator<int>());
-    boost::promise<int> p(boost::container::allocator_arg, test_allocator<int>());
+    boost::promise<int> p0(boost::allocator_arg, test_allocator<int>());
+    boost::promise<int> p(boost::allocator_arg, test_allocator<int>());
     BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
     BOOST_TEST(test_alloc_base::count == 1);
@@ -57,8 +57,8 @@ int main()
   BOOST_TEST(test_alloc_base::count == 0);
 
   {
-    boost::promise<int&> p0(boost::container::allocator_arg, test_allocator<int>());
-    boost::promise<int&> p(boost::container::allocator_arg, test_allocator<int>());
+    boost::promise<int&> p0(boost::allocator_arg, test_allocator<int>());
+    boost::promise<int&> p(boost::allocator_arg, test_allocator<int>());
     BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
     BOOST_TEST(test_alloc_base::count == 1);
@@ -78,8 +78,8 @@ int main()
   }
   BOOST_TEST(test_alloc_base::count == 0);
   {
-    boost::promise<void> p0(boost::container::allocator_arg, test_allocator<void>());
-    boost::promise<void> p(boost::container::allocator_arg, test_allocator<void>());
+    boost::promise<void> p0(boost::allocator_arg, test_allocator<void>());
+    boost::promise<void> p(boost::allocator_arg, test_allocator<void>());
     BOOST_TEST(test_alloc_base::count == 2);
     p = boost::move(p0);
     BOOST_TEST(test_alloc_base::count == 1);
