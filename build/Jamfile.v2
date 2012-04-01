@@ -211,7 +211,7 @@ alias thread_sources
 explicit thread_sources ;
 
 lib boost_thread
-    : thread_sources future.cpp shared_mutex.cpp
+    : thread_sources future.cpp
     : <conditional>@requirements
     :
     : <link>shared:<define>BOOST_THREAD_USE_DLL=1
