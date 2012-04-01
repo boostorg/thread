@@ -191,7 +191,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     #explicit mutual_exclusion ;
     test-suite mutual_exclusion
     :
-          #uncomment the following once these works on windows
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
@@ -207,7 +206,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_assign_pass.cpp : unique_lock__cons__move_assign_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_pass.cpp : unique_lock__cons__move_ctor_p ]
 
-          #uncomment the following once these works on windows
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_try_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_try_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_for_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_for_p ]
@@ -340,6 +338,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_f ]
           [ thread-run2 ./threads/thread/constr/default_pass.cpp : thread__constr__default_p ]
           [ thread-run-lib2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
+          [ thread-run-lib2 ./threads/thread/constr/FArgs_pass.cpp : thread__constr__FArgs_p ]
           [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_p ]
           #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
           [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_p ]
