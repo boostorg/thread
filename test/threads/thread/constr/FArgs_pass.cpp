@@ -41,8 +41,10 @@ void operator delete(void* p) throw ()
 
 bool f_run = false;
 
-void f()
+void f(int i, double j)
 {
+  BOOST_TEST(i == 5);
+  BOOST_TEST(j == 5.5);
   f_run = true;
 }
 
@@ -69,13 +71,14 @@ public:
     --n_alive;
   }
 
-  void operator()()
+  void operator()(int i, double j)
   {
     BOOST_TEST(alive_ == 1);
     BOOST_TEST(n_alive >= 1);
+    BOOST_TEST(i == 5);
+    BOOST_TEST(j == 5.5);
     op_run = true;
   }
-
 };
 
 int G::n_alive = 0;
@@ -85,17 +88,17 @@ bool G::op_run = false;
 int main()
 {
   {
-    boost::thread t(f);
+    boost::thread t(f, 5, 5.5);
     t.join();
     BOOST_TEST(f_run == true);
   }
-  f_run = false;
 #ifndef BOOST_MSVC
+  f_run = false;
   {
     try
     {
       throw_one = 0;
-      boost::thread t(f);
+      boost::thread t(f, 5, 5.5);
       BOOST_TEST(false);
     }
     catch (...)
@@ -107,32 +110,14 @@ int main()
 #endif
   {
     BOOST_TEST(G::n_alive == 0);
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
     BOOST_TEST(!G::op_run);
-    boost::thread t( (G()));
+    boost::thread t(G(), 5, 5.5);
     t.join();
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
     BOOST_TEST(G::n_alive == 0);
     BOOST_TEST(G::op_run);
   }
-#ifndef BOOST_MSVC
-  G::op_run = false;
-  {
-    try
-    {
-      throw_one = 0;
-      BOOST_TEST(G::n_alive == 0);
-      BOOST_TEST(!G::op_run);
-      boost::thread t( (G()));
-      BOOST_TEST(false);
-    }
-    catch (...)
-    {
-      throw_one = 0xFFFF;
-      BOOST_TEST(G::n_alive == 0);
-      std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
-      BOOST_TEST(!G::op_run);
-    }
-  }
-#endif
 
   return boost::report_errors();
 }
