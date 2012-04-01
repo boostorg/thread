@@ -758,6 +758,8 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 
 [[Throws:] [Nothing.]]
 
+[[Notes:] [Available only if BOOST_THREAD_FUTURE_USES_ALLOCATORS is defined.]]
+
 ]
 
 [endsect]

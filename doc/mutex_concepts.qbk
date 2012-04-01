@@ -358,19 +358,24 @@ A type `L` meets the __SharedLockable requirements if it meets the __TimedLockab
 * `m.__try_lock_upgrade()`
 * `m.__try_lock_upgrade_for(rel_time)`
 * `m.__try_lock_upgrade_until(abs_time)`
-* `m.__try_unlock_shared_and_lock()`
-* `m.__try_unlock_shared_and_lock_for(rel_time)`
-* `m.__try_unlock_shared_and_lock_until(abs_time)`
 * `m.__unlock_and_lock_shared()`
-* `m.__try_unlock_shared_and_lock_upgrade();`
-* `m.__try_unlock_shared_and_lock_upgrade_for(rel_time);`
-* `m.__try_unlock_shared_and_lock_upgrade_until(abs_time);`
 * `m.__unlock_and_lock_upgrade();`
 * `m.__unlock_upgrade_and_lock();`]
 * `m.__try_unlock_upgrade_and_lock()`
 * `m.__try_unlock_upgrade_and_lock_for(rel_time)`
 * `m.__try_unlock_upgrade_and_lock_until(abs_time)`
 * `m.__unlock_upgrade_and_lock_shared();`
+
+
+If BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION is defined the following expressions are also required:
+
+* `m.__try_unlock_shared_and_lock();`
+* `m.__try_unlock_shared_and_lock_for(rel_time);`
+* `m.__try_unlock_shared_and_lock_until(abs_time);`
+* `m.__try_unlock_shared_and_lock_upgrade();`
+* `m.__try_unlock_shared_and_lock_upgrade_for(rel_time);`
+* `m.__try_unlock_shared_and_lock_upgrade_until(abs_time);`
+
 
 Lock ownership acquired through a call to __lock_upgrade_ref__ must be released through a call to __unlock_upgrade_ref__. If the
 ownership type is changed through a call to one of the `unlock_xxx_and_lock_yyy()` functions, ownership must be released through a
@@ -450,6 +455,8 @@ The function returns within the timeout specified by `rel_time` only if it has o
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
 ]
 [endsect]
 
@@ -471,6 +478,8 @@ The function returns before the absolute timeout specified by `abs_time` only if
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
 ]
 [endsect]
 
@@ -489,9 +498,12 @@ If the conversion is not successful, the shared ownership of m is retained.]]
 
 [[Postcondition:] [If the call returns `true`, the current thread has exclusive ownership of `m`.]]
 
-[[Synchronization:] [If `__ try_unlock_shared_and_lock()` returns true, prior `__unlock()` and subsequent lock operations on the same object synchronize with this operation. ]]
+[[Synchronization:] [If `__try_unlock_shared_and_lock()` returns true, prior `__unlock()` and subsequent lock operations on the same object synchronize with this operation. ]]
+
 
 [[Throws:] [Nothing]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
 
 ]
 [endsect]
@@ -517,6 +529,8 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
 ]
 [endsect]
 
@@ -540,6 +554,8 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 [[Synchronization:] [If `__try_unlock_shared_and_lock_until(rel_time)` returns true, prior `__unlock()` and subsequent lock operations on the same object synchronize with this operation. ]]
 
 [[Throws:] [Nothing]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
 
 ]
 [endsect]
@@ -579,6 +595,8 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
 ]
 [endsect]
 
@@ -604,6 +622,9 @@ If the conversion is not successful, the shared ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
+
 ]
 [endsect]
 
@@ -626,6 +647,8 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 [[Synchronization:] [If `__try_unlock_shared_and_lock_upgrade_until(rel_time)` returns true, prior `__unlock_upgrade()` and subsequent lock operations on the same object synchronize with this operation. ]]
 
 [[Throws:] [Nothing]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
 
 ]
 [endsect]
@@ -685,6 +708,9 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
+
 ]
 [endsect]
 
@@ -709,6 +735,8 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
 ]
 [endsect]
 
@@ -731,6 +759,8 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 [[Synchronization:] [If `__try_unlock_upgrade_and_lock_for(rel_time)` returns true, prior `__unlock()` and subsequent lock operations on the same object synchronize with this operation. ]]
 
 [[Throws:] [Nothing]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
 
 ]
 [endsect]
@@ -885,8 +915,18 @@ object passed to the constructor.]]
         unique_lock(Lockable& m_,adopt_lock_t);
         unique_lock(Lockable& m_,defer_lock_t) noexcept;
         unique_lock(Lockable& m_,try_to_lock_t);
-        unique_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
 
+    #ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+        unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
+        template <class Clock, class Duration>
+        unique_lock(shared_lock<mutex_type>&& sl,
+                    const chrono::time_point<Clock, Duration>& abs_time);
+        template <class Rep, class Period>
+        unique_lock(shared_lock<mutex_type>&& sl,
+                    const chrono::duration<Rep, Period>& rel_time)
+    #endif
+
+        unique_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
         template <class Clock, class Duration>
         unique_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t);
         template <class Rep, class Period>
@@ -1015,6 +1055,82 @@ returns `false`.]]
 ]
 
 [endsect]
+
+[section:constructor_sh_try `unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)`]
+
+[variablelist
+
+[[Requires:] [The supplied `Mutex` type must implement `__try_unlock_shared_and_lock()`.]]
+
+[[Effects:] [Constructs an object of type __unique_lock. Let `pm` be and `owns` the ownership state. Initializes `pm` with nullptr and `owns` with false. 
+If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.release()`. 
+Else `sl.__owns_lock()` returns `true`, and in this case if `sl.mutex()->try_unlock_shared_and_lock()` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
+
+[[Note:] [If `sl.owns_lock()` returns `true` and `sl.mutex()->try_unlock_shared_and_lock()` returns `false`, `sl` is not modified.]]
+
+[[Throws:] [Nothing.]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
+]
+
+[endsect]
+
+
+[section:constructor_sh_until `unique_lock(shared_lock<mutex_type>&&, const chrono::time_point<Clock, Duration>&)`]
+
+        template <class Clock, class Duration>
+        unique_lock(shared_lock<mutex_type>&& sl,
+                    const chrono::time_point<Clock, Duration>& abs_time);
+
+[variablelist
+
+[[Requires:] [The supplied `Mutex` type shall implement `__try_unlock_shared_and_lock_until(abs_time)`.]]
+
+[[Effects:] [Constructs an object of type `__unique_lock`, initializing `pm` with `nullptr` and `owns` with `false`. 
+If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.__release()`. 
+Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()->__try_unlock_shared_and_lock_until(abs_time)` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
+
+[[Note:] [If `sl.owns_lock()` returns `true` and `sl.mutex()-> __try_unlock_shared_and_lock_until(abs_time)` returns `false`, `sl` is not modified.]]
+
+[[Throws:] [Nothing.]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
+]
+
+[endsect]
+
+[section:constructor_sh_for `unique_lock(shared_lock<mutex_type>&&, const chrono::duration<Rep, Period>&)`]
+
+        template <class Rep, class Period>
+        unique_lock(shared_lock<mutex_type>&& sl,
+                    const chrono::duration<Rep, Period>& rel_time)
+
+[variablelist
+
+[[Requires:] [The supplied `Mutex` type shall implement `__try_unlock_shared_and_lock_for(rel_time)`.]]
+
+[[Effects:] [Constructs an object of type `__unique_lock`, initializing `pm` with `nullptr` and `owns` with `false`. 
+If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.__release()`. 
+Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()-> __try_unlock_shared_and_lock_for(rel_time)` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
+
+[[Note:] [If `sl.owns_lock()` returns `true` and `sl.mutex()-> __try_unlock_shared_and_lock_for(rel_time)` returns `false`, `sl` is not modified.]]
+
+
+[[Postcondition:] [.]]
+
+[[Throws:] [Nothing.]]
+
+[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+
+]
+
+[endsect]
+
+
+
+
 
 [section:constructor_abs_time `unique_lock(Lockable & m,boost::system_time const& abs_time)`  // DEPRECATED V2]
 
@@ -1154,6 +1270,8 @@ __owns_lock_ref__ returns `false`.]]
     {
     public:
         typedef Lockable mutex_type;
+
+        // Shared locking
         shared_lock();
         explicit shared_lock(Lockable& m_);
         shared_lock(Lockable& m_,adopt_lock_t);
@@ -1170,11 +1288,7 @@ __owns_lock_ref__ returns `false`.]]
         shared_lock& operator=(shared_lock const&) = delete;
 
         shared_lock(shared_lock<Lockable> && other);
-        explicit shared_lock(unique_lock<Lockable> && other);
-        explicit shared_lock(upgrade_lock<Lockable> && other);
-
         shared_lock& operator=(shared_lock<Lockable> && other);
-        void swap(shared_lock& other);
 
         void lock();
         bool try_lock();
@@ -1185,8 +1299,20 @@ __owns_lock_ref__ returns `false`.]]
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time);
         void unlock();
 
+        // Conversion from upgrade locking
+        explicit shared_lock(upgrade_lock<Lockable> && other);
+
+        // Conversion from exclusive locking
+        explicit shared_lock(unique_lock<Lockable> && other);
+
+        // Setters
+        void swap(shared_lock& other);
+        mutex_type* release() noexcept;
+
+        // Getters
         explicit operator bool() const;
         bool owns_lock() const;
+        mutex_type mutex() const;
     };
 
 Like __unique_lock__, __shared_lock__ models the __lockable_concept__, but rather than acquiring unique ownership of the supplied
@@ -1382,19 +1508,27 @@ __owns_lock_shared_ref__ returns `false`.]]
     {
     public:
         typedef Lockable mutex_type;
-        explicit upgrade_lock(Lockable& m_);
 
-        upgrade_lock(upgrade_lock<Lockable> && other);
-        explicit upgrade_lock(unique_lock<Lockable> && other);
+        // Upgrade locking
 
+        upgrade_lock();
+        explicit upgrade_lock(mutex_type& m_);
+        upgrade_lock(mutex_type& m, defer_lock_t) noexcept;
+        upgrade_lock(mutex_type& m, try_to_lock_t);
+        upgrade_lock(mutex_type& m, adopt_lock_t);
+        template <class Clock, class Duration>
+        upgrade_lock(mutex_type& m,
+                     const chrono::time_point<Clock, Duration>& abs_time);
+        template <class Rep, class Period>
+        upgrade_lock(mutex_type& m,
+                     const chrono::duration<Rep, Period>& rel_time);
         ~upgrade_lock();
 
         upgrade_lock(const upgrade_lock& other) = delete;
         upgrade_lock& operator=(const upgrade_lock<Lockable> & other) = delete;
 
+        upgrade_lock(upgrade_lock<Lockable> && other);
         upgrade_lock& operator=(upgrade_lock<Lockable> && other);
-
-        void swap(upgrade_lock& other);
 
         void lock();
         bool try_lock();
@@ -1404,8 +1538,28 @@ __owns_lock_shared_ref__ returns `false`.]]
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time);
         void unlock();
 
+    #ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+       // Conversion from shared locking
+        upgrade_lock(shared_lock<mutex_type>&& sl, try_to_lock_t);
+        template <class Clock, class Duration>
+        upgrade_lock(shared_lock<mutex_type>&& sl,
+                       const chrono::time_point<Clock, Duration>& abs_time);
+        template <class Rep, class Period>
+        upgrade_lock(shared_lock<mutex_type>&& sl,
+                       const chrono::duration<Rep, Period>& rel_time);
+    #endif
+
+        // Conversion from exclusive locking
+        explicit upgrade_lock(unique_lock<Lockable> && other);
+
+        // Setters
+        void swap(upgrade_lock& other);
+        mutex_type* release() noexcept;
+
+        // Getters
         explicit operator bool() const;
         bool owns_lock() const;
+        mutex_type mutex() const;
     };
 
 Like __unique_lock__, __upgrade_lock__ models the __lockable_concept__, but rather than acquiring unique ownership of the supplied
@@ -1421,7 +1575,7 @@ pointer to `m` and __owns_lock_ref__ returns `true`. If an object that ['owns] t
 is destroyed, then the destructor will invoke [unlock_upgrade_ref_link `mutex()->unlock_upgrade()`].
 
 The member functions of __upgrade_lock__ are not thread-safe. In particular, __upgrade_lock__ is intended to model the upgrade
-ownership of a __lockable_concept_type__ object by a particular thread, and the member functions that release ownership of the lock
+ownership of a __upgrade_lockable_concept_type__ object by a particular thread, and the member functions that release ownership of the lock
 state (including the destructor) must be called by the same thread that acquired ownership of the lock state.
 
 [endsect]
