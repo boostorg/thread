@@ -161,14 +161,7 @@ rule usage-requirements ( properties * )
         }
     }
 
-    if <toolset>vacpp in $(properties)
-    {
-        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
-    } 
-    else 
-    {
-        result += <library>/boost/chrono//boost_chrono ;
-    }
+    result += <library>/boost/chrono//boost_chrono ;
 
     return $(result) ;
 }
@@ -193,14 +186,7 @@ rule requirements ( properties * )
             }
         }
     }
-    if <toolset>vacpp in $(properties)
-    {
-        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
-    } 
-    else 
-    {
-        result += <library>/boost/chrono//boost_chrono ;
-    }
+    result += <library>/boost/chrono//boost_chrono ;
 
     return $(result) ;
 }
@@ -225,7 +211,7 @@ alias thread_sources
 explicit thread_sources ;
 
 lib boost_thread
-    : thread_sources future.cpp
+    : thread_sources future.cpp shared_mutex.cpp
     : <conditional>@requirements
     :
     : <link>shared:<define>BOOST_THREAD_USE_DLL=1

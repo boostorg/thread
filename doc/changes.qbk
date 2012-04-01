@@ -30,7 +30,6 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6672 #6672] upgrade_lock:: missing constructors from time related types.
 * [@http://svn.boost.org/trac/boost/ticket/6675 #6675] upgrade_lock:: missing non-member swap.
  	
-
 Fixed Bugs:
 
 * [@http://svn.boost.org/trac/boost/ticket/2575 #2575] Bug- Boost 1.36.0 on Itanium platform.
@@ -185,11 +184,6 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] Add thread constructor from movable callable and movable arguments following C++11. 
  	
 
-# Add the shared locking upward conversions.
-
-  * [@http://svn.boost.org/trac/boost/ticket/6217 #6217] 	Enhance Boost.Thread shared mutex interface following Howard Hinnant proposal.
-
-# Try to fix the thread specific storage issues.
 
 [endsect]
 

@@ -10,6 +10,7 @@
 // reverse_lock& operator=(reverse_lock const&) = delete;
 
 #include <boost/thread/locks.hpp>
+#include <boost/thread/reverse_lock.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -23,7 +24,7 @@ int main()
   {
     boost::reverse_lock<boost::unique_lock<boost::mutex> > lg0(lk0);
     boost::reverse_lock<boost::unique_lock<boost::mutex> > lg1(lk1);
-    lk1 = lk0;
+    lg1 = lg0;
   }
 
 }

@@ -6,7 +6,7 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[article Thread
+[library Thread
     [quickbook 1.5]
     [version 2.0.0]
     [authors [Williams, Anthony] [Botet Escriba, Vicente J.]]
@@ -222,6 +222,7 @@
 [include thread_ref.qbk]
 
 [section:synchronization Synchronization]
+[include sync_tutorial.qbk]
 [include mutex_concepts.qbk]
 [include mutexes.qbk]
 [include condition_variables.qbk]
