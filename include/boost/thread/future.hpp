@@ -40,10 +40,10 @@
 #include <boost/thread/detail/memory.hpp>
 #endif
 
-#if BOOST_THREAD_VERSION==1
-#define BOOST_THREAD_FUTURE unique_future
-#else
+#if defined BOOST_THREAD_USES_FUTURE
 #define BOOST_THREAD_FUTURE future
+#else
+#define BOOST_THREAD_FUTURE unique_future
 #endif
 
 namespace boost
@@ -1262,7 +1262,7 @@ namespace boost
 
         void lazy_init()
         {
-#if BOOST_THREAD_VERSION==1
+#if defined BOOST_THREAD_PROMISE_LAZY
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
@@ -1274,7 +1274,7 @@ namespace boost
     public:
 #if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
         template <class Allocator>
-        explicit promise(boost::container::allocator_arg_t, Allocator a)
+        explicit promise(boost::allocator_arg_t, Allocator a)
         {
           typedef typename Allocator::template rebind<detail::future_object<R> >::other A2;
           A2 a2(a);
@@ -1285,7 +1285,7 @@ namespace boost
         }
 #endif
         promise():
-#if BOOST_THREAD_VERSION==1
+#if defined BOOST_THREAD_PROMISE_LAZY
             future_(),
 #else
             future_(new detail::future_object<R>()),
@@ -1309,22 +1309,15 @@ namespace boost
         // Assignment
 #ifndef BOOST_NO_RVALUE_REFERENCES
         promise(promise && rhs) BOOST_NOEXCEPT:
-//#if ! BOOST_THREAD_VERSION==1
-        //            future_(rhs.future_),
-//#endif
             future_obtained(rhs.future_obtained)
         {
-//#if BOOST_THREAD_VERSION==1
             future_.swap(rhs.future_);
-//#else
-            // we need to release the future as shared_ptr doesn't implements move semantics
             rhs.future_.reset();
-//#endif
             rhs.future_obtained=false;
         }
         promise & operator=(promise&& rhs) BOOST_NOEXCEPT
         {
-#if BOOST_THREAD_VERSION==1
+#if defined BOOST_THREAD_PROMISE_LAZY
             future_.swap(rhs.future_);
             future_obtained=rhs.future_obtained;
             rhs.future_.reset();
@@ -1476,7 +1469,7 @@ namespace boost
 
         void lazy_init()
         {
-#if BOOST_THREAD_VERSION==1
+#if defined BOOST_THREAD_PROMISE_LAZY
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
@@ -1487,7 +1480,7 @@ namespace boost
     public:
 #if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
         template <class Allocator>
-        explicit promise(boost::container::allocator_arg_t, Allocator a)
+        explicit promise(boost::allocator_arg_t, Allocator a)
         {
           typedef typename Allocator::template rebind<detail::future_object<void> >::other A2;
           A2 a2(a);
@@ -1498,7 +1491,7 @@ namespace boost
         }
 #endif
         promise():
-#if BOOST_THREAD_VERSION==1
+#if defined BOOST_THREAD_PROMISE_LAZY
             future_(),
 #else
             future_(new detail::future_object<void>),

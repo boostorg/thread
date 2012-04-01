@@ -35,7 +35,7 @@ int main()
       typedef int T;
       boost::future<T> f;
       {
-          boost::promise<T> p(boost::container::allocator_arg, test_allocator<T>());
+          boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
           f = p.get_future();
           BOOST_TEST(test_alloc_base::count == 1);
@@ -49,7 +49,7 @@ int main()
       typedef int& T;
       boost::future<T> f;
       {
-          boost::promise<T> p(boost::container::allocator_arg, test_allocator<int>());
+          boost::promise<T> p(boost::allocator_arg, test_allocator<int>());
           BOOST_TEST(test_alloc_base::count == 1);
           f = p.get_future();
           BOOST_TEST(test_alloc_base::count == 1);
@@ -63,7 +63,7 @@ int main()
       typedef void T;
       boost::future<T> f;
       {
-          boost::promise<T> p(boost::container::allocator_arg, test_allocator<T>());
+          boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
           f = p.get_future();
           BOOST_TEST(test_alloc_base::count == 1);

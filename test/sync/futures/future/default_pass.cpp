@@ -14,9 +14,9 @@
 
 // <boost/thread/future.hpp>
 
-// class promise<R>
+// class future<R>
 
-// promise();
+// future();
 
 #define BOOST_THREAD_VERSION 2
 
@@ -27,22 +27,18 @@ int main()
 {
 
   {
-      boost::promise<int> p;
-      boost::future<int> f = p.get_future();
-      BOOST_TEST(f.valid());
+      boost::future<int> f;
+      BOOST_TEST(!f.valid());
   }
   {
-      boost::promise<int&> p;
-      boost::future<int&> f = p.get_future();
-      BOOST_TEST(f.valid());
+      boost::future<int&> f;
+      BOOST_TEST(!f.valid());
   }
   {
-      boost::promise<void> p;
-      std::cout << __LINE__ << std::endl;
-      boost::future<void> f = p.get_future();
-      std::cout << __LINE__ << std::endl;
-      BOOST_TEST(f.valid());
+      boost::future<void> f;
+      BOOST_TEST(!f.valid());
   }
+
 
   return boost::report_errors();
 }
