@@ -5,9 +5,9 @@
 
 // <boost/thread/locks.hpp>
 
-// template <class Mutex> class unlock_guard;
+// template <class Mutex> class reverse_lock;
 
-// unlock_guard& operator=(unlock_guard const&) = delete;
+// reverse_lock& operator=(reverse_lock const&) = delete;
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
@@ -21,8 +21,8 @@ int main()
   boost::unique_lock<boost::mutex> lk0(m0);
   boost::unique_lock<boost::mutex> lk1(m1);
   {
-    boost::unlock_guard<boost::unique_lock<boost::mutex> > lg0(lk0);
-    boost::unlock_guard<boost::unique_lock<boost::mutex> > lg1(lk1);
+    boost::reverse_lock<boost::unique_lock<boost::mutex> > lg0(lk0);
+    boost::reverse_lock<boost::unique_lock<boost::mutex> > lg1(lk1);
     lk1 = lk0;
   }
 
