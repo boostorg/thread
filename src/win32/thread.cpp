@@ -271,11 +271,6 @@ namespace boost
 
     }
 
-    thread::~thread()
-    {
-        detach();
-    }
-
     thread::id thread::get_id() const BOOST_NOEXCEPT
     {
         return thread::id((get_thread_info)());

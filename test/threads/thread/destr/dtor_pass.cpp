@@ -17,6 +17,8 @@
 
 // ~thread();
 
+#define BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+
 #include <boost/thread/thread.hpp>
 #include <new>
 #include <cstdlib>
@@ -58,7 +60,7 @@ bool G::op_run = false;
 
 void f1()
 {
-  std::exit(0);
+  std::exit(boost::report_errors());
 }
 
 int main()
@@ -71,10 +73,9 @@ int main()
 #if defined BOOST_THREAD_USES_CHRONO
     boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
 #endif
+    BOOST_TEST(t.joinable());
   }
-#if 0
   BOOST_TEST(false);
-#endif
   return boost::report_errors();
 }
 

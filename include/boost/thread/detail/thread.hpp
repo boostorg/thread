@@ -208,8 +208,16 @@ namespace boost
         thread(const volatile thread&);
 #endif
         thread() BOOST_NOEXCEPT;
-        ~thread();
-
+        ~thread()
+        {
+    #if defined BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+          if (joinable()) {
+            std::terminate();
+          }
+    #else
+            detach();
+    #endif
+        }
 #ifndef BOOST_NO_RVALUE_REFERENCES
         template <
           class F
@@ -239,6 +247,9 @@ namespace boost
 
         thread& operator=(thread&& other) BOOST_NOEXCEPT
         {
+#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+            if (joinable()) std::terminate();
+#endif
             thread_info=other.thread_info;
             other.thread_info.reset();
             return *this;
@@ -354,6 +365,9 @@ namespace boost
 #if defined BOOST_THREAD_USES_MOVE
         thread& operator=(boost::rv<thread>& x) BOOST_NOEXCEPT
         {
+#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+            if (joinable()) std::terminate();
+#endif
             thread new_thread(boost::move(x));
             swap(new_thread);
             return *this;
@@ -361,6 +375,9 @@ namespace boost
 #else
         thread& operator=(detail::thread_move_t<thread> x) BOOST_NOEXCEPT
         {
+#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+            if (joinable()) std::terminate();
+#endif
             thread new_thread(x);
             swap(new_thread);
             return *this;
