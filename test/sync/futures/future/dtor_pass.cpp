@@ -37,7 +37,7 @@ int main()
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           BOOST_TEST(test_alloc_base::count == 1);
           BOOST_TEST(f.valid());
       }
@@ -51,7 +51,7 @@ int main()
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<int>());
           BOOST_TEST(test_alloc_base::count == 1);
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           BOOST_TEST(test_alloc_base::count == 1);
           BOOST_TEST(f.valid());
       }
@@ -65,7 +65,7 @@ int main()
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           BOOST_TEST(test_alloc_base::count == 1);
           BOOST_TEST(f.valid());
       }
