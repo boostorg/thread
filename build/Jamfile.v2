@@ -160,8 +160,10 @@ rule usage-requirements ( properties * )
             # in that case?
         }
     }
-
-    result += <library>/boost/chrono//boost_chrono ;
+    if ! <toolset>vacpp in $(properties)
+    {
+      result += <library>/boost/chrono//boost_chrono ;
+    } 
 
     return $(result) ;
 }
@@ -186,7 +188,10 @@ rule requirements ( properties * )
             }
         }
     }
-    result += <library>/boost/chrono//boost_chrono ;
+    if ! <toolset>vacpp in $(properties)
+    {
+      result += <library>/boost/chrono//boost_chrono ;
+    } 
 
     return $(result) ;
 }
