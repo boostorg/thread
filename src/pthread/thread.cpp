@@ -244,10 +244,7 @@ namespace boost
         }
     }
 
-    thread::~thread()
-    {
-        detach();
-    }
+
 
     detail::thread_data_ptr thread::get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const
     {

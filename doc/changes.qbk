@@ -23,12 +23,15 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6226 #6226] c++11 compliance: Add explicit bool conversion from locks. 
 * [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise constructor with allocator following the standard c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6230 #6230] c++11 compliance: Follows the exception reporting mechanism as defined in the c++11. 
+* [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
+* [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
 * [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
 * [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
 * [@http://svn.boost.org/trac/boost/ticket/6231 #6231] Add BasicLockable requirements in the documentation to follow c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6671 #6671] upgrade_lock: missing mutex and release functions.
 * [@http://svn.boost.org/trac/boost/ticket/6672 #6672] upgrade_lock:: missing constructors from time related types.
 * [@http://svn.boost.org/trac/boost/ticket/6675 #6675] upgrade_lock:: missing non-member swap.
+
  	
 Fixed Bugs:
 
@@ -176,8 +179,6 @@ The following features will be included in next releases.
 # Complete the C++11 missing features, in particular
 
   * [@http://svn.boost.org/trac/boost/ticket/4710 #4710] Missing async(). 
-  * [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
-  * [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
   * [@http://svn.boost.org/trac/boost/ticket/6342 #6342] Breaking change: Adapt the one_flag and call_once to the c++11 interface. 
 
   * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] Use of variadic templates on Generic Locking Algorithms on compilers providing them. 

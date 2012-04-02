@@ -462,8 +462,8 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 [variablelist
 
 [[Effects:] [Transfers ownership of the thread managed by `other` (if
-any) to `*this`. If there was a thread previously associated with
-`*this` then that thread is detached.]]
+any) to `*this`. Version 1: If there was a thread previously associated with
+`*this` then that thread is detached, version 2: If the thread is joinable calls to std::terminate.]]
 
 [[Postconditions:] [`other->get_id()==thread::id()` and `get_id()` returns the value of `other.get_id()` prior to the assignment.]]
 
@@ -620,7 +620,7 @@ are copied into internal storage for access by the new thread.]]]
 
 [variablelist
 
-[[Effects:] [If `*this` has an associated thread of execution, calls __detach__. Destroys `*this`.]]
+[[Effects:] [Version 1: If `*this` has an associated thread of execution, calls __detach__, Version 2: If the thread is joinable calls to std::terminate. Destroys `*this`.]]
 
 [[Throws:] [Nothing.]]
 

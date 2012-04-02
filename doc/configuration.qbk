@@ -117,6 +117,11 @@ which introduces a dependency on Boost.Container. This feature is provided only 
 
 [endsect]
 
+[section:terminate Call to terminate if joinable]
+
+C++11 has a different semantic for the thread destructor and the move assignment. Instead of detaching the thread, calls to terminate() if the thread was joinable. When `BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` and `BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` is defined Boost.Thread provides the C++ semantic.
+
+[endsect]
 
 
 [section:version `BOOST_THREAD_VERSION` Version]
@@ -130,8 +135,9 @@ The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In t
 * Breaking change `BOOST_THREAD_USES_FUTURE`
 * Uniformity `BOOST_THREAD_SHARED_MUTEX_GENERIC`
 * Extension `BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION`
-* Extension `BOOST_THREAD_FUTURE_USES_ALLOCATORS`
-
+* Conformity `BOOST_THREAD_FUTURE_USES_ALLOCATORS`
+* Breaking change BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+* Breaking change BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
 
 [endsect]
 
