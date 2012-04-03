@@ -32,7 +32,7 @@ int main()
   {
       typedef int T;
       boost::promise<T> p;
-      boost::future<T> f0 = p.get_future();
+      boost::future<T> f0 = BOOST_EXPLICIT_MOVE(p.get_future());
       boost::future<T> f;
       f = boost::move(f0);
       BOOST_TEST(!f0.valid());
@@ -49,7 +49,7 @@ int main()
   {
       typedef int& T;
       boost::promise<T> p;
-      boost::future<T> f0 = p.get_future();
+      boost::future<T> f0 = BOOST_EXPLICIT_MOVE(p.get_future());
       boost::future<T> f;
       f = boost::move(f0);
       BOOST_TEST(!f0.valid());
@@ -66,7 +66,7 @@ int main()
   {
       typedef void T;
       boost::promise<T> p;
-      boost::future<T> f0 = p.get_future();
+      boost::future<T> f0 = BOOST_EXPLICIT_MOVE(p.get_future());
       boost::future<T> f;
       f = boost::move(f0);
       BOOST_TEST(!f0.valid());
