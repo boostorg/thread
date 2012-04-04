@@ -46,7 +46,11 @@ namespace boost
 
         namespace
         {
+#ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
+          boost::once_flag current_thread_tls_init_flag;
+#else
             boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
+#endif
             pthread_key_t current_thread_tls_key;
 
             extern "C"
