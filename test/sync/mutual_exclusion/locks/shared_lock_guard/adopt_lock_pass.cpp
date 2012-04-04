@@ -23,16 +23,20 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
+#if defined BOOST_THREAD_USES_CHRONO
 typedef boost::chrono::high_resolution_clock Clock;
 typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
+#else
+#endif
 
 boost::shared_mutex m;
 
 void f()
 {
+#if defined BOOST_THREAD_USES_CHRONO
   time_point t0 = Clock::now();
   time_point t1;
   {
@@ -42,13 +46,27 @@ void f()
   }
   ns d = t1 - t0 - ms(250);
   BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
+#else
+  //time_point t0 = Clock::now();
+  //time_point t1;
+  {
+    m.lock();
+    boost::shared_lock_guard<boost::shared_mutex> lg(m, boost::adopt_lock);
+    //t1 = Clock::now();
+  }
+  //ns d = t1 - t0 - ms(250);
+  //BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
+#endif
 }
 
 int main()
 {
   m.lock();
   boost::thread t(f);
+#if defined BOOST_THREAD_USES_CHRONO
   boost::this_thread::sleep_for(ms(250));
+#else
+#endif
   m.unlock();
   t.join();
 

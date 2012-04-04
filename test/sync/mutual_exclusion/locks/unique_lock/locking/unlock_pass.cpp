@@ -16,14 +16,12 @@
 
 // template <class Mutex> class unique_lock;
 
-// template <class Rep, class Period>
-//   bool try_lock_for(const chrono::duration<Rep, Period>& rel_time);
+//   bool unlock();
 
 #include <boost/thread/locks.hpp>
 //#include <boost/thread/mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if defined BOOST_THREAD_USES_CHRONO
 
 bool unlock_called = false;
 
@@ -68,8 +66,4 @@ int main()
 
   return boost::report_errors();
 }
-
-#else
-#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
-#endif
 
