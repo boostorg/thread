@@ -66,9 +66,9 @@ int main()
     BOOST_TEST(!t0.joinable());
 #if defined BOOST_THREAD_USES_CHRONO
     boost::this_thread::sleep_for(boost::chrono::milliseconds(250));
-#endif
     BOOST_TEST(G::op_run);
     BOOST_TEST(G::n_alive == 0);
+#endif
   }
   return boost::report_errors();
 }
