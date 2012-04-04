@@ -40,7 +40,7 @@ namespace boost
         {
           if (mtx) {
             mtx->lock();
-            m = Lock(*mtx, adopt_lock);
+            m = BOOST_EXPLICIT_MOVE(Lock(*mtx, adopt_lock));
           }
         }
 
