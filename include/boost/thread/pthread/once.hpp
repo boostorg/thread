@@ -21,38 +21,40 @@
 namespace boost
 {
 
-#if BOOST_THREAD_VERSION==3
+#define BOOST_ONCE_INITIAL_FLAG_VALUE 0
+
+#ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
 
   struct once_flag
   {
       BOOST_CONSTEXPR once_flag() BOOST_NOEXCEPT
-        : epoch(0)
+        : epoch(BOOST_ONCE_INITIAL_FLAG_VALUE)
       {}
 #ifndef BOOST_NO_DELETED_FUNCTIONS
       once_flag(const once_flag&) = delete;
       once_flag& operator=(const once_flag&) = delete;
 #else // BOOST_NO_DELETED_FUNCTIONS
   private:
-      once_flag(const once_flag&);
-      once_flag& operator=(const once_flag&);
+      once_flag(once_flag&);
+      once_flag& operator=(once_flag&);
   public:
 #endif // BOOST_NO_DELETED_FUNCTIONS
   private:
       boost::uintmax_t epoch;
-
+      template<typename Function>
+      friend
+      void call_once(once_flag& flag,Function f);
   };
 
-#else // BOOST_THREAD_VERSION==3
+#else // BOOST_THREAD_PROVIDES_ONCE_CXX11
 
     struct once_flag
     {
         boost::uintmax_t epoch;
     };
 
-#define BOOST_ONCE_INITIAL_FLAG_VALUE 0
 #define BOOST_ONCE_INIT {BOOST_ONCE_INITIAL_FLAG_VALUE}
-
-#endif // BOOST_THREAD_VERSION==3
+#endif // BOOST_THREAD_PROVIDES_ONCE_CXX11
 
     namespace detail
     {

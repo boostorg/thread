@@ -26,7 +26,11 @@ namespace boost
 {
     namespace
     {
+#ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::once_flag current_thread_tls_init_flag;
+#else
         boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
+#endif
         #if defined(UNDER_CE)
         // Windows CE does not define the TLS_OUT_OF_INDEXES constant.
         DWORD tls_out_of_index=0xFFFFFFFF;
