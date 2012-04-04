@@ -28,18 +28,18 @@ int main()
 
   {
       boost::promise<int> p;
-      boost::future<int> f = p.get_future();
+      boost::future<int> f = BOOST_EXPLICIT_MOVE(p.get_future());
       BOOST_TEST(f.valid());
   }
   {
       boost::promise<int&> p;
-      boost::future<int&> f = p.get_future();
+      boost::future<int&> f = BOOST_EXPLICIT_MOVE(p.get_future());
       BOOST_TEST(f.valid());
   }
   {
       boost::promise<void> p;
       std::cout << __LINE__ << std::endl;
-      boost::future<void> f = p.get_future();
+      boost::future<void> f = BOOST_EXPLICIT_MOVE(p.get_future());
       std::cout << __LINE__ << std::endl;
       BOOST_TEST(f.valid());
   }

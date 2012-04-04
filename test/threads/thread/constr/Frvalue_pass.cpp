@@ -77,7 +77,7 @@ class MoveOnly
 };
 
 MoveOnly MakeMoveOnly() {
-  return MoveOnly();
+  return BOOST_EXPLICIT_MOVE(MoveOnly());
 }
 
 int main()

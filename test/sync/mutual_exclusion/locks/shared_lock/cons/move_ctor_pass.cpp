@@ -36,7 +36,7 @@ int main()
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::shared_lock<boost::shared_mutex> lk( (boost::shared_lock<boost::shared_mutex>(m)));
+  boost::shared_lock<boost::shared_mutex> lk( (BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(m))));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   }

@@ -74,7 +74,36 @@ int main()
   }
   BOOST_TEST(test_alloc_base::count == 0);
 #endif
-
+  {
+      typedef int T;
+      boost::future<T> f;
+      {
+          boost::promise<T> p;
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          BOOST_TEST(f.valid());
+      }
+      BOOST_TEST(f.valid());
+  }
+  {
+      typedef int& T;
+      boost::future<T> f;
+      {
+          boost::promise<T> p;
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          BOOST_TEST(f.valid());
+      }
+      BOOST_TEST(f.valid());
+  }
+  {
+      typedef void T;
+      boost::future<T> f;
+      {
+          boost::promise<T> p;
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          BOOST_TEST(f.valid());
+      }
+      BOOST_TEST(f.valid());
+  }
   return boost::report_errors();
 }
 
