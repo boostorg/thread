@@ -30,7 +30,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           p.set_value(3);
       }
       BOOST_TEST(f.get() == 3);
@@ -40,7 +40,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
       }
       try
       {
@@ -58,7 +58,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           p.set_value(i);
       }
       BOOST_TEST(&f.get() == &i);
@@ -85,7 +85,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           p.set_value();
       }
       f.get();
@@ -96,7 +96,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
       }
       try
       {

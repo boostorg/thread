@@ -36,7 +36,7 @@ int main()
   BOOST_TEST(lk0.owns_lock() == false);
   }
   {
-  boost::unique_lock<boost::upgrade_mutex> lk( (boost::upgrade_lock<boost::upgrade_mutex>(m)));
+  boost::unique_lock<boost::upgrade_mutex> lk( (BOOST_EXPLICIT_MOVE(boost::upgrade_lock<boost::upgrade_mutex>(m))));
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == true);
   }
