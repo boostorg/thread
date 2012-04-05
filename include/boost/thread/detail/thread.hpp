@@ -210,7 +210,7 @@ namespace boost
         thread() BOOST_NOEXCEPT;
         ~thread()
         {
-    #if defined BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+    #if defined BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
           if (joinable()) {
             std::terminate();
           }
@@ -247,7 +247,7 @@ namespace boost
 
         thread& operator=(thread&& other) BOOST_NOEXCEPT
         {
-#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
 #endif
             thread_info=other.thread_info;
@@ -365,7 +365,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_MOVE
         thread& operator=(boost::rv<thread>& x) BOOST_NOEXCEPT
         {
-#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
 #endif
             thread new_thread(boost::move(x));
@@ -375,7 +375,7 @@ namespace boost
 #else
         thread& operator=(detail::thread_move_t<thread> x) BOOST_NOEXCEPT
         {
-#if defined BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
 #endif
             thread new_thread(x);

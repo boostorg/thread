@@ -19,11 +19,10 @@
 // promise(promise&& rhs);
 
 #define BOOST_THREAD_VERSION 2
-#define BOOST_THREAD_FUTURE_USES_ALLOCATORS
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <libs/thread/test/sync/futures/test_allocator.hpp>
 #endif
 
@@ -31,7 +30,7 @@ boost::mutex m;
 
 int main()
 {
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
   BOOST_TEST(test_alloc_base::count == 0);
   {
     boost::promise<int> p0(boost::allocator_arg, test_allocator<int>());
@@ -45,7 +44,7 @@ int main()
     std::cout << __LINE__ << std::endl;
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -66,7 +65,7 @@ int main()
     BOOST_TEST(f.valid());
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -85,7 +84,7 @@ int main()
     BOOST_TEST(f.valid());
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -106,7 +105,7 @@ int main()
     std::cout << __LINE__ << std::endl;
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -123,7 +122,7 @@ int main()
     BOOST_TEST(f.valid());
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -138,7 +137,7 @@ int main()
     BOOST_TEST(f.valid());
     try
     {
-      f = p0.get_future();
+      f = BOOST_EXPLICIT_MOVE(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)

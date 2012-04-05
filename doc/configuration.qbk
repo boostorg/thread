@@ -12,7 +12,7 @@
 
 Boost.Thread uses by default Boost.System to define the exceptions. For backward compatibility and also for compilers that don't work well with Boost.System the user can define `BOOST_THREAD_DONT_USE_SYSTEM `.
 
-`BOOST_THREAD_DONT_USE_MOVE` is defined when Boost.Thread uses Boost.Move.
+`BOOST_THREAD_USES_SYSTEM` is defined when Boost.Thread uses Boost.Move.
 
 [endsect]
 
@@ -20,7 +20,7 @@ Boost.Thread uses by default Boost.System to define the exceptions. For backward
 
 Boost.Thread uses by default Boost.Chrono for the time related functions. For backward compatibility and also for compilers that don't work well with Boost.Chrono the user can define `BOOST_THREAD_DONT_USE_CHRONO`. If `BOOST_THREAD_DONT_USE_SYSTEM` is defined then `BOOST_THREAD_DONT_USE_CHRONO` is defined implicitly.
 
-`BOOST_THREAD_USE_CHRONO` is defined when Boost.Thread uses Boost.Move.
+`BOOST_THREAD_USES_CHRONO` is defined when Boost.Thread uses Boost.Chrono.
 
 [endsect]
 
@@ -28,20 +28,25 @@ Boost.Thread uses by default Boost.Chrono for the time related functions. For ba
 
 Boost.Thread uses by default Boost.Move emulation on compilers that don't support Rvalue references. For backward compatibility and also for compilers that don't work well with Boost.Move the user can define `BOOST_THREAD_DONT_USE_MOVE`.
 
-`BOOST_THREAD_USE_MOVE` is defined when Boost.Thread uses Boost.Move.
+`BOOST_THREAD_USES_MOVE` is defined when Boost.Thread uses Boost.Move.
 
 [endsect]
 
 [section:shared_gen  Shared Locking Generic]
 
-The shared mutex implementation on Windows platform provides currently less functionality than the generic one that is used for PTheads based platforms. In order to have access to these functions, the user needs to define `BOOST_THREAD_SHARED_MUTEX_GENERIC` to use the generic implementation, that while could be less efficient, provides all the functions.
+The shared mutex implementation on Windows platform provides currently less functionality than the generic one that is used for PTheads based platforms. In order to have access to these functions, the user needs to define `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` to use the generic implementation, that while could be less efficient, provides all the functions.
+
+Define `BOOST_THREAD_DONT_PROVIDE_GENERIC_SHARED_MUTEX_ON_WIN` if you don't want these functions.
 
 [endsect]
 
 [section:shared_upwards Shared Locking Upwards Conversion]
 
 Boost.Threads includes in version 2 the Shared Locking Upwards Conversion as defined in [@http://home.roadrunner.com/~hinnant/bloomington/shared_mutex.html Shared Locking].
-These conversions need to be used carefully to avoid deadlock or livelock. The user need to define explicitly `BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION` to get these upwards conversions. 
+These conversions need to be used carefully to avoid deadlock or livelock. The user need to define explicitly `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` to get these upwards conversions. 
+
+Define `BOOST_THREAD_DONT_PROVIDE_SHARED_MUTEX_UPWARDS_CONVERSION` if you don't want these functions.
+
 
 [endsect]
 
@@ -49,21 +54,17 @@ These conversions need to be used carefully to avoid deadlock or livelock. The u
 
 In [@http://home.roadrunner.com/~hinnant/bloomington/shared_mutex.html Shared Locking] the lock conversions are explicit. As this explicit conversion breaks the lock interfaces, it is provided only if the `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION` is defined.
 
-[endsect]
-
-[section:deprecated Deprecated]
-
-Version 2.0.0 deprecates some Boost.Thread features. 
-
-These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define `BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
-
+Define `BOOST_THREAD_DONT_PROVIDE_EXPLICIT_LOCK_CONVERSION` if you don't want these functions.
 
 [endsect]
+
 
 [section:future unique_future versus future]
 
 C++11 uses `std::future`. Versions of Boost.Thread previous to version 2.0.0 uses `boost:unique_future`.
-Since version 2.0.0 `boost::future` replaces `boost::__unique_future` when `BOOST_THREAD_USES_FUTURE` is defined. The documentation doesn't contains anymore however `boost::__unique_future`.
+Since version 2.0.0 `boost::future` replaces `boost::unique_future` when `BOOST_THREAD_PROVIDES_FUTURE` is defined. The documentation doesn't contains anymore however `boost::unique_future`.
+
+Define `BOOST_THREAD_DONT_PROVIDE_FUTURE ` if you don't want these functions.
 
 [endsect]
 
@@ -71,7 +72,9 @@ Since version 2.0.0 `boost::future` replaces `boost::__unique_future` when `BOOS
 
 C++11 promise initialize the associated state at construction time. Versions of Boost.Thread previous to version 2.0.0 initialize it lazily at any point in time in which this associated state is needed. 
 
-Since version 2.0.0 this difference in behavior can be configured. When `BOOST_THREAD_PROMISE_LAZY` is defined the backward compatible behavior is provided. 
+Since version 2.0.0 this difference in behavior can be configured. When `BOOST_THREAD_PROVIDES_PROMISE_LAZY` is defined the backward compatible behavior is provided. 
+
+Define `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY ` if you don't want this feature.
 
 [endsect]
 
@@ -113,32 +116,90 @@ Since version 2.0.0 Boost.Thread implements this constructor using the following
       struct uses_allocator : public container::uses_allocator<T, Alloc> {}; 
     }
 
-which introduces a dependency on Boost.Container. This feature is provided only if  `BOOST_THREAD_FUTURE_USES_ALLOCATORS` is defined. 
+which introduces a dependency on Boost.Container. This feature is provided only if  `BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS` is defined. 
+
+Define `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS ` if you don't want this feature.
 
 [endsect]
 
 [section:terminate Call to terminate if joinable]
 
-C++11 has a different semantic for the thread destructor and the move assignment. Instead of detaching the thread, calls to terminate() if the thread was joinable. When `BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` and `BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` is defined Boost.Thread provides the C++ semantic.
+C++11 has a different semantic for the thread destructor and the move assignment. Instead of detaching the thread, calls to terminate() if the thread was joinable. When `BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` and `BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` is defined Boost.Thread provides the C++ semantic.
+
+Define `BOOST_THREAD_DONT_PROVIDE_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` or `BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` if you don't want these features.
+
+[endsect]
+
+[section:once_flag once_flag]
+
+C++11 defines a default constructor for once_flag. When `BOOST_THREAD_PROVIDES_ONCE_CXX11 ` is defined Boost.Thread provides this C++ semantics. In this case, the previous aggregate syntax is not supported. 
+
+  boost::once_flag once = BOOST_ONCE_INIT;
+
+You should now just do
+
+  boost::once_flag once;
+
+Define `BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11 ` if you don't want this feature.
+
+[endsect]
+
+[section:deprecated Deprecated]
+
+Version 2.0.0 deprecates some Boost.Thread features. 
+
+These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define `BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+
 
 [endsect]
 
 
-[section:version `BOOST_THREAD_VERSION` Version]
+[section:version Version]
 
 `BOOST_THREAD_VERSION` defines the Boost.Thread version. 
-The default version is 1.
+The default version is 1. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
-The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In this case the following breaking or extending macros are defined
+* `BOOST_THREAD_PROVIDES_PROMISE_LAZY`
+* `BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0`
+
+The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
 * Breaking change `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION `
-* Breaking change `BOOST_THREAD_USES_FUTURE`
-* Uniformity `BOOST_THREAD_SHARED_MUTEX_GENERIC`
-* Extension `BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION`
-* Conformity `BOOST_THREAD_FUTURE_USES_ALLOCATORS`
-* Breaking change BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
-* Breaking change BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+* Breaking change `BOOST_THREAD_PROVIDES_FUTURE`
+* Uniformity `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN`
+* Extension `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION`
+* Conformity `BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS`
+* Breaking change BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+* Breaking change BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+* Breaking change `BOOST_THREAD_PROVIDES_ONCE_CXX11`
+
+* Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
+* Breaking change `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`
 
 [endsect]
 
+[endsect]
+
+[section:limitations Limitations]
+
+Some compilers don't work correctly with some of the added features.
+
+[section:sun SunPro]
+
+If __SUNPRO_CC < 0x5100 the library defines
+
+* `BOOST_THREAD_DONT_USE_MOVE`
+* `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS`
+
+
+[endsect]
+[section:vacpp VACPP]
+
+If __IBMCPP__ is defined the library defines
+
+* `BOOST_THREAD_DONT_USE_CHRONO`
+
+And Boost.Thread doesn't links with Boost.Chrono.
+
+[endsect]
 [endsect]

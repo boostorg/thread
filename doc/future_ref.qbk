@@ -11,10 +11,12 @@
 
   namespace boost 
   {
+  #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
     namespace future_state // DEPRECATED V2
     {
         enum state {uninitialized, waiting, ready, moved};
     }
+  #endif
 
     enum class future_errc
     {
@@ -167,8 +169,6 @@
         unique_future(unique_future & rhs);// = delete;
         unique_future& operator=(unique_future& rhs);// = delete;
 
-        typedef future_state::state state; // DEPRECATED V2
-
         unique_future() noexcept;
         ~unique_future();
 
@@ -183,7 +183,6 @@
         R&& get();        
 
         // functions to check state
-        state get_state() const; //DEPRECATED V2
         bool valid() const;        
         bool is_ready() const; // EXTENSION        
         bool has_exception() const; // EXTENSION        
@@ -196,10 +195,15 @@
         template <class Clock, class Duration>
         future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
 
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
         bool timed_wait_until(boost::system_time const& abs_time) const;  // DEPRECATED V2
-
+    #endif
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
+        typedef future_state::state state; // DEPRECATED V2
+        state get_state() const; //DEPRECATED V2
+    #endif
     };
 
 [section:default_constructor Default Constructor]
@@ -495,7 +499,6 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         R get();
         
         // functions to check state, and wait for ready
-        state get_state() const noexcept; // DEPRECATED V2
         bool valid() const noexcept;
         bool is_ready() const noexcept; // EXTENSION
         bool has_exception() const noexcept; // EXTENSION
@@ -508,9 +511,14 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         template <class Clock, class Duration>
         future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
 
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
         bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED V2
+    #endif
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
+        state get_state() const noexcept; // DEPRECATED V2
+    #endif
     };
 
 [section:default_constructor Default Constructor]

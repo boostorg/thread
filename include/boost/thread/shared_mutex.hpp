@@ -3,7 +3,7 @@
 
 //  shared_mutex.hpp
 //
-//  (C) Copyright 2007 Anthony Williams 
+//  (C) Copyright 2007 Anthony Williams
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -11,7 +11,7 @@
 
 #include <boost/thread/detail/platform.hpp>
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-#if defined(BOOST_THREAD_SHARED_MUTEX_GENERIC)
+#if defined(BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN)
 #include <boost/thread/pthread/shared_mutex.hpp>
 #else
 #include <boost/thread/win32/shared_mutex.hpp>

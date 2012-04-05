@@ -19,7 +19,7 @@
 // template <class Rep, class Period>
 //   unique_lock(mutex_type& m, const chrono::duration<Rep, Period>& rel_time);
 
-#define BOOST_THREAD_SHARED_MUTEX_GENERIC
+#define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/mutex.hpp>
