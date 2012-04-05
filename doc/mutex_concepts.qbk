@@ -367,7 +367,7 @@ A type `L` meets the __SharedLockable requirements if it meets the __TimedLockab
 * `m.__unlock_upgrade_and_lock_shared();`
 
 
-If BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION is defined the following expressions are also required:
+If `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION is defined the following expressions are also required:
 
 * `m.__try_unlock_shared_and_lock();`
 * `m.__try_unlock_shared_and_lock_for(rel_time);`
@@ -455,7 +455,7 @@ The function returns within the timeout specified by `rel_time` only if it has o
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -478,7 +478,7 @@ The function returns before the absolute timeout specified by `abs_time` only if
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -503,7 +503,7 @@ If the conversion is not successful, the shared ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -529,7 +529,7 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -555,7 +555,7 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -595,7 +595,7 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -622,7 +622,7 @@ If the conversion is not successful, the shared ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 
 ]
@@ -648,7 +648,7 @@ If the conversion is not successful, the shared ownership of the mutex is retain
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -708,7 +708,7 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 
 ]
@@ -735,7 +735,7 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -760,7 +760,7 @@ If the conversion is not successful, the upgrade ownership of m is retained.]]
 
 [[Throws:] [Nothing]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 [endsect]
@@ -916,7 +916,7 @@ object passed to the constructor.]]
         unique_lock(Lockable& m_,defer_lock_t) noexcept;
         unique_lock(Lockable& m_,try_to_lock_t);
 
-    #ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+    #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION
         unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
         template <class Clock, class Duration>
         unique_lock(shared_lock<mutex_type>&& sl,
@@ -926,7 +926,6 @@ object passed to the constructor.]]
                     const chrono::duration<Rep, Period>& rel_time)
     #endif
 
-        unique_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
         template <class Clock, class Duration>
         unique_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t);
         template <class Rep, class Period>
@@ -946,9 +945,6 @@ object passed to the constructor.]]
         void lock();
         bool try_lock();
 
-        template<typename TimeDuration>
-        bool timed_lock(TimeDuration const& relative_time); // DEPRECATED V2
-        bool timed_lock(::boost::system_time const& absolute_time); // DEPRECATED V2
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time);
         template <class Clock, class Duration>
@@ -960,6 +956,14 @@ object passed to the constructor.]]
         bool owns_lock() const noexcept;
 
         Lockable* mutex() const noexcept;
+
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        unique_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
+        template<typename TimeDuration>
+        bool timed_lock(TimeDuration const& relative_time); // DEPRECATED V2
+        bool timed_lock(::boost::system_time const& absolute_time); // DEPRECATED V2
+    #endif
+
     };
 
 __unique_lock__ is more complex than __lock_guard__: not only does it provide for RAII-style locking, it also allows for deferring
@@ -1070,7 +1074,7 @@ Else `sl.__owns_lock()` returns `true`, and in this case if `sl.mutex()->try_unl
 
 [[Throws:] [Nothing.]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 
@@ -1095,7 +1099,7 @@ Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()->__try_unl
 
 [[Throws:] [Nothing.]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 
@@ -1122,7 +1126,7 @@ Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()-> __try_un
 
 [[Throws:] [Nothing.]]
 
-[[Notes:] [Available only if BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION and BOOST_THREAD_SHARED_MUTEX_GENERIC is defined on Windows platform]]
+[[Notes:] [Available only if `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` and `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` is defined on Windows platform]]
 
 ]
 
@@ -1132,7 +1136,7 @@ Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()-> __try_un
 
 
 
-[section:constructor_abs_time `unique_lock(Lockable & m,boost::system_time const& abs_time)`  // DEPRECATED V2]
+[section:constructor_abs_time `unique_lock(Lockable & m,boost::system_time const& abs_time)`  DEPRECATED V2]
 
 [variablelist
 
@@ -1277,7 +1281,6 @@ __owns_lock_ref__ returns `false`.]]
         shared_lock(Lockable& m_,adopt_lock_t);
         shared_lock(Lockable& m_,defer_lock_t);
         shared_lock(Lockable& m_,try_to_lock_t);
-        shared_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
         template <class Clock, class Duration>
         shared_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t);
         template <class Rep, class Period>
@@ -1292,7 +1295,6 @@ __owns_lock_ref__ returns `false`.]]
 
         void lock();
         bool try_lock();
-        bool timed_lock(boost::system_time const& target_time); // DEPRECATED V2
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time);
         template <class Clock, class Duration>
@@ -1313,6 +1315,11 @@ __owns_lock_ref__ returns `false`.]]
         explicit operator bool() const;
         bool owns_lock() const;
         mutex_type mutex() const;
+
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        shared_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
+        bool timed_lock(boost::system_time const& target_time); // DEPRECATED V2
+    #endif
     };
 
 Like __unique_lock__, __shared_lock__ models the __lockable_concept__, but rather than acquiring unique ownership of the supplied
@@ -1538,7 +1545,7 @@ __owns_lock_shared_ref__ returns `false`.]]
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time);
         void unlock();
 
-    #ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+    #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION
        // Conversion from shared locking
         upgrade_lock(shared_lock<mutex_type>&& sl, try_to_lock_t);
         template <class Clock, class Duration>

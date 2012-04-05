@@ -640,7 +640,7 @@ namespace boost
 #endif
 #endif
 
-#ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
         unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
@@ -1584,7 +1584,7 @@ namespace boost
 #endif
 #endif
 
-#ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONSS
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
 
@@ -1949,7 +1949,7 @@ namespace boost
         {
             if(source)
             {
-                *source=upgrade_lock<Mutex>(::boost::move(exclusive));
+                *source=BOOST_EXPLICIT_MOVE(upgrade_lock<Mutex>(::boost::move(exclusive)));
             }
         }
 

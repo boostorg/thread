@@ -28,6 +28,7 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
 * [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
 * [@http://svn.boost.org/trac/boost/ticket/6231 #6231] Add BasicLockable requirements in the documentation to follow c++11.
+* [@http://svn.boost.org/trac/boost/ticket/6342 #6342] c++11 compliance: Adapt the one_flag and call_once to the c++11 interface.
 * [@http://svn.boost.org/trac/boost/ticket/6671 #6671] upgrade_lock: missing mutex and release functions.
 * [@http://svn.boost.org/trac/boost/ticket/6672 #6672] upgrade_lock:: missing constructors from time related types.
 * [@http://svn.boost.org/trac/boost/ticket/6675 #6675] upgrade_lock:: missing non-member swap.
@@ -42,6 +43,7 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/5516 #5516] Upgrade lock is not acquired when previous upgrade lock releases if another read lock is present. 
 * [@http://svn.boost.org/trac/boost/ticket/5990 #5990] shared_future<T>::get() has wrong return type. 
 * [@http://svn.boost.org/trac/boost/ticket/6174 #6174] packaged_task doesn't correctly handle moving results.
+* [@http://svn.boost.org/trac/boost/ticket/6222 #6222] Compile error with SunStudio: unique_future move. 
 * [@http://svn.boost.org/trac/boost/ticket/6673 #6673] shared_lock: move assign doesn't works with c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6674 #6674] shared_mutex: try_lock_upgrade_until doesn't works.
  	
@@ -179,8 +181,6 @@ The following features will be included in next releases.
 # Complete the C++11 missing features, in particular
 
   * [@http://svn.boost.org/trac/boost/ticket/4710 #4710] Missing async(). 
-  * [@http://svn.boost.org/trac/boost/ticket/6342 #6342] Breaking change: Adapt the one_flag and call_once to the c++11 interface. 
-
   * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
   * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] Add thread constructor from movable callable and movable arguments following C++11. 
  	

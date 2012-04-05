@@ -104,17 +104,6 @@ optimizations in some cases, based on the knowledge of the mutex type;
             template<typename predicate_type>
             void wait(boost::unique_lock<boost::mutex>& lock,predicate_type predicate);
 
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time); // DEPRECATED V2
-
-            template<typename duration_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time); // DEPRECATED V2
-
-            template<typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate); // DEPRECATED V2
-
-            template<typename duration_type,typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate); // DEPRECATED V2
-
             template <class Clock, class Duration>
             typename cv_status::type
             wait_until(
@@ -141,12 +130,20 @@ optimizations in some cases, based on the knowledge of the mutex type;
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred);
 
-        // backwards compatibility
-
+        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time); // DEPRECATED V2
+            template<typename duration_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time); // DEPRECATED V2
+            template<typename predicate_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate); // DEPRECATED V2
+            template<typename duration_type,typename predicate_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate); // DEPRECATED V2
             bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time); // DEPRECATED V2
 
             template<typename predicate_type>
             bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate); // DEPRECATED V2
+        #endif
+
         };
     }
 
@@ -461,18 +458,6 @@ return true;
             template<typename lock_type,typename predicate_type>
             void wait(lock_type& lock,predicate_type predicate);
 
-            template<typename lock_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time) // DEPRECATED V2;
-
-            template<typename lock_type,typename duration_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time) // DEPRECATED V2;
-
-            template<typename lock_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate) // DEPRECATED V2;
-
-            template<typename lock_type,typename duration_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate) // DEPRECATED V2;
-
             template <class lock_type, class Clock, class Duration>
             cv_status wait_until(
                 lock_type& lock,
@@ -496,13 +481,20 @@ return true;
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred);
 
-        // backwards compatibility
-
+        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+            template<typename lock_type>
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time) // DEPRECATED V2;
+            template<typename lock_type,typename duration_type>
+            bool timed_wait(lock_type& lock,duration_type const& rel_time) // DEPRECATED V2;
+            template<typename lock_type,typename predicate_type>
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate) // DEPRECATED V2;
+            template<typename lock_type,typename duration_type,typename predicate_type>
+            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate) // DEPRECATED V2;
             template<typename lock_type>
             bool timed_wait(lock_type>& lock,boost::xtime const& abs_time) // DEPRECATED V2;
-
             template<typename lock_type,typename predicate_type>
             bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate) // DEPRECATED V2;
+        #endif
         };
     }
 

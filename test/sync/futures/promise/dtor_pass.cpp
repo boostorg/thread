@@ -68,7 +68,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
       }
       try
       {

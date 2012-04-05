@@ -23,13 +23,13 @@
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <libs/thread/test/sync/futures/test_allocator.hpp>
 #endif
 
 int main()
 {
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
   BOOST_TEST(test_alloc_base::count == 0);
   {
       typedef int T;

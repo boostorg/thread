@@ -17,7 +17,7 @@
 
 // ~thread();
 
-#define BOOST_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+#define BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
 
 #include <boost/thread/thread.hpp>
 #include <new>

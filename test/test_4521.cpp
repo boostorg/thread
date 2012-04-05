@@ -7,7 +7,7 @@ int calculate_the_answer_to_life_the_universe_and_everything()
 
 int main() {
 boost::packaged_task<int> pt(calculate_the_answer_to_life_the_universe_and_everything);
-boost::unique_future<int> fi=pt.get_future();
+boost::unique_future<int> fi=BOOST_EXPLICIT_MOVE(pt.get_future());
 
 boost::thread task(boost::move(pt)); // launch task on a thread
 

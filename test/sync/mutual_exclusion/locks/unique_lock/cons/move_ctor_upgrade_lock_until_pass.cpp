@@ -20,7 +20,7 @@
 //         unique_lock(shared_lock<mutex_type>&&,
 //                     const chrono::time_point<Clock, Duration>&);
 
-#define BOOST_THREAD_SHARED_MUTEX_GENERIC
+#define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 
 #include <boost/thread/locks.hpp>
 #include <boost/thread/shared_mutex.hpp>

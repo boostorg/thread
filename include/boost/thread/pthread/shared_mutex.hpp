@@ -437,7 +437,7 @@ namespace boost
             release_waiters();
         }
 
-#ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
         bool try_unlock_shared_and_lock()
         {
           boost::mutex::scoped_lock lk(state_change);
@@ -497,7 +497,7 @@ namespace boost
             release_waiters();
         }
 
-#ifdef BOOST_THREAD_SHARED_MUTEX_PROVIDES_UPWARDS_CONVERSION
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
         bool try_unlock_shared_and_lock_upgrade()
         {
           boost::mutex::scoped_lock lk(state_change);

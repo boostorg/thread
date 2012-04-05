@@ -36,11 +36,11 @@
 #include <boost/chrono/system_clocks.hpp>
 #endif
 
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <boost/thread/detail/memory.hpp>
 #endif
 
-#if defined BOOST_THREAD_USES_FUTURE
+#if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
 #else
 #define BOOST_THREAD_FUTURE unique_future
@@ -1272,7 +1272,7 @@ namespace boost
         }
 
     public:
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
         template <class Allocator>
         explicit promise(boost::allocator_arg_t, Allocator a)
         {
@@ -1478,7 +1478,7 @@ namespace boost
 #endif
         }
     public:
-#if defined BOOST_THREAD_FUTURE_USES_ALLOCATORS
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
         template <class Allocator>
         explicit promise(boost::allocator_arg_t, Allocator a)
         {

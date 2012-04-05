@@ -18,7 +18,7 @@
 
 // thread& operator=(thread&& t);
 
-#define BOOST_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+#define BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
 
 #include <boost/thread/thread.hpp>
 #include <new>

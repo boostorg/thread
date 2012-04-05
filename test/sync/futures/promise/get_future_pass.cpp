@@ -36,7 +36,7 @@ int main()
       boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
       try
       {
-          f = p.get_future();
+          f = BOOST_EXPLICIT_MOVE(p.get_future());
           BOOST_TEST(false);
       }
       catch (const boost::future_error& e)
