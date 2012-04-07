@@ -12,9 +12,9 @@ public:
 
     void start(int N)
     {
-      std::cout << "start\n";
+//      std::cout << "start\n";
         m_Thread = boost::thread(&Worker::processQueue, this, N);
-        std::cout << "started\n";
+//        std::cout << "started\n";
     }
 
     void join()
@@ -27,14 +27,14 @@ public:
         float ms = N * 1e3;
         boost::posix_time::milliseconds workTime(ms);
 
-        std::cout << "Worker: started, will work for "
-                  << ms << "ms"
-                  << std::endl;
+//        std::cout << "Worker: started, will work for "
+//                  << ms << "ms"
+//                  << std::endl;
 
         // We're busy, honest!
         boost::this_thread::sleep(workTime);
 
-        std::cout << "Worker: completed" << std::endl;
+//        std::cout << "Worker: completed" << std::endl;
     }
 
 private:
@@ -44,19 +44,19 @@ private:
 
 int main(int argc, char* argv[])
 {
-    std::cout << "main: startup" << std::endl;
+//    std::cout << "main: startup" << std::endl;
 
     Worker worker;
 
-    std::cout << "main: create worker" << std::endl;
+//    std::cout << "main: create worker" << std::endl;
 
     worker.start(3);
 
-    std::cout << "main: waiting for thread" << std::endl;
+//    std::cout << "main: waiting for thread" << std::endl;
 
     worker.join();
 
-    std::cout << "main: done" << std::endl;
+//    std::cout << "main: done" << std::endl;
 
     return 0;
 }
