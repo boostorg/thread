@@ -19,6 +19,10 @@
 // This compiler doesn't support Boost.Move
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
 #define BOOST_THREAD_DONT_USE_MOVE
+#endif
+
+// This compiler doesn't support Boost.Container Allocators files
+#if defined __SUNPRO_CC
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #endif
 
