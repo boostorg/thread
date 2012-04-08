@@ -649,19 +649,41 @@ namespace boost
         std::size_t
         hash_value(const thread::id &v)
         {
+#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+          return hash_value(v.thread_data);
+#else
           return hash_value(v.thread_data.get());
+#endif
         }
 
-        detail::thread_data_ptr thread_data;
+#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        typedef unsigned int data;
+#else
+        typedef thread::native_handle_type data;
+#endif
+#else
+        typedef detail::thread_data_ptr data;
+#endif
+        data thread_data;
 
-        id(detail::thread_data_ptr thread_data_):
+        id(data thread_data_):
             thread_data(thread_data_)
         {}
         friend class thread;
         friend id BOOST_THREAD_DECL this_thread::get_id() BOOST_NOEXCEPT;
     public:
         id() BOOST_NOEXCEPT:
-            thread_data()
+#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        //thread_data(detail::win32::invalid_handle_value)
+        thread_data(0)
+#else
+        thread_data(0)
+#endif
+#else
+        thread_data()
+#endif
         {}
 
         id(const id& other) BOOST_NOEXCEPT :
@@ -723,7 +745,8 @@ namespace boost
         {
             if(thread_data)
             {
-                return os<<thread_data;
+              io::ios_flags_saver  ifs( os );
+              return os<< std::hex << thread_data;
             }
             else
             {

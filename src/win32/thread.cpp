@@ -277,7 +277,13 @@ namespace boost
 
     thread::id thread::get_id() const BOOST_NOEXCEPT
     {
+    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+      detail::thread_data_ptr local_thread_info=(get_thread_info)();
+      return local_thread_info?local_thread_info->id:0;
+      //return const_cast<thread*>(this)->native_handle();
+    #else
         return thread::id((get_thread_info)());
+    #endif
     }
 
     bool thread::joinable() const BOOST_NOEXCEPT
@@ -537,7 +543,12 @@ namespace boost
 
         thread::id get_id() BOOST_NOEXCEPT
         {
+        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+          //return detail::win32::GetCurrentThread();
+          return detail::win32::GetCurrentThreadId();
+        #else
             return thread::id(get_or_make_current_thread_data());
+        #endif
         }
 
         void interruption_point()
