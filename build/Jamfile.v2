@@ -1,6 +1,7 @@
 # $Id$
 # Copyright 2006-2007 Roland Schwarz.
 # Copyright 2007 Anthony Williams
+# Copyright 2011-2012 Vicente J.Botet Escriba.
 # Distributed under the Boost Software License, Version 1.0. (See
 # accompanying file LICENSE_1_0.txt or copy at
 # http://www.boost.org/LICENSE_1_0.txt)
@@ -46,6 +47,31 @@ project boost/thread
       <toolset>gcc:<cxxflags>-Wno-long-long
       <define>BOOST_SYSTEM_NO_DEPRECATED
       <library>/boost/system//boost_system
+       #-pedantic -ansi -std=gnu++0x -Wextra -fpermissive
+        <warnings>all
+        <toolset>gcc:<cxxflags>-Wextra
+        <toolset>gcc:<cxxflags>-pedantic
+        <toolset>gcc:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wextra
+        <toolset>darwin:<cxxflags>-pedantic
+        #<toolset>darwin:<cxxflags>-ansi
+        #<toolset>darwin:<cxxflags>-fpermissive
+        <toolset>darwin:<cxxflags>-Wno-long-long
+        #<toolset>pathscale:<cxxflags>-Wextra
+        <toolset>pathscale:<cxxflags>-Wno-long-long
+        <toolset>pathscale:<cxxflags>-pedantic
+        <toolset>clang:<cxxflags>-Wextra
+        <toolset>clang:<cxxflags>-pedantic
+        #<toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-fpermissive
+        <toolset>clang:<cxxflags>-Wno-long-long
+        <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+
 
     # : default-build <threading>multi
     : usage-requirements  # pass these requirement to dependents (i.e. users)
