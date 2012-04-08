@@ -9,7 +9,7 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/platform.hpp>
+#include <boost/thread/detail/config.hpp>
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 #if defined(BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN)
 #include <boost/thread/pthread/shared_mutex.hpp>
