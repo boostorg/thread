@@ -19,7 +19,7 @@
 import testing ;
 
 project
-    : requirements 
+    : requirements
                    <threading>multi
     ;
 
@@ -369,22 +369,22 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run ../example/tss.cpp ]
           [ thread-run ../example/xtime.cpp ]
           [ thread-run ../example/shared_monitor.cpp ]
-          #[ thread-run ../example/shared_mutex.cpp ]
+          [ thread-run ../example/shared_mutex.cpp ]
           #[ thread-run ../example/v2_shared_monitor.cpp ]
           #[ thread-run ../example/v2_shared_mutex.cpp ]
     ;
 
     #explicit shared_upwards ;
-    #test-suite shared_upwards
-    #:
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_try_pass.cpp : unique_lock__cons__move_ctor_shared_lock_try_p ]
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_for_pass.cpp : unique_lock__cons__move_ctor_shared_lock_for_p ]
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_until_pass.cpp : unique_lock__cons__move_ctor_shared_lock_until_p ]
-    #
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_try_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_try_p ]
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_for_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_for_p ]
-    #      [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_until_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_until_p ]
-    #;
+    test-suite shared_upwards
+    :
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_try_pass.cpp : unique_lock__cons__move_ctor_shared_lock_try_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_for_pass.cpp : unique_lock__cons__move_ctor_shared_lock_for_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_until_pass.cpp : unique_lock__cons__move_ctor_shared_lock_until_p ]
+
+          [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_try_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_try_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_for_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_for_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_until_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_until_p ]
+    ;
 
 
     #explicit shared_lock_guard ;
@@ -404,6 +404,13 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
+    ;
+
+    explicit tt ;
+    test-suite tt
+    :
+          #[ thread-test test_thread.cpp ]
+          [ thread-run2 test_ml.cpp : test_ml ]
     ;
 
 }
