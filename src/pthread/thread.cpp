@@ -483,6 +483,10 @@ namespace boost
 
     thread::id thread::get_id() const BOOST_NOEXCEPT
     {
+    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        //return local_thread_info->thread_handle;
+        return const_cast<thread*>(this)->native_handle();
+    #else
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
@@ -490,8 +494,9 @@ namespace boost
         }
         else
         {
-            return id();
+                return id();
         }
+    #endif
     }
 
     void thread::interrupt()
@@ -543,8 +548,12 @@ namespace boost
     {
         thread::id get_id() BOOST_NOEXCEPT
         {
+        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+             return pthread_self();
+        #else
             boost::detail::thread_data_base* const thread_info=get_or_make_current_thread_data();
             return thread::id(thread_info?thread_info->shared_from_this():detail::thread_data_ptr());
+        #endif
         }
 
         void interruption_point()
