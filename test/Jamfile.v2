@@ -1,5 +1,6 @@
 #  (C) Copyright William E. Kempf 2001.
 #  (C) Copyright 2007 Anthony Williams.
+#  (C) Copyright 2011-2012 Vicente J.Botet Escriba.
 #  Distributed under the Boost Software License, Version 1.0. (See accompanying
 #  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 #
@@ -21,6 +22,25 @@ import testing ;
 project
     : requirements
                    <threading>multi
+        <warnings>all
+        <toolset>gcc:<cxxflags>-Wextra
+        <toolset>gcc:<cxxflags>-pedantic
+        <toolset>gcc:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wextra
+        <toolset>darwin:<cxxflags>-pedantic
+        <toolset>darwin:<cxxflags>-Wno-long-long
+        #<toolset>pathscale:<cxxflags>-Wextra
+        <toolset>pathscale:<cxxflags>-Wno-long-long
+        <toolset>pathscale:<cxxflags>-pedantic
+        <toolset>clang:<cxxflags>-Wextra
+        <toolset>clang:<cxxflags>-pedantic
+        <toolset>clang:<cxxflags>-Wno-long-long
+        <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
     ;
 
 rule thread-run ( sources )
@@ -184,6 +204,17 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2 ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
+
+          [ thread-run2 ./sync/futures/packaged_task/alloc_ctor_pass.cpp : packaged_task__alloc_ctor_p ]
+          [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_assign_fail.cpp : : packaged_task__copy_assign_f ]
+          [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_ctor_fail.cpp : : packaged_task__copy_ctor_f ]
+          [ thread-run2 ./sync/futures/packaged_task/default_ctor_pass.cpp : packaged_task__default_ctor_p ]
+          #[ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
+          [ thread-run2 ./sync/futures/packaged_task/get_future_pass.cpp : packaged_task__get_future_p ]
+          [ thread-run2 ./sync/futures/packaged_task/move_ctor_pass.cpp : packaged_task__move_ctor_p ]
+          [ thread-run2 ./sync/futures/packaged_task/move_assign_pass.cpp : packaged_task__move_asign_p ]
+          [ thread-run2 ./sync/futures/packaged_task/use_allocator_pass.cpp : packaged_task__use_allocator_p ]
+          [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : futures__types_p ]
 
     ;
 
@@ -358,9 +389,9 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     test-suite examples
     :
           [ thread-run ../example/monitor.cpp ]
-          #[ thread-run ../example/starvephil.cpp ]
-          #[ thread-run ../example/tennis.cpp ]
-          #[ thread-run ../example/condition.cpp ]
+          [ compile ../example/starvephil.cpp ]
+          #[ compile ../example/tennis.cpp ]
+          [ compile ../example/condition.cpp ]
           [ thread-run ../example/mutex.cpp ]
           [ thread-run ../example/once.cpp ]
           [ thread-run ../example/recursive_mutex.cpp ]
@@ -404,13 +435,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
-    ;
-
-    explicit tt ;
-    test-suite tt
-    :
-          #[ thread-test test_thread.cpp ]
-          [ thread-run2 test_ml.cpp : test_ml ]
     ;
 
 }
