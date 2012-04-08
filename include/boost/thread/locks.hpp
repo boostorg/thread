@@ -1584,10 +1584,9 @@ namespace boost
 #endif
 #endif
 
-#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONSS
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
-
         upgrade_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
         : m(0),is_locked(false)
         {
