@@ -237,7 +237,7 @@ void test_timed_lock_times_out_but_read_lock_succeeds_if_read_lock_held()
     {
         rw_mutex.unlock();
     }
-    
+
     boost::posix_time::milliseconds const wait_duration(500);
     timed_lock_succeeded=rw_mutex.timed_lock_shared(wait_duration);
     BOOST_CHECK(timed_lock_succeeded);
@@ -265,4 +265,17 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_timed_lock_times_out_but_read_lock_succeeds_if_read_lock_held));
 
     return test;
+}
+
+void remove_unused_warning()
+{
+
+  //../../../boost/test/results_collector.hpp:40:13: warning: unused function 'first_failed_assertion' [-Wunused-function]
+  //(void)first_failed_assertion;
+
+  //../../../boost/test/tools/floating_point_comparison.hpp:304:25: warning: unused variable 'check_is_close' [-Wunused-variable]
+  //../../../boost/test/tools/floating_point_comparison.hpp:326:25: warning: unused variable 'check_is_small' [-Wunused-variable]
+  (void)boost::test_tools::check_is_close;
+  (void)boost::test_tools::check_is_small;
+
 }

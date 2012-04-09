@@ -16,7 +16,8 @@ int main()
                  const time_t wait_time = ::time(0)+1;
 
                  boost::mutex::scoped_lock lk(mtx);
-                 const bool res = cv.timed_wait(lk, boost::posix_time::from_time_t(wait_time));
+                 //const bool res =
+                     (void)cv.timed_wait(lk, boost::posix_time::from_time_t(wait_time));
                  const time_t end_time = ::time(0);
                  std::cerr << "end_time=" <<  end_time << " \n";
                  std::cerr << "wait_time=" << wait_time << " \n";

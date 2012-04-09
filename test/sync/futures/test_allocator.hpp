@@ -68,7 +68,7 @@ public:
             ++count;
             return (pointer)std::malloc(n * sizeof(T));
         }
-    void deallocate(pointer p, size_type n)
+    void deallocate(pointer p, size_type)
         {--count; std::free(p);}
     size_type max_size() const throw()
         {return UINT_MAX / sizeof(T);}
@@ -141,7 +141,7 @@ public:
         : data_(a.data_) {}
     T* allocate(std::size_t n)
         {return (T*)std::malloc(n * sizeof(T));}
-    void deallocate(T* p, std::size_t n)
+    void deallocate(T* p, std::size_t)
         {std::free(p);}
 
     other_allocator select_on_container_copy_construction() const

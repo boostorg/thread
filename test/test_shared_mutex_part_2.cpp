@@ -21,9 +21,9 @@ class simple_upgrade_thread
     boost::mutex& finish_mutex;
     boost::mutex& unblocked_mutex;
     unsigned& unblocked_count;
-        
+
     void operator=(simple_upgrade_thread&);
-        
+
 public:
     simple_upgrade_thread(boost::shared_mutex& rwm_,
                           boost::mutex& finish_mutex_,
@@ -32,16 +32,16 @@ public:
         rwm(rwm_),finish_mutex(finish_mutex_),
         unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
     {}
-        
+
     void operator()()
     {
         boost::upgrade_lock<boost::shared_mutex> lk(rwm);
-            
+
         {
             boost::mutex::scoped_lock ulk(unblocked_mutex);
             ++unblocked_count;
         }
-            
+
         boost::mutex::scoped_lock flk(finish_mutex);
     }
 };
@@ -50,7 +50,7 @@ public:
 void test_only_one_upgrade_lock_permitted()
 {
     unsigned const number_of_threads=10;
-    
+
     boost::thread_group pool;
 
     boost::shared_mutex rw_mutex;
@@ -61,7 +61,7 @@ void test_only_one_upgrade_lock_permitted()
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
     boost::mutex::scoped_lock finish_lock(finish_mutex);
-    
+
     try
     {
         for(unsigned i=0;i<number_of_threads;++i)
@@ -296,4 +296,17 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_if_other_thread_has_shared_lock_try_lock_shared_returns_true));
 
     return test;
+}
+
+void remove_unused_warning()
+{
+
+  //../../../boost/test/results_collector.hpp:40:13: warning: unused function 'first_failed_assertion' [-Wunused-function]
+  //(void)first_failed_assertion;
+
+  //../../../boost/test/tools/floating_point_comparison.hpp:304:25: warning: unused variable 'check_is_close' [-Wunused-variable]
+  //../../../boost/test/tools/floating_point_comparison.hpp:326:25: warning: unused variable 'check_is_small' [-Wunused-variable]
+  (void)boost::test_tools::check_is_close;
+  (void)boost::test_tools::check_is_small;
+
 }

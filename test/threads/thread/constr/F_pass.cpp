@@ -25,7 +25,11 @@
 
 unsigned throw_one = 0xFFFF;
 
+#if defined _GLIBCXX_THROW
+void* operator new(std::size_t s) _GLIBCXX_THROW (std::bad_alloc)
+#else
 void* operator new(std::size_t s) throw (std::bad_alloc)
+#endif
 {
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
   if (throw_one == 0) throw std::bad_alloc();
