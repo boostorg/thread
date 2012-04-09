@@ -503,7 +503,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
 
-    explicit tt ;
+    #explicit tt ;
     test-suite tt
     :
           [ thread-run test_ml.cpp  ]

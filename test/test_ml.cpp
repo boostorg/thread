@@ -1,3 +1,6 @@
+#include <boost/config.hpp>
+#ifndef BOOST_NO_RVALUE_REFERENCES
+
 #include <boost/detail/lightweight_test.hpp>
 #include "boost/thread/future.hpp"
 #include "boost/utility/result_of.hpp"
@@ -35,7 +38,7 @@ async (F&& f)
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
  typedef typename boost::result_of< F() >::type RetType;
  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
- async_func_pt<RetType>* p= new  async_func_pt<RetType> (boost::packaged_task<RetType>(f));
+ async_func_pt<RetType>* p= new  async_func_pt<RetType> (boost::packaged_task<RetType>(boost::forward<F>(f)));
  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
  boost::unique_future<RetType> future_result= p->get_future();
  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
@@ -92,7 +95,13 @@ int main()
 
 }
 
+#else
+int main()
+{
+  return 0;
+}
 
+#endif
 /*
  *
  "/Users/viboes/clang/llvmCore-3.0-rc1.install/bin/clang++"
