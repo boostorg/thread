@@ -12,36 +12,46 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/locks.hpp>
+// <boost/thread/future.hpp>
 
-// template <class Mutex>
-//   void swap(unique_lock<Mutex>& x, unique_lock<Mutex>& y);
+// template <class R>
+//   void
+//   swap(packaged_task<R>& x, packaged_task<R>& y);
 
-#include <boost/thread/locks.hpp>
+#include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-struct mutex
+class A
 {
-  void lock()
-  {
-  }
-  void unlock()
-  {
-  }
-};
+    long data_;
 
-mutex m;
+public:
+    explicit A(long i) : data_(i) {}
+
+    long operator()() const {return data_;}
+    long operator()(long i, long j) const {return data_ + i + j;}
+};
 
 int main()
 {
-  boost::unique_lock<mutex> lk1(m);
-  boost::unique_lock<mutex> lk2;
-  swap(lk1, lk2);
-  BOOST_TEST(lk1.mutex() == 0);
-  BOOST_TEST(lk1.owns_lock() == false);
-  BOOST_TEST(lk2.mutex() == &m);
-  BOOST_TEST(lk2.owns_lock() == true);
+  {
+      boost::packaged_task<double> p0(A(5));
+      boost::packaged_task<double> p;
+      p.swap(p0);
+      BOOST_TEST(!p0.valid());
+      BOOST_TEST(p.valid());
+      boost::future<double> f = p.get_future();
+      //p(3, 'a');
+      p();
+      BOOST_TEST(f.get() == 5.0);
+  }
+  {
+      boost::packaged_task<double> p0;
+      boost::packaged_task<double> p;
+      p.swap(p0);
+      BOOST_TEST(!p0.valid());
+      BOOST_TEST(!p.valid());
+  }
 
-  return boost::report_errors();
 }
 

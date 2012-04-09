@@ -1662,6 +1662,10 @@ namespace boost
                 started(false)
             {}
 
+            void reset()
+            {
+              started=false;
+            }
             void run()
             {
                 {
@@ -1705,9 +1709,6 @@ namespace boost
             task_object(F&& f_):
               f(boost::forward<F>(f_))
             {}
-//            task_object(task_object&& rhs):
-//                f(boost::move(rhs.f_))
-//            {}
 #else
 //            task_object(R(*f_)()):
 //                f(f_)
@@ -1759,9 +1760,6 @@ namespace boost
             task_object(F&& f_):
               f(boost::forward<F>(f_))
             {}
-//            task_object(task_object&& rhs):
-//                f(boost::forward<F>(rhs.f_))
-//            {}
 #else
 //            task_object(void(*f_)()):
 //                f(f_)
@@ -2000,13 +1998,13 @@ namespace boost
 #endif
 #endif
 
-//        void reset()
-//        {
-//            if (!valid())
-//                throw future_error(system::make_error_code(future_errc::no_state));
-//            task = new detail::task_object<R,F>(task.get());
-//            future_obtained=false;
-//        }
+        void reset()
+        {
+            if (!valid())
+                throw future_error(system::make_error_code(future_errc::no_state));
+            task->reset();
+            future_obtained=false;
+        }
 
         void swap(packaged_task& other) BOOST_NOEXCEPT
         {

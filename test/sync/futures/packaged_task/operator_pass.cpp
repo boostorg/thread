@@ -18,106 +18,107 @@
 // void operator()();
 
 
-
 #define BOOST_THREAD_VERSION 2
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 class A
 {
-    long data_;
+  long data_;
 
 public:
-    explicit A(long i) : data_(i) {}
+  explicit A(long i) :
+    data_(i)
+  {
+  }
 
-    long operator()() const
-    {
-        return data_;
-    }
-    long operator()(long i, long j) const
-    {
-        if (j == 'z')
-            throw A(6);
-        return data_ + i + j;
-    }
+  long operator()() const
+  {
+    return data_;
+  }
+  long operator()(long i, long j) const
+  {
+    if (j == 'z') throw A(6);
+    return data_ + i + j;
+  }
 };
 
 void func0(boost::packaged_task<double> p)
 {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-    //p(3, 'a');
-    p();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+  //p(3, 'a');
+  p();
 }
 
 void func1(boost::packaged_task<double(int, char)> p)
 {
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
-    //p(3, 'z');
-    p();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+  //p(3, 'z');
+  p();
 }
 
 void func2(boost::packaged_task<double(int, char)> p)
 {
-    //p(3, 'a');
+  //p(3, 'a');
+  p();
+  try
+  {
+    //p(3, 'c');
     p();
-    try
-    {
-      //p(3, 'c');
-      p();
-    }
-    catch (const boost::future_error& e)
-    {
-        BOOST_TEST(e.code() == make_error_code(boost::future_errc::promise_already_satisfied));
-    }
+  }
+  catch (const boost::future_error& e)
+  {
+    BOOST_TEST(e.code() == make_error_code(boost::future_errc::promise_already_satisfied));
+  }
 }
 
 void func3(boost::packaged_task<double(int, char)> p)
 {
-    try
-    {
-      //p(3, 'a');
-      p();
-    }
-    catch (const boost::future_error& e)
-    {
-        BOOST_TEST(e.code() == make_error_code(boost::future_errc::no_state));
-    }
+  try
+  {
+    //p(3, 'a');
+    p();
+  }
+  catch (const boost::future_error& e)
+  {
+    BOOST_TEST(e.code() == make_error_code(boost::future_errc::no_state));
+  }
 }
-
 
 int main()
 {
   {
-      boost::packaged_task<doubl> p(A(5));
-      boost::future<double> f = p.get_future();
-      boost::thread(func0, boost::move(p)).detach();
-      BOOST_TEST(f.get() == 105.0);
+    boost::packaged_task<double> p(A(5));
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::thread(func0, boost::move(p)).detach();
+    BOOST_TEST(f.get() == 5.0);
   }
   {
-      boost::packaged_task<double> p(A(5));
-      boost::future<double> f = p.get_future();
-      boost::thread(func1, boost::move(p)).detach();
-      try
-      {
-          f.get();
-          BOOST_TEST(false);
-      }
-      catch (const A& e)
-      {
-          BOOST_TEST(e(3, 'a') == 106);
-      }
+    boost::packaged_task<double> p(A(5));
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::thread(func1, boost::move(p)).detach();
+    try
+    {
+      f.get();
+      BOOST_TEST(false);
+    }
+    catch (const A& e)
+    {
+      //BOOST_TEST(e(3, 'a') == 106);
+      BOOST_TEST(e() == 5);
+    }
   }
   {
-      boost::packaged_task<double> p(A(5));
-      boost::future<double> f = p.get_future();
-      boost::thread t(func2, boost::move(p));
-      BOOST_TEST(f.get() == 105.0);
-      t.join();
+    boost::packaged_task<double> p(A(5));
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::thread t(func2, boost::move(p));
+    BOOST_TEST(f.get() == 5.0);
+    t.join();
   }
   {
-      boost::packaged_task<double> p;
-      boost::thread t(func3, boost::move(p));
-      t.join();
+    boost::packaged_task<double> p;
+    boost::thread t(func3, boost::move(p));
+    t.join();
   }
 
   return boost::report_errors();

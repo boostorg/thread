@@ -13,12 +13,12 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // <boost/thread/future.hpp>
-
 // class packaged_task<R>
 
-// void swap(packaged_task& other);
+// void operator()();
 
 
+#define BOOST_THREAD_VERSION 2
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -38,6 +38,7 @@ public:
   }
   long operator()(long i, long j) const
   {
+    if (j == 'z') throw A(6);
     return data_ + i + j;
   }
 };
@@ -45,22 +46,28 @@ public:
 int main()
 {
   {
-    boost::packaged_task<double> p0(A(5));
-    boost::packaged_task<double> p;
-    p.swap(p0);
-    BOOST_TEST(!p0.valid());
-    BOOST_TEST(p.valid());
+    boost::packaged_task<double> p(A(5));
     boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);
+    p.reset();
+    //p(4, 'a');
+    p();
+    f = p.get_future();
+    BOOST_TEST(f.get() == 5.0);
   }
   {
-    boost::packaged_task<double(int, char)> p0;
-    boost::packaged_task<double(int, char)> p;
-    p.swap(p0);
-    BOOST_TEST(!p0.valid());
-    BOOST_TEST(!p.valid());
+    boost::packaged_task<double> p;
+    try
+    {
+      p.reset();
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::no_state));
+    }
   }
 
   return boost::report_errors();

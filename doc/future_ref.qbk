@@ -947,9 +947,9 @@ or __shared_future__ associated with this result, and the result is not ['ready]
         // void operator()(ArgTypes... );  // NOT YET IMPLEMENTED
         // void make_ready_at_thread_exit(ArgTypes...); // NOT YET IMPLEMENTED
 
-        // void reset();  // NOT YET IMPLEMENTED
+        void reset();
         template<typename F>
-        void set_wait_callback(F f);        
+        void set_wait_callback(F f);  // EXTENSION   
     };
 
 [section:task_constructor Task Constructor]
@@ -1079,7 +1079,22 @@ __packaged_task__. __task_already_started__ if the task has already been invoked
 
 [endsect]
 
-[section:set_wait_callback Member Function `set_wait_callback()`]
+[section:reset Member Function `reset()`]
+
+        void reset();
+
+[variablelist
+
+[[Effects:] [Reset the state of the packaged_task so that it can be called again.]]
+
+[[Throws:] [__task_moved__ if ownership of the task associated with `*this` has been moved to another instance of
+__packaged_task__.]]
+
+]
+
+[endsect]
+
+[section:set_wait_callback Member Function `set_wait_callback()` EXTENSION]
 
     template<typename F>
     void set_wait_callback(F f);
