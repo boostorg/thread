@@ -102,7 +102,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 }
 
 {
-    test-suite threads
+    test-suite t_threads
     :
           [ thread-test test_thread.cpp ]
           [ thread-test test_thread_id.cpp ]
@@ -114,15 +114,27 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-test test_thread_mf.cpp ]
           [ thread-test test_thread_exit.cpp ]
           [ thread-test test_move_function.cpp ]
+          [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
+          [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
+          [ thread-test test_tss.cpp ]
+          [ thread-test test_xtime.cpp ]
+    ;
+
+    test-suite t_sync
+    :
           [ thread-test test_mutex.cpp ]
           [ thread-test test_condition_notify_one.cpp ]
           [ thread-test test_condition_timed_wait_times_out.cpp ]
           [ thread-test test_condition_notify_all.cpp ]
           [ thread-test test_condition.cpp ]
-          [ thread-test test_tss.cpp ]
           [ thread-test test_once.cpp ]
-          [ thread-test test_xtime.cpp ]
           [ thread-test test_barrier.cpp ]
+          [ thread-test test_lock_concept.cpp ]
+          [ thread-test test_generic_locks.cpp ]
+    ;
+
+    test-suite t_shared
+    :
           [ thread-test test_shared_mutex.cpp ]
           [ thread-test test_shared_mutex_part_2.cpp ]
           [ thread-test test_shared_mutex_timed_locks.cpp ]
@@ -131,11 +143,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           #[ thread-test test_v2_shared_mutex.cpp ]
           #[ thread-test test_v2_shared_mutex_part_2.cpp ]
           #[ thread-test test_v2_shared_mutex_timed_locks.cpp ]
-          [ thread-test test_lock_concept.cpp ]
-          [ thread-test test_generic_locks.cpp ]
+    ;
+
+    test-suite t_futures
+    :
           [ thread-test test_futures.cpp ]
-          [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
-          [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
     ;
 
 
@@ -191,11 +203,15 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/conditions/cv_status/cv_status_pass.cpp : cv_status__cv_status_p ]
     ;
 
-    #explicit futures ;
-    test-suite futures
+    #explicit async ;
+    test-suite async
     :
     #      [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]
+    ;
 
+    #explicit promise ;
+    test-suite promise
+    :
           [ thread-compile-fail-V2 ./sync/futures/promise/copy_assign_fail.cpp : : promise__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/promise/copy_ctor_fail.cpp : : promise__copy_ctor_f ]
           [ thread-run2 ./sync/futures/promise/alloc_ctor_pass.cpp : promise__alloc_ctor_p ]
@@ -205,7 +221,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/promise/move_ctor_pass.cpp : promise__move_ctor_p ]
           [ thread-run2 ./sync/futures/promise/move_assign_pass.cpp : promise__move_asign_p ]
           [ thread-run2 ./sync/futures/promise/use_allocator_pass.cpp : promise__use_allocator_p ]
+    ;
 
+    #explicit future ;
+    test-suite future
+    :
           [ thread-compile-fail-V2 ./sync/futures/future/copy_assign_fail.cpp : : future__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/future/copy_ctor_fail.cpp : : future__copy_ctor_f ]
           [ thread-run2 ./sync/futures/future/default_pass.cpp : future__default_p ]
@@ -214,7 +234,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2 ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
+    ;
 
+    #explicit packaged_task ;
+    test-suite packaged_task
+    :
           [ thread-run2 ./sync/futures/packaged_task/alloc_ctor_pass.cpp : packaged_task__alloc_ctor_p ]
           [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_assign_fail.cpp : : packaged_task__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_ctor_fail.cpp : : packaged_task__copy_ctor_f ]
@@ -227,19 +251,24 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/packaged_task/reset_pass.cpp : packaged_task__reset_p ]
           [ thread-run2 ./sync/futures/packaged_task/use_allocator_pass.cpp : packaged_task__use_allocator_p ]
           [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : packaged_task__types_p ]
-
+          [ thread-run2 ./sync/futures/packaged_task/member_swap_pass.cpp : packaged_task__member_swap_p ]
+          [ thread-run2 ./sync/futures/packaged_task/non_member_swap_pass.cpp : packaged_task__non_member_swap_p ]
     ;
 
 
-    #explicit mutual_exclusion ;
-    test-suite mutual_exclusion
+    #explicit lock_guard ;
+    test-suite lock_guard
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
+    ;
 
+    #explicit unique_lock ;
+    test-suite unique_lock
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : unique_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : unique_lock__cons__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/adopt_lock_pass.cpp : unique_lock__cons__adopt_lock_p ]
@@ -248,7 +277,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/duration_pass.cpp : unique_lock__cons__duration_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_assign_pass.cpp : unique_lock__cons__move_assign_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_pass.cpp : unique_lock__cons__move_ctor_p ]
-
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_try_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_try_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_for_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_for_p ]
@@ -269,7 +297,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/obs/op_int_fail.cpp : : unique_lock__op_int_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/owns_lock_pass.cpp : unique_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : unique_lock__types_p ]
+    ;
 
+    #explicit shared_lock ;
+    test-suite shared_lock
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_assign_fail.cpp : : shared_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_ctor_fail.cpp : : shared_lock__cons__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/cons/adopt_lock_pass.cpp : shared_lock__cons__adopt_lock_p ]
@@ -288,8 +320,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/try_lock_pass.cpp : shared_lock__try_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/try_lock_until_pass.cpp : shared_lock__try_lock_until_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/locking/unlock_pass.cpp : shared_lock__unlock_p ]
-
-
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/member_swap_pass.cpp : shared_lock__member_swap_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/non_member_swap_pass.cpp : shared_lock__non_member_swap_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/mod/release_pass.cpp : shared_lock__release_p ]
@@ -297,7 +327,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/op_bool_pass.cpp : shared_lock__op_bool_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/owns_lock_pass.cpp : shared_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/types_pass.cpp : shared_lock__types_p ]
+    ;
 
+    #explicit upgrade_lock ;
+    test-suite upgrade_lock
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_assign_fail.cpp : : upgrade_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_ctor_fail.cpp : : upgrade_lock__cons__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/adopt_lock_pass.cpp : upgrade_lock__cons__adopt_lock_p ]
@@ -322,21 +356,33 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/obs/op_bool_pass.cpp : upgrade_lock__op_bool_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/obs/owns_lock_pass.cpp : upgrade_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/types_pass.cpp : upgrade_lock__types_p ]
+    ;
 
+    #explicit mutex ;
+    test-suite mutex
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutex__copy_f ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/default_pass.cpp : mutex__default_p ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/lock_pass.cpp : mutex__lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutex__native_handle_p ]
           [ thread-run2 ./sync/mutual_exclusion/mutex/try_lock_pass.cpp : mutex__try_lock_p ]
+    ;
 
+    #explicit recursive_mutex ;
+    test-suite recursive_mutex
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/assign_fail.cpp : : recursive_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/copy_fail.cpp : : recursive_mutex__copy_f ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/default_pass.cpp : recursive_mutex__default_p ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/lock_pass.cpp : recursive_mutex__lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/native_handle_pass.cpp : recursive_mutex__native_handle_p ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_mutex/try_lock_pass.cpp : recursive_mutex__try_lock_p ]
+    ;
 
+    #explicit recursive_timed_mutex ;
+    test-suite recursive_timed_mutex
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/assign_fail.cpp : : recursive_timed_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : recursive_timed_mutex__copy_f ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/default_pass.cpp : recursive_timed_mutex__default_p ]
@@ -345,7 +391,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_for_pass.cpp : recursive_timed_mutex__try_lock_for_p ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_pass.cpp : recursive_timed_mutex__try_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_until_pass.cpp : recursive_timed_mutex__try_lock_until_p ]
+    ;
 
+    #explicit timed_mutex ;
+    test-suite timed_mutex
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : timed_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : timed_mutex__copy_f ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/default_pass.cpp : timed_mutex__default_p ]
@@ -354,7 +404,11 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_for_pass.cpp : timed_mutex__try_lock_for_p ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_pass.cpp : timed_mutex__try_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : timed_mutex__try_lock_until_p ]
+    ;
 
+    #explicit shared_mutex ;
+    test-suite shared_mutex
+    :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/assign_fail.cpp : : shared_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/copy_fail.cpp : : shared_mutex__copy_f ]
           [ thread-run2 ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
@@ -448,5 +502,6 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
+
 
 }
