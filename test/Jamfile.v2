@@ -223,6 +223,8 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/packaged_task/get_future_pass.cpp : packaged_task__get_future_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_ctor_pass.cpp : packaged_task__move_ctor_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_assign_pass.cpp : packaged_task__move_asign_p ]
+          #[ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p ]
+          [ thread-run2 ./sync/futures/packaged_task/reset_pass.cpp : packaged_task__reset_p ]
           [ thread-run2 ./sync/futures/packaged_task/use_allocator_pass.cpp : packaged_task__use_allocator_p ]
           [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : packaged_task__types_p ]
 

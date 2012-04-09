@@ -33,7 +33,7 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6672 #6672] upgrade_lock:: missing constructors from time related types.
 * [@http://svn.boost.org/trac/boost/ticket/6675 #6675] upgrade_lock:: missing non-member swap.
 * Added missing packaged_task::result_type and packaged_task:: constructor with allocator.
-
+* Added packaged_task::reset()
 
 Fixed Bugs:
 
