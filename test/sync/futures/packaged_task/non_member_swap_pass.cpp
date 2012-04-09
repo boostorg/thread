@@ -18,6 +18,8 @@
 //   void
 //   swap(packaged_task<R>& x, packaged_task<R>& y);
 
+#define BOOST_THREAD_VERSION 2
+
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 

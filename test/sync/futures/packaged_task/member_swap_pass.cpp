@@ -18,6 +18,7 @@
 
 // void swap(packaged_task& other);
 
+#define BOOST_THREAD_VERSION 2
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -56,8 +57,8 @@ int main()
     BOOST_TEST(f.get() == 5.0);
   }
   {
-    boost::packaged_task<double(int, char)> p0;
-    boost::packaged_task<double(int, char)> p;
+    boost::packaged_task<double> p0;
+    boost::packaged_task<double> p;
     p.swap(p0);
     BOOST_TEST(!p0.valid());
     BOOST_TEST(!p.valid());
