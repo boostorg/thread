@@ -44,7 +44,8 @@ int main()
       }
       try
       {
-          T i = f.get();
+          //T i =
+              (void)f.get();
           BOOST_TEST(false);
       }
       catch (const boost::future_error& e)
@@ -72,7 +73,8 @@ int main()
       }
       try
       {
-          T i = f.get();
+          //T i =
+              (void)f.get();
           BOOST_TEST(false);
       }
       catch (const boost::future_error& e)

@@ -1,6 +1,6 @@
 // Copyright (C) 2007-8 Anthony Williams
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
@@ -31,7 +31,7 @@ void do_test_timed_wait_times_out()
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
-    while(cond.timed_wait(lock,timeout));
+    while(cond.timed_wait(lock,timeout)) {}
 
     boost::system_time const end=boost::get_system_time();
     BOOST_CHECK((delay-timeout_resolution)<=(end-start));
@@ -79,7 +79,7 @@ void do_test_timed_wait_relative_times_out()
     boost::mutex::scoped_lock lock(m);
     boost::system_time const start=boost::get_system_time();
 
-    while(cond.timed_wait(lock,delay));
+    while(cond.timed_wait(lock,delay)) {}
 
     boost::system_time const end=boost::get_system_time();
     BOOST_CHECK((delay-timeout_resolution)<=(end-start));
@@ -95,7 +95,7 @@ void do_test_cv_any_timed_wait_times_out()
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
-    while(cond.timed_wait(lock,timeout));
+    while(cond.timed_wait(lock,timeout)) {}
 
     boost::system_time const end=boost::get_system_time();
     BOOST_CHECK((delay-timeout_resolution)<=(end-start));
@@ -143,7 +143,7 @@ void do_test_cv_any_timed_wait_relative_times_out()
     boost::mutex::scoped_lock lock(m);
     boost::system_time const start=boost::get_system_time();
 
-    while(cond.timed_wait(lock,delay));
+    while(cond.timed_wait(lock,delay)) {}
 
     boost::system_time const end=boost::get_system_time();
     BOOST_CHECK((delay-timeout_resolution)<=(end-start));
@@ -170,4 +170,17 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
     test->add(BOOST_TEST_CASE(&test_timed_wait_times_out));
 
     return test;
+}
+
+void remove_unused_warning()
+{
+
+  //../../../boost/test/results_collector.hpp:40:13: warning: unused function 'first_failed_assertion' [-Wunused-function]
+  //(void)first_failed_assertion;
+
+  //../../../boost/test/tools/floating_point_comparison.hpp:304:25: warning: unused variable 'check_is_close' [-Wunused-variable]
+  //../../../boost/test/tools/floating_point_comparison.hpp:326:25: warning: unused variable 'check_is_small' [-Wunused-variable]
+  (void)boost::test_tools::check_is_close;
+  (void)boost::test_tools::check_is_small;
+
 }

@@ -13,7 +13,7 @@ public:
   boostThreadLocksTest()
     :myMutex()
      //, myLock(myMutex,boost::defer_lock_t())
-  {};
+  {}
 };
 
 int boostThreadLocksTest::firstFunction(boostThreadLocksTest *pBoostThreadLocksTest)
@@ -25,7 +25,7 @@ int boostThreadLocksTest::firstFunction(boostThreadLocksTest *pBoostThreadLocksT
   std::cout<<"Returning from "<<boost::this_thread::get_id()<<" "<<"firstFunction"<<std::endl;
   return(0);
 }
-int boostThreadLocksTest::secondFunction(boostThreadLocksTest *pBoostThreadLocksTest, boost::upgrade_lock<boost::shared_mutex>& upgr) {
+int boostThreadLocksTest::secondFunction(boostThreadLocksTest */*pBoostThreadLocksTest*/, boost::upgrade_lock<boost::shared_mutex>& upgr) {
   std::cout<<"Before Exclusive Locking "<<boost::this_thread::get_id()<<" "<<"secondFunction"<<std::endl;
   boost::upgrade_to_unique_lock<boost::shared_mutex> localUniqueLock(upgr);
   std::cout<<"After Exclusive Locking "<<boost::this_thread::get_id()<<" "<<"secondFunction"<<std::endl;

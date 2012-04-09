@@ -42,7 +42,7 @@ private:
     boost::thread m_Thread;
 };
 
-int main(int argc, char* argv[])
+int main()
 {
 //    std::cout << "main: startup" << std::endl;
 

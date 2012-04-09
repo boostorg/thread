@@ -57,7 +57,8 @@ void f()
   cv.notify_one();
   Clock::time_point t0 = Clock::now();
   int count=0;
-  bool r = cv.wait_for(lk, milliseconds(250), Pred(test2));
+  //bool r =
+      (void)cv.wait_for(lk, milliseconds(250), Pred(test2));
   count++;
   Clock::time_point t1 = Clock::now();
   if (runs == 0)

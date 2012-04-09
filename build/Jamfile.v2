@@ -71,6 +71,15 @@ project boost/thread
         <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+        <toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
+        <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
+        #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
+        #<toolset>clang-2.9:<cxxflags>-Wno-delete-non-virtual-dtor
+        #<toolset>clang-2.9:<cxxflags>-Wno-unused-function
+        <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor 
+        #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
+        #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
 
 
     # : default-build <threading>multi

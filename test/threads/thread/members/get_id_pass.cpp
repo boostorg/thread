@@ -61,7 +61,7 @@ int main()
 {
   {
     boost::thread t0( (G()));
-    boost::thread::id id0 = t0.get_id();
+    //boost::thread::id id0 = t0.get_id();
     boost::thread t1;
     boost::thread::id id1 = t1.get_id();
     BOOST_TEST(t0.get_id() != id1);
