@@ -1698,26 +1698,18 @@ namespace boost
         struct task_object:
             task_base<R>
         {
+        private:
+          task_object(task_object&);
+        public:
             F f;
-#ifndef BOOST_NO_RVALUE_REFERENCES
-            task_object(R(*f_)()):
-                f(f_)
-            {}
-//            task_object(const F &f_):
-//                f(f_)
-//            {}
-            task_object(F&& f_):
-              f(boost::forward<F>(f_))
-            {}
-#else
-//            task_object(R(*f_)()):
-//                f(f_)
-//            {}
             task_object(F const& f_):
                 f(f_)
             {}
-
-#if defined BOOST_THREAD_USES_MOVE
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+              f(boost::forward<F>(f_))
+            {}
+#elif defined BOOST_THREAD_USES_MOVE
             task_object(boost::rv<F>& f_):
                 f(boost::move(f_))
             {}
@@ -1726,8 +1718,6 @@ namespace boost
                 f(f_)
             {}
 #endif
-#endif
-
             void do_run()
             {
                 try
@@ -1749,25 +1739,18 @@ namespace boost
         struct task_object<void,F>:
             task_base<void>
         {
+        private:
+          task_object(task_object&);
+        public:
             F f;
-#ifndef BOOST_NO_RVALUE_REFERENCES
-            task_object(void(*f_)()):
-                f(f_)
-            {}
-//            task_object(const F& f_):
-//                f(f_)
-//            {}
-            task_object(F&& f_):
-              f(boost::forward<F>(f_))
-            {}
-#else
-//            task_object(void(*f_)()):
-//                f(f_)
-//            {}
             task_object(F const& f_):
                 f(f_)
             {}
-#if defined BOOST_THREAD_USES_MOVE
+#ifndef BOOST_NO_RVALUE_REFERENCES
+            task_object(F&& f_):
+              f(boost::forward<F>(f_))
+            {}
+#elif defined BOOST_THREAD_USES_MOVE
             task_object(boost::rv<F>& f_):
                 f(boost::forward<F>(f_))
             {}
@@ -1775,7 +1758,6 @@ namespace boost
             task_object(boost::detail::thread_move_t<F> f_):
                 f(f_)
             {}
-#endif
 #endif
 
             void do_run()
@@ -1797,7 +1779,6 @@ namespace boost
         };
 
     }
-
 
     template<typename R>
     class packaged_task
@@ -1823,15 +1804,6 @@ namespace boost
 
         // construction and destruction
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
-        explicit packaged_task(R(*f)()):
-            task(new detail::task_object<R,R(*)()>(f)),future_obtained(false)
-        {}
-        template <class F>
-        explicit packaged_task(F&& f):
-            task(new detail::task_object<R,F>(boost::forward<F>(f))),future_obtained(false)
-        {}
-#else
         explicit packaged_task(R(*f)()):
             task(new detail::task_object<R,R(*)()>(f)),future_obtained(false)
         {}
@@ -1839,6 +1811,12 @@ namespace boost
         explicit packaged_task(F const& f):
             task(new detail::task_object<R,F>(f)),future_obtained(false)
         {}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+        template <class F>
+        explicit packaged_task(F&& f):
+            task(new detail::task_object<R,F>(boost::forward<F>(f))),future_obtained(false)
+        {}
+#else
 #if defined BOOST_THREAD_USES_MOVE
         template <class F>
         explicit packaged_task(boost::rv<F>& f):
@@ -1853,6 +1831,17 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
+        template <class F, class Allocator>
+        packaged_task(boost::allocator_arg_t, Allocator a, const F& f)
+        {
+          typedef typename Allocator::template rebind<detail::task_object<R,F> >::other A2;
+          A2 a2(a);
+          typedef thread_detail::allocator_destructor<A2> D;
+
+          task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(f), D(a2, 1) );
+          std::cout << __FILE__ ":"<<__LINE__<<std::endl;
+          future_obtained = false;
+        }
 #ifndef BOOST_NO_RVALUE_REFERENCES
         template <class F, class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, F&& f)
@@ -1864,17 +1853,6 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(boost::forward<F>(f)), D(a2, 1) );
           future_obtained = false;
         }
-//        template <class F, class Allocator>
-//        packaged_task(boost::allocator_arg_t, Allocator a, const F& f)
-//        {
-//          typedef typename Allocator::template rebind<detail::task_object<R,F> >::other A2;
-//          A2 a2(a);
-//          typedef thread_detail::allocator_destructor<A2> D;
-//
-//          task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(f), D(a2, 1) );
-//          std::cout << __FILE__ ":"<<__LINE__<<std::endl;
-//          future_obtained = false;
-//        }
 #else
 #if defined BOOST_THREAD_USES_MOVE
         template <class F, class Allocator>
@@ -1887,16 +1865,6 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(boost::move(f)), D(a2, 1) );
           future_obtained = false;
         }
-        template <class F, class Allocator>
-        packaged_task(boost::allocator_arg_t, Allocator a, F const& f)
-        {
-          typedef typename Allocator::template rebind<detail::task_object<R,F> >::other A2;
-          A2 a2(a);
-          typedef thread_detail::allocator_destructor<A2> D;
-
-          task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(f), D(a2, 1) );
-          future_obtained = false;
-        }
 #else
         template <class F, class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, boost::detail::thread_move_t<F> f)
@@ -1906,16 +1874,6 @@ namespace boost
           typedef thread_detail::allocator_destructor<A2> D;
 
           task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(boost::forward<F>(f)), D(a2, 1) );
-          future_obtained = false;
-        }
-        template <class F, class Allocator>
-        packaged_task(boost::allocator_arg_t, Allocator a, F const& f)
-        {
-          typedef typename Allocator::template rebind<detail::task_object<R,F> >::other A2;
-          A2 a2(a);
-          typedef thread_detail::allocator_destructor<A2> D;
-
-          task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(f), D(a2, 1) );
           future_obtained = false;
         }
 #endif // BOOST_THREAD_USES_MOVE

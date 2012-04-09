@@ -128,7 +128,7 @@ int main()
     p();
     BOOST_TEST(f.get() == 5.0);
   }
-  BOOST_TEST(A::n_copies >= 0);
+  BOOST_TEST(A::n_copies > 0);
   BOOST_TEST(A::n_moves > 0);
   BOOST_TEST(test_alloc_base::count == 0);
 
