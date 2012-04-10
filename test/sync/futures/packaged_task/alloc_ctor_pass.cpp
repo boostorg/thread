@@ -27,6 +27,15 @@
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <libs/thread/test/sync/futures/test_allocator.hpp>
 
+double fct()
+{
+  return 5.0;
+}
+long lfct()
+{
+  return 5;
+}
+
 class A
 {
   long data_;
@@ -131,6 +140,42 @@ int main()
   BOOST_TEST(A::n_copies > 0);
   BOOST_TEST(A::n_moves > 0);
   BOOST_TEST(test_alloc_base::count == 0);
+  A::n_copies = 0;
+  A::n_copies = 0;
+  {
+    const A a(5);
+    boost::packaged_task<double> p(boost::allocator_arg,
+        test_allocator<A>(), a);
+    BOOST_TEST(test_alloc_base::count > 0);
+    BOOST_TEST(p.valid());
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    //p(3, 'a');
+    p();
+    BOOST_TEST(f.get() == 5.0);
+  }
+  BOOST_TEST(A::n_copies > 0);
+  BOOST_TEST(A::n_moves > 0);
+  BOOST_TEST(test_alloc_base::count == 0);
+  {
+    boost::packaged_task<double> p(boost::allocator_arg,
+        test_allocator<A>(), fct);
+    BOOST_TEST(test_alloc_base::count > 0);
+    BOOST_TEST(p.valid());
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    //p(3, 'a');
+    p();
+    BOOST_TEST(f.get() == 5.0);
+  }
+  {
+    boost::packaged_task<double> p(boost::allocator_arg,
+        test_allocator<A>(), &lfct);
+    BOOST_TEST(test_alloc_base::count > 0);
+    BOOST_TEST(p.valid());
+    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    //p(3, 'a');
+    p();
+    BOOST_TEST(f.get() == 5.0);
+  }
 
   return boost::report_errors();
 }

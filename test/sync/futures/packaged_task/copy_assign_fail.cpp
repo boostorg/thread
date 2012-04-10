@@ -37,22 +37,10 @@ public:
 int main()
 {
   {
-      boost::packaged_task<double(int, char)> p0(A(5));
-      boost::packaged_task<double(int, char)> p;
+      boost::packaged_task<double> p0(A(5));
+      boost::packaged_task<double> p;
       p = p0;
-//      BOOST_TEST(!p0.valid());
-//      BOOST_TEST(p.valid());
-//      boost::future<double> f = p.get_future();
-//      p(3, 'a');
-//      BOOST_TEST(f.get() == 105.0);
   }
-//  {
-//      boost::packaged_task<double(int, char)> p0;
-//      boost::packaged_task<double(int, char)> p;
-//      p = p0;
-//      BOOST_TEST(!p0.valid());
-//      BOOST_TEST(!p.valid());
-//  }
 
   return boost::report_errors();
 }
