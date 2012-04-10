@@ -21,7 +21,7 @@ import testing ;
 
 project
     : requirements
-        #<threading>multi
+        <threading>multi
 
         <warnings>all
         <toolset>gcc:<cxxflags>-Wextra
@@ -463,6 +463,8 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/thread/members/swap_pass.cpp : thread__swap_p ]
           [ thread-run2 ./threads/thread/non_members/swap_pass.cpp : swap_threads_p ]
           [ thread-run2 ./threads/thread/static/hardware_concurrency_pass.cpp : thread__hardware_concurrency_p ]
+          #[ thread-run2 ./threads/container/thread_vector_pass.cpp : thread_vector_p ]
+          #[ thread-run2 ./threads/container/thread_ptr_list_pass.cpp : thread_ptr_list_p ]
     ;
 
     explicit examples ;
