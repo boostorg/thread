@@ -32,8 +32,52 @@ public:
     static int n_copies;
 
     explicit A(long i) : data_(i) {}
-    A(A&& a) : data_(a.data_) {++n_moves; a.data_ = -1;}
-    A(const A& a) : data_(a.data_) {++n_copies;}
+#ifndef BOOST_NO_RVALUE_REFERENCES
+  A(A&& a) : data_(a.data_)
+  {
+    ++n_moves; a.data_ = -1;
+  }
+#else
+
+#if defined BOOST_THREAD_USES_MOVE
+  operator ::boost::rv<A>&()
+  {
+    return *static_cast< ::boost::rv<A>* >(this);
+  }
+  operator const ::boost::rv<A>&() const
+  {
+    return *static_cast<const ::boost::rv<A>* >(this);
+  }
+  ::boost::rv<A>& move()
+  {
+    return *static_cast< ::boost::rv<A>* >(this);
+  }
+  const ::boost::rv<A>& move() const
+  {
+    return *static_cast<const ::boost::rv<A>* >(this);
+  }
+
+  A(boost::rv<A>& a) : data_(a.data_)
+  {
+    ++n_moves; a.data_ = -1;
+  }
+#else
+  operator boost::detail::thread_move_t<A>()
+  {
+      return boost::detail::thread_move_t<A>(*this);
+  }
+  boost::detail::thread_move_t<A> move()
+  {
+      return boost::detail::thread_move_t<A>(*this);
+  }
+  A(boost::detail::thread_move_t<A> a) : data_(a.data_)
+  {
+    ++n_moves; a.data_ = -1;
+  }
+
+#endif
+#endif
+  A(const A& a) : data_(a.data_) {++n_copies;}
 
     long operator()() const {return data_;}
     long operator()(long i, long j) const {return data_ + i + j;}
@@ -46,12 +90,12 @@ int A::n_copies = 0;
 int main()
 {
   {
-      boost::packaged_task<double> p(A(5));
+      boost::packaged_task<double> p(BOOST_EXPLICIT_MOVE(A(5)));
       BOOST_TEST(p.valid());
       boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
       //p(3, 'a');
       p();
-      BOOST_TEST(f.get() == 105.0);
+      BOOST_TEST(f.get() == 5.0);
       BOOST_TEST(A::n_copies == 0);
       BOOST_TEST(A::n_moves > 0);
   }
@@ -64,7 +108,7 @@ int main()
       boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
       //p(3, 'a');
       p();
-      BOOST_TEST(f.get() == 105.0);
+      BOOST_TEST(f.get() == 5.0);
       BOOST_TEST(A::n_copies > 0);
       BOOST_TEST(A::n_moves > 0);
   }
