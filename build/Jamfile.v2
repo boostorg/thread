@@ -52,27 +52,35 @@ project boost/thread
         <toolset>gcc:<cxxflags>-Wextra
         <toolset>gcc:<cxxflags>-pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
+        #<toolset>gcc:<cxxflags>-ansi
+        #<toolset>gcc:<cxxflags>-fpermissive
+
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
-        #<toolset>darwin:<cxxflags>-ansi
-        #<toolset>darwin:<cxxflags>-fpermissive
+        <toolset>darwin:<cxxflags>-ansi
+        <toolset>darwin:<cxxflags>-fpermissive
         <toolset>darwin:<cxxflags>-Wno-long-long
+
         #<toolset>pathscale:<cxxflags>-Wextra
         <toolset>pathscale:<cxxflags>-Wno-long-long
         <toolset>pathscale:<cxxflags>-pedantic
+
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
-        #<toolset>clang:<cxxflags>-ansi
+        <toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long
+
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+
         <toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
         <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+
         #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
         #<toolset>clang-2.9:<cxxflags>-Wno-delete-non-virtual-dtor

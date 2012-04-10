@@ -21,28 +21,41 @@ import testing ;
 
 project
     : requirements
-                   <threading>multi
+        #<threading>multi
+
         <warnings>all
         <toolset>gcc:<cxxflags>-Wextra
         <toolset>gcc:<cxxflags>-pedantic
         <toolset>gcc:<cxxflags>-Wno-long-long
+        #<toolset>gcc:<cxxflags>-ansi
+        #<toolset>gcc:<cxxflags>-fpermissive
+
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
         <toolset>darwin:<cxxflags>-Wno-long-long
+        #<toolset>darwin:<cxxflags>-ansi
+        <toolset>darwin:<cxxflags>-fpermissive
+
         #<toolset>pathscale:<cxxflags>-Wextra
         <toolset>pathscale:<cxxflags>-Wno-long-long
         <toolset>pathscale:<cxxflags>-pedantic
+
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
         <toolset>clang:<cxxflags>-Wno-long-long
+        <toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-fpermissive
+
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.6.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+
         #<toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
-        <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        #<toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+
         #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
         #<toolset>clang-2.9:<cxxflags>-Wno-delete-non-virtual-dtor
@@ -180,7 +193,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 
 
     #explicit conditions ;
-    test-suite conditions
+    test-suite ts_conditions
     :
           [ thread-compile-fail-V2 ./sync/conditions/condition_variable/assign_fail.cpp : : condition_variable__assign_f ]
           [ thread-compile-fail-V2 ./sync/conditions/condition_variable/copy_fail.cpp : : condition_variable__copy_f ]
@@ -204,13 +217,13 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit async ;
-    test-suite async
+    test-suite ts_async
     :
     #      [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]
     ;
 
     #explicit promise ;
-    test-suite promise
+    test-suite ts_promise
     :
           [ thread-compile-fail-V2 ./sync/futures/promise/copy_assign_fail.cpp : : promise__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/promise/copy_ctor_fail.cpp : : promise__copy_ctor_f ]
@@ -224,7 +237,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit future ;
-    test-suite future
+    test-suite ts_future
     :
           [ thread-compile-fail-V2 ./sync/futures/future/copy_assign_fail.cpp : : future__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/future/copy_ctor_fail.cpp : : future__copy_ctor_f ]
@@ -237,7 +250,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit packaged_task ;
-    test-suite packaged_task
+    test-suite ts_packaged_task
     :
           [ thread-run2 ./sync/futures/packaged_task/alloc_ctor_pass.cpp : packaged_task__alloc_ctor_p ]
           [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_assign_fail.cpp : : packaged_task__copy_assign_f ]
@@ -258,7 +271,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 
 
     #explicit lock_guard ;
-    test-suite lock_guard
+    test-suite ts_lock_guard
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
@@ -268,7 +281,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit unique_lock ;
-    test-suite unique_lock
+    test-suite ts_unique_lock
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_assign_fail.cpp : : unique_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/unique_lock/cons/copy_ctor_fail.cpp : : unique_lock__cons__copy_ctor_f ]
@@ -301,7 +314,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit shared_lock ;
-    test-suite shared_lock
+    test-suite ts_shared_lock
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_assign_fail.cpp : : shared_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock/cons/copy_ctor_fail.cpp : : shared_lock__cons__copy_ctor_f ]
@@ -331,7 +344,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit upgrade_lock ;
-    test-suite upgrade_lock
+    test-suite ts_upgrade_lock
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_assign_fail.cpp : : upgrade_lock__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/upgrade_lock/cons/copy_ctor_fail.cpp : : upgrade_lock__cons__copy_ctor_f ]
@@ -359,8 +372,8 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/upgrade_lock/types_pass.cpp : upgrade_lock__types_p ]
     ;
 
-    #explicit mutex ;
-    test-suite mutex
+    #explicit mutexs ;
+    test-suite ts_mutex
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutex__copy_f ]
@@ -371,7 +384,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit recursive_mutex ;
-    test-suite recursive_mutex
+    test-suite ts_recursive_mutex
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/assign_fail.cpp : : recursive_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_mutex/copy_fail.cpp : : recursive_mutex__copy_f ]
@@ -382,7 +395,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit recursive_timed_mutex ;
-    test-suite recursive_timed_mutex
+    test-suite ts_recursive_timed_mutex
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/assign_fail.cpp : : recursive_timed_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : recursive_timed_mutex__copy_f ]
@@ -395,7 +408,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit timed_mutex ;
-    test-suite timed_mutex
+    test-suite ts_timed_mutex
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/assign_fail.cpp : : timed_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : timed_mutex__copy_f ]
@@ -407,8 +420,8 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : timed_mutex__try_lock_until_p ]
     ;
 
-    #explicit shared_mutex ;
-    test-suite shared_mutex
+    #explicit shared_mutexs ;
+    test-suite ts_shared_mutex
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/assign_fail.cpp : : shared_mutex__assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/shared_mutex/copy_fail.cpp : : shared_mutex__copy_f ]
@@ -421,7 +434,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit this_thread ;
-    test-suite this_thread
+    test-suite ts_this_thread
     :
           [ thread-run2 ./threads/this_thread/get_id/get_id_pass.cpp : this_thread__get_id_p ]
           [ thread-run2 ./threads/this_thread/sleep_for/sleep_for_pass.cpp : this_thread__sleep_for_p ]
@@ -429,7 +442,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit thread ;
-    test-suite thread
+    test-suite ts_thread
     :
           [ thread-compile-fail-V2 ./threads/thread/assign/copy_fail.cpp : : thread__assign__copy_f ]
           [ thread-run2 ./threads/thread/assign/move_pass.cpp : thread__assign__move_p ]
@@ -453,7 +466,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     explicit examples ;
-    test-suite examples
+    test-suite ts_examples
     :
           [ thread-run ../example/monitor.cpp ]
           [ compile ../example/starvephil.cpp ]
@@ -473,7 +486,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit shared_upwards ;
-    test-suite shared_upwards
+    test-suite ts_shared_upwards
     :
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_try_pass.cpp : unique_lock__cons__move_ctor_shared_lock_try_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_for_pass.cpp : unique_lock__cons__move_ctor_shared_lock_for_p ]
@@ -486,7 +499,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
 
 
     #explicit shared_lock_guard ;
-    test-suite shared_lock_guard
+    test-suite ts_shared_lock_guard
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock_guard/copy_assign_fail.cpp : : shared_lock_guard__cons__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/shared_lock_guard/copy_ctor_fail.cpp : : shared_lock_guard__cons__copy_ctor_f ]
@@ -496,7 +509,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
     ;
 
     #explicit reverse_lock ;
-    test-suite reverse_lock
+    test-suite ts_reverse_lock
     :
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_assign_fail.cpp : : reverse_lock__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
@@ -504,8 +517,8 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
 
-    #explicit tt ;
-    test-suite tt
+    explicit ts ;
+    test-suite ts
     :
           [ thread-run test_ml.cpp  ]
     ;
