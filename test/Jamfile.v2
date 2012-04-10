@@ -243,6 +243,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_assign_fail.cpp : : packaged_task__copy_assign_f ]
           [ thread-compile-fail-V2 ./sync/futures/packaged_task/copy_ctor_fail.cpp : : packaged_task__copy_ctor_f ]
           [ thread-run2 ./sync/futures/packaged_task/default_ctor_pass.cpp : packaged_task__default_ctor_p ]
+          [ thread-run2 ./sync/futures/packaged_task/func_ctor_pass.cpp : packaged_task__func_ctor_p ]
           #[ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
           [ thread-run2 ./sync/futures/packaged_task/get_future_pass.cpp : packaged_task__get_future_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_ctor_pass.cpp : packaged_task__move_ctor_p ]
