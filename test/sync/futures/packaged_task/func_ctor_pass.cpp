@@ -23,6 +23,15 @@
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
+double fct()
+{
+  return 5.0;
+}
+long lfct()
+{
+  return 5;
+}
+
 class A
 {
     long data_;
@@ -113,6 +122,35 @@ int main()
       BOOST_TEST(A::n_moves > 0);
   }
 
+  A::n_copies = 0;
+  A::n_copies = 0;
+  {
+      const A a(5);
+      boost::packaged_task<double> p(a);
+      BOOST_TEST(p.valid());
+      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      //p(3, 'a');
+      p();
+      BOOST_TEST(f.get() == 5.0);
+      BOOST_TEST(A::n_copies > 0);
+      BOOST_TEST(A::n_moves > 0);
+  }
+  {
+      boost::packaged_task<double> p(fct);
+      BOOST_TEST(p.valid());
+      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      //p(3, 'a');
+      p();
+      BOOST_TEST(f.get() == 5.0);
+  }
+  {
+      boost::packaged_task<double> p(&lfct);
+      BOOST_TEST(p.valid());
+      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      //p(3, 'a');
+      p();
+      BOOST_TEST(f.get() == 5.0);
+  }
 
   return boost::report_errors();
 }

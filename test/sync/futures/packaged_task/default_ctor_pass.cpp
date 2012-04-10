@@ -22,22 +22,11 @@
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-class A
-{
-    long data_;
-
-public:
-    explicit A(long i) : data_(i) {}
-
-    long operator()() const {return data_;}
-    long operator()(long i, long j) const {return data_ + i + j;}
-};
-
 
 int main()
 {
   {
-    boost::packaged_task<A> p;
+    boost::packaged_task<int> p;
     BOOST_TEST(!p.valid());
 
   }

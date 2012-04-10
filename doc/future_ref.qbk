@@ -969,12 +969,16 @@ as invoking `f`.]]
 [[Throws:] [Any exceptions thrown by the copy (or move) constructor of `f`. `std::bad_alloc` if memory for the internal data
 structures could not be allocated.]]
 
+[[Notes:] [The R(*f)()) overload to allow passing a function without needing to use `&`.]]
+
 ]
 
 [endsect]
 
 [section:alloc_constructor Allocator Constructor]
 
+        template <class Allocator>
+        packaged_task(allocator_arg_t, Allocator a, R(*f)());
         template <class F, class Allocator>
         packaged_task(allocator_arg_t, Allocator a, F&& f);
 
@@ -989,6 +993,7 @@ as invoking `f`.]]
 structures could not be allocated.]]
 
 [[Notes:] [Available only if BOOST_THREAD_FUTURE_USES_ALLOCATORS is defined.]]
+[[Notes:] [The R(*f)()) overload to allow passing a function without needing to use `&`.]]
 
 ]
 
