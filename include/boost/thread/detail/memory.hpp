@@ -49,15 +49,6 @@ namespace boost
   typedef container::allocator_arg_t allocator_arg_t;
   BOOST_CONSTEXPR allocator_arg_t allocator_arg = {};
 
-  template <class R>
-  class promise;
-  namespace container
-  {
-    template <class R, class Alloc>
-    struct uses_allocator<promise<R> , Alloc> : true_type
-    {
-    };
-  }
   template <class T, class Alloc>
   struct uses_allocator: public container::uses_allocator<T, Alloc>
   {

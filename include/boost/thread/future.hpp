@@ -1645,6 +1645,16 @@ namespace boost
 
     };
 
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
+    namespace container
+    {
+      template <class R, class Alloc>
+      struct uses_allocator<promise<R> , Alloc> : true_type
+      {
+      };
+    }
+#endif
+
 #ifdef BOOST_NO_RVALUE_REFERENCES
     template <typename T>
     struct has_move_emulation_enabled_aux<promise<T> >
@@ -2030,9 +2040,12 @@ namespace boost
     };
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
+    namespace container
+    {
       template <class R, class Alloc>
       struct uses_allocator<packaged_task<R>, Alloc>
         : public true_type {};
+    }
 #endif
 
 #ifdef BOOST_NO_RVALUE_REFERENCES
