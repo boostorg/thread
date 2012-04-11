@@ -89,13 +89,13 @@ int main()
 {
   {
     boost::packaged_task<double> p(A(5));
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     boost::thread(func0, boost::move(p)).detach();
     BOOST_TEST(f.get() == 5.0);
   }
   {
     boost::packaged_task<double> p(A(5));
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     boost::thread(func1, boost::move(p)).detach();
     try
     {
@@ -110,7 +110,7 @@ int main()
   }
   {
     boost::packaged_task<double> p(A(5));
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     boost::thread t(func2, boost::move(p));
     BOOST_TEST(f.get() == 5.0);
     t.join();

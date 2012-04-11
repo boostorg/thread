@@ -81,7 +81,7 @@ class MoveOnly
 int main()
 {
   {
-    boost::thread t = boost::thread( BOOST_EXPLICIT_MOVE(MoveOnly()), BOOST_EXPLICIT_MOVE(MoveOnly()) );
+    boost::thread t = boost::thread( BOOST_THREAD_MAKE_RV_REF(MoveOnly()), BOOST_THREAD_MAKE_RV_REF(MoveOnly()) );
     t.join();
   }
   return boost::report_errors();

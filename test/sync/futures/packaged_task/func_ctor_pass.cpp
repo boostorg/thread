@@ -99,9 +99,9 @@ int A::n_copies = 0;
 int main()
 {
   {
-      boost::packaged_task<double> p(BOOST_EXPLICIT_MOVE(A(5)));
+      boost::packaged_task<double> p(BOOST_THREAD_MAKE_RV_REF(A(5)));
       BOOST_TEST(p.valid());
-      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
@@ -114,7 +114,7 @@ int main()
       A a(5);
       boost::packaged_task<double> p(a);
       BOOST_TEST(p.valid());
-      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
@@ -128,7 +128,7 @@ int main()
       const A a(5);
       boost::packaged_task<double> p(a);
       BOOST_TEST(p.valid());
-      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
@@ -138,7 +138,7 @@ int main()
   {
       boost::packaged_task<double> p(fct);
       BOOST_TEST(p.valid());
-      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
@@ -146,7 +146,7 @@ int main()
   {
       boost::packaged_task<double> p(&lfct);
       BOOST_TEST(p.valid());
-      boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+      boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);

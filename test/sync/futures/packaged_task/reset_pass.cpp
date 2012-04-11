@@ -47,7 +47,7 @@ int main()
 {
   {
     boost::packaged_task<double> p(A(5));
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);

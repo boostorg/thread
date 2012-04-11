@@ -42,7 +42,7 @@ int main()
   {
 
     boost::unique_lock<boost::mutex> lk1;
-    lk1 = BOOST_EXPLICIT_MOVE(boost::unique_lock<boost::mutex>(m0));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::unique_lock<boost::mutex>(m0));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
   }

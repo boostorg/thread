@@ -30,7 +30,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
           p.set_value(3);
       }
       BOOST_TEST(f.get() == 3);
@@ -40,7 +40,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       }
       try
       {
@@ -59,7 +59,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
           p.set_value(i);
       }
       BOOST_TEST(&f.get() == &i);
@@ -69,7 +69,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       }
       try
       {
@@ -87,7 +87,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
           p.set_value();
       }
       f.get();
@@ -98,7 +98,7 @@ int main()
       boost::future<T> f;
       {
           boost::promise<T> p;
-          f = BOOST_EXPLICIT_MOVE(p.get_future());
+          f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
       }
       try
       {

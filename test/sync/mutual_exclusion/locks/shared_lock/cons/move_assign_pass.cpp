@@ -40,14 +40,14 @@ int main()
   {
 
     boost::shared_lock<boost::shared_mutex> lk1;
-    lk1 = BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(m0));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::shared_lock<boost::shared_mutex>(m0));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
   }
   {
     boost::unique_lock<boost::shared_mutex> lk0(m0);
     boost::shared_lock<boost::shared_mutex> lk1(m1);
-    lk1 = BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(boost::move(lk0)));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::shared_lock<boost::shared_mutex>(boost::move(lk0)));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
     BOOST_TEST(lk0.mutex() == 0);
@@ -56,14 +56,14 @@ int main()
   {
 
     boost::shared_lock<boost::shared_mutex> lk1;
-    lk1 = BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(boost::unique_lock<boost::shared_mutex>(m0)));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::shared_lock<boost::shared_mutex>(boost::unique_lock<boost::shared_mutex>(m0)));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
   }
   {
     boost::upgrade_lock<boost::shared_mutex> lk0(m0);
     boost::shared_lock<boost::shared_mutex> lk1(m1);
-    lk1 = BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(boost::move(lk0)));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::shared_lock<boost::shared_mutex>(boost::move(lk0)));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
     BOOST_TEST(lk0.mutex() == 0);
@@ -72,7 +72,7 @@ int main()
   {
 
     boost::shared_lock<boost::shared_mutex> lk1;
-    lk1 = BOOST_EXPLICIT_MOVE(boost::shared_lock<boost::shared_mutex>(boost::upgrade_lock<boost::shared_mutex>(m0)));
+    lk1 = BOOST_THREAD_MAKE_RV_REF(boost::shared_lock<boost::shared_mutex>(boost::upgrade_lock<boost::shared_mutex>(m0)));
     BOOST_TEST(lk1.mutex() == &m0);
     BOOST_TEST(lk1.owns_lock() == true);
   }
