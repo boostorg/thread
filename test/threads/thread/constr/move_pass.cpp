@@ -84,7 +84,7 @@ int main()
   }
   BOOST_TEST(G::n_alive == 0);
   {
-    boost::thread t1((BOOST_EXPLICIT_MOVE(make_thread())));
+    boost::thread t1((BOOST_THREAD_MAKE_RV_REF(make_thread())));
     t1.join();
     BOOST_TEST(G::op_run);
   }

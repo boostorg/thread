@@ -40,7 +40,7 @@ namespace boost
         {
           if (mtx) {
             mtx->lock();
-            m = BOOST_EXPLICIT_MOVE(Lock(*mtx, adopt_lock));
+            m = BOOST_THREAD_MAKE_RV_REF(Lock(*mtx, adopt_lock));
           }
         }
 

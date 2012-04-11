@@ -28,7 +28,7 @@ void thread_proc()
     boost::call_once(&init, once);
 }
 
-int main(int argc, char* argv[])
+int main()
 {
     boost::thread_group threads;
     for (int i=0; i<5; ++i)

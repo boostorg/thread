@@ -51,7 +51,7 @@ int main()
     p.swap(p0);
     BOOST_TEST(!p0.valid());
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);

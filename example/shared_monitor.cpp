@@ -128,7 +128,7 @@ int main()
     v.push_back(&thr2);
     boost::thread thr3(test_w);
     v.push_back(&thr3);
-    for (int i = 0; i < v.size(); ++i)
+    for (std::size_t i = 0; i < v.size(); ++i)
         v[i]->join();
     Clock::time_point t1 = Clock::now();
     std::cout << sec(t1-t0) << '\n';

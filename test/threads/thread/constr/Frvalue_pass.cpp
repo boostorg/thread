@@ -77,13 +77,13 @@ class MoveOnly
 };
 
 MoveOnly MakeMoveOnly() {
-  return BOOST_EXPLICIT_MOVE(MoveOnly());
+  return BOOST_THREAD_MAKE_RV_REF(MoveOnly());
 }
 
 int main()
 {
   {
-    boost::thread t(( BOOST_EXPLICIT_MOVE(MakeMoveOnly()) ));
+    boost::thread t(( BOOST_THREAD_MAKE_RV_REF(MakeMoveOnly()) ));
     t.join();
   }
   return boost::report_errors();

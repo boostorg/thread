@@ -33,7 +33,7 @@ project
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
         <toolset>darwin:<cxxflags>-Wno-long-long
-        #<toolset>darwin:<cxxflags>-ansi
+        #<toolset>darwin:<cxxflags>-ansi # doesn't work for 4.1.2
         <toolset>darwin:<cxxflags>-fpermissive
 
         #<toolset>pathscale:<cxxflags>-Wextra
@@ -44,7 +44,7 @@ project
         <toolset>clang:<cxxflags>-pedantic
         <toolset>clang:<cxxflags>-Wno-long-long
         <toolset>clang:<cxxflags>-ansi
-        #<toolset>clang:<cxxflags>-fpermissive
+        #<toolset>clang:<cxxflags>-fpermissive # doesn't work 
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
@@ -53,8 +53,10 @@ project
         <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
 
-        #<toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
-        #<toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        <toolset>darwin-4.6.2:<cxxflags>-ansi
+        #<toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor # doesn't work
+        <toolset>darwin-4.7.0:<cxxflags>-ansi
+        <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
 
         #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
@@ -463,11 +465,16 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/thread/members/swap_pass.cpp : thread__swap_p ]
           [ thread-run2 ./threads/thread/non_members/swap_pass.cpp : swap_threads_p ]
           [ thread-run2 ./threads/thread/static/hardware_concurrency_pass.cpp : thread__hardware_concurrency_p ]
-          #[ thread-run2 ./threads/container/thread_vector_pass.cpp : thread_vector_p ]
-          #[ thread-run2 ./threads/container/thread_ptr_list_pass.cpp : thread_ptr_list_p ]
     ;
 
-    #explicit examples ;
+    #explicit ts_container ;
+    test-suite ts_container
+    :
+          [ thread-run2 ./threads/container/thread_vector_pass.cpp : container__thread_vector_p ]
+          [ thread-run2 ./threads/container/thread_ptr_list_pass.cpp : container__thread_ptr_list_p ]
+    ;
+
+    explicit examples ;
     test-suite ts_examples
     :
           [ thread-run ../example/monitor.cpp ]

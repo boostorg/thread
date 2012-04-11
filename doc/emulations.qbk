@@ -66,7 +66,7 @@ To make the code portable Boost.Thread uses a macro BOOST_MOVE_RVALUE that can b
 
   thread mkth() 
   {
-    return BOOST_EXPLICIT_MOVE(thread(f));
+    return BOOST_THREAD_MAKE_RV_REF(thread(f));
   }
 
 See the Boost.Move documentation for a complete description on how to declare new Movable classes and its limitations. 

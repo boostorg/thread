@@ -11,11 +11,7 @@
 #ifndef BOOST_NO_IOSTREAM
 #include <ostream>
 #endif
-#if defined BOOST_THREAD_USES_MOVE
-#include <boost/move/move.hpp>
-#else
 #include <boost/thread/detail/move.hpp>
-#endif
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/thread_heap_alloc.hpp>

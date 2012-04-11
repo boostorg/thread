@@ -113,10 +113,10 @@ int main()
 {
   {
     boost::packaged_task<double> p(boost::allocator_arg,
-        test_allocator<A>(), BOOST_EXPLICIT_MOVE(A(5)));
+        test_allocator<A>(), BOOST_THREAD_MAKE_RV_REF(A(5)));
     BOOST_TEST(test_alloc_base::count > 0);
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);
@@ -132,7 +132,7 @@ int main()
         test_allocator<A>(), a);
     BOOST_TEST(test_alloc_base::count > 0);
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);
@@ -148,7 +148,7 @@ int main()
         test_allocator<A>(), a);
     BOOST_TEST(test_alloc_base::count > 0);
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);
@@ -161,7 +161,7 @@ int main()
         test_allocator<A>(), fct);
     BOOST_TEST(test_alloc_base::count > 0);
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);
@@ -171,7 +171,7 @@ int main()
         test_allocator<A>(), &lfct);
     BOOST_TEST(test_alloc_base::count > 0);
     BOOST_TEST(p.valid());
-    boost::future<double> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     //p(3, 'a');
     p();
     BOOST_TEST(f.get() == 5.0);

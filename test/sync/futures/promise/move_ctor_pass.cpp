@@ -37,14 +37,14 @@ int main()
     boost::promise<int> p(boost::move(p0));
     BOOST_TEST(test_alloc_base::count == 1);
     std::cout << __LINE__ << std::endl;
-    boost::future<int> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<int> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     std::cout << __LINE__ << std::endl;
     BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     std::cout << __LINE__ << std::endl;
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -60,12 +60,12 @@ int main()
     boost::promise<int&> p0(boost::allocator_arg, test_allocator<int>());
     boost::promise<int&> p(boost::move(p0));
     BOOST_TEST(test_alloc_base::count == 1);
-    boost::future<int&> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<int&> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -79,12 +79,12 @@ int main()
     boost::promise<void> p0(boost::allocator_arg, test_allocator<void>());
     boost::promise<void> p(boost::move(p0));
     BOOST_TEST(test_alloc_base::count == 1);
-    boost::future<void> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<void> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     BOOST_TEST(test_alloc_base::count == 1);
     BOOST_TEST(f.valid());
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -99,13 +99,13 @@ int main()
     boost::promise<int> p0;
     boost::promise<int> p(boost::move(p0));
     std::cout << __LINE__ << std::endl;
-    boost::future<int> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<int> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     std::cout << __LINE__ << std::endl;
     BOOST_TEST(f.valid());
     std::cout << __LINE__ << std::endl;
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -118,11 +118,11 @@ int main()
   {
     boost::promise<int&> p0;
     boost::promise<int&> p(boost::move(p0));
-    boost::future<int&> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<int&> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     BOOST_TEST(f.valid());
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)
@@ -133,11 +133,11 @@ int main()
   {
     boost::promise<void> p0;
     boost::promise<void> p(boost::move(p0));
-    boost::future<void> f = BOOST_EXPLICIT_MOVE(p.get_future());
+    boost::future<void> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     BOOST_TEST(f.valid());
     try
     {
-      f = BOOST_EXPLICIT_MOVE(p0.get_future());
+      f = BOOST_THREAD_MAKE_RV_REF(p0.get_future());
       BOOST_TEST(false);
     }
     catch (const boost::future_error& e)

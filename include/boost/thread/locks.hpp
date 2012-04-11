@@ -383,7 +383,8 @@ namespace boost
         }
         BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(boost::rv<upgrade_lock<Mutex> >& other);
 
-        operator ::boost::rv<unique_lock<Mutex> >&()
+        //operator boost::rv<boost::unique_lock<boost::mutex> >&
+        operator boost::rv<unique_lock<Mutex> >&()
         {
           return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
         }
@@ -1948,7 +1949,7 @@ namespace boost
         {
             if(source)
             {
-                *source=BOOST_EXPLICIT_MOVE(upgrade_lock<Mutex>(::boost::move(exclusive)));
+                *source=BOOST_THREAD_MAKE_RV_REF(upgrade_lock<Mutex>(::boost::move(exclusive)));
             }
         }
 
