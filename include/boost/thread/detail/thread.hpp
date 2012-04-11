@@ -78,7 +78,7 @@ namespace boost
             {}
 #if defined BOOST_THREAD_USES_MOVE
             thread_data(boost::rv<F>& f_):
-                f(boost::move(f_))
+                f(f_)
             {}
 #else
             thread_data(detail::thread_move_t<F> f_):
@@ -142,15 +142,7 @@ namespace boost
     public:
       typedef thread_attributes attributes;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-      thread(thread const&) = delete;
-      thread& operator=(thread const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-      thread(thread&);
-      thread& operator=(thread&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+      BOOST_THREAD_MOVABLE_ONLY(thread)
     private:
 
         void release_handle();
@@ -380,38 +372,6 @@ namespace boost
         }
 #endif
 #endif
-
-#if defined BOOST_THREAD_USES_MOVE
-        ::boost::rv<thread>& move()  BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<thread>* >(this);
-        }
-        const ::boost::rv<thread>& move() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<thread>* >(this);
-        }
-
-      operator ::boost::rv<thread>&()  BOOST_NOEXCEPT
-      {
-        return *static_cast< ::boost::rv<thread>* >(this);
-      }
-      operator const ::boost::rv<thread>&() const BOOST_NOEXCEPT
-      {
-        return *static_cast<const ::boost::rv<thread>* >(this);
-      }
-#else
-        operator detail::thread_move_t<thread>() BOOST_NOEXCEPT
-        {
-            return move();
-        }
-
-        detail::thread_move_t<thread> move() BOOST_NOEXCEPT
-        {
-            detail::thread_move_t<thread> x(*this);
-            return x;
-        }
-#endif
-
 #endif
 
         template <class F,class A1>

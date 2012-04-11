@@ -37,11 +37,11 @@ void f1()
 {
   time_point t0 = Clock::now();
   // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(m.try_lock_for(ms(300)+ms(1000)) == true);
+  BOOST_TEST(m.try_lock_for(ms(300)+ms(2000)) == true);
   time_point t1 = Clock::now();
   m.unlock();
   ns d = t1 - t0 - ms(250);
-  BOOST_TEST(d < ns(5000000)+ms(1000)); // within 5ms
+  BOOST_TEST(d < ns(5000000)+ms(2000)); // within 5ms
 }
 
 void f2()

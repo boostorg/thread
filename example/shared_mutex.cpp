@@ -705,7 +705,7 @@ void temp()
     static upgrade_mutex mut;
     unique_lock<upgrade_mutex> ul(mut);
     shared_lock<upgrade_mutex> sl;
-    sl = shared_lock<upgrade_mutex>(boost::move(ul));
+    sl = BOOST_THREAD_MAKE_RV_REF(shared_lock<upgrade_mutex>(boost::move(ul)));
 }
 
 int main()

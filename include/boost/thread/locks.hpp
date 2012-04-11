@@ -253,17 +253,10 @@ namespace boost
     private:
         Mutex& m;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        lock_guard(lock_guard const&) = delete;
-        lock_guard& operator=(lock_guard const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        lock_guard(lock_guard&);
-        lock_guard& operator=(lock_guard&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef Mutex mutex_type;
+        BOOST_THREAD_NO_COPYABLE(lock_guard)
+
         explicit lock_guard(Mutex& m_):
             m(m_)
         {
@@ -285,21 +278,13 @@ namespace boost
         Mutex* m;
         bool is_locked;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        unique_lock(unique_lock const&) = delete;
-        unique_lock& operator=(unique_lock const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        unique_lock(unique_lock&);
-        unique_lock& operator=(unique_lock &);
-#endif // BOOST_NO_DELETED_FUNCTIONS
-
     private:
         explicit unique_lock(upgrade_lock<Mutex>&);
         unique_lock& operator=(upgrade_lock<Mutex>& other);
     public:
         typedef Mutex mutex_type;
+        BOOST_THREAD_MOVABLE_ONLY(unique_lock)
+
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         unique_lock(const volatile unique_lock&);
 #endif
@@ -383,23 +368,23 @@ namespace boost
         }
         BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(boost::rv<upgrade_lock<Mutex> >& other);
 
-        //operator boost::rv<boost::unique_lock<boost::mutex> >&
-        operator boost::rv<unique_lock<Mutex> >&()
-        {
-          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
-        }
-        operator const ::boost::rv<unique_lock<Mutex> >&() const
-        {
-          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
-        }
-        ::boost::rv<unique_lock<Mutex> >& move()
-        {
-          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
-        }
-        const ::boost::rv<unique_lock<Mutex> >& move() const
-        {
-          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
-        }
+//        //operator boost::rv<boost::unique_lock<boost::mutex> >&
+//        operator boost::rv<unique_lock<Mutex> >&()
+//        {
+//          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
+//        }
+//        operator const ::boost::rv<unique_lock<Mutex> >&() const
+//        {
+//          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
+//        }
+//        ::boost::rv<unique_lock<Mutex> >& move()
+//        {
+//          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
+//        }
+//        const ::boost::rv<unique_lock<Mutex> >& move() const
+//        {
+//          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
+//        }
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         unique_lock& operator=(unique_lock<Mutex> other)
         {
@@ -432,15 +417,15 @@ namespace boost
         }
         BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other);
 
-        operator detail::thread_move_t<unique_lock<Mutex> >()
-        {
-            return move();
-        }
-
-        detail::thread_move_t<unique_lock<Mutex> > move()
-        {
-            return detail::thread_move_t<unique_lock<Mutex> >(*this);
-        }
+//        operator detail::thread_move_t<unique_lock<Mutex> >()
+//        {
+//            return move();
+//        }
+//
+//        detail::thread_move_t<unique_lock<Mutex> > move()
+//        {
+//            return detail::thread_move_t<unique_lock<Mutex> >(*this);
+//        }
 
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         unique_lock& operator=(unique_lock<Mutex> other)
@@ -1000,17 +985,10 @@ namespace boost
     protected:
         Mutex* m;
         bool is_locked;
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        shared_lock(shared_lock const&) = delete;
-        shared_lock& operator=(shared_lock const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        shared_lock(shared_lock &);
-        shared_lock& operator=(shared_lock &);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+
     public:
         typedef Mutex mutex_type;
+        BOOST_THREAD_MOVABLE_ONLY(shared_lock)
 
         shared_lock() BOOST_NOEXCEPT:
             m(0),is_locked(false)
@@ -1135,23 +1113,6 @@ namespace boost
             other.m=0;
         }
 
-        operator ::boost::rv<shared_lock<Mutex> >&() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<shared_lock<Mutex> >* >(this);
-        }
-        operator const ::boost::rv<shared_lock<Mutex> >&() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<shared_lock<Mutex> >* >(this);
-        }
-        ::boost::rv<shared_lock<Mutex> >& move() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<shared_lock<Mutex> >* >(this);
-        }
-        const ::boost::rv<shared_lock<Mutex> >& move() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<shared_lock<Mutex> >* >(this);
-        }
-
         shared_lock& operator=(::boost::rv<shared_lock<Mutex> >& other) BOOST_NOEXCEPT
         {
             shared_lock temp(other);
@@ -1205,15 +1166,15 @@ namespace boost
             other->m=0;
         }
 
-        operator detail::thread_move_t<shared_lock<Mutex> >() BOOST_NOEXCEPT
-        {
-            return move();
-        }
-
-        detail::thread_move_t<shared_lock<Mutex> > move() BOOST_NOEXCEPT
-        {
-            return detail::thread_move_t<shared_lock<Mutex> >(*this);
-        }
+//        operator detail::thread_move_t<shared_lock<Mutex> >() BOOST_NOEXCEPT
+//        {
+//            return move();
+//        }
+//
+//        detail::thread_move_t<shared_lock<Mutex> > move() BOOST_NOEXCEPT
+//        {
+//            return detail::thread_move_t<shared_lock<Mutex> >(*this);
+//        }
 
 
         shared_lock& operator=(detail::thread_move_t<shared_lock<Mutex> > other) BOOST_NOEXCEPT
@@ -1407,17 +1368,11 @@ namespace boost
     protected:
         Mutex* m;
         bool is_locked;
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        upgrade_lock(upgrade_lock const&) = delete;
-        upgrade_lock& operator=(upgrade_lock const&) = delete;
-#else
-    private:
-        explicit upgrade_lock(upgrade_lock&);
-        upgrade_lock& operator=(upgrade_lock&);
-#endif
+
     public:
         typedef Mutex mutex_type;
+        BOOST_THREAD_MOVABLE_ONLY(upgrade_lock)
+
         upgrade_lock() BOOST_NOEXCEPT:
             m(0),is_locked(false)
         {}
@@ -1506,22 +1461,6 @@ namespace boost
             other.m=0;
         }
 
-        operator ::boost::rv<upgrade_lock>&() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<upgrade_lock>* >(this);
-        }
-        operator const ::boost::rv<upgrade_lock>&() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<upgrade_lock>* >(this);
-        }
-        ::boost::rv<upgrade_lock>& move() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<upgrade_lock>* >(this);
-        }
-        const ::boost::rv<upgrade_lock>& move() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<upgrade_lock>* >(this);
-        }
         upgrade_lock& operator=(boost::rv<upgrade_lock<Mutex> >& other) BOOST_NOEXCEPT
         {
             upgrade_lock temp(other);
@@ -1556,15 +1495,15 @@ namespace boost
             other->m=0;
         }
 
-        operator detail::thread_move_t<upgrade_lock<Mutex> >() BOOST_NOEXCEPT
-        {
-            return move();
-        }
-
-        detail::thread_move_t<upgrade_lock<Mutex> > move() BOOST_NOEXCEPT
-        {
-            return detail::thread_move_t<upgrade_lock<Mutex> >(*this);
-        }
+//        operator detail::thread_move_t<upgrade_lock<Mutex> >() BOOST_NOEXCEPT
+//        {
+//            return move();
+//        }
+//
+//        detail::thread_move_t<upgrade_lock<Mutex> > move() BOOST_NOEXCEPT
+//        {
+//            return detail::thread_move_t<upgrade_lock<Mutex> >(*this);
+//        }
 
 
         upgrade_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other) BOOST_NOEXCEPT
@@ -1931,17 +1870,10 @@ namespace boost
         upgrade_lock<Mutex>* source;
         unique_lock<Mutex> exclusive;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        upgrade_to_unique_lock(upgrade_to_unique_lock const&) = delete;
-        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock const&) = delete;
-#else
-    private:
-        explicit upgrade_to_unique_lock(upgrade_to_unique_lock&);
-        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock&);
-#endif
     public:
         typedef Mutex mutex_type;
+        BOOST_THREAD_MOVABLE_ONLY(upgrade_to_unique_lock)
+
         explicit upgrade_to_unique_lock(upgrade_lock<Mutex>& m_):
             source(&m_),exclusive(::boost::move(*source))
         {}
@@ -1980,22 +1912,7 @@ namespace boost
             swap(temp);
             return *this;
         }
-        operator ::boost::rv<upgrade_to_unique_lock>&() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<upgrade_to_unique_lock>* >(this);
-        }
-        operator const ::boost::rv<upgrade_to_unique_lock>&() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<upgrade_to_unique_lock>* >(this);
-        }
-        ::boost::rv<upgrade_to_unique_lock>& move() BOOST_NOEXCEPT
-        {
-          return *static_cast< ::boost::rv<upgrade_to_unique_lock>* >(this);
-        }
-        const ::boost::rv<upgrade_to_unique_lock>& move() const BOOST_NOEXCEPT
-        {
-          return *static_cast<const ::boost::rv<upgrade_to_unique_lock>* >(this);
-        }
+
 #else
         upgrade_to_unique_lock(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other) BOOST_NOEXCEPT:
             source(other->source),exclusive(::boost::move(other->exclusive))
@@ -2009,15 +1926,7 @@ namespace boost
             swap(temp);
             return *this;
         }
-        operator detail::thread_move_t<upgrade_to_unique_lock<Mutex> >() BOOST_NOEXCEPT
-        {
-            return move();
-        }
 
-        detail::thread_move_t<upgrade_to_unique_lock<Mutex> > move() BOOST_NOEXCEPT
-        {
-            return detail::thread_move_t<upgrade_to_unique_lock<Mutex> >(*this);
-        }
 #endif
 #endif
         void swap(upgrade_to_unique_lock& other) BOOST_NOEXCEPT
@@ -2064,6 +1973,8 @@ namespace boost
         {
             typedef unique_lock<Mutex> base;
         public:
+            BOOST_THREAD_MOVABLE_ONLY(try_lock_wrapper)
+
             try_lock_wrapper()
             {}
 
@@ -2098,23 +2009,6 @@ namespace boost
                 base(::boost::move(static_cast<base&>(other)))
             {}
 
-            operator ::boost::rv<try_lock_wrapper>&()
-            {
-              return *static_cast< ::boost::rv<try_lock_wrapper>* >(this);
-            }
-            operator const ::boost::rv<try_lock_wrapper>&() const
-            {
-              return *static_cast<const ::boost::rv<try_lock_wrapper>* >(this);
-            }
-            ::boost::rv<try_lock_wrapper>& move()
-            {
-              return *static_cast< ::boost::rv<try_lock_wrapper>* >(this);
-            }
-            const ::boost::rv<try_lock_wrapper>& move() const
-            {
-              return *static_cast<const ::boost::rv<try_lock_wrapper>* >(this);
-            }
-
             try_lock_wrapper& operator=(boost::rv<try_lock_wrapper<Mutex> >& other)
             {
                 try_lock_wrapper temp(other);
@@ -2126,16 +2020,6 @@ namespace boost
             try_lock_wrapper(detail::thread_move_t<try_lock_wrapper<Mutex> > other):
                 base(detail::thread_move_t<base>(*other))
             {}
-
-            operator detail::thread_move_t<try_lock_wrapper<Mutex> >()
-            {
-                return move();
-            }
-
-            detail::thread_move_t<try_lock_wrapper<Mutex> > move()
-            {
-                return detail::thread_move_t<try_lock_wrapper<Mutex> >(*this);
-            }
 
             try_lock_wrapper& operator=(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
             {

@@ -54,7 +54,7 @@ int main()
     p.reset();
     //p(4, 'a');
     p();
-    f = p.get_future();
+    f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
     BOOST_TEST(f.get() == 5.0);
   }
   {

@@ -803,17 +803,6 @@ namespace boost
     template <typename R>
     class BOOST_THREAD_FUTURE
     {
-
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-      BOOST_THREAD_FUTURE(BOOST_THREAD_FUTURE const& rhs) = delete;
-      BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_FUTURE const& rhs) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-      BOOST_THREAD_FUTURE(BOOST_THREAD_FUTURE & rhs);// = delete;
-      BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_FUTURE& rhs);// = delete;
-#endif // BOOST_NO_DELETED_FUNCTIONS
-
     private:
 
         typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
@@ -832,6 +821,7 @@ namespace boost
         {}
 
     public:
+        BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
         typedef future_state::state state;
 
         BOOST_THREAD_FUTURE()
@@ -865,22 +855,7 @@ namespace boost
             other.future_.reset();
             return *this;
         }
-        operator ::boost::rv<BOOST_THREAD_FUTURE>&()
-        {
-          return *static_cast< ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
-        }
-        operator const ::boost::rv<BOOST_THREAD_FUTURE>&() const
-        {
-          return *static_cast<const ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
-        }
-        ::boost::rv<BOOST_THREAD_FUTURE>& move()
-        {
-          return *static_cast< ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
-        }
-        const ::boost::rv<BOOST_THREAD_FUTURE>& move() const
-        {
-          return *static_cast<const ::boost::rv<BOOST_THREAD_FUTURE>* >(this);
-        }
+
 #else
         BOOST_THREAD_FUTURE(boost::detail::thread_move_t<BOOST_THREAD_FUTURE> other) BOOST_NOEXCEPT:
             future_(other->future_)
@@ -895,14 +870,6 @@ namespace boost
             return *this;
         }
 
-        operator boost::detail::thread_move_t<BOOST_THREAD_FUTURE>()
-        {
-            return boost::detail::thread_move_t<BOOST_THREAD_FUTURE>(*this);
-        }
-        boost::detail::thread_move_t<BOOST_THREAD_FUTURE> move()
-        {
-            return boost::detail::thread_move_t<BOOST_THREAD_FUTURE>(*this);
-        }
 #endif
 #endif
         shared_future<R> share()
@@ -1028,6 +995,8 @@ namespace boost
         {}
 
     public:
+        BOOST_THREAD_MOVABLE(shared_future)
+
         shared_future(shared_future const& other):
             future_(other.future_)
         {}
@@ -1091,22 +1060,6 @@ namespace boost
             other.future_.reset();
             return *this;
         }
-        operator ::boost::rv<shared_future>&()
-        {
-          return *static_cast< ::boost::rv<shared_future>* >(this);
-        }
-        operator const ::boost::rv<shared_future>&() const
-        {
-          return *static_cast<const ::boost::rv<shared_future>* >(this);
-        }
-        ::boost::rv<shared_future>& move()
-        {
-          return *static_cast< ::boost::rv<shared_future>* >(this);
-        }
-        const ::boost::rv<shared_future>& move() const
-        {
-          return *static_cast<const ::boost::rv<shared_future>* >(this);
-        }
 
 #else
 
@@ -1134,14 +1087,6 @@ namespace boost
             return *this;
         }
 
-        operator boost::detail::thread_move_t<shared_future>()
-        {
-            return boost::detail::thread_move_t<shared_future>(*this);
-        }
-        boost::detail::thread_move_t<shared_future> move()
-        {
-            return boost::detail::thread_move_t<shared_future>(*this);
-        }
 #endif
 #endif
 
@@ -1251,17 +1196,6 @@ namespace boost
         future_ptr future_;
         bool future_obtained;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        promise(promise const&  rhs) = delete;
-        promise & operator=(promise const & rhs) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        promise(promise & rhs);// = delete;
-        promise & operator=(promise & rhs);// = delete;
-#endif // BOOST_NO_DELETED_FUNCTIONS
-    private:
-
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROMISE_LAZY
@@ -1274,6 +1208,7 @@ namespace boost
         }
 
     public:
+        BOOST_THREAD_MOVABLE_ONLY(promise)
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
         template <class Allocator>
         promise(boost::allocator_arg_t, Allocator a)
@@ -1346,22 +1281,7 @@ namespace boost
             rhs.future_obtained=false;
             return *this;
         }
-        operator ::boost::rv<promise>&()
-        {
-          return *static_cast< ::boost::rv<promise>* >(this);
-        }
-        operator const ::boost::rv<promise>&() const
-        {
-          return *static_cast<const ::boost::rv<promise>* >(this);
-        }
-        ::boost::rv<promise>& move()
-        {
-          return *static_cast< ::boost::rv<promise>* >(this);
-        }
-        const ::boost::rv<promise>& move() const
-        {
-          return *static_cast<const ::boost::rv<promise>* >(this);
-        }
+
 #else
         promise(boost::detail::thread_move_t<promise> rhs) BOOST_NOEXCEPT:
             future_(rhs->future_),future_obtained(rhs->future_obtained)
@@ -1378,10 +1298,6 @@ namespace boost
             return *this;
         }
 
-        operator boost::detail::thread_move_t<promise>()
-        {
-            return boost::detail::thread_move_t<promise>(*this);
-        }
 #endif
 #endif
 
@@ -1458,17 +1374,6 @@ namespace boost
         future_ptr future_;
         bool future_obtained;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        promise(promise const&  rhs) = delete;
-        promise & operator=(promise const & rhs) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        promise(promise & rhs);// = delete;
-        promise & operator=(promise & rhs);// = delete;
-#endif // BOOST_NO_DELETED_FUNCTIONS
-    private:
-
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROMISE_LAZY
@@ -1480,6 +1385,8 @@ namespace boost
 #endif
         }
     public:
+        BOOST_THREAD_MOVABLE_ONLY(promise)
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
         template <class Allocator>
         promise(boost::allocator_arg_t, Allocator a)
@@ -1548,22 +1455,7 @@ namespace boost
             rhs.future_obtained=false;
             return *this;
         }
-        operator ::boost::rv<promise>&()
-        {
-          return *static_cast< ::boost::rv<promise>* >(this);
-        }
-        operator const ::boost::rv<promise>&() const
-        {
-          return *static_cast<const ::boost::rv<promise>* >(this);
-        }
-        ::boost::rv<promise>& move()
-        {
-          return *static_cast< ::boost::rv<promise>* >(this);
-        }
-        const ::boost::rv<promise>& move() const
-        {
-          return *static_cast<const ::boost::rv<promise>* >(this);
-        }
+
 #else
         promise(boost::detail::thread_move_t<promise> rhs) BOOST_NOEXCEPT :
             future_(rhs->future_),future_obtained(rhs->future_obtained)
@@ -1580,14 +1472,6 @@ namespace boost
             return *this;
         }
 
-        operator boost::detail::thread_move_t<promise>()
-        {
-            return boost::detail::thread_move_t<promise>(*this);
-        }
-        boost::detail::thread_move_t<promise> move()
-        {
-            return boost::detail::thread_move_t<promise>(*this);
-        }
 #endif
 #endif
 
@@ -1799,17 +1683,10 @@ namespace boost
         boost::shared_ptr<detail::task_base<R> > task;
         bool future_obtained;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        packaged_task(packaged_task const&) = delete;
-        packaged_task& operator=(packaged_task const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        packaged_task(packaged_task&);// = delete;
-        packaged_task& operator=(packaged_task&);// = delete;
-#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef R result_type;
+        BOOST_THREAD_MOVABLE_ONLY(packaged_task)
+
         packaged_task():
             future_obtained(false)
         {}
@@ -1942,22 +1819,7 @@ namespace boost
             swap(temp);
             return *this;
         }
-        operator ::boost::rv<packaged_task>&()
-        {
-          return *static_cast< ::boost::rv<packaged_task>* >(this);
-        }
-        operator const ::boost::rv<packaged_task>&() const
-        {
-          return *static_cast<const ::boost::rv<packaged_task>* >(this);
-        }
-        ::boost::rv<packaged_task>& move()
-        {
-          return *static_cast< ::boost::rv<packaged_task>* >(this);
-        }
-        const ::boost::rv<packaged_task>& move() const
-        {
-          return *static_cast<const ::boost::rv<packaged_task>* >(this);
-        }
+
 #else
         packaged_task(boost::detail::thread_move_t<packaged_task> other) BOOST_NOEXCEPT:
             future_obtained(other->future_obtained)
@@ -1971,14 +1833,7 @@ namespace boost
             swap(temp);
             return *this;
         }
-        operator boost::detail::thread_move_t<packaged_task>()
-        {
-            return boost::detail::thread_move_t<packaged_task>(*this);
-        }
-        boost::detail::thread_move_t<packaged_task> move()
-        {
-            return boost::detail::thread_move_t<packaged_task>(*this);
-        }
+
 #endif
 #endif
 

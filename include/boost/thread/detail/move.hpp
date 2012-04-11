@@ -14,9 +14,8 @@
 #include <boost/type_traits/remove_cv.hpp>
 #endif
 
+#include <boost/thread/detail/delete.hpp>
 #include <boost/move/move.hpp>
-
-//#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -45,6 +44,7 @@ namespace boost
         };
     }
 
+
 #ifndef BOOST_NO_SFINAE
     template<typename T>
     typename enable_if<boost::is_convertible<T&,boost::detail::thread_move_t<T> >, boost::detail::thread_move_t<T> >::type move(T& t)
@@ -58,30 +58,36 @@ namespace boost
     {
         return t;
     }
-
-
 }
 
 #if ! defined  BOOST_NO_RVALUE_REFERENCES
+
 #define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
 #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
-
+#define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
 
 #elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
+
 #define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
 #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
+#define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+
 #else
+
+#if defined BOOST_THREAD_USES_MOVE
+#define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
+#define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+
+#else
+
+#define BOOST_THREAD_RV_REF(TYPE) thread_move_t<TYPE>
+#define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+#endif
 
 namespace boost
 {
 namespace detail
 {
-
-#if defined BOOST_THREAD_USES_MOVE
-#define BOOST_THREAD_RV_REF(TYPE) BOOST_RV_REF(TYPE)
-#else
-#define BOOST_THREAD_RV_REF(TYPE) thread_move_t<TYPE>
-#endif
   template <typename T>
   BOOST_THREAD_RV_REF(typename ::boost::remove_cv<typename ::boost::remove_reference<T>::type>::type)
   make_rv_ref(T v)  BOOST_NOEXCEPT
@@ -108,8 +114,53 @@ namespace detail
 #endif
 
 
+#if ! defined  BOOST_NO_RVALUE_REFERENCES
 
+#define BOOST_THREAD_MOVABLE(TYPE)
 
-//#include <boost/config/abi_suffix.hpp>
+#else
+
+#if defined BOOST_THREAD_USES_MOVE
+
+#define BOOST_THREAD_MOVABLE(TYPE) \
+    ::boost::rv<TYPE>& move()  BOOST_NOEXCEPT \
+    { \
+      return *static_cast< ::boost::rv<TYPE>* >(this); \
+    } \
+    const ::boost::rv<TYPE>& move() const BOOST_NOEXCEPT \
+    { \
+      return *static_cast<const ::boost::rv<TYPE>* >(this); \
+    } \
+    operator ::boost::rv<TYPE>&() \
+    { \
+      return *static_cast< ::boost::rv<TYPE>* >(this); \
+    } \
+    operator const ::boost::rv<TYPE>&() const \
+    { \
+      return *static_cast<const ::boost::rv<TYPE>* >(this); \
+    }\
+
+#else
+
+#define BOOST_THREAD_MOVABLE(TYPE) \
+    operator detail::thread_move_t<TYPE>() BOOST_NOEXCEPT \
+    { \
+        return move(); \
+    } \
+    detail::thread_move_t<thread> move() BOOST_NOEXCEPT \
+    { \
+        detail::thread_move_t<TYPE> x(*this); \
+        return x; \
+    } \
+
+#endif
+#endif
+
+#define BOOST_THREAD_MOVABLE_ONLY(TYPE) \
+  BOOST_THREAD_NO_COPYABLE(TYPE) \
+  BOOST_THREAD_MOVABLE(TYPE) \
+
+#define BOOST_THREAD_COPYABLE_AND_MOVABLE(TYPE) \
+  BOOST_THREAD_MOVABLE(TYPE) \
 
 #endif
