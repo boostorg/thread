@@ -64,27 +64,23 @@ namespace boost
             public detail::thread_data_base
         {
         public:
+            BOOST_THREAD_NO_COPYABLE(thread_data)
 #ifndef BOOST_NO_RVALUE_REFERENCES
-            thread_data(F&& f_):
-              f(boost::forward<F>(f_))
-            {}
+              thread_data(BOOST_THREAD_RV_REF(F) f_):
+                f(boost::forward<F>(f_))
+              {}
 // This overloading must be removed if we want the packaged_task's tests to pass.
 //            thread_data(F& f_):
 //                f(f_)
 //            {}
 #else
+
+            thread_data(BOOST_THREAD_RV_REF(F) f_):
+              f(f_)
+            {}
             thread_data(F f_):
                 f(f_)
             {}
-#if defined BOOST_THREAD_USES_MOVE
-            thread_data(boost::rv<F>& f_):
-                f(f_)
-            {}
-#else
-            thread_data(detail::thread_move_t<F> f_):
-                f(f_)
-            {}
-#endif
 #endif
             void run()
             {
@@ -92,9 +88,6 @@ namespace boost
             }
         private:
             F f;
-
-            void operator=(thread_data&);
-            thread_data(thread_data&);
         };
 
         template<typename F>
@@ -103,14 +96,11 @@ namespace boost
         {
         private:
             F& f;
-
-            void operator=(thread_data&);
-            thread_data(thread_data&);
         public:
+            BOOST_THREAD_NO_COPYABLE(thread_data)
             thread_data(boost::reference_wrapper<F> f_):
                 f(f_)
             {}
-
             void run()
             {
                 f();
@@ -123,13 +113,11 @@ namespace boost
         {
         private:
             F& f;
-            void operator=(thread_data&);
-            thread_data(thread_data&);
         public:
+            BOOST_THREAD_NO_COPYABLE(thread_data)
             thread_data(const boost::reference_wrapper<F> f_):
                 f(f_)
             {}
-
             void run()
             {
                 f();
@@ -174,21 +162,12 @@ namespace boost
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
-#if defined BOOST_THREAD_USES_MOVE
         template<typename F>
-        static inline detail::thread_data_ptr make_thread_info(boost::rv<F>& f)
-        {
-            return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(boost::move(f)));
-        }
-
-#else
-        template<typename F>
-        static inline detail::thread_data_ptr make_thread_info(boost::detail::thread_move_t<F> f)
+        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
 
-#endif
 #endif
         struct dummy;
     public:
@@ -243,11 +222,6 @@ namespace boost
             return *this;
         }
 
-//        thread&& move()
-//        {
-//            return ::boost::move(*this);
-//        }
-
 #else
 #ifdef BOOST_NO_SFINAE
         template <class F>
@@ -263,80 +237,44 @@ namespace boost
             start_thread(attrs);
         }
 #else
-#if defined BOOST_THREAD_USES_MOVE
         template <class F>
-        explicit thread(F f,typename disable_if<boost::is_convertible<F&,boost::rv<F>& >, dummy* >::type=0):
+        explicit thread(F f,typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
         template <class F>
-        thread(attributes& attrs, F f,typename disable_if<boost::is_convertible<F&,boost::rv<F>& >, dummy* >::type=0):
-            thread_info(make_thread_info(f))
-        {
-            start_thread(attrs);
-        }
-#else
-        template <class F>
-        explicit thread(F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
-            thread_info(make_thread_info(f))
-        {
-            start_thread();
-        }
-        template <class F>
-        thread(attributes& attrs, F f,typename disable_if<boost::is_convertible<F&,detail::thread_move_t<F> >, dummy* >::type=0):
+        thread(attributes& attrs, F f,typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread(attrs);
         }
 #endif
-#endif
 
-#if defined BOOST_THREAD_USES_MOVE
         template <class F>
-        explicit thread(boost::rv<F>& f):
-            thread_info(make_thread_info(boost::move(f)))
+        explicit thread(BOOST_THREAD_RV_REF(F) f):
+            thread_info(make_thread_info(f))
         {
             start_thread();
         }
 
-
-//        explicit thread(void (*f)()):
-//            thread_info(make_thread_info(f))
-//        {
-//            start_thread();
-//        }
-//
-
         template <class F>
-        thread(attributes& attrs, boost::rv<F>& f):
-            thread_info(make_thread_info(boost::move(f)))
+        thread(attributes& attrs, BOOST_THREAD_RV_REF(F) f):
+            thread_info(make_thread_info(f))
         {
             start_thread(attrs);
         }
 
+#if defined BOOST_THREAD_USES_MOVE
 
-        thread(boost::rv<thread>& x)
+        thread(BOOST_THREAD_RV_REF(thread) x)
         {
             thread_info=x.thread_info;
             x.thread_info.reset();
         }
 #else
-        template <class F>
-        explicit thread(detail::thread_move_t<F> f):
-            thread_info(make_thread_info(f))
-        {
-            start_thread();
-        }
 
-        template <class F>
-        thread(attributes& attrs, detail::thread_move_t<F> f):
-            thread_info(make_thread_info(f))
-        {
-            start_thread(attrs);
-        }
-
-        thread(detail::thread_move_t<thread> x)
+        thread(BOOST_THREAD_RV_REF(thread) x)
         {
             thread_info=x->thread_info;
             x->thread_info.reset();
@@ -350,18 +288,7 @@ namespace boost
             return *this;
         }
 #else
-#if defined BOOST_THREAD_USES_MOVE
-        thread& operator=(boost::rv<thread>& x) BOOST_NOEXCEPT
-        {
-#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
-            if (joinable()) std::terminate();
-#endif
-            thread new_thread(boost::move(x));
-            swap(new_thread);
-            return *this;
-        }
-#else
-        thread& operator=(detail::thread_move_t<thread> x) BOOST_NOEXCEPT
+        thread& operator=(BOOST_THREAD_RV_REF(thread) x) BOOST_NOEXCEPT
         {
 #if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
@@ -370,7 +297,6 @@ namespace boost
             swap(new_thread);
             return *this;
         }
-#endif
 #endif
 #endif
 
@@ -447,9 +373,6 @@ namespace boost
 
         bool joinable() const BOOST_NOEXCEPT;
         void join();
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-        bool timed_join(const system_time& abs_time); // DEPRECATED V2
-
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
@@ -471,6 +394,11 @@ namespace boost
           typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
           return try_join_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
         }
+#endif
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        bool timed_join(const system_time& abs_time); // DEPRECATED V2
+
+#ifdef BOOST_THREAD_USES_CHRONO
         bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp);
 #endif
     public:
@@ -482,26 +410,6 @@ namespace boost
           return do_try_join_until(ts);
         }
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class Rep, class Period>
-        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
-        {
-          return try_join_until(chrono::steady_clock::now() + rel_time);
-        }
-        template <class Clock, class Duration>
-        bool try_join_until(const chrono::time_point<Clock, Duration>& t)
-        {
-          using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
-          typename Clock::time_point  c_now = Clock::now();
-          return try_join_until(s_now + ceil<nanoseconds>(t - c_now));
-        }
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<chrono::system_clock, Duration>& t)
-        {
-          using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
-          return try_join_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-        }
         bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
         {
           using namespace chrono;
@@ -562,17 +470,6 @@ namespace boost
     {
         return static_cast<thread&&>(t);
     }
-    inline thread&& move(thread&& t) BOOST_NOEXCEPT
-    {
-        return static_cast<thread&&>(t);
-    }
-#else
-#if !defined BOOST_THREAD_USES_MOVE
-    inline detail::thread_move_t<thread> move(detail::thread_move_t<thread> t) BOOST_NOEXCEPT
-    {
-        return t;
-    }
-#endif
 #endif
 
 #ifdef BOOST_NO_RVALUE_REFERENCES
@@ -632,7 +529,6 @@ namespace boost
         id() BOOST_NOEXCEPT:
 #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-        //thread_data(detail::win32::invalid_handle_value)
         thread_data(0)
 #else
         thread_data(0)
