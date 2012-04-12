@@ -15,17 +15,18 @@ namespace boost
     class reverse_lock
     {
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        reverse_lock(reverse_lock const&) = delete;
-        reverse_lock& operator=(reverse_lock const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        reverse_lock(reverse_lock&);
-        reverse_lock& operator=(reverse_lock&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//        reverse_lock(reverse_lock const&) = delete;
+//        reverse_lock& operator=(reverse_lock const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//    private:
+//        reverse_lock(reverse_lock&);
+//        reverse_lock& operator=(reverse_lock&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef typename Lock::mutex_type mutex_type;
+        BOOST_THREAD_NO_COPYABLE(reverse_lock)
 
         explicit reverse_lock(Lock& m_)
         : m(m_), mtx(0)

@@ -48,16 +48,17 @@ namespace boost
         }
 
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//        shared_mutex(shared_mutex const&) = delete;
+//        shared_mutex& operator=(shared_mutex const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//    private:
+//        shared_mutex(shared_mutex const&);
+//        shared_mutex& operator=(shared_mutex const&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
-        shared_mutex(shared_mutex const&) = delete;
-        shared_mutex& operator=(shared_mutex const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        shared_mutex(shared_mutex const&);
-        shared_mutex& operator=(shared_mutex const&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
-    public:
+        BOOST_THREAD_NO_COPYABLE(shared_mutex)
 
         shared_mutex()
         {

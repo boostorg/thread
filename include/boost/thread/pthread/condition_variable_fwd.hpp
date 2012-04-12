@@ -30,17 +30,19 @@ namespace boost
         pthread_mutex_t internal_mutex;
         pthread_cond_t cond;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        condition_variable(condition_variable const&) = delete;
-        condition_variable& operator=(condition_variable const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-      condition_variable(condition_variable const&);
-      condition_variable& operator=(condition_variable const&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//        condition_variable(condition_variable const&) = delete;
+//        condition_variable& operator=(condition_variable const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//    private:
+//      condition_variable(condition_variable const&);
+//      condition_variable& operator=(condition_variable const&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
 
     public:
+      BOOST_THREAD_NO_COPYABLE(condition_variable)
         condition_variable()
         {
             int const res=pthread_mutex_init(&internal_mutex,NULL);

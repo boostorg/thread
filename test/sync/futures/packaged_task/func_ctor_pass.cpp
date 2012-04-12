@@ -34,62 +34,32 @@ long lfct()
 
 class A
 {
-    long data_;
+  long data_;
 
 public:
-    static int n_moves;
-    static int n_copies;
+  BOOST_THREAD_COPYABLE_AND_MOVABLE(A)
+  static int n_moves;
+  static int n_copies;
 
-    explicit A(long i) : data_(i) {}
-#ifndef BOOST_NO_RVALUE_REFERENCES
-  A(A&& a) : data_(a.data_)
+  explicit A(long i) : data_(i)
   {
-    ++n_moves; a.data_ = -1;
   }
-#else
-
-#if defined BOOST_THREAD_USES_MOVE
-  operator ::boost::rv<A>&()
+  A(BOOST_THREAD_RV_REF(A) a) : data_(BOOST_THREAD_RV(a).data_)
   {
-    return *static_cast< ::boost::rv<A>* >(this);
+    ++n_moves; BOOST_THREAD_RV(a).data_ = -1;
   }
-  operator const ::boost::rv<A>&() const
+  A(const A& a) : data_(a.data_)
   {
-    return *static_cast<const ::boost::rv<A>* >(this);
+    ++n_copies;
   }
-  ::boost::rv<A>& move()
+  ~A()
   {
-    return *static_cast< ::boost::rv<A>* >(this);
-  }
-  const ::boost::rv<A>& move() const
-  {
-    return *static_cast<const ::boost::rv<A>* >(this);
   }
 
-  A(boost::rv<A>& a) : data_(a.data_)
-  {
-    ++n_moves; a.data_ = -1;
-  }
-#else
-  operator boost::detail::thread_move_t<A>()
-  {
-      return boost::detail::thread_move_t<A>(*this);
-  }
-  boost::detail::thread_move_t<A> move()
-  {
-      return boost::detail::thread_move_t<A>(*this);
-  }
-  A(boost::detail::thread_move_t<A> a) : data_(a.data_)
-  {
-    ++n_moves; a.data_ = -1;
-  }
-
-#endif
-#endif
-  A(const A& a) : data_(a.data_) {++n_copies;}
-
-    long operator()() const {return data_;}
-    long operator()(long i, long j) const {return data_ + i + j;}
+  long operator()() const
+  { return data_;}
+  long operator()(long i, long j) const
+  { return data_ + i + j;}
 };
 
 int A::n_moves = 0;

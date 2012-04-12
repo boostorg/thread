@@ -38,50 +38,18 @@
 
 struct X
 {
-private:
-
-    X(X& other);
-
 public:
-
     int i;
 
+    BOOST_THREAD_MOVABLE_ONLY(X)
     X():
         i(42)
     {}
-#ifndef BOOST_NO_RVALUE_REFERENCES
-    X(X&& other):
-        i(other.i)
+    X(BOOST_THREAD_RV_REF(X) other):
+        i(BOOST_THREAD_RV(other).i)
     {
-        other.i=0;
+      BOOST_THREAD_RV(other).i=0;
     }
-#else
-#if defined BOOST_THREAD_USES_MOVE
-    X(boost::rv<X>& other):
-        i(other.i)
-    {
-        other.i=0;
-    }
-    operator ::boost::rv<X>&()
-    {
-      return *static_cast< ::boost::rv<X>* >(this);
-    }
-    operator const ::boost::rv<X>&() const
-    {
-      return *static_cast<const ::boost::rv<X>* >(this);
-    }
-#else
-    X(boost::detail::thread_move_t<X> other):
-        i(other->i)
-    {
-        other->i=0;
-    }
-    operator boost::detail::thread_move_t<X>()
-    {
-        return boost::detail::thread_move_t<X>(*this);
-    }
-#endif
-#endif
     ~X()
     {}
 };

@@ -27,18 +27,19 @@ namespace boost
 
   struct once_flag
   {
+    BOOST_THREAD_NO_COPYABLE(once_flag)
       BOOST_CONSTEXPR once_flag() BOOST_NOEXCEPT
         : epoch(BOOST_ONCE_INITIAL_FLAG_VALUE)
       {}
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-      once_flag(const once_flag&) = delete;
-      once_flag& operator=(const once_flag&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-  private:
-      once_flag(once_flag&);
-      once_flag& operator=(once_flag&);
-  public:
-#endif // BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//      once_flag(const once_flag&) = delete;
+//      once_flag& operator=(const once_flag&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//  private:
+//      once_flag(once_flag&);
+//      once_flag& operator=(once_flag&);
+//  public:
+//#endif // BOOST_NO_DELETED_FUNCTIONS
   private:
       boost::uintmax_t epoch;
       template<typename Function>
