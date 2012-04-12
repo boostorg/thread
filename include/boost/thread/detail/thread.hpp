@@ -265,21 +265,11 @@ namespace boost
             start_thread(attrs);
         }
 
-#if defined BOOST_THREAD_USES_MOVE
-
         thread(BOOST_THREAD_RV_REF(thread) x)
         {
-            thread_info=x.thread_info;
-            x.thread_info.reset();
+            thread_info=BOOST_THREAD_RV(x).thread_info;
+            BOOST_THREAD_RV(x).thread_info.reset();
         }
-#else
-
-        thread(BOOST_THREAD_RV_REF(thread) x)
-        {
-            thread_info=x->thread_info;
-            x->thread_info.reset();
-        }
-#endif
 
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         thread& operator=(thread x)
