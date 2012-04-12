@@ -67,7 +67,7 @@ int main()
   {
     m.lock();
     boost::thread t(f2);
-    boost::this_thread::sleep_for(ms(300));
+    boost::this_thread::sleep_for(ms(300)+ms(1000));
     m.unlock();
     t.join();
   }
