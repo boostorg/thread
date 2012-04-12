@@ -334,16 +334,16 @@ namespace boost
 #endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-        unique_lock(unique_lock&& other) BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+        unique_lock(BOOST_THREAD_RV_REF(unique_lock) other) BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+          BOOST_THREAD_RV(other).is_locked=false;
+          BOOST_THREAD_RV(other).m=0;
         }
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(upgrade_lock<Mutex>&& other);
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other);
 
 
-        unique_lock& operator=(unique_lock&& other)  BOOST_NOEXCEPT
+        unique_lock& operator=(BOOST_THREAD_RV_REF(unique_lock) other)  BOOST_NOEXCEPT
         {
             unique_lock temp(::boost::move(other));
             swap(temp);
@@ -351,451 +351,265 @@ namespace boost
         }
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        unique_lock& operator=(upgrade_lock<Mutex>&& other)  BOOST_NOEXCEPT
+        unique_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other)  BOOST_NOEXCEPT
         {
             unique_lock temp(::boost::move(other));
             swap(temp);
             return *this;
         }
 #endif
-#else
-#if defined BOOST_THREAD_USES_MOVE
-        unique_lock(boost::rv<unique_lock<Mutex> >& other)  BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+#else // BOOST_NO_RVALUE_REFERENCES
+        unique_lock(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)  BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+          BOOST_THREAD_RV(other).is_locked=false;
+          BOOST_THREAD_RV(other).m=0;
         }
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(boost::rv<upgrade_lock<Mutex> >& other);
-
-//        //operator boost::rv<boost::unique_lock<boost::mutex> >&
-//        operator boost::rv<unique_lock<Mutex> >&()
-//        {
-//          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
-//        }
-//        operator const ::boost::rv<unique_lock<Mutex> >&() const
-//        {
-//          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
-//        }
-//        ::boost::rv<unique_lock<Mutex> >& move()
-//        {
-//          return *static_cast< ::boost::rv<unique_lock<Mutex> >* >(this);
-//        }
-//        const ::boost::rv<unique_lock<Mutex> >& move() const
-//        {
-//          return *static_cast<const ::boost::rv<unique_lock<Mutex> >* >(this);
-//        }
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other);
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         unique_lock& operator=(unique_lock<Mutex> other)
         {
             swap(other);
             return *this;
         }
-#else
-        unique_lock& operator=(boost::rv<unique_lock<Mutex> >& other)  BOOST_NOEXCEPT
+#else  // BOOST_WORKAROUND
+        unique_lock& operator=(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)  BOOST_NOEXCEPT
         {
             unique_lock temp(other);
             swap(temp);
             return *this;
         }
-#endif
-
+#endif // BOOST_WORKAROUND
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        unique_lock& operator=(boost::rv<upgrade_lock<Mutex> >& other)  BOOST_NOEXCEPT
+        unique_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other)  BOOST_NOEXCEPT
         {
             unique_lock temp(other);
             swap(temp);
             return *this;
         }
-#endif
-#else
-        unique_lock(detail::thread_move_t<unique_lock<Mutex> > other)  BOOST_NOEXCEPT:
-            m(other->m),is_locked(other->is_locked)
-        {
-            other->is_locked=false;
-            other->m=0;
-        }
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other);
-
-//        operator detail::thread_move_t<unique_lock<Mutex> >()
-//        {
-//            return move();
-//        }
-//
-//        detail::thread_move_t<unique_lock<Mutex> > move()
-//        {
-//            return detail::thread_move_t<unique_lock<Mutex> >(*this);
-//        }
-
-#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
-        unique_lock& operator=(unique_lock<Mutex> other)
-        {
-            swap(other);
-            return *this;
-        }
-#else
-        unique_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)  BOOST_NOEXCEPT
-        {
-            unique_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-#endif
-
-#ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        unique_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)  BOOST_NOEXCEPT
-        {
-            unique_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-#endif
-
-        void swap(detail::thread_move_t<unique_lock<Mutex> > other)  BOOST_NOEXCEPT
-        {
-            std::swap(m,other->m);
-            std::swap(is_locked,other->is_locked);
-        }
-#endif
-#endif
+#endif // BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
+#endif // BOOST_NO_RVALUE_REFERENCES
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from upgrade locking
-        unique_lock(upgrade_lock<mutex_type>&& ul, try_to_lock_t)
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul, try_to_lock_t)
         : m(0),is_locked(false)
         {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock())
+            if (BOOST_THREAD_RV(ul).owns_lock()) {
+              if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock())
               {
-                  m = ul.release();
+                  m = BOOST_THREAD_RV(ul).release();
                   is_locked = true;
               }
             }
             else
             {
-              m = ul.release();
+              m = BOOST_THREAD_RV(ul).release();
             }
         }
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
-        unique_lock(upgrade_lock<mutex_type>&& ul,
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul,
                     const chrono::time_point<Clock, Duration>& abs_time)
         : m(0),is_locked(false)
         {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock_until(abs_time))
+            if (BOOST_THREAD_RV(ul).owns_lock()) {
+              if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock_until(abs_time))
               {
-                  m = ul.release();
+                  m = BOOST_THREAD_RV(ul).release();
                   is_locked = true;
               }
             }
             else
             {
-              m = ul.release();
+              m = BOOST_THREAD_RV(ul).release();
             }
         }
 
         template <class Rep, class Period>
-        unique_lock(upgrade_lock<mutex_type>&& ul,
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul,
                     const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-          if (ul.owns_lock()) {
-            if (ul.mutex()->try_unlock_upgrade_and_lock_for(rel_time))
+          if (BOOST_THREAD_RV(ul).owns_lock()) {
+            if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock_for(rel_time))
             {
-              m = ul.release();
+              m = BOOST_THREAD_RV(ul).release();
               is_locked = true;
             }
           }
           else
           {
-            m = ul.release();
+            m = BOOST_THREAD_RV(ul).release();
           }
         }
 #endif
 #else
 
-#if defined BOOST_THREAD_USES_MOVE
         // Conversion from upgrade locking
-        unique_lock(boost::rv<upgrade_lock<mutex_type> > &ul, try_to_lock_t)
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul, try_to_lock_t)
         : m(0),is_locked(false)
         {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock())
+            if (BOOST_THREAD_RV(ul).owns_lock()) {
+              if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock())
               {
-                  m = ul.release();
+                  m = BOOST_THREAD_RV(ul).release();
                   is_locked = true;
               }
             }
             else
             {
-              m = ul.release();
-            }
-        }
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Clock, class Duration>
-        unique_lock(boost::rv<upgrade_lock<mutex_type> > &ul,
-                    const chrono::time_point<Clock, Duration>& abs_time)
-        : m(0),is_locked(false)
-        {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock_until(abs_time))
-              {
-                  m = ul.release();
-                  is_locked = true;
-              }
-            }
-            else
-            {
-              m = ul.release();
+              m = BOOST_THREAD_RV(ul).release();
             }
         }
 
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Clock, class Duration>
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul,
+                    const chrono::time_point<Clock, Duration>& abs_time)
+        : m(0),is_locked(false)
+        {
+            if (BOOST_THREAD_RV(ul).owns_lock()) {
+              if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock_until(abs_time))
+              {
+                  m = BOOST_THREAD_RV(ul).release();
+                  is_locked = true;
+              }
+            }
+            else
+            {
+              m = BOOST_THREAD_RV(ul).release();
+            }
+        }
         template <class Rep, class Period>
-        unique_lock(boost::rv<upgrade_lock<mutex_type> > &ul,
+        unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<mutex_type>) ul,
                     const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-          if (ul.owns_lock()) {
-            if (ul.mutex()->try_unlock_upgrade_and_lock_for(rel_time))
+          if (BOOST_THREAD_RV(ul).owns_lock()) {
+            if (BOOST_THREAD_RV(ul).mutex()->try_unlock_upgrade_and_lock_for(rel_time))
             {
-              m = ul.release();
+              m = BOOST_THREAD_RV(ul).release();
               is_locked = true;
             }
           }
           else
           {
-            m = ul.release();
+            m = BOOST_THREAD_RV(ul).release();
           }
         }
-#endif
-#else
-        // Conversion from upgrade locking
-        unique_lock(detail::thread_move_t<upgrade_lock<mutex_type> > ul, try_to_lock_t)
-        : m(0),is_locked(false)
-        {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock())
-              {
-                  m = ul.release();
-                  is_locked = true;
-              }
-            }
-            else
-            {
-              m = ul.release();
-            }
-        }
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Clock, class Duration>
-        unique_lock(detail::thread_move_t<upgrade_lock<mutex_type> > ul,
-                    const chrono::time_point<Clock, Duration>& abs_time)
-        : m(0),is_locked(false)
-        {
-            if (ul.owns_lock()) {
-              if (ul.mutex()->try_unlock_upgrade_and_lock_until(abs_time))
-              {
-                  m = ul.release();
-                  is_locked = true;
-              }
-            }
-            else
-            {
-              m = ul.release();
-            }
-        }
-
-        template <class Rep, class Period>
-        unique_lock(detail::thread_move_t<upgrade_lock<mutex_type> > ul,
-                    const chrono::duration<Rep, Period>& rel_time)
-        : m(0),is_locked(false)
-        {
-          if (ul.owns_lock()) {
-            if (ul.mutex()->try_unlock_upgrade_and_lock_for(rel_time))
-            {
-              m = ul.release();
-              is_locked = true;
-            }
-          }
-          else
-          {
-            m = ul.release();
-          }
-        }
-#endif
 #endif
 #endif
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
-        unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl, try_to_lock_t)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock())
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock())
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
-        unique_lock(shared_lock<mutex_type>&& sl,
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                     const chrono::time_point<Clock, Duration>& abs_time)
         : m(0),is_locked(false)
         {
-            if (sl.owns_lock()) {
-              if (sl.mutex()->try_unlock_shared_and_lock_until(abs_time))
+            if (BOOST_THREAD_RV(sl).owns_lock()) {
+              if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_until(abs_time))
               {
-                  m = sl.release();
+                  m = BOOST_THREAD_RV(sl).release();
                   is_locked = true;
               }
             }
             else
             {
-              m = sl.release();
+              m = BOOST_THREAD_RV(sl).release();
             }
         }
 
         template <class Rep, class Period>
-        unique_lock(shared_lock<mutex_type>&& sl,
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                     const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-              if (sl.owns_lock()) {
-                if (sl.mutex()->try_unlock_shared_and_lock_for(rel_time))
+              if (BOOST_THREAD_RV(sl).owns_lock()) {
+                if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_for(rel_time))
                 {
-                    m = sl.release();
+                    m = BOOST_THREAD_RV(sl).release();
                     is_locked = true;
                 }
               }
               else
               {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
               }
         }
 #endif
 #else
-
-#if defined BOOST_THREAD_USES_MOVE
-
         // Conversion from shared locking
-        unique_lock(boost::rv<shared_lock<mutex_type> >& sl, try_to_lock_t)
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl, try_to_lock_t)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock())
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock())
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
-        unique_lock(boost::rv<shared_lock<mutex_type> >& sl,
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                     const chrono::time_point<Clock, Duration>& abs_time)
         : m(0),is_locked(false)
         {
-            if (sl.owns_lock()) {
-              if (sl.mutex()->try_unlock_shared_and_lock_until(abs_time))
+            if (BOOST_THREAD_RV(sl).owns_lock()) {
+              if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_until(abs_time))
               {
-                  m = sl.release();
+                  m = BOOST_THREAD_RV(sl).release();
                   is_locked = true;
               }
             }
             else
             {
-              m = sl.release();
+              m = BOOST_THREAD_RV(sl).release();
             }
         }
-
         template <class Rep, class Period>
-        unique_lock(boost::rv<shared_lock<mutex_type> >& sl,
+        unique_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                     const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-              if (sl.owns_lock()) {
-                if (sl.mutex()->try_unlock_shared_and_lock_for(rel_time))
+              if (BOOST_THREAD_RV(sl).owns_lock()) {
+                if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_for(rel_time))
                 {
-                    m = sl.release();
+                    m = BOOST_THREAD_RV(sl).release();
                     is_locked = true;
                 }
               }
               else
               {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
               }
         }
-#endif
-#else
-
-        // Conversion from shared locking
-        unique_lock(detail::thread_move_t<shared_lock<mutex_type> > sl, try_to_lock_t)
-        : m(0),is_locked(false)
-        {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock())
-            {
-                m = sl.release();
-                is_locked = true;
-            }
-          }
-          else
-          {
-            m = sl.release();
-          }
-        }
-
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Clock, class Duration>
-        unique_lock(detail::thread_move_t<shared_lock<mutex_type> > sl,
-                    const chrono::time_point<Clock, Duration>& abs_time)
-        : m(0),is_locked(false)
-        {
-            if (sl.owns_lock()) {
-              if (sl.mutex()->try_unlock_shared_and_lock_until(abs_time))
-              {
-                  m = sl.release();
-                  is_locked = true;
-              }
-            }
-            else
-            {
-              m = sl.release();
-            }
-        }
-
-        template <class Rep, class Period>
-        unique_lock(detail::thread_move_t<shared_lock<mutex_type> > sl,
-                    const chrono::duration<Rep, Period>& rel_time)
-        : m(0),is_locked(false)
-        {
-              if (sl.owns_lock()) {
-                if (sl.mutex()->try_unlock_shared_and_lock_for(rel_time))
-                {
-                    m = sl.release();
-                    is_locked = true;
-                }
-              }
-              else
-              {
-                m = sl.release();
-              }
-        }
-#endif
 #endif
 #endif
 #endif
@@ -1030,37 +844,37 @@ namespace boost
 #endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-        shared_lock(shared_lock<Mutex> && other) BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+        shared_lock(BOOST_THREAD_RV_REF(shared_lock<Mutex>) other) BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(unique_lock<Mutex> && other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_and_lock_shared();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(upgrade_lock<Mutex> && other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_upgrade_and_lock_shared();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
 
-        shared_lock& operator=(shared_lock<Mutex> && other) BOOST_NOEXCEPT
+        shared_lock& operator=(BOOST_THREAD_RV_REF(shared_lock<Mutex>) other) BOOST_NOEXCEPT
         {
             shared_lock temp(::boost::move(other));
             swap(temp);
@@ -1068,14 +882,14 @@ namespace boost
         }
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        shared_lock& operator=(unique_lock<Mutex> && other)
+        shared_lock& operator=(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)
         {
             shared_lock temp(::boost::move(other));
             swap(temp);
             return *this;
         }
 
-        shared_lock& operator=(upgrade_lock<Mutex> && other)
+        shared_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other)
         {
             shared_lock temp(::boost::move(other));
             swap(temp);
@@ -1083,37 +897,35 @@ namespace boost
         }
 #endif
 #else
-#if defined BOOST_THREAD_USES_MOVE
-        shared_lock(boost::rv<shared_lock<Mutex> >& other) BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+        shared_lock(BOOST_THREAD_RV_REF(shared_lock<Mutex>) other) BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
-
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(boost::rv<unique_lock<Mutex> >& other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_and_lock_shared();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(boost::rv<upgrade_lock<Mutex> >& other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_upgrade_and_lock_shared();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        shared_lock& operator=(::boost::rv<shared_lock<Mutex> >& other) BOOST_NOEXCEPT
+        shared_lock& operator=(BOOST_THREAD_RV_REF(shared_lock<Mutex>) other) BOOST_NOEXCEPT
         {
             shared_lock temp(other);
             swap(temp);
@@ -1121,86 +933,21 @@ namespace boost
         }
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        shared_lock& operator=(::boost::rv<unique_lock<Mutex> >& other)
+        shared_lock& operator=(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)
         {
             shared_lock temp(other);
             swap(temp);
             return *this;
         }
 
-        shared_lock& operator=(::boost::rv<upgrade_lock<Mutex> >& other)
+        shared_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other)
         {
             shared_lock temp(other);
             swap(temp);
             return *this;
         }
-#endif
-#else
-
-        shared_lock(detail::thread_move_t<shared_lock<Mutex> > other) BOOST_NOEXCEPT:
-            m(other->m),is_locked(other->is_locked)
-        {
-            other->is_locked=false;
-            other->m=0;
-        }
-
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(detail::thread_move_t<unique_lock<Mutex> > other):
-            m(other->m),is_locked(other->is_locked)
-        {
-            if(is_locked)
-            {
-                m->unlock_and_lock_shared();
-            }
-            other->is_locked=false;
-            other->m=0;
-        }
-
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION shared_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
-            m(other->m),is_locked(other->is_locked)
-        {
-            if(is_locked)
-            {
-                m->unlock_upgrade_and_lock_shared();
-            }
-            other->is_locked=false;
-            other->m=0;
-        }
-
-//        operator detail::thread_move_t<shared_lock<Mutex> >() BOOST_NOEXCEPT
-//        {
-//            return move();
-//        }
-//
-//        detail::thread_move_t<shared_lock<Mutex> > move() BOOST_NOEXCEPT
-//        {
-//            return detail::thread_move_t<shared_lock<Mutex> >(*this);
-//        }
-
-
-        shared_lock& operator=(detail::thread_move_t<shared_lock<Mutex> > other) BOOST_NOEXCEPT
-        {
-            shared_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-
-#ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        shared_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
-        {
-            shared_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-
-        shared_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other)
-        {
-            shared_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-#endif
-#endif
-#endif
+#endif // BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
+#endif // BOOST_NO_RVALUE_REFERENCES
 
         void swap(shared_lock& other) BOOST_NOEXCEPT
         {
@@ -1408,25 +1155,25 @@ namespace boost
 #endif
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
-        upgrade_lock(upgrade_lock<Mutex>&& other) BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+        upgrade_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other) BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION upgrade_lock(unique_lock<Mutex>&& other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION upgrade_lock(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_and_lock_upgrade();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
 
-        upgrade_lock& operator=(upgrade_lock<Mutex>&& other) BOOST_NOEXCEPT
+        upgrade_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other) BOOST_NOEXCEPT
         {
             upgrade_lock temp(::boost::move(other));
             swap(temp);
@@ -1434,7 +1181,7 @@ namespace boost
         }
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        upgrade_lock& operator=(unique_lock<Mutex>&& other)
+        upgrade_lock& operator=(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)
         {
             upgrade_lock temp(::boost::move(other));
             swap(temp);
@@ -1442,26 +1189,23 @@ namespace boost
         }
 #endif
 #else
-#if defined BOOST_THREAD_USES_MOVE
-        upgrade_lock(boost::rv<upgrade_lock<Mutex> >& other) BOOST_NOEXCEPT:
-            m(other.m),is_locked(other.is_locked)
+        upgrade_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other) BOOST_NOEXCEPT:
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
-
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION upgrade_lock(boost::rv<unique_lock<Mutex> >& other):
-            m(other.m),is_locked(other.is_locked)
+        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION upgrade_lock(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other):
+            m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
         {
             if(is_locked)
             {
                 m->unlock_and_lock_upgrade();
             }
-            other.is_locked=false;
-            other.m=0;
+            BOOST_THREAD_RV(other).is_locked=false;
+            BOOST_THREAD_RV(other).m=0;
         }
-
-        upgrade_lock& operator=(boost::rv<upgrade_lock<Mutex> >& other) BOOST_NOEXCEPT
+        upgrade_lock& operator=(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other) BOOST_NOEXCEPT
         {
             upgrade_lock temp(other);
             swap(temp);
@@ -1469,232 +1213,128 @@ namespace boost
         }
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        upgrade_lock& operator=(boost::rv<unique_lock<Mutex> >& other)
+        upgrade_lock& operator=(BOOST_THREAD_RV_REF(unique_lock<Mutex>) other)
         {
             upgrade_lock temp(other);
             swap(temp);
             return *this;
         }
-#endif
-#else
-        upgrade_lock(detail::thread_move_t<upgrade_lock<Mutex> > other) BOOST_NOEXCEPT:
-            m(other->m),is_locked(other->is_locked)
-        {
-            other->is_locked=false;
-            other->m=0;
-        }
-
-        BOOST_THREAD_EXPLICIT_LOCK_CONVERSION upgrade_lock(detail::thread_move_t<unique_lock<Mutex> > other):
-            m(other->m),is_locked(other->is_locked)
-        {
-            if(is_locked)
-            {
-                m->unlock_and_lock_upgrade();
-            }
-            other->is_locked=false;
-            other->m=0;
-        }
-
-//        operator detail::thread_move_t<upgrade_lock<Mutex> >() BOOST_NOEXCEPT
-//        {
-//            return move();
-//        }
-//
-//        detail::thread_move_t<upgrade_lock<Mutex> > move() BOOST_NOEXCEPT
-//        {
-//            return detail::thread_move_t<upgrade_lock<Mutex> >(*this);
-//        }
-
-
-        upgrade_lock& operator=(detail::thread_move_t<upgrade_lock<Mutex> > other) BOOST_NOEXCEPT
-        {
-            upgrade_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-
-#ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
-        upgrade_lock& operator=(detail::thread_move_t<unique_lock<Mutex> > other)
-        {
-            upgrade_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-#endif
 #endif
 #endif
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
 #ifndef BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
-        upgrade_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
+        upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl, try_to_lock_t)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade())
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade())
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
-            upgrade_lock(shared_lock<mutex_type>&& sl,
+            upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                          const chrono::time_point<Clock, Duration>& abs_time)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_until(abs_time))
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade_until(abs_time))
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
 
         template <class Rep, class Period>
-            upgrade_lock(shared_lock<mutex_type>&& sl,
+            upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl,
                          const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_for(rel_time))
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade_for(rel_time))
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
-#endif
-#else
-
-
-#if defined BOOST_THREAD_USES_MOVE
+#endif // BOOST_THREAD_USES_CHRONO
+#else // BOOST_NO_RVALUE_REFERENCES
         // Conversion from shared locking
-
-        upgrade_lock(boost::rv<shared_lock<mutex_type> > &sl, try_to_lock_t)
+        upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>) sl, try_to_lock_t)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade())
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade())
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
+
 #ifdef BOOST_THREAD_USES_CHRONO
+
         template <class Clock, class Duration>
-            upgrade_lock(boost::rv<shared_lock<mutex_type> > &sl,
+            upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>)sl,
                          const chrono::time_point<Clock, Duration>& abs_time)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_until(abs_time))
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade_until(abs_time))
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
 
         template <class Rep, class Period>
-            upgrade_lock(boost::rv<shared_lock<mutex_type> > &sl,
+            upgrade_lock(BOOST_THREAD_RV_REF(shared_lock<mutex_type>)sl,
                          const chrono::duration<Rep, Period>& rel_time)
         : m(0),is_locked(false)
         {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_for(rel_time))
+          if (BOOST_THREAD_RV(sl).owns_lock()) {
+            if (BOOST_THREAD_RV(sl).mutex()->try_unlock_shared_and_lock_upgrade_for(rel_time))
             {
-                m = sl.release();
+                m = BOOST_THREAD_RV(sl).release();
                 is_locked = true;
             }
           }
           else
           {
-            m = sl.release();
+            m = BOOST_THREAD_RV(sl).release();
           }
         }
-#endif
-#else
-        // Conversion from shared locking
-
-        upgrade_lock(detail::thread_move_t<shared_lock<mutex_type> > sl, try_to_lock_t)
-        : m(0),is_locked(false)
-        {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade())
-            {
-                m = sl.release();
-                is_locked = true;
-            }
-          }
-          else
-          {
-            m = sl.release();
-          }
-        }
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Clock, class Duration>
-            upgrade_lock(detail::thread_move_t<shared_lock<mutex_type> > sl,
-                         const chrono::time_point<Clock, Duration>& abs_time)
-        : m(0),is_locked(false)
-        {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_until(abs_time))
-            {
-                m = sl.release();
-                is_locked = true;
-            }
-          }
-          else
-          {
-            m = sl.release();
-          }
-        }
-
-        template <class Rep, class Period>
-            upgrade_lock(detail::thread_move_t<shared_lock<mutex_type> >& sl,
-                         const chrono::duration<Rep, Period>& rel_time)
-        : m(0),is_locked(false)
-        {
-          if (sl.owns_lock()) {
-            if (sl.mutex()->try_unlock_shared_and_lock_upgrade_for(rel_time))
-            {
-                m = sl.release();
-                is_locked = true;
-            }
-          }
-          else
-          {
-            m = sl.release();
-          }
-        }
-#endif
-#endif
-#endif
-#endif
+#endif // BOOST_THREAD_USES_CHRONO
+#endif // BOOST_NO_RVALUE_REFERENCES
+#endif // BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
 
         void swap(upgrade_lock& other) BOOST_NOEXCEPT
         {
@@ -1827,42 +1467,17 @@ namespace boost
 #endif
 
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename Mutex>
-    unique_lock<Mutex>::unique_lock(upgrade_lock<Mutex>&& other):
-        m(other.m),is_locked(other.is_locked)
+    unique_lock<Mutex>::unique_lock(BOOST_THREAD_RV_REF(upgrade_lock<Mutex>) other):
+        m(BOOST_THREAD_RV(other).m),is_locked(BOOST_THREAD_RV(other).is_locked)
     {
         if(is_locked)
         {
             m->unlock_upgrade_and_lock();
         }
-        other.release();
+        BOOST_THREAD_RV(other).release();
     }
-#else
-#if defined BOOST_THREAD_USES_MOVE
-    template<typename Mutex>
-    unique_lock<Mutex>::unique_lock(boost::rv<upgrade_lock<Mutex> >& other):
-        m(other.m),is_locked(other.is_locked)
-    {
-        if(is_locked)
-        {
-            m->unlock_upgrade_and_lock();
-        }
-        other.release();
-    }
-#else
-    template<typename Mutex>
-    unique_lock<Mutex>::unique_lock(detail::thread_move_t<upgrade_lock<Mutex> > other):
-        m(other->m),is_locked(other->is_locked)
-    {
-        if(is_locked)
-        {
-            m->unlock_upgrade_and_lock();
-        }
-        other.release();
-    }
-#endif
-#endif
+
     template <class Mutex>
     class upgrade_to_unique_lock
     {
@@ -1885,50 +1500,19 @@ namespace boost
             }
         }
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
-        upgrade_to_unique_lock(upgrade_to_unique_lock<Mutex>&& other) BOOST_NOEXCEPT:
-            source(other.source),exclusive(::boost::move(other.exclusive))
+        upgrade_to_unique_lock(BOOST_THREAD_RV_REF(upgrade_to_unique_lock<Mutex>) other) BOOST_NOEXCEPT:
+            source(BOOST_THREAD_RV(other).source),exclusive(::boost::move(BOOST_THREAD_RV(other).exclusive))
         {
-            other.source=0;
+            BOOST_THREAD_RV(other).source=0;
         }
 
-        upgrade_to_unique_lock& operator=(upgrade_to_unique_lock<Mutex>&& other) BOOST_NOEXCEPT
-        {
-            upgrade_to_unique_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-#else
-#if defined BOOST_THREAD_USES_MOVE
-        upgrade_to_unique_lock(boost::rv<upgrade_to_unique_lock<Mutex> >& other) BOOST_NOEXCEPT:
-            source(other.source),exclusive(::boost::move(other.exclusive))
-        {
-            other.source=0;
-        }
-
-        upgrade_to_unique_lock& operator=(boost::rv<upgrade_to_unique_lock<Mutex> >& other) BOOST_NOEXCEPT
+        upgrade_to_unique_lock& operator=(BOOST_THREAD_RV_REF(upgrade_to_unique_lock<Mutex>) other) BOOST_NOEXCEPT
         {
             upgrade_to_unique_lock temp(other);
             swap(temp);
             return *this;
         }
 
-#else
-        upgrade_to_unique_lock(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other) BOOST_NOEXCEPT:
-            source(other->source),exclusive(::boost::move(other->exclusive))
-        {
-            other->source=0;
-        }
-
-        upgrade_to_unique_lock& operator=(detail::thread_move_t<upgrade_to_unique_lock<Mutex> > other) BOOST_NOEXCEPT
-        {
-            upgrade_to_unique_lock temp(other);
-            swap(temp);
-            return *this;
-        }
-
-#endif
-#endif
         void swap(upgrade_to_unique_lock& other) BOOST_NOEXCEPT
         {
             std::swap(source,other.source);
@@ -1992,11 +1576,11 @@ namespace boost
                 base(m_,try_to_lock)
             {}
 #ifndef BOOST_NO_RVALUE_REFERENCES
-            try_lock_wrapper(try_lock_wrapper&& other):
+            try_lock_wrapper(BOOST_THREAD_RV_REF(try_lock_wrapper) other):
                 base(::boost::move(other))
             {}
 
-            try_lock_wrapper& operator=(try_lock_wrapper<Mutex>&& other)
+            try_lock_wrapper& operator=(BOOST_THREAD_RV_REF(try_lock_wrapper<Mutex>) other)
             {
                 try_lock_wrapper temp(::boost::move(other));
                 swap(temp);
@@ -2005,34 +1589,21 @@ namespace boost
 
 #else
 #if defined BOOST_THREAD_USES_MOVE
-            try_lock_wrapper(boost::rv<try_lock_wrapper<Mutex> >& other):
+            try_lock_wrapper(BOOST_THREAD_RV_REF(try_lock_wrapper<Mutex>) other):
                 base(::boost::move(static_cast<base&>(other)))
             {}
 
-            try_lock_wrapper& operator=(boost::rv<try_lock_wrapper<Mutex> >& other)
-            {
-                try_lock_wrapper temp(other);
-                swap(temp);
-                return *this;
-            }
-
 #else
-            try_lock_wrapper(detail::thread_move_t<try_lock_wrapper<Mutex> > other):
-                base(detail::thread_move_t<base>(*other))
+            try_lock_wrapper(BOOST_THREAD_RV_REF(try_lock_wrapper<Mutex>) other):
+                base(BOOST_THREAD_RV_REF(base)(*other))
             {}
-
-            try_lock_wrapper& operator=(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
+#endif
+            try_lock_wrapper& operator=(BOOST_THREAD_RV_REF(try_lock_wrapper<Mutex>) other)
             {
                 try_lock_wrapper temp(other);
                 swap(temp);
                 return *this;
             }
-
-            void swap(detail::thread_move_t<try_lock_wrapper<Mutex> > other)
-            {
-                base::swap(*other);
-            }
-#endif
 #endif
             void swap(try_lock_wrapper& other)
             {
@@ -2560,7 +2131,6 @@ namespace boost
     }
 
 }
-
 #include <boost/config/abi_suffix.hpp>
 
 #endif
