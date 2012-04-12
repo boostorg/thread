@@ -40,15 +40,15 @@ namespace boost
 {
     class recursive_mutex
     {
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-      recursive_mutex(recursive_mutex const&) = delete;
-      recursive_mutex& operator=(recursive_mutex const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-  private:
-      recursive_mutex(recursive_mutex const&);
-      recursive_mutex& operator=(recursive_mutex const&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//      recursive_mutex(recursive_mutex const&) = delete;
+//      recursive_mutex& operator=(recursive_mutex const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//  private:
+//      recursive_mutex(recursive_mutex const&);
+//      recursive_mutex& operator=(recursive_mutex const&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
@@ -58,6 +58,7 @@ namespace boost
         unsigned count;
 #endif
     public:
+        BOOST_THREAD_NO_COPYABLE(recursive_mutex)
         recursive_mutex()
         {
 #ifdef BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
@@ -182,15 +183,15 @@ namespace boost
 
     class recursive_timed_mutex
     {
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-      recursive_timed_mutex(recursive_timed_mutex const&) = delete;
-      recursive_timed_mutex& operator=(recursive_timed_mutex const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-      recursive_timed_mutex(recursive_timed_mutex const&);
-      recursive_timed_mutex& operator=(recursive_timed_mutex const&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//      recursive_timed_mutex(recursive_timed_mutex const&) = delete;
+//      recursive_timed_mutex& operator=(recursive_timed_mutex const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//    private:
+//      recursive_timed_mutex(recursive_timed_mutex const&);
+//      recursive_timed_mutex& operator=(recursive_timed_mutex const&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
@@ -200,6 +201,7 @@ namespace boost
         unsigned count;
 #endif
     public:
+        BOOST_THREAD_NO_COPYABLE(recursive_timed_mutex)
         recursive_timed_mutex()
         {
 #ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK

@@ -826,19 +826,13 @@ namespace boost
         {
             future_.swap(BOOST_THREAD_RV(other).future_);
         }
-        BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
-        {
-            future_=BOOST_THREAD_RV(other).future_;
-            BOOST_THREAD_RV(other).future_.reset();
-            return *this;
-        }
 #else
         BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT:
             future_(BOOST_THREAD_RV(other).future_)
         {
             BOOST_THREAD_RV(other).future_.reset();
         }
-
+#endif
         BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
         {
             future_=BOOST_THREAD_RV(other).future_;
@@ -846,7 +840,6 @@ namespace boost
             return *this;
         }
 
-#endif
         shared_future<R> share()
         {
           return shared_future<R>(::boost::move(*this));
@@ -958,9 +951,6 @@ namespace boost
 
         future_ptr future_;
 
-//         shared_future(const BOOST_THREAD_FUTURE<R>& other);
-//         shared_future& operator=(const BOOST_THREAD_FUTURE<R>& other);
-
         friend class detail::future_waiter;
         friend class promise<R>;
         friend class packaged_task<R>;
@@ -998,18 +988,6 @@ namespace boost
         {
             future_.swap(BOOST_THREAD_RV(other).future_);
         }
-        shared_future& operator=(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT
-        {
-            future_.swap(BOOST_THREAD_RV(other).future_);
-            BOOST_THREAD_RV(other).future_.reset();
-            return *this;
-        }
-        shared_future& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<R>) other) BOOST_NOEXCEPT
-        {
-            future_.swap(BOOST_THREAD_RV(other).future_);
-            BOOST_THREAD_RV(other).future_.reset();
-            return *this;
-        }
 #else
         shared_future(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT :
             future_(BOOST_THREAD_RV(other).future_)
@@ -1021,6 +999,7 @@ namespace boost
         {
             BOOST_THREAD_RV(other).future_.reset();
         }
+#endif
         shared_future& operator=(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT
         {
             future_.swap(BOOST_THREAD_RV(other).future_);
@@ -1033,8 +1012,6 @@ namespace boost
             BOOST_THREAD_RV(other).future_.reset();
             return *this;
         }
-
-#endif
 
         void swap(shared_future& other) BOOST_NOEXCEPT
         {
@@ -1226,7 +1203,6 @@ namespace boost
             BOOST_THREAD_RV(rhs).future_obtained=false;
             return *this;
         }
-
 #endif
 
         void swap(promise& other)
@@ -1350,30 +1326,14 @@ namespace boost
         }
 
         // Assignment
-#ifndef BOOST_NO_RVALUE_REFERENCES
-        promise(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT :
-            future_obtained(BOOST_THREAD_RV(rhs).future_obtained)
-        {
-            future_.swap(BOOST_THREAD_RV(rhs).future_);
-            // we need to release the future as shared_ptr doesn't implements move semantics
-            BOOST_THREAD_RV(rhs).future_.reset();
-            BOOST_THREAD_RV(rhs).future_obtained=false;
-        }
-        promise & operator=(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT
-        {
-            future_.swap(BOOST_THREAD_RV(rhs).future_);
-            future_obtained=BOOST_THREAD_RV(rhs).future_obtained;
-            BOOST_THREAD_RV(rhs).future_.reset();
-            BOOST_THREAD_RV(rhs).future_obtained=false;
-            return *this;
-        }
-#else
         promise(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT :
             future_(BOOST_THREAD_RV(rhs).future_),future_obtained(BOOST_THREAD_RV(rhs).future_obtained)
         {
+          // we need to release the future as shared_ptr doesn't implements move semantics
             BOOST_THREAD_RV(rhs).future_.reset();
             BOOST_THREAD_RV(rhs).future_obtained=false;
         }
+
         promise & operator=(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT
         {
             future_=BOOST_THREAD_RV(rhs).future_;
@@ -1382,8 +1342,6 @@ namespace boost
             BOOST_THREAD_RV(rhs).future_obtained=false;
             return *this;
         }
-
-#endif
 
         void swap(promise& other)
         {

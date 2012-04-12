@@ -41,57 +41,17 @@ class A
   long data_;
 
 public:
+  BOOST_THREAD_COPYABLE_AND_MOVABLE(A)
   static int n_moves;
   static int n_copies;
 
   explicit A(long i) : data_(i)
   {
   }
-#ifndef BOOST_NO_RVALUE_REFERENCES
-  A(A&& a) : data_(a.data_)
+  A(BOOST_THREAD_RV_REF(A) a) : data_(BOOST_THREAD_RV(a).data_)
   {
-    ++n_moves; a.data_ = -1;
+    ++n_moves; BOOST_THREAD_RV(a).data_ = -1;
   }
-#else
-
-#if defined BOOST_THREAD_USES_MOVE
-  operator ::boost::rv<A>&()
-  {
-    return *static_cast< ::boost::rv<A>* >(this);
-  }
-  operator const ::boost::rv<A>&() const
-  {
-    return *static_cast<const ::boost::rv<A>* >(this);
-  }
-  ::boost::rv<A>& move()
-  {
-    return *static_cast< ::boost::rv<A>* >(this);
-  }
-  const ::boost::rv<A>& move() const
-  {
-    return *static_cast<const ::boost::rv<A>* >(this);
-  }
-
-  A(boost::rv<A>& a) : data_(a.data_)
-  {
-    ++n_moves; a.data_ = -1;
-  }
-#else
-  operator boost::detail::thread_move_t<A>()
-  {
-      return boost::detail::thread_move_t<A>(*this);
-  }
-  boost::detail::thread_move_t<A> move()
-  {
-      return boost::detail::thread_move_t<A>(*this);
-  }
-  A(boost::detail::thread_move_t<A> a) : data_(a.data_)
-  {
-    ++n_moves; a.data_ = -1;
-  }
-
-#endif
-#endif
   A(const A& a) : data_(a.data_)
   {
     ++n_copies;

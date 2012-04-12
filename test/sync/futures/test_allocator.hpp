@@ -75,16 +75,8 @@ public:
     void construct(pointer p, const T& val)
         {::new(p) T(val);}
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
-    void construct(pointer p, T&& val)
+    void construct(pointer p, BOOST_THREAD_RV_REF(T) val)
         {::new(p) T(boost::move(val));}
-#elif defined BOOST_THREAD_USES_MOVE
-    void construct(pointer p, ::boost::rv<T>& val)
-        {::new(p) T(boost::move(val));}
-#else
-    void construct(pointer p, ::boost::detail::thread_move_t<T> val)
-        {::new(p) T(boost::move(val));}
-#endif  // BOOST_NO_RVALUE_REFERENCES
 
     void destroy(pointer p) {p->~T();}
 

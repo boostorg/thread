@@ -25,51 +25,13 @@
 
 class MoveOnly
 {
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-  public:
-  MoveOnly(const MoveOnly&)=delete;
-  MoveOnly& operator=(MoveOnly const&);
-#else
-  private:
-  MoveOnly(MoveOnly&);
-  MoveOnly& operator=(MoveOnly&);
-  public:
-#endif
+public:
+  BOOST_THREAD_MOVABLE_ONLY(MoveOnly)
   MoveOnly()
   {
   }
-#ifndef BOOST_NO_RVALUE_REFERENCES
-  MoveOnly(MoveOnly&&)
+  MoveOnly(BOOST_THREAD_RV_REF(MoveOnly))
   {}
-#else
-#if defined BOOST_THREAD_USES_MOVE
-  MoveOnly(boost::rv<MoveOnly>&)
-  {}
-  MoveOnly& operator=(boost::rv<MoveOnly>&)
-  {
-    return *this;
-  }
-  operator ::boost::rv<MoveOnly>&()
-  {
-    return *static_cast< ::boost::rv<MoveOnly>* >(this);
-  }
-  operator const ::boost::rv<MoveOnly>&() const
-  {
-    return *static_cast<const ::boost::rv<MoveOnly>* >(this);
-  }
-  ::boost::rv<MoveOnly>& move()
-  {
-    return *static_cast< ::boost::rv<MoveOnly>* >(this);
-  }
-  const ::boost::rv<MoveOnly>& move() const
-  {
-    return *static_cast<const ::boost::rv<MoveOnly>* >(this);
-  }
-#else
-  MoveOnly(detail::thread_move_t<MoveOnly>)
-  {}
-#endif
-#endif
 
   void operator()()
   {

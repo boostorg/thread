@@ -17,17 +17,18 @@ namespace boost
     private:
         SharedMutex& m;
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        shared_lock_guard(shared_lock_guard const&) = delete;
-        shared_lock_guard& operator=(shared_lock_guard const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        shared_lock_guard(shared_lock_guard&);
-        shared_lock_guard& operator=(shared_lock_guard&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
+//#ifndef BOOST_NO_DELETED_FUNCTIONS
+//    public:
+//        shared_lock_guard(shared_lock_guard const&) = delete;
+//        shared_lock_guard& operator=(shared_lock_guard const&) = delete;
+//#else // BOOST_NO_DELETED_FUNCTIONS
+//    private:
+//        shared_lock_guard(shared_lock_guard&);
+//        shared_lock_guard& operator=(shared_lock_guard&);
+//#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef SharedMutex mutex_type;
+        BOOST_THREAD_NO_COPYABLE(shared_lock_guard)
         explicit shared_lock_guard(SharedMutex& m_):
             m(m_)
         {
