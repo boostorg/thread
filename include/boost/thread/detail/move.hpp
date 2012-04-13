@@ -12,6 +12,7 @@
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/decay.hpp>
 #endif
 
 #include <boost/thread/detail/delete.hpp>
@@ -166,5 +167,21 @@ namespace detail
 
 #define BOOST_THREAD_COPYABLE_AND_MOVABLE(TYPE) \
   BOOST_THREAD_MOVABLE(TYPE) \
+
+
+
+#ifndef BOOST_NO_RVALUE_REFERENCES
+namespace boost
+{  namespace thread_detail
+  {
+      template <class T>
+      typename decay<T>::type
+      decay_copy(T&& t)
+      {
+          return boost::forward<T>(t);
+      }
+  }
+}
+#endif
 
 #endif

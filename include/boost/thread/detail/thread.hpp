@@ -45,18 +45,6 @@
 namespace boost
 {
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
-  namespace thread_detail
-  {
-      template <class T>
-      typename decay<T>::type
-      decay_copy(T&& t)
-      {
-          return boost::forward<T>(t);
-      }
-  }
-#endif
-
     namespace detail
     {
         template<typename F>
@@ -146,7 +134,7 @@ namespace boost
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
         template<typename F>
-        static inline detail::thread_data_ptr make_thread_info(F&& f)
+        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(
                 boost::forward<F>(f)));
@@ -171,8 +159,10 @@ namespace boost
 #endif
         struct dummy;
     public:
+#if 0 // This should not be needed anymore. Use instead BOOST_THREAD_MAKE_RV_REF.
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         thread(const volatile thread&);
+#endif
 #endif
         thread() BOOST_NOEXCEPT;
         ~thread()
@@ -189,7 +179,7 @@ namespace boost
         template <
           class F
         >
-        explicit thread(F&& f
+        explicit thread(BOOST_THREAD_RV_REF(F) f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
         ):
           thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
@@ -199,27 +189,10 @@ namespace boost
         template <
           class F
         >
-        thread(attributes& attrs, F&& f
-        , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
-        ):
+        thread(attributes& attrs, BOOST_THREAD_RV_REF(F) f):
           thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
         {
             start_thread(attrs);
-        }
-
-        thread(thread&& other) BOOST_NOEXCEPT
-        {
-            thread_info.swap(other.thread_info);
-        }
-
-        thread& operator=(thread&& other) BOOST_NOEXCEPT
-        {
-#if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
-            if (joinable()) std::terminate();
-#endif
-            thread_info=other.thread_info;
-            other.thread_info.reset();
-            return *this;
         }
 
 #else
@@ -238,21 +211,25 @@ namespace boost
         }
 #else
         template <class F>
-        explicit thread(F f,typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
+        explicit thread(F f
+            // todo Disable also if Or is_same<typename decay<F>::type, thread>
+        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
         template <class F>
-        thread(attributes& attrs, F f,typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
+        thread(attributes& attrs, F f
+        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread(attrs);
         }
 #endif
-
         template <class F>
-        explicit thread(BOOST_THREAD_RV_REF(F) f):
+        explicit thread(BOOST_THREAD_RV_REF(F) f
+        , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
+        ):
             thread_info(make_thread_info(f))
         {
             start_thread();
@@ -264,31 +241,32 @@ namespace boost
         {
             start_thread(attrs);
         }
-
+#endif
         thread(BOOST_THREAD_RV_REF(thread) x)
         {
             thread_info=BOOST_THREAD_RV(x).thread_info;
             BOOST_THREAD_RV(x).thread_info.reset();
         }
-
+#if 0 // This should not be needed anymore. Use instead BOOST_THREAD_MAKE_RV_REF.
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
         thread& operator=(thread x)
         {
             swap(x);
             return *this;
         }
-#else
-        thread& operator=(BOOST_THREAD_RV_REF(thread) x) BOOST_NOEXCEPT
+#endif
+#endif
+
+        thread& operator=(BOOST_THREAD_RV_REF(thread) other) BOOST_NOEXCEPT
         {
+
 #if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
 #endif
-            thread new_thread(x);
-            swap(new_thread);
+            thread_info=BOOST_THREAD_RV(other).thread_info;
+            BOOST_THREAD_RV(other).thread_info.reset();
             return *this;
         }
-#endif
-#endif
 
         template <class F,class A1>
         thread(F f,A1 a1,typename disable_if<boost::is_convertible<F&,thread_attributes >, dummy* >::type=0):
