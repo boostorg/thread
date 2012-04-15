@@ -41,7 +41,7 @@ For example, with the following declarations
     // ...
   };
 
-This could not work on these compilers even if thread is convertible to rv<thread>
+This could not work on some compilers even if thread is convertible to rv<thread> because the compiler prefers the private copy constructor.
 
   thread mkth() 
   {
@@ -62,7 +62,7 @@ Note that ::boost::move can not be used in this case as thread is not implicitly
     return ::boost::move(thread(f));
   }
 
-To make the code portable Boost.Thread uses a macro BOOST_MOVE_RVALUE that can be used as in 
+To make the code portable Boost.Thread the user needs to use a macro BOOST_THREAD_MAKE_RV_REF that can be used as in 
 
   thread mkth() 
   {
