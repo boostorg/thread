@@ -84,7 +84,7 @@ namespace boost
 
 #else
 
-#define BOOST_THREAD_RV_REF(TYPE) thread_move_t<TYPE>
+#define BOOST_THREAD_RV_REF(TYPE) boost::detail::thread_move_t<TYPE>
 #define BOOST_THREAD_RV(V) (*V)
 #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
 #endif
@@ -148,13 +148,13 @@ namespace detail
 #else
 
 #define BOOST_THREAD_MOVABLE(TYPE) \
-    operator detail::thread_move_t<TYPE>() BOOST_NOEXCEPT \
+    operator ::boost::detail::thread_move_t<TYPE>() BOOST_NOEXCEPT \
     { \
         return move(); \
     } \
-    detail::thread_move_t<thread> move() BOOST_NOEXCEPT \
+    ::boost::detail::thread_move_t<TYPE> move() BOOST_NOEXCEPT \
     { \
-        detail::thread_move_t<TYPE> x(*this); \
+      ::boost::detail::thread_move_t<TYPE> x(*this); \
         return x; \
     } \
 
