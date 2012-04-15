@@ -17,6 +17,8 @@
 
 // template <class F, class ...Args> thread(F&& f, Args&&... args);
 
+#define BOOST_THREAD_USES_MOVE
+
 #include <boost/thread/thread.hpp>
 #include <new>
 #include <cstdlib>

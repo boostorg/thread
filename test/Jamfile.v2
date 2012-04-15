@@ -474,7 +474,7 @@ rule thread-compile-fail-V2 ( sources : reqs * : name )
           [ thread-run2 ./threads/container/thread_ptr_list_pass.cpp : container__thread_ptr_list_p ]
     ;
 
-    explicit examples ;
+    #explicit examples ;
     test-suite ts_examples
     :
           [ thread-run ../example/monitor.cpp ]
