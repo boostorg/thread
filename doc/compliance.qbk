@@ -66,7 +66,7 @@
     [[30.6.3]        [Class future_error]  [Yes] [-] [-]]
     [[30.6.4]        [Shared state]  [-] [-] [-]]
     [[30.6.5]        [Class template promise]  [Partial] [allocator] [#6228]]
-    [[30.6.6]        [Class template future]  [Partial] [allocator,unique_future is the closest to future, renamed in V2] [#6228]]
+    [[30.6.6]        [Class template future]  [Partial] [allocator,unique_future is the closest to future, renamed in V3] [#6228]]
     [[30.6.7]        [Class template shared_future]  [Partial] [allocator] [#6228]]
     [[30.6.8]        [Function template async]  [No] [async] [#4710]]
     [[30.6.9]        [Class template packaged_task]  [Partial] [move] [#yyyy]]

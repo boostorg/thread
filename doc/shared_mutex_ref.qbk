@@ -34,20 +34,20 @@
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time);
         void unlock();
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
         // use upgrade_mutex instead.
-        void lock_upgrade(); // DEPRECATED V2
-        void unlock_upgrade(); // DEPRECATED V2
+        void lock_upgrade();
+        void unlock_upgrade();
 
-        void unlock_upgrade_and_lock(); // DEPRECATED V2
-        void unlock_and_lock_upgrade(); // DEPRECATED V2
-        void unlock_and_lock_shared(); // DEPRECATED V2
-        void unlock_upgrade_and_lock_shared(); // DEPRECATED V2
+        void unlock_upgrade_and_lock();
+        void unlock_and_lock_upgrade();
+        void unlock_and_lock_shared();
+        void unlock_upgrade_and_lock_shared();
     #endif
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        bool timed_lock_shared(system_time const& timeout); // DEPRECATED V2
-        bool timed_lock(system_time const& timeout); // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        bool timed_lock_shared(system_time const& timeout);
+        bool timed_lock(system_time const& timeout);
     #endif
 
     };

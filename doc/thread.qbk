@@ -8,7 +8,7 @@
 
 [library Thread
     [quickbook 1.5]
-    [version 2.0.0]
+    [version 3.0.0]
     [authors [Williams, Anthony] [Botet Escriba, Vicente J.]]
     [copyright 2007-11 Anthony Williams]
     [copyright 2011-12 Vicente J. Botet Escriba]

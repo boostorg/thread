@@ -364,7 +364,7 @@ namespace boost
         }
 #endif
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-        bool timed_join(const system_time& abs_time); // DEPRECATED V2
+        bool timed_join(const system_time& abs_time);
 
 #ifdef BOOST_THREAD_USES_CHRONO
         bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp);
@@ -372,7 +372,7 @@ namespace boost
     public:
 
 #else
-        bool timed_join(const system_time& abs_time) // DEPRECATED V2
+        bool timed_join(const system_time& abs_time)
         {
           struct timespec const ts=detail::get_timespec(abs_time);
           return do_try_join_until(ts);
@@ -396,7 +396,7 @@ namespace boost
 #endif
 
         template<typename TimeDuration>
-        inline bool timed_join(TimeDuration const& rel_time)  // DEPRECATED V2
+        inline bool timed_join(TimeDuration const& rel_time)
         {
             return timed_join(get_system_time()+rel_time);
         }
@@ -409,16 +409,18 @@ namespace boost
         typedef detail::thread_data_base::native_handle_type native_handle_type;
         native_handle_type native_handle();
 
+#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+        // Use thread::id when comparisions are needed
         // backwards compatibility
-        bool operator==(const thread& other) const; // DEPRECATED V2
-        bool operator!=(const thread& other) const; // DEPRECATED V2
-
+        bool operator==(const thread& other) const;
+        bool operator!=(const thread& other) const;
+#endif
         static inline void yield() BOOST_NOEXCEPT
         {
             this_thread::yield();
         }
 
-        static inline void sleep(const system_time& xt) // DEPRECATED V2
+        static inline void sleep(const system_time& xt)
         {
             this_thread::sleep(xt);
         }
@@ -457,7 +459,7 @@ namespace boost
         bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
         bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
 
-        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time) // DEPRECATED V2
+        inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
         {
             sleep(system_time(abs_time));
         }

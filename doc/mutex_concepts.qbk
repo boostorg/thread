@@ -144,9 +144,9 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 ]
 [endsect]
 
-[heading Deprecated V2]
+[heading Deprecated V3.0.0]
 
-The following expressions were required on version 1, but are now deprecated.
+The following expressions were required on version 2, but are now deprecated.
 
 [*Variables:]
 
@@ -155,12 +155,12 @@ The following expressions were required on version 1, but are now deprecated.
 
 [*Expressions:]
 
-* `m.__timed_lock_duration(rel_time)` DEPRECATED V2
-* `m.__timed_lock(abs_time)` DEPRECATED V2
+* `m.__timed_lock_duration(rel_time)`
+* `m.__timed_lock(abs_time)`
 
 Lock ownership acquired through a call to __timed_lock_ref__ must be released through a call to __unlock_ref__.
 
-[section:timed_lock `m.timed_lock(abs_time)` DEPRECATED V2]
+[section:timed_lock `m.timed_lock(abs_time)`]
 
 [variablelist
 
@@ -175,7 +175,7 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 ]
 [endsect]
 
-[section:timed_lock_duration `m.timed_lock(rel_time)` DEPRECATED V2]
+[section:timed_lock_duration `m.timed_lock(rel_time)`]
 
 [variablelist
 
@@ -292,7 +292,7 @@ ownership of `m`.]]
 ]
 [endsect]
 
-[heading Deprecated V2]
+[heading Deprecated V3]
 
 The following expressions were required on version 1, but are now deprecated.
 
@@ -302,11 +302,11 @@ The following expressions were required on version 1, but are now deprecated.
 
 [*Expressions:]
 
-* `m.timed_lock_shared(abs_time);` DEPRECATED V2
+* `m.timed_lock_shared(abs_time);`
 
 Lock ownership acquired through a call to __timed_lock_shared_ref__ must be released through a call to __unlock_shared_ref__.
 
-[section:timed_lock_shared `m.timed_lock_shared(abs_time)` DEPRECATED V2]
+[section:timed_lock_shared `m.timed_lock_shared(abs_time)`]
 
 [variablelist
 
@@ -957,11 +957,11 @@ object passed to the constructor.]]
 
         Lockable* mutex() const noexcept;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        unique_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        unique_lock(Lockable& m_,system_time const& target_time);
         template<typename TimeDuration>
-        bool timed_lock(TimeDuration const& relative_time); // DEPRECATED V2
-        bool timed_lock(::boost::system_time const& absolute_time); // DEPRECATED V2
+        bool timed_lock(TimeDuration const& relative_time);
+        bool timed_lock(::boost::system_time const& absolute_time);
     #endif
 
     };
@@ -1136,7 +1136,7 @@ Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()-> __try_un
 
 
 
-[section:constructor_abs_time `unique_lock(Lockable & m,boost::system_time const& abs_time)`  DEPRECATED V2]
+[section:constructor_abs_time `unique_lock(Lockable & m,boost::system_time const& abs_time)`]
 
 [variablelist
 
@@ -1316,9 +1316,9 @@ __owns_lock_ref__ returns `false`.]]
         bool owns_lock() const;
         mutex_type mutex() const;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        shared_lock(Lockable& m_,system_time const& target_time); // DEPRECATED V2
-        bool timed_lock(boost::system_time const& target_time); // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        shared_lock(Lockable& m_,system_time const& target_time);
+        bool timed_lock(boost::system_time const& target_time);
     #endif
     };
 

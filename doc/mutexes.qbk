@@ -89,10 +89,10 @@ __try_mutex__ is a `typedef` to __mutex__, provided for backwards compatibility 
         typedef unspecified-type scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        bool timed_lock(system_time const & abs_time); // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        bool timed_lock(system_time const & abs_time);
         template<typename TimeDuration>
-        bool timed_lock(TimeDuration const & relative_time); // DEPRECATED V2
+        bool timed_lock(TimeDuration const & relative_time);
     #endif
 
     };
@@ -203,10 +203,10 @@ __recursive_try_mutex__ is a `typedef` to __recursive_mutex__, provided for back
         typedef unspecified-type scoped_try_lock;
         typedef scoped_lock scoped_timed_lock;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        bool timed_lock(system_time const & abs_time); // DEPRECATED V2 
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        bool timed_lock(system_time const & abs_time); 
         template<typename TimeDuration>
-        bool timed_lock(TimeDuration const & relative_time); // DEPRECATED V2
+        bool timed_lock(TimeDuration const & relative_time);
     #endif
 
     };

@@ -20,7 +20,7 @@
 //     explicit packaged_task(allocator_arg_t, const Allocator& a, F&& f);
 
 
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 3
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>

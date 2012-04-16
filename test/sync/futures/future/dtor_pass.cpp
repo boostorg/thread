@@ -18,7 +18,7 @@
 
 // ~promise();
 
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 3
 #include <boost/exception/exception.hpp>
 
 #include <boost/thread/future.hpp>

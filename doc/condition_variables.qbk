@@ -130,18 +130,18 @@ optimizations in some cases, based on the knowledge of the mutex type;
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred);
 
-        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time); // DEPRECATED V2
+        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time);
             template<typename duration_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time); // DEPRECATED V2
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time);
             template<typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate); // DEPRECATED V2
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate);
             template<typename duration_type,typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate); // DEPRECATED V2
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time); // DEPRECATED V2
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time);
 
             template<typename predicate_type>
-            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate); // DEPRECATED V2
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate);
         #endif
 
         };
@@ -243,7 +243,7 @@ while(!pred())
 
 [endsect]
 
-[section:timed_wait `bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time)` DEPRECATED V2]
+[section:timed_wait `bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time)`]
 
 [variablelist
 
@@ -274,7 +274,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_rel `template<typename duration_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time)` DEPRECATED V2]
+[section:timed_wait_rel `template<typename duration_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time)`]
 
 [variablelist
 
@@ -307,7 +307,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_predicate `template<typename predicate_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock, boost::system_time const& abs_time, predicate_type pred)` DEPRECATED V2]
+[section:timed_wait_predicate `template<typename predicate_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock, boost::system_time const& abs_time, predicate_type pred)`]
 
 [variablelist
 
@@ -481,19 +481,19 @@ return true;
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred);
 
-        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
             template<typename lock_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time) // DEPRECATED V2;
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time);
             template<typename lock_type,typename duration_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time) // DEPRECATED V2;
+            bool timed_wait(lock_type& lock,duration_type const& rel_time);
             template<typename lock_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate) // DEPRECATED V2;
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate);
             template<typename lock_type,typename duration_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate) // DEPRECATED V2;
+            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate);
             template<typename lock_type>
-            bool timed_wait(lock_type>& lock,boost::xtime const& abs_time) // DEPRECATED V2;
+            bool timed_wait(lock_type>& lock,boost::xtime const& abs_time);
             template<typename lock_type,typename predicate_type>
-            bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate) // DEPRECATED V2;
+            bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate);
         #endif
         };
     }
@@ -588,7 +588,7 @@ while(!pred())
 
 [endsect]
 
-[section:timed_wait `template<typename lock_type> bool timed_wait(lock_type& lock,boost::system_time const& abs_time)` DEPRECATED V2]
+[section:timed_wait `template<typename lock_type> bool timed_wait(lock_type& lock,boost::system_time const& abs_time)`]
 
 [variablelist
 
@@ -613,7 +613,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_rel `template<typename lock_type,typename duration_type> bool timed_wait(lock_type& lock,duration_type const& rel_time)` DEPRECATED V2]
+[section:timed_wait_rel `template<typename lock_type,typename duration_type> bool timed_wait(lock_type& lock,duration_type const& rel_time)`]
 
 [variablelist
 
@@ -640,7 +640,7 @@ __interrupt__ on the __thread__ object associated with the current thread of exe
 
 [endsect]
 
-[section:timed_wait_predicate `template<typename lock_type,typename predicate_type> bool timed_wait(lock_type& lock, boost::system_time const& abs_time, predicate_type pred)` DEPRECATED V2]
+[section:timed_wait_predicate `template<typename lock_type,typename predicate_type> bool timed_wait(lock_type& lock, boost::system_time const& abs_time, predicate_type pred)`]
 
 [variablelist
 
