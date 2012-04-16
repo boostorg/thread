@@ -36,9 +36,9 @@
       class disable_interruption; // EXTENSION
       class restore_interruption; // EXTENSION
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
-      void sleep(TimeDuration const& rel_time); // DEPRECATED V2
-      void sleep(system_time const& abs_time)  // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+      void sleep(TimeDuration const& rel_time);
+      void sleep(system_time const& abs_time);
     #endif
     }
     class thread_group; // EXTENSION
@@ -271,18 +271,18 @@ The following functions are ['interruption points], which will throw __thread_in
 current thread, and interruption is requested for the current thread:
 
 * [join_link `boost::thread::join()`]
-* [timed_join_link `boost::thread::timed_join()` DEPRECATED V2]
+* [timed_join_link `boost::thread::timed_join()`]
 * `boost::__thread::__try_join_for()`,
 * `boost::__thread::__try_join_until()`,
 * [cond_wait_link `boost::condition_variable::wait()`]
-* [cond_timed_wait_link `boost::condition_variable::timed_wait()` DEPRECATED V2]
+* [cond_timed_wait_link `boost::condition_variable::timed_wait()`]
 * `boost::__condition_variable::__wait_for()`
 * `boost::__condition_variable::__wait_until()`
 * [cond_any_wait_link `boost::condition_variable_any::wait()`]
-* [cond_any_timed_wait_link `boost::condition_variable_any::timed_wait()` DEPRECATED V2]
+* [cond_any_timed_wait_link `boost::condition_variable_any::timed_wait()`]
 * `boost::__condition_variable_any::__cvany_wait_for()`
 * `boost::__condition_variable_any::__cvany_wait_until()`
-* [link thread.thread_management.thread.sleep `boost::thread::sleep()` DEPRECATED V2]
+* [link thread.thread_management.thread.sleep `boost::thread::sleep()`]
 * `boost::this_thread::__sleep_for()`
 * `boost::this_thread::__sleep_until()`
 * __interruption_point__
@@ -413,18 +413,18 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         bool interruption_requested() const noexcept; // EXTENSION
 
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-        bool timed_join(const system_time& wait_until); // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+        bool timed_join(const system_time& wait_until);
         template<typename TimeDuration>
-        bool timed_join(TimeDuration const& rel_time);  // DEPRECATED V2
+        bool timed_join(TimeDuration const& rel_time); 
     #endif
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
-        bool operator==(const thread& other) const; // DEPRECATED V2
-        bool operator!=(const thread& other) const; // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+        bool operator==(const thread& other) const;
+        bool operator!=(const thread& other) const;
 
-        static void yield(); // DEPRECATED V2
-        static void sleep(const system_time& xt); // DEPRECATED V2
+        static void yield();
+        static void sleep(const system_time& xt);
     #endif
 
     };
@@ -637,7 +637,7 @@ are copied into internal storage for access by the new thread.]]]
 [endsect]
 
 [/
-[section:v2_destructor V2 Thread Destructor]
+[section:v2_destructor V3 Thread Destructor]
 
     ~thread();
 
@@ -702,7 +702,7 @@ are copied into internal storage for access by the new thread.]]]
 
 [endsect]
 
-[section:timed_join Member function `timed_join()` DEPRECATED V2]
+[section:timed_join Member function `timed_join()`]
 
     bool timed_join(const system_time& wait_until);
 
@@ -905,7 +905,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:equals `operator==` DEPRECATED V2]
+[section:equals `operator==` DEPRECATED V3]
 
     bool operator==(const thread& other) const;
 
@@ -919,7 +919,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:not_equals `operator!=` DEPRECATED V2]
+[section:not_equals `operator!=` DEPRECATED V3]
 
     bool operator!=(const thread& other) const;
 
@@ -933,7 +933,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:sleep Static member function `sleep()` DEPRECATED V2]
+[section:sleep Static member function `sleep()`]
 
     void sleep(system_time const& abs_time);
 
@@ -951,7 +951,7 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
 [endsect]
 
-[section:yield Static member function `yield()` DEPRECATED V2]
+[section:yield Static member function `yield()`]
 
     void yield();
 
@@ -1248,9 +1248,9 @@ thread attributes implementation. If no such instance exists, `native_handle()` 
       class disable_interruption; // EXTENSION
       class restore_interruption; // EXTENSION
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
-      void sleep(TimeDuration const& rel_time); // DEPRECATED V2
-      void sleep(system_time const& abs_time)  // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+      void sleep(TimeDuration const& rel_time);
+      void sleep(system_time const& abs_time) 
     #endif
     }
   }
@@ -1331,7 +1331,7 @@ thread attributes implementation. If no such instance exists, `native_handle()` 
 
 [endsect]
 
-[section:sleep Non-member function `sleep()` DEPRECATED V2]
+[section:sleep Non-member function `sleep()`]
 
     #include <boost/thread/thread.hpp>
 

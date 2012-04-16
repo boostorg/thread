@@ -26,9 +26,10 @@ Boost.Thread uses by default Boost.Chrono for the time related functions. For ba
 
 [section:move  Boost.Move]
 
-Boost.Thread uses by default Boost.Move emulation on compilers that don't support Rvalue references. For backward compatibility and also for compilers that don't work well with Boost.Move the user can define `BOOST_THREAD_DONT_USE_MOVE`.
+Boost.Thread uses by default an internal move semantic implementation. Since version 3.0.0 you can use the move emulation emulation provided by Boost.Move. 
 
-`BOOST_THREAD_USES_MOVE` is defined when Boost.Thread uses Boost.Move.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_USES_MOVE ` if you want to use Boost.Move interface.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_USE_MOVE ` if you want to use boost::unique_future.
 
 [endsect]
 
@@ -36,7 +37,8 @@ Boost.Thread uses by default Boost.Move emulation on compilers that don't suppor
 
 The shared mutex implementation on Windows platform provides currently less functionality than the generic one that is used for PTheads based platforms. In order to have access to these functions, the user needs to define `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` to use the generic implementation, that while could be less efficient, provides all the functions.
 
-Define `BOOST_THREAD_DONT_PROVIDE_GENERIC_SHARED_MUTEX_ON_WIN` if you don't want these functions.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_GENERIC_SHARED_MUTEX_ON_WIN ` if you don't want these features.
 
 [endsect]
 
@@ -45,8 +47,8 @@ Define `BOOST_THREAD_DONT_PROVIDE_GENERIC_SHARED_MUTEX_ON_WIN` if you don't want
 Boost.Threads includes in version 2 the Shared Locking Upwards Conversion as defined in [@http://home.roadrunner.com/~hinnant/bloomington/shared_mutex.html Shared Locking].
 These conversions need to be used carefully to avoid deadlock or livelock. The user need to define explicitly `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION` to get these upwards conversions. 
 
-Define `BOOST_THREAD_DONT_PROVIDE_SHARED_MUTEX_UPWARDS_CONVERSION` if you don't want these functions.
-
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_SHARED_MUTEX_UPWARDS_CONVERSION ` if you don't want these features.
 
 [endsect]
 
@@ -54,32 +56,34 @@ Define `BOOST_THREAD_DONT_PROVIDE_SHARED_MUTEX_UPWARDS_CONVERSION` if you don't 
 
 In [@http://home.roadrunner.com/~hinnant/bloomington/shared_mutex.html Shared Locking] the lock conversions are explicit. As this explicit conversion breaks the lock interfaces, it is provided only if the `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION` is defined.
 
-Define `BOOST_THREAD_DONT_PROVIDE_EXPLICIT_LOCK_CONVERSION` if you don't want these functions.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_EXPLICIT_LOCK_CONVERSION ` if you don't want these features.
 
 [endsect]
 
 
 [section:future unique_future versus future]
 
-C++11 uses `std::future`. Versions of Boost.Thread previous to version 2.0.0 uses `boost:unique_future`.
-Since version 2.0.0 `boost::future` replaces `boost::unique_future` when `BOOST_THREAD_PROVIDES_FUTURE` is defined. The documentation doesn't contains anymore however `boost::unique_future`.
+C++11 uses `std::future`. Versions of Boost.Thread previous to version 3.0.0 uses `boost:unique_future`.
+Since version 3.0.0 `boost::future` replaces `boost::unique_future` when `BOOST_THREAD_PROVIDES_FUTURE` is defined. The documentation doesn't contains anymore however `boost::unique_future`.
 
-Define `BOOST_THREAD_DONT_PROVIDE_FUTURE ` if you don't want these functions.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_FUTURE` if you want to use boost::future.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_FUTURE` if you want to use boost::unique_future.
 
 [endsect]
 
 [section:lazy promise lazy initialization]
 
-C++11 promise initialize the associated state at construction time. Versions of Boost.Thread previous to version 2.0.0 initialize it lazily at any point in time in which this associated state is needed. 
+C++11 promise initialize the associated state at construction time. Versions of Boost.Thread previous to version 3.0.0 initialize it lazily at any point in time in which this associated state is needed. 
 
-Since version 2.0.0 this difference in behavior can be configured. When `BOOST_THREAD_PROVIDES_PROMISE_LAZY` is defined the backward compatible behavior is provided. 
+Since version 3.0.0 this difference in behavior can be configured. When `BOOST_THREAD_PROVIDES_PROMISE_LAZY` is defined the backward compatible behavior is provided. 
 
-Define `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY ` if you don't want this feature.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY ` if you want to use boost::future.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_PROVIDES_PROMISE_LAZY ` if you want to use boost::unique_future.
 
 [endsect]
 
 [section:alloc promise Allocator constructor]
-
 
 C++11 std::promise provides constructors with allocators. 
 
@@ -100,7 +104,7 @@ where
 
     template <class T, class Alloc> struct uses_allocator; 
 
-Since version 2.0.0 Boost.Thread implements this constructor using the following interface
+Since version 3.0.0 Boost.Thread implements this constructor using the following interface
 
     namespace boost 
     {
@@ -118,7 +122,8 @@ Since version 2.0.0 Boost.Thread implements this constructor using the following
 
 which introduces a dependency on Boost.Container. This feature is provided only if  `BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS` is defined. 
 
-Define `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS ` if you don't want this feature.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS ` if you don't want these features.
 
 [endsect]
 
@@ -126,7 +131,11 @@ Define `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS ` if you don't want thi
 
 C++11 has a different semantic for the thread destructor and the move assignment. Instead of detaching the thread, calls to terminate() if the thread was joinable. When `BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` and `BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` is defined Boost.Thread provides the C++ semantic.
 
-Define `BOOST_THREAD_DONT_PROVIDE_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE` or `BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE` if you don't want these features.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE ` if you don't want these features.
+
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE ` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE ` if you don't want these features.
 
 [endsect]
 
@@ -140,15 +149,16 @@ You should now just do
 
   boost::once_flag once;
 
-Define `BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11 ` if you don't want this feature.
+When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_ONCE_CXX11` if you want these features.
+When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11` if you don't want these features.
 
 [endsect]
 
 [section:deprecated Deprecated]
 
-Version 2.0.0 deprecates some Boost.Thread features. 
+Version 3.0.0 deprecates some Boost.Thread features. 
 
-These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define `BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define `BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
 
 
 [endsect]
@@ -160,7 +170,7 @@ These deprecated features will be provided by default up to boost 1.52. If you d
 The default version is 1. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
 * `BOOST_THREAD_PROVIDES_PROMISE_LAZY`
-* `BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0`
+* `BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0`
 
 The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
@@ -174,7 +184,7 @@ The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In t
 * Breaking change `BOOST_THREAD_PROVIDES_ONCE_CXX11`
 
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
-* Breaking change `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0`
+* Breaking change `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`
 
 [endsect]
 

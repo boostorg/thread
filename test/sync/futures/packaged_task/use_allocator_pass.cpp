@@ -21,7 +21,7 @@
 //      : true_type { };
 
 
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 3
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>

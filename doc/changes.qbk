@@ -8,7 +8,7 @@
 
 [section:changes History]
 
-[heading Version 2.0.0 - boost 1.50]
+[heading Version 3.0.0 - boost 1.50]
 
 New Features:
 
@@ -54,7 +54,7 @@ Fixed Bugs:
 [/
 Deprecated features since boost 1.50 available only until boost 1.55:
 
-These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V2_0_0. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
 
 * Time related functions don't using the Boost.Chrono library, use the chrono overloads instead.
 
@@ -66,7 +66,7 @@ There are some new features which share the same interface but with different be
 *  #6269 	c++11 compliance: thread move assignment should call terminate if joinable
 ]
 
-[heading boost 1.49]
+[heading Version 2.1.1 - boost 1.49]
 
 Fixed Bugs:
 
@@ -97,7 +97,7 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/6207 #6207] shared_lock swap compiler error on clang 3.0 c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6208 #6208] try_lock_wrapper swap compiler error on clang 3.0 c++11. 
 
-[heading Changes since boost 1.40]
+[heading Version 2.1.0 - Changes since boost 1.40]
 
 The 1.41.0 release of Boost adds futures to the thread library. There are also a few minor changes.
 
@@ -117,7 +117,7 @@ The 1.36.0 release of Boost includes a few new features in the thread library:
 
 * Backwards-compatibility overloads added for `timed_lock` and `timed_wait` functions to allow use of `xtime` for timeouts.
 
-[heading Changes since boost 1.34]
+[heading Version 2.0.0 - Changes since boost 1.34]
 
 Almost every line of code in __boost_thread__ has been changed since the 1.34 release of boost. However, most of the interface
 changes have been extensions, so the new code is largely backwards-compatible with the old code. The new features and breaking

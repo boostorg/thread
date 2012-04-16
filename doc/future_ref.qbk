@@ -11,8 +11,8 @@
 
   namespace boost 
   {
-  #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
-    namespace future_state // DEPRECATED V2
+  #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+    namespace future_state
     {
         enum state {uninitialized, waiting, ready, moved};
     }
@@ -85,7 +85,7 @@
     unsigned wait_for_any(F1& f1,Fs&... fs);
 
 
-[section:future_state Enumeration `state` DEPRECATED V2]
+[section:future_state Enumeration `state`]
 
     namespace future_state
     {
@@ -195,14 +195,14 @@
         template <class Clock, class Duration>
         future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         template<typename Duration>
-        bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
-        bool timed_wait_until(boost::system_time const& abs_time) const;  // DEPRECATED V2
+        bool timed_wait(Duration const& rel_time) const;
+        bool timed_wait_until(boost::system_time const& abs_time) const; 
     #endif
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
-        typedef future_state::state state; // DEPRECATED V2
-        state get_state() const; //DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+        typedef future_state::state state;
+        state get_state() const;
     #endif
     };
 
@@ -347,7 +347,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_duration Member function `timed_wait()` DEPRECATED V2]
+[section:timed_wait_duration Member function `timed_wait()`]
 
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
@@ -374,7 +374,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_absolute Member function `timed_wait()` DEPRECATED V2]
+[section:timed_wait_absolute Member function `timed_wait()`]
 
     bool timed_wait(boost::system_time const& wait_timeout);
 
@@ -452,7 +452,7 @@ stored exception, `false` otherwise.]]
 
 [endsect]
 
-[section:get_state Member function `get_state()` DEPRECATED V2]
+[section:get_state Member function `get_state()`]
 
     future_state::state get_state();
 
@@ -511,13 +511,13 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
         template <class Clock, class Duration>
         future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const; 
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         template<typename Duration>
-        bool timed_wait(Duration const& rel_time) const; // DEPRECATED V2
-        bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED V2
+        bool timed_wait(Duration const& rel_time) const;
+        bool timed_wait_until(boost::system_time const& abs_time) const;
     #endif
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V2_0_0
-        state get_state() const noexcept; // DEPRECATED V2
+    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+        state get_state() const noexcept;
     #endif
     };
 
@@ -581,7 +581,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_duration Member function `timed_wait()` DEPRECATED V2]
+[section:timed_wait_duration Member function `timed_wait()`]
 
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
@@ -608,7 +608,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_absolute Member function `timed_wait()` DEPRECATED V2]
+[section:timed_wait_absolute Member function `timed_wait()`]
 
     bool timed_wait(boost::system_time const& wait_timeout);
 
@@ -685,7 +685,7 @@ stored exception, `false` otherwise.]]
 
 [endsect]
 
-[section:get_state Member function `get_state()` DEPRECATED V2]
+[section:get_state Member function `get_state()`]
 
     future_state::state get_state();
 
