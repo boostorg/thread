@@ -25,4 +25,3 @@ int main()
   boost::condition_variable cv0;
   return boost::report_errors();
 }
-
