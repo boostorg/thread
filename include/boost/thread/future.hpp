@@ -982,7 +982,7 @@ namespace boost
 //        {
 //            future_.swap(BOOST_THREAD_RV(other).future_);
 //        }
-//        shared_future(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<R>) other) BOOST_NOEXCEPT
+//        shared_future(BOOST_THREAD_RV_REF_BEG BOOST_THREAD_FUTURE<R> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT
 //        {
 //            future_.swap(BOOST_THREAD_RV(other).future_);
 //        }
@@ -992,7 +992,7 @@ namespace boost
         {
             BOOST_THREAD_RV(other).future_.reset();
         }
-        shared_future(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<R>) other) BOOST_NOEXCEPT :
+        shared_future(BOOST_THREAD_RV_REF_BEG BOOST_THREAD_FUTURE<R> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT :
             future_(BOOST_THREAD_RV(other).future_)
         {
             BOOST_THREAD_RV(other).future_.reset();
@@ -1004,7 +1004,7 @@ namespace boost
             BOOST_THREAD_RV(other).future_.reset();
             return *this;
         }
-        shared_future& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<R>) other) BOOST_NOEXCEPT
+        shared_future& operator=(BOOST_THREAD_RV_REF_BEG BOOST_THREAD_FUTURE<R> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT
         {
             future_.swap(BOOST_THREAD_RV(other).future_);
             BOOST_THREAD_RV(other).future_.reset();
