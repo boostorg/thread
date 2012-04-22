@@ -652,12 +652,7 @@ namespace boost
         lhs.swap(rhs);
     }
 
-#if defined BOOST_NO_RVALUE_REFERENCES && ! defined BOOST_THREAD_USES_MOVE
-    template <typename Mutex>
-    struct has_move_emulation_enabled_aux<unique_lock<Mutex> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(Mutex) unique_lock<Mutex> BOOST_THREAD_DCL_MOVABLE_END
 
     template<typename Mutex>
     class shared_lock
@@ -907,13 +902,7 @@ namespace boost
 
     };
 
-#if defined BOOST_NO_RVALUE_REFERENCES && ! defined BOOST_THREAD_USES_MOVE
-  template <typename Mutex>
-  struct has_move_emulation_enabled_aux<shared_lock<Mutex> >
-  : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-  {};
-#endif
-
+    BOOST_THREAD_DCL_MOVABLE_BEG(Mutex) shared_lock<Mutex> BOOST_THREAD_DCL_MOVABLE_END
 
     template<typename Mutex>
     void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs) BOOST_NOEXCEPT
@@ -1180,13 +1169,7 @@ namespace boost
         lhs.swap(rhs);
     }
 
-#if defined BOOST_NO_RVALUE_REFERENCES && ! defined BOOST_THREAD_USES_MOVE
-    template <typename Mutex>
-    struct has_move_emulation_enabled_aux<upgrade_lock<Mutex> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
-
+    BOOST_THREAD_DCL_MOVABLE_BEG(Mutex) upgrade_lock<Mutex> BOOST_THREAD_DCL_MOVABLE_END
 
     template<typename Mutex>
     unique_lock<Mutex>::unique_lock(BOOST_THREAD_RV_REF_BEG upgrade_lock<Mutex> BOOST_THREAD_RV_REF_END other):
@@ -1263,12 +1246,7 @@ namespace boost
         }
     };
 
-#if defined BOOST_NO_RVALUE_REFERENCES && ! defined BOOST_THREAD_USES_MOVE
-    template <typename Mutex>
-    struct has_move_emulation_enabled_aux<upgrade_to_unique_lock<Mutex> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(Mutex) upgrade_to_unique_lock<Mutex> BOOST_THREAD_DCL_MOVABLE_END
 
     namespace detail
     {
