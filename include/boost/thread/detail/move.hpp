@@ -23,6 +23,8 @@ namespace boost
 
     namespace detail
     {
+      template <typename T>
+      struct has_move_emulation_enabled_aux_dummy_specialization;
         template<typename T>
         struct thread_move_t
         {
@@ -69,6 +71,16 @@ namespace boost
 #define BOOST_THREAD_RV(V) V
 #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
 #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+  namespace detail { \
+    template <typename T> \
+    struct has_move_emulation_enabled_aux_dummy_specialization<
+
+#define BOOST_THREAD_DCL_MOVABLE_END > \
+      : integral_constant<bool, true> \
+      {}; \
+    }
 
 #elif ! defined  BOOST_NO_RVALUE_REFERENCES && defined  BOOST_MSVC
 
@@ -78,6 +90,16 @@ namespace boost
 #define BOOST_THREAD_RV(V) V
 #define BOOST_THREAD_MAKE_RV_REF(RVALUE) RVALUE
 #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+  namespace detail { \
+    template <typename T> \
+    struct has_move_emulation_enabled_aux_dummy_specialization<
+
+#define BOOST_THREAD_DCL_MOVABLE_END > \
+      : integral_constant<bool, true> \
+      {}; \
+    }
 
 #else
 
@@ -87,6 +109,16 @@ namespace boost
 #define BOOST_THREAD_RV_REF_END BOOST_RV_REF_END
 #define BOOST_THREAD_RV(V) V
 #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE(TYPE)
+#define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+  namespace detail { \
+    template <typename T> \
+    struct has_move_emulation_enabled_aux_dummy_specialization<
+
+#define BOOST_THREAD_DCL_MOVABLE_END > \
+      : integral_constant<bool, true> \
+      {}; \
+    }
 
 #else
 
@@ -95,6 +127,21 @@ namespace boost
 #define BOOST_THREAD_RV_REF_END >
 #define BOOST_THREAD_RV(V) (*V)
 #define BOOST_THREAD_FWD_REF(TYPE) BOOST_FWD_REF(TYPE)
+
+#define BOOST_THREAD_DCL_MOVABLE(TYPE) \
+template <> \
+struct has_move_emulation_enabled_aux< TYPE > \
+  : BOOST_MOVE_BOOST_NS::integral_constant<bool, true> \
+{};
+
+#define BOOST_THREAD_DCL_MOVABLE_BEG(T) \
+template <typename T> \
+struct has_move_emulation_enabled_aux<
+
+#define BOOST_THREAD_DCL_MOVABLE_END > \
+  : BOOST_MOVE_BOOST_NS::integral_constant<bool, true> \
+{};
+
 #endif
 
 namespace boost

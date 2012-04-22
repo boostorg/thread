@@ -442,14 +442,7 @@ namespace boost
     }
 #endif
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-#if !defined BOOST_THREAD_USES_MOVE
-    template <>
-    struct has_move_emulation_enabled_aux<thread>
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
-#endif
+    BOOST_THREAD_DCL_MOVABLE(thread)
 
     namespace this_thread
     {

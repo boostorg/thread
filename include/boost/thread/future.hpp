@@ -935,12 +935,7 @@ namespace boost
 #endif
     };
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-    template <typename T>
-    struct has_move_emulation_enabled_aux<BOOST_THREAD_FUTURE<T> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(T) BOOST_THREAD_FUTURE<T> BOOST_THREAD_DCL_MOVABLE_END
 
     template <typename R>
     class shared_future
@@ -1102,12 +1097,7 @@ namespace boost
 #endif
     };
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-    template <typename T>
-    struct has_move_emulation_enabled_aux<shared_future<T> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(T) shared_future<T> BOOST_THREAD_DCL_MOVABLE_END
 
     template <typename R>
     class promise
@@ -1405,12 +1395,7 @@ namespace boost
     }
 #endif
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-    template <typename T>
-    struct has_move_emulation_enabled_aux<promise<T> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(T) promise<T> BOOST_THREAD_DCL_MOVABLE_END
 
     namespace detail
     {
@@ -1736,14 +1721,8 @@ namespace boost
     }
 #endif
 
-#ifdef BOOST_NO_RVALUE_REFERENCES
-#if ! defined BOOST_THREAD_USES_MOVE
-    template <typename T>
-    struct has_move_emulation_enabled_aux<packaged_task<T> >
-      : BOOST_MOVE_BOOST_NS::integral_constant<bool, true>
-    {};
-#endif
-#endif
+    BOOST_THREAD_DCL_MOVABLE_BEG(T) packaged_task<T> BOOST_THREAD_DCL_MOVABLE_END
+
 
 }
 
