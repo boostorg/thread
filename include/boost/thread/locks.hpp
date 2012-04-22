@@ -3,6 +3,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
 // (C) Copyright 2011-2012 Vicente J. Botet Escriba
+
 #ifndef BOOST_THREAD_LOCKS_HPP
 #define BOOST_THREAD_LOCKS_HPP
 #include <boost/thread/detail/config.hpp>
@@ -1279,17 +1280,15 @@ namespace boost
                 base(::boost::move(other))
             {}
 
-#else
-#if defined BOOST_THREAD_USES_MOVE
-            try_lock_wrapper(BOOST_THREAD_RV_REF_BEG try_lock_wrapper<Mutex> BOOST_THREAD_RV_REF_END other):
+#elif defined BOOST_THREAD_USES_MOVE
+            try_lock_wrapper(BOOST_THREAD_RV_REF(try_lock_wrapper) other):
                 base(::boost::move(static_cast<base&>(other)))
             {}
 
 #else
-            try_lock_wrapper(BOOST_THREAD_RV_REF_BEG try_lock_wrapper<Mutex> BOOST_THREAD_RV_REF_END other):
+            try_lock_wrapper(BOOST_THREAD_RV_REF(try_lock_wrapper) other):
                 base(BOOST_THREAD_RV_REF(base)(*other))
             {}
-#endif
 #endif
             try_lock_wrapper& operator=(BOOST_THREAD_RV_REF_BEG try_lock_wrapper<Mutex> BOOST_THREAD_RV_REF_END other)
             {

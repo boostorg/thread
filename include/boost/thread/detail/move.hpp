@@ -2,6 +2,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-8 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #ifndef BOOST_THREAD_MOVE_HPP
 #define BOOST_THREAD_MOVE_HPP
