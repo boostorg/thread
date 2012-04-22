@@ -4,6 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-8 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
@@ -11,7 +12,6 @@
 #include <boost/assert.hpp>
 #include <algorithm>
 #include <boost/thread/cv_status.hpp>
-//#include <boost/thread/thread.hpp>
 #include <boost/thread/win32/thread_data.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
