@@ -19,18 +19,18 @@
 	   {
 	      boost::this_thread::sleep(boost::posix_time::seconds(100));
 	   }
-	   catch(boost::thread_interrupted& interrupt)
+	   catch (boost::thread_interrupted& interrupt)
 	   {
 	      boost::mutex::scoped_lock lock(mutex_);
 	      cerr << "Thread " << boost::this_thread::get_id() << " got interrupted" << endl;
 	      throw(interrupt);
 	   }
-	   catch(std::exception& e)
+	   catch (std::exception& e)
 	   {
 	      boost::mutex::scoped_lock lock(mutex_);
 	      cerr << "Thread " << boost::this_thread::get_id() << " caught std::exception" << e.what() << endl;
 	   }
-	   catch(...)
+	   catch (...)
 	   {
 	      boost::mutex::scoped_lock lock(mutex_);
 	      cerr << "Thread " << boost::this_thread::get_id() << " caught something else" << endl;
@@ -39,7 +39,9 @@
 
 	void test()
 	{
-	   boost::thread_group threads;
+    try
+    {
+    boost::thread_group threads;
 
 	   for (int i = 0; i < 2; ++i)
 	   {
@@ -49,6 +51,11 @@
 	   //boost::this_thread::sleep(1);
 	   threads.interrupt_all();
 	   threads.join_all();
+    }
+    catch (...)
+    {
+      BOOST_CHECK(false && "exception raised");
+    }
 	}
 
 boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])

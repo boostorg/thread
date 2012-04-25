@@ -11,8 +11,12 @@
 #include <utility>
 #include <memory>
 #include <string>
+#include <iostream>
 
 #include <boost/test/unit_test.hpp>
+
+#define LOG \
+  if (false) {} else std::cout << std::endl << __FILE__ << "[" << __LINE__ << "]"
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
     template<typename T>
@@ -80,6 +84,7 @@ void set_promise_exception_thread(boost::promise<int>* p)
 
 void test_store_value_from_thread()
 {
+    LOG;
     boost::promise<int> pi2;
     boost::unique_future<int> fi2(pi2.get_future());
     boost::thread(set_promise_thread,&pi2);
@@ -94,6 +99,7 @@ void test_store_value_from_thread()
 
 void test_store_exception()
 {
+  LOG;
     boost::promise<int> pi3;
     boost::unique_future<int> fi3=pi3.get_future();
     boost::thread(set_promise_exception_thread,&pi3);
@@ -115,6 +121,7 @@ void test_store_exception()
 
 void test_initial_state()
 {
+  LOG;
     boost::unique_future<int> fi;
     BOOST_CHECK(!fi.is_ready());
     BOOST_CHECK(!fi.has_value());
@@ -135,6 +142,7 @@ void test_initial_state()
 
 void test_waiting_future()
 {
+  LOG;
     boost::promise<int> pi;
     boost::unique_future<int> fi;
     fi=pi.get_future();
@@ -149,6 +157,7 @@ void test_waiting_future()
 
 void test_cannot_get_future_twice()
 {
+  LOG;
     boost::promise<int> pi;
     pi.get_future();
 
@@ -165,6 +174,7 @@ void test_cannot_get_future_twice()
 
 void test_set_value_updates_future_state()
 {
+  LOG;
     boost::promise<int> pi;
     boost::unique_future<int> fi;
     fi=pi.get_future();
@@ -179,6 +189,7 @@ void test_set_value_updates_future_state()
 
 void test_set_value_can_be_retrieved()
 {
+  LOG;
     boost::promise<int> pi;
     boost::unique_future<int> fi;
     fi=pi.get_future();
@@ -196,6 +207,7 @@ void test_set_value_can_be_retrieved()
 
 void test_set_value_can_be_moved()
 {
+  LOG;
 //     boost::promise<int> pi;
 //     boost::unique_future<int> fi;
 //     fi=pi.get_future();
@@ -213,6 +225,7 @@ void test_set_value_can_be_moved()
 
 void test_future_from_packaged_task_is_waiting()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
     int i=0;
@@ -225,6 +238,7 @@ void test_future_from_packaged_task_is_waiting()
 
 void test_invoking_a_packaged_task_populates_future()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
 
@@ -241,6 +255,7 @@ void test_invoking_a_packaged_task_populates_future()
 
 void test_invoking_a_packaged_task_twice_throws()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
 
     pt();
@@ -258,6 +273,7 @@ void test_invoking_a_packaged_task_twice_throws()
 
 void test_cannot_get_future_twice_from_task()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     pt.get_future();
     try
@@ -273,6 +289,7 @@ void test_cannot_get_future_twice_from_task()
 
 void test_task_stores_exception_if_function_throws()
 {
+  LOG;
     boost::packaged_task<int> pt(throw_runtime_error);
     boost::unique_future<int> fi=pt.get_future();
 
@@ -300,6 +317,7 @@ void test_task_stores_exception_if_function_throws()
 
 void test_void_promise()
 {
+  LOG;
     boost::promise<void> p;
     boost::unique_future<void> f=p.get_future();
     p.set_value();
@@ -312,6 +330,7 @@ void test_void_promise()
 
 void test_reference_promise()
 {
+  LOG;
     boost::promise<int&> p;
     boost::unique_future<int&> f=p.get_future();
     int i=42;
@@ -328,6 +347,7 @@ void do_nothing()
 
 void test_task_returning_void()
 {
+  LOG;
     boost::packaged_task<void> pt(do_nothing);
     boost::unique_future<void> fi=pt.get_future();
 
@@ -348,6 +368,7 @@ int& return_ref()
 
 void test_task_returning_reference()
 {
+  LOG;
     boost::packaged_task<int&> pt(return_ref);
     boost::unique_future<int&> fi=pt.get_future();
 
@@ -363,6 +384,7 @@ void test_task_returning_reference()
 
 void test_shared_future()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
 
@@ -382,6 +404,7 @@ void test_shared_future()
 
 void test_copies_of_shared_future_become_ready_together()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
 
@@ -420,6 +443,7 @@ void test_copies_of_shared_future_become_ready_together()
 
 void test_shared_future_can_be_move_assigned_from_unique_future()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
 
@@ -435,6 +459,7 @@ void test_shared_future_can_be_move_assigned_from_unique_future()
 
 void test_shared_future_void()
 {
+  LOG;
     boost::packaged_task<void> pt(do_nothing);
     boost::unique_future<void> fi=pt.get_future();
 
@@ -452,6 +477,7 @@ void test_shared_future_void()
 
 void test_shared_future_ref()
 {
+  LOG;
     boost::promise<int&> p;
     boost::shared_future<int&> f(p.get_future());
     int i=42;
@@ -465,6 +491,7 @@ void test_shared_future_ref()
 
 void test_can_get_a_second_future_from_a_moved_promise()
 {
+  LOG;
     boost::promise<int> pi;
     boost::unique_future<int> fi=pi.get_future();
 
@@ -482,6 +509,7 @@ void test_can_get_a_second_future_from_a_moved_promise()
 
 void test_can_get_a_second_future_from_a_moved_void_promise()
 {
+  LOG;
     boost::promise<void> pi;
     boost::unique_future<void> fi=pi.get_future();
 
@@ -497,6 +525,7 @@ void test_can_get_a_second_future_from_a_moved_void_promise()
 
 void test_unique_future_for_move_only_udt()
 {
+  LOG;
     boost::promise<X> pt;
     boost::unique_future<X> fi=pt.get_future();
 
@@ -507,6 +536,7 @@ void test_unique_future_for_move_only_udt()
 
 void test_unique_future_for_string()
 {
+  LOG;
     boost::promise<std::string> pt;
     boost::unique_future<std::string> fi=pt.get_future();
 
@@ -557,6 +587,7 @@ void do_nothing_callback(boost::promise<int>& /*pi*/)
 
 void test_wait_callback()
 {
+  LOG;
     callback_called=0;
     boost::promise<int> pi;
     boost::unique_future<int> fi=pi.get_future();
@@ -571,6 +602,7 @@ void test_wait_callback()
 
 void test_wait_callback_with_timed_wait()
 {
+  LOG;
     callback_called=0;
     boost::promise<int> pi;
     boost::unique_future<int> fi=pi.get_future();
@@ -594,6 +626,7 @@ void test_wait_callback_with_timed_wait()
 
 void wait_callback_for_task(boost::packaged_task<int>& pt)
 {
+  LOG;
     boost::lock_guard<boost::mutex> lk(callback_mutex);
     ++callback_called;
     try
@@ -608,6 +641,7 @@ void wait_callback_for_task(boost::packaged_task<int>& pt)
 
 void test_wait_callback_for_packaged_task()
 {
+  LOG;
     callback_called=0;
     boost::packaged_task<int> pt(make_int);
     boost::unique_future<int> fi=pt.get_future();
@@ -622,6 +656,7 @@ void test_wait_callback_for_packaged_task()
 
 void test_packaged_task_can_be_moved()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int);
 
     boost::unique_future<int> fi=pt.get_future();
@@ -649,6 +684,7 @@ void test_packaged_task_can_be_moved()
 
 void test_destroying_a_promise_stores_broken_promise()
 {
+  LOG;
     boost::unique_future<int> f;
 
     {
@@ -668,6 +704,7 @@ void test_destroying_a_promise_stores_broken_promise()
 
 void test_destroying_a_packaged_task_stores_broken_promise()
 {
+  LOG;
     boost::unique_future<int> f;
 
     {
@@ -693,6 +730,7 @@ int make_int_slowly()
 
 void test_wait_for_either_of_two_futures_1()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -710,6 +748,7 @@ void test_wait_for_either_of_two_futures_1()
 
 void test_wait_for_either_of_two_futures_2()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -727,6 +766,7 @@ void test_wait_for_either_of_two_futures_2()
 
 void test_wait_for_either_of_three_futures_1()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -747,6 +787,7 @@ void test_wait_for_either_of_three_futures_1()
 
 void test_wait_for_either_of_three_futures_2()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -767,6 +808,7 @@ void test_wait_for_either_of_three_futures_2()
 
 void test_wait_for_either_of_three_futures_3()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -787,6 +829,7 @@ void test_wait_for_either_of_three_futures_3()
 
 void test_wait_for_either_of_four_futures_1()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -810,6 +853,7 @@ void test_wait_for_either_of_four_futures_1()
 
 void test_wait_for_either_of_four_futures_2()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -833,6 +877,7 @@ void test_wait_for_either_of_four_futures_2()
 
 void test_wait_for_either_of_four_futures_3()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -856,6 +901,7 @@ void test_wait_for_either_of_four_futures_3()
 
 void test_wait_for_either_of_four_futures_4()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -879,6 +925,7 @@ void test_wait_for_either_of_four_futures_4()
 
 void test_wait_for_either_of_five_futures_1()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -905,7 +952,8 @@ void test_wait_for_either_of_five_futures_1()
 
 void test_wait_for_either_of_five_futures_2()
 {
-    boost::packaged_task<int> pt(make_int_slowly);
+  LOG;
+   boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
     boost::unique_future<int> f2(pt2.get_future());
@@ -930,6 +978,7 @@ void test_wait_for_either_of_five_futures_2()
 }
 void test_wait_for_either_of_five_futures_3()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -955,6 +1004,7 @@ void test_wait_for_either_of_five_futures_3()
 }
 void test_wait_for_either_of_five_futures_4()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -980,6 +1030,7 @@ void test_wait_for_either_of_five_futures_4()
 }
 void test_wait_for_either_of_five_futures_5()
 {
+  LOG;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> f1(pt.get_future());
     boost::packaged_task<int> pt2(make_int_slowly);
@@ -1006,6 +1057,7 @@ void test_wait_for_either_of_five_futures_5()
 
 void test_wait_for_either_invokes_callbacks()
 {
+  LOG;
     callback_called=0;
     boost::packaged_task<int> pt(make_int_slowly);
     boost::unique_future<int> fi=pt.get_future();
@@ -1022,6 +1074,7 @@ void test_wait_for_either_invokes_callbacks()
 
 void test_wait_for_any_from_range()
 {
+  LOG;
     unsigned const count=10;
     for(unsigned i=0;i<count;++i)
     {
@@ -1056,6 +1109,7 @@ void test_wait_for_any_from_range()
 
 void test_wait_for_all_from_range()
 {
+  LOG;
     unsigned const count=10;
     boost::unique_future<int> futures[count];
     for(unsigned j=0;j<count;++j)
@@ -1075,6 +1129,7 @@ void test_wait_for_all_from_range()
 
 void test_wait_for_all_two_futures()
 {
+  LOG;
     unsigned const count=2;
     boost::unique_future<int> futures[count];
     for(unsigned j=0;j<count;++j)
@@ -1094,6 +1149,7 @@ void test_wait_for_all_two_futures()
 
 void test_wait_for_all_three_futures()
 {
+  LOG;
     unsigned const count=3;
     boost::unique_future<int> futures[count];
     for(unsigned j=0;j<count;++j)
@@ -1113,6 +1169,7 @@ void test_wait_for_all_three_futures()
 
 void test_wait_for_all_four_futures()
 {
+  LOG;
     unsigned const count=4;
     boost::unique_future<int> futures[count];
     for(unsigned j=0;j<count;++j)
@@ -1132,6 +1189,7 @@ void test_wait_for_all_four_futures()
 
 void test_wait_for_all_five_futures()
 {
+  LOG;
     unsigned const count=5;
     boost::unique_future<int> futures[count];
     for(unsigned j=0;j<count;++j)
