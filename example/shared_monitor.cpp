@@ -7,8 +7,9 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
+#if defined BOOST_THREAD_DONT_USE_CHRONO
 #include <boost/chrono/chrono_io.hpp>
-
+#endif
 #include <cassert>
 #include <vector>
 
@@ -108,15 +109,19 @@ void test_w()
         la3.compute(a1, a2);
         a1 = la3;
         a2 = la3;
-//        boost::this_thread::sleep_for(boost::chrono::seconds(1));
+#if defined BOOST_THREAD_DONT_USE_CHRONO
+        boost::this_thread::sleep_for(boost::chrono::seconds(1));
+#endif
     }
 }
 
 int main()
 {
+#if defined BOOST_THREAD_DONT_USE_CHRONO
     typedef boost::chrono::high_resolution_clock Clock;
     typedef boost::chrono::duration<double> sec;
     Clock::time_point t0 = Clock::now();
+#endif
     std::vector<boost::thread*> v;
     boost::thread thw(test_w);
     v.push_back(&thw);
@@ -130,7 +135,9 @@ int main()
     v.push_back(&thr3);
     for (std::size_t i = 0; i < v.size(); ++i)
         v[i]->join();
+#if defined BOOST_THREAD_DONT_USE_CHRONO
     Clock::time_point t1 = Clock::now();
     std::cout << sec(t1-t0) << '\n';
+#endif
     return 0;
 }
