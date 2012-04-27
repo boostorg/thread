@@ -12,7 +12,7 @@
 #include <boost/detail/workaround.hpp>
 
 // This compiler doesn't support Boost.Chrono
-#if defined __IBMCPP__
+#if (__IBMCPP__ < 1100)
 #define BOOST_THREAD_DONT_USE_CHRONO
 #endif
 
