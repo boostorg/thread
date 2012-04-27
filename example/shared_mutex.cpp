@@ -11,10 +11,10 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
+
+#if defined BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/chrono_io.hpp>
 
-#include <cassert>
-#include <vector>
 
 enum {reading, writing};
 int state = reading;
@@ -721,3 +721,6 @@ int main()
   return 0;
 }
 
+#else
+#error "This platform doesn't support Boost.Chrono"
+#endif
