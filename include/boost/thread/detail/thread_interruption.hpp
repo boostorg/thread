@@ -7,6 +7,7 @@
 // (C) Copyright 2012 Vicente J. Botet Escriba
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/delete.hpp>
 
 namespace boost
 {
@@ -17,15 +18,7 @@ namespace boost
           bool interruption_was_enabled;
           friend class restore_interruption;
         public:
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-            disable_interruption(const disable_interruption&) = delete;
-            disable_interruption& operator=(const disable_interruption&) = delete;
-#else
-        private:
-            disable_interruption(const disable_interruption&);
-            disable_interruption& operator=(const disable_interruption&);
-        public:
-#endif
+            BOOST_THREAD_NO_COPYABLE(disable_interruption)
             disable_interruption() BOOST_NOEXCEPT;
             ~disable_interruption() BOOST_NOEXCEPT;
         };
@@ -33,16 +26,7 @@ namespace boost
         class BOOST_THREAD_DECL restore_interruption
         {
         public:
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-            restore_interruption(const restore_interruption&) = delete;
-            restore_interruption& operator=(const restore_interruption&) = delete;
-#else
-        private:
-            restore_interruption(const restore_interruption&);
-            restore_interruption& operator=(const restore_interruption&);
-        public:
-#endif
-
+            BOOST_THREAD_NO_COPYABLE(restore_interruption)
             explicit restore_interruption(disable_interruption& d) BOOST_NOEXCEPT;
             ~restore_interruption() BOOST_NOEXCEPT;
         };

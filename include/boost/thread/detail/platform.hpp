@@ -35,6 +35,7 @@
 #  define BOOST_THREAD_BEOS
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 #  define BOOST_THREAD_MACOS
+#  define BOOST_THREAD_WAIT_BUG
 #elif defined(__IBMCPP__) || defined(_AIX)
 #  define BOOST_THREAD_AIX
 #elif defined(__amigaos__)
@@ -55,7 +56,7 @@
 // dispatcher table. If there is no entry for a platform but pthreads is
 // available on the platform, pthread is choosen as default. If nothing is
 // available the preprocessor will fail with a diagnostic message.
- 
+
 #if defined(BOOST_THREAD_POSIX)
 #  define BOOST_THREAD_PLATFORM_PTHREAD
 #else

@@ -7,6 +7,7 @@
 #define BOOST_THREAD_REVERSE_LOCK_HPP
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/locks.hpp>
+#include <boost/thread/detail/delete.hpp>
 
 namespace boost
 {
@@ -15,15 +16,6 @@ namespace boost
     class reverse_lock
     {
 
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//        reverse_lock(reverse_lock const&) = delete;
-//        reverse_lock& operator=(reverse_lock const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//    private:
-//        reverse_lock(reverse_lock&);
-//        reverse_lock& operator=(reverse_lock&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         typedef typename Lock::mutex_type mutex_type;
         BOOST_THREAD_NO_COPYABLE(reverse_lock)
