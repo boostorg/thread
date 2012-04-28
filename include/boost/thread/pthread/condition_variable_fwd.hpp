@@ -18,7 +18,8 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
-
+#include <boost/thread/detail/delete.hpp>
+#include <boost/date_time/posix_time/posix_time_duration.hpp>
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -29,17 +30,6 @@ namespace boost
     private:
         pthread_mutex_t internal_mutex;
         pthread_cond_t cond;
-
-
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//        condition_variable(condition_variable const&) = delete;
-//        condition_variable& operator=(condition_variable const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//    private:
-//      condition_variable(condition_variable const&);
-//      condition_variable& operator=(condition_variable const&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
 
     public:
       BOOST_THREAD_NO_COPYABLE(condition_variable)
@@ -75,12 +65,18 @@ namespace boost
             while(!pred()) wait(m);
         }
 
+
         inline bool timed_wait(
             unique_lock<mutex>& m,
             boost::system_time const& wait_until)
         {
+#if defined BOOST_THREAD_WAIT_BUG
+            struct timespec const timeout=detail::get_timespec(wait_until+boost::posix_time::microseconds(1000));
+            return do_timed_wait(m, timeout);
+#else
             struct timespec const timeout=detail::get_timespec(wait_until);
             return do_timed_wait(m, timeout);
+#endif
         }
         bool timed_wait(
             unique_lock<mutex>& m,
