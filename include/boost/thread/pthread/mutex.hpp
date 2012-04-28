@@ -21,6 +21,7 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
+#include <boost/thread/detail/delete.hpp>
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0 && _POSIX_C_SOURCE>=200112L
@@ -34,15 +35,6 @@ namespace boost
 {
     class mutex
     {
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//      mutex(mutex const&) = delete;
-//      mutex& operator=(mutex const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//  private:
-//      mutex(mutex const&);
-//      mutex& operator=(mutex const&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
     public:
@@ -122,16 +114,6 @@ namespace boost
 
     class timed_mutex
     {
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//      timed_mutex(timed_mutex const&) = delete;
-//      timed_mutex& operator=(timed_mutex const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//    private:
-//      timed_mutex(timed_mutex const&);
-//      timed_mutex& operator=(timed_mutex const&);
-//    public:
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK

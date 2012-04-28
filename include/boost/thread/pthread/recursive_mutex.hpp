@@ -24,6 +24,7 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
+#include <boost/thread/detail/delete.hpp>
 
 #ifdef _POSIX_TIMEOUTS
 #if _POSIX_TIMEOUTS >= 0
@@ -41,15 +42,6 @@ namespace boost
 {
     class recursive_mutex
     {
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//      recursive_mutex(recursive_mutex const&) = delete;
-//      recursive_mutex& operator=(recursive_mutex const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//  private:
-//      recursive_mutex(recursive_mutex const&);
-//      recursive_mutex& operator=(recursive_mutex const&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE
@@ -184,15 +176,6 @@ namespace boost
 
     class recursive_timed_mutex
     {
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//      recursive_timed_mutex(recursive_timed_mutex const&) = delete;
-//      recursive_timed_mutex& operator=(recursive_timed_mutex const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//    private:
-//      recursive_timed_mutex(recursive_timed_mutex const&);
-//      recursive_timed_mutex& operator=(recursive_timed_mutex const&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         pthread_mutex_t m;
 #ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK

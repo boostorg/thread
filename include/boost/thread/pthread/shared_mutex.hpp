@@ -17,6 +17,7 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
+#include <boost/thread/detail/delete.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -47,16 +48,6 @@ namespace boost
             shared_cond.notify_all();
         }
 
-
-//#ifndef BOOST_NO_DELETED_FUNCTIONS
-//    public:
-//        shared_mutex(shared_mutex const&) = delete;
-//        shared_mutex& operator=(shared_mutex const&) = delete;
-//#else // BOOST_NO_DELETED_FUNCTIONS
-//    private:
-//        shared_mutex(shared_mutex const&);
-//        shared_mutex& operator=(shared_mutex const&);
-//#endif // BOOST_NO_DELETED_FUNCTIONS
     public:
         BOOST_THREAD_NO_COPYABLE(shared_mutex)
 
