@@ -402,7 +402,7 @@ namespace boost
           boost::mutex::scoped_lock lk(state_change);
           if (state.shared_count != 1)
           {
-              while (true)
+              for (;;)
               {
                 cv_status status = shared_cond.wait_until(lk,abs_time);
                 if (state.shared_count == 1)
@@ -462,7 +462,7 @@ namespace boost
           boost::mutex::scoped_lock lk(state_change);
           if (state.shared_count != 1)
           {
-              while (true)
+              for (;;)
               {
                 cv_status status = shared_cond.wait_until(lk,abs_time);
                 if (state.shared_count == 1)
@@ -524,7 +524,7 @@ namespace boost
               || state.upgrade
               )
           {
-              while (true)
+              for (;;)
               {
                 cv_status status = exclusive_cond.wait_until(lk,abs_time);
                 if(    ! state.exclusive
