@@ -19,6 +19,7 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
+#include <boost/thread/detail/delete.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -26,15 +27,6 @@ namespace boost
 {
     class shared_mutex
     {
-#ifndef BOOST_NO_DELETED_FUNCTIONS
-    public:
-        shared_mutex(shared_mutex const&) = delete;
-        shared_mutex& operator=(shared_mutex const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
-    private:
-        shared_mutex(shared_mutex const&);
-        shared_mutex& operator=(shared_mutex const&);
-#endif // BOOST_NO_DELETED_FUNCTIONS
     private:
         struct state_data
         {
@@ -87,6 +79,7 @@ namespace boost
 
 
     public:
+        BOOST_THREAD_NO_COPYABLE(shared_mutex)
         shared_mutex()
         {
             semaphores[unlock_sem]=detail::win32::create_anonymous_semaphore(0,LONG_MAX);

@@ -22,10 +22,8 @@ namespace boost
     class recursive_mutex:
         public ::boost::detail::basic_recursive_mutex
     {
-    private:
-        recursive_mutex(recursive_mutex const&);
-        recursive_mutex& operator=(recursive_mutex const&);
     public:
+        BOOST_THREAD_NO_COPYABLE(recursive_mutex)
         recursive_mutex()
         {
             ::boost::detail::basic_recursive_mutex::initialize();
@@ -44,10 +42,8 @@ namespace boost
     class recursive_timed_mutex:
         public ::boost::detail::basic_recursive_timed_mutex
     {
-    private:
-        recursive_timed_mutex(recursive_timed_mutex const&);
-        recursive_timed_mutex& operator=(recursive_timed_mutex const&);
     public:
+        BOOST_THREAD_NO_COPYABLE(recursive_timed_mutex)
         recursive_timed_mutex()
         {
             ::boost::detail::basic_recursive_timed_mutex::initialize();
