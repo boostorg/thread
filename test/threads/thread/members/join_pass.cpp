@@ -17,6 +17,7 @@
 
 // void join();
 
+#define BOOST_THREAD_VESRION 3
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/locks.hpp>
@@ -67,33 +68,52 @@ void resource_deadlock_would_occur_tester()
 {
   try
   {
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     boost::unique_lock<boost::mutex> lk(resource_deadlock_would_occur_mtx);
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
 
     resource_deadlock_would_occur_th->join();
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     BOOST_TEST(false);
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
   }
   catch (boost::system::system_error& e)
   {
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     BOOST_TEST(e.code().value() == boost::system::errc::resource_deadlock_would_occur);
+  }
+  catch (...)
+  {
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
+    BOOST_TEST(false&&"exception thrown");
   }
 }
 
 int main()
 {
   {
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     boost::thread t0( (G()));
     BOOST_TEST(t0.joinable());
     t0.join();
     BOOST_TEST(!t0.joinable());
   }
   {
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     boost::unique_lock<boost::mutex> lk(resource_deadlock_would_occur_mtx);
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     boost::thread t0( resource_deadlock_would_occur_tester );
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     resource_deadlock_would_occur_th = &t0;
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     BOOST_TEST(t0.joinable());
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     lk.unlock();
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     t0.join();
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
     BOOST_TEST(!t0.joinable());
+    std::cout << __FILE__ << ":" << __LINE__ <<" " << std::endl;
   }
 
 //  {
