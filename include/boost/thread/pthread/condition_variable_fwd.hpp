@@ -71,7 +71,7 @@ namespace boost
             boost::system_time const& wait_until)
         {
 #if defined BOOST_THREAD_WAIT_BUG
-            struct timespec const timeout=detail::get_timespec(wait_until+boost::posix_time::microseconds(1000));
+            struct timespec const timeout=detail::get_timespec(wait_until + BOOST_THREAD_WAIT_BUG);
             return do_timed_wait(m, timeout);
 #else
             struct timespec const timeout=detail::get_timespec(wait_until);
