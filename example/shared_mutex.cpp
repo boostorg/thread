@@ -178,6 +178,7 @@ void try_for_writer()
 void
 test_shared_mutex()
 {
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(reader);
         boost::thread t2(writer);
@@ -186,6 +187,7 @@ test_shared_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(try_reader);
         boost::thread t2(try_writer);
@@ -194,6 +196,7 @@ test_shared_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(try_for_reader);
         boost::thread t2(try_for_writer);
@@ -202,6 +205,7 @@ test_shared_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
 }
 
 }
@@ -561,6 +565,7 @@ void try_for_counter_clockwise()
 void
 test_upgrade_mutex()
 {
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(reader);
         boost::thread t2(writer);
@@ -569,6 +574,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(try_reader);
         boost::thread t2(try_writer);
@@ -577,6 +583,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(try_for_reader);
         boost::thread t2(try_for_writer);
@@ -585,6 +592,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(reader);
         boost::thread t2(writer);
@@ -593,6 +601,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(reader);
         boost::thread t2(writer);
@@ -601,6 +610,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         boost::thread t1(reader);
         boost::thread t2(writer);
@@ -609,6 +619,7 @@ test_upgrade_mutex()
         t2.join();
         t3.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         state = reading;
         boost::thread t1(clockwise);
@@ -620,6 +631,7 @@ test_upgrade_mutex()
         t3.join();
         t4.join();
     }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
     {
         state = reading;
         boost::thread t1(try_clockwise);
@@ -627,13 +639,15 @@ test_upgrade_mutex()
         t1.join();
         t2.join();
     }
-    {
-        state = reading;
-        boost::thread t1(try_for_clockwise);
-        boost::thread t2(try_for_counter_clockwise);
-        t1.join();
-        t2.join();
-    }
+    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
+//    {
+//        state = reading;
+//        boost::thread t1(try_for_clockwise);
+//        boost::thread t2(try_for_counter_clockwise);
+//        t1.join();
+//        t2.join();
+//    }
+//    std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
 }
 
 }
@@ -710,12 +724,16 @@ void temp()
 
 int main()
 {
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
   typedef boost::chrono::high_resolution_clock Clock;
   typedef boost::chrono::duration<double> sec;
   Clock::time_point t0 = Clock::now();
 
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
   S::test_shared_mutex();
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
   U::test_upgrade_mutex();
+  std::cout << __FILE__ << "[" <<__LINE__ << "]" << std::endl;
   Clock::time_point t1 = Clock::now();
   std::cout << sec(t1 - t0) << '\n';
   return 0;
