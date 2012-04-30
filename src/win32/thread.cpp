@@ -93,7 +93,7 @@ namespace boost
 
         typedef void* uintptr_t;
 
-        inline uintptr_t const _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
+        inline uintptr_t _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
                                               void* arglist, unsigned initflag, unsigned* thrdaddr)
         {
             DWORD threadID;
