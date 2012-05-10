@@ -18,6 +18,7 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/move/move.hpp>
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -239,5 +240,7 @@ namespace boost
   }
 }
 #endif
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif
