@@ -9,7 +9,7 @@
 #ifndef BOOST_THREAD_CV_STATUS_HPP
 #define BOOST_THREAD_CV_STATUS_HPP
 
-#include <boost/thread/detail/scoped_enum.hpp>
+#include <boost/detail/scoped_enum_emulation.hpp>
 
 namespace boost
 {
