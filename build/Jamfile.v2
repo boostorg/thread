@@ -203,7 +203,8 @@ rule usage-requirements ( properties * )
             # in that case?
         }
     }
-    if ! <toolset>vacpp in $(properties)
+
+    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties)
     {
       result += <library>/boost/chrono//boost_chrono ;
     } 
@@ -231,7 +232,7 @@ rule requirements ( properties * )
             }
         }
     }
-    if ! <toolset>vacpp in $(properties)
+    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties)
     {
       result += <library>/boost/chrono//boost_chrono ;
     } 
