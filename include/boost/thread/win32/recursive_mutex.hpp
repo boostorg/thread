@@ -10,7 +10,6 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 
-#include <boost/utility.hpp>
 #include <boost/thread/win32/basic_recursive_mutex.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/locks.hpp>
