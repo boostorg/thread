@@ -15,7 +15,6 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/thread_heap_alloc.hpp>
-#include <boost/utility.hpp>
 #include <boost/assert.hpp>
 #include <list>
 #include <algorithm>

@@ -13,7 +13,6 @@
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/static_assert.hpp>
 #include <limits.h>
-#include <boost/utility.hpp>
 #include <boost/thread/thread_time.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>

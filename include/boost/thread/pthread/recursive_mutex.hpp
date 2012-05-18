@@ -7,7 +7,6 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 
 #include <pthread.h>
-#include <boost/utility.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/thread/locks.hpp>
