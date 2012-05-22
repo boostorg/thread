@@ -1,7 +1,7 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
 //
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying 
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/mutex.hpp>
@@ -164,7 +164,7 @@ private:
     void* _param;
 };
 
-int main(int argc, char* argv[])
+int main()
 {
     boost::thread thrd_chef(&chef);
     phil p[] = { phil(0), phil(1), phil(2), phil(3), phil(4) };

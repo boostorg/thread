@@ -2,21 +2,37 @@
 #include <assert.h>
 #include <iostream>
 #include <stdlib.h>
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #include <unistd.h>
+#endif
 
 boost::mutex mtx;
 boost::condition_variable cv;
 
+using namespace boost::posix_time;
+using namespace boost::gregorian;
 int main()
 {
-         for (int i=0; i<3; ++i) {
-                 const time_t wait_time = ::time(0)+1;
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 
-                 boost::mutex::scoped_lock lk(mtx);
-                 const bool res = cv.timed_wait(lk, boost::posix_time::from_time_t(wait_time));
-                 const time_t end_time = ::time(0);
-                 assert(end_time >= wait_time);
-                 std::cerr << end_time - wait_time << " OK\n";
-         }
-         return 0;
+  for (int i=0; i<3; ++i)
+  {
+    const time_t now_time = ::time(0);
+    const time_t wait_time = now_time+1;
+    time_t end_time;
+    assert(now_time < wait_time);
+
+    boost::mutex::scoped_lock lk(mtx);
+    //const bool res =
+    (void)cv.timed_wait(lk, from_time_t(wait_time));
+    end_time = ::time(0);
+    std::cerr << "now_time =" << now_time << " \n";
+    std::cerr << "end_time =" << end_time << " \n";
+    std::cerr << "wait_time=" << wait_time << " \n";
+    std::cerr << end_time - wait_time << " \n";
+    assert(end_time >= wait_time);
+    std::cerr << " OK\n";
+  }
+#endif
+  return 0;
 }

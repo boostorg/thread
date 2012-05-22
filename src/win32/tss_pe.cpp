@@ -25,7 +25,7 @@ namespace boost
 }
 
 namespace {
-    void NTAPI on_tls_callback(void* h, DWORD dwReason, PVOID pv)
+    void NTAPI on_tls_callback(void* , DWORD dwReason, PVOID )
     {
         switch (dwReason)
         {

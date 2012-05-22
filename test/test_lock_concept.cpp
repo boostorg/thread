@@ -18,7 +18,7 @@ struct test_initially_locked
     {
         Mutex m;
         Lock lock(m);
-        
+
         BOOST_CHECK(lock);
         BOOST_CHECK(lock.owns_lock());
     }
@@ -32,7 +32,7 @@ struct test_initially_unlocked_if_other_thread_has_lock
     bool done;
     bool locked;
     boost::condition_variable done_cond;
-    
+
     test_initially_unlocked_if_other_thread_has_lock():
         done(false),locked(false)
     {}
@@ -51,7 +51,7 @@ struct test_initially_unlocked_if_other_thread_has_lock
     {
         return done;
     }
-    
+
 
     void operator()()
     {
@@ -69,7 +69,7 @@ struct test_initially_unlocked_if_other_thread_has_lock
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
             }
-            
+
             lock.unlock();
             t.join();
         }
@@ -90,7 +90,7 @@ struct test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock
     bool done;
     bool locked;
     boost::condition_variable done_cond;
-    
+
     test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock():
         done(false),locked(false)
     {}
@@ -109,7 +109,7 @@ struct test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock
     {
         return done;
     }
-    
+
 
     void operator()()
     {
@@ -127,7 +127,7 @@ struct test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
             }
-            
+
             lock.unlock();
             t.join();
         }
@@ -148,7 +148,7 @@ struct test_initially_locked_if_other_thread_has_shared_lock
     bool done;
     bool locked;
     boost::condition_variable done_cond;
-    
+
     test_initially_locked_if_other_thread_has_shared_lock():
         done(false),locked(false)
     {}
@@ -167,7 +167,7 @@ struct test_initially_locked_if_other_thread_has_shared_lock
     {
         return done;
     }
-    
+
 
     void operator()()
     {
@@ -185,7 +185,7 @@ struct test_initially_locked_if_other_thread_has_shared_lock
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(locked);
             }
-            
+
             lock.unlock();
             t.join();
         }
@@ -205,7 +205,7 @@ struct test_initially_unlocked_with_defer_lock_parameter
     {
         Mutex m;
         Lock lock(m,boost::defer_lock);
-        
+
         BOOST_CHECK(!lock);
         BOOST_CHECK(!lock.owns_lock());
     }
@@ -219,7 +219,7 @@ struct test_initially_locked_with_adopt_lock_parameter
         Mutex m;
         m.lock();
         Lock lock(m,boost::adopt_lock);
-        
+
         BOOST_CHECK(lock);
         BOOST_CHECK(lock.owns_lock());
     }
@@ -273,7 +273,7 @@ struct test_unlocked_after_try_lock_if_other_thread_has_lock
     bool done;
     bool locked;
     boost::condition_variable done_cond;
-    
+
     test_unlocked_after_try_lock_if_other_thread_has_lock():
         done(false),locked(false)
     {}
@@ -292,7 +292,7 @@ struct test_unlocked_after_try_lock_if_other_thread_has_lock
     {
         return done;
     }
-    
+
 
     void operator()()
     {
@@ -310,7 +310,7 @@ struct test_unlocked_after_try_lock_if_other_thread_has_lock
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
             }
-            
+
             lock.unlock();
             t.join();
         }
@@ -330,7 +330,7 @@ struct test_throws_if_lock_called_when_already_locked
     {
         Mutex m;
         Lock lock(m);
-        
+
         BOOST_CHECK_THROW( lock.lock(), boost::lock_error );
     }
 };
@@ -342,7 +342,7 @@ struct test_throws_if_try_lock_called_when_already_locked
     {
         Mutex m;
         Lock lock(m);
-        
+
         BOOST_CHECK_THROW( lock.try_lock(), boost::lock_error );
     }
 };
@@ -355,7 +355,7 @@ struct test_throws_if_unlock_called_when_already_unlocked
         Mutex m;
         Lock lock(m);
         lock.unlock();
-        
+
         BOOST_CHECK_THROW( lock.unlock(), boost::lock_error );
     }
 };
@@ -367,7 +367,7 @@ struct test_default_constructed_has_no_mutex_and_unlocked
         Lock l;
         BOOST_CHECK(!l.mutex());
         BOOST_CHECK(!l.owns_lock());
-    };
+    }
 };
 
 
@@ -387,18 +387,21 @@ struct test_locks_can_be_swapped
         BOOST_CHECK_EQUAL(l2.mutex(),&m2);
 
         l1.swap(l2);
-        
+
         BOOST_CHECK_EQUAL(l1.mutex(),&m2);
         BOOST_CHECK_EQUAL(l2.mutex(),&m1);
-        
+
         swap(l1,l2);
 
         BOOST_CHECK_EQUAL(l1.mutex(),&m1);
         BOOST_CHECK_EQUAL(l2.mutex(),&m2);
 
+#if 0
         l1.swap(Lock(m3));
 
         BOOST_CHECK_EQUAL(l1.mutex(),&m3);
+#endif
+
     }
 };
 
@@ -437,7 +440,7 @@ BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_unique_lock_is_scoped_lock,Mutex)
 BOOST_TEST_CASE_TEMPLATE_FUNCTION(test_scoped_try_lock_concept,Mutex)
 {
     typedef typename Mutex::scoped_try_lock Lock;
-    
+
     test_default_constructed_has_no_mutex_and_unlocked<Lock>()();
     test_initially_locked<Mutex,Lock>()();
     test_initially_unlocked_if_other_thread_has_lock<Mutex,Lock>()();
@@ -470,25 +473,25 @@ struct dummy_shared_mutex
         timed_locked_relative(false),
         timed_locked_absolute(false)
     {}
-    
+
     void lock()
     {
         locked=true;
     }
-    
+
     void lock_shared()
     {
         shared_locked=true;
     }
-    
+
     void unlock()
     {}
-    
+
     void unlock_shared()
     {
         shared_unlocked=true;
     }
-    
+
     bool timed_lock_shared(boost::system_time)
     {
         shared_timed_locked_absolute=true;
@@ -511,7 +514,7 @@ struct dummy_shared_mutex
         timed_locked_relative=true;
         return false;
     }
-    
+
 };
 
 
@@ -519,7 +522,7 @@ void test_shared_lock()
 {
     typedef boost::shared_mutex Mutex;
     typedef boost::shared_lock<Mutex> Lock;
-    
+
     test_default_constructed_has_no_mutex_and_unlocked<Lock>()();
     test_initially_locked<Mutex,Lock>()();
     test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock<Mutex,Lock>()();
@@ -552,7 +555,7 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 
     typedef boost::mpl::vector<boost::mutex,boost::try_mutex,boost::timed_mutex,
         boost::recursive_mutex,boost::recursive_try_mutex,boost::recursive_timed_mutex> mutex_types_with_scoped_lock;
-    
+
     test->add(BOOST_TEST_CASE_TEMPLATE(test_scoped_lock_concept,mutex_types_with_scoped_lock));
 
     typedef boost::mpl::vector<boost::try_mutex,boost::timed_mutex,
@@ -562,9 +565,22 @@ boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 
     typedef boost::mpl::vector<boost::mutex,boost::try_mutex,boost::timed_mutex,
         boost::recursive_mutex,boost::recursive_try_mutex,boost::recursive_timed_mutex,boost::shared_mutex> all_mutex_types;
-    
+
     test->add(BOOST_TEST_CASE_TEMPLATE(test_unique_lock_is_scoped_lock,all_mutex_types));
     test->add(BOOST_TEST_CASE(&test_shared_lock));
 
     return test;
+}
+
+void remove_unused_warning()
+{
+
+  //../../../boost/test/results_collector.hpp:40:13: warning: unused function 'first_failed_assertion' [-Wunused-function]
+  //(void)first_failed_assertion;
+
+  //../../../boost/test/tools/floating_point_comparison.hpp:304:25: warning: unused variable 'check_is_close' [-Wunused-variable]
+  //../../../boost/test/tools/floating_point_comparison.hpp:326:25: warning: unused variable 'check_is_small' [-Wunused-variable]
+  (void)boost::test_tools::check_is_close;
+  (void)boost::test_tools::check_is_small;
+
 }

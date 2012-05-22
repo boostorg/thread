@@ -13,7 +13,7 @@ int foo()
 }
 
 
-int main(int argc, char** argv)
+int main()
 {
   boost::packaged_task<int> pt(&foo);
   boost::unique_future<int> fi = pt.get_future();

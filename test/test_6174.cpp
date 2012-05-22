@@ -5,22 +5,20 @@
 
 #ifndef BOOST_NO_RVALUE_REFERENCES
 struct MovableButNonCopyable {
-#ifndef   BOOST_NO_DEFAULTED_FUNCTIONS
-      MovableButNonCopyable() = default;
+#if ! defined BOOST_NO_DELETED_FUNCTIONS
       MovableButNonCopyable(MovableButNonCopyable const&) = delete;
       MovableButNonCopyable& operator=(MovableButNonCopyable const&) = delete;
-      MovableButNonCopyable(MovableButNonCopyable&&) = default;
-      MovableButNonCopyable& operator=(MovableButNonCopyable&&) = default;
 #else
-  MovableButNonCopyable() {};
-  MovableButNonCopyable(MovableButNonCopyable&&) {};
-  MovableButNonCopyable& operator=(MovableButNonCopyable&&) {
-    return *this;
-  };
 private:
     MovableButNonCopyable(MovableButNonCopyable const&);
     MovableButNonCopyable& operator=(MovableButNonCopyable const&);
 #endif
+public:
+    MovableButNonCopyable() {};
+    MovableButNonCopyable(MovableButNonCopyable&&) {};
+    MovableButNonCopyable& operator=(MovableButNonCopyable&&) {
+      return *this;
+    };
 };
 int main()
 {
