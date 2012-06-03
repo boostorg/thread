@@ -2,8 +2,8 @@
 #ifndef BOOST_NO_RVALUE_REFERENCES
 
 #include <boost/detail/lightweight_test.hpp>
-#include "boost/thread/future.hpp"
-#include "boost/utility/result_of.hpp"
+#include <boost/thread/future.hpp>
+#include <boost/utility/result_of.hpp>
 #include <functional>
 
 struct async_func {
@@ -116,9 +116,9 @@ int main()
 
 /*
  *
- * #include "boost/test/unit_test.hpp"
-#include "boost/thread/future.hpp"
-#include "boost/utility/result_of.hpp"
+ * #include <boost/test/unit_test.hpp>
+#include <boost/thread/future.hpp>
+#include <boost/utility/result_of.hpp>
 #include <functional>
 
 struct async_func {

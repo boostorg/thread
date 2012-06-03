@@ -20,25 +20,34 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6195 #6195] c++11 compliance: Provide the standard time related interface using Boost.Chrono. 
 * [@http://svn.boost.org/trac/boost/ticket/6217 #6217] Enhance Boost.Thread shared mutex interface following Howard Hinnant proposal. 
 * [@http://svn.boost.org/trac/boost/ticket/6224 #6224] c++11 compliance: Add the use of standard noexcept on compilers supporting them. 
+* [@http://svn.boost.org/trac/boost/ticket/6225 #6225] Add the use of standard =delete defaulted operations on compilers supporting them.
 * [@http://svn.boost.org/trac/boost/ticket/6226 #6226] c++11 compliance: Add explicit bool conversion from locks. 
 * [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise constructor with allocator following the standard c++11. 
+* [@http://svn.boost.org/trac/boost/ticket/6229 #6229] Rename the unique_future to future following the c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6230 #6230] c++11 compliance: Follows the exception reporting mechanism as defined in the c++11. 
+* [@http://svn.boost.org/trac/boost/ticket/6231 #6231] Add BasicLockable requirements in the documentation to follow c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
 * [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
 * [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
 * [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
-* [@http://svn.boost.org/trac/boost/ticket/6231 #6231] Add BasicLockable requirements in the documentation to follow c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6342 #6342] c++11 compliance: Adapt the one_flag to the c++11 interface.
 * [@http://svn.boost.org/trac/boost/ticket/6671 #6671] upgrade_lock: missing mutex and release functions.
 * [@http://svn.boost.org/trac/boost/ticket/6672 #6672] upgrade_lock:: missing constructors from time related types.
 * [@http://svn.boost.org/trac/boost/ticket/6675 #6675] upgrade_lock:: missing non-member swap.
+* [@http://svn.boost.org/trac/boost/ticket/6676 #6676] lock conversion should be explicit.
 * Added missing packaged_task::result_type and packaged_task:: constructor with allocator.
 * Added packaged_task::reset()
 
+
 Fixed Bugs:
 
+* [@http://svn.boost.org/trac/boost/ticket/2380 #2380] boost::move from lvalue does not work with gcc.
+* [@http://svn.boost.org/trac/boost/ticket/2430 #2430] shared_mutex for win32 doesn't have timed_lock_upgrade.
 * [@http://svn.boost.org/trac/boost/ticket/2575 #2575] Bug- Boost 1.36.0 on Itanium platform.
+* [@http://svn.boost.org/trac/boost/ticket/3160 #3160] Duplicate tutorial code in boost::thread.
 * [@http://svn.boost.org/trac/boost/ticket/4345 #4345] thread::id and joining problem with cascade of threads.
+* [@http://svn.boost.org/trac/boost/ticket/4521 #4521] Error using boost::move on packaged_task (MSVC 10).
+* [@http://svn.boost.org/trac/boost/ticket/4711 #4711] Must use implementation details to return move-only types.
 * [@http://svn.boost.org/trac/boost/ticket/4921 #4921] BOOST_THREAD_USE_DLL and BOOST_THREAD_USE_LIB are crucial and need to be documented.
 * [@http://svn.boost.org/trac/boost/ticket/5013 #5013] documentation: boost::thread: pthreas_exit causes terminate().
 * [@http://svn.boost.org/trac/boost/ticket/5173 #5173] boost::this_thread::get_id is very slow.
@@ -47,6 +56,7 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/5990 #5990] shared_future<T>::get() has wrong return type. 
 * [@http://svn.boost.org/trac/boost/ticket/6174 #6174] packaged_task doesn't correctly handle moving results.
 * [@http://svn.boost.org/trac/boost/ticket/6222 #6222] Compile error with SunStudio: unique_future move. 
+* [@http://svn.boost.org/trac/boost/ticket/6354 #6354] PGI: Compiler threading support is not turned on.
 * [@http://svn.boost.org/trac/boost/ticket/6673 #6673] shared_lock: move assign doesn't works with c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6674 #6674] shared_mutex: try_lock_upgrade_until doesn't works.
 * Fix issue signaled on the ML with task_object(task_object const&) in presence of task_object(task_object &&) 

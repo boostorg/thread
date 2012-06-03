@@ -24,6 +24,8 @@
 
 
 #include <boost/thread/future.hpp>
+#include <boost/thread/thread.hpp>
+#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
 
@@ -49,13 +51,13 @@ void f2()
   boost::this_thread::sleep_for(ms(200));
 }
 
-boost::unique_ptr<int> f3(int i)
+boost::interprocess::unique_ptr<int> f3(int i)
 {
   boost::this_thread::sleep_for(ms(200));
-  return boost::unique_ptr<int>(new int(i));
+  return boost::interprocess::unique_ptr<int>(new int(i));
 }
 
-boost::unique_ptr<int> f4(boost::unique_ptr<int>&& p)
+boost::interprocess::unique_ptr<int> f4(boost::interprocess::unique_ptr<int>&& p)
 {
   boost::this_thread::sleep_for(ms(200));
   return boost::move(p);
@@ -163,7 +165,7 @@ int main()
   }
 
   {
-    boost::future<boost::unique_ptr<int>> f = boost::async(f3, 3);
+    boost::future<boost::interprocess::unique_ptr<int>> f = boost::async(f3, 3);
     boost::this_thread::sleep_for(ms(300));
     Clock::time_point t0 = Clock::now();
     BOOST_TEST(*f.get() == 3);
@@ -172,7 +174,7 @@ int main()
   }
 
   {
-    boost::future<boost::unique_ptr<int>> f = boost::async(f4, boost::unique_ptr<int>(new int(3)));
+    boost::future<boost::interprocess::unique_ptr<int>> f = boost::async(f4, boost::interprocess::unique_ptr<int>(new int(3)));
     boost::this_thread::sleep_for(ms(300));
     Clock::time_point t0 = Clock::now();
     BOOST_TEST(*f.get() == 3);

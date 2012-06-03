@@ -340,7 +340,7 @@ Instead of
 
 use
 
-        switch (BOOST_SCOPED_ENUM_NATIVE(future_errc)(ev))
+        switch (boost::native_value(ev))
         {
         case future_errc::broken_promise:
 
