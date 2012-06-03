@@ -8,6 +8,13 @@
 
 #include <boost/config.hpp>
 
+/**
+ * BOOST_THREAD_DELETE_COPY_CTOR deletes the copy constructor when the compiler supports it or
+ * makes it private.
+ *
+ * BOOST_THREAD_DELETE_COPY_ASSIGN deletes the copy assignment when the compiler supports it or
+ * makes it private.
+ */
 #ifndef BOOST_NO_DELETED_FUNCTIONS
 #define BOOST_THREAD_DELETE_COPY_CTOR(CLASS) \
       CLASS(CLASS const&) = delete; \
@@ -27,6 +34,10 @@
     public:
 #endif // BOOST_NO_DELETED_FUNCTIONS
 
+/**
+ * BOOST_THREAD_NO_COPYABLE deletes the copy constructor and assignment when the compiler supports it or
+ * makes them private.
+ */
 #define BOOST_THREAD_NO_COPYABLE(CLASS) \
     BOOST_THREAD_DELETE_COPY_CTOR(CLASS) \
     BOOST_THREAD_DELETE_COPY_ASSIGN(CLASS)

@@ -40,8 +40,8 @@ import path ;
 project boost/thread
     : source-location ../src
     : requirements <threading>multi
-      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
-      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+      <link>static:<define>BOOST_THREAD_STATIC_LINK=1
+      <link>shared:<define>BOOST_THREAD_DYN_LINK=1
       -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
@@ -92,8 +92,8 @@ project boost/thread
 
     # : default-build <threading>multi
     : usage-requirements  # pass these requirement to dependents (i.e. users)
-      <link>static:<define>BOOST_THREAD_BUILD_LIB=1
-      <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
+      <link>static:<define>BOOST_THREAD_STATIC_LINK=1
+      <link>shared:<define>BOOST_THREAD_DYN_LINK=1
       <define>BOOST_SYSTEM_NO_DEPRECATED
       <library>/boost/system//boost_system
     ;
@@ -263,7 +263,7 @@ lib boost_thread
     : thread_sources future.cpp
     : <conditional>@requirements
     :
-    : <link>shared:<define>BOOST_THREAD_USE_DLL=1
-      <link>static:<define>BOOST_THREAD_USE_LIB=1
+    : #<link>shared:<define>BOOST_THREAD_USE_DLL=1
+      #<link>static:<define>BOOST_THREAD_USE_LIB=1
       <conditional>@usage-requirements
     ;

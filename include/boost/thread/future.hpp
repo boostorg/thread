@@ -43,6 +43,9 @@
 #include <boost/thread/detail/memory.hpp>
 #endif
 
+#include <boost/utility/result_of.hpp>
+//#include <boost/thread.hpp>
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
 #else
@@ -1654,6 +1657,37 @@ namespace boost
 #endif
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) packaged_task<T> BOOST_THREAD_DCL_MOVABLE_END
+
+//    template <class F>
+//    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
+//    async(launch policy, F f)
+//    {
+//        typedef typename boost::result_of<F()>::type R;
+//        typedef BOOST_THREAD_FUTURE<R> future;
+//        if (int(policy) & int(launch::async))
+//        {
+//          packaged_task<R> pt( f );
+//
+//          BOOST_THREAD_FUTURE ret = pt.get_future();
+//          boost::thread( boost::move(pt) ).detach();
+//          return ::boost::move(ret);
+//        }
+//        else if (int(policy) & int(launch::deferred))
+//        {
+//          packaged_task<R> pt( f );
+//
+//          BOOST_THREAD_FUTURE ret = pt.get_future();
+//          return ::boost::move(ret);
+//        }
+//    }
+//
+//    template <class F>
+//    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
+//    async(F f)
+//    {
+//        return async(launch::any, f);
+//    }
+
 
 
 }
