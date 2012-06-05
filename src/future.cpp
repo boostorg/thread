@@ -46,7 +46,7 @@ namespace boost
     }
   }
 
-  const system::error_category&
+  BOOST_THREAD_DECL const system::error_category&
   future_category()
   {
       static thread_detail::future_error_category f;
