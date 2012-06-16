@@ -10,7 +10,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <libs/thread/test/util.inl>
-#include "condition_test_common.hpp"
+#include <libs/thread/test/condition_test_common.hpp>
 
 unsigned const number_of_test_threads=5;
 
