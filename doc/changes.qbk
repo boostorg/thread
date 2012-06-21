@@ -59,7 +59,11 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/6354 #6354] PGI: Compiler threading support is not turned on.
 * [@http://svn.boost.org/trac/boost/ticket/6673 #6673] shared_lock: move assign doesn't works with c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6674 #6674] shared_mutex: try_lock_upgrade_until doesn't works.
+* [@http://svn.boost.org/trac/boost/ticket/6908 #6908] Compile error due to unprotected definitions of _WIN32_WINNT and WINVER.
+* [@http://svn.boost.org/trac/boost/ticket/6940 #6940] TIME_UTC is a macro in C11.
+* [@http://svn.boost.org/trac/boost/ticket/6959 #6959] call of abs is ambiguous.
 * Fix issue signaled on the ML with task_object(task_object const&) in presence of task_object(task_object &&) 
+ 	
  	
 [/
 Deprecated features since boost 1.50 available only until boost 1.55:
