@@ -11,6 +11,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
+#include <vector>
 
 #if defined BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/chrono_io.hpp>
