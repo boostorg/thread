@@ -36,33 +36,31 @@ namespace boost
 #else
         boost::once_flag current_thread_tls_init_flag=BOOST_ONCE_INIT;
 #endif
-        #if defined(UNDER_CE)
+#if defined(UNDER_CE)
         // Windows CE does not define the TLS_OUT_OF_INDEXES constant.
-        DWORD tls_out_of_index=0xFFFFFFFF;
-        #else
-        DWORD tls_out_of_index=TLS_OUT_OF_INDEXES;
-        #endif
-        DWORD current_thread_tls_key=tls_out_of_index;
+#define TLS_OUT_OF_INDEXES 0xFFFFFFFF
+#endif
+        DWORD current_thread_tls_key=TLS_OUT_OF_INDEXES;
 
         void create_current_thread_tls_key()
         {
             tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
             current_thread_tls_key=TlsAlloc();
-            BOOST_ASSERT(current_thread_tls_key!=tls_out_of_index);
+            BOOST_ASSERT(current_thread_tls_key!=TLS_OUT_OF_INDEXES);
         }
 
         void cleanup_tls_key()
         {
-            if(current_thread_tls_key!=tls_out_of_index)
+            if(current_thread_tls_key!=TLS_OUT_OF_INDEXES)
             {
                 TlsFree(current_thread_tls_key);
-                current_thread_tls_key=tls_out_of_index;
+                current_thread_tls_key=TLS_OUT_OF_INDEXES;
             }
         }
 
         detail::thread_data_base* get_current_thread_data()
         {
-            if(current_thread_tls_key==tls_out_of_index)
+            if(current_thread_tls_key==TLS_OUT_OF_INDEXES)
             {
                 return 0;
             }
@@ -72,7 +70,7 @@ namespace boost
         void set_current_thread_data(detail::thread_data_base* new_data)
         {
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
-            if(current_thread_tls_key!=tls_out_of_index)
+            if(current_thread_tls_key!=TLS_OUT_OF_INDEXES)
                 BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
             else
                 boost::throw_exception(thread_resource_error());
