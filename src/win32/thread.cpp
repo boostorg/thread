@@ -219,7 +219,7 @@ namespace boost
     void thread::start_thread(const attributes& attr)
     {
       //uintptr_t const new_thread=_beginthreadex(attr.get_security(),attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
-      uintptr_t const new_thread=_beginthreadex(0,attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
+      uintptr_t const new_thread=_beginthreadex(0,static_cast<unsigned int>(attr.get_stack_size()),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
       if(!new_thread)
       {
           boost::throw_exception(thread_resource_error());
