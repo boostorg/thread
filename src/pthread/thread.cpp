@@ -562,6 +562,7 @@ namespace boost
 
         void interruption_point()
         {
+#ifndef BOOST_NO_EXCEPTIONS
             boost::detail::thread_data_base* const thread_info=detail::get_current_thread_data();
             if(thread_info && thread_info->interrupt_enabled)
             {
@@ -572,6 +573,7 @@ namespace boost
                     throw thread_interrupted();
                 }
             }
+#endif
         }
 
         bool interruption_enabled() BOOST_NOEXCEPT
