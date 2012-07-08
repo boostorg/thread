@@ -52,6 +52,11 @@
 #define BOOST_THREAD_FUTURE unique_future
 #endif
 
+// boost::thread::future requires exception handling
+// due to boost::exception::exception_ptr dependency
+
+#ifndef BOOST_NO_EXCEPTIONS
+
 namespace boost
 {
 
@@ -1692,5 +1697,5 @@ namespace boost
 
 }
 
-
-#endif
+#endif // BOOST_NO_EXCEPTION
+#endif // header
