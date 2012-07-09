@@ -8,7 +8,52 @@
 
 [section:changes History]
 
+[heading Version 3.0.1 - boost 1.51]
+
+New Features:
+
+* [@http://svn.boost.org/trac/boost/ticket/2100 #2100] thread fails to compile with -fno-exceptions
+
+Deprecated features since boost 1.50 available only until boost 1.55:
+
+These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+
+* Time related functions don't using the Boost.Chrono library, use the chrono overloads instead.
+
+Breaking changes when BOOST_THREAD_VERSION==3:
+
+There are some new features which share the same interface but with different behavior. These breaking features are provided by default when BOOST_THREAD_VERSION is 3, but the user can however choose the version 2 behavior by defining the corresponding macro. As for the deprecated features, these broken features will be only available until boost 1.55.
+
+* [@http://svn.boost.org/trac/boost/ticket/6229 #6229] Rename the unique_future to future following the c++11.
+* [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
+* [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
+
+
+Fixed Bugs:
+
+
+* [@http://svn.boost.org/trac/boost/ticket/4258 #4258] Linking with boost thread does not work on mingw/gcc 4.5.
+* [@http://svn.boost.org/trac/boost/ticket/4885 #4885] Access violation in set_tss_data at process exit due to invalid assumption about TlsAlloc.
+* [@http://svn.boost.org/trac/boost/ticket/6931 #6931] mutex waits forwever with Intel Compiler and /debug:parallel
+* [@http://svn.boost.org/trac/boost/ticket/7044 #7044] boost 1.50.0 header missing.
+* [@http://svn.boost.org/trac/boost/ticket/7052 #7052] Thread: BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 only masks thread::operator==, thread::operator!= forward declarations, not definitions.
+* [@http://svn.boost.org/trac/boost/ticket/7066 #7066] An attempt to fix current_thread_tls_key static initialization order.
+* [@http://svn.boost.org/trac/boost/ticket/7074 #7074] Multiply defined symbol boost::allocator_arg.
+* [@http://svn.boost.org/trac/boost/ticket/7078 #7078] Trivial 64-bit warning fix on Windows for thread attribute stack size
+* [@http://svn.boost.org/trac/boost/ticket/7089 #7089] BOOST_THREAD_WAIT_BUG limits functionality without solving anything
+
+[/
+#6787 	boost::thread::sleep() hangs if system time is rolled back
+#7045 	Thread library does not automatically compile date_time
+]
+
 [heading Version 3.0.0 - boost 1.50]
+
+Breaking changes when BOOST_THREAD_VERSION==3:
+
+* [@http://svn.boost.org/trac/boost/ticket/6229 #6229] Breaking change: Rename the unique_future to future following the c++11.
+* [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
+* [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
 
 New Features:
 
@@ -23,11 +68,8 @@ New Features:
 * [@http://svn.boost.org/trac/boost/ticket/6225 #6225] Add the use of standard =delete defaulted operations on compilers supporting them.
 * [@http://svn.boost.org/trac/boost/ticket/6226 #6226] c++11 compliance: Add explicit bool conversion from locks. 
 * [@http://svn.boost.org/trac/boost/ticket/6228 #6228] Add promise constructor with allocator following the standard c++11. 
-* [@http://svn.boost.org/trac/boost/ticket/6229 #6229] Rename the unique_future to future following the c++11.
 * [@http://svn.boost.org/trac/boost/ticket/6230 #6230] c++11 compliance: Follows the exception reporting mechanism as defined in the c++11. 
 * [@http://svn.boost.org/trac/boost/ticket/6231 #6231] Add BasicLockable requirements in the documentation to follow c++11.
-* [@http://svn.boost.org/trac/boost/ticket/6266 #6266] Breaking change: thread destructor should call terminate if joinable. 
-* [@http://svn.boost.org/trac/boost/ticket/6269 #6269] Breaking change: thread move assignment should call terminate if joinable. 
 * [@http://svn.boost.org/trac/boost/ticket/6272 #6272] c++11 compliance: Add thread::id hash specialization.
 * [@http://svn.boost.org/trac/boost/ticket/6273 #6273] c++11 compliance: Add cv_status enum class and use it on the conditions wait functions. 
 * [@http://svn.boost.org/trac/boost/ticket/6342 #6342] c++11 compliance: Adapt the one_flag to the c++11 interface.
@@ -65,20 +107,6 @@ Fixed Bugs:
 * Fix issue signaled on the ML with task_object(task_object const&) in presence of task_object(task_object &&) 
  	
  	
-[/
-Deprecated features since boost 1.50 available only until boost 1.55:
-
-These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
-
-* Time related functions don't using the Boost.Chrono library, use the chrono overloads instead.
-
-Breaking changes:
-
-There are some new features which share the same interface but with different behavior. These breaking features are provided by default when BOOST_THREAD_VERSION is 2, but the user can however choose the version 1 behavior by defining the corresponding macro. As for the deprecated features, these broken features will be only available until boost 1.55.
-
-*  #6266 	c++11 compliance: thread destructor should call terminate if joinable
-*  #6269 	c++11 compliance: thread move assignment should call terminate if joinable
-]
 
 [heading Version 2.1.1 - boost 1.49]
 
