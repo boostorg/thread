@@ -183,16 +183,20 @@ namespace boost
         {
             detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(param));
             set_current_thread_data(thread_info);
-            try
+#ifndef BOOST_NO_EXCEPTIONS
+            try // BOOST_NO_EXCEPTIONS protected
+#endif
             {
                 thread_info->run();
             }
-            catch(thread_interrupted const&)
+#ifndef BOOST_NO_EXCEPTIONS
+            catch(thread_interrupted const&) // BOOST_NO_EXCEPTIONS protected
             {
             }
+#endif
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
-//             catch(...)
+//             catch(...) // BOOST_NO_EXCEPTIONS protected
 //             {
 //                 std::terminate();
 //             }
@@ -254,15 +258,19 @@ namespace boost
         void make_external_thread_data()
         {
             externally_launched_thread* me=detail::heap_new<externally_launched_thread>();
-            try
+#ifndef BOOST_NO_EXCEPTIONS
+            try // BOOST_NO_EXCEPTIONS protected
+#endif
             {
                 set_current_thread_data(me);
             }
-            catch(...)
+#ifndef BOOST_NO_EXCEPTIONS
+            catch(...) // BOOST_NO_EXCEPTIONS protected
             {
                 detail::heap_delete(me);
-                throw;
+                throw; // BOOST_NO_EXCEPTIONS protected
             }
+#endif
         }
 
         detail::thread_data_base* get_or_make_current_thread_data()

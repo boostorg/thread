@@ -8,7 +8,9 @@ boost::shared_mutex mutex;
 void thread()
 {
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
+#ifndef BOOST_NO_EXCEPTIONS
   try
+#endif
   {
     for (int i =0; i<10; ++i)
     {
@@ -23,10 +25,12 @@ void thread()
       }
     }
   }
+#ifndef BOOST_NO_EXCEPTIONS
   catch (boost::lock_error& le)
   {
     std::cerr << "lock_error exception\n";
   }
+#endif
   std::cout << __FILE__ << ":" << __LINE__ << std::endl;
 }
 

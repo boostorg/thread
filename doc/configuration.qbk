@@ -167,12 +167,12 @@ These deprecated features will be provided by default up to boost 1.52. If you d
 [section:version Version]
 
 `BOOST_THREAD_VERSION` defines the Boost.Thread version. 
-The default version is 1. In this case the following breaking or extending macros are defined if the opposite is not requested: 
+The default version is 2. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
 * `BOOST_THREAD_PROVIDES_PROMISE_LAZY`
 * `BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0`
 
-The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In this case the following breaking or extending macros are defined if the opposite is not requested: 
+The user can request the version 3 by defining `BOOST_THREAD_VERSION` to 3. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
 * Breaking change `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION `
 * Breaking change `BOOST_THREAD_PROVIDES_FUTURE`
@@ -185,6 +185,8 @@ The user can request the version 2 by defining `BOOST_THREAD_VERSION` to 2. In t
 
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`
+
+The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.53.
 
 [endsect]
 
