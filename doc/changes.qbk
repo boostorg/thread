@@ -8,6 +8,30 @@
 
 [section:changes History]
 
+[heading Version 3.0.1 - boost 1.51]
+
+New Features:
+
+* [@http://svn.boost.org/trac/boost/ticket/2100 #2100] thread fails to compile with -fno-exceptions
+
+Fixed Bugs:
+
+
+* [@http://svn.boost.org/trac/boost/ticket/4258 #4258] Linking with boost thread does not work on mingw/gcc 4.5.
+* [@http://svn.boost.org/trac/boost/ticket/4885 #4885] Access violation in set_tss_data at process exit due to invalid assumption about TlsAlloc.
+* [@http://svn.boost.org/trac/boost/ticket/6931 #6931] mutex waits forwever with Intel Compiler and /debug:parallel
+* [@http://svn.boost.org/trac/boost/ticket/7044 #7044] boost 1.50.0 header missing.
+* [@http://svn.boost.org/trac/boost/ticket/7052 #7052] Thread: BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 only masks thread::operator==, thread::operator!= forward declarations, not definitions.
+* [@http://svn.boost.org/trac/boost/ticket/7066 #7066] An attempt to fix current_thread_tls_key static initialization order.
+* [@http://svn.boost.org/trac/boost/ticket/7074 #7074] Multiply defined symbol boost::allocator_arg.
+* [@http://svn.boost.org/trac/boost/ticket/7078 #7078] Trivial 64-bit warning fix on Windows for thread attribute stack size
+* [@http://svn.boost.org/trac/boost/ticket/7089 #7089] BOOST_THREAD_WAIT_BUG limits functionality without solving anything
+
+[/
+#6787 	boost::thread::sleep() hangs if system time is rolled back
+#7045 	Thread library does not automatically compile date_time
+]
+
 [heading Version 3.0.0 - boost 1.50]
 
 New Features:
@@ -63,6 +87,7 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/6940 #6940] TIME_UTC is a macro in C11.
 * [@http://svn.boost.org/trac/boost/ticket/6959 #6959] call of abs is ambiguous.
 * Fix issue signaled on the ML with task_object(task_object const&) in presence of task_object(task_object &&) 
+ 	
  	
 [/
 Deprecated features since boost 1.50 available only until boost 1.55:

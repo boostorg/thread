@@ -11,12 +11,12 @@ typedef upgrade_to_unique_lock<shared_mutex> auto_upgrade_unique_lock;
 
 void testUpgrade(void)
 {
-	shared_mutex		mtx;
-	auto_upgrade_lock	lock(mtx);
-	// Do some read-only stuff
+  shared_mutex    mtx;
+  auto_upgrade_lock lock(mtx);
+  // Do some read-only stuff
 
-	auto_upgrade_unique_lock writeLock(lock);
-	// Do some write-only stuff with the upgraded lock
+  auto_upgrade_unique_lock writeLock(lock);
+  // Do some write-only stuff with the upgraded lock
 }
 
 int main()
