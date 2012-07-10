@@ -5,12 +5,12 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:compliance Conformace and Extension]
+[section:compliance Conformance and Extension]
 
 [section:cpp11 C++11 standard Thread library]
 
 
-[table C++11 standard Conformace
+[table C++11 standard Conformance
     [[Section]        [Description]  [Status] [Comments] [Ticket]]
     [[30]        [Thread support library]  [Partial] [-] [-]]
     [[30.1]        [General]  [-] [-] [-]]
@@ -89,7 +89,7 @@
 
 [section:shared Shared Locking extensions]
 
-[table Howard's Shared Locking Proposal Conformace
+[table Howard's Shared Locking Proposal Conformance
     [[Section]  [Description]  [Status] [Comments]]
     [[X]        [Shared Locking]  [Yes] [Needs `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION]]
     [[X.1]      [Shared Lockables Concepts]  [Yes] [ - ]]
