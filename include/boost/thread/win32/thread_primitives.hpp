@@ -376,7 +376,8 @@ namespace boost
                 };
                 return ret;
 
-#endif            }
+#endif
+            }
 
         }
     }
