@@ -52,7 +52,7 @@ namespace boost
         {
         public:
             BOOST_THREAD_NO_COPYABLE(thread_data)
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
               thread_data(BOOST_THREAD_RV_REF(F) f_):
                 f(boost::forward<F>(f_))
               {}
@@ -131,7 +131,7 @@ namespace boost
 
         detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
         {
@@ -174,7 +174,7 @@ namespace boost
             detach();
     #endif
         }
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template <
           class F
         >
@@ -434,7 +434,7 @@ namespace boost
         return lhs.swap(rhs);
     }
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     inline thread&& move(thread& t) BOOST_NOEXCEPT
     {
         return static_cast<thread&&>(t);
