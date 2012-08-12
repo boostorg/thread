@@ -224,10 +224,10 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/conditions/cv_status/cv_status_pass.cpp : cv_status__cv_status_p ]
     ;
 
-    #explicit ts_async ;
+    explicit ts_async ;
     test-suite ts_async
     :
-    #      [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]
+          [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]
     ;
 
     #explicit ts_promise ;
@@ -530,12 +530,6 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
-    ;
-
-    explicit ts ;
-    test-suite ts
-    :
-          [ thread-run test_ml.cpp  ]
     ;
 
 }

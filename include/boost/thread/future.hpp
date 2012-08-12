@@ -50,7 +50,7 @@
 #endif
 
 #include <boost/utility/result_of.hpp>
-//#include <boost/thread.hpp>
+#include <boost/thread/thread.hpp>
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
@@ -77,7 +77,7 @@ namespace boost
     template <>
     struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc> : public true_type {};
 
-    #ifdef BOOST_NO_SCOPED_ENUMS
+    #ifdef BOOST_NO_CXX11_SCOPED_ENUMS
     template <>
     struct BOOST_SYMBOL_VISIBLE is_error_code_enum<future_errc::enum_type> : public true_type { };
     #endif
@@ -374,7 +374,7 @@ namespace boost
         struct future_traits
         {
             typedef boost::scoped_ptr<T> storage_type;
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             typedef T const& source_reference_type;
             struct dummy;
             typedef typename boost::mpl::if_<boost::is_fundamental<T>,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
@@ -1422,7 +1422,7 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             task_object(BOOST_THREAD_RV_REF(F) f_):
               f(boost::forward<F>(f_))
             {}
@@ -1459,7 +1459,7 @@ namespace boost
             task_object(F const& f_):
                 f(f_)
             {}
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             task_object(BOOST_THREAD_RV_REF(F) f_):
               f(boost::forward<F>(f_))
             {}
@@ -1509,7 +1509,7 @@ namespace boost
         explicit packaged_task(R(*f)()):
             task(new detail::task_object<R,R(*)()>(f)),future_obtained(false)
         {}
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F>
         explicit packaged_task(BOOST_THREAD_RV_REF(F) f):
             task(new detail::task_object<R,
@@ -1539,7 +1539,7 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,FR>(f), D(a2, 1) );
           future_obtained = false;
         }
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F, class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, BOOST_THREAD_RV_REF(F) f)
         {
@@ -1572,7 +1572,7 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) detail::task_object<R,F>(boost::move(f)), D(a2, 1) );
           future_obtained = false;
         }
-#endif //BOOST_NO_RVALUE_REFERENCES
+#endif //BOOST_NO_CXX11_RVALUE_REFERENCES
 #endif // BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 
         ~packaged_task()
@@ -1665,35 +1665,38 @@ namespace boost
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) packaged_task<T> BOOST_THREAD_DCL_MOVABLE_END
 
-//    template <class F>
-//    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
-//    async(launch policy, F f)
-//    {
-//        typedef typename boost::result_of<F()>::type R;
-//        typedef BOOST_THREAD_FUTURE<R> future;
-//        if (int(policy) & int(launch::async))
-//        {
-//          packaged_task<R> pt( f );
-//
-//          BOOST_THREAD_FUTURE ret = pt.get_future();
-//          boost::thread( boost::move(pt) ).detach();
-//          return ::boost::move(ret);
-//        }
-//        else if (int(policy) & int(launch::deferred))
-//        {
-//          packaged_task<R> pt( f );
-//
-//          BOOST_THREAD_FUTURE ret = pt.get_future();
-//          return ::boost::move(ret);
-//        }
-//    }
-//
-//    template <class F>
-//    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
-//    async(F f)
-//    {
-//        return async(launch::any, f);
-//    }
+    template <class F>
+    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
+    async(launch policy, F f)
+    {
+        typedef typename boost::result_of<F()>::type R;
+        //typedef BOOST_THREAD_FUTURE<R> future;
+        if (int(policy) & int(launch::async))
+        {
+          packaged_task<R> pt( f );
+
+          BOOST_THREAD_FUTURE<R> ret = pt.get_future();
+          boost::thread( boost::move(pt) ).detach();
+          return ::boost::move(ret);
+        }
+        else if (int(policy) & int(launch::deferred))
+        {
+          packaged_task<R> pt( f );
+
+          BOOST_THREAD_FUTURE<R> ret = pt.get_future();
+          return ::boost::move(ret);
+        } else {
+          BOOST_THREAD_FUTURE<R> ret;
+          return ::boost::move(ret);
+        }
+    }
+
+    template <class F>
+    BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
+    async(F f)
+    {
+        return async(launch::any, f);
+    }
 
 
 
