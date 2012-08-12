@@ -1,3 +1,8 @@
+// Copyright (C) 2010 Vicente Botet
+//
+//  Distributed under the Boost Software License, Version 1.0. (See accompanying
+//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
+
 
 
 #include <boost/thread.hpp>
@@ -16,13 +21,21 @@ private:
 public:
     MovableButNonCopyable() {};
     MovableButNonCopyable(MovableButNonCopyable&&) {};
-    MovableButNonCopyable& operator=(MovableButNonCopyable&&) {
+    MovableButNonCopyable& operator=(MovableButNonCopyable&&)
+    {
       return *this;
     };
 };
+
+MovableButNonCopyable construct()
+{
+  return MovableButNonCopyable();
+}
+
 int main()
 {
-    boost::packaged_task<MovableButNonCopyable>(MovableButNonCopyable());
+    boost::packaged_task<MovableButNonCopyable> pt(construct);
+    pt();
     return 0;
 }
 #else
