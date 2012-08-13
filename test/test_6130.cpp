@@ -43,5 +43,5 @@ int main()
     std::cerr << " OK\n";
   }
 #endif
-  return 1;
+  return 0;
 }
