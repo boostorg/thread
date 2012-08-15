@@ -105,7 +105,7 @@ namespace boost
   template <class T>
   struct BOOST_SYMBOL_VISIBLE default_delete
   {
-  #ifndef BOOST_NO_DEFAULTED_FUNCTIONS
+  #ifndef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     BOOST_SYMBOL_VISIBLE
     BOOST_CONSTEXPR default_delete() = default;
   #else
@@ -128,7 +128,7 @@ namespace boost
   struct BOOST_SYMBOL_VISIBLE default_delete<T[]>
   {
   public:
-  #ifndef BOOST_NO_DEFAULTED_FUNCTIONS
+  #ifndef BOOST_NO_CXX11_DEFAULTED_FUNCTIONS
     BOOST_SYMBOL_VISIBLE
     BOOST_CONSTEXPR default_delete() = default;
   #else
