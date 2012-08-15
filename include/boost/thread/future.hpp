@@ -106,14 +106,14 @@ namespace boost
 
   namespace system
   {
-    inline BOOST_THREAD_DECL
+    inline
     error_code
     make_error_code(future_errc e)
     {
         return error_code(underlying_cast<int>(e), boost::future_category());
     }
 
-    inline BOOST_THREAD_DECL
+    inline
     error_condition
     make_error_condition(future_errc e)
     {
