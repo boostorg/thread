@@ -484,7 +484,7 @@ namespace boost
             void mark_finished_with_result(rvalue_source_type result_)
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
-                mark_finished_with_result_internal(result_);
+                mark_finished_with_result_internal(static_cast<rvalue_source_type>(result_));
             }
 
             move_dest_type get()
