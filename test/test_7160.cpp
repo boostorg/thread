@@ -11,7 +11,7 @@
 class ThreadClass
 {
    public:
-	ThreadClass()
+  ThreadClass()
 	{
 	}
 
