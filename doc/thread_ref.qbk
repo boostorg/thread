@@ -338,7 +338,7 @@ The user can access to some synchronization functions related to the native curr
 
 Of course all the synchronization facilities provided by Boost.Thread are also available on native threads. 
 
-The `boost::this_thread` interrupt related functions behave in a degraded mode when called from a thread created using the native interface, i.e. `boost::this_thread::interruption_enabled()` returns false. As consequence the use of `boost::this_thread::disable_interruption` and `boost::this_thread::restore_interruption` will do nothing and calls to `boost::this_thread::interrupt_point()` will be just ignored.  
+The `boost::this_thread` interrupt related functions behave in a degraded mode when called from a thread created using the native interface, i.e. `boost::this_thread::interruption_enabled()` returns false. As consequence the use of `boost::this_thread::disable_interruption` and `boost::this_thread::restore_interruption` will do nothing and calls to `boost::this_thread::interruption_point()` will be just ignored.  
 
 As the single way to interrupt a thread is through a __thread__ instance, `interruption_request()` wiil returns false for the native threads. 
 
