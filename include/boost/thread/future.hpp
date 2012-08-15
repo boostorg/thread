@@ -576,7 +576,7 @@ namespace boost
         class future_waiter
         {
             struct registered_waiter;
-            typedef std::vector<registered_waiter>::size_type count_type;
+            typedef std::vector<int>::size_type count_type;
 
             struct registered_waiter
             {
