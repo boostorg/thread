@@ -178,6 +178,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-test test_2309.cpp ]
           [ thread-run test_2501.cpp ]
           [ thread-test test_2741.cpp ]
+          [ thread-run test_3628.cpp ]
           [ thread-run test_4521.cpp ]
           [ thread-run test_4648.cpp ]
           [ thread-run test_4882.cpp ]
@@ -189,6 +190,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run test_6170.cpp ]
           [ thread-run test_6174.cpp ]
           [ thread-run test_7160.cpp ]
+          [ thread-run test_7328.cpp ]
     ;
 
 
