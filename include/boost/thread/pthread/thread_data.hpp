@@ -177,7 +177,43 @@ namespace boost
     namespace this_thread
     {
 #ifdef BOOST_THREAD_USES_CHRONO
-        void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns);
+        inline
+        void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
+        {
+            using namespace chrono;
+            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
+
+            if(thread_info)
+            {
+              unique_lock<mutex> lk(thread_info->sleep_mutex);
+              while(cv_status::no_timeout==thread_info->sleep_condition.wait_for(lk,ns)) {}
+            }
+            else
+            {
+              if (ns >= nanoseconds::zero())
+              {
+
+  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+                timespec ts;
+                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
+                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
+                BOOST_VERIFY(!pthread_delay_np(&ts));
+  #   elif defined(BOOST_HAS_NANOSLEEP)
+                timespec ts;
+                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
+                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
+                //  nanosleep takes a timespec that is an offset, not
+                //  an absolute time.
+                nanosleep(&ts, 0);
+  #   else
+                mutex mx;
+                mutex::scoped_lock lock(mx);
+                condition_variable cond;
+                cond.wait_for(lock, ns);
+  #   endif
+              }
+            }
+        }
 #endif
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
