@@ -13,4 +13,4 @@ void test()
     boost::thread t2(t1);
 }
 
-#include "libs/thread/test/remove_error_code_unused_warning.hpp"
+#include "../remove_error_code_unused_warning.hpp"

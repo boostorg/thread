@@ -31,5 +31,5 @@ int main()
   return boost::report_errors();
 }
 
-#include "libs/thread/test/remove_error_code_unused_warning.hpp"
+#include "../../../remove_error_code_unused_warning.hpp"
 
