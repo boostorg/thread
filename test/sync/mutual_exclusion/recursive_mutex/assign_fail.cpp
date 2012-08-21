@@ -27,5 +27,5 @@ int main()
   boost::recursive_mutex m1(m0);
 }
 
-#include "libs/thread/test/remove_error_code_unused_warning.hpp"
+#include "../../../remove_error_code_unused_warning.hpp"
 

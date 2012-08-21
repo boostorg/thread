@@ -26,5 +26,5 @@ void fail()
   boost::condition_variable cv1(cv0);
 }
 
-#include "libs/thread/test/remove_error_code_unused_warning.hpp"
+#include "../../../remove_error_code_unused_warning.hpp"
 
