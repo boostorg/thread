@@ -61,8 +61,8 @@
     class packaged_task;
     template <class R> void swap(packaged_task<R>&, packaged_task<R>&) noexcept;
 
-    //template <class R, class Alloc> 
-    //struct uses_allocator<packaged_task <R>, Alloc>; // NOT YET IMPLEMENTED
+    template <class R, class Alloc> 
+    struct uses_allocator<packaged_task <R>, Alloc>;
 
     // template <class F, class... Args> 
     // future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type> 
