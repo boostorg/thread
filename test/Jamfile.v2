@@ -44,7 +44,7 @@ project
         <toolset>clang:<cxxflags>-pedantic
         <toolset>clang:<cxxflags>-Wno-long-long
         <toolset>clang:<cxxflags>-ansi
-        #<toolset>clang:<cxxflags>-fpermissive # doesn't work 
+        #<toolset>clang:<cxxflags>-fpermissive # doesn't work
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
@@ -80,13 +80,13 @@ rule thread-run ( sources )
 rule thread-test ( sources )
 {
     return
-    [ run $(sources) ../build//boost_thread : : : 
-      <library>/boost/test//boost_unit_test_framework/<link>static 
+    [ run $(sources) ../build//boost_thread : : :
+      <library>/boost/test//boost_unit_test_framework/<link>static
     ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
-        : : : 
-      <library>/boost/test//boost_unit_test_framework/<link>static 
-    : $(sources[1]:B)_lib 
+        : : :
+      <library>/boost/test//boost_unit_test_framework/<link>static
+    : $(sources[1]:B)_lib
     ]
     ;
 }

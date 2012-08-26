@@ -128,19 +128,6 @@ namespace boost
             {}
         };
 
-        struct tss_data_node
-        {
-            void const* key;
-            boost::shared_ptr<boost::detail::tss_cleanup_function> func;
-            void* value;
-            tss_data_node* next;
-
-            tss_data_node(void const* key_,boost::shared_ptr<boost::detail::tss_cleanup_function> func_,void* value_,
-                          tss_data_node* next_):
-                key(key_),func(func_),value(value_),next(next_)
-            {}
-        };
-
     }
 
     namespace
@@ -150,7 +137,7 @@ namespace boost
             detail::thread_data_ptr current_thread_data(get_current_thread_data(),false);
             if(current_thread_data)
             {
-                while(current_thread_data->tss_data || current_thread_data->thread_exit_callbacks)
+                while(! current_thread_data->tss_data.empty() || current_thread_data->thread_exit_callbacks)
                 {
                     while(current_thread_data->thread_exit_callbacks)
                     {
@@ -163,15 +150,18 @@ namespace boost
                         }
                         boost::detail::heap_delete(current_node);
                     }
-                    while(current_thread_data->tss_data)
+                    for(std::map<void const*,detail::tss_data_node>::iterator next=current_thread_data->tss_data.begin(),
+                            current,
+                            end=current_thread_data->tss_data.end();
+                        next!=end;)
                     {
-                        detail::tss_data_node* const current_node=current_thread_data->tss_data;
-                        current_thread_data->tss_data=current_node->next;
-                        if(current_node->func)
+                        current=next;
+                        ++next;
+                        if(current->second.func && (current->second.value!=0))
                         {
-                            (*current_node->func)(current_node->value);
+                            (*current->second.func)(current->second.value);
                         }
-                        boost::detail::heap_delete(current_node);
+                        current_thread_data->tss_data.erase(current);
                     }
                 }
 
@@ -301,7 +291,6 @@ namespace boost
     {
         return (get_thread_info)();
     }
-
     void thread::join()
     {
         if (this_thread::get_id() == get_id())
@@ -318,44 +307,26 @@ namespace boost
 
     bool thread::timed_join(boost::system_time const& wait_until)
     {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
-        detail::thread_data_ptr local_thread_info=(get_thread_info)();
-        if(local_thread_info)
-        {
-            if(!this_thread::interruptible_wait(local_thread_info->thread_handle,get_milliseconds_until(wait_until)))
-            {
-                return false;
-            }
-            release_handle();
-        }
-        return true;
+      return do_try_join_until(get_milliseconds_until(wait_until));
     }
 
-#ifdef BOOST_THREAD_USES_CHRONO
-
-    bool thread::try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+    bool thread::do_try_join_until(uintmax_t milli)
     {
       if (this_thread::get_id() == get_id())
       {
-        boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+          boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
       }
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
       {
-        chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
-        if(!this_thread::interruptible_wait(local_thread_info->thread_handle,rel_time.count()))
-        {
-            return false;
-        }
-        release_handle();
+          if(!this_thread::interruptible_wait(local_thread_info->thread_handle,milli))
+          {
+              return false;
+          }
+          release_handle();
       }
       return true;
     }
-
-#endif
 
     void thread::detach() BOOST_NOEXCEPT
     {
@@ -636,14 +607,11 @@ namespace boost
             detail::thread_data_base* const current_thread_data(get_current_thread_data());
             if(current_thread_data)
             {
-                detail::tss_data_node* current_node=current_thread_data->tss_data;
-                while(current_node)
+                std::map<void const*,tss_data_node>::iterator current_node=
+                    current_thread_data->tss_data.find(key);
+                if(current_node!=current_thread_data->tss_data.end())
                 {
-                    if(current_node->key==key)
-                    {
-                        return current_node;
-                    }
-                    current_node=current_node->next;
+                    return &current_node->second;
                 }
             }
             return NULL;
@@ -658,23 +626,43 @@ namespace boost
             return NULL;
         }
 
-        void set_tss_data(void const* key,boost::shared_ptr<tss_cleanup_function> func,void* tss_data,bool cleanup_existing)
+        void add_new_tss_node(void const* key,
+                              boost::shared_ptr<tss_cleanup_function> func,
+                              void* tss_data)
+        {
+            detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
+            current_thread_data->tss_data.insert(std::make_pair(key,tss_data_node(func,tss_data)));
+        }
+
+        void erase_tss_node(void const* key)
+        {
+            detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
+            current_thread_data->tss_data.erase(key);
+        }
+
+        void set_tss_data(void const* key,
+                          boost::shared_ptr<tss_cleanup_function> func,
+                          void* tss_data,bool cleanup_existing)
         {
             if(tss_data_node* const current_node=find_tss_data(key))
             {
-                if(cleanup_existing && current_node->func.get() && current_node->value)
+                if(cleanup_existing && current_node->func && (current_node->value!=0))
                 {
                     (*current_node->func)(current_node->value);
                 }
-                current_node->func=func;
-                current_node->value=tss_data;
+                if(func || (tss_data!=0))
+                {
+                    current_node->func=func;
+                    current_node->value=tss_data;
+                }
+                else
+                {
+                    erase_tss_node(key);
+                }
             }
-            else if(func && tss_data)
+            else
             {
-                detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
-                tss_data_node* const new_node=
-                    heap_new<tss_data_node>(key,func,tss_data,current_thread_data->tss_data);
-                current_thread_data->tss_data=new_node;
+                add_new_tss_node(key,func,tss_data);
             }
         }
     }
