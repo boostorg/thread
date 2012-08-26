@@ -11,6 +11,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
+#include <map>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #endif
@@ -58,8 +59,18 @@ namespace boost
 
     namespace detail
     {
+        struct tss_cleanup_function;
         struct thread_exit_callback_node;
-        struct tss_data_node;
+        struct tss_data_node
+        {
+            boost::shared_ptr<boost::detail::tss_cleanup_function> func;
+            void* value;
+
+            tss_data_node(boost::shared_ptr<boost::detail::tss_cleanup_function> func_,
+                          void* value_):
+                func(func_),value(value_)
+            {}
+        };
 
         struct thread_data_base;
         void intrusive_ptr_add_ref(thread_data_base * p);
@@ -71,14 +82,14 @@ namespace boost
             detail::win32::handle_manager thread_handle;
             detail::win32::handle_manager interruption_handle;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
-            boost::detail::tss_data_node* tss_data;
+            std::map<void const*,boost::detail::tss_data_node> tss_data;
             bool interruption_enabled;
             unsigned id;
 
             thread_data_base():
                 count(0),thread_handle(detail::win32::invalid_handle_value),
                 interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
-                thread_exit_callbacks(0),tss_data(0),
+                thread_exit_callbacks(0),tss_data(),
                 interruption_enabled(true),
                 id(0)
             {}
