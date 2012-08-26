@@ -341,7 +341,8 @@ namespace boost
         {
             inline bool interlocked_bit_test_and_set(long* x,long bit)
             {
-#ifndef BOOST_INTEL_CXX_VERSION                 __asm {
+#ifndef BOOST_INTEL_CXX_VERSION
+                __asm {
                     mov eax,bit;
                     mov edx,x;
                     lock bts [edx],eax;
@@ -359,7 +360,8 @@ namespace boost
 
             inline bool interlocked_bit_test_and_reset(long* x,long bit)
             {
-#ifndef BOOST_INTEL_CXX_VERSION                 __asm {
+#ifndef BOOST_INTEL_CXX_VERSION
+                __asm {
                     mov eax,bit;
                     mov edx,x;
                     lock btr [edx],eax;
