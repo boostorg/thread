@@ -102,20 +102,20 @@ namespace boost
   BOOST_SCOPED_ENUM_DECLARE_END(future_status)
 
   BOOST_THREAD_DECL
-  const system::error_category& future_category();
+  const system::error_category& future_category() BOOST_NOEXCEPT;
 
   namespace system
   {
     inline
     error_code
-    make_error_code(future_errc e)
+    make_error_code(future_errc e) //BOOST_NOEXCEPT
     {
         return error_code(underlying_cast<int>(e), boost::future_category());
     }
 
     inline
     error_condition
-    make_error_condition(future_errc e)
+    make_error_condition(future_errc e) //BOOST_NOEXCEPT
     {
         return error_condition(underlying_cast<int>(e), future_category());
     }
@@ -137,14 +137,13 @@ namespace boost
         return ec_;
       }
 
-      //virtual ~future_error() BOOST_NOEXCEPT;
   };
 
     class BOOST_SYMBOL_VISIBLE future_uninitialized:
         public future_error
     {
     public:
-        future_uninitialized():
+        future_uninitialized() :
           future_error(system::make_error_code(future_errc::no_state))
         {}
     };
@@ -179,7 +178,6 @@ namespace boost
     public:
         task_already_started():
         future_error(system::make_error_code(future_errc::promise_already_satisfied))
-            //std::logic_error("Task already started")
         {}
     };
 
@@ -189,7 +187,6 @@ namespace boost
         public:
             task_moved():
               future_error(system::make_error_code(future_errc::no_state))
-                //std::logic_error("Task moved")
             {}
         };
 
@@ -199,7 +196,6 @@ namespace boost
             public:
                   promise_moved():
                   future_error(system::make_error_code(future_errc::no_state))
-                    //std::logic_error("Promise moved")
                 {}
             };
 
@@ -1218,6 +1214,11 @@ namespace boost
             }
             future_->mark_exceptional_finish_internal(p);
         }
+
+        // setting the result with deferred notification
+        //void set_value_at_thread_exit(const R& r); // NOT YET IMPLEMENTED
+        //void set_value_at_thread_exit(see below); // NOT YET IMPLEMENTED
+        //void set_exception_at_thread_exit(exception_ptr p); // NOT YET IMPLEMENTED
 
         template<typename F>
         void set_wait_callback(F f)
