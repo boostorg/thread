@@ -7,7 +7,7 @@
 #include <boost/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-using namespace boost;
+//using namespace boost;
 using namespace boost::chrono;
 
 bool interrupted = false;
@@ -18,10 +18,10 @@ void f()
     std::cout << "Starting sleep in thread" << std::endl;
     while (true)
     {
-      this_thread::sleep_for(seconds(60));
+      boost::this_thread::sleep_for(seconds(60));
     }
   }
-  catch (const thread_interrupted&)
+  catch (const boost::thread_interrupted&)
   {
     interrupted = true;
     std::cout << "Thread interrupted." << std::endl;
@@ -30,7 +30,7 @@ void f()
 
 int main()
 {
-  thread t(f);
+  boost::thread t(f);
   t.interrupt();
   t.join();
   std::cout << "Joined with thread." << std::endl;
