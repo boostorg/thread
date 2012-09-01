@@ -23,6 +23,8 @@
 #include <boost/bind.hpp>
 #include <stdlib.h>
 #include <memory>
+//#include <vector>
+//#include <utility>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/io/ios_state.hpp>
@@ -69,10 +71,13 @@ namespace boost
                 f(f_)
             {}
 #endif
+            //thread_data() {}
+
             void run()
             {
                 f();
             }
+
         private:
             F f;
         };
@@ -406,7 +411,7 @@ namespace boost
             return timed_join(get_system_time()+rel_time);
         }
 
-        void detach() BOOST_NOEXCEPT;
+        void detach();
 
         static unsigned hardware_concurrency() BOOST_NOEXCEPT;
 
