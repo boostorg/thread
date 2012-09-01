@@ -15,7 +15,9 @@
 
 // class thread
 
-// void join();
+//        template <class Rep, class Period>
+//        bool try_join_for(const chrono::duration<Rep, Period>& rel_time);
+
 #define BOOST_THREAD_VESRION 3
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -26,38 +28,34 @@
 #include <iostream>
 #include <boost/detail/lightweight_test.hpp>
 
+#if defined BOOST_THREAD_USES_CHRONO
+
 class G
 {
   int alive_;
 public:
-  static int n_alive;
   static bool op_run;
 
   G() :
     alive_(1)
   {
-    ++n_alive;
   }
   G(const G& g) :
     alive_(g.alive_)
   {
-    ++n_alive;
   }
   ~G()
   {
     alive_ = 0;
-    --n_alive;
   }
 
   void operator()()
   {
     BOOST_TEST(alive_ == 1);
-    //BOOST_TEST(n_alive == 1);
     op_run = true;
   }
 };
 
-int G::n_alive = 0;
 bool G::op_run = false;
 
 boost::thread* resource_deadlock_would_occur_th=0;
@@ -67,7 +65,7 @@ void resource_deadlock_would_occur_tester()
   try
   {
     boost::unique_lock<boost::mutex> lk(resource_deadlock_would_occur_mtx);
-    resource_deadlock_would_occur_th->join();
+    resource_deadlock_would_occur_th->try_join_for(boost::chrono::milliseconds(50));
     BOOST_TEST(false);
   }
   catch (boost::system::system_error& e)
@@ -80,13 +78,23 @@ void resource_deadlock_would_occur_tester()
   }
 }
 
+void th_100_ms()
+{
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+}
+
 int main()
 {
   {
     boost::thread t0( (G()));
     BOOST_TEST(t0.joinable());
-    t0.join();
+    BOOST_TEST(t0.try_join_for(boost::chrono::milliseconds(50)));
     BOOST_TEST(!t0.joinable());
+  }
+  {
+    boost::thread t0( (th_100_ms));
+    BOOST_TEST(!t0.try_join_for(boost::chrono::milliseconds(50)));
+    t0.join();
   }
 
   {
@@ -106,7 +114,7 @@ int main()
     t0.detach();
     try
     {
-      t0.join();
+      t0.try_join_for(boost::chrono::milliseconds(50));
       BOOST_TEST(false);
     }
     catch (boost::system::system_error& e)
@@ -118,6 +126,21 @@ int main()
     boost::thread t0( (G()));
     BOOST_TEST(t0.joinable());
     t0.join();
+    try
+    {
+      t0.try_join_for(boost::chrono::milliseconds(50));
+      BOOST_TEST(false);
+    }
+    catch (boost::system::system_error& e)
+    {
+      BOOST_TEST(e.code().value() == boost::system::errc::invalid_argument);
+    }
+
+  }
+  {
+    boost::thread t0( (G()));
+    BOOST_TEST(t0.joinable());
+    t0.try_join_for(boost::chrono::milliseconds(50));
     try
     {
       t0.join();
@@ -133,3 +156,6 @@ int main()
   return boost::report_errors();
 }
 
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif

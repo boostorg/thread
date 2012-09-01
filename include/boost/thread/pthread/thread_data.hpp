@@ -8,18 +8,25 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/thread/locks.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/pthread/condition_variable_fwd.hpp>
+
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/thread/mutex.hpp>
 #include <boost/optional.hpp>
-#include <pthread.h>
 #include <boost/assert.hpp>
-#include <boost/thread/pthread/condition_variable_fwd.hpp>
-#include <map>
-#include <unistd.h>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #endif
+
+#include <map>
+#include <vector>
+#include <utility>
+
+#include <pthread.h>
+#include <unistd.h>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -104,19 +111,28 @@ namespace boost
             bool interrupt_requested;
             pthread_mutex_t* cond_mutex;
             pthread_cond_t* current_cond;
+            typedef std::vector<std::pair<condition_variable*, mutex*>
+            //, hidden_allocator<std::pair<condition_variable*, mutex*> >
+            > notify_list_t;
+            notify_list_t notify;
 
             thread_data_base():
                 done(false),join_started(false),joined(false),
                 thread_exit_callbacks(0),
                 interrupt_enabled(true),
                 interrupt_requested(false),
-                current_cond(0)
+                current_cond(0),
+                notify()
             {}
             virtual ~thread_data_base();
 
             typedef pthread_t native_handle_type;
 
             virtual void run()=0;
+            void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
+            {
+              notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
+            }
         };
 
         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
