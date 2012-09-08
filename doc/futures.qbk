@@ -23,7 +23,8 @@
 
 
 [template unique_future_link[link_text] [link thread.synchronization.futures.reference.unique_future [link_text]]]
-[def __unique_future__ [unique_future_link `boost::unique_future`]]
+[def __unique_future__ [unique_future_link `future`]]
+[def __unique_future `future`]
 
 [template unique_future_get_link[link_text] [link thread.synchronization.futures.reference.unique_future.get [link_text]]]
 [def __unique_future_get__ [unique_future_get_link `boost::unique_future<R>::get()`]]
@@ -114,7 +115,7 @@ place of the return value.
     }
 
     boost::packaged_task<int> pt(calculate_the_answer_to_life_the_universe_and_everything);
-    boost::unique_future<int> fi=pt.get_future();
+    boost::__unique_future__<int> fi=pt.get_future();
 
     boost::thread task(boost::move(pt)); // launch task on a thread
 
@@ -132,7 +133,7 @@ future. A promise can therefore be used where the value may come from more than 
 produce multiple values.
 
     boost::promise<int> pi;
-    boost::unique_future<int> fi;
+    boost::__unique_future__<int> fi;
     fi=pi.get_future();
 
     pi.set_value(42);
@@ -174,7 +175,7 @@ call to `f.get()` invokes the callback `invoke_lazy_task`, which runs the task t
     {
         boost::packaged_task<int> task(calculate_the_answer_to_life_the_universe_and_everything);
         task.set_wait_callback(invoke_lazy_task);
-        boost::unique_future<int> f(task.get_future());
+        boost::__unique_future__<int> f(task.get_future());
 
         assert(f.get()==42);
     }

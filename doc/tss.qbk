@@ -53,8 +53,10 @@ Boost.Thread uses the address of the `thread_specific_ptr` instance as key of th
 
 [section:thread_specific_ptr Class `thread_specific_ptr`]
 
-    #include <boost/thread/tss.hpp>
+  //  #include <boost/thread/tss.hpp>
 
+  namespace boost
+  {
     template <typename T>
     class thread_specific_ptr
     {
@@ -70,6 +72,7 @@ Boost.Thread uses the address of the `thread_specific_ptr` instance as key of th
         T* release();
         void reset(T* new_value=0);
     };
+  }
 
 [section:default_constructor `thread_specific_ptr();`]
 
