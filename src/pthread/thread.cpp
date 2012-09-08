@@ -24,7 +24,7 @@
 #include <unistd.h>
 #endif
 
-#include <libs/thread/src/pthread/timeconv.inl>
+#include "./timeconv.inl"
 
 namespace boost
 {
@@ -426,33 +426,6 @@ namespace boost
                 }
             }
         }
-
-#ifdef BOOST_THREAD_USES_CHRONO
-        void
-        sleep_for(const chrono::nanoseconds& ns)
-        {
-            using namespace chrono;
-            if (ns >= nanoseconds::zero())
-            {
-                timespec ts;
-                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
-                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
-
-#   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                BOOST_VERIFY(!pthread_delay_np(&ts));
-#   elif defined(BOOST_HAS_NANOSLEEP)
-                //  nanosleep takes a timespec that is an offset, not
-                //  an absolute time.
-                nanosleep(&ts, 0);
-#   else
-                mutex mx;
-                mutex::scoped_lock lock(mx);
-                condition_variable cond;
-                cond.wait_for(lock, ns);
-#   endif
-            }
-        }
-#endif
 
         void yield() BOOST_NOEXCEPT
         {

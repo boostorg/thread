@@ -13,7 +13,9 @@
 
 // This compiler doesn't support Boost.Chrono
 #if defined __IBMCPP__ && (__IBMCPP__ < 1100)
+#if ! defined BOOST_THREAD_DONT_USE_CHRONO
 #define BOOST_THREAD_DONT_USE_CHRONO
+#endif
 #endif
 
 // This compiler doesn't support Boost.Move
