@@ -33,7 +33,7 @@ namespace boost
       typedef typename alloc_traits::pointer pointer;
       typedef typename alloc_traits::size_type size_type;
     private:
-      _Alloc& alloc_;
+      _Alloc alloc_;
       size_type s_;
     public:
       allocator_destructor(_Alloc& a, size_type s)BOOST_NOEXCEPT
@@ -41,6 +41,7 @@ namespace boost
       {}
       void operator()(pointer p)BOOST_NOEXCEPT
       {
+        alloc_traits::destroy(alloc_, p);
         alloc_traits::deallocate(alloc_, p, s_);
       }
     };
