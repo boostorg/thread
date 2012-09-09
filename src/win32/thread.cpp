@@ -13,22 +13,39 @@
 #endif
 
 #include <boost/thread/thread.hpp>
+#include <boost/thread/once.hpp>
+#include <boost/thread/tss.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/detail/tss_hooks.hpp>
+
+#include <boost/assert.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/date_time/posix_time/conversion.hpp>
+
+#include <memory>
 #include <algorithm>
 #ifndef UNDER_CE
 #include <process.h>
 #endif
 #include <stdio.h>
-#include <boost/thread/once.hpp>
-#include <boost/thread/tss.hpp>
-#include <boost/assert.hpp>
-#include <boost/throw_exception.hpp>
-#include <boost/thread/detail/tss_hooks.hpp>
-#include <boost/date_time/posix_time/conversion.hpp>
 #include <windows.h>
-#include <memory>
 
 namespace boost
 {
+  namespace detail
+  {
+    thread_data_base::~thread_data_base()
+    {
+      {
+        for (notify_list_t::iterator i = notify.begin(), e = notify.end();
+                i != e; ++i)
+        {
+            i->second->unlock();
+            i->first->notify_all();
+        }
+      }
+    }
+  }
     namespace
     {
 #ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
@@ -240,6 +257,9 @@ namespace boost
 
             void run()
             {}
+            void notify_all_at_thread_exit(condition_variable*, mutex*)
+            {}
+
         private:
             externally_launched_thread(externally_launched_thread&);
             void operator=(externally_launched_thread&);
@@ -303,6 +323,12 @@ namespace boost
             this_thread::interruptible_wait(local_thread_info->thread_handle,detail::timeout::sentinel());
             release_handle();
         }
+        else
+        {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+        }
     }
 
     bool thread::timed_join(boost::system_time const& wait_until)
@@ -324,11 +350,17 @@ namespace boost
               return false;
           }
           release_handle();
+          return true;
       }
-      return true;
+      else
+      {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+        boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+      }
     }
 
-    void thread::detach() BOOST_NOEXCEPT
+    void thread::detach()
     {
         release_handle();
     }
@@ -682,6 +714,14 @@ namespace boost
         boost::run_thread_exit_callbacks();
     }
 
+    BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+    {
+      detail::thread_data_base* const current_thread_data(get_current_thread_data());
+      if(current_thread_data)
+      {
+        current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
+      }
+    }
 }
 
 

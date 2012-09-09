@@ -10,11 +10,12 @@
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/thread/condition.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/throw_exception.hpp>
+
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
 #elif defined(__APPLE__) || defined(__FreeBSD__)
@@ -31,7 +32,16 @@ namespace boost
     namespace detail
     {
         thread_data_base::~thread_data_base()
-        {}
+        {
+          {
+            for (notify_list_t::iterator i = notify.begin(), e = notify.end();
+                    i != e; ++i)
+            {
+                i->second->unlock();
+                i->first->notify_all();
+            }
+          }
+        }
 
         struct thread_exit_callback_node
         {
@@ -175,6 +185,8 @@ namespace boost
 
             void run()
             {}
+            void notify_all_at_thread_exit(condition_variable*, mutex*)
+            {}
 
         private:
             externally_launched_thread(externally_launched_thread&);
@@ -304,6 +316,12 @@ namespace boost
                 thread_info.reset();
             }
         }
+        else
+        {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+        }
     }
 
     bool thread::do_try_join_until(struct timespec const &timeout)
@@ -353,8 +371,14 @@ namespace boost
             {
                 thread_info.reset();
             }
+            return true;
         }
-        return true;
+        else
+        {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+        }
     }
 
     bool thread::joinable() const BOOST_NOEXCEPT
@@ -363,7 +387,7 @@ namespace boost
     }
 
 
-    void thread::detach() BOOST_NOEXCEPT
+    void thread::detach()
     {
         detail::thread_data_ptr local_thread_info;
         thread_info.swap(local_thread_info);
@@ -677,6 +701,15 @@ namespace boost
             }
         }
     }
+    BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
+    {
+      detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
+      if(current_thread_data)
+      {
+        current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
+      }
+    }
+
 
 
 }

@@ -790,8 +790,10 @@ blocking.]]
 
 [section:locks Lock Types]
 
-    #include <boost/thread/locks.hpp> 
+  //#include <boost/thread/locks.hpp> 
 
+  namespace boost 
+  {
     struct defer_lock_t {}; 
     struct try_to_lock_t {}; 
     struct adopt_lock_t {}; 
@@ -815,6 +817,7 @@ blocking.]]
     void swap(upgrade_lock <Mutex>& lhs, upgrade_lock <Mutex>& rhs);
     template <class Mutex>
     class upgrade_to_unique_lock;
+  }
 
 [section:lock_tags Lock option tags] 
 
@@ -837,7 +840,7 @@ These tags are used in scoped locks constructors to specify a specific behavior.
 
 [section:lock_guard Class template `lock_guard`]
 
-    #include <boost/thread/locks.hpp>
+    //#include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class lock_guard
@@ -903,7 +906,7 @@ object passed to the constructor.]]
 
 [section:unique_lock Class template `unique_lock`]
 
-    #include <boost/thread/locks.hpp>
+    //#include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class unique_lock
@@ -1267,7 +1270,7 @@ __owns_lock_ref__ returns `false`.]]
 
 [section:shared_lock Class template `shared_lock`]
 
-    #include <boost/thread/locks.hpp>
+    //#include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class shared_lock
@@ -1508,7 +1511,7 @@ __owns_lock_shared_ref__ returns `false`.]]
 
 [section:upgrade_lock Class template `upgrade_lock`]
 
-    #include <boost/thread/locks.hpp>
+    //#include <boost/thread/locks.hpp>
 
     template<typename Lockable>
     class upgrade_lock
@@ -1663,8 +1666,10 @@ call [try_lock_ref_link `m.try_lock()`] rather than `m.lock()`.
 
 [section: reverse_mutex Class template `reverse_mutex`]
 
-    #include <boost/thread/reverse_mutex.hpp> 
+  //#include <boost/thread/reverse_mutex.hpp> 
 
+  namespace boost 
+  {
     template<typename BasicLockable>
     class reverse_mutex
     {
@@ -1679,6 +1684,7 @@ call [try_lock_ref_link `m.try_lock()`] rather than `m.lock()`.
         void lock();
         void unlock();
     };
+  }
 
 __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lockable when `lock()` is called and locks it when `unlock()` is called. 
 
@@ -1692,17 +1698,22 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
 
 [section:shared_lock_guard Class template `shared_lock_guard`]
 
-    #include <boost/thread/shared_lock_guard.hpp>
-
+  // #include <boost/thread/shared_lock_guard.hpp>
+  namespace boost 
+  {
     template<typename SharedLockable>
     class shared_lock_guard
     {
     public:
+        shared_lock_guard(shared_lock_guard const&) = delete;
+        shared_lock_guard& operator=(shared_lock_guard const&) = delete;
+        
         explicit shared_lock_guard(SharedLockable& m_);
         shared_lock_guard(SharedLockable& m_,boost::adopt_lock_t);
 
         ~shared_lock_guard();
     };
+  }
 
 __shared_lock_guard is very simple: on construction it
 acquires shared ownership of the implementation of the __shared_lockable_concept__ supplied as
@@ -1756,7 +1767,9 @@ obtained by a call to `m.__lock_shared()`.]]
 
 [section:reverse_lock Class template `reverse_lock`]
 
-    #include <boost/thread/reverse_lock.hpp>
+  // #include <boost/thread/reverse_lock.hpp>
+  namespace boost 
+  {
 
     template<typename Lock>
     class reverse_lock
@@ -1768,6 +1781,7 @@ obtained by a call to `m.__lock_shared()`.]]
         explicit reverse_lock(Lock& m_);
         ~reverse_lock();
     };
+  }
 
 __reverse_lock reverse the operations of a lock: it provide for RAII-style, that unlocks the lock at construction time and lock it at destruction time. In addition, it transfer ownership temporarily, so that the mutex can not be locked using the Lock.
 
@@ -1810,6 +1824,10 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 
 [section:lock_multiple Non-member function `lock(Lockable1,Lockable2,...)`]
 
+  // #include <boost/thread/locks.hpp>
+  namespace boost 
+  {
+
     template<typename Lockable1,typename Lockable2>
     void lock(Lockable1& l1,Lockable2& l2);
 
@@ -1821,6 +1839,8 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 
     template<typename Lockable1,typename Lockable2,typename Lockable3,typename Lockable4,typename Lockable5>
     void lock(Lockable1& l1,Lockable2& l2,Lockable3& l3,Lockable4& l4,Lockable5& l5);
+
+  }
 
 [variablelist
 
