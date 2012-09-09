@@ -17,6 +17,8 @@
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/thread/detail/delete.hpp>
+// Force SIG_ATOMIC_MAX tobe defined
+#define __STDC_LIMIT_MACROS
 #include <csignal>
 
 #include <boost/config/abi_prefix.hpp>
