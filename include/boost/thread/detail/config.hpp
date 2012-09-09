@@ -43,13 +43,8 @@
 #endif
 #endif
 
-// Uses Boost.System by default if not stated the opposite defining BOOST_THREAD_DONT_USE_SYSTEM
-#if ! defined BOOST_THREAD_DONT_USE_SYSTEM && ! defined BOOST_THREAD_USES_SYSTEM
-#define BOOST_THREAD_USES_SYSTEM
-#endif
-
-// Uses Boost.Chrono by default if not stated the opposite  defining BOOST_THREAD_DONT_USE_CHRONO or BOOST_THREAD_DONT_USE_SYSTEM
-#if ! defined BOOST_THREAD_DONT_USE_CHRONO && ! defined BOOST_THREAD_DONT_USE_SYSTEM && ! defined BOOST_THREAD_USES_CHRONO
+// Uses Boost.Chrono by default if not stated the opposite defining BOOST_THREAD_DONT_USE_CHRONO
+#if ! defined BOOST_THREAD_DONT_USE_CHRONO && ! defined BOOST_THREAD_USES_CHRONO
 #define BOOST_THREAD_USES_CHRONO
 #endif
 
