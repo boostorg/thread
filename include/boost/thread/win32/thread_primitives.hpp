@@ -299,7 +299,7 @@ namespace boost
     }
 }
 
-#if defined(BOOST_MSVC) && (_MSC_VER>=1400)  && !defined(UNDER_CE)
+#if (defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)) && (_MSC_VER>=1400)  && !defined(UNDER_CE)
 
 namespace boost
 {
@@ -332,7 +332,7 @@ namespace boost
     }
 }
 #define BOOST_THREAD_BTS_DEFINED
-#elif (defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)) && defined(_M_IX86)
+#elif defined(BOOST_MSVC) && defined(_M_IX86)
 namespace boost
 {
     namespace detail
