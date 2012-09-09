@@ -47,7 +47,7 @@ platforms such cleanup is only done for threads that are started with
 `boost::thread` unless `boost::on_thread_exit()` is called manually
 from that thread.
 
-[heading Rational about the nature of the key]
+[heading Rationale about the nature of the key]
 
 Boost.Thread uses the address of the `thread_specific_ptr` instance as key of the thread specific pointers. This avoids to create/destroy a key which will need a lock to protect from race conditions. This has a little performance liability, as the access must be done using an associative container.
 
