@@ -1136,7 +1136,7 @@ __packaged_task__.]]
   template <class T>
   typename decay<T>::type decay_copy(T&& v)
   {
-    return std::forward<T>(v);
+    return boost::forward<T>(v);
   }
 
 [endsect]
@@ -1161,7 +1161,7 @@ provides the result of the function in a future object with which it shares a sh
 [[Requires:] [
 
 ``
-decay_copy(std::forward<F>(f))()
+decay_copy(boost::forward<F>(f))()
 ``
 
 shall be a valid expression.
@@ -1172,9 +1172,9 @@ shall be a valid expression.
 
 The further behavior of the second function depends on the policy argument as follows (if more than one of these conditions applies, the implementation may choose any of the corresponding policies):
 
-- if `policy & launch::async` is non-zero - calls `decay_copy(std::forward<F>(f))()` as if in a new thread of execution represented by a thread object with the calls to `decay_copy()` being evaluated in the thread that called `async`. Any return value is stored as the result in the shared state. Any exception propagated from the execution of `decay_copy(std::forward<F>(f))()` is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
+- if `policy & launch::async` is non-zero - calls `decay_copy(boost::forward<F>(f))()` as if in a new thread of execution represented by a thread object with the calls to `decay_copy()` being evaluated in the thread that called `async`. Any return value is stored as the result in the shared state. Any exception propagated from the execution of `decay_copy(boost::forward<F>(f))()` is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
 
-- if `policy & launch::deferred` is non-zero - Stores `decay_copy(std::forward<F>(f))` in the shared state. This copy of `f` constitute a deferred function. Invocation of the deferred function evaluates `boost::move(g)()` where `g` is the stored value of `decay_copy(std::forward<F>(f))`. The shared state is not made ready until the function has completed. The first call to a non-timed waiting function on an asynchronous return object referring to this shared state shall invoke the deferred function in the thread that called the waiting function. Once evaluation of `boost::move(g)()` begins, the function is no longer considered deferred. (Note: If this policy is specified together with other policies, such as when using a policy value of `launch::async | launch::deferred`, implementations should defer invocation or the selection of the policy when no more concurrency can be effectively exploited.)
+- if `policy & launch::deferred` is non-zero - Stores `decay_copy(boost::forward<F>(f))` in the shared state. This copy of `f` constitute a deferred function. Invocation of the deferred function evaluates `boost::move(g)()` where `g` is the stored value of `decay_copy(boost::forward<F>(f))`. The shared state is not made ready until the function has completed. The first call to a non-timed waiting function on an asynchronous return object referring to this shared state shall invoke the deferred function in the thread that called the waiting function. Once evaluation of `boost::move(g)()` begins, the function is no longer considered deferred. (Note: If this policy is specified together with other policies, such as when using a policy value of `launch::async | launch::deferred`, implementations should defer invocation or the selection of the policy when no more concurrency can be effectively exploited.)
 
 ]]
 
@@ -1202,7 +1202,7 @@ If the implementation chooses the `launch::async` policy,
 
 ]]
 
-[[Remarks:] [The first signature shall not participate in overload resolution if decay<F>::type is std::launch.
+[[Remarks:] [The first signature shall not participate in overload resolution if decay<F>::type is boost::launch.
 ]]
 
 ]
@@ -1211,12 +1211,12 @@ If the implementation chooses the `launch::async` policy,
 
 [variablelist
 
-[[Requires:] [F and each Ti in Args shall satisfy the MoveConstructible requirements. INVOKE (DECAY_- COPY (std::forward<F>(f)), decay_copy (std::forward<Args>(args))...) shall be a valid expression.
+[[Requires:] [F and each Ti in Args shall satisfy the MoveConstructible requirements. INVOKE (DECAY_- COPY (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) shall be a valid expression.
 
 ]]
 [[Effects:] [The first function behaves the same as a call to the second function with a policy argument of launch::async | launch::deferred and the same arguments for F and Args. The second function creates a shared state that is associated with the returned future object. The further behavior of the second function depends on the policy argument as follows (if more than one of these conditions applies, the implementation may choose any of the corresponding policies):
-- if policy & launch::async is non-zero - calls INVOKE (decay_copy (std::forward<F>(f)), decay_copy (std::forward<Args>(args))...) (20.8.2, 30.3.1.2) as if in a new thread of exe- cution represented by a thread object with the calls to decay_copy() being evaluated in the thread that called async. Any return value is stored as the result in the shared state. Any excep- tion propagated from the execution of INVOKE(decay_copy(std::forward<F>(f)), DECAY_- COPY (std::forward<Args>(args))...) is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
-- if policy & launch::deferred is non-zero - Stores decay_copy (std::forward<F>(f)) and decay_copy (std::forward<Args>(args))... in the shared state. These copies of f and args constitute a deferred function. Invocation of the deferred function evaluates INVOKE (std::move(g), std::move(xyz)) where g is the stored value of decay_copy (std::forward<F>(f)) and xyz is the stored copy of decay_copy (std::forward<Args>(args)).... The shared state is not made ready until the function has completed. The first call to a non-timed waiting function (30.6.4) on an asynchronous return object referring to this shared state shall invoke the deferred func- tion in the thread that called the waiting function. Once evaluation of INVOKE (std::move(g), std::move(xyz)) begins, the function is no longer considered deferred.
+- if policy & launch::async is non-zero - calls INVOKE (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) (20.8.2, 30.3.1.2) as if in a new thread of exe- cution represented by a thread object with the calls to decay_copy() being evaluated in the thread that called async. Any return value is stored as the result in the shared state. Any excep- tion propagated from the execution of INVOKE(decay_copy(boost::forward<F>(f)), DECAY_- COPY (boost::forward<Args>(args))...) is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
+- if policy & launch::deferred is non-zero - Stores decay_copy (boost::forward<F>(f)) and decay_copy (boost::forward<Args>(args))... in the shared state. These copies of f and args constitute a deferred function. Invocation of the deferred function evaluates INVOKE (boost::move(g), boost::move(xyz)) where g is the stored value of decay_copy (boost::forward<F>(f)) and xyz is the stored copy of decay_copy (boost::forward<Args>(args)).... The shared state is not made ready until the function has completed. The first call to a non-timed waiting function (30.6.4) on an asynchronous return object referring to this shared state shall invoke the deferred func- tion in the thread that called the waiting function. Once evaluation of INVOKE (boost::move(g), boost::move(xyz)) begins, the function is no longer considered deferred.
 
 ]]
 
@@ -1241,7 +1241,7 @@ If the implementation chooses the launch::async policy,
 - resource_unavailable_try_again - if policy is launch::async and the system is unable to start a new thread.
 ]]
 
-[[Remarks:] [The first signature shall not participate in overload resolution if decay<F>::type is std:: launch.
+[[Remarks:] [The first signature shall not participate in overload resolution if decay<F>::type is boost::launch.
 ]]
 
 ]
