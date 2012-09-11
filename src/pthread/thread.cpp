@@ -649,7 +649,7 @@ namespace boost
                     return &current_node->second;
                 }
             }
-            return NULL;
+            return 0;
         }
 
         void* get_tss_data(void const* key)
@@ -658,7 +658,7 @@ namespace boost
             {
                 return current_node->value;
             }
-            return NULL;
+            return 0;
         }
 
         void add_new_tss_node(void const* key,
@@ -695,7 +695,7 @@ namespace boost
                     erase_tss_node(key);
                 }
             }
-            else
+            else if(func || (tss_data!=0))
             {
                 add_new_tss_node(key,func,tss_data);
             }
