@@ -343,7 +343,8 @@ Ownership can also be ['downgraded] as well as ['upgraded]: exclusive ownership 
 __upgrade_lockable_concept__ can be downgraded to upgradable ownership or shared ownership, and upgradable ownership can be
 downgraded to plain shared ownership.
 
-A type `L` meets the __SharedLockable requirements if it meets the __TimedLockable requirements and the following expressions are well-formed and have the specified semantics.
+A type `L` meets the __UpgradeLockable requirements if it meets the __SharedLockable 
+requirements and the following expressions are well-formed and have the specified semantics.
 
 [*Variables:]
 
