@@ -692,7 +692,7 @@ namespace boost
                     erase_tss_node(key);
                 }
             }
-            else
+            else if(func || (tss_data!=0))
             {
                 add_new_tss_node(key,func,tss_data);
             }
