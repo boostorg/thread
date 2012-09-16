@@ -8,6 +8,11 @@
 #ifndef BOOST_THREAD_CONFIG_WEK01032003_HPP
 #define BOOST_THREAD_CONFIG_WEK01032003_HPP
 
+// Force SIG_ATOMIC_MAX to be defined
+#ifndef __STDC_LIMIT_MACROS
+#define __STDC_LIMIT_MACROS
+#endif
+
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 
