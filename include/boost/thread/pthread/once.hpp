@@ -12,16 +12,16 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#include <pthread.h>
-#include <boost/assert.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
-#include <boost/cstdint.hpp>
 #include <boost/thread/detail/delete.hpp>
-// Force SIG_ATOMIC_MAX tobe defined
-#define __STDC_LIMIT_MACROS
-#include <csignal>
+#include <boost/detail/no_exceptions_support.hpp>
 
+#include <boost/assert.hpp>
 #include <boost/config/abi_prefix.hpp>
+
+#include <boost/cstdint.hpp>
+#include <pthread.h>
+#include <csignal>
 
 namespace boost
 {
@@ -92,21 +92,18 @@ namespace boost
                 if(flag.epoch==uninitialized_flag)
                 {
                     flag.epoch=being_initialized;
-#ifndef BOOST_NO_EXCEPTIONS
-                    try // BOOST_NO_EXCEPTIONS protected
+                    BOOST_TRY
                     {
-#endif
                         pthread::pthread_mutex_scoped_unlock relocker(&detail::once_epoch_mutex);
                         f();
-#ifndef BOOST_NO_EXCEPTIONS
                     }
-                    catch(...)  // BOOST_NO_EXCEPTIONS protected
+                    BOOST_CATCH (...)
                     {
                         flag.epoch=uninitialized_flag;
                         BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
-                        throw;  // BOOST_NO_EXCEPTIONS protected
+                        BOOST_RETHROW
                     }
-#endif
+                    BOOST_CATCH_END
                     flag.epoch=--detail::once_global_epoch;
                     BOOST_VERIFY(!pthread_cond_broadcast(&detail::once_epoch_cv));
                 }
