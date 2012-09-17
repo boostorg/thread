@@ -70,6 +70,7 @@
 
 [template packaged_task_link[link_text] [link thread.synchronization.futures.reference.packaged_task [link_text]]]
 [def __packaged_task__ [packaged_task_link `boost::packaged_task`]]
+[def __packaged_task [packaged_task_link `boost::packaged_task`]]
 
 [template wait_for_any_link[link_text] [link thread.synchronization.futures.reference.wait_for_any [link_text]]]
 [def __wait_for_any__ [wait_for_any_link `boost::wait_for_any()`]]
