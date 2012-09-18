@@ -169,7 +169,7 @@
 
 
 [def __thread__ [link thread.thread_management.thread `boost::thread`]]
-[def __thread [link thread.thread_management.thread `boost::thread`]]
+[def __thread [link thread.thread_management.thread `thread`]]
 [def __thread_id__ [link thread.thread_management.thread.id `boost::thread::id`]]
 [template join_link[link_text] [link thread.thread_management.thread.join [link_text]]]
 [def __join__ [join_link `join()`]]

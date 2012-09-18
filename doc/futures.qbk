@@ -27,22 +27,22 @@
 [def __unique_future `future`]
 
 [template unique_future_get_link[link_text] [link thread.synchronization.futures.reference.unique_future.get [link_text]]]
-[def __unique_future_get__ [unique_future_get_link `boost::unique_future<R>::get()`]]
+[def __unique_future_get__ [unique_future_get_link `boost::future<R>::get()`]]
 
 [template unique_future_wait_link[link_text] [link thread.synchronization.futures.reference.unique_future.wait [link_text]]]
-[def __unique_future_wait__ [unique_future_wait_link `boost::unique_future<R>::wait()`]]
+[def __unique_future_wait__ [unique_future_wait_link `boost::future<R>::wait()`]]
 
 [template unique_future_is_ready_link[link_text] [link thread.synchronization.futures.reference.unique_future.is_ready [link_text]]]
-[def __unique_future_is_ready__ [unique_future_is_ready_link `boost::unique_future<R>::is_ready()`]]
+[def __unique_future_is_ready__ [unique_future_is_ready_link `boost::future<R>::is_ready()`]]
 
 [template unique_future_has_value_link[link_text] [link thread.synchronization.futures.reference.unique_future.has_value [link_text]]]
-[def __unique_future_has_value__ [unique_future_has_value_link `boost::unique_future<R>::has_value()`]]
+[def __unique_future_has_value__ [unique_future_has_value_link `boost::future<R>::has_value()`]]
 
 [template unique_future_has_exception_link[link_text] [link thread.synchronization.futures.reference.unique_future.has_exception [link_text]]]
-[def __unique_future_has_exception__ [unique_future_has_exception_link `boost::unique_future<R>::has_exception()`]]
+[def __unique_future_has_exception__ [unique_future_has_exception_link `boost::future<R>::has_exception()`]]
 
 [template unique_future_get_state_link[link_text] [link thread.synchronization.futures.reference.unique_future.get_state [link_text]]]
-[def __unique_future_get_state__ [unique_future_get_state_link `boost::unique_future<R>::get_state()`]]
+[def __unique_future_get_state__ [unique_future_get_state_link `boost::future<R>::get_state()`]]
 
 [template shared_future_link[link_text] [link thread.synchronization.futures.reference.shared_future [link_text]]]
 [def __shared_future__ [shared_future_link `boost::shared_future`]]
