@@ -27,6 +27,17 @@
       no_state
     };
 
+    enum class launch
+    {
+      async = unspecified,
+      deferred = unspecified,
+      any = async | deferred
+    };
+    
+    enum class future_status {
+      ready,  timeout, deferred
+    };
+    
     namespace system
     {
       template <>
@@ -115,6 +126,18 @@
   }
 
 [endsect]
+[section:launch Enumeration `launch `]
+
+    enum class launch
+    {
+      async = unspecified,
+      deferred = unspecified,
+      any = async | deferred
+    };
+
+The enum type launch is a bitmask type with launch::async and launch::deferred denoting individual bits. 
+
+[endsect]
 [section:is_error_code_enum Specialization `is_error_code_enum<future_errc>`]
 
   namespace system
@@ -132,6 +155,12 @@
     error_code make_error_code(future_errc e);
   }
 
+[variablelist
+
+[[Returns:] [`error_code(static_cast<int>(e), future_category())`.]]
+
+]  
+
 [endsect]
 [section:make_error_condition Non-member function `make_error_condition()`]
 
@@ -140,10 +169,25 @@
     error_condition make_error_condition(future_errc e);
   }
 
+[variablelist
+
+[[Returns:] [`error_condition(static_cast<int>(e), future_category())`.]]
+
+]  
+
 [endsect]
 [section:future_category Non-member function `future_category()`]
 
   const system::error_category& future_category();
+
+[variablelist
+
+[[Returns:] [A reference to an object of a type derived from class error_category.]]
+
+[[Notes:] [The object's `default_error_condition` and equivalent virtual functions behave as specified for the class `system::error_category`. 
+The object's `name` virtual function returns a pointer to the string "future".]]
+
+]  
 
 [endsect]
 [section:future_error Class `future_error`]
@@ -156,6 +200,34 @@
 
       const system::error_code& code() const no_except;
   };
+
+[section:constructor Constructor]
+
+      future_error(system::error_code ec);
+
+[variablelist
+
+[[Effects:] [Constructs a future_error.]]
+
+[[Postconditions:] [`code()==ec` ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[section:code Member function `code()`]
+
+      const system::error_code& code() const no_except;
+
+[variablelist
+
+[[Returns:] [The value of `ec` that was passed to the object's constructor.]]
+
+]
+
+[endsect]
+
 
 [endsect]
 
@@ -408,16 +480,96 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
+[section:wait_for Member function `wait_for()`]
 
-[section:is_ready Member function `is_ready()` EXTENSION]
-
-    bool is_ready();
+      template <class Rep, class Period>
+      future_status wait_for(const chrono::duration<Rep, Period>& rel_time) const;
 
 [variablelist
 
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set.]]
+[[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready, or the time specified by
+`wait_duration` has elapsed. If the result is not ready on entry, and the result has a ['wait callback] set, that callback is
+invoked prior to waiting.]]
 
-[[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready for retrieval, `false`
+[[Returns:] [
+
+- `future_status::deferred` if the shared state contains a deferred function. (Not implemented yet)
+
+- `future_status::ready` if the shared state is ready.
+
+- `future_status::timeout` if the function is returning because the relative timeout specified by `rel_time` has expired.
+
+]]
+
+[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
+associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
+['wait callback] if such a callback is called.]]
+
+[[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
+[unique_future_get_state_link `this->get_state()`] returns __ready__.]]
+
+[[Notes:] [`wait_for()` is an ['interruption point]. `Duration` must be a type that meets the Boost.DateTime time duration requirements.]]
+
+]
+
+[endsect]
+
+[section:wait_until Member function `wait_until()`]
+
+      template <class Clock, class Duration>
+      future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const;
+
+[variablelist
+
+[[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready, or the time point specified by
+`wait_timeout` has passed. If the result is not ready on entry, and the result has a ['wait callback] set, that callback is invoked
+prior to waiting.]]
+
+[[Returns:] [
+
+- `future_status::deferred` if the shared state contains a deferred function. (Not implemented yet)
+
+- `future_status::ready` if the shared state is ready.
+
+- `future_status::timeout` if the function is returning because the absolute timeout specified by `absl_time` has reached.
+
+]]
+
+[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
+associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
+['wait callback] if such a callback is called.]]
+
+[[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
+[unique_future_get_state_link `this->get_state()`] returns __ready__.]]
+
+[[Notes:] [`wait_until()` is an ['interruption point].]]
+
+]
+
+[endsect]
+
+
+[section:valid Member function `valid()`]
+
+    bool valid() const;
+
+[variablelist
+
+[[Returns:] [`true` if `*this` is associated with an asynchronous result, `false`
+otherwise.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[section:is_ready Member function `is_ready()` EXTENSION]
+
+    bool is_ready() const;
+
+[variablelist
+
+[[Returns:] [`true` if `*this` is associated with an asynchronous result and that result is ready for retrieval, `false`
 otherwise.]]
 
 [[Throws:] [Nothing.]]
@@ -428,11 +580,9 @@ otherwise.]]
 
 [section:has_value Member function `has_value()` EXTENSION]
 
-    bool has_value();
+    bool has_value() const;
 
 [variablelist
-
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set with a value rather than an exception.]]
 
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, that result is ready for retrieval, and the result is a
 stored value, `false` otherwise.]]
@@ -445,11 +595,9 @@ stored value, `false` otherwise.]]
 
 [section:has_exception Member function `has_exception()` EXTENSION]
 
-    bool has_exception();
+    bool has_exception() const;
 
 [variablelist
-
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set with an exception rather than a value.]]
 
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, that result is ready for retrieval, and the result is a
 stored exception, `false` otherwise.]]
@@ -642,13 +790,95 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:is_ready Member function `is_ready()` EXTENSION]
+[section:wait_for Member function `wait_for()`]
 
-    bool is_ready();
+      template <class Rep, class Period>
+      future_status wait_for(const chrono::duration<Rep, Period>& rel_time) const;
+
 
 [variablelist
 
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set.]]
+[[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready, or the time specified by
+`wait_duration` has elapsed. If the result is not ready on entry, and the result has a ['wait callback] set, that callback is
+invoked prior to waiting.]]
+
+[[Returns:] [
+
+- `future_status::deferred` if the shared state contains a deferred function. (Not implemented yet)
+
+- `future_status::ready` if the shared state is ready.
+
+- `future_status::timeout` if the function is returning because the relative timeout specified by `rel_time` has expired.
+
+]]
+
+[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
+associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
+['wait callback] if such a callback is called.]]
+
+[[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
+[shared_future_get_state_link `this->get_state()`] returns __ready__.]]
+
+[[Notes:] [`timed_wait()` is an ['interruption point]. `Duration` must be a type that meets the Boost.DateTime time duration requirements.]]
+
+]
+
+[endsect]
+
+[section:wait_until Member function `wait_until()`]
+
+      template <class Clock, class Duration>
+      future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const;
+
+[variablelist
+
+[[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready, or the time point specified by
+`wait_timeout` has passed. If the result is not ready on entry, and the result has a ['wait callback] set, that callback is invoked
+prior to waiting.]]
+
+[[Returns:] [
+
+- `future_status::deferred` if the shared state contains a deferred function. (Not implemented yet)
+
+- `future_status::ready` if the shared state is ready.
+
+- `future_status::timeout` if the function is returning because the absolute timeout specified by `absl_time` has reached.
+
+]]
+
+[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
+associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
+['wait callback] if such a callback is called.]]
+
+[[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
+[shared_future_get_state_link `this->get_state()`] returns __ready__.]]
+
+[[Notes:] [`timed_wait()` is an ['interruption point].]]
+
+]
+
+[endsect]
+
+[section:valid Member function `valid()`]
+
+    bool valid() const;
+
+[variablelist
+
+[[Returns:] [`true` if `*this` is associated with an asynchronous result, `false`
+otherwise.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:is_ready Member function `is_ready()` EXTENSION]
+
+    bool is_ready() const;
+
+[variablelist
 
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready for retrieval, `false`
 otherwise.]]
@@ -661,11 +891,9 @@ otherwise.]]
 
 [section:has_value Member function `has_value()` EXTENSION]
 
-    bool has_value();
+    bool has_value() const;
 
 [variablelist
-
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set with a value rather than an exception.]]
 
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, that result is ready for retrieval, and the result is a
 stored value, `false` otherwise.]]
@@ -678,11 +906,9 @@ stored value, `false` otherwise.]]
 
 [section:has_exception Member function `has_exception()` EXTENSION]
 
-    bool has_exception();
+    bool has_exception() const;
 
 [variablelist
-
-[[Effects:] [Checks to see if the asynchronous result associated with `*this` is set with an exception rather than a value.]]
 
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, that result is ready for retrieval, and the result is a
 stored exception, `false` otherwise.]]
