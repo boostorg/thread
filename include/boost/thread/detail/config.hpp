@@ -16,6 +16,12 @@
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 
+#ifdef BOOST_NO_NOEXCEPT
+#  define BOOST_THREAD_NOEXCEPT_OR_THROW throw()
+#else
+#  define BOOST_THREAD_NOEXCEPT_OR_THROW noexcept
+#endif
+
 // This compiler doesn't support Boost.Chrono
 #if defined __IBMCPP__ && (__IBMCPP__ < 1100) && ! defined BOOST_THREAD_DONT_USE_CHRONO
 #define BOOST_THREAD_DONT_USE_CHRONO
