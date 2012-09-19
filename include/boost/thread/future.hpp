@@ -136,9 +136,9 @@ namespace boost
       {
         return ec_;
       }
-      const char* what() const BOOST_NOEXCEPT
+      const char* what() const BOOST_THREAD_NOEXCEPT_OR_THROW
       {
-        return code().message();
+        return code().message().c_str();
       }
 
   };
