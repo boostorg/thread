@@ -148,20 +148,17 @@ namespace boost
                 boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
-#ifndef BOOST_NO_EXCEPTIONS
-                try // BOOST_NO_EXCEPTIONS protected
-#endif
+                BOOST_TRY
                 {
                     thread_info->run();
                 }
-#ifndef BOOST_NO_EXCEPTIONS
-                catch(thread_interrupted const&) // BOOST_NO_EXCEPTIONS protected
+                BOOST_CATCH (thread_interrupted const&)
                 {
                 }
-#endif
+                BOOST_CATCH_END
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
-//                 catch(...) // BOOST_NO_EXCEPTIONS protected
+//                 BOOST_CATCH(...)
 //                 {
 //                     std::terminate();
 //                 }
@@ -649,7 +646,7 @@ namespace boost
                     return &current_node->second;
                 }
             }
-            return NULL;
+            return 0;
         }
 
         void* get_tss_data(void const* key)
@@ -658,7 +655,7 @@ namespace boost
             {
                 return current_node->value;
             }
-            return NULL;
+            return 0;
         }
 
         void add_new_tss_node(void const* key,
@@ -695,7 +692,7 @@ namespace boost
                     erase_tss_node(key);
                 }
             }
-            else
+            else if(func || (tss_data!=0))
             {
                 add_new_tss_node(key,func,tss_data);
             }

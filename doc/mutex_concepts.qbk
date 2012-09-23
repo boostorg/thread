@@ -75,7 +75,7 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 [endsect]
 [section:lockable `Lockable` Concept]
 
-A type `L` meets the __Lockable requirements if it meets the __BasicLocable requirements and the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
+A type `L` meets the __Lockable requirements if it meets the __BasicLockable requirements and the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
 
 * `m.__try_lock()`
 
@@ -343,7 +343,8 @@ Ownership can also be ['downgraded] as well as ['upgraded]: exclusive ownership 
 __upgrade_lockable_concept__ can be downgraded to upgradable ownership or shared ownership, and upgradable ownership can be
 downgraded to plain shared ownership.
 
-A type `L` meets the __SharedLockable requirements if it meets the __TimedLockable requirements and the following expressions are well-formed and have the specified semantics.
+A type `L` meets the __UpgradeLockable requirements if it meets the __SharedLockable 
+requirements and the following expressions are well-formed and have the specified semantics.
 
 [*Variables:]
 
@@ -360,7 +361,7 @@ A type `L` meets the __SharedLockable requirements if it meets the __TimedLockab
 * `m.__try_lock_upgrade_until(abs_time)`
 * `m.__unlock_and_lock_shared()`
 * `m.__unlock_and_lock_upgrade();`
-* `m.__unlock_upgrade_and_lock();`]
+* `m.__unlock_upgrade_and_lock();`
 * `m.__try_unlock_upgrade_and_lock()`
 * `m.__try_unlock_upgrade_and_lock_for(rel_time)`
 * `m.__try_unlock_upgrade_and_lock_until(abs_time)`
@@ -1069,7 +1070,7 @@ returns `false`.]]
 
 [[Requires:] [The supplied `Mutex` type must implement `__try_unlock_shared_and_lock()`.]]
 
-[[Effects:] [Constructs an object of type __unique_lock. Let `pm` be and `owns` the ownership state. Initializes `pm` with nullptr and `owns` with false. 
+[[Effects:] [Constructs an object of type __unique_lock. Let `pm` be the pointer to the mutex and `owns` the ownership state. Initializes `pm` with nullptr and `owns` with false. 
 If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.release()`. 
 Else `sl.__owns_lock()` returns `true`, and in this case if `sl.mutex()->try_unlock_shared_and_lock()` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
 
@@ -1095,8 +1096,8 @@ Else `sl.__owns_lock()` returns `true`, and in this case if `sl.mutex()->try_unl
 [[Requires:] [The supplied `Mutex` type shall implement `__try_unlock_shared_and_lock_until(abs_time)`.]]
 
 [[Effects:] [Constructs an object of type `__unique_lock`, initializing `pm` with `nullptr` and `owns` with `false`. 
-If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.__release()`. 
-Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()->__try_unlock_shared_and_lock_until(abs_time)` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
+If `sl.__owns_lock_shared_ref__()` returns `false`, sets `pm` to the return value of `sl.release()`. 
+Else `sl.__owns_lock_shared_ref__()` returns `true`, and in this case if `sl.mutex()->__try_unlock_shared_and_lock_until(abs_time)` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
 
 [[Note:] [If `sl.owns_lock()` returns `true` and `sl.mutex()-> __try_unlock_shared_and_lock_until(abs_time)` returns `false`, `sl` is not modified.]]
 
@@ -1119,7 +1120,7 @@ Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()->__try_unl
 [[Requires:] [The supplied `Mutex` type shall implement `__try_unlock_shared_and_lock_for(rel_time)`.]]
 
 [[Effects:] [Constructs an object of type `__unique_lock`, initializing `pm` with `nullptr` and `owns` with `false`. 
-If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.__release()`. 
+If `sl.__owns_lock()` returns `false`, sets `pm` to the return value of `sl.release()`. 
 Else `sl.owns_lock()` returns `true`, and in this case if `sl.mutex()-> __try_unlock_shared_and_lock_for(rel_time)` returns `true`, sets `pm` to the value returned by `sl.release()` and sets `owns` to `true`.]]
 
 [[Note:] [If `sl.owns_lock()` returns `true` and `sl.mutex()-> __try_unlock_shared_and_lock_for(rel_time)` returns `false`, `sl` is not modified.]]
@@ -1720,7 +1721,7 @@ acquires shared ownership of the implementation of the __shared_lockable_concept
 the constructor parameter. On destruction, the ownership is released. This
 provides simple RAII-style locking of a __shared_lockable_concept_type__ object, to facilitate exception-safe
 shared locking and unlocking. 
-In addition, the `__shared_lock_guard_ca(SharedLockable &m, boost::adopt_lock_t)` constructor allows the __shared_lock_guard object to
+In addition, the `__shared_lock_guard_constructor_adopt(SharedLockable &m, boost::adopt_lock_t)` constructor allows the __shared_lock_guard object to
 take shared ownership of a lock already held by the current thread.
 
 [section:constructor `shared_lock_guard(SharedLockable & m)`]
@@ -1791,9 +1792,9 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 
 [variablelist
 
-[[Effects:] [Stores a reference to `m`. Invokes `m.__unlock()` if `m` owns his lock and then stores the mutex by calling `m.__release()`.]]
+[[Effects:] [Stores a reference to `m`. Invokes `m.__unlock()` if `m` owns his lock and then stores the mutex by calling `m.release()`.]]
 
-[[Postcondition:] [`!m.__owns_lock() && m.__mutex()==0`.]]
+[[Postcondition:] [`!m.__owns_lock() && m.mutex()==0`.]]
 
 [[Throws:] [Any exception thrown by the call to `m.__unlock()`.]]
 
