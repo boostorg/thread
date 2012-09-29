@@ -22,7 +22,8 @@
 //     future<typename result_of<F(Args...)>::type>
 //     async(launch policy, F&& f, Args&&... args);
 
-#define BOOST_THREAD_VERSION 3
+//#define BOOST_THREAD_VERSION 3
+#define BOOST_THREAD_VERSION 4
 
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
@@ -93,13 +94,13 @@ boost::interprocess::unique_ptr<int, boost::default_delete<int> > f3(int i)
   return boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(i));
 }
 
-typedef boost::interprocess::unique_ptr<int, boost::default_delete<int> > XXT;
-boost::interprocess::unique_ptr<int, boost::default_delete<int> > f4(
-    BOOST_THREAD_RV_REF(boost::interprocess::unique_ptr<int, boost::default_delete<int> > ) p)
-{
-  boost::this_thread::sleep_for(ms(200));
-  return boost::move(p);
-}
+//typedef boost::interprocess::unique_ptr<int, boost::default_delete<int> > XXT;
+//boost::interprocess::unique_ptr<int, boost::default_delete<int> > f4(
+//    BOOST_THREAD_RV_REF(boost::interprocess::unique_ptr<int, boost::default_delete<int> > ) p)
+//{
+//  boost::this_thread::sleep_for(ms(200));
+//  return boost::move(p);
+//}
 
 
 int main()

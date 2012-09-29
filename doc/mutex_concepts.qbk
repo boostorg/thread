@@ -59,13 +59,11 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 
 [variablelist
 
-[[Precondition:] [The current thread owns `m`.]]
+[[Requires:] [The current thread owns `m`.]]
 
-[[Effects:] [Releases ownership by the current thread.]]
+[[Effects:] [Releases a lock on `m` by the current thread.]]
 
 [[Return type:] [`void`.]]
-
-[[Postcondition:] [The current thread no longer owns `m`.]]
 
 [[Throws:] [Nothing.]]
 ]

@@ -69,12 +69,12 @@
     template <typename R>
     class shared_future;
 
-    template <typename R>
+    template <typename S>
     class packaged_task;
-    template <class R> void swap(packaged_task<R>&, packaged_task<R>&) noexcept;
+    template <class S> void swap(packaged_task<S>&, packaged_task<S>&) noexcept;
 
-    template <class R, class Alloc>
-    struct uses_allocator<packaged_task <R>, Alloc>;
+    template <class S, class Alloc>
+    struct uses_allocator<packaged_task <S>, Alloc>;
 
     template <class F>
     future<typename result_of<typename decay<F>::type()>::type>
@@ -119,12 +119,15 @@
 
   enum class future_errc
   {
-    broken_promise,
-    future_already_retrieved,
-    promise_already_satisfied,
-    no_state
+    broken_promise = implementation defined,
+    future_already_retrieved = implementation defined,
+    promise_already_satisfied = implementation defined,
+    no_state = implementation defined
   }
 
+
+ The enum values of future_errc are distinct and not zero. 
+ 
 [endsect]
 [section:launch Enumeration `launch `]
 
@@ -1141,25 +1144,27 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 
 [section:packaged_task `packaged_task` class template]
 
+    template<typename S>
+    class packaged_task;
     template<typename R
-      // , class... ArgTypes // NOT YET IMPLEMENTED
+      , class... ArgTypes
     >
-    class packaged_task
+    class packaged_task<R(ArgTypes)>
     {
     public:
-      typedef R result_type;
-
       packaged_task(packaged_task&);// = delete;
       packaged_task& operator=(packaged_task&);// = delete;
 
       // construction and destruction
       packaged_task() noexcept;
 
-      explicit packaged_task(R(*f)());
+      explicit packaged_task(R(*f)(ArgTypes...));
 
       template <class F>
       explicit packaged_task(F&& f);
 
+      template <class Allocator>
+      packaged_task(allocator_arg_t, Allocator a, R(*f)(ArgTypes...));
       template <class F, class Allocator>
       packaged_task(allocator_arg_t, Allocator a, F&& f);
 
@@ -1177,8 +1182,7 @@ or __shared_future__ associated with this result, and the result is not ['ready]
       __unique_future__<R> get_future();
 
       // execution
-      void operator()();
-      // void operator()(ArgTypes... );  // NOT YET IMPLEMENTED
+      void operator()(ArgTypes... );
       // void make_ready_at_thread_exit(ArgTypes...); // NOT YET IMPLEMENTED
 
       void reset();
@@ -1188,14 +1192,14 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 
 [section:task_constructor Task Constructor]
 
-    packaged_task(R(*f)());
+    packaged_task(R(*f)(ArgTypes...));
 
     template<typename F>
     packaged_task(F&&f);
 
 [variablelist
 
-[[Preconditions:] [`f()` is a valid expression with a return type convertible to `R`. Invoking a copy of `f` shall behave the same
+[[Preconditions:] [`f()` is a valid expression with a return type convertible to `R`. Invoking a copy of `f` must behave the same
 as invoking `f`.]]
 
 [[Effects:] [Constructs a new __packaged_task__ with `boost::forward<F>(f)` stored as the associated task.]]
@@ -1203,7 +1207,10 @@ as invoking `f`.]]
 [[Throws:] [Any exceptions thrown by the copy (or move) constructor of `f`. `std::bad_alloc` if memory for the internal data
 structures could not be allocated.]]
 
-[[Notes:] [The R(*f)()) overload to allow passing a function without needing to use `&`.]]
+[[Notes:] [The R(*f)(ArgTypes...)) overload to allow passing a function without needing to use `&`.]]
+
+[[Remark:] [This constructor doesn't participate in overload resolution if decay<F>::type is the same type as boost::packaged_task<R>.]]
+
 
 ]
 
@@ -1212,7 +1219,7 @@ structures could not be allocated.]]
 [section:alloc_constructor Allocator Constructor]
 
       template <class Allocator>
-      packaged_task(allocator_arg_t, Allocator a, R(*f)());
+      packaged_task(allocator_arg_t, Allocator a, R(*f)(ArgTypes...));
       template <class F, class Allocator>
       packaged_task(allocator_arg_t, Allocator a, F&& f);
 
@@ -1227,7 +1234,7 @@ as invoking `f`.]]
 structures could not be allocated.]]
 
 [[Notes:] [Available only if BOOST_THREAD_FUTURE_USES_ALLOCATORS is defined.]]
-[[Notes:] [The R(*f)()) overload to allow passing a function without needing to use `&`.]]
+[[Notes:] [The R(*f)(ArgTypes...)) overload to allow passing a function without needing to use `&`.]]
 
 ]
 
@@ -1414,7 +1421,7 @@ The further behavior of the second function depends on the policy argument as fo
 
 If the implementation chooses the `launch::async` policy,
 
-- a call to a waiting function on an asynchronous return object that shares the shared state created by this async call shall block until the associated thread has completed, as if joined;
+- a call to a non-timed waiting function on an asynchronous return object that shares the shared state created by this async call shall block until the associated thread has completed, as if joined;
 
 - the associated thread completion synchronizes with the return from the first function that successfully detects the ready status of the shared state or with the return from the last function that releases the shared state, whichever happens first.
 ]]
@@ -1437,12 +1444,12 @@ If the implementation chooses the `launch::async` policy,
 
 [variablelist
 
-[[Requires:] [F and each Ti in Args shall satisfy the MoveConstructible requirements. INVOKE (DECAY_- COPY (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) shall be a valid expression.
+[[Requires:] [F and each Ti in Args shall satisfy the MoveConstructible requirements. invoke (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) shall be a valid expression.
 
 ]]
 [[Effects:] [The first function behaves the same as a call to the second function with a policy argument of launch::async | launch::deferred and the same arguments for F and Args. The second function creates a shared state that is associated with the returned future object. The further behavior of the second function depends on the policy argument as follows (if more than one of these conditions applies, the implementation may choose any of the corresponding policies):
-- if policy & launch::async is non-zero - calls INVOKE (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) (20.8.2, 30.3.1.2) as if in a new thread of exe- cution represented by a thread object with the calls to decay_copy() being evaluated in the thread that called async. Any return value is stored as the result in the shared state. Any excep- tion propagated from the execution of INVOKE(decay_copy(boost::forward<F>(f)), DECAY_- COPY (boost::forward<Args>(args))...) is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
-- if policy & launch::deferred is non-zero - Stores decay_copy (boost::forward<F>(f)) and decay_copy (boost::forward<Args>(args))... in the shared state. These copies of f and args constitute a deferred function. Invocation of the deferred function evaluates INVOKE (boost::move(g), boost::move(xyz)) where g is the stored value of decay_copy (boost::forward<F>(f)) and xyz is the stored copy of decay_copy (boost::forward<Args>(args)).... The shared state is not made ready until the function has completed. The first call to a non-timed waiting function (30.6.4) on an asynchronous return object referring to this shared state shall invoke the deferred func- tion in the thread that called the waiting function. Once evaluation of INVOKE (boost::move(g), boost::move(xyz)) begins, the function is no longer considered deferred.
+- if policy & launch::async is non-zero - calls invoke (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) (20.8.2, 30.3.1.2) as if in a new thread of exe- cution represented by a thread object with the calls to decay_copy() being evaluated in the thread that called async. Any return value is stored as the result in the shared state. Any excep- tion propagated from the execution of invoke(decay_copy(boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
+- if policy & launch::deferred is non-zero - Stores decay_copy (boost::forward<F>(f)) and decay_copy (boost::forward<Args>(args))... in the shared state. These copies of f and args constitute a deferred function. Invocation of the deferred function evaluates invoke (boost::move(g), boost::move(xyz)) where g is the stored value of decay_copy (boost::forward<F>(f)) and xyz is the stored copy of decay_copy (boost::forward<Args>(args)).... The shared state is not made ready until the function has completed. The first call to a non-timed waiting function (30.6.4) on an asynchronous return object referring to this shared state shall invoke the deferred func- tion in the thread that called the waiting function. Once evaluation of invoke (boost::move(g), boost::move(xyz)) begins, the function is no longer considered deferred.
 
 ]]
 

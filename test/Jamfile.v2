@@ -245,6 +245,11 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/promise/get_future_pass.cpp : promise__get_future_p ]
           [ thread-run2 ./sync/futures/promise/move_ctor_pass.cpp : promise__move_ctor_p ]
           [ thread-run2 ./sync/futures/promise/move_assign_pass.cpp : promise__move_asign_p ]
+          [ thread-run2 ./sync/futures/promise/set_exception_pass.cpp : promise__set_exception_p ]
+          [ thread-run2 ./sync/futures/promise/set_lvalue_pass.cpp : promise__set_lvalue_p ]
+          [ thread-run2 ./sync/futures/promise/set_rvalue_pass.cpp : promise__set_rvalue_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_const_pass.cpp : promise__set_value_const_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_void_pass.cpp : promise__set_value_void_p ]
           [ thread-run2 ./sync/futures/promise/use_allocator_pass.cpp : promise__use_allocator_p ]
     ;
 
@@ -255,7 +260,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/futures/future/copy_ctor_fail.cpp : : future__copy_ctor_f ]
           [ thread-run2 ./sync/futures/future/default_pass.cpp : future__default_p ]
           [ thread-run2 ./sync/futures/future/dtor_pass.cpp : future__dtor_p ]
-          #[ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p ]
+          [ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p ]
           [ thread-run2 ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2 ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
@@ -269,11 +274,11 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/futures/packaged_task/copy_ctor_fail.cpp : : packaged_task__copy_ctor_f ]
           [ thread-run2 ./sync/futures/packaged_task/default_ctor_pass.cpp : packaged_task__default_ctor_p ]
           [ thread-run2 ./sync/futures/packaged_task/func_ctor_pass.cpp : packaged_task__func_ctor_p ]
-          #[ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
+          [ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
           [ thread-run2 ./sync/futures/packaged_task/get_future_pass.cpp : packaged_task__get_future_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_ctor_pass.cpp : packaged_task__move_ctor_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_assign_pass.cpp : packaged_task__move_asign_p ]
-          #[ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p ]
+          [ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p ]
           [ thread-run2 ./sync/futures/packaged_task/reset_pass.cpp : packaged_task__reset_p ]
           [ thread-run2 ./sync/futures/packaged_task/use_allocator_pass.cpp : packaged_task__use_allocator_p ]
           [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : packaged_task__types_p ]
@@ -463,7 +468,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run-lib2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
           [ thread-run-lib2 ./threads/thread/constr/FArgs_pass.cpp : thread__constr__FArgs_p ]
           [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_p ]
-          #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
+          [ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
           [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_p ]
           [ thread-run2 ./threads/thread/destr/dtor_pass.cpp : thread__destr__dtor_p ]
           [ thread-run2 ./threads/thread/id/hash_pass.cpp : thread__id__hash_p ]
@@ -536,6 +541,16 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
+    ;
+
+    explicit ts_ ;
+    test-suite ts_
+    :
+          [ thread-run ../example/unwrap.cpp ]
+          [ thread-run ../example/make_future.cpp ]
+          [ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p2 ]
+          [ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p2 ]
+          [ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p2 ]
     ;
 
 }
