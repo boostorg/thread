@@ -17,6 +17,8 @@
 
 // template <class F, class ...Args> thread(F&& f, Args&&... args);
 
+#define BOOST_THREAD_VERSION 4
+
 #include <boost/thread/thread.hpp>
 #include <new>
 #include <cstdlib>
@@ -25,6 +27,7 @@
 
 class MoveOnly
 {
+public:
   BOOST_THREAD_MOVABLE_ONLY(MoveOnly)
   MoveOnly()
   {
@@ -39,9 +42,11 @@ class MoveOnly
 
 int main()
 {
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
   {
-    boost::thread t = boost::thread( BOOST_THREAD_MAKE_RV_REF(MoveOnly()), BOOST_THREAD_MAKE_RV_REF(MoveOnly()) );
+    boost::thread t = boost::thread( MoveOnly(), MoveOnly() );
     t.join();
   }
+#endif
   return boost::report_errors();
 }

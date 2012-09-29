@@ -13,43 +13,52 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 // <boost/thread/future.hpp>
-// class packaged_task<R>
 
-// packaged_task(packaged_task&) = delete;
+// class promise<R>
 
+// void promise<void>::set_value();
 
-#define BOOST_THREAD_VERSION 4
-#if BOOST_THREAD_VERSION == 4
-#define BOOST_THREAD_DETAIL_SIGNATURE double()
-#else
-#define BOOST_THREAD_DETAIL_SIGNATURE double
-#endif
+#define BOOST_THREAD_VERSION 3
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/static_assert.hpp>
 
-class A
+struct A
 {
-    long data_;
-
-public:
-    explicit A(long i) : data_(i) {}
-
-    long operator()() const {return data_;}
-    long operator()(long i, long j) const {return data_ + i + j;}
+  A()
+  {
+  }
+  A(const A&)
+  {
+    throw 10;
+  }
 };
-
 
 int main()
 {
-  {
-    boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE> p0(A(5));
-    boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE> p(p0);
 
+  {
+    typedef void T;
+    boost::promise<T> p;
+    boost::future<T> f = p.get_future();
+    p.set_value();
+    f.get();
+    try
+    {
+      p.set_value();
+      BOOST_TEST(false);
+    }
+    catch (const boost::future_error& e)
+    {
+      BOOST_TEST(e.code() == boost::system::make_error_code(boost::future_errc::promise_already_satisfied));
+    }
+    catch (...)
+    {
+      BOOST_TEST(false);
+    }
   }
 
   return boost::report_errors();
 }
-
-#include "../../../remove_error_code_unused_warning.hpp"
 

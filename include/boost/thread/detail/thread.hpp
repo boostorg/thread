@@ -6,6 +6,15 @@
 // (C) Copyright 2007-10 Anthony Williams
 // (C) Copyright 20011-12 Vicente J. Botet Escriba
 
+//===----------------------------------------------------------------------===//
+//
+//                     The LLVM Compiler Infrastructure
+//
+// This file is dual licensed under the MIT and the University of Illinois Open
+// Source Licenses. See LICENSE.TXT for details.
+//
+// The code taking care of thread creation and invoke have been taken from libcxx.
+//===----------------------------------------------------------------------===//
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/exceptions.hpp>
 #ifndef BOOST_NO_IOSTREAM
@@ -36,6 +45,9 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#include <tuple>
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 #ifdef BOOST_MSVC
@@ -48,6 +60,126 @@ namespace boost
 
     namespace detail
     {
+
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+
+      // __make_tuple_indices
+
+      template <std::size_t...> struct tuple_indices {};
+
+      template <std::size_t Sp, class IntTuple, std::size_t Ep>
+      struct make_indices_imp;
+
+      template <std::size_t Sp, std::size_t ...Indices, std::size_t Ep>
+      struct make_indices_imp<Sp, tuple_indices<Indices...>, Ep>
+      {
+          typedef typename make_indices_imp<Sp+1, tuple_indices<Indices..., Sp>, Ep>::type type;
+      };
+
+      template <std::size_t Ep, std::size_t ...Indices>
+      struct make_indices_imp<Ep, tuple_indices<Indices...>, Ep>
+      {
+          typedef tuple_indices<Indices...> type;
+      };
+
+      template <std::size_t Ep, std::size_t Sp = 0>
+      struct make_tuple_indices
+      {
+          static_assert(Sp <= Ep, "make_tuple_indices input error");
+          typedef typename make_indices_imp<Sp, tuple_indices<>, Ep>::type type;
+      };
+
+
+//      // bullets 1 and 2
+//
+//      template <class Fp, class A0, class ...Args>
+//      inline
+//      auto
+//      invoke(Fp&& f, A0&& a0, Args&& ...args)
+//          -> decltype((boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...))
+//      {
+//          return (boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...);
+//      }
+//
+//      template <class Fp, class A0, class ...Args>
+//      inline
+//      auto
+//      invoke(Fp&& f, A0&& a0, Args&& ...args)
+//          -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...))
+//      {
+//          return ((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...);
+//      }
+//
+//      // bullets 3 and 4
+//
+//      template <class Fp, class A0>
+//      inline
+//      auto
+//      invoke(Fp&& f, A0&& a0)
+//          -> decltype(boost::forward<A0>(a0).*f)
+//      {
+//          return boost::forward<A0>(a0).*f;
+//      }
+//
+//      template <class Fp, class A0>
+//      inline
+//      auto
+//      invoke(Fp&& f, A0&& a0)
+//          -> decltype((*boost::forward<A0>(a0)).*f)
+//      {
+//          return (*boost::forward<A0>(a0)).*f;
+//      }
+
+      // bullet 5
+
+      template <class Fp, class ...Args>
+      inline
+      auto
+      invoke(Fp&& f, Args&& ...args)
+          -> decltype(boost::forward<Fp>(f)(boost::forward<Args>(args)...))
+      {
+          return boost::forward<Fp>(f)(boost::forward<Args>(args)...);
+      }
+
+//      template <class Tp, class ...Args>
+//      struct invoke_return
+//      {
+//          typedef decltype(invoke(boost::declval<Tp>(), boost::declval<Args>()...)) type;
+//      };
+
+
+
+      template<typename F, class ...ArgTypes>
+      class thread_data:
+          public detail::thread_data_base
+      {
+      public:
+          BOOST_THREAD_NO_COPYABLE(thread_data)
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+            thread_data(BOOST_THREAD_RV_REF(F) f_, BOOST_THREAD_RV_REF(ArgTypes)... args_):
+              fp(boost::forward<F>(f_), boost::forward<ArgTypes>(args_)...)
+            {}
+#endif
+          template <std::size_t ...Indices>
+          void run2(tuple_indices<Indices...>)
+          {
+
+              invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
+          }
+          void run()
+          {
+              typedef typename make_tuple_indices<std::tuple_size<std::tuple<F, ArgTypes...> >::value, 1>::type index_type;
+
+              run2(index_type());
+          }
+
+      private:
+          //F f;
+          //std::tuple<ArgTypes...> args;
+          std::tuple<typename decay<F>::type, typename decay<ArgTypes>::type...> fp;
+      };
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+
         template<typename F>
         class thread_data:
             public detail::thread_data_base
@@ -115,6 +247,7 @@ namespace boost
                 f();
             }
         };
+#endif
     }
 
     class BOOST_THREAD_DECL thread
@@ -124,6 +257,8 @@ namespace boost
 
       BOOST_THREAD_MOVABLE_ONLY(thread)
     private:
+
+        struct dummy;
 
         void release_handle();
 
@@ -137,12 +272,25 @@ namespace boost
         detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        template<typename F, class ...ArgTypes>
+        static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
+        {
+            return detail::thread_data_ptr(detail::heap_new<
+                  detail::thread_data<typename boost::remove_reference<F>::type, ArgTypes...>
+                  >(
+                    boost::forward<F>(f), boost::forward<ArgTypes>(args)...
+                  )
+                );
+        }
+#else
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(BOOST_THREAD_RV_REF(F) f)
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<typename boost::remove_reference<F>::type> >(
                 boost::forward<F>(f)));
         }
+#endif
         static inline detail::thread_data_ptr make_thread_info(void (*f)())
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<void(*)()> >(
@@ -150,7 +298,11 @@ namespace boost
         }
 #else
         template<typename F>
-        static inline detail::thread_data_ptr make_thread_info(F f)
+        static inline detail::thread_data_ptr make_thread_info(F f
+            , typename disable_if_c<
+                boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value || is_same<typename decay<F>::type, thread>::value,
+                dummy* >::type=0
+                )
         {
             return detail::thread_data_ptr(detail::heap_new<detail::thread_data<F> >(f));
         }
@@ -161,7 +313,6 @@ namespace boost
         }
 
 #endif
-        struct dummy;
     public:
 #if 0 // This should not be needed anymore. Use instead BOOST_THREAD_MAKE_RV_REF.
 #if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100)
@@ -216,8 +367,9 @@ namespace boost
 #else
         template <class F>
         explicit thread(F f
-            // todo Disable also if Or is_same<typename decay<F>::type, thread>
-        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
+        , typename disable_if_c<
+            boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value || is_same<typename decay<F>::type, thread>::value,
+            dummy* >::type=0):
             thread_info(make_thread_info(f))
         {
             start_thread();
@@ -234,14 +386,22 @@ namespace boost
         explicit thread(BOOST_THREAD_RV_REF(F) f
         , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
         ):
-            thread_info(make_thread_info(f))
+#ifdef BOOST_THREAD_USES_MOVE
+        thread_info(make_thread_info(boost::move<F>(f))) // todo : Add forward
+#else
+        thread_info(make_thread_info(f)) // todo : Add forward
+#endif
         {
             start_thread();
         }
 
         template <class F>
         thread(attributes& attrs, BOOST_THREAD_RV_REF(F) f):
-            thread_info(make_thread_info(f))
+#ifdef BOOST_THREAD_USES_MOVE
+            thread_info(make_thread_info(boost::move<F>(f))) // todo : Add forward
+#else
+            thread_info(make_thread_info(f)) // todo : Add forward
+#endif
         {
             start_thread(attrs);
         }
@@ -272,6 +432,20 @@ namespace boost
             return *this;
         }
 
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+        template <class F, class Arg, class ...Args>
+        thread(F&& f, Arg&& arg, Args&&... args) :
+          thread_info(make_thread_info(
+              thread_detail::decay_copy(boost::forward<F>(f)),
+              thread_detail::decay_copy(boost::forward<Arg>(arg)),
+              thread_detail::decay_copy(boost::forward<Args>(args))...)
+          )
+
+        {
+          start_thread();
+        }
+
+#else
         template <class F,class A1>
         thread(F f,A1 a1,typename disable_if<boost::is_convertible<F&,thread_attributes >, dummy* >::type=0):
             thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1)))
@@ -333,7 +507,7 @@ namespace boost
         {
             start_thread();
         }
-
+#endif
         void swap(thread& x) BOOST_NOEXCEPT
         {
             thread_info.swap(x.thread_info);
