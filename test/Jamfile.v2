@@ -509,6 +509,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run ../example/shared_mutex.cpp ]
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
+          [ thread-run ../example/make_future.cpp ]
+
     ;
 
     #explicit ts_shared_upwards ;
@@ -546,11 +548,7 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run ../example/unwrap.cpp ]
-          [ thread-run ../example/make_future.cpp ]
-          [ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p2 ]
-          [ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p2 ]
-          [ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p2 ]
+          #[ thread-run ../example/unwrap.cpp ]
     ;
 
 }
