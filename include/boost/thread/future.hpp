@@ -2176,7 +2176,7 @@ namespace boost
   }
 
 
-  BOOST_THREAD_FUTURE<void> make_future()
+  inline BOOST_THREAD_FUTURE<void> make_future()
   {
     promise<void> p;
     return boost::move(p.get_future());
@@ -2193,7 +2193,7 @@ namespace boost
   }
 
 
-  shared_future<void> make_shared_future()
+  inline shared_future<void> make_shared_future()
   {
     promise<void> p;
     return p.get_future().share();
