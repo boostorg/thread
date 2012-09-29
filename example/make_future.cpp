@@ -7,6 +7,7 @@
 
 #include <boost/thread/future.hpp>
 #include <iostream>
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 
 int p1() { return 5; }
 
@@ -40,3 +41,10 @@ int main()
   }
   return 0;
 }
+#else
+
+int main()
+{
+  return 0;
+}
+#endif
