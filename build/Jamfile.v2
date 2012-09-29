@@ -60,7 +60,7 @@ project boost/thread
 
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
-        <toolset>darwin:<cxxflags>-ansi
+        #<toolset>darwin:<cxxflags>-ansi
         <toolset>darwin:<cxxflags>-fpermissive
         <toolset>darwin:<cxxflags>-Wno-long-long
 
@@ -70,7 +70,7 @@ project boost/thread
 
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
-        <toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long
 
