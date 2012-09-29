@@ -43,7 +43,7 @@ project
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
         <toolset>clang:<cxxflags>-Wno-long-long
-        <toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive # doesn't work
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
