@@ -36,7 +36,7 @@ struct A
     value(i)
   {
   }
-  A(const A&)= delete;
+  BOOST_THREAD_DELETE_COPY_CTOR(A)
   A(A&& rhs)
   {
     if(rhs.value==0)
