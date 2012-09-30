@@ -1981,7 +1981,7 @@ namespace boost
 
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class R, class... ArgTypes>
         BOOST_THREAD_FUTURE<R>
         async(launch policy, R(*f)(ArgTypes...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
@@ -2033,7 +2033,7 @@ namespace boost
         }
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
         BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
         async(launch policy, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
@@ -2090,7 +2090,7 @@ namespace boost
 #else
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
         BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
         async(launch policy, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
@@ -2139,7 +2139,7 @@ namespace boost
         }
     }
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
         BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
         async(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args )
