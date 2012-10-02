@@ -282,28 +282,20 @@ namespace boost
 
             void wait(bool rethrow=true)
             {
-                //std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                 boost::unique_lock<boost::mutex> lock(mutex);
-                std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                 do_callback(lock);
-                std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                 while(!done)
                 {
-                  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                     waiters.wait(lock);
                 }
-                std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                 if(rethrow && thread_was_interrupted)
                 {
-                  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                     throw boost::thread_interrupted();
                 }
                 if(rethrow && exception)
                 {
-                  std::cout << __FILE__ << ":" << __LINE__ << std::endl;
                     boost::rethrow_exception(exception);
                 }
-                std::cout << __FILE__ << ":" << __LINE__ << std::endl;
             }
 
             bool timed_wait_until(boost::system_time const& target_time)
@@ -498,7 +490,6 @@ namespace boost
             move_dest_type get()
             {
                 wait();
-                std::cout << __FILE__ << ":" << __LINE__ << " " << " " <<std::endl;
                 return static_cast<move_dest_type>(*result);
                 //return boost::move(*result); // todo check why this doesn't works (references?)
             }
@@ -914,7 +905,6 @@ namespace boost
 
         bool valid() const BOOST_NOEXCEPT
         {
-          //std::cout << __FILE__ << ":" << __LINE__ << std::endl;
             return future_ != 0;
         }
 
