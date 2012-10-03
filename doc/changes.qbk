@@ -22,7 +22,6 @@ Deprecated features since boost 1.53 available only until boost 1.58:
 
 New Features:
 
-
 * [@http://svn.boost.org/trac/boost/ticket/7281 #7281] C++11 compliance: Add ArgTypes to packaged_task template. 
 Provided when BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined (Default value from Boost 1.55).
 See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK.
@@ -37,6 +36,7 @@ Provided when BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_PROVIDES_SI
 See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK, BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_DONT_PROVIDE_VARIADIC_THREAD.
 
 * [@http://svn.boost.org/trac/boost/ticket/7414 #7414] c++11 compliance: future::get post-condition should be valid()==false
+* [@http://svn.boost.org/trac/boost/ticket/7414 #7444] Async: Add make_future/make_shared_future
 
 [/* [@http://svn.boost.org/trac/boost/ticket/7413 #7413] c++11 compliance: Add async when the launch policy is deferred.]
 
@@ -306,16 +306,17 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/7413 #7413] c++11 compliance: Add async when the launch policy is deferred.
   * [@http://svn.boost.org/trac/boost/ticket/7280 #7280] C++11 compliance: Add promise::...at_thread_exit functions.
   * [@http://svn.boost.org/trac/boost/ticket/7282 #7282] C++11 compliance: Add packaged_task::make_ready_at_thread_exit function.
-  * [@http://svn.boost.org/trac/boost/ticket/7285 #7285] Allow to pass movable arguments for call_once. 
-  * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
+  * [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once. 
+  * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] C++11 compliance: Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
 
 
 # Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations], in particular
 
-  * make_future/make_shared_future,
-  * future<T>.then,
-  * when_any/when_all,
-  * scheduler (in the form of an asynchronous executor as defined in Boost.Async).
+  * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then
+  * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any
+  * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all
+  * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter
+
 
 # Add a synchronized value class following the design in [@http://www.drdobbs.com/cpp/enforcing-correct-mutex-usage-with-synch/225200269 Enforcing Correct Mutex Usage with Synchronized Values]
  	
