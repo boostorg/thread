@@ -45,7 +45,9 @@ MoveOnly MakeMoveOnly() {
   return BOOST_THREAD_MAKE_RV_REF(MoveOnly());
 }
 
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES && defined BOOST_THREAD_USES_MOVE
 BOOST_STATIC_ASSERT(::boost::is_function<boost::rv<boost::rv<MoveOnly> >&>::value==false);
+#endif
 
 int main()
 {

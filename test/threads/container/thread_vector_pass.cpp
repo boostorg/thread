@@ -42,7 +42,9 @@ void increment_count()
   std::cout << "count = " << ++count << std::endl;
 }
 
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES && defined BOOST_THREAD_USES_MOVE
 BOOST_STATIC_ASSERT(::boost::is_function<boost::rv<boost::rv<boost::thread> >&>::value==false);
+#endif
 
 int main()
 {
