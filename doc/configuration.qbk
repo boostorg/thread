@@ -18,6 +18,8 @@ Boost.Thread uses by default Boost.Chrono for the time related functions. For ba
 
 [endsect]
 
+
+
 [section:move  Boost.Move]
 
 Boost.Thread uses by default an internal move semantic implementation. Since version 3.0.0 you can use the move emulation emulation provided by Boost.Move. 
@@ -27,6 +29,11 @@ When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_USE_MOVE ` if you don't
 
 [endsect]
 
+[section:id thread::id]
+
+Boost.Thread uses by default a thread::id on Posix based on the pthread type (BOOST_THREAD_PROVIDES_BASIC_THREAD_ID). For backward compatibility and also for compilers that don't work well with this modification the user can define `BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID`.
+
+[endsect]
 [section:shared_gen  Shared Locking Generic]
 
 The shared mutex implementation on Windows platform provides currently less functionality than the generic one that is used for PTheads based platforms. In order to have access to these functions, the user needs to define `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN` to use the generic implementation, that while could be less efficient, provides all the functions.
@@ -148,12 +155,40 @@ When `BOOST_THREAD_VERSION==3` define `BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11` if 
 
 [endsect]
 
-[section:deprecated Deprecated]
 
-Version 3.0.0 deprecates some Boost.Thread features. 
+[section:deprecated Signature parameter for packaged_task]
 
-These deprecated features will be provided by default up to boost 1.52. If you don't want to include the deprecated features you could define `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`. Since 1.53 these features will not be included any more by default. Since this version, if you want to include the deprecated features yet you could define `BOOST_THREAD_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`. These deprecated features will be only available until boost 1.55, that is you have 1 year and a half to move to the new features.
+C++11 packaged task class has a Signature template parameter. When `BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK ` is defined Boost.Thread provides this C++ feature. 
 
+[waring This is a breaking change respect to version 3.x.]
+
+When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK` if you want this feature.
+When `BOOST_THREAD_VERSION>4` define `BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK` if you don't want this feature.
+
+[endsect]
+
+
+[section:thread_const-var thread constructor with variadic rvalue parameters]
+
+C++11 thread constructor accep a variable number of rvalue argumentshas. When `BOOST_THREAD_PROVIDES_VARIADIC_THREAD ` is defined Boost.Thread provides this C++ feature if the following are not defined 
+
+* BOOST_NO_CXX11_VARIADIC_TEMPLATES
+* BOOST_NO_CXX11_DECLTYPE
+* BOOST_NO_CXX11_RVALUE_REFERENCES
+* BOOST_NO_CXX11_HDR_TUPLE
+
+When `BOOST_THREAD_VERSION>4` define `BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK` if you don't want this feature.
+
+[endsect]
+
+[section:get_invalid future<>::get() invalidates the future]
+
+C++11 future<>::get() invalidates the future once its value has been obtained. When `BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET ` is defined Boost.Thread provides this C++ feature. 
+
+[waring This is a breaking change respect to version 3.x.]
+
+When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET` if you want this feature.
+When `BOOST_THREAD_VERSION>4` define `BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET` if you don't want this feature.
 
 [endsect]
 
@@ -169,18 +204,25 @@ The default version is 2. In this case the following breaking or extending macro
 The user can request the version 3 by defining `BOOST_THREAD_VERSION` to 3. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
 * Breaking change `BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION `
-* Breaking change `BOOST_THREAD_PROVIDES_FUTURE`
+* Conformity & Breaking change `BOOST_THREAD_PROVIDES_FUTURE`
 * Uniformity `BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN`
 * Extension `BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION`
 * Conformity `BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS`
-* Breaking change BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
-* Breaking change BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
-* Breaking change `BOOST_THREAD_PROVIDES_ONCE_CXX11`
+* Conformity & Breaking change BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
+* Conformity & Breaking change BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
+* Conformity & Breaking change `BOOST_THREAD_PROVIDES_ONCE_CXX11`
 
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0`
 
 The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.53.
+
+The user can request the version 4 by defining `BOOST_THREAD_VERSION` to 4. In this case the following breaking or extending macros are defined if the opposite is not requested: 
+
+* Conformity & Breaking change `BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK `
+* Conformity & Breaking change `BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET `
+* Conformity `BOOST_THREAD_PROVIDES_VARIADIC_THREAD`
+
 
 [endsect]
 
@@ -210,5 +252,15 @@ If __IBMCPP__ < 1100 the library defines
 
 And Boost.Thread doesn't links with Boost.Chrono.
 
+
 [endsect]
+[section:ce WCE]
+
+If _WIN32_WCE && _WIN32_WCE==0x501 the library defines
+
+* `BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS`
+
+
+[endsect]
+
 [endsect]

@@ -12,12 +12,10 @@
 
   namespace boost
   {
-  #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
-    namespace future_state
+    namespace future_state  // EXTENSION
     {
       enum state {uninitialized, waiting, ready, moved};
     }
-  #endif
 
     enum class future_errc
     {
@@ -83,27 +81,31 @@
     future<typename result_of<typename decay<F>::type()>::type>
     async(launch policy, F f);
 
-    // template <class F, class... Args>
-    // future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    // async(F&& f, Args&&... args); // NOT YET IMPLEMENTED
-    // template <class F, class... Args>
-    // future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    // async(launch policy, F&& f, Args&&... args); // NOT YET IMPLEMENTED
-
-
+    template <class F, class... Args>
+    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(F&& f, Args&&... args);
+    template <class F, class... Args>
+    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(launch policy, F&& f, Args&&... args);
+    
     template<typename Iterator>
     void wait_for_all(Iterator begin,Iterator end); // EXTENSION
-
     template<typename F1,typename... FS>
     void wait_for_all(F1& f1,Fs&... fs); // EXTENSION
 
     template<typename Iterator>
     Iterator wait_for_any(Iterator begin,Iterator end);
-
     template<typename F1,typename... Fs>
     unsigned wait_for_any(F1& f1,Fs&... fs);
-
-
+    
+    template <typename T>
+    future<typename decay<T>::type> make_future(T&& value);  // EXTENSION
+    future<void> make_future();  // EXTENSION
+    
+    template <typename T>
+    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // EXTENSION
+    shared_future<void> make_shared_future();  // EXTENSION
+    
 [section:future_state Enumeration `state`]
 
     namespace future_state
@@ -280,13 +282,11 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 
     #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
       template<typename Duration>
-      bool timed_wait(Duration const& rel_time) const;
-      bool timed_wait_until(boost::system_time const& abs_time) const;
+      bool timed_wait(Duration const& rel_time) const; // DEPRECATED SINCE V3.0.0
+      bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED SINCE V3.0.0
     #endif
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
-      typedef future_state::state state;
-      state get_state() const;
-    #endif
+      typedef future_state::state state;  // EXTENSION
+      state get_state() const;  // EXTENSION
     };
 
 [section:default_constructor Default Constructor]
@@ -430,7 +430,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_duration Member function `timed_wait()`]
+[section:timed_wait_duration Member function `timed_wait()` DEPRECATED SINCE V3.0.0]
 
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
@@ -457,7 +457,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 
 [endsect]
 
-[section:timed_wait_absolute Member function `timed_wait()`]
+[section:timed_wait_absolute Member function `timed_wait()` DEPRECATED SINCE V3.0.0]
 
     bool timed_wait(boost::system_time const& wait_timeout);
 
@@ -672,12 +672,10 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 
     #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
       template<typename Duration>
-      bool timed_wait(Duration const& rel_time) const;
-      bool timed_wait_until(boost::system_time const& abs_time) const;
+      bool timed_wait(Duration const& rel_time) const;  // DEPRECATED SINCE V3.0.0
+      bool timed_wait_until(boost::system_time const& abs_time) const;  // DEPRECATED SINCE V3.0.0
     #endif
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
-      state get_state() const noexcept;
-    #endif
+      state get_state() const noexcept;  // EXTENSION
     };
 
 [section:default_constructor Default Constructor]
@@ -1378,16 +1376,27 @@ __packaged_task__.]]
 
     template <class F>
     __unique_future__<typename result_of<typename decay<F>::type()>::type>
-    async(F f);
+    async(F&& f);
     template <class F>
     __unique_future__<typename result_of<typename decay<F>::type()>::type>
-    async(launch policy, F f);
+    async(launch policy, F&& f);
 
+    template <class F, class... Args>
+    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(F&& f, Args&&... args);
+    template <class F, class... Args>
+    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(launch policy, F&& f, Args&&... args);
 
+   
 The function template async provides a mechanism to launch a function potentially in a new thread and
 provides the result of the function in a future object with which it shares a shared state.
 
 [warning `async(launch::deferred, F)` is NOT YET IMPLEMENTED!]
+
+[warning the variadic prototype is provided only on C++11 compilers supporting rvalue references, variadic templates, decltype and a standard library providing <tuple>, and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined.]
+
+[heading Non-Variadic variant]
 
 [variablelist
 
@@ -1440,48 +1449,75 @@ If the implementation chooses the `launch::async` policy,
 
 ]
 
-[/
+[heading Variadic variant]
 
 [variablelist
 
-[[Requires:] [F and each Ti in Args shall satisfy the MoveConstructible requirements. invoke (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) shall be a valid expression.
+[[Requires:] [
+`F` and each `Ti` in `Args` shall satisfy the `MoveConstructible` requirements. 
+
+  invoke (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) 
+  
+shall be a valid expression.
 
 ]]
-[[Effects:] [The first function behaves the same as a call to the second function with a policy argument of launch::async | launch::deferred and the same arguments for F and Args. The second function creates a shared state that is associated with the returned future object. The further behavior of the second function depends on the policy argument as follows (if more than one of these conditions applies, the implementation may choose any of the corresponding policies):
-- if policy & launch::async is non-zero - calls invoke (decay_copy (boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) (20.8.2, 30.3.1.2) as if in a new thread of exe- cution represented by a thread object with the calls to decay_copy() being evaluated in the thread that called async. Any return value is stored as the result in the shared state. Any excep- tion propagated from the execution of invoke(decay_copy(boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...) is stored as the exceptional result in the shared state. The thread object is stored in the shared state and affects the behavior of any asynchronous return objects that reference that state.
-- if policy & launch::deferred is non-zero - Stores decay_copy (boost::forward<F>(f)) and decay_copy (boost::forward<Args>(args))... in the shared state. These copies of f and args constitute a deferred function. Invocation of the deferred function evaluates invoke (boost::move(g), boost::move(xyz)) where g is the stored value of decay_copy (boost::forward<F>(f)) and xyz is the stored copy of decay_copy (boost::forward<Args>(args)).... The shared state is not made ready until the function has completed. The first call to a non-timed waiting function (30.6.4) on an asynchronous return object referring to this shared state shall invoke the deferred func- tion in the thread that called the waiting function. Once evaluation of invoke (boost::move(g), boost::move(xyz)) begins, the function is no longer considered deferred.
+[[Effects:] [
+
+- The first function behaves the same as a call to the second function with a policy argument of `launch::async | launch::deferred` and the same arguments for `F` and `Args`. 
+
+- The second function creates a shared state that is associated with the returned future object. 
+The further behavior of the second function depends on the policy argument as follows (if more than one of these conditions applies, 
+the implementation may choose any of the corresponding policies):
+
+  - if `policy & launch::async` is non-zero - calls `invoke(decay_copy(forward<F>(f)), decay_copy (forward<Args>(args))...)` 
+  as if in a new thread of execution represented by a thread object with the calls to `decay_copy()` being evaluated in the thread that called `async`. 
+  Any return value is stored as the result in the shared state. 
+  Any exception propagated from the execution of `invoke(decay_copy(boost::forward<F>(f)), decay_copy (boost::forward<Args>(args))...)` 
+  is stored as the exceptional result in the shared state. The thread object is stored in the shared state and 
+  affects the behavior of any asynchronous return objects that reference that state.
+
+  - if `policy & launch::deferred` is non-zero - Stores `decay_copy(forward<F>(f))` and `decay_copy(forward<Args>(args))...` in the shared state. 
+  These copies of `f` and `args` constitute a deferred function. Invocation of the deferred function evaluates 
+  `invoke(move(g), move(xyz))` where `g` is the stored value of `decay_copy(forward<F>(f))` and `xyz` is the stored copy of `decay_copy(forward<Args>(args))...`. 
+  The shared state is not made ready until the function has completed. The first call to a non-timed waiting function on 
+  an asynchronous return object referring to this shared state shall invoke the deferred function in the thread that called the waiting function. 
+  Once evaluation of `invoke(move(g), move(xyz))` begins, the function is no longer considered deferred.
 
 ]]
 
-[[Note:] [If this policy is specified together with other policies, such as when using a policy value of launch::async | launch::deferred, implementations should defer invocation or the selection of the policy when no more concurrency can be effectively exploited.]]
-[[Returns:] [An object of type __unique_future__<typename result_of<typename decay<F>::type(typename de- cay<Args>::type...)>::type> that refers to the shared state created by this call to async.]]
+[[Note:] [If this policy is specified together with other policies, such as when using a policy value of `launch::async | launch::deferred`, 
+implementations should defer invocation or the selection of the policy when no more concurrency can be effectively exploited.]]
+
+[[Returns:] [An object of type `__unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>` 
+that refers to the shared state created by this call to `async`.]]
 
 [[Synchronization:] [Regardless of the provided policy argument,
 
-- the invocation of async synchronizes with (1.10) the invocation of f. (Note: This statement applies even when the corresponding future object is moved to another thread.); and
-- the completion of the function f is sequenced before (1.10) the shared state is made ready. (Note: f might not be called at all, so its completion might never happen.)
-If the implementation chooses the launch::async policy,
-- a call to a waiting function on an asynchronous return object that shares the shared state created by this async call shall block until the associated thread has completed, as if joined;
-- the associated thread completion synchronizes with (1.10) the return from the first function that successfully detects the ready status of the shared state or with the return from the last function that releases the shared state, whichever happens first.
+- the invocation of async synchronizes with the invocation of `f`. (Note: This statement applies even when the corresponding future object is moved to another thread.); and
+
+- the completion of the function `f` is sequenced before the shared state is made ready. (Note: f might not be called at all, so its completion might never happen.)
+If the implementation chooses the `launch::async` policy,
+
+- a call to a waiting function on an asynchronous return object that shares the shared state created by this async call 
+shall block until the associated thread has completed, as if joined;
+
+- the associated thread completion synchronizes with the return from the first function that successfully detects the ready status of the shared state or 
+with the return from the last function that releases the shared state, whichever happens first.
 
 ]]
 
-[[Throws:] [system_error if policy is launch::async and the implementation is unable to start a new thread.
+[[Throws:] [`system_error` if policy is `launch::async` and the implementation is unable to start a new thread.
 ]]
 
 [[Error conditions:][
 
-- resource_unavailable_try_again - if policy is launch::async and the system is unable to start a new thread.
+- `resource_unavailable_try_again` - if policy is `launch::async` and the system is unable to start a new thread.
 ]]
 
 [[Remarks:] [The first signature shall not participate in overload resolution if decay<F>::type is boost::launch.
 ]]
 
 ]
-
-]
-
-
 
 
 [endsect]
@@ -1562,5 +1598,72 @@ __unique_future__ or __shared_future__.]]
 
 [endsect]
 
+[section:make_future Non-member function `make_future()`]
+
+    template <typename T>
+    future<typename decay<T>::type> make_future(T&& value);  // EXTENSION
+    future<void> make_future();  // EXTENSION
+    
+
+[variablelist
+
+[[Effects:] [
+The value that is passed in to the function is moved to the shared state of the returned function if it is an rvalue. 
+Otherwise the value is copied to the shared state of the returned function.
+.]]
+
+[[Returns:] [
+
+- future<T>, if function is given a value of type T
+
+- future<void>, if the function is not given any inputs.
+
+]]
+
+[[Postcondition:] [
+
+- Returned future<T>, valid() == true
+
+- Returned future<T>, is_ready() = true
+
+]]
+
+]
+
+    
+[endsect]
+[section:make_shared_future Non-member function `make_shared_future()`]
+
+    template <typename T>
+    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // EXTENSION
+    shared_future<void> make_shared_future();  // EXTENSION
+ 
+[variablelist
+
+[[Effects:] [
+The value that is passed in to the function is moved to the shared state of the returned function if it is an rvalue. 
+Otherwise the value is copied to the shared state of the returned function.
+.]]
+
+[[Returns:] [
+
+- shared_future<T>, if function is given a value of type T
+
+- shared_future<void>, if the function is not given any inputs.
+
+]]
+
+[[Postcondition:] [
+
+- Returned shared_future<T>, valid() == true
+
+- Returned shared_future<T>, is_ready() = true
+
+]]
+
+]
+    
+[endsect]
+    
 
 [endsect]
