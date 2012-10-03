@@ -32,8 +32,6 @@
 #include <boost/bind.hpp>
 #include <stdlib.h>
 #include <memory>
-//#include <vector>
-//#include <utility>
 #include <boost/utility/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/io/ios_state.hpp>
@@ -264,9 +262,30 @@ namespace boost
 
         detail::thread_data_ptr thread_info;
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
         void start_thread();
         void start_thread(const attributes& attr);
+#else
+    private:
+        bool start_thread_noexcept();
+        bool start_thread_noexcept(const attributes& attr);
+    public:
+        void start_thread()
+        {
+          if (!start_thread_noexcept())
+          {
+            boost::throw_exception(thread_resource_error());
+          }
+        }
+        void start_thread(const attributes& attr)
+        {
+          if (!start_thread_noexcept(attr))
+          {
+            boost::throw_exception(thread_resource_error());
+          }
+        }
 
+#endif
         explicit thread(detail::thread_data_ptr data);
 
         detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
@@ -300,7 +319,8 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f
             , typename disable_if_c<
-                boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value || is_same<typename decay<F>::type, thread>::value,
+                //boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
+                is_same<typename decay<F>::type, thread>::value,
                 dummy* >::type=0
                 )
         {
@@ -514,11 +534,23 @@ namespace boost
         }
 
         class BOOST_SYMBOL_VISIBLE id;
-        id get_id() const BOOST_NOEXCEPT;
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+        inline id get_id()  const BOOST_NOEXCEPT;
+#else
+        id BOOST_THREAD_DECL get_id() const BOOST_NOEXCEPT;
+#endif
 
 
         bool joinable() const BOOST_NOEXCEPT;
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
         void join();
+#else
+    private:
+        bool join_noexcept();
+    public:
+        inline void join();
+#endif
+
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
@@ -556,11 +588,17 @@ namespace boost
 
 
 #else
+    private:
+        bool do_try_join_until_noexcept(struct timespec const &timeout, bool& res);
+        inline bool do_try_join_until(struct timespec const &timeout);
+    public:
+#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         bool timed_join(const system_time& abs_time)
         {
           struct timespec const ts=detail::get_timespec(abs_time);
           return do_try_join_until(ts);
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
         {
@@ -573,18 +611,17 @@ namespace boost
           return do_try_join_until(ts);
         }
 #endif
-      private:
-        bool do_try_join_until(struct timespec const &timeout);
-      public:
 
 #endif
+      public:
 
+#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
             return timed_join(get_system_time()+rel_time);
         }
-
+#endif
         void detach();
 
         static unsigned hardware_concurrency() BOOST_NOEXCEPT;
@@ -604,10 +641,12 @@ namespace boost
             this_thread::yield();
         }
 
+#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         static inline void sleep(const system_time& xt)
         {
             this_thread::sleep(xt);
         }
+#endif
 
         // extensions
         void interrupt();
@@ -630,16 +669,22 @@ namespace boost
 
     namespace this_thread
     {
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+        inline thread::id get_id() BOOST_NOEXCEPT;
+#else
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
+#endif
 
         void BOOST_THREAD_DECL interruption_point();
         bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
         bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
 
+#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
         inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
         {
             sleep(system_time(abs_time));
         }
+#endif
     }
 
     class BOOST_SYMBOL_VISIBLE thread::id
@@ -756,6 +801,63 @@ namespace boost
 #endif
 #endif
     };
+
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
+    thread::id thread::get_id() const BOOST_NOEXCEPT
+    {
+    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        return const_cast<thread*>(this)->native_handle();
+    #else
+        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
+        return (local_thread_info? id(local_thread_info) id());
+    #endif
+    }
+
+    namespace this_thread
+    {
+        thread::id get_id() BOOST_NOEXCEPT
+        {
+        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+             return pthread_self();
+        #else
+            boost::detail::thread_data_base* const thread_info=get_or_make_current_thread_data();
+            return (thread_info?thread::id(thread_info->shared_from_this()):thread::id());
+        #endif
+        }
+    }
+    void thread::join() {
+        if (this_thread::get_id() == get_id())
+        {
+            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+        }
+        if (!join_noexcept())
+        {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+            boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+        }
+    }
+
+    bool thread::do_try_join_until(struct timespec const &timeout)
+    {
+        if (this_thread::get_id() == get_id())
+        {
+            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+        }
+        bool res;
+        if (do_try_join_until_noexcept(timeout, res))
+        {
+          return res;
+        }
+        else
+        {
+#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+            boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#endif
+        }
+    }
+
+#endif
 
 #if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template<class charT, class traits>
