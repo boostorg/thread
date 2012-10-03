@@ -3,6 +3,8 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
+
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>

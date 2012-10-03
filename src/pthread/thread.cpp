@@ -155,13 +155,13 @@ namespace boost
                 BOOST_CATCH (thread_interrupted const&)
                 {
                 }
-                BOOST_CATCH_END
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
 //                 BOOST_CATCH(...)
 //                 {
 //                     std::terminate();
 //                 }
+                BOOST_CATCH_END
 
                 detail::tls_destructor(thread_info.get());
                 detail::set_current_thread_data(0);
@@ -215,18 +215,20 @@ namespace boost
     thread::thread() BOOST_NOEXCEPT
     {}
 
-    void thread::start_thread()
+    bool thread::start_thread_noexcept()
     {
         thread_info->self=thread_info;
         int const res = pthread_create(&thread_info->thread_handle, 0, &thread_proxy, thread_info.get());
         if (res != 0)
         {
             thread_info->self.reset();
-            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
+            return false;
+//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
+        return true;
     }
 
-    void thread::start_thread(const attributes& attr)
+    bool thread::start_thread_noexcept(const attributes& attr)
     {
         thread_info->self=thread_info;
         const attributes::native_handle_type* h = attr.native_handle();
@@ -234,14 +236,16 @@ namespace boost
         if (res != 0)
         {
             thread_info->self.reset();
-            boost::throw_exception(thread_resource_error());
+            return false;
+//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
         int detached_state;
         res = pthread_attr_getdetachstate(h, &detached_state);
         if (res != 0)
         {
             thread_info->self.reset();
-            boost::throw_exception(thread_resource_error());
+            return false;
+//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_attr_getdetachstate"));
         }
         if (PTHREAD_CREATE_DETACHED==detached_state)
         {
@@ -259,6 +263,7 @@ namespace boost
               }
           }
         }
+        return true;
     }
 
 
@@ -268,12 +273,8 @@ namespace boost
         return thread_info;
     }
 
-    void thread::join()
+    bool thread::join_noexcept()
     {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
@@ -312,21 +313,16 @@ namespace boost
             {
                 thread_info.reset();
             }
+            return true;
         }
         else
         {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#endif
+          return false;
         }
     }
 
-    bool thread::do_try_join_until(struct timespec const &timeout)
+    bool thread::do_try_join_until_noexcept(struct timespec const &timeout, bool& res)
     {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
@@ -338,7 +334,8 @@ namespace boost
                 {
                     if(!local_thread_info->done_condition.do_timed_wait(lock,timeout))
                     {
-                        return false;
+                      res=false;
+                      return true;
                     }
                 }
                 do_join=!local_thread_info->join_started;
@@ -368,13 +365,12 @@ namespace boost
             {
                 thread_info.reset();
             }
+            res=true;
             return true;
         }
         else
         {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#endif
+          return false;
         }
     }
 
@@ -479,24 +475,6 @@ namespace boost
 #endif
     }
 
-    thread::id thread::get_id() const BOOST_NOEXCEPT
-    {
-    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-        //return local_thread_info->thread_handle;
-        return const_cast<thread*>(this)->native_handle();
-    #else
-        detail::thread_data_ptr const local_thread_info=(get_thread_info)();
-        if(local_thread_info)
-        {
-            return id(local_thread_info);
-        }
-        else
-        {
-                return id();
-        }
-    #endif
-    }
-
     void thread::interrupt()
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
@@ -544,16 +522,6 @@ namespace boost
 
     namespace this_thread
     {
-        thread::id get_id() BOOST_NOEXCEPT
-        {
-        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-             return pthread_self();
-        #else
-            boost::detail::thread_data_base* const thread_info=get_or_make_current_thread_data();
-            return thread::id(thread_info?thread_info->shared_from_this():detail::thread_data_ptr());
-        #endif
-        }
-
         void interruption_point()
         {
 #ifndef BOOST_NO_EXCEPTIONS

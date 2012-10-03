@@ -83,6 +83,7 @@ int main()
       threads.emplace_back(&increment_count);
     }
     interrupt_all(threads);
+    join_all(threads);
   }
   return boost::report_errors();
 }
