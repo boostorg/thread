@@ -24,6 +24,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/static_assert.hpp>
 
 class MoveOnly
 {
@@ -43,6 +44,8 @@ public:
 MoveOnly MakeMoveOnly() {
   return BOOST_THREAD_MAKE_RV_REF(MoveOnly());
 }
+
+BOOST_STATIC_ASSERT(::boost::is_function<boost::rv<boost::rv<MoveOnly> >&>::value==false);
 
 int main()
 {
