@@ -537,7 +537,7 @@ namespace boost
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
         inline id get_id()  const BOOST_NOEXCEPT;
 #else
-        id BOOST_THREAD_DECL get_id() const BOOST_NOEXCEPT;
+        id get_id() const BOOST_NOEXCEPT;
 #endif
 
 
