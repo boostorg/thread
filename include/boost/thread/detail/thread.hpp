@@ -854,6 +854,7 @@ namespace boost
 #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
             boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
 #endif
+            return false;
         }
     }
 
