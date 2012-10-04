@@ -9,6 +9,8 @@
 #include <list>
 #include <iostream>
 
+#if defined BOOST_THREAD_USES_CHRONO
+
 using namespace std;
 
 boost::recursive_mutex theMutex;
@@ -87,3 +89,7 @@ int main()
   return 0;
 }
 
+
+#else
+#error "Test not applicable: BOOST_THREAD_USES_CHRONO not defined for this platform as not supported"
+#endif
