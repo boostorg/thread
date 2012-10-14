@@ -30,14 +30,14 @@ namespace boost
 
   namespace thread_detail
   {
-#ifdef SIG_ATOMIC_MAX
-    typedef sig_atomic_t  uintmax_atomic_t;
-    #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_MAX_C SIG_ATOMIC_MAX
-#else
+//#ifdef SIG_ATOMIC_MAX
+//    typedef sig_atomic_t  uintmax_atomic_t;
+//    #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_MAX_C SIG_ATOMIC_MAX
+//#else
     typedef unsigned long  uintmax_atomic_t;
     #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_C2(value) value##ul
     #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_MAX_C BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_C2(~0)
-#endif
+//#endif
   }
 
 #ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
