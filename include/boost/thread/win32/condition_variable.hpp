@@ -195,7 +195,10 @@ namespace boost
 
                 ~entry_manager()
                 {
+                  if(! entry->is_notified())
+                  {
                     entry->remove_waiter();
+                  }
                 }
 
                 list_entry* operator->()
