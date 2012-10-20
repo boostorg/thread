@@ -233,6 +233,7 @@ namespace boost
 #endif
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
+#if defined BOOST_THREAD_USES_DATETIME
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution
         template<typename TimeDuration>
@@ -251,6 +252,7 @@ namespace boost
         {
             this_thread::sleep(get_system_time()+rel_time);
         }
+#endif
 #endif
     }
 }

@@ -66,6 +66,7 @@ namespace boost
         }
 
 
+#if defined BOOST_THREAD_USES_DATETIME
         inline bool timed_wait(
             unique_lock<mutex>& m,
             boost::system_time const& wait_until)
@@ -121,6 +122,7 @@ namespace boost
         {
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
+#endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
 

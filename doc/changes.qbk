@@ -73,11 +73,12 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/2797 #2797] Two problems with thread_specific_ptr.
 * [@http://svn.boost.org/trac/boost/ticket/5274 #5274] failed to compile future.hpp with stlport 5.1.5 under msvc8.1, because of undefined class.
 * [@http://svn.boost.org/trac/boost/ticket/5431 #5431] compile error in Windows CE 6.0(interlocked).
-* [@http://svn.boost.org/trac/boost/ticket/5752 #5752] boost::call_once() is unreliable on some platforms.
-[/* [@http://svn.boost.org/trac/boost/ticket/5696 #5696] win32 detail::set_tss_data does nothing when tss_cleanup_function is NULL].
+[/* [@http://svn.boost.org/trac/boost/ticket/5752 #5752] boost::call_once() is unreliable on some platforms.]
+* [@http://svn.boost.org/trac/boost/ticket/5696 #5696] win32 detail::set_tss_data does nothing when tss_cleanup_function is NULL.
+* [@http://svn.boost.org/trac/boost/ticket/6931 #6931] mutex waits forwever with Intel C++ Compiler XE 12.1.5.344 Build 20120612
 * [@http://svn.boost.org/trac/boost/ticket/7045 #7045] Thread library does not automatically compile date_time. 	
 * [@http://svn.boost.org/trac/boost/ticket/7173 #7173] wrong function name interrupt_point(). 	
-* [@http://svn.boost.org/trac/boost/ticket/7200 #7200] Unable to build boost.thread modularized.
+* [@http://svn.boost.org/trac/boost/ticket/7200 #7200] Unable to build boost.thread modularized. 
 * [@http://svn.boost.org/trac/boost/ticket/7220 #7220] gcc 4.6.2 warns about inline+dllimport functions.
 * [@http://svn.boost.org/trac/boost/ticket/7238 #7238] this_thread::sleep_for() does not respond to interrupt().
 * [@http://svn.boost.org/trac/boost/ticket/7245 #7245] Minor typos on documentation related to version 3.
@@ -87,6 +88,12 @@ Fixed Bugs:
 * [@http://svn.boost.org/trac/boost/ticket/7336 #7336] BOOST_THREAD_DONT_USE_SYSTEM doesn't work.
 * [@http://svn.boost.org/trac/boost/ticket/7329 #7349] packaged_task holds reference to temporary.
 * [@http://svn.boost.org/trac/boost/ticket/7350 #7350] allocator_destructor does not destroy object
+* [@http://svn.boost.org/trac/boost/ticket/7360 #7360] Memory leak in pthread implementation of boost::thread_specific_ptr
+* [@http://svn.boost.org/trac/boost/ticket/7370 #7370] Boost.Thread documentation
+* [@http://svn.boost.org/trac/boost/ticket/7438 #7438] Segmentation fault in test_once regression test in group.join_all();
+* [@http://svn.boost.org/trac/boost/ticket/7461 #7461] detail::win32::ReleaseSemaphore may be called with count_to_release equal to 0
+* [@http://svn.boost.org/trac/boost/ticket/7499 #7499] call_once doesn't call even once
+
  	
 [heading Version 3.0.1 - boost 1.51]
 

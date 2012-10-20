@@ -262,10 +262,6 @@ namespace boost
 
         detail::thread_data_ptr thread_info;
 
-#ifdef BOOST_THREAD_PLATFORM_WIN32
-        void start_thread();
-        void start_thread(const attributes& attr);
-#else
     private:
         bool start_thread_noexcept();
         bool start_thread_noexcept(const attributes& attr);
@@ -285,7 +281,6 @@ namespace boost
           }
         }
 
-#endif
         explicit thread(detail::thread_data_ptr data);
 
         detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
@@ -542,14 +537,10 @@ namespace boost
 
 
         bool joinable() const BOOST_NOEXCEPT;
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-        void join();
-#else
     private:
         bool join_noexcept();
     public:
         inline void join();
-#endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
@@ -574,10 +565,15 @@ namespace boost
         }
 #endif
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-        bool timed_join(const system_time& abs_time);
     private:
-        bool do_try_join_until(uintmax_t milli);
+        bool do_try_join_until_noexcept(uintmax_t milli, bool& res);
+        inline bool do_try_join_until(uintmax_t milli);
     public:
+        bool timed_join(const system_time& abs_time);
+        //{
+        //  return do_try_join_until(get_milliseconds_until(wait_until));
+        //}
+
 #ifdef BOOST_THREAD_USES_CHRONO
         bool try_join_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
         {
@@ -592,7 +588,7 @@ namespace boost
         bool do_try_join_until_noexcept(struct timespec const &timeout, bool& res);
         inline bool do_try_join_until(struct timespec const &timeout);
     public:
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
           struct timespec const ts=detail::get_timespec(abs_time);
@@ -615,7 +611,7 @@ namespace boost
 #endif
       public:
 
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
@@ -630,7 +626,7 @@ namespace boost
         typedef detail::thread_data_base::native_handle_type native_handle_type;
         native_handle_type native_handle();
 
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+#if defined BOOST_THREAD_PROVIDES_THREAD_EQ
         // Use thread::id when comparisions are needed
         // backwards compatibility
         bool operator==(const thread& other) const;
@@ -641,7 +637,7 @@ namespace boost
             this_thread::yield();
         }
 
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+#if defined BOOST_THREAD_USES_DATETIME
         static inline void sleep(const system_time& xt)
         {
             this_thread::sleep(xt);
@@ -679,7 +675,7 @@ namespace boost
         bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
         bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
 
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+#if defined BOOST_THREAD_USES_DATETIME
         inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
         {
             sleep(system_time(abs_time));
@@ -720,11 +716,7 @@ namespace boost
     public:
         id() BOOST_NOEXCEPT:
 #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
         thread_data(0)
-#else
-        thread_data(0)
-#endif
 #else
         thread_data()
 #endif
@@ -825,6 +817,7 @@ namespace boost
         #endif
         }
     }
+#endif
     void thread::join() {
         if (this_thread::get_id() == get_id())
         {
@@ -838,7 +831,11 @@ namespace boost
         }
     }
 
+#ifdef BOOST_THREAD_PLATFORM_PTHREAD
     bool thread::do_try_join_until(struct timespec const &timeout)
+#else
+    bool thread::do_try_join_until(uintmax_t timeout)
+#endif
     {
         if (this_thread::get_id() == get_id())
         {
@@ -858,8 +855,6 @@ namespace boost
         }
     }
 
-#endif
-
 #if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template<class charT, class traits>
     BOOST_SYMBOL_VISIBLE
@@ -870,7 +865,7 @@ namespace boost
     }
 #endif
 
-#if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
+#if defined BOOST_THREAD_PROVIDES_THREAD_EQ
     inline bool thread::operator==(const thread& other) const
     {
         return get_id()==other.get_id();

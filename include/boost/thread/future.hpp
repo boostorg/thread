@@ -58,7 +58,6 @@
 #define BOOST_THREAD_FUTURE unique_future
 #endif
 
-
 namespace boost
 {
 
@@ -210,6 +209,50 @@ namespace boost
 
     namespace detail
     {
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+        struct future_continuation_base
+        {
+          future_continuation_base() {}
+          virtual ~future_continuation_base() {}
+
+          virtual void do_continuation(boost::unique_lock<boost::mutex>& ) {};
+        private:
+          future_continuation_base(future_continuation_base const&);
+          future_continuation_base& operator=(future_continuation_base const&);
+        };
+
+        template <typename F, typename R, typename C>
+        struct future_continuation;
+
+#endif
+
+        struct relocker
+        {
+            boost::unique_lock<boost::mutex>& lock_;
+            bool  unlocked_;
+
+            relocker(boost::unique_lock<boost::mutex>& lk):
+                lock_(lk)
+            {
+                lock_.unlock();
+                unlocked_=true;
+            }
+            ~relocker()
+            {
+              if (unlocked_) {
+                lock_.lock();
+              }
+            }
+            void lock() {
+              if (unlocked_) {
+                lock_.lock();
+                unlocked_=false;
+              }
+            }
+        private:
+            relocker& operator=(relocker const&);
+        };
+
         struct future_object_base
         {
             boost::exception_ptr exception;
@@ -220,10 +263,16 @@ namespace boost
             typedef std::list<boost::condition_variable_any*> waiter_list;
             waiter_list external_waiters;
             boost::function<void()> callback;
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+            shared_ptr<future_continuation_base> continuation_ptr;
+#endif
 
             future_object_base():
                 done(false),
                 thread_was_interrupted(false)
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+               , continuation_ptr()
+#endif
             {}
             virtual ~future_object_base()
             {}
@@ -241,7 +290,28 @@ namespace boost
                 external_waiters.erase(it);
             }
 
-            void mark_finished_internal()
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+            void do_continuation(boost::unique_lock<boost::mutex>& lock)
+            {
+                if (continuation_ptr) {
+                  continuation_ptr->do_continuation(lock);
+                }
+            }
+#else
+            void do_continuation(boost::unique_lock<boost::mutex>&)
+            {
+            }
+#endif
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+            void set_continuation_ptr(future_continuation_base* continuation, boost::unique_lock<boost::mutex>& lock)
+            {
+              continuation_ptr.reset(continuation);
+              if (done) {
+                do_continuation(lock);
+              }
+            }
+#endif
+            void mark_finished_internal(boost::unique_lock<boost::mutex>& lock)
             {
                 done=true;
                 waiters.notify_all();
@@ -250,24 +320,8 @@ namespace boost
                 {
                     (*it)->notify_all();
                 }
+                do_continuation(lock);
             }
-
-            struct relocker
-            {
-                boost::unique_lock<boost::mutex>& lock;
-
-                relocker(boost::unique_lock<boost::mutex>& lock_):
-                    lock(lock_)
-                {
-                    lock.unlock();
-                }
-                ~relocker()
-                {
-                    lock.lock();
-                }
-            private:
-                relocker& operator=(relocker const&);
-            };
 
             void do_callback(boost::unique_lock<boost::mutex>& lock)
             {
@@ -280,9 +334,8 @@ namespace boost
             }
 
 
-            void wait(bool rethrow=true)
+            void wait_internal(boost::unique_lock<boost::mutex> &lock, bool rethrow=true)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
                 do_callback(lock);
                 while(!done)
                 {
@@ -296,8 +349,15 @@ namespace boost
                 {
                     boost::rethrow_exception(exception);
                 }
+
+            }
+            void wait(bool rethrow=true)
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                wait_internal(lock, rethrow);
             }
 
+#if defined BOOST_THREAD_USES_DATETIME
             bool timed_wait_until(boost::system_time const& target_time)
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
@@ -312,7 +372,7 @@ namespace boost
                 }
                 return true;
             }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 
             template <class Clock, class Duration>
@@ -332,21 +392,21 @@ namespace boost
               return future_status::ready;
             }
 #endif
-            void mark_exceptional_finish_internal(boost::exception_ptr const& e)
+            void mark_exceptional_finish_internal(boost::exception_ptr const& e, boost::unique_lock<boost::mutex>& lock)
             {
                 exception=e;
-                mark_finished_internal();
+                mark_finished_internal(lock);
             }
             void mark_exceptional_finish()
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
-                mark_exceptional_finish_internal(boost::current_exception());
+                boost::unique_lock<boost::mutex> lock(mutex);
+                mark_exceptional_finish_internal(boost::current_exception(), lock);
             }
             void mark_interrupted_finish()
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(mutex);
                 thread_was_interrupted=true;
-                mark_finished_internal();
+                mark_finished_internal(lock);
             }
             bool has_value()
             {
@@ -463,29 +523,34 @@ namespace boost
                 result(0)
             {}
 
-            void mark_finished_with_result_internal(source_reference_type result_)
+            ~future_object()
             {
-                future_traits<T>::init(result,result_);
-                mark_finished_internal();
             }
 
-            void mark_finished_with_result_internal(rvalue_source_type result_)
+            void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
+            {
+                future_traits<T>::init(result,result_);
+                mark_finished_internal(lock);
+            }
+
+            void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
             {
                 future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
-                mark_finished_internal();
+                mark_finished_internal(lock);
             }
 
             void mark_finished_with_result(source_reference_type result_)
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
-                mark_finished_with_result_internal(result_);
+                boost::unique_lock<boost::mutex> lock(mutex);
+                mark_finished_with_result_internal(result_, lock);
             }
 
             void mark_finished_with_result(rvalue_source_type result_)
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
-                mark_finished_with_result_internal(static_cast<rvalue_source_type>(result_));
+                boost::unique_lock<boost::mutex> lock(mutex);
+                mark_finished_with_result_internal(static_cast<rvalue_source_type>(result_), lock);
             }
+
 
             move_dest_type get()
             {
@@ -527,15 +592,15 @@ namespace boost
             future_object()
             {}
 
-            void mark_finished_with_result_internal()
+            void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
             {
-                mark_finished_internal();
+                mark_finished_internal(lock);
             }
 
             void mark_finished_with_result()
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
-                mark_finished_with_result_internal();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                mark_finished_with_result_internal(lock);
             }
 
             void get()
@@ -590,7 +655,6 @@ namespace boost
                                   count_type index_):
                     future_(a_future),wait_iterator(wait_iterator_),index(index_)
                 {}
-
             };
 
             struct all_futures_lock
@@ -812,7 +876,10 @@ namespace boost
 
         friend class shared_future<R>;
         friend class promise<R>;
-
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+        template <typename, typename, typename>
+        friend struct detail::future_continuation;
+#endif
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
         template <class> friend class packaged_task; // todo check if this works in windows
 #else
@@ -918,6 +985,7 @@ namespace boost
             future_->wait(false);
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
@@ -932,6 +1000,7 @@ namespace boost
             }
             return future_->timed_wait_until(abs_time);
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         future_status
@@ -950,6 +1019,14 @@ namespace boost
           }
           return future_->wait_until(abs_time);
         }
+#endif
+
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+//        template<typename F>
+//        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+        template<typename F>
+        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type> then(F&& func);
+
 #endif
     };
 
@@ -1072,6 +1149,7 @@ namespace boost
             future_->wait(false);
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
@@ -1086,6 +1164,7 @@ namespace boost
             }
             return future_->timed_wait_until(abs_time);
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 
         template <class Rep, class Period>
@@ -1156,11 +1235,11 @@ namespace boost
         {
             if(future_)
             {
-                boost::lock_guard<boost::mutex> lock(future_->mutex);
+                boost::unique_lock<boost::mutex> lock(future_->mutex);
 
                 if(!future_->done)
                 {
-                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
+                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
             }
         }
@@ -1206,35 +1285,35 @@ namespace boost
         void set_value(typename detail::future_traits<R>::source_reference_type r)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
             if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future_->mark_finished_with_result_internal(r);
+            future_->mark_finished_with_result_internal(r, lock);
         }
 
 //         void set_value(R && r);
         void set_value(typename detail::future_traits<R>::rvalue_source_type r)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
             if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future_->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r));
+            future_->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r), lock);
         }
 
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
             if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future_->mark_exceptional_finish_internal(p);
+            future_->mark_exceptional_finish_internal(p, lock);
         }
 
         // setting the result with deferred notification
@@ -1297,11 +1376,11 @@ namespace boost
         {
             if(future_)
             {
-                boost::lock_guard<boost::mutex> lock(future_->mutex);
+                boost::unique_lock<boost::mutex> lock(future_->mutex);
 
                 if(!future_->done)
                 {
-                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()));
+                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
             }
         }
@@ -1350,23 +1429,23 @@ namespace boost
         void set_value()
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
             if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future_->mark_finished_with_result_internal();
+            future_->mark_finished_with_result_internal(lock);
         }
 
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
-            boost::lock_guard<boost::mutex> lock(future_->mutex);
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
             if(future_->done)
             {
                 boost::throw_exception(promise_already_satisfied());
             }
-            future_->mark_exceptional_finish_internal(p);
+            future_->mark_exceptional_finish_internal(p,lock);
         }
 
         template<typename F>
@@ -1443,11 +1522,11 @@ namespace boost
 
             void owner_destroyed()
             {
-                boost::lock_guard<boost::mutex> lk(this->mutex);
+                boost::unique_lock<boost::mutex> lk(this->mutex);
                 if(!started)
                 {
                     started=true;
-                    this->mark_exceptional_finish_internal(boost::copy_exception(boost::broken_promise()));
+                    this->mark_exceptional_finish_internal(boost::copy_exception(boost::broken_promise()), lk);
                 }
             }
 
@@ -1925,7 +2004,7 @@ namespace boost
             {
                 boost::throw_exception(future_already_retrieved());
             }
-            return BOOST_THREAD_FUTURE<R>();
+            //return BOOST_THREAD_FUTURE<R>();
 
         }
 
@@ -2178,7 +2257,7 @@ namespace boost
   {
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
-    p.set_value(value);
+    p.set_value(boost::forward<T>(value));
     return p.get_future().share();
   }
 
@@ -2190,6 +2269,71 @@ namespace boost
 
   }
 #endif
+
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+  namespace detail
+  {
+
+      template <typename F, typename R, typename C>
+      struct future_continuation : future_continuation_base
+      {
+        F& parent;
+        C continuation;
+        promise<R> next;
+
+        future_continuation(F& f, C&& c) : parent(f), continuation(boost::forward<C>(c)), next()
+        {}
+        ~future_continuation()
+        {}
+
+        void do_continuation(boost::unique_lock<boost::mutex>& lk)
+        {
+          try
+          {
+            lk.unlock();
+            R val = continuation(parent);
+            next.set_value(boost::move(val));
+          }
+          catch (...)
+          {
+            next.set_exception(boost::current_exception());
+          }
+        }
+      private:
+
+        future_continuation(future_continuation const&);
+        future_continuation& operator=(future_continuation const&);
+      };
+  }
+
+//        template<typename F>
+//        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+  template <typename R>
+  template <typename F>
+  inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type>
+  BOOST_THREAD_FUTURE<R>::then(F&& func)
+  {
+
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
+
+    if (future_)
+    {
+      boost::unique_lock<boost::mutex> lock(future_->mutex);
+      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F > *ptr =
+          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func));
+      if (ptr==0)
+      {
+        return BOOST_THREAD_FUTURE<future_type>();
+      }
+      future_->set_continuation_ptr(ptr, lock);
+      return ptr->next.get_future();
+    } else {
+      return BOOST_THREAD_FUTURE<future_type>();
+    }
+
+  }
+#endif
+
 }
 
 #endif // BOOST_NO_EXCEPTION
