@@ -6,6 +6,7 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread.hpp>
@@ -400,6 +401,7 @@ namespace boost
     namespace this_thread
     {
 
+#if ! defined BOOST_THREAD_USES_DATETIME2
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution
         template<>
@@ -443,7 +445,7 @@ namespace boost
                 }
             }
         }
-
+#endif
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)

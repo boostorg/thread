@@ -11,6 +11,7 @@
 #ifndef WINVER
 #define WINVER 0x400
 #endif
+#define BOOST_THREAD_VERSION 2
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/once.hpp>
@@ -87,10 +88,15 @@ namespace boost
         void set_current_thread_data(detail::thread_data_base* new_data)
         {
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
-            if(current_thread_tls_key!=TLS_OUT_OF_INDEXES)
+            if (current_thread_tls_key!=TLS_OUT_OF_INDEXES)
+            {
                 BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
+            }
             else
-                boost::throw_exception(thread_resource_error());
+            {
+                BOOST_VERIFY(false);
+                //boost::throw_exception(thread_resource_error());
+            }
         }
 
 #ifndef BOOST_HAS_THREADEX
@@ -212,29 +218,33 @@ namespace boost
     thread::thread() BOOST_NOEXCEPT
     {}
 
-    void thread::start_thread()
+    bool thread::start_thread_noexcept()
     {
         uintptr_t const new_thread=_beginthreadex(0,0,&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
         if(!new_thread)
         {
-            boost::throw_exception(thread_resource_error());
+            return false;
+//            boost::throw_exception(thread_resource_error());
         }
         intrusive_ptr_add_ref(thread_info.get());
         thread_info->thread_handle=(detail::win32::handle)(new_thread);
         ResumeThread(thread_info->thread_handle);
+        return true;
     }
 
-    void thread::start_thread(const attributes& attr)
+    bool thread::start_thread_noexcept(const attributes& attr)
     {
       //uintptr_t const new_thread=_beginthreadex(attr.get_security(),attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
       uintptr_t const new_thread=_beginthreadex(0,static_cast<unsigned int>(attr.get_stack_size()),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
       if(!new_thread)
       {
-          boost::throw_exception(thread_resource_error());
+        return false;
+//          boost::throw_exception(thread_resource_error());
       }
       intrusive_ptr_add_ref(thread_info.get());
       thread_info->thread_handle=(detail::win32::handle)(new_thread);
       ResumeThread(thread_info->thread_handle);
+      return true;
     }
 
     thread::thread(detail::thread_data_ptr data):
@@ -305,23 +315,22 @@ namespace boost
     {
         return (get_thread_info)();
     }
-    void thread::join()
+    bool thread::join_noexcept()
     {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
+
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
             this_thread::interruptible_wait(local_thread_info->thread_handle,detail::timeout::sentinel());
             release_handle();
+            return true;
         }
         else
         {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#endif
+          return false;
+//#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+//          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+//#endif
         }
     }
 
@@ -330,27 +339,26 @@ namespace boost
       return do_try_join_until(get_milliseconds_until(wait_until));
     }
 
-    bool thread::do_try_join_until(uintmax_t milli)
+    bool thread::do_try_join_until_noexcept(uintmax_t milli, bool& res)
     {
-      if (this_thread::get_id() == get_id())
-      {
-          boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-      }
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
       {
           if(!this_thread::interruptible_wait(local_thread_info->thread_handle,milli))
           {
-              return false;
+            res=false;
+            return true;
           }
           release_handle();
+          res=true;
           return true;
       }
       else
       {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-        boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#endif
+        return false;
+//#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+//        boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+//#endif
       }
     }
 

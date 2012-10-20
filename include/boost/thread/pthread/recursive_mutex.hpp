@@ -232,11 +232,13 @@ namespace boost
 #endif
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
             return timed_lock(get_system_time()+relative_time);
         }
+#endif
 
 #ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
         void lock()
@@ -334,12 +336,13 @@ namespace boost
 
 #endif
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
             struct timespec const ts=detail::get_timespec(abs_time);
             return do_try_lock_until(ts);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)

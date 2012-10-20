@@ -157,6 +157,7 @@ namespace boost
             while(!pred()) wait(m);
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& wait_until)
         {
@@ -197,7 +198,7 @@ namespace boost
         {
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class lock_type,class Duration>
         cv_status

@@ -88,6 +88,7 @@ namespace boost
             }
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_shared(system_time const& timeout)
         {
             boost::this_thread::disable_interruption do_not_disturb;
@@ -109,6 +110,7 @@ namespace boost
         {
             return timed_lock_shared(get_system_time()+relative_time);
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_shared_for(const chrono::duration<Rep, Period>& rel_time)
@@ -166,6 +168,7 @@ namespace boost
             state.exclusive=true;
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const& timeout)
         {
             boost::this_thread::disable_interruption do_not_disturb;
@@ -194,7 +197,7 @@ namespace boost
         {
             return timed_lock(get_system_time()+relative_time);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
@@ -262,6 +265,7 @@ namespace boost
             state.upgrade=true;
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_upgrade(system_time const& timeout)
         {
             boost::this_thread::disable_interruption do_not_disturb;
@@ -287,7 +291,7 @@ namespace boost
         {
             return timed_lock_upgrade(get_system_time()+relative_time);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_upgrade_for(const chrono::duration<Rep, Period>& rel_time)

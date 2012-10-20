@@ -523,6 +523,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run ../example/make_future.cpp ]
+          [ thread-run ../example/future_then.cpp ]
 
     ;
 

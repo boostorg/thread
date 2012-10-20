@@ -311,6 +311,7 @@ namespace boost
         {
             try_lock();
         }
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         unique_lock(Mutex& m_,TimeDuration const& target_time):
             m(&m_),is_locked(false)
@@ -322,7 +323,7 @@ namespace boost
         {
             timed_lock(target_time);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         unique_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t)
@@ -521,6 +522,7 @@ namespace boost
             is_locked=m->try_lock();
             return is_locked;
         }
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const& relative_time)
         {
@@ -562,7 +564,7 @@ namespace boost
             is_locked=m->timed_lock(absolute_time);
             return is_locked;
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 
         template <class Rep, class Period>
@@ -686,12 +688,13 @@ namespace boost
         {
             try_lock();
         }
+#if defined BOOST_THREAD_USES_DATETIME
         shared_lock(Mutex& m_,system_time const& target_time):
             m(&m_),is_locked(false)
         {
             timed_lock(target_time);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
         shared_lock(Mutex& mtx, const chrono::time_point<Clock, Duration>& t)
@@ -809,6 +812,7 @@ namespace boost
             is_locked=m->try_lock_shared();
             return is_locked;
         }
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(boost::system_time const& target_time)
         {
             if(m==0)
@@ -836,6 +840,7 @@ namespace boost
             is_locked=m->timed_lock_shared(target_time);
             return is_locked;
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
