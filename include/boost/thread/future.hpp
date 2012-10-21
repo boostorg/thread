@@ -594,13 +594,18 @@ namespace boost
 
             struct all_futures_lock
             {
-                count_type count;
+#ifdef _MANAGED
+                typedef std::ptrdiff_t count_type_portable;
+#else
+                typedef count_type count_type_portable;
+#endif
+                count_type_portable count;
                 boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
 
                 all_futures_lock(std::vector<registered_waiter>& futures):
                     count(futures.size()),locks(new boost::unique_lock<boost::mutex>[count])
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
 #if defined __DECCXX || defined __SUNPRO_CC || defined __hpux
                         locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
@@ -617,7 +622,7 @@ namespace boost
 
                 void unlock()
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
                         locks[i].unlock();
                     }
