@@ -14,7 +14,6 @@
 // due to boost::exception::exception_ptr dependency
 
 #ifndef BOOST_NO_EXCEPTIONS
-#include <iostream>
 
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <stdexcept>
