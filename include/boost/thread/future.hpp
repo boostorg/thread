@@ -14,6 +14,7 @@
 // due to boost::exception::exception_ptr dependency
 
 #ifndef BOOST_NO_EXCEPTIONS
+#include <iostream>
 
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <stdexcept>
@@ -21,6 +22,9 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/locks.hpp>
+//#include <boost/thread/lock_algorithms.hpp>
+//#include <boost/thread/lock_types.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -659,13 +663,18 @@ namespace boost
 
             struct all_futures_lock
             {
-                count_type count;
-                boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
+#ifdef _MANAGED
+                   typedef std::ptrdiff_t count_type_portable;
+#else
+                   typedef count_type count_type_portable;
+#endif
+                   count_type_portable count;
+                   boost::scoped_array<boost::unique_lock<boost::mutex> > locks;
 
                 all_futures_lock(std::vector<registered_waiter>& futures):
                     count(futures.size()),locks(new boost::unique_lock<boost::mutex>[count])
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
 #if defined __DECCXX || defined __SUNPRO_CC || defined __hpux
                         locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
@@ -682,7 +691,7 @@ namespace boost
 
                 void unlock()
                 {
-                    for(count_type i=0;i<count;++i)
+                    for(count_type_portable i=0;i<count;++i)
                     {
                         locks[i].unlock();
                     }
