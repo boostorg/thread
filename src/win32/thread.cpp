@@ -196,9 +196,12 @@ namespace boost
         {
             detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(param));
             set_current_thread_data(thread_info);
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             BOOST_TRY
             {
+#endif
                 thread_info->run();
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             }
             BOOST_CATCH(thread_interrupted const&)
             {
@@ -210,6 +213,7 @@ namespace boost
 //                 std::terminate();
 //             }
             BOOST_CATCH_END
+#endif
             run_thread_exit_callbacks();
             return 0;
         }
@@ -259,7 +263,9 @@ namespace boost
             externally_launched_thread()
             {
                 ++count;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 interruption_enabled=false;
+#endif
             }
 
             void run()
@@ -372,6 +378,7 @@ namespace boost
         thread_info=0;
     }
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     void thread::interrupt()
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
@@ -393,6 +400,7 @@ namespace boost
         GetSystemInfo(&info);
         return info.dwNumberOfProcessors;
     }
+#endif
 
     thread::native_handle_type thread::native_handle()
     {
@@ -469,19 +477,22 @@ namespace boost
             detail::win32::handle handles[3]={0};
             unsigned handle_count=0;
             unsigned wait_handle_index=~0U;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             unsigned interruption_index=~0U;
+#endif
             unsigned timeout_index=~0U;
             if(handle_to_wait_for!=detail::win32::invalid_handle_value)
             {
                 wait_handle_index=handle_count;
                 handles[handle_count++]=handle_to_wait_for;
             }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             if(get_current_thread_data() && get_current_thread_data()->interruption_enabled)
             {
                 interruption_index=handle_count;
                 handles[handle_count++]=get_current_thread_data()->interruption_handle;
             }
-
+#endif
             detail::win32::handle_manager timer_handle;
 
 #ifndef UNDER_CE
@@ -533,11 +544,13 @@ namespace boost
                         {
                             return true;
                         }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                         else if(notified_index==interruption_index)
                         {
                             detail::win32::ResetEvent(get_current_thread_data()->interruption_handle);
                             throw thread_interrupted();
                         }
+#endif
                         else if(notified_index==timeout_index)
                         {
                             return false;
@@ -560,13 +573,13 @@ namespace boost
         thread::id get_id() BOOST_NOEXCEPT
         {
         #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-          //return detail::win32::GetCurrentThread();
           return detail::win32::GetCurrentThreadId();
         #else
             return thread::id(get_or_make_current_thread_data());
         #endif
         }
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         void interruption_point()
         {
             if(interruption_enabled() && interruption_requested())
@@ -585,12 +598,14 @@ namespace boost
         {
             return get_current_thread_data() && (detail::win32::WaitForSingleObject(get_current_thread_data()->interruption_handle,0)==0);
         }
+#endif
 
         void yield() BOOST_NOEXCEPT
         {
             detail::win32::Sleep(0);
         }
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         disable_interruption::disable_interruption() BOOST_NOEXCEPT:
             interruption_was_enabled(interruption_enabled())
         {
@@ -624,6 +639,7 @@ namespace boost
             }
         }
     }
+#endif
 
     namespace detail
     {

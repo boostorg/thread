@@ -21,9 +21,8 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/thread/locks.hpp>
-//#include <boost/thread/lock_algorithms.hpp>
-//#include <boost/thread/lock_types.hpp>
+#include <boost/thread/lock_algorithms.hpp>
+#include <boost/thread/lock_types.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
@@ -260,7 +259,9 @@ namespace boost
         {
             boost::exception_ptr exception;
             bool done;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             bool thread_was_interrupted;
+#endif
             boost::mutex mutex;
             boost::condition_variable waiters;
             typedef std::list<boost::condition_variable_any*> waiter_list;
@@ -272,7 +273,9 @@ namespace boost
 
             future_object_base():
                 done(false),
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 thread_was_interrupted(false)
+#endif
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
                , continuation_ptr()
 #endif
@@ -344,10 +347,12 @@ namespace boost
                 {
                     waiters.wait(lock);
                 }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 if(rethrow && thread_was_interrupted)
                 {
                     throw boost::thread_interrupted();
                 }
+#endif
                 if(rethrow && exception)
                 {
                     boost::rethrow_exception(exception);
@@ -405,21 +410,31 @@ namespace boost
                 boost::unique_lock<boost::mutex> lock(mutex);
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
             }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             void mark_interrupted_finish()
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
                 thread_was_interrupted=true;
                 mark_finished_internal(lock);
             }
+#endif
             bool has_value()
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
-                return done && !(exception || thread_was_interrupted);
+                return done && !(exception
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                    || thread_was_interrupted
+#endif
+                );
             }
             bool has_exception()
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
-                return done && (exception || thread_was_interrupted);
+                return done && (exception
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                    || thread_was_interrupted
+#endif
+);
             }
 
             template<typename F,typename U>
@@ -1590,10 +1605,12 @@ namespace boost
                     this->mark_finished_with_result(f());
                 }
 #endif
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 catch(thread_interrupted& )
                 {
                     this->mark_interrupted_finish();
                 }
+#endif
                 catch(...)
                 {
                     this->mark_exceptional_finish();
@@ -1639,10 +1656,12 @@ namespace boost
                         this->mark_finished_with_result(f());
                     }
 #endif
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     catch(thread_interrupted& )
                     {
                         this->mark_interrupted_finish();
                     }
+#endif
                     catch(...)
                     {
                         this->mark_exceptional_finish();
@@ -1698,10 +1717,12 @@ namespace boost
 #endif
                     this->mark_finished_with_result();
                 }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 catch(thread_interrupted& )
                 {
                     this->mark_interrupted_finish();
                 }
+#endif
                 catch(...)
                 {
                     this->mark_exceptional_finish();
@@ -1747,10 +1768,12 @@ namespace boost
 #endif
                   this->mark_finished_with_result();
                 }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 catch(thread_interrupted& )
                 {
                     this->mark_interrupted_finish();
                 }
+#endif
                 catch(...)
                 {
                     this->mark_exceptional_finish();

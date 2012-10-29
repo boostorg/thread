@@ -149,9 +149,13 @@ namespace boost
                 boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
                 thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_TRY
                 {
+#endif
                     thread_info->run();
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+
                 }
                 BOOST_CATCH (thread_interrupted const&)
                 {
@@ -163,7 +167,7 @@ namespace boost
 //                     std::terminate();
 //                 }
                 BOOST_CATCH_END
-
+#endif
                 detail::tls_destructor(thread_info.get());
                 detail::set_current_thread_data(0);
                 boost::lock_guard<boost::mutex> lock(thread_info->data_mutex);
@@ -178,7 +182,9 @@ namespace boost
         {
             externally_launched_thread()
             {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 interrupt_enabled=false;
+#endif
             }
 
             void run()
@@ -401,7 +407,6 @@ namespace boost
     namespace this_thread
     {
 
-#if ! defined BOOST_THREAD_USES_DATETIME2
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution
         template<>
@@ -445,7 +450,6 @@ namespace boost
                 }
             }
         }
-#endif
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)
@@ -477,6 +481,7 @@ namespace boost
 #endif
     }
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     void thread::interrupt()
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
@@ -505,6 +510,7 @@ namespace boost
             return false;
         }
     }
+#endif
 
     thread::native_handle_type thread::native_handle()
     {
@@ -522,6 +528,7 @@ namespace boost
 
 
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     namespace this_thread
     {
         void interruption_point()
@@ -593,6 +600,7 @@ namespace boost
             }
         }
     }
+#endif
 
     namespace detail
     {

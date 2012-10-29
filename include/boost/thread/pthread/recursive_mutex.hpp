@@ -9,7 +9,9 @@
 #include <pthread.h>
 #include <boost/throw_exception.hpp>
 #include <boost/thread/exceptions.hpp>
-#include <boost/thread/locks.hpp>
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+#include <boost/thread/lock_types.hpp>
+#endif
 #include <boost/thread/thread_time.hpp>
 #include <boost/assert.hpp>
 #ifndef _WIN32
@@ -167,8 +169,10 @@ namespace boost
 
 #endif
 
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
         typedef unique_lock<recursive_mutex> scoped_lock;
         typedef detail::try_lock_wrapper<recursive_mutex> scoped_try_lock;
+#endif
     };
 
     typedef recursive_mutex recursive_try_mutex;
@@ -383,9 +387,11 @@ namespace boost
             return &m;
         }
 
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
         typedef unique_lock<recursive_timed_mutex> scoped_timed_lock;
         typedef detail::try_lock_wrapper<recursive_timed_mutex> scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
+#endif
     };
 
 }

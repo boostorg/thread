@@ -8,6 +8,7 @@
 #include <list>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -22,7 +23,7 @@ namespace boost
     {
     private:
         thread_group(thread_group const&);
-        thread_group& operator=(thread_group const&);        
+        thread_group& operator=(thread_group const&);
     public:
         thread_group() {}
         ~thread_group()
@@ -43,7 +44,7 @@ namespace boost
             threads.push_back(new_thread.get());
             return new_thread.release();
         }
-        
+
         void add_thread(thread* thrd)
         {
             if(thrd)
@@ -52,7 +53,7 @@ namespace boost
                 threads.push_back(thrd);
             }
         }
-            
+
         void remove_thread(thread* thrd)
         {
             boost::lock_guard<shared_mutex> guard(m);
@@ -62,11 +63,11 @@ namespace boost
                 threads.erase(it);
             }
         }
-        
+
         void join_all()
         {
             boost::shared_lock<shared_mutex> guard(m);
-            
+
             for(std::list<thread*>::iterator it=threads.begin(),end=threads.end();
                 it!=end;
                 ++it)
@@ -74,11 +75,12 @@ namespace boost
                 (*it)->join();
             }
         }
-        
+
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         void interrupt_all()
         {
             boost::shared_lock<shared_mutex> guard(m);
-            
+
             for(std::list<thread*>::iterator it=threads.begin(),end=threads.end();
                 it!=end;
                 ++it)
@@ -86,13 +88,14 @@ namespace boost
                 (*it)->interrupt();
             }
         }
-        
+#endif
+
         size_t size() const
         {
             boost::shared_lock<shared_mutex> guard(m);
             return threads.size();
         }
-        
+
     private:
         std::list<thread*> threads;
         mutable shared_mutex m;

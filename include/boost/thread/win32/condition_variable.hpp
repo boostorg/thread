@@ -14,6 +14,8 @@
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread_time.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/lock_types.hpp>
 
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
