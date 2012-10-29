@@ -12,51 +12,13 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/thread_functors.hpp>
 #include <boost/thread/thread.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
-
-  struct detach
-  {
-    void operator()(thread& t)
-    {
-      t.detach();
-    }
-  };
-
-  struct join_if_joinable
-  {
-    void operator()(thread& t)
-    {
-      if (t.joinable())
-      {
-        t.join();
-      }
-    }
-  };
-
-  struct interrupt
-  {
-    void operator()(thread& t)
-    {
-      t.interrupt();
-    }
-  };
-
-  struct interrupt_and_join_if_joinable
-  {
-    void operator()(thread& t)
-    {
-      t.interrupt();
-      if (t.joinable())
-      {
-        t.join();
-      }
-    }
-  };
 
   /**
    * RAI @c thread wrapper adding a specific destroyer allowing to master what can be done at destruction time.
@@ -132,6 +94,16 @@ namespace boost
     typedef thread::id id;
 
     BOOST_THREAD_MOVABLE_ONLY( scoped_thread) /// Movable only
+
+    /**
+     * Default Constructor.
+     *
+     * Effects: wraps a not-a-thread.
+     */
+    scoped_thread() BOOST_NOEXCEPT:
+    t_()
+    {
+    }
 
     /**
      * Constructor from the thread to own.
