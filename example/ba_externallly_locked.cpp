@@ -6,6 +6,7 @@
 #define BOOST_THREAD_VERSION 4
 
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/lockable_adapter.hpp>
 #include <boost/thread/externally_locked.hpp>
 #include <boost/thread/strict_lock.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -32,12 +33,12 @@ public:
 };
 
 //[AccountManager
-class AccountManager
+class AccountManager: public basic_lockable_adapter<mutex>
 {
-  mutex mtx_;
 public:
+  typedef basic_lockable_adapter<mutex> lockable_base_type;
   AccountManager() :
-    checkingAcct_(mtx_), savingsAcct_(mtx_)
+    lockable_base_type(), checkingAcct_(*this), savingsAcct_(*this)
   {
   }
   inline void Checking2Savings(int amount);
@@ -48,63 +49,63 @@ private:
   {
     return true;
   } /*->*/
-  externally_locked<BankAccount, mutex > checkingAcct_;
-  externally_locked<BankAccount, mutex > savingsAcct_;
+  externally_locked<BankAccount, AccountManager > checkingAcct_;
+  externally_locked<BankAccount, AccountManager > savingsAcct_;
 };
 //]
 
 //[Checking2Savings
 void AccountManager::Checking2Savings(int amount)
 {
-  strict_lock<mutex> guard(mtx_);
+  strict_lock<AccountManager> guard(*this);
   checkingAcct_.get(guard).Withdraw(amount);
   savingsAcct_.get(guard).Deposit(amount);
 }
 //]
 
-#if MUST_NOT_COMPILE
-//[AMoreComplicatedChecking2Savings_DO_NOT_COMPILE
+//#if DO_NOT_COMPILE
+////[AMoreComplicatedChecking2Savings_DO_NOT_COMPILE
+//void AccountManager::AMoreComplicatedChecking2Savings(int amount) {
+//    unique_lock<AccountManager> guard(*this);
+//    if (some_condition()) {
+//        guard.lock();
+//    }
+//    checkingAcct_.get(guard).Withdraw(amount);
+//    savingsAcct_.get(guard).Deposit(amount);
+//    guard1.unlock();
+//}
+////]
+//#elif DO_NOT_COMPILE_2
+////[AMoreComplicatedChecking2Savings_DO_NOT_COMPILE2
+//void AccountManager::AMoreComplicatedChecking2Savings(int amount) {
+//    unique_lock<AccountManager> guard1(*this);
+//    if (some_condition()) {
+//        guard1.lock();
+//    }
+//    {
+//        strict_lock<AccountManager> guard(guard1);
+//        checkingAcct_.get(guard).Withdraw(amount);
+//        savingsAcct_.get(guard).Deposit(amount);
+//    }
+//    guard1.unlock();
+//}
+////]
+//#else
+////[AMoreComplicatedChecking2Savings
 void AccountManager::AMoreComplicatedChecking2Savings(int amount) {
-    unique_lock<mutex> guard(mtx_);
-    if (some_condition()) {
-        guard.lock();
-    }
-    checkingAcct_.get(guard).Withdraw(amount);
-    savingsAcct_.get(guard).Deposit(amount);
-    guard1.unlock();
-}
-//]
-#elif MUST_NOT_COMPILE_2
-//[AMoreComplicatedChecking2Savings_DO_NOT_COMPILE2
-void AccountManager::AMoreComplicatedChecking2Savings(int amount) {
-    unique_lock<mutex> guard1(mtx_);
+    unique_lock<AccountManager> guard1(*this);
     if (some_condition()) {
         guard1.lock();
     }
     {
-        strict_lock<mutex> guard(guard1);
+        nested_strict_lock<unique_lock<AccountManager> > guard(guard1);
         checkingAcct_.get(guard).Withdraw(amount);
         savingsAcct_.get(guard).Deposit(amount);
     }
     guard1.unlock();
 }
-]
-#else
-//[AMoreComplicatedChecking2Savings
-void AccountManager::AMoreComplicatedChecking2Savings(int amount) {
-    unique_lock<mutex> guard1(mtx_);
-    if (some_condition()) {
-        guard1.lock();
-    }
-    {
-        nested_strict_lock<unique_lock<mutex> > guard(guard1);
-        checkingAcct_.get(guard).Withdraw(amount);
-        savingsAcct_.get(guard).Deposit(amount);
-    }
-    guard1.unlock();
-}
-//]
-#endif
+////]
+//#endif
 
 int main()
 {

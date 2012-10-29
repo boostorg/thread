@@ -28,6 +28,10 @@ struct func
             do_something(i);
         }
     }
+
+private:
+    func& operator=(func const&);
+
 };
 
 void do_something_in_current_thread()
