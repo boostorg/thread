@@ -20,10 +20,12 @@
 
 namespace boost
 {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     namespace this_thread
     {
         void BOOST_THREAD_DECL interruption_point();
     }
+#endif
 
     namespace thread_cv_detail
     {
@@ -56,13 +58,17 @@ namespace boost
         int res=0;
         {
             thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
             guard.activate(m);
             do {
               res = pthread_cond_wait(&cond,&internal_mutex);
             } while (res == EINTR);
         }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
+#endif
         if(res)
         {
             boost::throw_exception(condition_error(res, "boost:: condition_variable constructor failed in pthread_cond_wait"));
@@ -79,11 +85,15 @@ namespace boost
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
         {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
             guard.activate(m);
             cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
         }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
+#endif
         if(cond_res==ETIMEDOUT)
         {
             return false;
@@ -140,11 +150,15 @@ namespace boost
             int res=0;
             {
                 thread_cv_detail::lock_on_exit<lock_type> guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
                 guard.activate(m);
                 res=pthread_cond_wait(&cond,&internal_mutex);
             }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             this_thread::interruption_point();
+#endif
             if(res)
             {
                 boost::throw_exception(condition_error(res, "condition_variable_any failed in pthread_cond_wait"));
@@ -310,11 +324,15 @@ namespace boost
           int res=0;
           {
               thread_cv_detail::lock_on_exit<lock_type> guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
               detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
               guard.activate(m);
               res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
           }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           this_thread::interruption_point();
+#endif
           if(res==ETIMEDOUT)
           {
               return false;

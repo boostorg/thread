@@ -9,7 +9,9 @@
 #include <pthread.h>
 #include <boost/throw_exception.hpp>
 #include <boost/thread/exceptions.hpp>
-#include <boost/thread/locks.hpp>
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+#include <boost/thread/lock_types.hpp>
+#endif
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/assert.hpp>
@@ -71,12 +73,15 @@ namespace boost
 
         void unlock()
         {
-            int ret;
+            int res;
             do
             {
-                ret = pthread_mutex_unlock(&m);
-            } while (ret == EINTR);
-            BOOST_VERIFY(!ret);
+              res = pthread_mutex_unlock(&m);
+            } while (res == EINTR);
+            if (res)
+            {
+                boost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_lock"));
+            }
         }
 
         bool try_lock()
@@ -86,12 +91,8 @@ namespace boost
             {
                 res = pthread_mutex_trylock(&m);
             } while (res == EINTR);
-            if(res && (res!=EBUSY))
+            if (res==EBUSY)
             {
-                // The following throw_exception has been replaced by an assertion and just return false,
-                // as this is an internal error and the user can do nothing with the exception.
-                //boost::throw_exception(lock_error(res,"boost: mutex try_lock failed in pthread_mutex_trylock"));
-                BOOST_ASSERT_MSG(false ,"boost: mutex try_lock failed in pthread_mutex_trylock");
                 return false;
             }
 
@@ -105,8 +106,10 @@ namespace boost
             return &m;
         }
 
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
         typedef unique_lock<mutex> scoped_lock;
         typedef detail::try_lock_wrapper<mutex> scoped_try_lock;
+#endif
     };
 
     typedef mutex try_mutex;
@@ -160,19 +163,43 @@ namespace boost
 #ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
         void lock()
         {
-            BOOST_VERIFY(!pthread_mutex_lock(&m));
+            int res;
+            do
+            {
+                res = pthread_mutex_lock(&m);
+            } while (res == EINTR);
+            if (res)
+            {
+                boost::throw_exception(lock_error(res,"boost: mutex lock failed in pthread_mutex_lock"));
+            }
         }
 
         void unlock()
         {
-            BOOST_VERIFY(!pthread_mutex_unlock(&m));
+            int res;
+            do
+            {
+              res = pthread_mutex_unlock(&m);
+            } while (res == EINTR);
+            if (res)
+            {
+                boost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_lock"));
+            }
         }
 
         bool try_lock()
         {
-            int const res=pthread_mutex_trylock(&m);
-            BOOST_ASSERT(!res || res==EBUSY);
-            return !res;
+          int res;
+          do
+          {
+              res = pthread_mutex_trylock(&m);
+          } while (res == EINTR);
+          if (res==EBUSY)
+          {
+              return false;
+          }
+
+          return !res;
         }
 
 
@@ -280,9 +307,11 @@ namespace boost
             return &m;
         }
 
+#if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
         typedef unique_lock<timed_mutex> scoped_timed_lock;
         typedef detail::try_lock_wrapper<timed_mutex> scoped_try_lock;
         typedef scoped_timed_lock scoped_lock;
+#endif
     };
 
 }

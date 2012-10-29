@@ -11,7 +11,7 @@
 #include <pthread.h>
 #include <boost/thread/cv_status.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/locks.hpp>
+#include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/xtime.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO

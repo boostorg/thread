@@ -16,6 +16,7 @@
 // The code taking care of thread creation and invoke have been taken from libcxx.
 //===----------------------------------------------------------------------===//
 #include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/exceptions.hpp>
 #ifndef BOOST_NO_IOSTREAM
 #include <ostream>
@@ -632,21 +633,23 @@ namespace boost
         bool operator==(const thread& other) const;
         bool operator!=(const thread& other) const;
 #endif
+#if defined BOOST_THREAD_USES_DATETIME
         static inline void yield() BOOST_NOEXCEPT
         {
             this_thread::yield();
         }
 
-#if defined BOOST_THREAD_USES_DATETIME
         static inline void sleep(const system_time& xt)
         {
             this_thread::sleep(xt);
         }
 #endif
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         // extensions
         void interrupt();
         bool interruption_requested() const BOOST_NOEXCEPT;
+#endif
     };
 
     inline void swap(thread& lhs,thread& rhs) BOOST_NOEXCEPT
@@ -671,9 +674,11 @@ namespace boost
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
 #endif
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         void BOOST_THREAD_DECL interruption_point();
         bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
         bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
+#endif
 
 #if defined BOOST_THREAD_USES_DATETIME
         inline BOOST_SYMBOL_VISIBLE void sleep(xtime const& abs_time)
@@ -851,7 +856,6 @@ namespace boost
 #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
             boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
 #endif
-            return false;
         }
     }
 

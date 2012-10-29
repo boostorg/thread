@@ -8,7 +8,8 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/exceptions.hpp>
-#include <boost/thread/locks.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/lock_types.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 
@@ -107,8 +108,10 @@ namespace boost
             bool joined;
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
             std::map<void const*,boost::detail::tss_data_node> tss_data;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             bool interrupt_enabled;
             bool interrupt_requested;
+#endif
             pthread_mutex_t* cond_mutex;
             pthread_cond_t* current_cond;
             typedef std::vector<std::pair<condition_variable*, mutex*>
@@ -119,8 +122,10 @@ namespace boost
             thread_data_base():
                 done(false),join_started(false),joined(false),
                 thread_exit_callbacks(0),
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 interrupt_enabled(true),
                 interrupt_requested(false),
+#endif
                 current_cond(0),
                 notify()
             {}
@@ -137,6 +142,7 @@ namespace boost
 
         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         class interruption_checker
         {
             thread_data_base* const thread_info;
@@ -189,6 +195,7 @@ namespace boost
             }
         };
     }
+#endif
 
     namespace this_thread
     {
