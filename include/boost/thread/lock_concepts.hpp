@@ -10,6 +10,7 @@
 #include <boost/thread/lock_options.hpp>
 #include <boost/thread/lockable_concepts.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/thread/detail/move.hpp>
 
 #include <boost/chrono/chrono.hpp>
 #include <boost/concept_check.hpp>
@@ -37,7 +38,7 @@ namespace boost
       Lk l2(mtx, defer_lock);
       Lk l3(mtx, adopt_lock);
       Lk l4(( Lk()));
-      // BUG Lk l5(( boost::move(l1)));
+      Lk l5(( boost::move(l2)));
       cvt_mutex_ptr(l1.mutex());
       if (l1.owns_lock()) return;
       if (l1) return;
@@ -48,7 +49,12 @@ namespace boost
       l2.release();
 
     }
-    mutex_type mtx;
+    BasicLock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    BasicLock operator=(BasicLock const&);
+    mutex_type& mtx;
   }
   ;
 
@@ -64,7 +70,12 @@ namespace boost
       Lk l1(mtx, try_to_lock);
       if (l1.try_lock()) return;
     }
-    mutex_type mtx;
+    Lock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    Lock operator=(Lock const&);
+    mutex_type& mtx;
   };
 
   template <typename Lk>
@@ -76,12 +87,17 @@ namespace boost
 
     BOOST_CONCEPT_USAGE(TimedLock)
     {
-      Lk l1(mtx, t);
+      const Lk l1(mtx, t);
       Lk l2(mtx, d);
       if (l1.try_lock_until(t)) return;
       if (l1.try_lock_for(d)) return;
     }
-    mutex_type mtx;
+    TimedLock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    TimedLock operator=(TimedLock const&);
+    mutex_type& mtx;
     boost::chrono::system_clock::time_point t;
     boost::chrono::system_clock::duration d;
   };
@@ -96,7 +112,12 @@ namespace boost
     {
 
     }
-    mutex_type mtx;
+    UniqueLock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    UniqueLock operator=(UniqueLock const&);
+    mutex_type& mtx;
   };
 
   template <typename Lk>
@@ -108,7 +129,12 @@ namespace boost
     BOOST_CONCEPT_USAGE(SharedLock)
     {
     }
-    mutex_type mtx;
+    SharedLock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    SharedLock operator=(SharedLock const&);
+    mutex_type& mtx;
 
   };
 
@@ -121,7 +147,12 @@ namespace boost
     BOOST_CONCEPT_USAGE(UpgradeLock)
     {
     }
-    mutex_type mtx;
+    UpgradeLock() :
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    UpgradeLock operator=(UpgradeLock const&);
+    mutex_type& mtx;
   };
 
   /**
@@ -147,10 +178,17 @@ namespace boost
 
     BOOST_CONCEPT_USAGE( StrictLock)
     {
-      if (l1.is_locking(&mtx)) return;
+      if (l1.owns_lock(&mtx)) return;
     }
-    const Lk &l1;
-    mutex_type mtx;
+    StrictLock() :
+      l1(*static_cast<Lk*>(0)),
+      mtx(*static_cast<mutex_type*>(0))
+    {}
+  private:
+    StrictLock operator=(StrictLock const&);
+
+    Lk const& l1;
+    mutex_type const& mtx;
 
   };
 
