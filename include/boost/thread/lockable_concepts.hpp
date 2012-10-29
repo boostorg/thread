@@ -28,8 +28,11 @@ namespace boost
       l.lock();
       l.unlock();
     }
+    BasicLockable() : l(*static_cast<Mutex*>(0)) {}
   private:
-    Mutex l;
+    BasicLockable operator=(BasicLockable const&);
+
+    Mutex& l;
   }
   ;
   //]
@@ -48,8 +51,10 @@ namespace boost
     {
       if (l.try_lock()) return;
     }
+    Lockable() : l(*static_cast<Mutex*>(0)) {}
   private:
-    Mutex l;
+    Lockable operator=(Lockable const&);
+    Mutex& l;
   };
   //]
 
@@ -69,9 +74,12 @@ namespace boost
       if (l.try_lock_until(t)) return;
       if (l.try_lock_for(d)) return;
     }
+    TimedLockable() : l(*static_cast<Mutex*>(0)) {}
+  private:
+    TimedLockable operator=(TimedLockable const&);
     Mutex& l;
-    chrono::system_clock::time_point& t;
-    chrono::system_clock::duration& d;
+    chrono::system_clock::time_point t;
+    chrono::system_clock::duration d;
   };
   //]
 
@@ -94,9 +102,12 @@ namespace boost
       if (l.try_lock_shared_until(t)) return;
       if (l.try_lock_shared_for(d)) return;
     }
+    SharedLockable() : l(*static_cast<Mutex*>(0)) {}
+  private:
+    SharedLockable operator=(SharedLockable const&);
     Mutex& l;
-    chrono::system_clock::time_point& t;
-    chrono::system_clock::duration& d;
+    chrono::system_clock::time_point t;
+    chrono::system_clock::duration d;
   };
   //]
 
@@ -133,9 +144,12 @@ namespace boost
       if (l.try_unlock_upgrade_and_lock_for(d)) return;
       l.unlock_upgrade_and_lock_shared();
     }
+    UpgradeLockable() : l(*static_cast<Mutex*>(0)) {}
+  private:
+    UpgradeLockable operator=(UpgradeLockable const&);
     Mutex& l;
-    chrono::system_clock::time_point& t;
-    chrono::system_clock::duration& d;
+    chrono::system_clock::time_point t;
+    chrono::system_clock::duration d;
   };
   //]
 

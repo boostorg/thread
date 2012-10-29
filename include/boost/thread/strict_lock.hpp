@@ -62,6 +62,8 @@ namespace boost
 
 
     // observers
+  private:
+
     /**
      * @return the owned mutex.
      */
@@ -69,11 +71,12 @@ namespace boost
     {
       return &mtx_;
     }
+  public:
 
     /**
      * @return whether if this lock is locking that mutex.
      */
-    bool is_locking(mutex_type* l) const BOOST_NOEXCEPT
+    bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT
     {
       return l == mutex();
     } /*< strict locks specific function >*/
@@ -115,7 +118,7 @@ namespace boost
      * __Requires: <c>lk.mutex() != null_ptr</c>
      * __Effects: Stores the reference to the lock parameter and takes ownership on it.
      * If the lock doesn't owns the mutex @mtx lock it.
-     * __Postconditions: @c is_locking()
+     * __Postconditions: @c owns_lock()
      * __StrongException
      * __Throws:
      *
@@ -148,7 +151,7 @@ namespace boost
     }
 
     // observers
-
+private:
     /**
      * return @c the owned mutex.
      */
@@ -156,11 +159,11 @@ namespace boost
     {
       return tmp_lk_.mutex();
     }
-
+public:
     /**
      * @return whether if this lock is locking that mutex.
      */
-    bool is_locking(mutex_type* l) const BOOST_NOEXCEPT
+    bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT
     {
       return l == mutex();
     }
