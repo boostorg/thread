@@ -26,9 +26,9 @@
 [def __lockable_concept_type__ [lockable_concept_link `Lockable`]]
 [def __BasicLockable [link thread.synchronization.mutex_concepts.basic_lockable `BasicLockable`]]
 [def __Lockable [link thread.synchronization.mutex_concepts.lockable `Lockable`]]
-[def __TimedLockable [link thread.synchronization.mutex_concepts.timed_lockable `TimedLockable `]]
-[def __SharedLockable [link thread.synchronization.mutex_concepts.shared_lockable `SharedLockable `]]
-[def __UpgradeLockable [link thread.synchronization.mutex_concepts.upgrade_lockable `UpgradeLockable `]]
+[def __TimedLockable [link thread.synchronization.mutex_concepts.timed_lockable `TimedLockable`]]
+[def __SharedLockable [link thread.synchronization.mutex_concepts.shared_lockable `SharedLockable`]]
+[def __UpgradeLockable [link thread.synchronization.mutex_concepts.upgrade_lockable `UpgradeLockable`]]
 
 [template timed_lockable_concept_link[link_text] [link thread.synchronization.mutex_concepts.timed_lockable [link_text]]]
 [def __timed_lockable_concept__ [timed_lockable_concept_link `TimedLockable` concept]]
@@ -155,9 +155,12 @@
 [def __recursive_timed_mutex__ [link thread.synchronization.mutex_types.recursive_timed_mutex `boost::recursive_timed_mutex`]]
 [def __shared_mutex__ [link thread.synchronization.mutex_types.shared_mutex `boost::shared_mutex`]]
 
+
+[def __StrictLock [link thread.synchronization.lock_concepts.StrictLock `StrictLock`]]
+
 [template unique_lock_link[link_text] [link thread.synchronization.locks.unique_lock [link_text]]]
 
-[def __lock_guard__ [link thread.synchronization.locks.lock_guard `boost::lock_guard`]]
+[def __lock_guard__ [link thread.synchronization.lock_guard.lock_guard `boost::lock_guard`]]
 [def __unique_lock__ [unique_lock_link `boost::unique_lock`]]
 [def __unique_lock [unique_lock_link `boost::unique_lock`]]
 [def __shared_lock__ [link thread.synchronization.locks.shared_lock `boost::shared_lock`]]
@@ -166,6 +169,8 @@
 [def __reverse_lock [link thread.synchronization.other_locks.reverse_lock `reverse_lock`]]
 [def __shared_lock_guard [link thread.synchronization.other_locks.shared_lock_guard `shared_lock_guard`]]
 [def __shared_lock_guard_constructor_adopt [link thread.synchronization.other_locks.shared_lock_guard `shared_lock_guard`]]
+
+[def __strict_lock [link thread.synchronization.other_locks.strict_lock `strict_lock`]]
 
 
 [def __thread__ [link thread.thread_management.thread `boost::thread`]]
@@ -176,7 +181,6 @@
 
 [def __try_join_for [link thread.thread_management.thread.try_join_for `try_join_for`]]
 [def __try_join_until [link thread.thread_management.thread.try_join_until `try_join_until`]]
-
 
 [template timed_join_link[link_text] [link thread.thread_management.thread.timed_join [link_text]]]
 [def __timed_join__ [timed_join_link `timed_join()`]]
@@ -223,6 +227,7 @@
 [include changes.qbk]
 
 [include thread_ref.qbk]
+[include scoped_thread.qbk]
 
 [section:synchronization Synchronization]
 [include sync_tutorial.qbk]
