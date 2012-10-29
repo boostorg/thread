@@ -11,6 +11,7 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/thread_functors.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -20,68 +21,22 @@ namespace boost
   /**
    * Non-copyable RAII scoped thread guard joiner which join the thread if joinable when destroyed.
    */
-  class strict_thread_joiner
+  template <class CallableThread = join_if_joinable>
+  class thread_guard
   {
-    thread& t;
+    thread& t_;
   public:
-    BOOST_THREAD_MOVABLE_ONLY( strict_thread_joiner)
+    BOOST_THREAD_NO_COPYABLE( thread_guard)
 
-    explicit strict_thread_joiner(thread& t_) :
-    t(t_)
+    explicit thread_guard(thread& t) :
+    t_(t)
     {
     }
-    ~strict_thread_joiner()
+    ~thread_guard()
     {
-      if (t.joinable())
-      {
-        t.join();
-      }
-    }
-  };
+      CallableThread on_destructor;
 
-  /**
-   * MoveOnly RAII scoped thread guard joiner which join the thread if joinable when destroyed.
-   */
-  class thread_joiner
-  {
-    thread* t;
-  public:
-    BOOST_THREAD_MOVABLE_ONLY( thread_joiner)
-
-    explicit thread_joiner(thread& t_) :
-      t(&t_)
-    {
-    }
-
-    thread_joiner(BOOST_RV_REF(thread_joiner) x) :
-    t(x.t)
-    {
-      x.t = 0;
-    }
-
-    thread_joiner& operator=(BOOST_RV_REF(thread_joiner) x)
-    {
-      t = x.t;
-      x.t = 0;
-      return *this;
-    }
-
-    void swap(thread_joiner& rhs)BOOST_NOEXCEPT
-    {
-      thread* tmp=t;
-      t = rhs.t;
-      rhs.t = tmp;
-    }
-
-    ~thread_joiner()
-    {
-      if (t)
-      {
-        if (t->joinable())
-        {
-          t->join();
-        }
-      }
+      on_destructor(t_);
     }
   };
 

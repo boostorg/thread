@@ -39,7 +39,7 @@ void f()
     int some_local_state;
     func my_func(some_local_state);
     boost::thread t(my_func);
-    boost::strict_thread_joiner g(t);
+    boost::thread_guard<> g(t);
 
     do_something_in_current_thread();
 }
