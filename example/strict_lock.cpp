@@ -5,8 +5,8 @@
 
 #define BOOST_THREAD_VERSION 4
 
-#include <boost/thread/lock_traits.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_traits.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/strict_lock.hpp>
 #include <boost/thread/lock_types.hpp>
