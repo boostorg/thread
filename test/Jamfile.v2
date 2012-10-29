@@ -76,7 +76,7 @@ project
         <toolset>intel:<cxxflags>-wd193,304,383,444
         <toolset>intel:<cxxflags>-wd593,981
         <toolset>intel:<cxxflags>-wd1418
-	<toolset>intel:<cxxflags>-wd2415 
+	<toolset>intel:<cxxflags>-wd2415
 
 
     ;
@@ -559,10 +559,16 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
 
-    explicit ts_ ;
+    #explicit ts_ ;
     test-suite ts_
     :
+          [ thread-run ../example/strict_lock.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
+          [ thread-run ../example/synchronized_value.cpp ]
+          [ thread-run ../example/thread_guard.cpp ]
+          [ thread-run ../example/scoped_thread.cpp ]
+          [ thread-run ../example/ba_externallly_locked.cpp ]
+          [ thread-run test_7571.cpp ]
     ;
 
 }
