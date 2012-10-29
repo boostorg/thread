@@ -29,10 +29,12 @@ void join_all(TC & tc)
 template <typename TC>
 void interrupt_all(TC & tc)
 {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
   for (typename TC::iterator it = tc.begin(); it != tc.end(); ++it)
   {
     it->interrupt();
   }
+#endif
 }
 }
 
