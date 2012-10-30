@@ -39,7 +39,7 @@ class A
     long data_;
 
 public:
-    typedef int result_type;
+    typedef long result_type;
 
     explicit A(long i) : data_(i) {}
 
@@ -122,7 +122,7 @@ int main()
     BOOST_TEST(t1 - t0 < ms(100));
   }
   {
-    boost::future<int> f = boost::async(boost::launch::async, A(3));
+    boost::future<long> f = boost::async(boost::launch::async, A(3));
     boost::this_thread::sleep_for(ms(300));
     Clock::time_point t0 = Clock::now();
     BOOST_TEST(f.get() == 3);

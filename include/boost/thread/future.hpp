@@ -525,6 +525,7 @@ namespace boost
 
         };
 
+        // Used to create stand-alone futures
         template<typename T>
         struct future_object:
             detail::future_object_base
@@ -1045,11 +1046,16 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+
 //        template<typename F>
 //        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
-        template<typename F>
-        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type> then(F&& func);
 
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+        template<typename RF>
+        inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(BOOST_THREAD_FUTURE&));
+#endif
+        template<typename F>
+        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type> then(BOOST_THREAD_RV_REF(F) func);
 #endif
     };
 
@@ -2135,11 +2141,15 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
-        BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
+        BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
+            typename decay<ArgTypes>::type...
+        )>::type>
         async(launch policy, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
 
-          typedef typename boost::result_of<typename decay<F>::type()>::type R;
+          typedef typename boost::result_of<typename decay<F>::type(
+              typename decay<ArgTypes>::type...
+          )>::type R;
           typedef packaged_task<R(ArgTypes...)> packaged_task_type;
   #else
         template <class F>
@@ -2192,11 +2202,16 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
-        BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
+        BOOST_THREAD_FUTURE<typename boost::result_of<
+          typename decay<F>::type()>::type(
+              typename decay<ArgTypes>::type...
+          )>
         async(launch policy, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
 
-          typedef typename boost::result_of<typename decay<F>::type()>::type R;
+          typedef typename boost::result_of<typename decay<F>::type(
+              typename decay<ArgTypes>::type...
+              )>::type R;
           typedef packaged_task<R(ArgTypes...)> packaged_task_type;
   #else
         template <class F>
@@ -2241,7 +2256,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F, class ...ArgTypes>
-        BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
+        BOOST_THREAD_FUTURE<typename boost::result_of<F(typename decay<ArgTypes>::type...)>::type>
         async(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args )
         {
             return async(launch::any, boost::forward<F>(f), boost::forward<ArgTypes>(args)...);
@@ -2265,26 +2280,25 @@ namespace boost
 
 #endif
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   template <typename T>
-  BOOST_THREAD_FUTURE<typename decay<T>::type> make_future(T&& value)
+  BOOST_THREAD_FUTURE<typename decay<T>::type> make_future(BOOST_THREAD_FWD_REF(T) value)
   {
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
-    p.set_value(value);
-    return boost::move(p.get_future());
+    p.set_value(boost::forward<T>(value));
+    return p.get_future();
   }
 
 
   inline BOOST_THREAD_FUTURE<void> make_future()
   {
     promise<void> p;
-    return boost::move(p.get_future());
+    return p.get_future();
 
   }
 
   template <typename T>
-  shared_future<typename decay<T>::type> make_shared_future(T&& value)
+  shared_future<typename decay<T>::type> make_shared_future(BOOST_THREAD_FWD_REF(T) value)
   {
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
@@ -2299,12 +2313,10 @@ namespace boost
     return p.get_future().share();
 
   }
-#endif
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
   namespace detail
   {
-
       template <typename F, typename R, typename C>
       struct future_continuation : future_continuation_base
       {
@@ -2312,7 +2324,10 @@ namespace boost
         C continuation;
         promise<R> next;
 
-        future_continuation(F& f, C&& c) : parent(f), continuation(boost::forward<C>(c)), next()
+        future_continuation(F& f, BOOST_THREAD_FWD_REF(C) c) :
+          parent(f),
+          continuation(boost::forward<C>(c)),
+          next()
         {}
         ~future_continuation()
         {}
@@ -2335,14 +2350,50 @@ namespace boost
         future_continuation(future_continuation const&);
         future_continuation& operator=(future_continuation const&);
       };
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      template <typename F, typename R, typename CR>
+      struct future_continuation<F,R,CR(*)(F&)> : future_continuation_base
+      {
+        F& parent;
+        CR(*continuation)(F&) ;
+        promise<R> next;
+
+        future_continuation(F& f, CR(*c)(F&)) :
+          parent(f),
+          continuation(c),
+          next()
+        {}
+        ~future_continuation()
+        {}
+
+        void do_continuation(boost::unique_lock<boost::mutex>& lk)
+        {
+          try
+          {
+            lk.unlock();
+            R val = continuation(parent);
+            next.set_value(boost::move(val));
+          }
+          catch (...)
+          {
+            next.set_exception(boost::current_exception());
+          }
+        }
+      private:
+
+        future_continuation(future_continuation const&);
+        future_continuation& operator=(future_continuation const&);
+      };
+#endif
   }
 
 //        template<typename F>
 //        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+
   template <typename R>
   template <typename F>
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type>
-  BOOST_THREAD_FUTURE<R>::then(F&& func)
+  BOOST_THREAD_FUTURE<R>::then(BOOST_THREAD_RV_REF(F) func)
   {
 
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
@@ -2363,6 +2414,34 @@ namespace boost
     }
 
   }
+
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+  template <typename R>
+  template<typename RF>
+  BOOST_THREAD_FUTURE<RF>
+  BOOST_THREAD_FUTURE<R>::then(RF(*func)(BOOST_THREAD_FUTURE<R>&))
+  {
+
+    typedef RF future_type;
+
+    if (future_)
+    {
+      boost::unique_lock<boost::mutex> lock(future_->mutex);
+      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
+          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func);
+      if (ptr==0)
+      {
+        return BOOST_THREAD_FUTURE<future_type>();
+      }
+      future_->set_continuation_ptr(ptr, lock);
+      return ptr->next.get_future();
+    } else {
+      return BOOST_THREAD_FUTURE<future_type>();
+    }
+
+  }
+#endif
+
 #endif
 
 }
