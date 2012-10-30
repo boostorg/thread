@@ -204,6 +204,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run test_6174.cpp ]
           [ thread-run test_7160.cpp ]
           [ thread-run test_7328.cpp ]
+          [ thread-run test_7571.cpp ]
     ;
 
 
@@ -524,6 +525,11 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run ../example/make_future.cpp ]
           [ thread-run ../example/future_then.cpp ]
+          [ thread-run ../example/synchronized_value.cpp ]
+          [ thread-run ../example/thread_guard.cpp ]
+          [ thread-run ../example/scoped_thread.cpp ]
+          [ thread-run ../example/strict_lock.cpp ]
+          [ thread-run ../example/ba_externallly_locked.cpp ]
 
     ;
 
@@ -559,16 +565,10 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
 
-    #explicit ts_ ;
+    explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run ../example/strict_lock.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
-          [ thread-run ../example/synchronized_value.cpp ]
-          [ thread-run ../example/thread_guard.cpp ]
-          [ thread-run ../example/scoped_thread.cpp ]
-          [ thread-run ../example/ba_externallly_locked.cpp ]
-          [ thread-run test_7571.cpp ]
     ;
 
 }
