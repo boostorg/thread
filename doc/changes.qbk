@@ -20,25 +20,38 @@ Deprecated features since boost 1.53 available only until boost 1.58:
 
 * packaged_task<R> is deprecated, use instead packaged_task<R()>. See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK
 
+* [@http://svn.boost.org/trac/boost/ticket/7537 #7537] deprecate Mutex::scoped_lock and scoped_try_lock and boost::condition
+
 New Features:
 
-* [@http://svn.boost.org/trac/boost/ticket/7281 #7281] C++11 compliance: Add ArgTypes to packaged_task template. 
-Provided when BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined (Default value from Boost 1.55).
-See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK.
 
 
 * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] c++11 compliance: Add thread constructor from movable callable and movable arguments
 Provided when BOOST_THREAD_PROVIDES_VARIADIC_THREAD is defined (Default value from Boost 1.55):
 See BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_DONT_PROVIDE_VARIADIC_THREAD.
 
+* [@http://svn.boost.org/trac/boost/ticket/7281 #7281] C++11 compliance: Add ArgTypes to packaged_task template. 
+Provided when BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined (Default value from Boost 1.55).
+See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK.
+
 * [@http://svn.boost.org/trac/boost/ticket/7412 #7412] c++11 compliance: Add async from movable callable and movable arguments
 Provided when BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK are defined (Default value from Boost 1.55):
 See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK, BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_DONT_PROVIDE_VARIADIC_THREAD.
 
-* [@http://svn.boost.org/trac/boost/ticket/7414 #7414] c++11 compliance: future::get post-condition should be valid()==false
-* [@http://svn.boost.org/trac/boost/ticket/7414 #7444] Async: Add make_future/make_shared_future
-
 [/* [@http://svn.boost.org/trac/boost/ticket/7413 #7413] c++11 compliance: Add async when the launch policy is deferred.]
+* [@http://svn.boost.org/trac/boost/ticket/7414 #7414] c++11 compliance: future::get post-condition should be valid()==false.
+* [@http://svn.boost.org/trac/boost/ticket/7414 #7444] Async: Add make_future/make_shared_future.
+* [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
+* [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
+* [@http://svn.boost.org/trac/boost/ticket/7540 #7540] Add a helper class that join a thread on destruction.
+* [@http://svn.boost.org/trac/boost/ticket/7541 #7541] Add a thread wrapper class that joins on destruction.
+* [@http://svn.boost.org/trac/boost/ticket/7587 #7587] Add strict_lock and nested_strict_lock
+* [@http://svn.boost.org/trac/boost/ticket/7588 #7588] Split the locks.hpp in several files to limit depedencies
+* [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Add polymorphic lockables
+* [@http://svn.boost.org/trac/boost/ticket/7590 #7590] Add lockable concept checkers based on Boost.ConceptCheck
+* [@http://svn.boost.org/trac/boost/ticket/7592 #7592] Add a null_mutex that is a no-op and that is a model of UpgardeLockable
+* [@http://svn.boost.org/trac/boost/ticket/7593 #7593] Add a externally_locked class
+* [@http://svn.boost.org/trac/boost/ticket/7590 #7594] Allow to disable thread interruptions
 
 Fixed Bugs:
 
