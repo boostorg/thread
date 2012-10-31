@@ -280,6 +280,18 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
     ;
 
+    #explicit ts_shared_future ;
+    test-suite ts_shared_future
+    :
+          [ thread-run2 ./sync/futures/shared_future/copy_assign_pass.cpp : shared_future__copy_assign_p ]
+          [ thread-run2 ./sync/futures/shared_future/copy_ctor_pass.cpp : shared_future__copy_ctor_p ]
+          [ thread-run2 ./sync/futures/shared_future/default_pass.cpp : shared_future__default_p ]
+          [ thread-run2 ./sync/futures/shared_future/dtor_pass.cpp : shared_future__dtor_p ]
+          [ thread-run2 ./sync/futures/shared_future/get_pass.cpp : shared_future__get_p ]
+          [ thread-run2 ./sync/futures/shared_future/move_ctor_pass.cpp : shared_future__move_ctor_p ]
+          [ thread-run2 ./sync/futures/shared_future/move_assign_pass.cpp : shared_future__move_asign_p ]
+    ;
+
     #explicit ts_packaged_task ;
     test-suite ts_packaged_task
     :
