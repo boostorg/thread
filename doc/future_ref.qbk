@@ -289,7 +289,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       template <class Clock, class Duration>
       future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USES_DATE_TIME || defined BOOST_THREAD_DONT_USE_CHRONO
       template<typename Duration>
       bool timed_wait(Duration const& rel_time) const; // DEPRECATED SINCE V3.0.0
       bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED SINCE V3.0.0
@@ -444,6 +444,14 @@ associated with `*this` is not ready at the point of the call, and the current t
     template<typename Duration>
     bool timed_wait(Duration const& wait_duration);
 
+[warning
+DEPRECATED since 3.00.
+ 
+Available only up to Boost 1.56. 
+
+Use instead __wait_for.  
+]
+
 [variablelist
 
 [[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready, or the time specified by
@@ -469,6 +477,14 @@ associated with `*this` is not ready at the point of the call, and the current t
 [section:timed_wait_absolute Member function `timed_wait()` DEPRECATED SINCE V3.0.0]
 
     bool timed_wait(boost::system_time const& wait_timeout);
+
+[warning
+DEPRECATED since 3.00.
+ 
+Available only up to Boost 1.56. 
+
+Use instead __wait_until.  
+]
 
 [variablelist
 
@@ -733,7 +749,7 @@ launch::deferred
       template <class Clock, class Duration>
       future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USES_DATE_TIME || defined BOOST_THREAD_DONT_USE_CHRONO
       template<typename Duration>
       bool timed_wait(Duration const& rel_time) const;  // DEPRECATED SINCE V3.0.0
       bool timed_wait_until(boost::system_time const& abs_time) const;  // DEPRECATED SINCE V3.0.0

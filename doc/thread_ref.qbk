@@ -532,6 +532,16 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
 
     thread& operator=(thread&& other) noexcept;
 
+
+[warning
+DEPRECATED since 3.0.0: BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE behavior.  
+ 
+Available only up to Boost 1.56. 
+
+Join the thread before moving.
+]
+
+
 [variablelist
 
 [[Effects:] [Transfers ownership of the thread managed by `other` (if
@@ -547,6 +557,7 @@ _ if defined BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOI
 [[Throws:] [Nothing]]
 
 ]
+
 
 [endsect]
 
@@ -695,6 +706,14 @@ are copied into internal storage for access by the new thread.]]]
 
     ~thread();
 
+[warning
+DEPRECATED since 3.0.0: BOOST_THREAD_DONT_PROVIDE_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE behavior.  
+ 
+Available only up to Boost 1.56. 
+
+Join the thread before destroying or use a scoped thread.
+]
+
 [variablelist
 
 [[Effects:] [
@@ -766,6 +785,14 @@ are copied into internal storage for access by the new thread.]]]
 
     template<typename TimeDuration>
     bool timed_join(TimeDuration const& rel_time);
+
+[warning
+DEPRECATED since 3.00.
+ 
+Available only up to Boost 1.56. 
+
+Use instead __try_join_for, __try_join_until.  
+]
 
 [variablelist
 
@@ -979,11 +1006,19 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
     bool operator==(const thread& other) const;
 
+[warning
+DEPRECATED since 4.0.0.  
+ 
+Available only up to Boost 1.58. 
+
+Use `a.__get_id()==b.__get_id()` instead`.
+]
+
+
 [variablelist
 
 [[Returns:] [`get_id()==other.get_id()`]]
 
-[[See:] [Use `a.__get_id()==b.__get_id()` instead]]
 
 ]
 
@@ -993,11 +1028,17 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
     bool operator!=(const thread& other) const;
 
+[warning
+DEPRECATED since 4.0.0.  
+ 
+Available only up to Boost 1.58. 
+
+Use `a.__get_id()!=b.__get_id()` instead`.
+]
+
 [variablelist
 
 [[Returns:] [`get_id()!=other.get_id()`]]
-
-[[See:] [Use `a.__get_id()!=b.__get_id()` instead`]]
 
 ]
 
@@ -1007,6 +1048,15 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
     void sleep(system_time const& abs_time);
 
+[warning
+DEPRECATED since 3.0.0.  
+ 
+Available only up to Boost 1.56. 
+
+Use `this_thread::__sleep_for()` or `this_thread::__sleep_until()`.
+]
+
+
 [variablelist
 
 [[Effects:] [Suspends the current thread until the specified time has been reached.]]
@@ -1014,8 +1064,6 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 [[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
 
 [[Notes:] [`sleep()` is one of the predefined __interruption_points__.]]
-
-[[See:] [Use `this_thread::__sleep_for()` or `this_thread::__sleep_until()`]]
 
 ]
 
@@ -1025,11 +1073,17 @@ implementation. If no such instance exists, `native_handle()` and `native_handle
 
     void yield();
 
+[warning
+DEPRECATED since 3.0.0.  
+ 
+Available only up to Boost 1.56. 
+
+Use `this_thread::__yield()`.
+]
+
 [variablelist
 
 [[Effects:] [See [link thread.thread_management.this_thread.yield `boost::this_thread::yield()`].]]
-
-[[See:] [Use `this_thread::__yield()`]]
 
 ]
 
@@ -1412,6 +1466,15 @@ thread attributes implementation. If no such instance exists, `native_handle()` 
         void sleep(system_time const& abs_time)
     }
 
+[warning
+DEPRECATED since 3.0.0.  
+ 
+Available only up to Boost 1.56. 
+
+Use `__sleep_for()` and `__sleep_until()` instead.
+]
+
+
 [variablelist
 
 [[Effects:] [Suspends the current thread until the time period
@@ -1421,8 +1484,6 @@ specified by `rel_time` has elapsed or the time point specified by
 [[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted.]]
 
 [[Notes:] [`sleep()` is one of the predefined __interruption_points__.]]
-
-[[See:] [Use `__sleep_for()` and `__sleep_until()` instead.]]
 
 ]
 
