@@ -14,9 +14,9 @@
 
 // <boost/thread/future.hpp>
 
-// class future<R>
+// class shared_future<R>
 
-// ~future();
+// ~shared_future();
 
 #define BOOST_THREAD_VERSION 3
 #include <boost/exception/exception.hpp>
@@ -33,7 +33,7 @@ int main()
   BOOST_TEST(test_alloc_base::count == 0);
   {
       typedef int T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
@@ -47,7 +47,7 @@ int main()
   BOOST_TEST(test_alloc_base::count == 0);
   {
       typedef int& T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<int>());
           BOOST_TEST(test_alloc_base::count == 1);
@@ -61,7 +61,7 @@ int main()
   BOOST_TEST(test_alloc_base::count == 0);
   {
       typedef void T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p(boost::allocator_arg, test_allocator<T>());
           BOOST_TEST(test_alloc_base::count == 1);
@@ -76,7 +76,7 @@ int main()
 #endif
   {
       typedef int T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p;
           f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
@@ -86,7 +86,7 @@ int main()
   }
   {
       typedef int& T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p;
           f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
@@ -96,7 +96,7 @@ int main()
   }
   {
       typedef void T;
-      boost::future<T> f;
+      boost::shared_future<T> f;
       {
           boost::promise<T> p;
           f = BOOST_THREAD_MAKE_RV_REF(p.get_future());

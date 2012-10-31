@@ -584,6 +584,7 @@ namespace boost
                 return static_cast<shared_future_get_result_type>(*result);
             }
 
+            // todo move this to detail::future_object_base
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -630,6 +631,7 @@ namespace boost
             {
                 wait();
             }
+            // todo move this to detail::future_object_base
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -889,86 +891,55 @@ namespace boost
     template <typename R>
     class packaged_task;
 
-    template <typename R>
-    class BOOST_THREAD_FUTURE
+    namespace detail
     {
-    private:
+      /// Common implementation for all the futures independently of the return type
+      class base_future
+      {
+
+      };
+      /// Common implementation for future and shared_future.
+      template <typename R>
+      class basic_future : public base_future
+      {
+      protected:
 
         typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
 
         future_ptr future_;
 
-        friend class shared_future<R>;
-        friend class promise<R>;
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-        template <typename, typename, typename>
-        friend struct detail::future_continuation;
-#endif
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-        template <class> friend class packaged_task; // todo check if this works in windows
-#else
-        friend class packaged_task<R>;
-#endif
-        friend class detail::future_waiter;
-
-        typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
-
-        BOOST_THREAD_FUTURE(future_ptr a_future):
-            future_(a_future)
+        basic_future(future_ptr a_future):
+          future_(a_future)
         {
         }
+        // Copy construction from a shared_future
+        explicit basic_future(const shared_future<R>&) BOOST_NOEXCEPT;
 
-    public:
-        BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
+      public:
         typedef future_state::state state;
 
-        BOOST_THREAD_FUTURE()
+        BOOST_THREAD_MOVABLE(basic_future)
+        basic_future()
         {
         }
-
-        ~BOOST_THREAD_FUTURE()
+        ~basic_future()
         {
         }
-
-        BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT:
-            future_(BOOST_THREAD_RV(other).future_)
+        basic_future(BOOST_THREAD_RV_REF(basic_future) other) BOOST_NOEXCEPT:
+        future_(BOOST_THREAD_RV(other).future_)
         {
             BOOST_THREAD_RV(other).future_.reset();
         }
-
-        BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
+        basic_future& operator=(BOOST_THREAD_RV_REF(basic_future) other) BOOST_NOEXCEPT
         {
             future_=BOOST_THREAD_RV(other).future_;
             BOOST_THREAD_RV(other).future_.reset();
             return *this;
         }
-
-        shared_future<R> share()
+        void swap(basic_future& that) BOOST_NOEXCEPT
         {
-          return shared_future<R>(::boost::move(*this));
+          future_.swap(that.future_);
         }
-
-        void swap(BOOST_THREAD_FUTURE& other)
-        {
-            future_.swap(other.future_);
-        }
-
-        // retrieving the value
-        move_dest_type get()
-        {
-            if(!future_)
-            {
-                boost::throw_exception(future_uninitialized());
-            }
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-            future_ptr fut_=future_;
-            future_.reset();
-            return fut_->get();
-#else
-            return future_->get();
-#endif
-        }
-
         // functions to check state, and wait for ready
         state get_state() const BOOST_NOEXCEPT
         {
@@ -1045,6 +1016,85 @@ namespace boost
         }
 #endif
 
+      };
+
+    } // detail
+    BOOST_THREAD_DCL_MOVABLE_BEG(R) detail::basic_future<R> BOOST_THREAD_DCL_MOVABLE_END
+
+    template <typename R>
+    class BOOST_THREAD_FUTURE : public detail::basic_future<R>
+    {
+    private:
+        typedef detail::basic_future<R> base_type;
+        typedef typename base_type::future_ptr future_ptr;
+
+        friend class shared_future<R>;
+        friend class promise<R>;
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+        template <typename, typename, typename>
+        friend struct detail::future_continuation;
+#endif
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
+        template <class> friend class packaged_task; // todo check if this works in windows
+#else
+        friend class packaged_task<R>;
+#endif
+        friend class detail::future_waiter;
+
+        typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+
+        BOOST_THREAD_FUTURE(future_ptr a_future):
+          base_type(a_future)
+        {
+        }
+
+    public:
+        BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
+        typedef future_state::state state;
+
+        BOOST_THREAD_FUTURE() {}
+
+        ~BOOST_THREAD_FUTURE() {}
+
+        BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT:
+        base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
+        {
+        }
+
+        BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
+        {
+
+            base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
+            return *this;
+        }
+
+        shared_future<R> share()
+        {
+          return shared_future<R>(::boost::move(*this));
+        }
+
+        void swap(BOOST_THREAD_FUTURE& other)
+        {
+            static_cast<base_type*>(this)->swap(other);
+        }
+
+        // retrieving the value
+        move_dest_type get()
+        {
+            if(!this->future_)
+            {
+                boost::throw_exception(future_uninitialized());
+            }
+#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
+            future_ptr fut_=this->future_;
+            this->future_.reset();
+            return fut_->get();
+#else
+            return this->future_->get();
+#endif
+        }
+
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 
 //        template<typename F>
@@ -1062,11 +1112,11 @@ namespace boost
     BOOST_THREAD_DCL_MOVABLE_BEG(T) BOOST_THREAD_FUTURE<T> BOOST_THREAD_DCL_MOVABLE_END
 
     template <typename R>
-    class shared_future
+    class shared_future : public detail::basic_future<R>
     {
-        typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
 
-        future_ptr future_;
+        typedef detail::basic_future<R> base_type;
+        typedef typename base_type::future_ptr future_ptr;
 
         friend class detail::future_waiter;
         friend class promise<R>;
@@ -1077,14 +1127,14 @@ namespace boost
         friend class packaged_task<R>;
 #endif
         shared_future(future_ptr a_future):
-            future_(a_future)
+          base_type(a_future)
         {}
 
     public:
         BOOST_THREAD_MOVABLE(shared_future)
 
         shared_future(shared_future const& other):
-            future_(other.future_)
+        base_type(other)
         {}
 
         typedef future_state::state state;
@@ -1097,126 +1147,62 @@ namespace boost
 
         shared_future& operator=(shared_future const& other)
         {
-            future_=other.future_;
+            shared_future(other).swap(*this);
             return *this;
         }
         shared_future(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT :
-            future_(BOOST_THREAD_RV(other).future_)
+        base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
         {
             BOOST_THREAD_RV(other).future_.reset();
         }
-        shared_future(BOOST_THREAD_RV_REF_BEG BOOST_THREAD_FUTURE<R> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT :
-            future_(BOOST_THREAD_RV(other).future_)
+        shared_future(BOOST_THREAD_RV_REF( BOOST_THREAD_FUTURE<R> ) other) BOOST_NOEXCEPT :
+        base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
         {
-            BOOST_THREAD_RV(other).future_.reset();
         }
+
         shared_future& operator=(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT
         {
-            future_.swap(BOOST_THREAD_RV(other).future_);
-            BOOST_THREAD_RV(other).future_.reset();
+            base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
             return *this;
         }
-        shared_future& operator=(BOOST_THREAD_RV_REF_BEG BOOST_THREAD_FUTURE<R> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT
+        shared_future& operator=(BOOST_THREAD_RV_REF( BOOST_THREAD_FUTURE<R> ) other) BOOST_NOEXCEPT
         {
-            future_.swap(BOOST_THREAD_RV(other).future_);
-            BOOST_THREAD_RV(other).future_.reset();
+            base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
+            //shared_future(boost::move(other)).swap(*this);
+            //this->future_.swap(BOOST_THREAD_RV(other).future_);
+            //BOOST_THREAD_RV(other).future_.reset();
             return *this;
         }
 
         void swap(shared_future& other) BOOST_NOEXCEPT
         {
-            future_.swap(other.future_);
+            static_cast<base_type*>(this)->swap(other);
         }
 
         // retrieving the value
         typename detail::future_object<R>::shared_future_get_result_type get()
         {
-            if(!future_)
+            if(!this->future_)
             {
                 boost::throw_exception(future_uninitialized());
             }
 
-            return future_->get_sh();
+            return this->future_->get_sh();
         }
 
-        // functions to check state, and wait for ready
-        state get_state() const  BOOST_NOEXCEPT
-        {
-            if(!future_)
-            {
-                return future_state::uninitialized;
-            }
-            return future_->get_state();
-        }
-
-        bool valid() const  BOOST_NOEXCEPT
-        {
-            return future_ != 0;
-        }
-
-        bool is_ready() const  BOOST_NOEXCEPT
-        {
-            return get_state()==future_state::ready;
-        }
-
-        bool has_exception() const BOOST_NOEXCEPT
-        {
-            return future_ && future_->has_exception();
-        }
-
-        bool has_value() const BOOST_NOEXCEPT
-        {
-            return future_ && future_->has_value();
-        }
-
-        void wait() const
-        {
-            if(!future_)
-            {
-                boost::throw_exception(future_uninitialized());
-            }
-            future_->wait(false);
-        }
-
-#if defined BOOST_THREAD_USES_DATETIME
-        template<typename Duration>
-        bool timed_wait(Duration const& rel_time) const
-        {
-            return timed_wait_until(boost::get_system_time()+rel_time);
-        }
-
-        bool timed_wait_until(boost::system_time const& abs_time) const
-        {
-            if(!future_)
-            {
-                boost::throw_exception(future_uninitialized());
-            }
-            return future_->timed_wait_until(abs_time);
-        }
-#endif
-#ifdef BOOST_THREAD_USES_CHRONO
-
-        template <class Rep, class Period>
-        future_status
-        wait_for(const chrono::duration<Rep, Period>& rel_time) const
-        {
-          return wait_until(chrono::steady_clock::now() + rel_time);
-
-        }
-        template <class Clock, class Duration>
-        future_status
-        wait_until(const chrono::time_point<Clock, Duration>& abs_time) const
-        {
-          if(!future_)
-          {
-              boost::throw_exception(future_uninitialized());
-          }
-          return future_->wait_until(abs_time);
-        }
-#endif
     };
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) shared_future<T> BOOST_THREAD_DCL_MOVABLE_END
+
+    namespace detail
+    {
+      /// Copy construction from a shared_future
+      template <typename R>
+      inline basic_future<R>::basic_future(const shared_future<R>& other) BOOST_NOEXCEPT
+      : future_(other.future_)
+      {
+      }
+    }
 
     template <typename R>
     class promise
@@ -2025,6 +2011,8 @@ namespace boost
         }
         packaged_task& operator=(BOOST_THREAD_RV_REF(packaged_task) other) BOOST_NOEXCEPT
         {
+
+            // todo use forward
             packaged_task temp(static_cast<BOOST_THREAD_RV_REF(packaged_task)>(other));
             swap(temp);
             return *this;
@@ -2344,16 +2332,16 @@ namespace boost
 
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
 
-    if (future_)
+    if (this->future_)
     {
-      boost::unique_lock<boost::mutex> lock(future_->mutex);
+      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
       detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F > *ptr =
           new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func));
       if (ptr==0)
       {
         return BOOST_THREAD_FUTURE<future_type>();
       }
-      future_->set_continuation_ptr(ptr, lock);
+      this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
       return BOOST_THREAD_FUTURE<future_type>();
@@ -2370,16 +2358,16 @@ namespace boost
 
     typedef RF future_type;
 
-    if (future_)
+    if (this->future_)
     {
-      boost::unique_lock<boost::mutex> lock(future_->mutex);
+      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
       detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
           new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func);
       if (ptr==0)
       {
         return BOOST_THREAD_FUTURE<future_type>();
       }
-      future_->set_continuation_ptr(ptr, lock);
+      this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
       return BOOST_THREAD_FUTURE<future_type>();

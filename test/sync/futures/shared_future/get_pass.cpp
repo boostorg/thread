@@ -12,14 +12,13 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/future.hpp>
+// <boost/thread/shared_future.hpp>
 
-// class future<R>
+// class shared_future<R>
 
-// const R& future::get();
-// R& future<R&>::get();
-// void future<void>::get();
-
+// const R& shared_future::get();
+// R& shared_future<R&>::get();
+// void shared_future<void>::get();
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
 
@@ -91,7 +90,7 @@ int main()
       typedef int T;
       {
           boost::promise<T> p;
-          boost::future<T> f = p.get_future();
+          boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
            boost::thread(func1, boost::move(p)).detach();
 #else
@@ -99,13 +98,11 @@ int main()
 #endif
           BOOST_TEST(f.valid());
           BOOST_TEST(f.get() == 3);
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-          BOOST_TEST(!f.valid());
-#endif
+          BOOST_TEST(f.valid());
       }
       {
           boost::promise<T> p;
-          boost::future<T> f = p.get_future();
+          boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           boost::thread(func2, boost::move(p)).detach();
 #else
@@ -125,16 +122,14 @@ int main()
           {
               BOOST_TEST(false);
           }
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-          BOOST_TEST(!f.valid());
-#endif
+          BOOST_TEST(f.valid());
       }
   }
   {
       typedef int& T;
       {
           boost::promise<T> p;
-          boost::future<T> f = p.get_future();
+          boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           boost::thread(func3, boost::move(p)).detach();
 #else
@@ -143,13 +138,11 @@ int main()
 #endif
           BOOST_TEST(f.valid());
           BOOST_TEST(f.get() == 5);
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-          BOOST_TEST(!f.valid());
-#endif
+          BOOST_TEST(f.valid());
       }
       {
           boost::promise<T> p;
-          boost::future<T> f = p.get_future();
+          boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           boost::thread(func4, boost::move(p)).detach();
 #else
@@ -165,16 +158,14 @@ int main()
           {
               BOOST_TEST(i.value == 3.5);
           }
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-          BOOST_TEST(!f.valid());
-#endif
+          BOOST_TEST(f.valid());
       }
   }
 
   typedef void T;
   {
       boost::promise<T> p;
-      boost::future<T> f = p.get_future();
+      boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
        boost::thread(func5, boost::move(p)).detach();
 #else
@@ -182,13 +173,11 @@ int main()
 #endif
       BOOST_TEST(f.valid());
       f.get();
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-      BOOST_TEST(!f.valid());
-#endif
+      BOOST_TEST(f.valid());
   }
   {
       boost::promise<T> p;
-      boost::future<T> f = p.get_future();
+      boost::shared_future<T> f((p.get_future()));
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       boost::thread(func6, boost::move(p)).detach();
 #else
@@ -208,9 +197,7 @@ int main()
       {
           BOOST_TEST(false);
       }
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-      BOOST_TEST(!f.valid());
-#endif
+      BOOST_TEST(f.valid());
   }
 
   return boost::report_errors();
