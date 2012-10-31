@@ -242,7 +242,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
     ;
 
-    explicit ts_async ;
+    #explicit ts_async ;
     test-suite ts_async
     :
           [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]

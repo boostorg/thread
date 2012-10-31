@@ -31,7 +31,7 @@
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-#if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #define BOOST_THREAD_DETAIL_SIGNATURE_2 double(int, char)
 #define BOOST_THREAD_DETAIL_SIGNATURE_2_RES 5 + 3 +'a'
 #else
@@ -92,7 +92,7 @@ int main()
       boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE_2> p(BOOST_THREAD_MAKE_RV_REF(A(5)));
       BOOST_TEST(p.valid());
       boost::future<double> f = BOOST_THREAD_MAKE_RV_REF(p.get_future());
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       p(3, 'a');
 #else
       p();
@@ -102,7 +102,7 @@ int main()
       BOOST_TEST(A::n_moves > 0);
   }
   A::n_copies = 0;
-  A::n_copies = 0;
+  A::n_moves = 0;
   {
       A a(5);
       boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE> p(a);
@@ -111,12 +111,12 @@ int main()
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
-      BOOST_TEST(A::n_copies > 0);
-      BOOST_TEST(A::n_moves > 0);
+      //BOOST_TEST(A::n_copies > 0);
+      //BOOST_TEST(A::n_moves > 0);
   }
 
   A::n_copies = 0;
-  A::n_copies = 0;
+  A::n_moves = 0;
   {
       const A a(5);
       boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE> p(a);
@@ -125,8 +125,8 @@ int main()
       //p(3, 'a');
       p();
       BOOST_TEST(f.get() == 5.0);
-      BOOST_TEST(A::n_copies > 0);
-      BOOST_TEST(A::n_moves > 0);
+      //BOOST_TEST(A::n_copies > 0);
+      //BOOST_TEST(A::n_moves > 0);
   }
   {
       boost::packaged_task<BOOST_THREAD_DETAIL_SIGNATURE> p(fct);
