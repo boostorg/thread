@@ -1100,7 +1100,7 @@ namespace boost
 //        template<typename F>
 //        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
         template<typename RF>
         inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(BOOST_THREAD_FUTURE&));
 #endif
@@ -1609,7 +1609,7 @@ namespace boost
                 }
             }
         };
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -1811,7 +1811,7 @@ namespace boost
         {}
 
         // construction and destruction
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -1902,7 +1902,7 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
         template <class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, R(*f)())
         {
@@ -1923,7 +1923,7 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) task_object_type(f), D(a2, 1) );
           future_obtained = false;
         }
-#endif // BOOST_NO_CXX11_RVALUE_REFERENCES
+#endif // BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
 #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F, class Allocator>
@@ -2097,7 +2097,7 @@ namespace boost
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) packaged_task<T> BOOST_THREAD_DCL_MOVABLE_END
 
-#if defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -2284,7 +2284,7 @@ namespace boost
         future_continuation(future_continuation const&);
         future_continuation& operator=(future_continuation const&);
       };
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
       template <typename F, typename R, typename CR>
       struct future_continuation<F,R,CR(*)(F&)> : future_continuation_base
       {
@@ -2349,7 +2349,7 @@ namespace boost
 
   }
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
   template <typename R>
   template<typename RF>
   BOOST_THREAD_FUTURE<RF>
