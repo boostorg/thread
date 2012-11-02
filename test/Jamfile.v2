@@ -23,6 +23,8 @@ project
     : requirements
         <threading>multi
 
+        <define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+
         <warnings>all
         <toolset>gcc:<cxxflags>-Wextra
         <toolset>gcc:<cxxflags>-pedantic

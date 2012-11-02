@@ -6,15 +6,6 @@
 // (C) Copyright 2007-10 Anthony Williams
 // (C) Copyright 20011-12 Vicente J. Botet Escriba
 
-//===----------------------------------------------------------------------===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
-//
-// The code taking care of thread creation and invoke have been taken from libcxx.
-//===----------------------------------------------------------------------===//
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/exceptions.hpp>
@@ -25,6 +16,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/xtime.hpp>
 #include <boost/thread/detail/thread_heap_alloc.hpp>
+#include <boost/thread/detail/make_tuple_indices.hpp>
+#include <boost/thread/detail/invoke.hpp>
 #include <boost/assert.hpp>
 #include <list>
 #include <algorithm>
@@ -62,92 +55,6 @@ namespace boost
 
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
-      // __make_tuple_indices
-
-      template <std::size_t...> struct tuple_indices {};
-
-      template <std::size_t Sp, class IntTuple, std::size_t Ep>
-      struct make_indices_imp;
-
-      template <std::size_t Sp, std::size_t ...Indices, std::size_t Ep>
-      struct make_indices_imp<Sp, tuple_indices<Indices...>, Ep>
-      {
-          typedef typename make_indices_imp<Sp+1, tuple_indices<Indices..., Sp>, Ep>::type type;
-      };
-
-      template <std::size_t Ep, std::size_t ...Indices>
-      struct make_indices_imp<Ep, tuple_indices<Indices...>, Ep>
-      {
-          typedef tuple_indices<Indices...> type;
-      };
-
-      template <std::size_t Ep, std::size_t Sp = 0>
-      struct make_tuple_indices
-      {
-          static_assert(Sp <= Ep, "make_tuple_indices input error");
-          typedef typename make_indices_imp<Sp, tuple_indices<>, Ep>::type type;
-      };
-
-
-//      // bullets 1 and 2
-//
-//      template <class Fp, class A0, class ...Args>
-//      inline
-//      auto
-//      invoke(Fp&& f, A0&& a0, Args&& ...args)
-//          -> decltype((boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...))
-//      {
-//          return (boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...);
-//      }
-//
-//      template <class Fp, class A0, class ...Args>
-//      inline
-//      auto
-//      invoke(Fp&& f, A0&& a0, Args&& ...args)
-//          -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...))
-//      {
-//          return ((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...);
-//      }
-//
-//      // bullets 3 and 4
-//
-//      template <class Fp, class A0>
-//      inline
-//      auto
-//      invoke(Fp&& f, A0&& a0)
-//          -> decltype(boost::forward<A0>(a0).*f)
-//      {
-//          return boost::forward<A0>(a0).*f;
-//      }
-//
-//      template <class Fp, class A0>
-//      inline
-//      auto
-//      invoke(Fp&& f, A0&& a0)
-//          -> decltype((*boost::forward<A0>(a0)).*f)
-//      {
-//          return (*boost::forward<A0>(a0)).*f;
-//      }
-
-      // bullet 5
-
-      template <class Fp, class ...Args>
-      inline
-      auto
-      invoke(Fp&& f, Args&& ...args)
-          -> decltype(boost::forward<Fp>(f)(boost::forward<Args>(args)...))
-      {
-          return boost::forward<Fp>(f)(boost::forward<Args>(args)...);
-      }
-
-//      template <class Tp, class ...Args>
-//      struct invoke_return
-//      {
-//          typedef decltype(invoke(boost::declval<Tp>(), boost::declval<Args>()...)) type;
-//      };
-
-
-
       template<typename F, class ...ArgTypes>
       class thread_data:
           public detail::thread_data_base
@@ -173,8 +80,6 @@ namespace boost
           }
 
       private:
-          //F f;
-          //std::tuple<ArgTypes...> args;
           std::tuple<typename decay<F>::type, typename decay<ArgTypes>::type...> fp;
       };
 #else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -855,6 +760,8 @@ namespace boost
         {
 #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
             boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
+#else
+            return false;
 #endif
         }
     }
