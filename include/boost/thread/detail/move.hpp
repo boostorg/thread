@@ -230,19 +230,26 @@ namespace detail
 
 
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 namespace boost
 {  namespace thread_detail
   {
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T>
       typename decay<T>::type
       decay_copy(T&& t)
       {
           return boost::forward<T>(t);
       }
+#else
+  template <class T>
+  typename decay<T>::type
+  decay_copy(BOOST_THREAD_FWD_REF(T) t)
+  {
+      return boost::forward<T>(t);
+  }
+#endif
   }
 }
-#endif
 
 #include <boost/config/abi_suffix.hpp>
 
