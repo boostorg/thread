@@ -289,7 +289,7 @@ namespace boost
         }
 
         template <class lock_type>
-        inline void wait_until(
+        cv_status wait_until(
             lock_type& lk,
             chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
         {
@@ -299,7 +299,8 @@ namespace boost
             seconds s = duration_cast<seconds>(d);
             ts.tv_sec = static_cast<long>(s.count());
             ts.tv_nsec = static_cast<long>((d - s).count());
-            do_timed_wait(lk, ts);
+            if (do_timed_wait(lk, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
         }
 #endif
 
