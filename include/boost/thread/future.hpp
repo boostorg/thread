@@ -896,6 +896,7 @@ namespace boost
       /// Common implementation for all the futures independently of the return type
       class base_future
       {
+        //BOOST_THREAD_MOVABLE(base_future)
 
       };
       /// Common implementation for future and shared_future.
@@ -919,12 +920,9 @@ namespace boost
         typedef future_state::state state;
 
         BOOST_THREAD_MOVABLE(basic_future)
-        basic_future()
-        {
-        }
-        ~basic_future()
-        {
-        }
+        basic_future(): future_() {}
+        ~basic_future() {}
+
         basic_future(BOOST_THREAD_RV_REF(basic_future) other) BOOST_NOEXCEPT:
         future_(BOOST_THREAD_RV(other).future_)
         {
@@ -1063,7 +1061,6 @@ namespace boost
 
         BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
         {
-
             base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
             return *this;
         }
