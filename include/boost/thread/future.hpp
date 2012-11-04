@@ -39,6 +39,7 @@
 #include <boost/bind.hpp>
 #include <boost/ref.hpp>
 #include <boost/scoped_array.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <list>
 #include <boost/next_prior.hpp>
@@ -257,11 +258,13 @@ namespace boost
             relocker& operator=(relocker const&);
         };
 
-        struct future_object_base
+        struct future_object_base : enable_shared_from_this<future_object_base>
         {
+
             boost::exception_ptr exception;
             bool done;
             bool is_deferred;
+            bool is_constructed;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             bool thread_was_interrupted;
 #endif
@@ -276,7 +279,8 @@ namespace boost
 
             future_object_base():
                 done(false),
-                is_deferred(false)
+                is_deferred(false),
+                is_constructed(false)
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                , thread_was_interrupted(false)
 #endif
@@ -334,6 +338,13 @@ namespace boost
                 }
                 do_continuation(lock);
             }
+            void make_ready()
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              boost::unique_lock<boost::mutex> lock(mutex);
+              mark_finished_internal(lock);
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+            }
 
             void do_callback(boost::unique_lock<boost::mutex>& lock)
             {
@@ -348,17 +359,24 @@ namespace boost
 
             void wait_internal(boost::unique_lock<boost::mutex> &lock, bool rethrow=true)
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               do_callback(lock);
-              //if (!done)
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              //if (!done) // fixme why this doesn't works?
               {
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 if (is_deferred)
                 {
+                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   is_deferred=false;
                   execute(lock);
+                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
                   //lock.unlock();
                 }
                 else
                 {
+                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   while(!done)
                   {
                       waiters.wait(lock);
@@ -366,11 +384,14 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                   if(rethrow && thread_was_interrupted)
                   {
+                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                       throw boost::thread_interrupted();
                   }
 #endif
+                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   if(rethrow && exception)
                   {
+                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                       boost::rethrow_exception(exception);
                   }
                 }
@@ -378,8 +399,11 @@ namespace boost
             }
             void wait(bool rethrow=true)
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::unique_lock<boost::mutex> lock(mutex);
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 wait_internal(lock, rethrow);
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -424,13 +448,19 @@ namespace boost
 #endif
             void mark_exceptional_finish_internal(boost::exception_ptr const& e, boost::unique_lock<boost::mutex>& lock)
             {
+              //std::cout << "**************"<<__FILE__ << ":" << __LINE__ <<std::endl;
                 exception=e;
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 mark_finished_internal(lock);
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
             void mark_exceptional_finish()
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::unique_lock<boost::mutex> lock(mutex);
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             void mark_interrupted_finish()
@@ -440,9 +470,35 @@ namespace boost
                 mark_finished_internal(lock);
             }
 #endif
+            void set_exception_at_thread_exit(exception_ptr e)
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              unique_lock<boost::mutex> lk(mutex);
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              if (has_value(lk))
+              {
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                  throw_exception(promise_already_satisfied());
+              }
+              //std::cout << "**************"<<__FILE__ << ":" << __LINE__ <<std::endl;
+              exception=e;
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+            }
             bool has_value()
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::lock_guard<boost::mutex> lock(mutex);
+                return done && !(exception
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                    || thread_was_interrupted
+#endif
+                );
+            }
+            bool has_value(unique_lock<boost::mutex>& )
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 return done && !(exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     || thread_was_interrupted
@@ -452,6 +508,14 @@ namespace boost
             bool has_exception()
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
+                return done && (exception
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                    || thread_was_interrupted
+#endif
+                    );
+            }
+            bool has_exception(unique_lock<boost::mutex>&)
+            {
                 return done && (exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     || thread_was_interrupted
@@ -596,7 +660,9 @@ namespace boost
 
             move_dest_type get()
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 wait();
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 return static_cast<move_dest_type>(*result);
                 //return boost::move(*result); // todo check why this doesn't works (references?)
             }
@@ -620,6 +686,138 @@ namespace boost
                     return future_state::ready;
                 }
             }
+
+
+            //void set_value_at_thread_exit(source_reference_type result_)
+            void set_value_at_thread_exit(const T & result_)
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              unique_lock<boost::mutex> lk(this->mutex);
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              if (this->has_value(lk))
+              {
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                  throw_exception(promise_already_satisfied());
+              }
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              future_traits<T>::init(result,result_);
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              this->is_constructed = true;
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+            }
+            //void set_value_at_thread_exit(rvalue_source_type result_)
+            void set_value_at_thread_exit(BOOST_THREAD_RV_REF(T) result_)
+            {
+              unique_lock<boost::mutex> lk(this->mutex);
+              if (this->has_value(lk))
+                  throw_exception(promise_already_satisfied());
+              future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+              this->is_constructed = true;
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+            }
+
+
+        private:
+            future_object(future_object const&);
+            future_object& operator=(future_object const&);
+        };
+
+        template<typename T>
+        struct future_object<T&>:
+            detail::future_object_base
+        {
+            typedef typename future_traits<T>::storage_type storage_type;
+            typedef typename future_traits<T>::source_reference_type source_reference_type;
+            typedef typename future_traits<T>::rvalue_source_type rvalue_source_type;
+            typedef typename future_traits<T>::move_dest_type move_dest_type;
+            typedef typename future_traits<T>::shared_future_get_result_type shared_future_get_result_type;
+
+            T* result;
+
+            future_object():
+                result(0)
+            {}
+
+            ~future_object()
+            {
+            }
+
+            void mark_finished_with_result_internal(T& result_, boost::unique_lock<boost::mutex>& lock)
+            {
+                //future_traits<T>::init(result,result_);
+                result= &result_;
+                mark_finished_internal(lock);
+            }
+
+//            void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
+//            {
+//                future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+//                mark_finished_internal(lock);
+//            }
+
+            void mark_finished_with_result(T& result_)
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                mark_finished_with_result_internal(result_, lock);
+            }
+
+//            void mark_finished_with_result(rvalue_source_type result_)
+//            {
+//                boost::unique_lock<boost::mutex> lock(mutex);
+//                mark_finished_with_result_internal(static_cast<rvalue_source_type>(result_), lock);
+//            }
+
+
+            T& get()
+            {
+                wait();
+                //return static_cast<T&>(*result);
+                return *result;
+            }
+
+            T& get_sh()
+            {
+                wait();
+                //return static_cast<shared_future_get_result_type>(*result);
+                return *result;
+            }
+
+            // todo move this to detail::future_object_base
+            future_state::state get_state()
+            {
+                boost::lock_guard<boost::mutex> guard(mutex);
+                if(!done)
+                {
+                    return future_state::waiting;
+                }
+                else
+                {
+                    return future_state::ready;
+                }
+            }
+
+            void set_value_at_thread_exit(T& result_)
+            {
+              unique_lock<boost::mutex> lk(this->mutex);
+              if (this->has_value(lk))
+                  throw_exception(promise_already_satisfied());
+              //future_traits<T>::init(result,result_);
+              result= &result_;
+              this->is_constructed = true;
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+            }
+//            void set_value_at_thread_exit(rvalue_source_type result_)
+//            {
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (this->has_value())
+//                  throw_exception(promise_already_satisfied());
+//              future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+//              this->is_constructed = true;
+//              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+//            }
+
 
         private:
             future_object(future_object const&);
@@ -648,7 +846,9 @@ namespace boost
 
             void get()
             {
-                wait();
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                this->wait();
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
             void get_sh()
             {
@@ -666,6 +866,22 @@ namespace boost
                 {
                     return future_state::ready;
                 }
+            }
+            void set_value_at_thread_exit()
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              unique_lock<boost::mutex> lk(this->mutex);
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              if (this->has_value(lk))
+              {
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                  throw_exception(promise_already_satisfied());
+              }
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+             this->is_constructed = true;
+             //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
         private:
             future_object(future_object const&);
@@ -1275,15 +1491,22 @@ namespace boost
         // retrieving the value
         move_dest_type get()
         {
+          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             if(!this->future_)
             {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::throw_exception(future_uninitialized());
             }
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             future_ptr fut_=this->future_;
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             this->future_.reset();
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             return fut_->get();
 #else
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             return this->future_->get();
 #endif
         }
@@ -1408,7 +1631,7 @@ namespace boost
 
         void lazy_init()
         {
-#if defined BOOST_THREAD_PROMISE_LAZY
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
@@ -1432,7 +1655,7 @@ namespace boost
         }
 #endif
         promise():
-#if defined BOOST_THREAD_PROMISE_LAZY
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             future_(),
 #else
             future_(new detail::future_object<R>()),
@@ -1526,9 +1749,31 @@ namespace boost
         }
 
         // setting the result with deferred notification
-        //void set_value_at_thread_exit(const R& r); // NOT YET IMPLEMENTED
-        //void set_value_at_thread_exit(see below); // NOT YET IMPLEMENTED
-        //void set_exception_at_thread_exit(exception_ptr p); // NOT YET IMPLEMENTED
+        void set_value_at_thread_exit(const R& r)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_value_at_thread_exit(r);
+        }
+
+        void set_value_at_thread_exit(BOOST_THREAD_RV_REF(R) r)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_value_at_thread_exit(boost::move(r));
+        }
+        void set_exception_at_thread_exit(exception_ptr e)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_exception_at_thread_exit(e);
+        }
 
         template<typename F>
         void set_wait_callback(F f)
@@ -1539,6 +1784,148 @@ namespace boost
 
     };
 
+    template <typename R>
+    class promise<R&>
+    {
+        typedef boost::shared_ptr<detail::future_object<R&> > future_ptr;
+
+        future_ptr future_;
+        bool future_obtained;
+
+        void lazy_init()
+        {
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
+            if(!atomic_load(&future_))
+            {
+                future_ptr blank;
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<R&>));
+            }
+#endif
+        }
+
+    public:
+        BOOST_THREAD_MOVABLE_ONLY(promise)
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
+        template <class Allocator>
+        promise(boost::allocator_arg_t, Allocator a)
+        {
+          typedef typename Allocator::template rebind<detail::future_object<R&> >::other A2;
+          A2 a2(a);
+          typedef thread_detail::allocator_destructor<A2> D;
+
+          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<R&>(), D(a2, 1) );
+          future_obtained = false;
+        }
+#endif
+        promise():
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
+            future_(),
+#else
+            future_(new detail::future_object<R&>()),
+#endif
+            future_obtained(false)
+        {}
+
+        ~promise()
+        {
+            if(future_)
+            {
+                boost::unique_lock<boost::mutex> lock(future_->mutex);
+
+                if(!future_->done)
+                {
+                    future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
+                }
+            }
+        }
+
+        // Assignment
+        promise(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT :
+            future_(BOOST_THREAD_RV(rhs).future_),future_obtained(BOOST_THREAD_RV(rhs).future_obtained)
+        {
+            BOOST_THREAD_RV(rhs).future_.reset();
+            BOOST_THREAD_RV(rhs).future_obtained=false;
+        }
+        promise & operator=(BOOST_THREAD_RV_REF(promise) rhs) BOOST_NOEXCEPT
+        {
+            future_=BOOST_THREAD_RV(rhs).future_;
+            future_obtained=BOOST_THREAD_RV(rhs).future_obtained;
+            BOOST_THREAD_RV(rhs).future_.reset();
+            BOOST_THREAD_RV(rhs).future_obtained=false;
+            return *this;
+        }
+
+        void swap(promise& other)
+        {
+            future_.swap(other.future_);
+            std::swap(future_obtained,other.future_obtained);
+        }
+
+        // Result retrieval
+        BOOST_THREAD_FUTURE<R&> get_future()
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            if (future_obtained)
+            {
+                boost::throw_exception(future_already_retrieved());
+            }
+            future_obtained=true;
+            return BOOST_THREAD_FUTURE<R&>(future_);
+        }
+
+        void set_value(R& r)
+        {
+            lazy_init();
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
+            if(future_->done)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->mark_finished_with_result_internal(r, lock);
+        }
+
+        void set_exception(boost::exception_ptr p)
+        {
+            lazy_init();
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
+            if(future_->done)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->mark_exceptional_finish_internal(p, lock);
+        }
+
+        // setting the result with deferred notification
+        void set_value_at_thread_exit(R& r)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_value_at_thread_exit(r);
+        }
+
+        void set_exception_at_thread_exit(exception_ptr e)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_exception_at_thread_exit(e);
+        }
+
+        template<typename F>
+        void set_wait_callback(F f)
+        {
+            lazy_init();
+            future_->set_wait_callback(f,this);
+        }
+
+    };
     template <>
     class promise<void>
     {
@@ -1549,7 +1936,7 @@ namespace boost
 
         void lazy_init()
         {
-#if defined BOOST_THREAD_PROMISE_LAZY
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
@@ -1573,7 +1960,7 @@ namespace boost
         }
 #endif
         promise():
-#if defined BOOST_THREAD_PROMISE_LAZY
+#if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             future_(),
 #else
             future_(new detail::future_object<void>),
@@ -1655,6 +2042,31 @@ namespace boost
                 boost::throw_exception(promise_already_satisfied());
             }
             future_->mark_exceptional_finish_internal(p,lock);
+        }
+
+        // setting the result with deferred notification
+        void set_value_at_thread_exit()
+        {
+
+          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
+          if (future_.get()==0)
+          {
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+              boost::throw_exception(promise_moved());
+          }
+          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+          future_->set_value_at_thread_exit();
+          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+        }
+
+        void set_exception_at_thread_exit(exception_ptr e)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_exception_at_thread_exit(e);
         }
 
         template<typename F>
