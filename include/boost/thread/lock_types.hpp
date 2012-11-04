@@ -46,63 +46,54 @@ namespace boost
   }
 
 #ifdef BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES
-  template<typename T>
-  struct is_mutex_type<unique_lock<T> >
+  namespace sync
   {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
+    template<typename T>
+    struct is_basic_lockable<unique_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+    template<typename T>
+    struct is_lockable<unique_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
 
-  template<typename T>
-  struct is_mutex_type<shared_lock<T> >
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
+    template<typename T>
+    struct is_basic_lockable<shared_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+    template<typename T>
+    struct is_lockable<shared_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
 
-  template<typename T>
-  struct is_mutex_type<upgrade_lock<T> >
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
+    template<typename T>
+    struct is_basic_lockable<upgrade_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+    template<typename T>
+    struct is_lockable<upgrade_lock<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
 
-  template<typename T>
-  struct is_mutex_type<detail::try_lock_wrapper<T> >
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-
-  class mutex;
-  class timed_mutex;
-  class recursive_mutex;
-  class recursive_timed_mutex;
-  class shared_mutex;
-
-  template<>
-  struct is_mutex_type<mutex>
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-  template<>
-  struct is_mutex_type<timed_mutex>
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-  template<>
-  struct is_mutex_type<recursive_mutex>
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-  template<>
-  struct is_mutex_type<recursive_timed_mutex>
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-  template<>
-  struct is_mutex_type<shared_mutex>
-  {
-    BOOST_STATIC_CONSTANT(bool, value = true);
-  };
-
+    template<typename T>
+    struct is_basic_lockable<detail::try_lock_wrapper<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+    template<typename T>
+    struct is_lockable<detail::try_lock_wrapper<T> >
+    {
+      BOOST_STATIC_CONSTANT(bool, value = true);
+    };
+  }
 #endif
+
 
   template <typename Mutex>
   class unique_lock

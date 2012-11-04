@@ -340,10 +340,8 @@ namespace boost
             }
             void make_ready()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               boost::unique_lock<boost::mutex> lock(mutex);
               mark_finished_internal(lock);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 
             void do_callback(boost::unique_lock<boost::mutex>& lock)
@@ -359,24 +357,17 @@ namespace boost
 
             void wait_internal(boost::unique_lock<boost::mutex> &lock, bool rethrow=true)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               do_callback(lock);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               //if (!done) // fixme why this doesn't works?
               {
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 if (is_deferred)
                 {
-                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   is_deferred=false;
                   execute(lock);
-                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
-
                   //lock.unlock();
                 }
                 else
                 {
-                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   while(!done)
                   {
                       waiters.wait(lock);
@@ -384,14 +375,11 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                   if(rethrow && thread_was_interrupted)
                   {
-                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                       throw boost::thread_interrupted();
                   }
 #endif
-                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   if(rethrow && exception)
                   {
-                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                       boost::rethrow_exception(exception);
                   }
                 }
@@ -399,11 +387,8 @@ namespace boost
             }
             void wait(bool rethrow=true)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::unique_lock<boost::mutex> lock(mutex);
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 wait_internal(lock, rethrow);
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -448,19 +433,13 @@ namespace boost
 #endif
             void mark_exceptional_finish_internal(boost::exception_ptr const& e, boost::unique_lock<boost::mutex>& lock)
             {
-              //std::cout << "**************"<<__FILE__ << ":" << __LINE__ <<std::endl;
                 exception=e;
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 mark_finished_internal(lock);
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
             void mark_exceptional_finish()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::unique_lock<boost::mutex> lock(mutex);
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             void mark_interrupted_finish()
@@ -472,23 +451,16 @@ namespace boost
 #endif
             void set_exception_at_thread_exit(exception_ptr e)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               unique_lock<boost::mutex> lk(mutex);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               if (has_value(lk))
               {
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   throw_exception(promise_already_satisfied());
               }
-              //std::cout << "**************"<<__FILE__ << ":" << __LINE__ <<std::endl;
               exception=e;
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
             bool has_value()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::lock_guard<boost::mutex> lock(mutex);
                 return done && !(exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -498,7 +470,6 @@ namespace boost
             }
             bool has_value(unique_lock<boost::mutex>& )
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 return done && !(exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     || thread_was_interrupted
@@ -660,11 +631,8 @@ namespace boost
 
             move_dest_type get()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 wait();
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 return static_cast<move_dest_type>(*result);
-                //return boost::move(*result); // todo check why this doesn't works (references?)
             }
 
             shared_future_get_result_type get_sh()
@@ -688,26 +656,17 @@ namespace boost
             }
 
 
-            //void set_value_at_thread_exit(source_reference_type result_)
             void set_value_at_thread_exit(const T & result_)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               unique_lock<boost::mutex> lk(this->mutex);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               if (this->has_value(lk))
               {
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   throw_exception(promise_already_satisfied());
               }
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               future_traits<T>::init(result,result_);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               this->is_constructed = true;
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
-            //void set_value_at_thread_exit(rvalue_source_type result_)
             void set_value_at_thread_exit(BOOST_THREAD_RV_REF(T) result_)
             {
               unique_lock<boost::mutex> lk(this->mutex);
@@ -846,9 +805,7 @@ namespace boost
 
             void get()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 this->wait();
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
             void get_sh()
             {
@@ -869,19 +826,13 @@ namespace boost
             }
             void set_value_at_thread_exit()
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               unique_lock<boost::mutex> lk(this->mutex);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               if (this->has_value(lk))
               {
-                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                   throw_exception(promise_already_satisfied());
               }
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
              this->is_constructed = true;
-             //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
         private:
             future_object(future_object const&);
@@ -1491,22 +1442,15 @@ namespace boost
         // retrieving the value
         move_dest_type get()
         {
-          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             if(!this->future_)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 boost::throw_exception(future_uninitialized());
             }
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             future_ptr fut_=this->future_;
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             this->future_.reset();
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             return fut_->get();
 #else
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             return this->future_->get();
 #endif
         }
@@ -2047,17 +1991,11 @@ namespace boost
         // setting the result with deferred notification
         void set_value_at_thread_exit()
         {
-
-          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
-
           if (future_.get()==0)
           {
-            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               boost::throw_exception(promise_moved());
           }
-          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
           future_->set_value_at_thread_exit();
-          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
         }
 
         void set_exception_at_thread_exit(exception_ptr e)
