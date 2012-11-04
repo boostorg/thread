@@ -243,6 +243,7 @@ namespace boost
         thread() BOOST_NOEXCEPT;
         ~thread()
         {
+
     #if defined BOOST_THREAD_PROVIDES_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
           if (joinable()) {
             std::terminate();

@@ -146,9 +146,7 @@ namespace boost
 
             void make_ready_at_thread_exit(shared_ptr<future_object_base> as)
             {
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
               async_states_.push_back(as);
-              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
             }
 
         };
