@@ -72,6 +72,7 @@ namespace boost
 
     namespace detail
     {
+        struct future_object_base;
         struct tss_cleanup_function;
         struct thread_exit_callback_node;
         struct tss_data_node
@@ -107,6 +108,8 @@ namespace boost
             > notify_list_t;
             notify_list_t notify;
 
+            typedef std::vector<shared_ptr<future_object_base> > async_states_t;
+            async_states_t async_states_;
 
             thread_data_base():
                 count(0),thread_handle(detail::win32::invalid_handle_value),
@@ -118,7 +121,8 @@ namespace boost
                 interruption_enabled(true),
 #endif
                 id(0),
-                notify()
+                notify(),
+                async_states_()
             {}
             virtual ~thread_data_base();
 
@@ -150,7 +154,13 @@ namespace boost
               notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
             }
 
+            void make_ready_at_thread_exit(shared_ptr<future_object_base> as)
+            {
+              async_states_.push_back(as);
+            }
+
         };
+        BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
 
         typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
 

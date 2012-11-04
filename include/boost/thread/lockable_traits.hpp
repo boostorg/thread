@@ -8,26 +8,17 @@
 #define BOOST_THREAD_LOCKABLE_TRAITS_HPP
 
 #include <boost/thread/detail/config.hpp>
-#include <boost/thread/detail/move.hpp>
-#include <boost/thread/exceptions.hpp>
-//#include <boost/thread/testable_mutex.hpp>
-#include <boost/thread/thread_time.hpp>
 
 #include <boost/assert.hpp>
-#ifdef BOOST_THREAD_USES_CHRONO
-#include <boost/chrono/time_point.hpp>
-#include <boost/chrono/duration.hpp>
-#endif
 #include <boost/detail/workaround.hpp>
 #include <boost/type_traits/is_class.hpp>
-
-#include <algorithm>
-#include <iterator>
 
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+  namespace sync
+  {
 
 #if defined(BOOST_NO_SFINAE) ||                           \
     BOOST_WORKAROUND(__IBMCPP__, BOOST_TESTED_AT(600)) || \
@@ -72,100 +63,129 @@ namespace boost
                 bool, value=sizeof(has_member<derived>(0))==sizeof(true_type)); \
         }
 
-        BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(lock);
-        BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(unlock);
-        BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(try_lock);
+      BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(lock)
+;      BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(unlock);
+      BOOST_THREAD_DEFINE_HAS_MEMBER_CALLED(try_lock);
 
-        template<typename T,bool=has_member_called_lock<T>::value >
-        struct has_member_lock
+      template<typename T,bool=has_member_called_lock<T>::value >
+      struct has_member_lock
+      {
+        BOOST_STATIC_CONSTANT(bool, value=false);
+      };
+
+      template<typename T>
+      struct has_member_lock<T,true>
+      {
+        typedef char true_type;
+        struct false_type
         {
-            BOOST_STATIC_CONSTANT(bool, value=false);
+          true_type dummy[2];
         };
 
-        template<typename T>
-        struct has_member_lock<T,true>
+        template<typename U,typename V>
+        static true_type has_member(V (U::*)());
+        template<typename U>
+        static false_type has_member(U);
+
+        BOOST_STATIC_CONSTANT(
+            bool,value=sizeof(has_member_lock<T>::has_member(&T::lock))==sizeof(true_type));
+      };
+
+      template<typename T,bool=has_member_called_unlock<T>::value >
+      struct has_member_unlock
+      {
+        BOOST_STATIC_CONSTANT(bool, value=false);
+      };
+
+      template<typename T>
+      struct has_member_unlock<T,true>
+      {
+        typedef char true_type;
+        struct false_type
         {
-            typedef char true_type;
-            struct false_type
-            {
-                true_type dummy[2];
-            };
-
-            template<typename U,typename V>
-            static true_type has_member(V (U::*)());
-            template<typename U>
-            static false_type has_member(U);
-
-            BOOST_STATIC_CONSTANT(
-                bool,value=sizeof(has_member_lock<T>::has_member(&T::lock))==sizeof(true_type));
+          true_type dummy[2];
         };
 
-        template<typename T,bool=has_member_called_unlock<T>::value >
-        struct has_member_unlock
+        template<typename U,typename V>
+        static true_type has_member(V (U::*)());
+        template<typename U>
+        static false_type has_member(U);
+
+        BOOST_STATIC_CONSTANT(
+            bool,value=sizeof(has_member_unlock<T>::has_member(&T::unlock))==sizeof(true_type));
+      };
+
+      template<typename T,bool=has_member_called_try_lock<T>::value >
+      struct has_member_try_lock
+      {
+        BOOST_STATIC_CONSTANT(bool, value=false);
+      };
+
+      template<typename T>
+      struct has_member_try_lock<T,true>
+      {
+        typedef char true_type;
+        struct false_type
         {
-            BOOST_STATIC_CONSTANT(bool, value=false);
+          true_type dummy[2];
         };
 
-        template<typename T>
-        struct has_member_unlock<T,true>
-        {
-            typedef char true_type;
-            struct false_type
-            {
-                true_type dummy[2];
-            };
+        template<typename U>
+        static true_type has_member(bool (U::*)());
+        template<typename U>
+        static false_type has_member(U);
 
-            template<typename U,typename V>
-            static true_type has_member(V (U::*)());
-            template<typename U>
-            static false_type has_member(U);
-
-            BOOST_STATIC_CONSTANT(
-                bool,value=sizeof(has_member_unlock<T>::has_member(&T::unlock))==sizeof(true_type));
-        };
-
-        template<typename T,bool=has_member_called_try_lock<T>::value >
-        struct has_member_try_lock
-        {
-            BOOST_STATIC_CONSTANT(bool, value=false);
-        };
-
-        template<typename T>
-        struct has_member_try_lock<T,true>
-        {
-            typedef char true_type;
-            struct false_type
-            {
-                true_type dummy[2];
-            };
-
-            template<typename U>
-            static true_type has_member(bool (U::*)());
-            template<typename U>
-            static false_type has_member(U);
-
-            BOOST_STATIC_CONSTANT(
-                bool,value=sizeof(has_member_try_lock<T>::has_member(&T::try_lock))==sizeof(true_type));
-        };
+        BOOST_STATIC_CONSTANT(
+            bool,value=sizeof(has_member_try_lock<T>::has_member(&T::try_lock))==sizeof(true_type));
+      };
 
     }
 
-
     template<typename T>
-    struct is_mutex_type
+    struct is_basic_lockable
     {
-        BOOST_STATIC_CONSTANT(bool, value = detail::has_member_lock<T>::value &&
-                              detail::has_member_unlock<T>::value &&
-                              detail::has_member_try_lock<T>::value);
-
+      BOOST_STATIC_CONSTANT(bool, value = detail::has_member_lock<T>::value &&
+          detail::has_member_unlock<T>::value);
     };
+    template<typename T>
+    struct is_lockable
+    {
+      BOOST_STATIC_CONSTANT(bool, value =
+          is_basic_lockable<T>::value &&
+          detail::has_member_try_lock<T>::value);
+    };
+
 #else
     template<typename T>
-    struct is_mutex_type
+    struct is_basic_lockable
     {
-        BOOST_STATIC_CONSTANT(bool, value = false);
+      BOOST_STATIC_CONSTANT(bool, value = false);
+    };
+    template<typename T>
+    struct is_lockable
+    {
+      BOOST_STATIC_CONSTANT(bool, value = false);
     };
 #endif
+
+    template<typename T>
+    struct is_recursive_mutex_sur_parolle
+    {
+      BOOST_STATIC_CONSTANT(bool, value = false);
+    };
+
+    template<typename T>
+    struct is_recursive_basic_lockable
+    {
+      BOOST_STATIC_CONSTANT(bool, value = is_basic_lockable<T>::value &&
+          is_recursive_mutex_sur_parolle<T>::value);
+    };
+  }
+  template<typename T>
+  struct is_mutex_type
+  {
+    BOOST_STATIC_CONSTANT(bool, value = sync::is_lockable<T>::value);
+  };
 
 }
 #include <boost/config/abi_suffix.hpp>

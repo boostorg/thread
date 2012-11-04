@@ -16,6 +16,7 @@
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/thread/future.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
@@ -34,14 +35,22 @@ namespace boost
     {
         thread_data_base::~thread_data_base()
         {
-          {
             for (notify_list_t::iterator i = notify.begin(), e = notify.end();
                     i != e; ++i)
             {
                 i->second->unlock();
                 i->first->notify_all();
             }
-          }
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+            for (async_states_t::iterator i = async_states_.begin(), e = async_states_.end();
+                    i != e; ++i)
+            {
+              //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                (*i)->make_ready();
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+            }
+            //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
         }
 
         struct thread_exit_callback_node
@@ -68,11 +77,16 @@ namespace boost
             {
                 static void tls_destructor(void* data)
                 {
+                  //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                     boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
+                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                     if(thread_info)
                     {
+                      //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                         while(!thread_info->tss_data.empty() || thread_info->thread_exit_callbacks)
                         {
+                          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
                             while(thread_info->thread_exit_callbacks)
                             {
                                 detail::thread_exit_callback_node* const current_node=thread_info->thread_exit_callbacks;
@@ -98,8 +112,17 @@ namespace boost
                                 thread_info->tss_data.erase(current);
                             }
                         }
+                        //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                        if (thread_info) {
+                          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                         thread_info->self.reset();
+                        } else{
+                          //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
+                        }
+                        //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                     }
+                    //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
                 }
             }
 
@@ -162,10 +185,13 @@ namespace boost
                 }
 // Removed as it stops the debugger identifying the cause of the exception
 // Unhandled exceptions still cause the application to terminate
-//                 BOOST_CATCH(...)
-//                 {
-//                     std::terminate();
-//                 }
+                 BOOST_CATCH(...)
+                 {
+                   //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+                   throw;
+
+                     std::terminate();
+                 }
                 BOOST_CATCH_END
 #endif
                 detail::tls_destructor(thread_info.get());
@@ -173,6 +199,8 @@ namespace boost
                 boost::lock_guard<boost::mutex> lock(thread_info->data_mutex);
                 thread_info->done=true;
                 thread_info->done_condition.notify_all();
+                //std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+
                 return 0;
             }
         }

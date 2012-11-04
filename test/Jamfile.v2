@@ -267,6 +267,11 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/promise/set_value_const_pass.cpp : promise__set_value_const_p ]
           [ thread-run2 ./sync/futures/promise/set_value_void_pass.cpp : promise__set_value_void_p ]
           [ thread-run2 ./sync/futures/promise/use_allocator_pass.cpp : promise__use_allocator_p ]
+          [ thread-run2 ./sync/futures/promise/set_exception_at_thread_exit_pass.cpp : promise__set_exception_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_lvalue_at_thread_exit_pass.cpp : promise__set_lvalue_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_rvalue_at_thread_exit_pass.cpp : promise__set_rvalue_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_at_thread_exit_const_pass.cpp : promise__set_value_at_thread_exit_const_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_at_thread_exit_void_pass.cpp : promise__set_value_at_thread_exit_void_p ]
     ;
 
     #explicit ts_future ;
@@ -582,6 +587,7 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+
           #[ thread-run ../example/unwrap.cpp ]
     ;
 
