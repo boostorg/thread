@@ -448,6 +448,16 @@ namespace boost
                 thread_was_interrupted=true;
                 mark_finished_internal(lock);
             }
+            void set_interrupted_at_thread_exit()
+            {
+              unique_lock<boost::mutex> lk(mutex);
+              thread_was_interrupted=true;
+              if (has_value(lk))
+              {
+                  throw_exception(promise_already_satisfied());
+              }
+              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+            }
 #endif
             void set_exception_at_thread_exit(exception_ptr e)
             {
@@ -672,7 +682,8 @@ namespace boost
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
-              future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+              result.reset(new T(boost::move(result_)));
+              //future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
               this->is_constructed = true;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
             }
@@ -2079,6 +2090,29 @@ namespace boost
 #endif
             }
 
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+            virtual void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)=0;
+            void apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
+#else
+            virtual void do_apply()=0;
+            void apply()
+#endif
+            {
+                {
+                    boost::lock_guard<boost::mutex> lk(this->mutex);
+                    if(started)
+                    {
+                        boost::throw_exception(task_already_started());
+                    }
+                    started=true;
+                }
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+                do_apply(boost::forward<ArgTypes>(args)...);
+#else
+                do_apply();
+#endif
+            }
+
             void owner_destroyed()
             {
                 boost::unique_lock<boost::mutex> lk(this->mutex);
@@ -2127,6 +2161,33 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+            void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
+            {
+                try
+                {
+                    this->set_value_at_thread_exit(f(boost::forward<ArgTypes>(args)...));
+                }
+#else
+            void do_apply()
+            {
+                try
+                {
+                    this->set_value_at_thread_exit(f());
+                }
+#endif
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                catch(thread_interrupted& )
+                {
+                    this->set_interrupted_at_thread_exit();
+                }
+#endif
+                catch(...)
+                {
+                    this->set_exception_at_thread_exit(current_exception());
+                }
+            }
+
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_run(BOOST_THREAD_RV_REF(ArgTypes) ... args)
             {
                 try
@@ -2153,6 +2214,7 @@ namespace boost
                 }
             }
         };
+
 #if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -2178,6 +2240,36 @@ namespace boost
                 task_object(R (*f_)()):
                     f(f_)
                 {}
+
+
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+                void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
+                {
+                    try
+                    {
+                        this->set_value_at_thread_exit(f(boost::forward<ArgTypes>(args)...));
+                    }
+#else
+                void do_apply()
+                {
+                    try
+                    {
+                        this->set_value_at_thread_exit(f());
+                    }
+#endif
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                    catch(thread_interrupted& )
+                    {
+                        this->set_interrupted_at_thread_exit();
+                    }
+#endif
+                    catch(...)
+                    {
+                        this->set_exception_at_thread_exit(current_exception());
+                    }
+                }
+
+
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
                 void do_run(BOOST_THREAD_RV_REF(ArgTypes) ... args)
                 {
@@ -2241,6 +2333,33 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+            void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
+            {
+              try
+              {
+                f(boost::forward<ArgTypes>(args)...);
+#else
+            void do_apply()
+            {
+                try
+                {
+                    f();
+#endif
+                  this->set_value_at_thread_exit();
+                }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                catch(thread_interrupted& )
+                {
+                    this->set_interrupted_at_thread_exit();
+                }
+#endif
+                catch(...)
+                {
+                    this->set_exception_at_thread_exit(current_exception());
+                }
+            }
+
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_run(BOOST_THREAD_RV_REF(ArgTypes) ... args)
             {
                 try
@@ -2291,6 +2410,34 @@ namespace boost
             task_object(void (*f_)()):
                 f(f_)
             {}
+
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+            void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
+            {
+                try
+                {
+                    f(boost::forward<ArgTypes>(args)...);
+#else
+            void do_apply()
+            {
+                try
+                {
+                    f();
+#endif
+                    this->set_value_at_thread_exit();
+                }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                catch(thread_interrupted& )
+                {
+                    this->set_interrupted_at_thread_exit();
+                }
+#endif
+                catch(...)
+                {
+                    this->set_exception_at_thread_exit(current_exception());
+                }
+            }
+
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_run(BOOST_THREAD_RV_REF(ArgTypes) ... args)
             {
@@ -2612,6 +2759,18 @@ namespace boost
             }
             task->run(boost::forward<ArgTypes>(args)...);
         }
+        void make_ready_at_thread_exit(ArgTypes... args)
+        {
+          if(!task)
+          {
+              boost::throw_exception(task_moved());
+          }
+          if (task->has_value())
+          {
+                boost::throw_exception(promise_already_satisfied());
+          }
+          task->apply(boost::forward<ArgTypes>(args)...);
+        }
 #else
         void operator()()
         {
@@ -2620,6 +2779,16 @@ namespace boost
                 boost::throw_exception(task_moved());
             }
             task->run();
+        }
+        void make_ready_at_thread_exit()
+        {
+          if(!task)
+          {
+              boost::throw_exception(task_moved());
+          }
+          if (task->has_value())
+                boost::throw_exception(promise_already_satisfied());
+          task->apply();
         }
 #endif
         template<typename F>
