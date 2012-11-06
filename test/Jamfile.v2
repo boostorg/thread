@@ -317,6 +317,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : packaged_task__types_p ]
           [ thread-run2 ./sync/futures/packaged_task/member_swap_pass.cpp : packaged_task__member_swap_p ]
           [ thread-run2 ./sync/futures/packaged_task/non_member_swap_pass.cpp : packaged_task__non_member_swap_p ]
+          [ thread-run2 ./sync/futures/packaged_task/make_ready_at_thread_exit_pass.cpp : packaged_task__make_ready_at_thread_exit_p ]
     ;
 
 
@@ -587,8 +588,6 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run2 ./sync/futures/packaged_task/make_ready_at_thread_exit_pass.cpp : packaged_task__make_ready_at_thread_exit_p ]
-
           #[ thread-run ../example/unwrap.cpp ]
     ;
 
