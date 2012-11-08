@@ -197,7 +197,7 @@ namespace boost
 
                 ~entry_manager()
                 {
-                  if(! entry->is_notified())
+                  //if(! entry->is_notified()) // several regression #7657
                   {
                     entry->remove_waiter();
                   }
