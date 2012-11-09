@@ -12,6 +12,7 @@
 #if ! defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
 #include <boost/thread/is_locked_by_this_thread.hpp>
 #endif
+#include <boost/assert.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
