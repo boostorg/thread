@@ -72,6 +72,7 @@ namespace boost
                 it!=end;
                 ++it)
             {
+              if ((*it)->joinable())
                 (*it)->join();
             }
         }
