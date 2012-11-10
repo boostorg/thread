@@ -117,7 +117,7 @@
 [endsect]
 
 
-[section:future_errc Enumeration `future_errc `]
+[section:future_errc Enumeration `future_errc`]
 
   enum class future_errc
   {
@@ -131,7 +131,7 @@
  The enum values of future_errc are distinct and not zero. 
  
 [endsect]
-[section:launch Enumeration `launch `]
+[section:launch Enumeration `launch`]
 
     enum class launch
     {
@@ -277,7 +277,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       R&& get();
 
       // functions to check state
-      bool valid() const;
+      bool valid() const noexcept;
       bool is_ready() const; // EXTENSION
       bool has_exception() const; // EXTENSION
       bool has_value() const; // EXTENSION
@@ -424,7 +424,7 @@ value. Otherwise, returns an rvalue-reference to the value stored in the asynchr
 
 [section:wait Member function `wait()`]
 
-    void wait();
+    void wait() const;
 
 [variablelist
 
@@ -605,7 +605,7 @@ prior to waiting.]]
 
 [section:valid Member function `valid()`]
 
-    bool valid() const;
+    bool valid() const noexcept;
 
 [variablelist
 
@@ -827,7 +827,7 @@ value. Otherwise, returns a `const` reference to the value stored in the asynchr
 
 [section:wait Member function `wait()`]
 
-    void wait();
+    void wait() const;
 
 [variablelist
 
@@ -989,7 +989,7 @@ prior to waiting.]]
 
 [section:valid Member function `valid()`]
 
-    bool valid() const;
+    bool valid() const noexcept;
 
 [variablelist
 
