@@ -12,6 +12,7 @@
 
 #include <boost/thread/win32/basic_recursive_mutex.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/thread/detail/delete.hpp>
 #if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
 #include <boost/thread/lock_types.hpp>
 #endif

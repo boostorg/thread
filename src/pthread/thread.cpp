@@ -10,12 +10,13 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
+#endif
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/locks.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
-#include <boost/throw_exception.hpp>
 #include <boost/thread/future.hpp>
 
 #ifdef __GLIBC__
@@ -422,6 +423,7 @@ namespace boost
         /// Workaround of DECCXX issue of incorrect template substitution
         template<>
 #endif
+#if defined BOOST_THREAD_USES_DATETIME
         void sleep(const system_time& st)
         {
             detail::thread_data_base* const thread_info=detail::get_current_thread_data();
@@ -461,16 +463,19 @@ namespace boost
                 }
             }
         }
+#endif
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)
             BOOST_VERIFY(!sched_yield());
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
             BOOST_VERIFY(!pthread_yield());
-#   else
+#   elif defined BOOST_THREAD_USES_DATETIME
             xtime xt;
             xtime_get(&xt, TIME_UTC_);
             sleep(xt);
+#   else
+            sleep_for(chrono::milliseconds(0));
 #   endif
         }
     }

@@ -14,7 +14,9 @@
 #endif
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
+#endif
 #include <boost/thread/detail/thread_heap_alloc.hpp>
 #include <boost/thread/detail/make_tuple_indices.hpp>
 #include <boost/thread/detail/invoke.hpp>
@@ -257,7 +259,7 @@ namespace boost
           class F
         >
         explicit thread(BOOST_THREAD_RV_REF(F) f
-        , typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
+        //, typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0
         ):
           thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
         {
@@ -266,7 +268,7 @@ namespace boost
         template <
           class F
         >
-        thread(attributes& attrs, BOOST_THREAD_RV_REF(F) f):
+        thread(attributes const& attrs, BOOST_THREAD_RV_REF(F) f):
           thread_info(make_thread_info(thread_detail::decay_copy(boost::forward<F>(f))))
         {
             start_thread(attrs);
@@ -281,7 +283,7 @@ namespace boost
             start_thread();
         }
         template <class F>
-        thread(attributes& attrs, F f):
+        thread(attributes const& attrs, F f):
             thread_info(make_thread_info(f))
         {
             start_thread(attrs);
@@ -290,15 +292,18 @@ namespace boost
         template <class F>
         explicit thread(F f
         , typename disable_if_c<
-            boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value || is_same<typename decay<F>::type, thread>::value,
-            dummy* >::type=0):
+            boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
+            //|| is_same<typename decay<F>::type, thread>::value
+           , dummy* >::type=0
+        ):
             thread_info(make_thread_info(f))
         {
             start_thread();
         }
         template <class F>
-        thread(attributes& attrs, F f
-        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0):
+        thread(attributes const& attrs, F f
+        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
+        ):
             thread_info(make_thread_info(f))
         {
             start_thread(attrs);
@@ -318,7 +323,7 @@ namespace boost
         }
 
         template <class F>
-        thread(attributes& attrs, BOOST_THREAD_RV_REF(F) f):
+        thread(attributes const& attrs, BOOST_THREAD_RV_REF(F) f):
 #ifdef BOOST_THREAD_USES_MOVE
             thread_info(make_thread_info(boost::move<F>(f))) // todo : Add forward
 #else
@@ -366,7 +371,17 @@ namespace boost
         {
           start_thread();
         }
+        template <class F, class Arg, class ...Args>
+        thread(attributes const& attrs, F&& f, Arg&& arg, Args&&... args) :
+          thread_info(make_thread_info(
+              thread_detail::decay_copy(boost::forward<F>(f)),
+              thread_detail::decay_copy(boost::forward<Arg>(arg)),
+              thread_detail::decay_copy(boost::forward<Args>(args))...)
+          )
 
+        {
+          start_thread(attrs);
+        }
 #else
         template <class F,class A1>
         thread(F f,A1 a1,typename disable_if<boost::is_convertible<F&,thread_attributes >, dummy* >::type=0):
@@ -730,16 +745,12 @@ namespace boost
     }
 #endif
     void thread::join() {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
-        if (!join_noexcept())
-        {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-            boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#endif
-        }
+        BOOST_THREAD_ASSERT_PRECONDITION(  this_thread::get_id() != get_id(),
+            thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself")
+        );
+        BOOST_THREAD_VERIFY_PRECONDITION( join_noexcept(),
+            thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable")
+        );
     }
 
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
@@ -748,10 +759,9 @@ namespace boost
     bool thread::do_try_join_until(uintmax_t timeout)
 #endif
     {
-        if (this_thread::get_id() == get_id())
-        {
-            boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
-        }
+        BOOST_THREAD_ASSERT_PRECONDITION( this_thread::get_id() != get_id(),
+            thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself")
+        );
         bool res;
         if (do_try_join_until_noexcept(timeout, res))
         {
@@ -759,11 +769,10 @@ namespace boost
         }
         else
         {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-            boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-#else
-            return false;
-#endif
+          BOOST_THREAD_THROW_ELSE_RETURN(
+            thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"),
+            false
+          );
         }
     }
 

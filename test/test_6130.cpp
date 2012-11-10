@@ -30,7 +30,7 @@ int main()
     time_t end_time;
     assert(now_time < wait_time);
 
-    boost::mutex::scoped_lock lk(mtx);
+    boost::unique_lock<boost::mutex> lk(mtx);
     //const bool res =
     (void)cv.timed_wait(lk, from_time_t(wait_time));
     end_time = ::time(0);

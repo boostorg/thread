@@ -15,7 +15,7 @@ void test_lock_two_uncontended()
 {
     boost::mutex m1,m2;
 
-    boost::mutex::scoped_lock l1(m1,boost::defer_lock),
+    boost::unique_lock<boost::mutex> l1(m1,boost::defer_lock),
         l2(m2,boost::defer_lock);
 
     BOOST_CHECK(!l1.owns_lock());
@@ -39,7 +39,7 @@ struct wait_data
 
     void wait()
     {
-        boost::mutex::scoped_lock l(m);
+        boost::unique_lock<boost::mutex> l(m);
         while(!flag)
         {
             cond.wait(l);
@@ -51,7 +51,7 @@ struct wait_data
     {
         boost::system_time const target=boost::get_system_time()+d;
 
-        boost::mutex::scoped_lock l(m);
+        boost::unique_lock<boost::mutex> l(m);
         while(!flag)
         {
             if(!cond.timed_wait(l,target))
@@ -64,7 +64,7 @@ struct wait_data
 
     void signal()
     {
-        boost::mutex::scoped_lock l(m);
+        boost::unique_lock<boost::mutex> l(m);
         flag=true;
         cond.notify_all();
     }
@@ -83,7 +83,7 @@ void lock_mutexes_slowly(boost::mutex* m1,boost::mutex* m2,wait_data* locked,wai
 void lock_pair(boost::mutex* m1,boost::mutex* m2)
 {
     boost::lock(*m1,*m2);
-    boost::mutex::scoped_lock l1(*m1,boost::adopt_lock),
+    boost::unique_lock<boost::mutex> l1(*m1,boost::adopt_lock),
         l2(*m2,boost::adopt_lock);
 }
 
@@ -129,7 +129,7 @@ void test_lock_five_uncontended()
 {
     boost::mutex m1,m2,m3,m4,m5;
 
-    boost::mutex::scoped_lock l1(m1,boost::defer_lock),
+    boost::unique_lock<boost::mutex> l1(m1,boost::defer_lock),
         l2(m2,boost::defer_lock),
         l3(m3,boost::defer_lock),
         l4(m4,boost::defer_lock),

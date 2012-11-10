@@ -130,12 +130,10 @@ namespace boost
     nested_strict_lock(Lock& lk) :
       lk_(lk) /*< Store reference to lk >*/
     {
-#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED  /*< Define BOOST_THREAD_DONT_CHECK_PRECONDITIONS if you don't want to check lk ownership >*/
-      if (lk.mutex() == 0)
-      {
-        throw_exception( lock_error() );
-      }
-#endif
+      /*< Define BOOST_THREAD_DONT_CHECK_PRECONDITIONS if you don't want to check lk ownership >*/
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.mutex() != 0,
+          lock_error()
+      );
       if (!lk.owns_lock()) lk.lock(); /*< ensures it is locked >*/
       tmp_lk_ = move(lk); /*< Move ownership to temporary lk >*/
     }

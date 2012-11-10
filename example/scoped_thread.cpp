@@ -4,9 +4,9 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 3
 
 #include <iostream>
-//#include <string>
 #include <boost/thread/scoped_thread.hpp>
 
 void do_something(int& i)
@@ -36,6 +36,10 @@ void do_something_in_current_thread()
 {
 }
 
+//void do_something_with_current_thread(boost::thread&& th)
+//{
+//  th.join();
+//}
 
 int main()
 {
@@ -52,6 +56,14 @@ int main()
 
     do_something_in_current_thread();
   }
+//  {
+//    int some_local_state;
+//    boost::thread t(( func(some_local_state) ));
+//    boost::strict_scoped_thread<> g( (boost::move(t)) );
+//
+//    do_something_in_current_thread();
+//    do_something_with_current_thread(boost::thread(g));
+//  }
   return 0;
 }
 

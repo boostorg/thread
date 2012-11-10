@@ -28,7 +28,7 @@ void barrier_thread()
     {
         if (gen_barrier.wait())
         {
-            boost::mutex::scoped_lock lock(mutex);
+            boost::unique_lock<boost::mutex> lock(mutex);
             global_parameter++;
         }
     }

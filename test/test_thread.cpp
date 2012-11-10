@@ -77,7 +77,7 @@ void test_id_comparison()
 
 void interruption_point_thread(boost::mutex* m,bool* failed)
 {
-    boost::mutex::scoped_lock lk(*m);
+    boost::unique_lock<boost::mutex> lk(*m);
     boost::this_thread::interruption_point();
     *failed=true;
 }
@@ -86,7 +86,7 @@ void do_test_thread_interrupts_at_interruption_point()
 {
     boost::mutex m;
     bool failed=false;
-    boost::mutex::scoped_lock lk(m);
+    boost::unique_lock<boost::mutex> lk(m);
     boost::thread thrd(boost::bind(&interruption_point_thread,&m,&failed));
     thrd.interrupt();
     lk.unlock();
@@ -101,7 +101,7 @@ void test_thread_interrupts_at_interruption_point()
 
 void disabled_interruption_point_thread(boost::mutex* m,bool* failed)
 {
-    boost::mutex::scoped_lock lk(*m);
+    boost::unique_lock<boost::mutex> lk(*m);
     boost::this_thread::disable_interruption dc;
     boost::this_thread::interruption_point();
     *failed=false;
@@ -111,7 +111,7 @@ void do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
 {
     boost::mutex m;
     bool failed=true;
-    boost::mutex::scoped_lock lk(m);
+    boost::unique_lock<boost::mutex> lk(m);
     boost::thread thrd(boost::bind(&disabled_interruption_point_thread,&m,&failed));
     thrd.interrupt();
     lk.unlock();
@@ -165,7 +165,7 @@ struct long_running_thread
 
     void operator()()
     {
-        boost::mutex::scoped_lock lk(mut);
+        boost::unique_lock<boost::mutex> lk(mut);
         while(!done)
         {
             cond.wait(lk);
@@ -184,7 +184,7 @@ void do_test_timed_join()
     BOOST_CHECK(!joined);
     BOOST_CHECK(thrd.joinable());
     {
-        boost::mutex::scoped_lock lk(f.mut);
+        boost::unique_lock<boost::mutex> lk(f.mut);
         f.done=true;
         f.cond.notify_one();
     }

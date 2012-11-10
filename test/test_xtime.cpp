@@ -88,7 +88,7 @@ void test_xtime_condvar_backwards_compatibility()
     boost::condition_variable_any cond_any;
     boost::mutex m;
 
-    boost::mutex::scoped_lock lk(m);
+    boost::unique_lock<boost::mutex> lk(m);
     cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));
     cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)),predicate);
     cond_any.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));

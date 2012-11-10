@@ -2903,7 +2903,7 @@ namespace boost
         BOOST_THREAD_FUTURE<R>
         async(R(*f)())
         {
-            return async(launch::any, f);
+            return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), f));
         }
 #endif
 
@@ -2989,7 +2989,7 @@ namespace boost
     BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
     async(BOOST_THREAD_RV_REF(F) f)
     {
-        return async(launch::any, boost::forward<F>(f));
+        return async(launch(launch::any), boost::forward<F>(f));
     }
 
 

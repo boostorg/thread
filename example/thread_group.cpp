@@ -12,7 +12,7 @@ boost::mutex mutex;
 
 void increment_count()
 {
-    boost::mutex::scoped_lock lock(mutex);
+    boost::unique_lock<boost::mutex> lock(mutex);
     std::cout << "count = " << ++count << std::endl;
 }
 

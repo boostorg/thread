@@ -9,6 +9,17 @@
 [section:configuration Configuration]
 
 
+[table Default Values for Configurable Features
+    [[Feature]                  [Anti-Feature]               [V2]  [V3]  [V4]  ]
+    [[USES_CHRONO]              [DONT_USE_CHRONO]            [YES] [YES] [YES] ]
+    [[USES_MOVE]                [DONT_USE_MOVE]              [YES] [YES] [YES] ]
+    [[USES_DATETIME]            [DONT_USE_DATETIME]          [YES] [NO]  [NO] ]
+    [[PROVIDES_THREAD_EQ]       [DONT_PROVIDE_THREAD_EQ]     [YES] [YES] [NO] ]
+    [[PROVIDES_CONDITION]       [DONT_PROVIDE_CONDITION]     [YES] [YES] [NO] ]
+    [[PROVIDES_NESTED_LOCKS]    [DONT_PROVIDE_NESTED_LOCKS]  [YES] [YES] [NO] ]
+    [[PROVIDES_BASIC_THREAD_ID] [PROVIDES_BASIC_THREAD_ID]   [NO]  [YES] [YES] ]
+]
+
 [section:chrono Boost.Chrono]
 
 Boost.Thread uses by default Boost.Chrono for the time related functions and define `BOOST_THREAD_USES_CHRONO` if `BOOST_THREAD_DONT_USE_CHRONO` is not defined. The user should define `BOOST_THREAD_DONT_USE_CHRONO` for compilers that don't work well with Boost.Chrono.

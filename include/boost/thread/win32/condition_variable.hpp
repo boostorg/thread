@@ -11,7 +11,9 @@
 #include <boost/thread/win32/thread_data.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 #include <boost/thread/cv_status.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
+#endif
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/lock_guard.hpp>
@@ -323,6 +325,7 @@ namespace boost
         }
 
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time)
         {
             return do_wait(m,abs_time);
@@ -353,7 +356,7 @@ namespace boost
         {
             return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 
         template <class Clock, class Duration>
@@ -430,6 +433,7 @@ namespace boost
             while(!pred()) wait(m);
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
@@ -465,6 +469,7 @@ namespace boost
         {
             return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 
         template <class lock_type, class Clock, class Duration>

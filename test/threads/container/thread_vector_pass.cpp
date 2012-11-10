@@ -40,7 +40,7 @@ void interrupt_all(TC & tc)
 
 void increment_count()
 {
-  boost::mutex::scoped_lock lock(mutex);
+  boost::unique_lock<boost::mutex> lock(mutex);
   std::cout << "count = " << ++count << std::endl;
 }
 
