@@ -80,17 +80,32 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 [endsect]
 
 
+[section:is_basic_lockable `is_basic_lockable` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_basic_lockable;
+    }
+  }
+
+Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of BasicLockable you could build. 
+
 [endsect]
+[endsect]
+
 [section:lockable `Lockable` Concept]
 
   // #include <boost/thread/lockable_concepts.hpp> 
-
   namespace boost 
   {
     template<typename L>
     class Lockable;
   }
-
 
 A type `L` meets the __Lockable requirements if it meets the __BasicLockable requirements and the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
 
@@ -115,7 +130,53 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
 ]
 [endsect]
 
+[section:is_lockable `is_lockable` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_lockable;
+    }
+  }
+
+Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of Lockable you could build. 
+
 [endsect]
+[endsect]
+
+[section:recursive Recursive Lockable Concept]
+
+The user could require that the mutex passed to an algorithm is a recursive one. Whether a lockable is recursive or not can not be checked using template meta-programming. This is the motivation for the following trait.
+
+
+[section:is_recursive_mutex_sur_parolle `is_recursive_mutex_sur_parolle` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_recursive_mutex_sur_parolle: false_type;
+      template<>
+      class is_recursive_mutex_sur_parolle<recursive_mutex>: true_type;
+      template<>
+      class is_recursive_mutex_sur_parolle<timed_recursive_mutex>: true_type;
+    }
+  }
+
+The trait `is_recursive_mutex_sur_parolle` is `false_type` by default and is specialized for the provide `recursive_mutex` and `timed_recursive_mutex`. 
+
+It should be specialized by the user providing other model of recursive lockable.
+
+[endsect]
+
+[endsect]
+
 
 [section:timed_lockable `TimedLockable` Concept]
 
