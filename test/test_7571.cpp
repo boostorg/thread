@@ -19,7 +19,7 @@ public:
   ItemKeeper() { }
 
   void doSomething() {
-    boost::mutex::scoped_lock scoped_lock(mutex);
+    boost::unique_lock<boost::mutex> scoped_lock(mutex);
     int counts = MAX_COUNTS;
     while (counts--);
   }

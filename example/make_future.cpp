@@ -15,7 +15,7 @@ boost::future<int> compute(int x)
   if (x == 0) return boost::make_future(0);
   if (x < 0) return boost::make_future(-1);
   //boost::future<int> f1 = boost::async([]() { return x+1; });
-  boost::future<int> f1 = boost::async(p1);
+  boost::future<int> f1 = boost::async(boost::launch::async, p1);
   return boost::move(f1);
 }
 boost::shared_future<int> shared_compute(int x)

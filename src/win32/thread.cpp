@@ -21,9 +21,9 @@
 #include <boost/thread/future.hpp>
 
 #include <boost/assert.hpp>
-#include <boost/throw_exception.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
-
+#endif
 #include <memory>
 #include <algorithm>
 #ifndef UNDER_CE
@@ -344,17 +344,15 @@ namespace boost
         else
         {
           return false;
-//#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-//          boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-//#endif
         }
     }
 
+#if defined BOOST_THREAD_USES_DATETIME
     bool thread::timed_join(boost::system_time const& wait_until)
     {
       return do_try_join_until(get_milliseconds_until(wait_until));
     }
-
+#endif
     bool thread::do_try_join_until_noexcept(uintmax_t milli, bool& res)
     {
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
@@ -372,9 +370,6 @@ namespace boost
       else
       {
         return false;
-//#ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
-//        boost::throw_exception(thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"));
-//#endif
       }
     }
 

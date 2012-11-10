@@ -30,7 +30,7 @@ struct condition_test_data
 
 void condition_test_thread(condition_test_data* data)
 {
-    boost::mutex::scoped_lock lock(data->mutex);
+    boost::unique_lock<boost::mutex> lock(data->mutex);
     BOOST_CHECK(lock ? true : false);
     while (!(data->notified > 0))
         data->condition.wait(lock);
@@ -53,7 +53,7 @@ private:
 
 void condition_test_waits(condition_test_data* data)
 {
-    boost::mutex::scoped_lock lock(data->mutex);
+    boost::unique_lock<boost::mutex> lock(data->mutex);
     BOOST_CHECK(lock ? true : false);
 
     // Test wait.
@@ -107,7 +107,7 @@ void do_test_condition_waits()
     boost::thread thread(bind(&condition_test_waits, &data));
 
     {
-        boost::mutex::scoped_lock lock(data.mutex);
+        boost::unique_lock<boost::mutex> lock(data.mutex);
         BOOST_CHECK(lock ? true : false);
 
         boost::thread::sleep(delay(1));

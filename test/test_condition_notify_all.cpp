@@ -30,7 +30,7 @@ void do_test_condition_notify_all_wakes_from_wait()
         }
 
         {
-            boost::mutex::scoped_lock lock(data.mutex);
+            boost::unique_lock<boost::mutex> lock(data.mutex);
             data.flag=true;
             data.cond_var.notify_all();
         }
@@ -59,7 +59,7 @@ void do_test_condition_notify_all_wakes_from_wait_with_predicate()
         }
 
         {
-            boost::mutex::scoped_lock lock(data.mutex);
+            boost::unique_lock<boost::mutex> lock(data.mutex);
             data.flag=true;
             data.cond_var.notify_all();
         }
@@ -88,7 +88,7 @@ void do_test_condition_notify_all_wakes_from_timed_wait()
         }
 
         {
-            boost::mutex::scoped_lock lock(data.mutex);
+            boost::unique_lock<boost::mutex> lock(data.mutex);
             data.flag=true;
             data.cond_var.notify_all();
         }
@@ -117,7 +117,7 @@ void do_test_condition_notify_all_wakes_from_timed_wait_with_predicate()
         }
 
         {
-            boost::mutex::scoped_lock lock(data.mutex);
+            boost::unique_lock<boost::mutex> lock(data.mutex);
             data.flag=true;
             data.cond_var.notify_all();
         }
@@ -146,7 +146,7 @@ void do_test_condition_notify_all_wakes_from_relative_timed_wait_with_predicate(
         }
 
         {
-            boost::mutex::scoped_lock lock(data.mutex);
+            boost::unique_lock<boost::mutex> lock(data.mutex);
             data.flag=true;
             data.cond_var.notify_all();
         }
@@ -169,7 +169,7 @@ namespace
 
     void wait_for_condvar_and_increase_count()
     {
-        boost::mutex::scoped_lock lk(multiple_wake_mutex);
+        boost::unique_lock<boost::mutex> lk(multiple_wake_mutex);
         multiple_wake_cond.wait(lk);
         ++multiple_wake_count;
     }
@@ -193,7 +193,7 @@ void do_test_notify_all_following_notify_one_wakes_all_threads()
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
 
     {
-        boost::mutex::scoped_lock lk(multiple_wake_mutex);
+        boost::unique_lock<boost::mutex> lk(multiple_wake_mutex);
         BOOST_CHECK(multiple_wake_count==3);
     }
 

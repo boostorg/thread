@@ -117,6 +117,11 @@ namespace boost
     {
     }
 
+//    explicit operator thread()
+//    {
+//      return boost::move(t_);
+//    }
+
     /**
      * Move constructor.
      */

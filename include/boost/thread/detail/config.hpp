@@ -25,6 +25,21 @@
 #endif
 #endif
 
+#if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+#define BOOST_THREAD_ASSERT_PRECONDITION(EXPR, EX) \
+        if (EXPR) {} else boost::throw_exception(EX)
+#define BOOST_THREAD_VERIFY_PRECONDITION(EXPR, EX) \
+        if (EXPR) {} else boost::throw_exception(EX)
+#define BOOST_THREAD_THROW_ELSE_RETURN(EX, RET) \
+        boost::throw_exception(EX)
+#else
+#define BOOST_THREAD_ASSERT_PRECONDITION(EXPR, EX)
+#define BOOST_THREAD_VERIFY_PRECONDITION(EXPR, EX) \
+        (void)(EXPR)
+#define BOOST_THREAD_THROW_ELSE_RETURN(EX, RET) \
+        return (RET)
+#endif
+
 // This compiler doesn't support Boost.Chrono
 #if defined __IBMCPP__ && (__IBMCPP__ < 1100) && ! defined BOOST_THREAD_DONT_USE_CHRONO
 #define BOOST_THREAD_DONT_USE_CHRONO
@@ -54,9 +69,9 @@
 #endif
 
 
-// Default version is 2
+// Default version is 3
 #if !defined BOOST_THREAD_VERSION
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 4
 #else
 #if BOOST_THREAD_VERSION!=2  && BOOST_THREAD_VERSION!=3 && BOOST_THREAD_VERSION!=4
 #error "BOOST_THREAD_VERSION must be 2, 3 or 4"

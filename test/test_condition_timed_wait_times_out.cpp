@@ -29,7 +29,7 @@ void do_test_timed_wait_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
@@ -45,7 +45,7 @@ void do_test_timed_wait_with_predicate_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
@@ -62,7 +62,7 @@ void do_test_relative_timed_wait_with_predicate_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
 
     bool const res=cond.timed_wait(lock,delay,fake_predicate);
@@ -78,7 +78,7 @@ void do_test_timed_wait_relative_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
 
     while(cond.timed_wait(lock,delay)) {}
@@ -93,7 +93,7 @@ void do_test_cv_any_timed_wait_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
@@ -109,7 +109,7 @@ void do_test_cv_any_timed_wait_with_predicate_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
     boost::system_time const timeout=start+delay;
 
@@ -126,7 +126,7 @@ void do_test_cv_any_relative_timed_wait_with_predicate_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
 
     bool const res=cond.timed_wait(lock,delay,fake_predicate);
@@ -142,7 +142,7 @@ void do_test_cv_any_timed_wait_relative_times_out()
     boost::mutex m;
 
     boost::posix_time::seconds const delay(timeout_seconds);
-    boost::mutex::scoped_lock lock(m);
+    boost::unique_lock<boost::mutex> lock(m);
     boost::system_time const start=boost::get_system_time();
 
     while(cond.timed_wait(lock,delay)) {}

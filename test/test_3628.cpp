@@ -27,7 +27,7 @@ void ThreadFuncWaiter()
   for (int j = 0; j < 10; j++)
   {
     {
-      boost::recursive_mutex::scoped_lock lockMtx(theMutex);
+      boost::unique_lock<boost::recursive_mutex> lockMtx(theMutex);
       theConditions.push_back(&con1);
 
       cout << "Added " << boost::this_thread::get_id() << " " << &con1 << endl;
@@ -56,7 +56,7 @@ void ThreadFuncNotifier()
   for (int j = 0; j < 70; j++)
   {
     {
-      boost::recursive_mutex::scoped_lock lockMtx(theMutex);
+      boost::unique_lock<boost::recursive_mutex> lockMtx(theMutex);
       cout << "<Notifier " << j << endl;
 
       unsigned int i = 0;

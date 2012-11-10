@@ -407,9 +407,14 @@ value. Otherwise, returns an rvalue-reference to the value stored in the asynchr
 [[Postconditions:] [[unique_future_is_ready_link `this->is_ready()`] returns `true`. [unique_future_get_state_link
 `this->get_state()`] returns __ready__.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception stored in the
-asynchronous result in place of a value.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception stored in the asynchronous result in place of a value.
+]]
 
 [[Notes:] [`get()` is an ['interruption point].]]
 
@@ -426,9 +431,14 @@ asynchronous result in place of a value.]]
 [[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready. If the result is not ready on
 entry, and the result has a ['wait callback] set, that callback is invoked prior to waiting.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result
+associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [[unique_future_is_ready_link `this->is_ready()`] returns `true`. [unique_future_get_state_link
 `this->get_state()`] returns __ready__.]]
@@ -461,9 +471,13 @@ invoked prior to waiting.]]
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready before the specified time has
 elapsed, `false` otherwise.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
 [unique_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -495,9 +509,13 @@ prior to waiting.]]
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready before the specified time has
 passed, `false` otherwise.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
 [unique_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -529,9 +547,13 @@ invoked prior to waiting.]]
 
 ]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
 [unique_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -563,9 +585,13 @@ prior to waiting.]]
 
 ]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [unique_future_is_ready_link `this->is_ready()`] returns `true` and
 [unique_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -786,8 +812,12 @@ __shared_future_wait__, and returns a `const` reference to the result.]]
 [[Returns:] [If the result type `R` is a reference, returns the stored reference. If `R` is `void`, there is no return
 value. Otherwise, returns a `const` reference to the value stored in the asynchronous result.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the
-result associated with `*this` is not ready at the point of the call, and the current thread is interrupted.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted.
+]]
 
 [[Notes:] [`get()` is an ['interruption point].]]
 
@@ -804,8 +834,12 @@ result associated with `*this` is not ready at the point of the call, and the cu
 [[Effects:] [If `*this` is associated with an asynchronous result, waits until the result is ready. If the result is not ready on
 entry, and the result has a ['wait callback] set, that callback is invoked prior to waiting.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
+[[Throws:] [
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the
 ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [[shared_future_is_ready_link `this->is_ready()`] returns `true`. [shared_future_get_state_link
@@ -831,9 +865,13 @@ invoked prior to waiting.]]
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready before the specified time has
 elapsed, `false` otherwise.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
 [shared_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -857,9 +895,12 @@ prior to waiting.]]
 [[Returns:] [`true` if `*this` is associated with an asynchronous result, and that result is ready before the specified time has
 passed, `false` otherwise.]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
 [shared_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -892,9 +933,12 @@ invoked prior to waiting.]]
 
 ]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.]]
 
 [[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
 [shared_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -926,9 +970,13 @@ prior to waiting.]]
 
 ]]
 
-[[Throws:] [__future_uninitialized__ if `*this` is not associated with an asynchronous result. __thread_interrupted__ if the result
-associated with `*this` is not ready at the point of the call, and the current thread is interrupted. Any exception thrown by the
-['wait callback] if such a callback is called.]]
+[[Throws:] [
+- __future_uninitialized__ if `*this` is not associated with an asynchronous result. 
+
+- __thread_interrupted__ if the result associated with `*this` is not ready at the point of the call, and the current thread is interrupted. 
+
+- Any exception thrown by the ['wait callback] if such a callback is called.
+]]
 
 [[Postconditions:] [If this call returned `true`, then [shared_future_is_ready_link `this->is_ready()`] returns `true` and
 [shared_future_get_state_link `this->get_state()`] returns __ready__.]]
@@ -1042,14 +1090,12 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
       __unique_future__<R> get_future();
 
       // Set the value
-      void set_value(R& r);
-      void set_value(R&& r);
+      void set_value(see below);
       void set_exception(boost::exception_ptr e);
 
       // setting the result with deferred notification
-      // void set_value_at_thread_exit(const R& r); // NOT YET IMPLEMENTED
-      // void set_value_at_thread_exit(see below); // NOT YET IMPLEMENTED
-      // void set_exception_at_thread_exit(exception_ptr p); // NOT YET IMPLEMENTED
+      void set_value_at_thread_exit(see below);
+      void set_exception_at_thread_exit(exception_ptr p);
 
       template<typename F>
       void set_wait_callback(F f); // EXTENSION
@@ -1163,15 +1209,24 @@ memory necessary could not be allocated.]]
 
 [variablelist
 
-[[Effects:] [If `*this` was not associated with a result, allocate storage for a new asynchronous result and associate it with
-`*this`. Store the value `r` in the asynchronous result associated with `*this`. Any threads blocked waiting for the asynchronous
-result are woken.]]
+[[Effects:] [
+- If BOOST_THREAD_PROVIDES_PROMISE_LAZY is defined and if `*this` was not associated with a result, allocate storage for a new asynchronous result and associate it with `*this`. 
+
+- Store the value `r` in the asynchronous result associated with `*this`. Any threads blocked waiting for the asynchronous
+result are woken.
+]]
 
 [[Postconditions:] [All futures waiting on the asynchronous result are ['ready] and __unique_future_has_value__ or
 __shared_future_has_value__ for those futures shall return `true`.]]
 
-[[Throws:] [__promise_already_satisfied__ if the result associated with `*this` is already ['ready]. `std::bad_alloc` if the memory
-required for storage of the result cannot be allocated. Any exception thrown by the copy or move-constructor of `R`.]]
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated. 
+
+- Any exception thrown by the copy or move-constructor of `R`.]]
 
 ]
 
@@ -1183,21 +1238,83 @@ required for storage of the result cannot be allocated. Any exception thrown by 
 
 [variablelist
 
-[[Effects:] [If `*this` was not associated with a result, allocate storage for a new asynchronous result and associate it with
-`*this`. Store the exception `e` in the asynchronous result associated with `*this`. Any threads blocked waiting for the asynchronous
+[[Effects:] [
+- If BOOST_THREAD_PROVIDES_PROMISE_LAZY is defined and if `*this` was not associated with a result, allocate storage for a new asynchronous result and associate it with
+`*this`. 
+
+- Store the exception `e` in the asynchronous result associated with `*this`. Any threads blocked waiting for the asynchronous
 result are woken.]]
 
 [[Postconditions:] [All futures waiting on the asynchronous result are ['ready] and __unique_future_has_exception__ or
 __shared_future_has_exception__ for those futures shall return `true`.]]
 
-[[Throws:] [__promise_already_satisfied__ if the result associated with `*this` is already ['ready]. `std::bad_alloc` if the memory
-required for storage of the result cannot be allocated.]]
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated.
+]]
 
 ]
 
 [endsect]
 
-[section:set_wait_callback Member Function `set_wait_callback()`]
+[section:set_value_at_thread_exit Member Function `set_value_at_thread_exit()`]
+
+    void set_value_at_thread_exit(R&& r);
+    void set_value_at_thread_exit(const R& r);
+    void promise<R&>::set_value_at_thread_exit(R& r);
+    void promise<void>::set_value_at_thread_exit();
+
+[variablelist
+
+[[Effects:] [
+Stores the value r in the shared state without making that state ready immediately. 
+Schedules that state to be made ready when the current thread exits, after all objects of thread storage duration 
+associated with the current thread have been destroyed.]]
+
+
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated. 
+
+- Any exception thrown by the copy or move-constructor of `R`.
+]]
+
+]
+
+[endsect]
+
+[section:set_exception_at_thread_exit Member Function `set_exception_at_thread_exit()`]
+
+    void set_exception_at_thread_exit(boost::exception_ptr e);
+
+[variablelist
+
+[[Effects:] [
+Stores the exception pointer p in the shared state without making that state ready immediately. 
+Schedules that state to be made ready when the current thread exits, after all objects of thread storage duration
+ associated with the current thread have been destroyed.]]
+
+[[Postconditions:] [All futures waiting on the asynchronous result are ['ready] and __unique_future_has_exception__ or
+__shared_future_has_exception__ for those futures shall return `true`.]]
+
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated.
+]]
+
+]
+
+[endsect]
+[section:set_wait_callback Member Function `set_wait_callback()` EXTENSION]
 
     template<typename F>
     void set_wait_callback(F f);
@@ -1260,7 +1377,7 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 
       // execution
       void operator()(ArgTypes... );
-      // void make_ready_at_thread_exit(ArgTypes...); // NOT YET IMPLEMENTED
+      void make_ready_at_thread_exit(ArgTypes...);
 
       void reset();
       template<typename F>
@@ -1281,8 +1398,12 @@ as invoking `f`.]]
 
 [[Effects:] [Constructs a new __packaged_task__ with `boost::forward<F>(f)` stored as the associated task.]]
 
-[[Throws:] [Any exceptions thrown by the copy (or move) constructor of `f`. `std::bad_alloc` if memory for the internal data
-structures could not be allocated.]]
+[[Throws:] [
+
+- Any exceptions thrown by the copy (or move) constructor of `f`. 
+
+- `std::bad_alloc` if memory for the internal data structures could not be allocated.
+]]
 
 [[Notes:] [The R(*f)(ArgTypes...)) overload to allow passing a function without needing to use `&`.]]
 
@@ -1395,12 +1516,39 @@ asynchronous result associated with this task are woken.]]
 
 [[Postconditions:] [All futures waiting on the asynchronous result are ['ready]]]
 
-[[Throws:] [__task_moved__ if ownership of the task associated with `*this` has been moved to another instance of
-__packaged_task__. __task_already_started__ if the task has already been invoked.]]
+[[Throws:] [
+
+- __task_moved__ if ownership of the task associated with `*this` has been moved to another instance of __packaged_task__. 
+
+- __task_already_started__ if the task has already been invoked.]]
 
 ]
 
 [endsect]
+
+[section:make_ready_at_thread_exit Member Function `make_ready_at_thread_exit()`]
+
+      void make_ready_at_thread_exit(ArgTypes...);
+
+[variablelist
+
+[[Effects:] [Invoke the task associated with `*this` and store the result in the corresponding future. If the task returns normally,
+the return value is stored as the asynchronous result, otherwise the exception thrown is stored. 
+In either case, this is done without making that state ready immediately. 
+Schedules the shared state to be made ready when the current thread exits, after all objects of thread storage 
+duration associated with the current thread have been destroyed.]]
+
+[[Throws:] [
+
+- __task_moved__ if ownership of the task associated with `*this` has been moved to another instance of __packaged_task__. 
+
+- __task_already_started__ if the task has already been invoked.
+]]
+
+]
+
+[endsect]
+
 
 [section:reset Member Function `reset()`]
 

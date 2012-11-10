@@ -13,7 +13,7 @@
 
 #define CHECK_LOCKED_VALUE_EQUAL(mutex_name,value,expected_value)    \
     {                                                                \
-        boost::mutex::scoped_lock lock(mutex_name);                  \
+        boost::unique_lock<boost::mutex> lock(mutex_name);                  \
         BOOST_CHECK_EQUAL(value,expected_value);                     \
     }
 
@@ -40,11 +40,11 @@ public:
         boost::upgrade_lock<boost::shared_mutex> lk(rwm);
 
         {
-            boost::mutex::scoped_lock ulk(unblocked_mutex);
+            boost::unique_lock<boost::mutex> ulk(unblocked_mutex);
             ++unblocked_count;
         }
 
-        boost::mutex::scoped_lock flk(finish_mutex);
+        boost::unique_lock<boost::mutex> flk(finish_mutex);
     }
 };
 
@@ -62,7 +62,7 @@ void test_only_one_upgrade_lock_permitted()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     try
     {
@@ -102,7 +102,7 @@ void test_can_lock_upgrade_if_currently_locked_shared()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     unsigned const reader_count=10;
 
@@ -117,7 +117,7 @@ void test_can_lock_upgrade_if_currently_locked_shared()
         pool.create_thread(locking_thread<boost::upgrade_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
                                                                                      finish_mutex,simultaneous_running_count,max_simultaneous_running));
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<(reader_count+1))
             {
                 unblocked_condition.wait(lk);
@@ -155,7 +155,7 @@ void test_if_other_thread_has_write_lock_try_lock_shared_returns_false()
     boost::mutex finish_mutex;
     boost::mutex unblocked_mutex;
     unsigned unblocked_count=0;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
     boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::this_thread::sleep(boost::posix_time::seconds(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
@@ -178,7 +178,7 @@ void test_if_other_thread_has_write_lock_try_lock_upgrade_returns_false()
     boost::mutex finish_mutex;
     boost::mutex unblocked_mutex;
     unsigned unblocked_count=0;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
     boost::thread writer(simple_writing_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::this_thread::sleep(boost::posix_time::seconds(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
@@ -223,7 +223,7 @@ void test_if_other_thread_has_shared_lock_try_lock_shared_returns_true()
     boost::mutex finish_mutex;
     boost::mutex unblocked_mutex;
     unsigned unblocked_count=0;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
     boost::thread writer(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::thread::sleep(delay(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
@@ -246,7 +246,7 @@ void test_if_other_thread_has_shared_lock_try_lock_upgrade_returns_true()
     boost::mutex finish_mutex;
     boost::mutex unblocked_mutex;
     unsigned unblocked_count=0;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
     boost::thread writer(simple_reading_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::thread::sleep(delay(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);
@@ -269,7 +269,7 @@ void test_if_other_thread_has_upgrade_lock_try_lock_upgrade_returns_false()
     boost::mutex finish_mutex;
     boost::mutex unblocked_mutex;
     unsigned unblocked_count=0;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
     boost::thread writer(simple_upgrade_thread(rw_mutex,finish_mutex,unblocked_mutex,unblocked_count));
     boost::this_thread::sleep(boost::posix_time::seconds(1));
     CHECK_LOCKED_VALUE_EQUAL(unblocked_mutex,unblocked_count,1u);

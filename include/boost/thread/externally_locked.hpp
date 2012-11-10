@@ -87,19 +87,13 @@ namespace boost
      */
     T& get(strict_lock<mutex_type>& lk)
     {
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return obj_;
     }
 
     const T& get(strict_lock<mutex_type>& lk) const
     {
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return obj_;
     }
 
@@ -107,10 +101,7 @@ namespace boost
     T& get(nested_strict_lock<Lock>& lk)
     {
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return obj_;
     }
 
@@ -118,10 +109,7 @@ namespace boost
     const T& get(nested_strict_lock<Lock>& lk) const
     {
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return obj_;
     }
 
@@ -138,12 +126,9 @@ namespace boost
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
 
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_NO_CHECK_OWNERSHIP if you don't want to check lock ownership >*/
-      if (!lk.own_lock()) throw lock_error(); /*< run time check throw if no locked >*/
-#endif
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME
-      if (!lk.owns_lock(mtx_)) throw lock_error();
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
+
       return obj_;
     }
 
@@ -222,19 +207,13 @@ namespace boost
      */
     T& get(strict_lock<mutex_type> const& lk)
     {
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
 
     const T& get(strict_lock<mutex_type> const& lk) const
     {
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
 
@@ -242,10 +221,7 @@ namespace boost
     T& get(nested_strict_lock<Lock> const& lk)
     {
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
 
@@ -253,10 +229,7 @@ namespace boost
     const T& get(nested_strict_lock<Lock> const& lk) const
     {
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check lk check the same mtx >*/
-      if (!lk.owns_lock(&mtx_)) throw lock_error(); /*< run time check throw if not locks the same >*/
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
 
@@ -272,13 +245,8 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_NO_CHECK_OWNERSHIP if you don't want to check lock ownership >*/
-      if (!lk.own_lock()) throw lock_error(); /*< run time check throw if no locked >*/
-#endif
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME
-      if (!lk.owns_lock(mtx_)) throw lock_error();
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
 
@@ -294,13 +262,8 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP  /*< define BOOST_THREAD_EXTERNALLY_LOCKED_NO_CHECK_OWNERSHIP if you don't want to check lock ownership >*/
-      if (!lk.own_lock()) throw lock_error(); /*< run time check throw if no locked >*/
-#endif
-#ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME
-      if (!lk.owns_lock(mtx_)) throw lock_error();
-#endif
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
     mutex_type* mutex()
