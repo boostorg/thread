@@ -49,16 +49,24 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
 * [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
 * [@http://svn.boost.org/trac/boost/ticket/7540 #7540] Threads: Add a helper class that join a thread on destruction.
-* [@http://svn.boost.org/trac/boost/ticket/7541 #7541] Threads:  Add a thread wrapper class that joins on destruction.
+* [@http://svn.boost.org/trac/boost/ticket/7541 #7541] Threads: Add a thread wrapper class that joins on destruction.
+* [@http://svn.boost.org/trac/boost/ticket/7575 #7575] C++11 compliance: A future created by async should "join" in the destructor.
 * [@http://svn.boost.org/trac/boost/ticket/7587 #7587] Synchro: Add strict_lock and nested_strict_lock
 * [@http://svn.boost.org/trac/boost/ticket/7588 #7588] Synchro: Split the locks.hpp in several files to limit dependencies
 * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables
 * [@http://svn.boost.org/trac/boost/ticket/7590 #7590] Synchro: Add lockable concept checkers based on Boost.ConceptCheck
+* [@http://svn.boost.org/trac/boost/ticket/7591 #7591] Add lockable traits that can be used with enable_if
 * [@http://svn.boost.org/trac/boost/ticket/7592 #7592] Synchro: Add a null_mutex that is a no-op and that is a model of UpgardeLockable
 * [@http://svn.boost.org/trac/boost/ticket/7593 #7593] Synchro: Add a externally_locked class
 * [@http://svn.boost.org/trac/boost/ticket/7590 #7594] Threads: Allow to disable thread interruptions
 
 Fixed Bugs:
+
+* [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consuption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
+* [@http://svn.boost.org/trac/boost/ticket/7668 #7668] thread_group::join_all() should check whether its threads are joinable.
+* [@http://svn.boost.org/trac/boost/ticket/7669 #7669] thread_group::join_all() should catch resource_deadlock_would_occur.
+* [@http://svn.boost.org/trac/boost/ticket/7672 #7672] lockable_traits.hpp syntax error: "defined" token misspelled.
+
 
 [heading Version 3.1.0 - boost 1.52]
 
