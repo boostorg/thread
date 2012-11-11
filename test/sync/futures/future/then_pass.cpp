@@ -1,12 +1,3 @@
-//===----------------------------------------------------------------------===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-
 // Copyright (C) 2011 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -20,6 +11,7 @@
 // auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
 
 #define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -44,8 +36,16 @@ int main()
     BOOST_TEST(f2.get()==2);
   }
   {
+    boost::future<int> f2 = boost::async(p1).then(p2);
+    BOOST_TEST(f2.get()==2);
+  }
+  {
     boost::future<int> f1 = boost::async(p1);
     boost::future<int> f2 = f1.then(p2).then(p2);
+    BOOST_TEST(f2.get()==4);
+  }
+  {
+    boost::future<int> f2 = boost::async(p1).then(p2).then(p2);
     BOOST_TEST(f2.get()==4);
   }
 

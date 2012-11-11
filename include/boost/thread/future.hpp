@@ -263,7 +263,8 @@ namespace boost
 
             boost::exception_ptr exception;
             bool done;
-            bool is_deferred;
+            bool is_deferred_;
+            launch policy_;
             bool is_constructed;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             bool thread_was_interrupted;
@@ -276,10 +277,10 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             shared_ptr<future_continuation_base> continuation_ptr;
 #endif
-
             future_object_base():
                 done(false),
-                is_deferred(false),
+                is_deferred_(false),
+                policy_(launch::any),
                 is_constructed(false)
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                , thread_was_interrupted(false)
@@ -291,7 +292,8 @@ namespace boost
             virtual ~future_object_base()
             {}
 
-            void set_deferred() {is_deferred = true;}
+            void set_deferred() {is_deferred_ = true;}
+            void set_launch_policy(launch policy) {policy_ = policy;}
 
             waiter_list::iterator register_external_waiter(boost::condition_variable_any& cv)
             {
@@ -360,9 +362,9 @@ namespace boost
               do_callback(lock);
               //if (!done) // fixme why this doesn't works?
               {
-                if (is_deferred)
+                if (is_deferred_)
                 {
-                  is_deferred=false;
+                  is_deferred_=false;
                   execute(lock);
                   //lock.unlock();
                 }
@@ -395,7 +397,7 @@ namespace boost
             bool timed_wait_until(boost::system_time const& target_time)
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                if (is_deferred)
+                if (is_deferred_)
                     return false;
 
                 do_callback(lock);
@@ -417,7 +419,7 @@ namespace boost
             wait_until(const chrono::time_point<Clock, Duration>& abs_time)
             {
               boost::unique_lock<boost::mutex> lock(mutex);
-              if (is_deferred)
+              if (is_deferred_)
                   return future_status::deferred;
               do_callback(lock);
               while(!done)
@@ -502,6 +504,12 @@ namespace boost
                     || thread_was_interrupted
 #endif
                     );
+            }
+            void is_deferred() {is_deferred_ = true;}
+
+            launch launch_policy() const BOOST_NOEXCEPT
+            {
+                return policy_;
             }
 
             template<typename F,typename U>
@@ -1303,6 +1311,12 @@ namespace boost
             return future_ && future_->has_value();
         }
 
+        launch launch_policy() const BOOST_NOEXCEPT
+        {
+            if ( future_ ) return future_->launch_policy();
+            else return launch(launch::any);
+        }
+
         bool valid() const BOOST_NOEXCEPT
         {
             return future_ != 0;
@@ -1475,9 +1489,15 @@ namespace boost
 #if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
         template<typename RF>
         inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(BOOST_THREAD_FUTURE&));
+        template<typename RF>
+        inline BOOST_THREAD_FUTURE<RF> then(launch policy, RF(*func)(BOOST_THREAD_FUTURE&));
 #endif
         template<typename F>
-        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type> then(BOOST_THREAD_RV_REF(F) func);
+        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type>
+        then(BOOST_THREAD_RV_REF(F) func);
+        template<typename F>
+        inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type>
+        then(launch policy, BOOST_THREAD_RV_REF(F) func);
 #endif
     };
 
@@ -3044,11 +3064,19 @@ namespace boost
       {
         F& parent;
         C continuation;
+        launch policy_;
         promise<R> next;
 
         future_continuation(F& f, BOOST_THREAD_FWD_REF(C) c) :
           parent(f),
           continuation(boost::forward<C>(c)),
+          policy_(f.launch_policy()),
+          next()
+        {}
+        future_continuation(F& f, BOOST_THREAD_FWD_REF(C) c, launch policy) :
+          parent(f),
+          continuation(boost::forward<C>(c)),
+          policy_(policy),
           next()
         {}
         ~future_continuation()
@@ -3059,8 +3087,18 @@ namespace boost
           try
           {
             lk.unlock();
-            R val = continuation(parent);
-            next.set_value(boost::move(val));
+            // fixme what to do depending on inherits_launch_policy_ and policy_?
+//            if (int(policy_) & int(launch::deferred))
+            {
+              R val = continuation(parent);
+              next.set_value(boost::move(val));
+            }
+//            else
+//            {
+//              BOOST_THREAD_FUTURE<R> f = async(policy_, continuation, boost::ref(parent));
+//              R val = f.get();
+//              next.set_value(boost::move(val));
+//            }
           }
           catch (...)
           {
@@ -3078,11 +3116,19 @@ namespace boost
       {
         F& parent;
         CR(*continuation)(F&) ;
+        launch policy_;
         promise<R> next;
 
         future_continuation(F& f, CR(*c)(F&)) :
           parent(f),
           continuation(c),
+          policy_(f.launch_policy()),
+          next()
+        {}
+        future_continuation(F& f, CR(*c)(F&), launch policy) :
+          parent(f),
+          continuation(c),
+          policy_(policy),
           next()
         {}
         ~future_continuation()
@@ -3093,8 +3139,18 @@ namespace boost
           try
           {
             lk.unlock();
-            R val = continuation(parent);
-            next.set_value(boost::move(val));
+            // fixme what to do depending on inherits_launch_policy_ and policy_?
+//            if (int(policy_) & int(launch::deferred))
+            {
+              R val = continuation(parent);
+              next.set_value(boost::move(val));
+            }
+//            else
+//            {
+//              BOOST_THREAD_FUTURE<R> f = async(policy_, continuation, boost::ref(parent));
+//              R val = f.get();
+//              next.set_value(boost::move(val));
+//            }
           }
           catch (...)
           {
@@ -3117,6 +3173,33 @@ namespace boost
   template <typename R>
   template <typename F>
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type>
+  BOOST_THREAD_FUTURE<R>::then(launch policy, BOOST_THREAD_RV_REF(F) func)
+  {
+
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
+
+    if (this->future_)
+    {
+      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F > *ptr =
+          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func), policy);
+      if (ptr==0)
+      {
+        return BOOST_THREAD_FUTURE<future_type>();
+      }
+      this->future_->set_continuation_ptr(ptr, lock);
+      return ptr->next.get_future();
+    }
+    else
+    {
+      // fixme what to do when the future has no associated state?
+      return BOOST_THREAD_FUTURE<future_type>();
+    }
+
+  }
+  template <typename R>
+  template <typename F>
+  inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type>
   BOOST_THREAD_FUTURE<R>::then(BOOST_THREAD_RV_REF(F) func)
   {
 
@@ -3134,11 +3217,11 @@ namespace boost
       this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
+      // fixme what to do when the future has no associated state?
       return BOOST_THREAD_FUTURE<future_type>();
     }
 
   }
-
 #if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
   template <typename R>
   template<typename RF>
@@ -3160,6 +3243,32 @@ namespace boost
       this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
+      // fixme what to do when the future has no associated state?
+      return BOOST_THREAD_FUTURE<future_type>();
+    }
+
+  }
+  template <typename R>
+  template<typename RF>
+  BOOST_THREAD_FUTURE<RF>
+  BOOST_THREAD_FUTURE<R>::then(launch policy, RF(*func)(BOOST_THREAD_FUTURE<R>&))
+  {
+
+    typedef RF future_type;
+
+    if (this->future_)
+    {
+      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
+          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func, policy);
+      if (ptr==0)
+      {
+        return BOOST_THREAD_FUTURE<future_type>();
+      }
+      this->future_->set_continuation_ptr(ptr, lock);
+      return ptr->next.get_future();
+    } else {
+      // fixme what to do when the future has no associated state?
       return BOOST_THREAD_FUTURE<future_type>();
     }
 
