@@ -761,9 +761,9 @@ Join the thread before destroying or use a scoped thread.
 
 [[Error Conditions:] [
 
-[*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
+[*resource_deadlock_would_occur]: if deadlock is detected or `this->get_id() == boost::this_thread::get_id()` and `BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED` is defined..
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRROW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and `BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED` is defined.
 
 
 [/
@@ -814,7 +814,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRROW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -854,7 +854,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRROW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -894,7 +894,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRROW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -930,7 +930,7 @@ unchanged.]]
 
 [*no_such_process]: if the thread is not valid.
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRROW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 ]]
 
@@ -1719,6 +1719,8 @@ registered with `at_thread_exit()`]]
         thread* create_thread(F threadfunc);
         void add_thread(thread* thrd);
         void remove_thread(thread* thrd);
+        bool is_this_thread_in();
+        bool is_thread_in(thread* thrd);
         void join_all();
         void interrupt_all();
         int size() const;
@@ -1774,7 +1776,7 @@ registered with `at_thread_exit()`]]
 
 [variablelist
 
-[[Precondition:] [The expression `delete thrd` is well-formed and will not result in undefined behaviour.]]
+[[Precondition:] [The expression `delete thrd` is well-formed and will not result in undefined behaviour and `is_thread_in(thrd) == false`.]]
 
 [[Effects:] [Take ownership of the __thread__ object pointed to by `thrd` and add it to the group.]]
 
@@ -1804,11 +1806,39 @@ registered with `at_thread_exit()`]]
 
 [variablelist
 
+[[Requires:] [`is_this_thread_in() == false`.]]
+
 [[Effects:] [Call `join()` on each __thread__ object in the group.]]
 
 [[Postcondition:] [Every thread in the group has terminated.]]
 
 [[Note:] [Since __join__ is one of the predefined __interruption_points__, `join_all()` is also an interruption point.]]
+
+]
+
+[endsect]
+
+[section:is_this_thread_in Member function `is_this_thread_in()`]
+
+    bool is_this_thread_in();
+
+[variablelist
+
+[[Returns:] [true if there is a thread `th` in the group such that `th.get_id() == this_thread::get_id()`.]]
+
+
+]
+
+[endsect]
+
+[section:is_thread_in Member function `is_thread_in()`]
+
+    bool is_thread_in(thread* thrd);
+
+[variablelist
+
+[[Returns:] [true if there is a thread `th` in the group such that `th.get_id() == thrd->get_id()`.]]
+
 
 ]
 
