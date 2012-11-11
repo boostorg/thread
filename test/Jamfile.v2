@@ -285,6 +285,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2 ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
+          [ thread-run2 ./sync/futures/future/then_pass.cpp : future__then_p ]
     ;
 
     #explicit ts_shared_future ;
@@ -589,7 +590,7 @@ rule thread-compile-fail ( sources : reqs * : name )
     test-suite ts_
     :
           #[ thread-run test_7665.cpp ]
-          [ thread-run test_7666.cpp ]
+          #[ thread-run test_7666.cpp ]
           #[ compile ../example/tes_is_function.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
     ;
