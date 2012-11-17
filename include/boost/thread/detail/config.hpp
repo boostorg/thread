@@ -41,35 +41,44 @@
 #endif
 
 // This compiler doesn't support Boost.Chrono
-#if defined __IBMCPP__ && (__IBMCPP__ < 1100) && ! defined BOOST_THREAD_DONT_USE_CHRONO
+#if defined __IBMCPP__ && (__IBMCPP__ < 1100) \
+  && ! defined BOOST_THREAD_DONT_USE_CHRONO
 #define BOOST_THREAD_DONT_USE_CHRONO
+#if ! defined BOOST_THREAD_USE_DATE
 #define BOOST_THREAD_USE_DATE
+#endif
 #endif
 
 // This compiler doesn't support Boost.Move
-#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100) && ! defined BOOST_THREAD_DONT_USE_MOVE
+#if BOOST_WORKAROUND(__SUNPRO_CC, < 0x5100) \
+  && ! defined BOOST_THREAD_DONT_USE_MOVE
 #define BOOST_THREAD_DONT_USE_MOVE
 #endif
 
 // This compiler doesn't support Boost.Container Allocators files
-#if defined __SUNPRO_CC && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
+#if defined __SUNPRO_CC \
+  && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #endif
 
-#if defined _WIN32_WCE && _WIN32_WCE==0x501 && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
+#if defined _WIN32_WCE && _WIN32_WCE==0x501 \
+  && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #endif
 
-#if ! defined BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID && ! defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+/// BASIC_THREAD_ID
+// todo to be removed for 1.54
+#if ! defined BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID \
+ && ! defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #define BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #endif
 
+/// RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 #if defined BOOST_NO_CXX11_RVALUE_REFERENCES || defined BOOST_MSVC
 #define BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 #endif
 
-
-// Default version is 3
+// Default version is 2
 #if !defined BOOST_THREAD_VERSION
 #define BOOST_THREAD_VERSION 2
 #else
@@ -80,7 +89,8 @@
 
 // CHRONO
 // Uses Boost.Chrono by default if not stated the opposite defining BOOST_THREAD_DONT_USE_CHRONO
-#if ! defined BOOST_THREAD_DONT_USE_CHRONO && ! defined BOOST_THREAD_USES_CHRONO
+#if ! defined BOOST_THREAD_DONT_USE_CHRONO \
+  && ! defined BOOST_THREAD_USES_CHRONO
 #define BOOST_THREAD_USES_CHRONO
 #endif
 
@@ -103,9 +113,10 @@
 #if BOOST_THREAD_VERSION>=3
 
 // ONCE_CXX11
+// fixme BOOST_THREAD_PROVIDES_ONCE_CXX11 doesn't works when thread.cpp is compiled BOOST_THREAD_VERSION 3
 #if ! defined BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11 \
  && ! defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#define BOOST_THREAD_PROVIDES_ONCE_CXX11
+#define BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11
 #endif
 
 // THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
@@ -258,10 +269,6 @@
 #if  ! defined BOOST_THREAD_PROVIDES_THREAD_EQ
 #define BOOST_THREAD_PROVIDES_THREAD_EQ
 #endif
-
-//#if ! defined BOOST_THREAD_USES_DATETIME
-//#define defined BOOST_THREAD_USES_DATETIME
-//#endif
 
 #endif
 

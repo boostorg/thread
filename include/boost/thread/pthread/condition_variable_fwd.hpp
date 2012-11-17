@@ -72,10 +72,10 @@ namespace boost
             boost::system_time const& wait_until)
         {
 #if defined BOOST_THREAD_WAIT_BUG
-            struct timespec const timeout=detail::get_timespec(wait_until + BOOST_THREAD_WAIT_BUG);
+            struct timespec const timeout=detail::to_timespec(wait_until + BOOST_THREAD_WAIT_BUG);
             return do_timed_wait(m, timeout);
 #else
-            struct timespec const timeout=detail::get_timespec(wait_until);
+            struct timespec const timeout=detail::to_timespec(wait_until);
             return do_timed_wait(m, timeout);
 #endif
         }
@@ -218,10 +218,7 @@ namespace boost
         {
             using namespace chrono;
             nanoseconds d = tp.time_since_epoch();
-            timespec ts;
-            seconds s = duration_cast<seconds>(d);
-            ts.tv_sec = static_cast<long>(s.count());
-            ts.tv_nsec = static_cast<long>((d - s).count());
+            timespec ts = boost::detail::to_timespec(d);
             if (do_timed_wait(lk, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }

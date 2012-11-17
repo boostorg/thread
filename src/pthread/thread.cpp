@@ -452,7 +452,7 @@ namespace boost
                     nanosleep(&ts, 0);
 #   else
                     mutex mx;
-                    mutex::scoped_lock lock(mx);
+                    unique_lock<mutex> lock(mx);
                     condition cond;
                     cond.timed_wait(lock, xt);
 #   endif

@@ -343,7 +343,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            struct timespec const ts=detail::get_timespec(abs_time);
+            struct timespec const ts=detail::to_timespec(abs_time);
             return do_try_lock_until(ts);
         }
 #endif
@@ -370,12 +370,9 @@ namespace boost
         }
         bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
         {
-          using namespace chrono;
-          nanoseconds d = tp.time_since_epoch();
-          timespec ts;
-          seconds s = duration_cast<seconds>(d);
-          ts.tv_sec = static_cast<long>(s.count());
-          ts.tv_nsec = static_cast<long>((d - s).count());
+          //using namespace chrono;
+          chrono::nanoseconds d = tp.time_since_epoch();
+          timespec ts = boost::detail::to_timespec(d);
           return do_try_lock_until(ts);
         }
 #endif
