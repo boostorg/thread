@@ -210,65 +210,43 @@ namespace boost
 
     namespace this_thread
     {
+      namespace hiden
+      {
+        void BOOST_THREAD_DECL sleep_for(const timespec& ts);
+        void BOOST_THREAD_DECL sleep_until(const timespec& ts);
+      }
+
 #ifdef BOOST_THREAD_USES_CHRONO
         inline
         void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
         {
-            using namespace chrono;
-            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
-
-            if(thread_info)
-            {
-              unique_lock<mutex> lk(thread_info->sleep_mutex);
-              while(cv_status::no_timeout==thread_info->sleep_condition.wait_for(lk,ns)) {}
-            }
-            else
-            {
-              if (ns >= nanoseconds::zero())
-              {
-
-  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                timespec ts = boost::detail::to_timespec(ns);
-                BOOST_VERIFY(!pthread_delay_np(&ts));
-  #   elif defined(BOOST_HAS_NANOSLEEP)
-                timespec ts = boost::detail::to_timespec(ns);
-                //  nanosleep takes a timespec that is an offset, not
-                //  an absolute time.
-                nanosleep(&ts, 0);
-  #   else
-                mutex mx;
-                unique_lock<mutex> lock(mx);
-                condition_variable cond;
-                cond.wait_for(lock, ns);
-  #   endif
-              }
-            }
+            return boost::this_thread::hiden::sleep_for(boost::detail::to_timespec(ns));
         }
-#endif
+#endif // BOOST_THREAD_USES_CHRONO
+
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
 #if defined BOOST_THREAD_USES_DATETIME
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution
-        template<typename TimeDuration>
-        inline void sleep(TimeDuration const& rel_time)
-        {
-            this_thread::sleep(get_system_time()+rel_time);
-        }
-
         template<>
+#endif
         void BOOST_THREAD_DECL sleep(system_time const& abs_time)
+#if 1
+        ;
 #else
-        void BOOST_THREAD_DECL sleep(system_time const& abs_time);
+        {
+          return boost::this_thread::hiden::sleep_until(boost::detail::to_timespec(abs_time));
+        }
+#endif
 
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
             this_thread::sleep(get_system_time()+rel_time);
         }
-#endif
-#endif
-    }
+#endif // BOOST_THREAD_USES_DATETIME
+    } // this_thread
 }
 
 #include <boost/config/abi_suffix.hpp>

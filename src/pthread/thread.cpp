@@ -1,7 +1,7 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
 // Copyright (C) 2007-8 Anthony Williams
-// (C) Copyright 2011 Vicente J. Botet Escriba
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -351,7 +351,7 @@ namespace boost
                 unique_lock<mutex> lock(local_thread_info->data_mutex);
                 while(!local_thread_info->done)
                 {
-                    if(!local_thread_info->done_condition.do_timed_wait(lock,timeout))
+                    if(!local_thread_info->done_condition.do_wait_until(lock,timeout))
                     {
                       res=false;
                       return true;
@@ -418,11 +418,88 @@ namespace boost
 
     namespace this_thread
     {
+      namespace hiden
+      {
+        void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+        {
+            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
 
+            if(thread_info)
+            {
+              unique_lock<mutex> lk(thread_info->sleep_mutex);
+              while( thread_info->sleep_condition.do_wait_for(lk,ts)) {}
+            }
+            else
+            {
+
+              if (boost::detail::timespec_ge(ts, boost::detail::timespec_zero()))
+              {
+
+  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+                BOOST_VERIFY(!pthread_delay_np(&ts));
+  #   elif defined(BOOST_HAS_NANOSLEEP)
+                //  nanosleep takes a timespec that is an offset, not
+                //  an absolute time.
+                nanosleep(&ts, 0);
+  #   else
+                mutex mx;
+                unique_lock<mutex> lock(mx);
+                condition_variable cond;
+                cond.do_wait_for(lock, ts);
+  #   endif
+              }
+            }
+        }
+
+        void BOOST_THREAD_DECL sleep_until(const timespec& ts)
+        {
+            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
+
+            if(thread_info)
+            {
+              unique_lock<mutex> lk(thread_info->sleep_mutex);
+              while(thread_info->sleep_condition.do_wait_until(lk,ts)) {}
+            }
+            else
+            {
+              timespec now = boost::detail::timespec_now();
+              if (boost::detail::timespec_gt(ts, now))
+              {
+                for (int foo=0; foo < 5; ++foo)
+                {
+
+  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+                  timespec d = boost::detail::timespec_minus(ts, now);
+                  BOOST_VERIFY(!pthread_delay_np(&d));
+  #   elif defined(BOOST_HAS_NANOSLEEP)
+                  //  nanosleep takes a timespec that is an offset, not
+                  //  an absolute time.
+                  timespec d = boost::detail::timespec_minus(ts, now);
+                  nanosleep(&d, 0);
+  #   else
+                  mutex mx;
+                  unique_lock<mutex> lock(mx);
+                  condition_variable cond;
+                  cond.do_wait_until(lock, ts);
+  #   endif
+                  timespec now2 = boost::detail::timespec_now();
+                  if (boost::detail::timespec_ge(now2, ts))
+                  {
+                    return;
+                  }
+                }
+              }
+            }
+        }
+      } // hiden
+    } // this_thread
+    namespace this_thread
+    {
+#if 1
 #ifdef __DECXXX
         /// Workaround of DECCXX issue of incorrect template substitution
         template<>
-#endif
+#endif // __DECXXX
 #if defined BOOST_THREAD_USES_DATETIME
         void sleep(const system_time& st)
         {
@@ -463,7 +540,8 @@ namespace boost
                 }
             }
         }
-#endif
+#endif // BOOST_THREAD_USES_DATETIME
+#endif //1
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)

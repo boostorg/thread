@@ -4,7 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-8 Anthony Williams
-// (C) Copyright 2011 Vicente J. Botet Escriba
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
@@ -13,6 +13,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread_time.hpp>
+#include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/xtime.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
@@ -30,6 +31,20 @@ namespace boost
     private:
         pthread_mutex_t internal_mutex;
         pthread_cond_t cond;
+
+    public:
+    //private: // used by boost::thread::try_join_until
+
+        inline bool do_wait_until(
+            unique_lock<mutex>& lock,
+            struct timespec const &timeout);
+
+        bool do_wait_for(
+            unique_lock<mutex>& lock,
+            struct timespec const &timeout)
+        {
+          return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now()));
+        }
 
     public:
       BOOST_THREAD_NO_COPYABLE(condition_variable)
@@ -73,10 +88,10 @@ namespace boost
         {
 #if defined BOOST_THREAD_WAIT_BUG
             struct timespec const timeout=detail::to_timespec(wait_until + BOOST_THREAD_WAIT_BUG);
-            return do_timed_wait(m, timeout);
+            return do_wait_until(m, timeout);
 #else
             struct timespec const timeout=detail::to_timespec(wait_until);
-            return do_timed_wait(m, timeout);
+            return do_wait_until(m, timeout);
 #endif
         }
         bool timed_wait(
@@ -219,15 +234,10 @@ namespace boost
             using namespace chrono;
             nanoseconds d = tp.time_since_epoch();
             timespec ts = boost::detail::to_timespec(d);
-            if (do_timed_wait(lk, ts)) return cv_status::no_timeout;
+            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
 #endif
-        //private: // used by boost::thread::try_join_until
-
-        inline bool do_timed_wait(
-            unique_lock<mutex>& lock,
-            struct timespec const &timeout);
     };
 
     BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);

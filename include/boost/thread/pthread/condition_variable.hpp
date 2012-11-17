@@ -4,7 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-10 Anthony Williams
-// (C) Copyright 2011 Vicente J. Botet Escriba
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
@@ -75,12 +75,14 @@ namespace boost
         }
     }
 
-    inline bool condition_variable::do_timed_wait(
+    inline bool condition_variable::do_wait_until(
                 unique_lock<mutex>& m,
                 struct timespec const &timeout)
     {
         if (!m.owns_lock())
-            boost::throw_exception(condition_error(EPERM, "condition_variable do_timed_wait: mutex not locked"));
+        {
+            boost::throw_exception(condition_error(EPERM, "condition_variable do_wait_until: mutex not locked"));
+        }
 
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
@@ -176,7 +178,7 @@ namespace boost
         bool timed_wait(lock_type& m,boost::system_time const& wait_until)
         {
             struct timespec const timeout=detail::to_timespec(wait_until);
-            return do_timed_wait(m, timeout);
+            return do_wait_until(m, timeout);
         }
         template<typename lock_type>
         bool timed_wait(lock_type& m,xtime const& wait_until)
@@ -296,7 +298,7 @@ namespace boost
             using namespace chrono;
             nanoseconds d = tp.time_since_epoch();
             timespec ts = boost::detail::to_timespec(d);
-            if (do_timed_wait(lk, ts)) return cv_status::no_timeout;
+            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
 #endif
@@ -315,7 +317,7 @@ namespace boost
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>
-        inline bool do_timed_wait(
+        inline bool do_wait_until(
           lock_type& m,
           struct timespec const &timeout)
         {
