@@ -513,7 +513,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
-          struct timespec const ts=detail::get_timespec(abs_time);
+          struct timespec const ts=detail::to_timespec(abs_time);
           return do_try_join_until(ts);
         }
 #endif
@@ -522,10 +522,7 @@ namespace boost
         {
           using namespace chrono;
           nanoseconds d = tp.time_since_epoch();
-          timespec ts;
-          seconds s = duration_cast<seconds>(d);
-          ts.tv_sec = static_cast<long>(s.count());
-          ts.tv_nsec = static_cast<long>((d - s).count());
+          timespec ts = boost::detail::to_timespec(d);
           return do_try_join_until(ts);
         }
 #endif

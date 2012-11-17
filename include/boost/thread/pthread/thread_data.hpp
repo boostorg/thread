@@ -228,20 +228,16 @@ namespace boost
               {
 
   #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                timespec ts;
-                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
-                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
+                timespec ts = boost::detail::to_timespec(ns);
                 BOOST_VERIFY(!pthread_delay_np(&ts));
   #   elif defined(BOOST_HAS_NANOSLEEP)
-                timespec ts;
-                ts.tv_sec = static_cast<long>(duration_cast<seconds>(ns).count());
-                ts.tv_nsec = static_cast<long>((ns - seconds(ts.tv_sec)).count());
+                timespec ts = boost::detail::to_timespec(ns);
                 //  nanosleep takes a timespec that is an offset, not
                 //  an absolute time.
                 nanosleep(&ts, 0);
   #   else
                 mutex mx;
-                mutex::scoped_lock lock(mx);
+                unique_lock<mutex> lock(mx);
                 condition_variable cond;
                 cond.wait_for(lock, ns);
   #   endif
@@ -261,7 +257,7 @@ namespace boost
         }
 
         template<>
-        void BOOST_THREAD_DECL sleep(system_time const& abs_time);
+        void BOOST_THREAD_DECL sleep(system_time const& abs_time)
 #else
         void BOOST_THREAD_DECL sleep(system_time const& abs_time);
 
