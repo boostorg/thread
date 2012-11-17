@@ -495,53 +495,6 @@ namespace boost
     } // this_thread
     namespace this_thread
     {
-#if 1
-#ifdef __DECXXX
-        /// Workaround of DECCXX issue of incorrect template substitution
-        template<>
-#endif // __DECXXX
-#if defined BOOST_THREAD_USES_DATETIME
-        void sleep(const system_time& st)
-        {
-            detail::thread_data_base* const thread_info=detail::get_current_thread_data();
-
-            if(thread_info)
-            {
-                unique_lock<mutex> lk(thread_info->sleep_mutex);
-                while(thread_info->sleep_condition.timed_wait(lk,st)) {}
-            }
-            else
-            {
-                xtime const xt=get_xtime(st);
-
-                for (int foo=0; foo < 5; ++foo)
-                {
-#   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                    timespec ts;
-                    to_timespec_duration(xt, ts);
-                    BOOST_VERIFY(!pthread_delay_np(&ts));
-#   elif defined(BOOST_HAS_NANOSLEEP)
-                    timespec ts;
-                    to_timespec_duration(xt, ts);
-
-                    //  nanosleep takes a timespec that is an offset, not
-                    //  an absolute time.
-                    nanosleep(&ts, 0);
-#   else
-                    mutex mx;
-                    unique_lock<mutex> lock(mx);
-                    condition cond;
-                    cond.timed_wait(lock, xt);
-#   endif
-                    xtime cur;
-                    xtime_get(&cur, TIME_UTC_);
-                    if (xtime_cmp(xt, cur) <= 0)
-                        return;
-                }
-            }
-        }
-#endif // BOOST_THREAD_USES_DATETIME
-#endif //1
         void yield() BOOST_NOEXCEPT
         {
 #   if defined(BOOST_HAS_SCHED_YIELD)
@@ -549,10 +502,10 @@ namespace boost
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
             BOOST_VERIFY(!pthread_yield());
 #   elif defined BOOST_THREAD_USES_DATETIME
-            xtime xt;
-            xtime_get(&xt, TIME_UTC_);
-            sleep(xt);
-#   else
+//            xtime xt;
+//            xtime_get(&xt, TIME_UTC_);
+//            sleep(xt);
+//#   else
             sleep_for(chrono::milliseconds(0));
 #   endif
         }
