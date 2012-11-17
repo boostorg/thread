@@ -3,6 +3,7 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
 // (C) Copyright 2007 David Deakins
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x400
