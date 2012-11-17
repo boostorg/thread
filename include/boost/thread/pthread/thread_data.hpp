@@ -231,14 +231,10 @@ namespace boost
         /// Workaround of DECCXX issue of incorrect template substitution
         template<>
 #endif
-        void BOOST_THREAD_DECL sleep(system_time const& abs_time)
-#if 1
-        ;
-#else
+        inline void sleep(system_time const& abs_time)
         {
           return boost::this_thread::hiden::sleep_until(boost::detail::to_timespec(abs_time));
         }
-#endif
 
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
