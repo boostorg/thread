@@ -20,6 +20,7 @@
 #include <boost/thread/detail/thread_heap_alloc.hpp>
 #include <boost/thread/detail/make_tuple_indices.hpp>
 #include <boost/thread/detail/invoke.hpp>
+#include <boost/thread/detail/is_convertible.hpp>
 #include <boost/assert.hpp>
 #include <list>
 #include <algorithm>
@@ -222,7 +223,7 @@ namespace boost
         template<typename F>
         static inline detail::thread_data_ptr make_thread_info(F f
             , typename disable_if_c<
-                //boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
+                //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value ||
                 is_same<typename decay<F>::type, thread>::value,
                 dummy* >::type=0
                 )
@@ -292,7 +293,7 @@ namespace boost
         template <class F>
         explicit thread(F f
         , typename disable_if_c<
-            boost::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
+            boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
             //|| is_same<typename decay<F>::type, thread>::value
            , dummy* >::type=0
         ):
@@ -302,7 +303,7 @@ namespace boost
         }
         template <class F>
         thread(attributes const& attrs, F f
-        , typename disable_if<boost::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
+        , typename disable_if<boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F) >, dummy* >::type=0
         ):
             thread_info(make_thread_info(f))
         {
@@ -384,7 +385,7 @@ namespace boost
         }
 #else
         template <class F,class A1>
-        thread(F f,A1 a1,typename disable_if<boost::is_convertible<F&,thread_attributes >, dummy* >::type=0):
+        thread(F f,A1 a1,typename disable_if<boost::thread_detail::is_convertible<F&,thread_attributes >, dummy* >::type=0):
             thread_info(make_thread_info(boost::bind(boost::type<void>(),f,a1)))
         {
             start_thread();
