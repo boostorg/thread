@@ -28,7 +28,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
-#include <boost/type_traits/is_convertible.hpp>
+#include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/mpl/if.hpp>
@@ -65,6 +65,7 @@
 
 namespace boost
 {
+
 
   //enum class future_errc
   BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_errc)
@@ -539,8 +540,8 @@ namespace boost
             typedef typename boost::mpl::if_<boost::has_move_emulation_enabled<T>,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
 #else
             typedef T& source_reference_type;
-            typedef typename boost::mpl::if_<boost::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
-            typedef typename boost::mpl::if_<boost::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+            typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+            typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
 #endif
 
             typedef const T& shared_future_get_result_type;
@@ -863,18 +864,17 @@ namespace boost
         struct future_async_object: future_object<Rp>
         {
           typedef future_object<Rp> base_type;
-          Fp func_;
           boost::thread thr_;
 
         public:
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
           explicit future_async_object(Fp&& f)
-          : func_(boost::forward<Fp>(f))
+          :
         #else
-          explicit future_async_object(Fp f)
-          : func_(f)
+          explicit future_async_object(BOOST_THREAD_FWD_REF(Fp) f)
+          :
         #endif
-          , thr_(&future_async_object::execute, *this)
+          thr_(&future_async_object::run, this, boost::forward<Fp>(f))
           {
           }
 
@@ -883,36 +883,44 @@ namespace boost
             thr_.join();
           }
 
-          virtual void execute(boost::unique_lock<boost::mutex>& lock) {
+#if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+          static void run(future_async_object* that, Fp&& f)
+#else
+          static void run(future_async_object* that, BOOST_THREAD_FWD_REF(Fp) f)
+#endif
+          {
             try
             {
-              this->mark_finished_with_result_internal(func_(), lock);
+              that->mark_finished_with_result(f());
             }
-            catch (...)
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+            catch(thread_interrupted& )
             {
-              this->mark_exceptional_finish_internal(current_exception(), lock);
+              that->mark_interrupted_finish();
             }
-
+#endif
+            catch(...)
+            {
+              that->mark_exceptional_finish();
+            }
           }
-
         };
 
         template<typename Fp>
         struct future_async_object<void, Fp>: public future_object<void>
         {
           typedef future_object<void> base_type;
-          Fp func_;
           boost::thread thr_;
 
         public:
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
           explicit future_async_object(Fp&& f)
-          : func_(boost::forward<Fp>(f))
+          :
         #else
-          explicit future_async_object(Fp f)
-          : func_(f)
+          explicit future_async_object(BOOST_THREAD_FWD_REF(Fp) f)
+          :
         #endif
-          , thr_(&future_async_object::execute, *this)
+          thr_(&future_async_object::run, this, boost::forward<Fp>(f))
           {
           }
 
@@ -921,19 +929,28 @@ namespace boost
             thr_.join();
           }
 
-          virtual void execute(boost::unique_lock<boost::mutex>& lock) {
+#if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+          static void run(future_async_object* that, Fp&& f)
+#else
+          static void run(future_async_object* that, BOOST_THREAD_FWD_REF(Fp) f)
+#endif
+          {
             try
             {
-              func_();
-              this->mark_finished_with_result_internal(lock);
+              f();
+              that->mark_finished_with_result();
             }
-            catch (...)
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+            catch(thread_interrupted& )
             {
-              this->mark_exceptional_finish_internal(current_exception(), lock);
+              that->mark_interrupted_finish();
             }
-
+#endif
+            catch(...)
+            {
+              that->mark_exceptional_finish();
+            }
           }
-
         };
         /// future_deferred_object
         template<typename Rp, typename Fp>
@@ -1380,7 +1397,7 @@ namespace boost
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         make_future_async_object(Fp&& f);
         #else
-        make_future_async_object(Fp f);
+        make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f);
         #endif
 
         template <class Rp, class Fp>
@@ -1388,7 +1405,7 @@ namespace boost
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         make_future_deferred_object(Fp&& f);
         #else
-        make_future_deferred_object(Fp f);
+        make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f);
         #endif
     }
 
@@ -1417,7 +1434,7 @@ namespace boost
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         detail::make_future_async_object(Fp&& f);
         #else
-        detail::make_future_async_object(Fp f);
+        detail::make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f);
         #endif
 
         template <class Rp, class Fp>
@@ -1425,7 +1442,7 @@ namespace boost
         #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         detail::make_future_deferred_object(Fp&& f);
         #else
-        detail::make_future_deferred_object(Fp f);
+        detail::make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f);
         #endif
 
         typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
@@ -2840,7 +2857,7 @@ namespace boost
     #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
     make_future_deferred_object(Fp&& f)
     #else
-    make_future_deferred_object(Fp f)
+    make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f)
     #endif
     {
       shared_ptr<future_deferred_object<Rp, Fp> >
@@ -2856,7 +2873,7 @@ namespace boost
     #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
     make_future_async_object(Fp&& f)
     #else
-    make_future_async_object(Fp f)
+    make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f)
     #endif
     {
       shared_ptr<future_async_object<Rp, Fp> >
@@ -2971,6 +2988,14 @@ namespace boost
 
         if (int(policy) & int(launch::async))
         {
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+          return boost::detail::make_future_async_object<Rp>(
+              BF(
+                  thread_detail::decay_copy(boost::forward<F>(f))
+                  , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+              )
+          );
+#else
           packaged_task_type pt( boost::forward<F>(f) );
 
           BOOST_THREAD_FUTURE<R> ret = pt.get_future();
@@ -2980,6 +3005,7 @@ namespace boost
           boost::thread( boost::move(pt) ).detach();
 #endif
           return ::boost::move(ret);
+#endif
         }
         else if (int(policy) & int(launch::deferred))
         {
