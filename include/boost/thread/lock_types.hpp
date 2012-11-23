@@ -169,7 +169,9 @@ namespace boost
     {
       BOOST_THREAD_RV(other).is_locked=false;
       BOOST_THREAD_RV(other).m=0;
-    }BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(BOOST_THREAD_RV_REF_BEG upgrade_lock<Mutex> BOOST_THREAD_RV_REF_END other);
+    }
+
+    BOOST_THREAD_EXPLICIT_LOCK_CONVERSION unique_lock(BOOST_THREAD_RV_REF_BEG upgrade_lock<Mutex> BOOST_THREAD_RV_REF_END other);
 
 #ifndef BOOST_THREAD_PROVIDES_EXPLICIT_LOCK_CONVERSION
     unique_lock& operator=(BOOST_THREAD_RV_REF_BEG upgrade_lock<Mutex> BOOST_THREAD_RV_REF_END other) BOOST_NOEXCEPT
