@@ -330,6 +330,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/make_lock_guard_pass.cpp : make_lock_guard_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/make_lock_guard_adopt_lock_pass.cpp : make_lock_guard__adopt_lock_p ]
     ;
 
     #explicit ts_unique_lock ;
@@ -591,7 +593,6 @@ rule thread-compile-fail ( sources : reqs * : name )
     :
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
-          #[ compile ../example/tes_is_function.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
     ;
 

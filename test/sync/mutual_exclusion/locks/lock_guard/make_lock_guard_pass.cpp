@@ -12,15 +12,20 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/locks.hpp>
+// <boost/thread/lock_guard.hpp>
 
-// template <class Mutex> class lock_guard;
+// template <class Lockable>
+// lock_guard<Lockable> make_lock_guard(Lockable &);
 
-// lock_guard(Mutex &);
+#define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_USES_LOG
+#define BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS
 
+#include <boost/thread/detail/log.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
+
 #include <boost/detail/lightweight_test.hpp>
 
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -33,40 +38,37 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+
 void f()
 {
-#ifdef BOOST_THREAD_USES_CHRONO
   time_point t0 = Clock::now();
   time_point t1;
   {
-    boost::lock_guard<boost::mutex> lg(m);
+    auto&& lg = boost::make_lock_guard(m);
     t1 = Clock::now();
+    BOOST_THREAD_TRACE;
   }
+  BOOST_THREAD_TRACE;
   ns d = t1 - t0 - ms(250);
   // This test is spurious as it depends on the time the thread system switches the threads
   BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
-#else
-  //time_point t0 = Clock::now();
-  //time_point t1;
-  {
-    boost::lock_guard<boost::mutex> lg(m);
-    //t1 = Clock::now();
-  }
-  //ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
-  //BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
-#endif
 }
+#endif
 
 int main()
 {
-  m.lock();
-  boost::thread t(f);
-#ifdef BOOST_THREAD_USES_CHRONO
-  boost::this_thread::sleep_for(ms(250));
-#endif
-  m.unlock();
-  t.join();
 
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+  {
+    m.lock();
+    boost::thread t(f);
+  #ifdef BOOST_THREAD_USES_CHRONO
+    boost::this_thread::sleep_for(ms(250));
+  #endif
+    m.unlock();
+    t.join();
+  }
+#endif
   return boost::report_errors();
 }
