@@ -12,6 +12,7 @@
 #define BOOST_THREAD_DETAIL_IS_CONVERTIBLE_HPP
 
 #include <boost/type_traits/is_convertible.hpp>
+#include <boost/thread/detail/move.hpp>
 
 namespace boost
 {
@@ -20,9 +21,16 @@ namespace boost
     template <typename T1, typename T2>
     struct is_convertible : boost::is_convertible<T1,T2> {};
 
-    template <typename T1, typename T2>
-    struct is_convertible<T1&, T2&> : boost::is_convertible<T1, T2> {};
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 
+#if defined BOOST_THREAD_USES_MOVE
+    template <typename T1, typename T2>
+    struct is_convertible<
+      rv<T1> &,
+      rv<rv<T2> > &
+    > : false_type {};
+#endif
+#endif
   }
 
 } // namespace boost
