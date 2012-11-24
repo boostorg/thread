@@ -367,6 +367,18 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : unique_lock__types_p ]
     ;
 
+    #explicit ts_make_unique_lock ;
+    test-suite ts_make_unique_lock
+    :
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_mutex_pass.cpp : make_unique_lock__mutex_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_adopt_lock_pass.cpp : make_unique_lock__adopt_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_defer_lock_pass.cpp : make_unique_lock__defer_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_try_to_lock_pass.cpp : make_unique_lock__try_to_lock_p ]
+
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_locks_mutex_pass.cpp : make_unique_locks__mutex_p ]
+
+    ;
+
     #explicit ts_shared_lock ;
     test-suite ts_shared_lock
     :
