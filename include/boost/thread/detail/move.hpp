@@ -64,9 +64,9 @@ namespace boost
     {
         return t;
     }
-}
 
 #endif   //#if !defined BOOST_THREAD_USES_MOVE
+}
 
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 
