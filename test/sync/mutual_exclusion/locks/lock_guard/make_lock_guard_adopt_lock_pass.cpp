@@ -7,16 +7,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-// Copyright (C) 2011 Vicente J. Botet Escriba
+// Copyright (C) 2012 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/locks.hpp>
+// <boost/thread/lock_guard.hpp>
 
-// template <class Mutex> class lock_guard;
-
-// lock_guard(Mutex &);
+// template <class Lockable>
+// lock_guard<Lockable> make_lock_guard(Lockable &, adopt_lock_t);
 
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
@@ -30,8 +29,9 @@ typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
 #endif
-
 boost::mutex m;
+
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 
 void f()
 {
@@ -39,27 +39,29 @@ void f()
   time_point t0 = Clock::now();
   time_point t1;
   {
-    boost::lock_guard<boost::mutex> lg(m);
+    m.lock();
+    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock);
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
   BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
 #else
   //time_point t0 = Clock::now();
   //time_point t1;
   {
-    boost::lock_guard<boost::mutex> lg(m);
+    m.lock();
+    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock);
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
   //BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
 #endif
 }
+#endif
 
 int main()
 {
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
   m.lock();
   boost::thread t(f);
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -67,6 +69,7 @@ int main()
 #endif
   m.unlock();
   t.join();
-
+#endif
   return boost::report_errors();
 }
+

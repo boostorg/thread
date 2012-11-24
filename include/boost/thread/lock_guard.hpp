@@ -8,16 +8,42 @@
 #define BOOST_THREAD_LOCK_GUARD_HPP
 
 #include <boost/thread/detail/delete.hpp>
+#include <boost/thread/detail/move.hpp>
 #include <boost/thread/lock_options.hpp>
 #if ! defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
 #include <boost/thread/is_locked_by_this_thread.hpp>
 #endif
 #include <boost/assert.hpp>
-
+#include <iostream>
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#include <initializer_list>
+#endif
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
+
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+  namespace thread_detail
+  {
+    template <typename Mutex>
+    struct lockable_wrapper
+    {
+      Mutex* m;
+      explicit lockable_wrapper(Mutex& m_) :
+        m(&m_)
+      {}
+    };
+    template <typename Mutex>
+    struct lockable_adopt_wrapper
+    {
+      Mutex* m;
+      explicit lockable_adopt_wrapper(Mutex& m_) :
+        m(&m_)
+      {}
+    };
+  }
+#endif
 
   template <typename Mutex>
   class lock_guard
@@ -27,13 +53,14 @@ namespace boost
 
   public:
     typedef Mutex mutex_type;
-    BOOST_THREAD_NO_COPYABLE( lock_guard)
+    BOOST_THREAD_NO_COPYABLE( lock_guard )
 
     explicit lock_guard(Mutex& m_) :
       m(m_)
     {
       m.lock();
     }
+
     lock_guard(Mutex& m_, adopt_lock_t) :
       m(m_)
     {
@@ -41,13 +68,44 @@ namespace boost
       BOOST_ASSERT(is_locked_by_this_thread(m));
 #endif
     }
+
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+    lock_guard(std::initializer_list<thread_detail::lockable_wrapper<Mutex> > l_) :
+      m(*(const_cast<thread_detail::lockable_wrapper<Mutex>*>(l_.begin())->m))
+    {
+      m.lock();
+    }
+
+    lock_guard(std::initializer_list<thread_detail::lockable_adopt_wrapper<Mutex> > l_) :
+      m(*(const_cast<thread_detail::lockable_adopt_wrapper<Mutex>*>(l_.begin())->m))
+    {
+#if ! defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
+      BOOST_ASSERT(is_locked_by_this_thread(m));
+#endif
+    }
+
+#endif
     ~lock_guard()
     {
       m.unlock();
     }
   };
 
+
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+  template <typename Lockable>
+  lock_guard<Lockable> make_lock_guard(Lockable& mtx)
+  {
+    return { thread_detail::lockable_wrapper<Lockable>(mtx) };
+  }
+  template <typename Lockable>
+  lock_guard<Lockable> make_lock_guard(Lockable& mtx, adopt_lock_t)
+  {
+    return { thread_detail::lockable_adopt_wrapper<Lockable>(mtx) };
+  }
+#endif
 }
+
 #include <boost/config/abi_suffix.hpp>
 
 #endif
