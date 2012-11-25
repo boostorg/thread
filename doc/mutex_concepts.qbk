@@ -948,6 +948,10 @@ These tags are used in scoped locks constructors to specify a specific behavior.
 
     template<typename Lockable>
     class lock_guard
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& mtx); // EXTENSION
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& mtx, adopt_lock_t); // EXTENSION
   }
 
 [section:lock_guard Class template `lock_guard`]
@@ -1017,6 +1021,38 @@ object passed to the constructor.]]
 
 [endsect]
   
+[section:make_lock_guard Non Member Function `make_lock_guard`]
+
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& m); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a lock_guard as if initialized with `{m}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+
+[endsect]
+[section:make_lock_guard_adopt Non Member Function `make_lock_guard`]
+
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& m, adopt_lock_t); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a lock_guard as if initialized with `{m, adopt_lock}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+
+[endsect]
 [endsect]
 
 [section:lock_concepts Lock Concepts]
