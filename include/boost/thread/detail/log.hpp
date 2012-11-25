@@ -9,7 +9,10 @@
 #include <boost/thread/detail/config.hpp>
 #if defined BOOST_THREAD_USES_LOG
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#if defined BOOST_THREAD_USES_LOG_THREAD_ID
 #include <boost/thread/thread.hpp>
+#endif
 #include <iostream>
 
 namespace boost
@@ -24,12 +27,20 @@ namespace boost
 
   }
 }
+#if defined BOOST_THREAD_USES_LOG_THREAD_ID
 
 #define BOOST_THREAD_LOG \
   { \
-    boost::lock_guard<boost::recursive_mutex> lk(boost::thread_detail::terminal_mutex()); \
+    boost::lock_guard<boost::recursive_mutex> _lk_(boost::thread_detail::terminal_mutex()); \
     std::cout << boost::this_thread::get_id() << " - "<<__FILE__<<"["<<__LINE__<<"] " <<std::dec
+#else
 
+#define BOOST_THREAD_LOG \
+{ \
+  boost::lock_guard<boost::recursive_mutex> _lk_(boost::thread_detail::terminal_mutex()); \
+  std::cout << __FILE__<<"["<<__LINE__<<"] " <<std::dec
+
+#endif
 #define BOOST_THREAD_END_LOG \
     std::dec << std::endl; \
   }
