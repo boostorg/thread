@@ -23,6 +23,8 @@ namespace boost
 
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 
+#if defined(BOOST_INTEL_CXX_VERSION) && (BOOST_INTEL_CXX_VERSION <= 1001)
+
 #if defined BOOST_THREAD_USES_MOVE
     template <typename T1, typename T2>
     struct is_convertible<
@@ -30,6 +32,13 @@ namespace boost
       rv<rv<T2> > &
     > : false_type {};
 #endif
+
+#elif defined __GNUC__ && __GNUC__ < 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ < 4 )
+
+    template <typename T1, typename T2>
+    struct is_convertible<T1&, T2&> : boost::is_convertible<T1, T2> {};
+#endif
+
 #endif
   }
 
