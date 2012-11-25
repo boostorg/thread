@@ -45,7 +45,7 @@
     [[30.4.1.3]        [Timed mutex types]  [Yes] [-] [-]]
     [[30.4.1.3.1]        [Class timed_mutex]  [Yes] [-] [-]]
     [[30.4.1.3.1]        [Class recursive_timed_mutex]  [Yes] [-] [-]]
-    [[30.4.2]        [Locks]  [Partial] [variadic] [#6227]]
+    [[30.4.2]        [Locks]  [Yes] [-] [-]]
     [[30.4.2.1]        [Class template lock_guard]  [Yes] [-] [-]]
     [[30.4.2.2]        [Class template unique_lock]  [Yes] [-] [-]]
     [[30.4.2.2.1]        [unique_lock constructors, destructor, and assignment] [Yes]  [-]  [-]]
