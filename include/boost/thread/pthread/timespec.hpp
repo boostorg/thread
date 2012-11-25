@@ -65,7 +65,7 @@ namespace boost
     }
     inline boost::intmax_t to_nanoseconds_int_max(timespec const& ts)
     {
-      return ts.tv_sec * 1000000000l + ts.tv_nsec;
+      return static_cast<boost::intmax_t>(ts.tv_sec) * 1000000000l + ts.tv_nsec;
     }
     inline bool timespec_ge_zero(timespec const& ts)
     {
