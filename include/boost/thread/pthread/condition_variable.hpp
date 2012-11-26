@@ -8,7 +8,9 @@
 
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
 #include <boost/thread/pthread/thread_data.hpp>
+#endif
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
