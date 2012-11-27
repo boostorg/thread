@@ -18,7 +18,7 @@
 #include <boost/thread/detail/platform.hpp>
 
 #if ! defined BOOST_THREAD_NOEXCEPT_OR_THROW
-#ifdef BOOST_NO_NOEXCEPT
+#ifdef BOOST_NO_CXX11_NOEXCEPT
 #  define BOOST_THREAD_NOEXCEPT_OR_THROW throw()
 #else
 #  define BOOST_THREAD_NOEXCEPT_OR_THROW noexcept
