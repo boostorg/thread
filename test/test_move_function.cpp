@@ -97,7 +97,7 @@ namespace user_test_ns
     struct nc:
         public boost::shared_ptr<int>
     {
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         nc() {}
         nc(nc&&)
         {
@@ -120,7 +120,7 @@ namespace boost
 void test_move_for_user_defined_type_unaffected()
 {
     user_test_ns::nc src;
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     user_test_ns::nc dest=boost::move(src);
 #else
     user_test_ns::nc dest=move(src);

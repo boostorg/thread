@@ -9,9 +9,9 @@
 #include <boost/thread.hpp>
 #include <boost/config.hpp>
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 struct MovableButNonCopyable {
-#if ! defined BOOST_NO_DELETED_FUNCTIONS
+#if ! defined BOOST_NO_CXX11_DELETED_FUNCTIONS
       MovableButNonCopyable(MovableButNonCopyable const&) = delete;
       MovableButNonCopyable& operator=(MovableButNonCopyable const&) = delete;
 #else
