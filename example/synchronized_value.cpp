@@ -65,7 +65,7 @@ int main()
   }
   {
     boost::synchronized_value<std::string> s;
-#if 0
+#if 1
     s->append("foo/");
 #else
     s.synchronize()->append("foo");
@@ -75,7 +75,7 @@ int main()
   }
   {
     boost::synchronized_value<std::string> s;
-#if 0
+#if 1
     s->append("foo");
 #else
     s.synchronize()->append("foo");
