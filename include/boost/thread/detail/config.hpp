@@ -281,6 +281,13 @@
 
 #include <boost/thread/detail/platform.hpp>
 
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#else
+  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP) || defined(BOOST_HAS_NANOSLEEP)
+  #     define BOOST_THREAD_SLEEP_FOR_IS_STEADY
+  #   endif
+#endif
+
 // provided for backwards compatibility, since this
 // macro was used for several releases by mistake.
 #if defined(BOOST_THREAD_DYN_DLL) && ! defined BOOST_THREAD_DYN_LINK
