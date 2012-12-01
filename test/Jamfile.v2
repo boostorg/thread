@@ -92,6 +92,7 @@ rule thread-run ( sources )
     ;
 }
 
+
 rule thread-test ( sources )
 {
     return
@@ -116,6 +117,18 @@ rule thread-run2 ( sources : name )
       : $(name)_lib ]
     ;
 }
+
+rule thread-run2-h ( sources : name )
+{
+    return
+    [ run $(sources) : : :       
+      <library>/boost/system//boost_system
+      <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+      <define>BOOST_THREAD_VERSION=3 
+    : $(name)_h ]
+    ;
+}
+
 
 rule thread-run-lib2 ( sources : name )
 {
@@ -365,6 +378,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-compile-fail ./sync/mutual_exclusion/locks/unique_lock/obs/op_int_fail.cpp : : unique_lock__op_int_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/owns_lock_pass.cpp : unique_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : unique_lock__types_p ]
+
+
     ;
 
     #explicit ts_make_unique_lock ;
@@ -407,6 +422,10 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/op_bool_pass.cpp : shared_lock__op_bool_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/owns_lock_pass.cpp : shared_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/types_pass.cpp : shared_lock__types_p ]
+
+          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/default_pass.cpp : shared_lock__cons__default_p ]
+          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/defer_lock_pass.cpp : shared_lock__cons__defer_lock_p ]
+
     ;
 
     #explicit ts_upgrade_lock ;
@@ -497,6 +516,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_pass.cpp : shared_mutex__try_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_until_pass.cpp : shared_mutex__try_lock_until_p ]
 
+          [ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
     ;
 
     #explicit ts_this_thread ;
@@ -561,6 +581,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run ../example/make_future.cpp ]
           [ thread-run ../example/future_then.cpp ]
           [ thread-run ../example/synchronized_value.cpp ]
+          [ thread-run ../example/synchronized_person.cpp ]
           [ thread-run ../example/thread_guard.cpp ]
           [ thread-run ../example/scoped_thread.cpp ]
           [ thread-run ../example/strict_lock.cpp ]
