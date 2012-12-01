@@ -13,6 +13,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
+#include <boost/thread/lock_guard.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -31,46 +32,46 @@ namespace boost
     T value_;
     mutable lockable_type mtx_;
   public:
+    synchronized_value()
+    : value_()
+    {
+    }
+
+    synchronized_value(T other)
+    : value_(other)
+    {
+    }
+
     /**
      *
      */
-    struct strict_synchronizer
+    struct const_strict_synchronizer
     {
-    private:
+    protected:
       friend class synchronized_value;
 
       boost::unique_lock<lockable_type> lk_;
-      T& value_;
+      T const& value_;
 
-      explicit strict_synchronizer(synchronized_value& outer) :
+      explicit const_strict_synchronizer(synchronized_value const& outer) :
         lk_(outer.mtx_), value_(outer.value_)
       {
       }
     public:
-      BOOST_THREAD_NO_COPYABLE( strict_synchronizer )
+      BOOST_THREAD_NO_COPYABLE( const_strict_synchronizer )
 
-      strict_synchronizer(strict_synchronizer&& other)
+      const_strict_synchronizer(const_strict_synchronizer&& other)
       : lk_(boost::move(other.lk_)),value_(other.value_)
       {
       }
 
-      ~strict_synchronizer()
+      ~const_strict_synchronizer()
       {
-      }
-
-      T* operator->()
-      {
-        return &value_;
       }
 
       const T* operator->() const
       {
         return &value_;
-      }
-
-      T& operator*()
-      {
-        return value_;
       }
 
       const T& operator*() const
@@ -80,14 +81,59 @@ namespace boost
 
     };
 
+    /**
+     *
+     */
+    struct strict_synchronizer : const_strict_synchronizer
+    {
+    protected:
+      friend class synchronized_value;
+
+      explicit strict_synchronizer(synchronized_value& outer) :
+        const_strict_synchronizer(const_cast<synchronized_value&>(outer))
+      {
+      }
+    public:
+      BOOST_THREAD_NO_COPYABLE( strict_synchronizer )
+
+      strict_synchronizer(strict_synchronizer&& other)
+      : const_strict_synchronizer(boost::move(other))
+      {
+      }
+
+      ~strict_synchronizer()
+      {
+      }
+
+      T* operator->()
+      {
+        return const_cast<T*>(&this->value_);
+      }
+
+      T& operator*()
+      {
+        return const_cast<T&>(this->value_);
+      }
+
+    };
+
+
     strict_synchronizer operator->()
     {
       return BOOST_THREAD_MAKE_RV_REF(strict_synchronizer(*this));
+    }
+    const_strict_synchronizer operator->() const
+    {
+      return BOOST_THREAD_MAKE_RV_REF(const_strict_synchronizer(*this));
     }
 
     strict_synchronizer synchronize()
     {
       return BOOST_THREAD_MAKE_RV_REF(strict_synchronizer(*this));
+    }
+    const_strict_synchronizer synchronize() const
+    {
+      return BOOST_THREAD_MAKE_RV_REF(const_strict_synchronizer(*this));
     }
 
     /**

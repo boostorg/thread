@@ -29,7 +29,7 @@ void f(const boost::synchronized_value<int> &v) {
   std::cout<<"v="<<*v<<std::endl;
 }
 
-void g(const boost::synchronized_value<int>::strict_synchronizer &v) {
+void g(const boost::synchronized_value<int>::const_strict_synchronizer &v) {
   std::cout<<"v="<<*v<<std::endl;
 }
 
