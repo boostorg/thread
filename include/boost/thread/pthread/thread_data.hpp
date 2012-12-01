@@ -143,7 +143,7 @@ namespace boost
             typedef pthread_t native_handle_type;
 
             virtual void run()=0;
-            void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
+            virtual void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
             {
               notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
             }
@@ -221,11 +221,14 @@ namespace boost
       }
 
 #ifdef BOOST_THREAD_USES_CHRONO
+#ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
+
         inline
         void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
         {
             return boost::this_thread::hiden::sleep_for(boost::detail::to_timespec(ns));
         }
+#endif
 #endif // BOOST_THREAD_USES_CHRONO
 
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
