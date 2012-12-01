@@ -147,13 +147,13 @@ namespace boost
 
       T& value_;
 
+    public:
+      BOOST_THREAD_NO_COPYABLE(unique_synchronizer)
+
       explicit unique_synchronizer(synchronized_value& outer)
       : base_type(outer.mtx_), value_(outer.value_)
       {
       }
-    public:
-      BOOST_THREAD_NO_COPYABLE(unique_synchronizer)
-
       unique_synchronizer(unique_synchronizer&& other):
       base_type(static_cast<base_type&&>(other)),value_(other.value_)
       {
