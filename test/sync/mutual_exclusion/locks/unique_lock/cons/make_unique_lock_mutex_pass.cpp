@@ -33,7 +33,7 @@ void f()
   time_point t0 = Clock::now();
   time_point t1;
   {
-    auto&& _ = boost::make_unique_lock(m);
+    auto&& _ = boost::make_unique_lock(m); (void)_;
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
@@ -43,7 +43,7 @@ void f()
   //time_point t0 = Clock::now();
   //time_point t1;
   {
-    auto _ = boost::make_unique_lock(m);
+    auto _ = boost::make_unique_lock(m); (void)_;
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);

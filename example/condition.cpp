@@ -9,6 +9,7 @@
 #include <boost/utility.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/thread.hpp>
+#include "../test/remove_error_code_unused_warning.hpp"
 
 class bounded_buffer : private boost::noncopyable
 {
@@ -38,7 +39,8 @@ public:
     }
 
 private:
-    int begin, end, buffered;
+    int begin, end;
+    std::vector<int>::size_type buffered;
     std::vector<int> circular_buf;
     boost::condition_variable_any buffer_not_full, buffer_not_empty;
     boost::mutex monitor;

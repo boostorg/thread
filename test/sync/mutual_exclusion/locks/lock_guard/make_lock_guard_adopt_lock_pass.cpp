@@ -22,6 +22,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
+
 #ifdef BOOST_THREAD_USES_CHRONO
 typedef boost::chrono::high_resolution_clock Clock;
 typedef Clock::time_point time_point;
@@ -40,7 +41,8 @@ void f()
   time_point t1;
   {
     m.lock();
-    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock);
+    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock); (void)lg;
+
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
@@ -50,7 +52,7 @@ void f()
   //time_point t1;
   {
     m.lock();
-    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock);
+    auto&& lg = boost::make_lock_guard(m, boost::adopt_lock); (void)lg;
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);

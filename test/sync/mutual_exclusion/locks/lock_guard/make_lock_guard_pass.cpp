@@ -45,7 +45,7 @@ void f()
   time_point t0 = Clock::now();
   time_point t1;
   {
-    const auto&& lg = boost::make_lock_guard(m);
+    const auto&& lg = boost::make_lock_guard(m); (void)lg;
     t1 = Clock::now();
     BOOST_THREAD_TRACE;
   }
