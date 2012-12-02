@@ -94,14 +94,8 @@ namespace boost
         {
             long count;
             detail::win32::handle_manager thread_handle;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            detail::win32::handle_manager interruption_handle;
-#endif
             boost::detail::thread_exit_callback_node* thread_exit_callbacks;
             std::map<void const*,boost::detail::tss_data_node> tss_data;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            bool interruption_enabled;
-#endif
             unsigned id;
             typedef std::vector<std::pair<condition_variable*, mutex*>
             //, hidden_allocator<std::pair<condition_variable*, mutex*> >
@@ -110,19 +104,24 @@ namespace boost
 
             typedef std::vector<shared_ptr<future_object_base> > async_states_t;
             async_states_t async_states_;
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+            // These data must be at the end so that the access to the other fields doesn't change
+            // when BOOST_THREAD_PROVIDES_INTERRUPTIONS is defined
+            // Another option is to have them always
+            detail::win32::handle_manager interruption_handle;
+            bool interruption_enabled;
+//#endif
 
             thread_data_base():
                 count(0),thread_handle(detail::win32::invalid_handle_value),
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset)),
-#endif
                 thread_exit_callbacks(0),tss_data(),
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                interruption_enabled(true),
-#endif
                 id(0),
                 notify(),
                 async_states_()
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                , interruption_handle(create_anonymous_event(detail::win32::manual_reset_event,detail::win32::event_initially_reset))
+                , interruption_enabled(true)
+//#endif
             {}
             virtual ~thread_data_base();
 

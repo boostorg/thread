@@ -14,13 +14,16 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/pthread/timespec.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
 #include <boost/thread/detail/delete.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -64,12 +67,15 @@ namespace boost
         }
         ~condition_variable()
         {
-            BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
             int ret;
+            do {
+              ret = pthread_mutex_destroy(&internal_mutex);
+            } while (ret == EINTR);
+            BOOST_ASSERT(!ret);
             do {
               ret = pthread_cond_destroy(&cond);
             } while (ret == EINTR);
-            BOOST_VERIFY(!ret);
+            BOOST_ASSERT(!ret);
         }
 
         void wait(unique_lock<mutex>& m);
@@ -241,6 +247,7 @@ namespace boost
     };
 
     BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+
 }
 
 
