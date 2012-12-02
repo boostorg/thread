@@ -4,16 +4,11 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-//#define BOOST_THREAD_VERSION 4
-
-// There is yet a limitation when BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET is defined
-#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
+#define BOOST_THREAD_VERSION 4
 
 #include <iostream>
 #include <string>
 #include <boost/thread/synchronized_value.hpp>
-
-#if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
 void addTrailingSlashIfMissing(boost::synchronized_value<std::string> & path)
 {
@@ -88,10 +83,3 @@ int main()
   return 0;
 }
 
-#else
-
-int main()
-{
-  return 0;
-}
-#endif

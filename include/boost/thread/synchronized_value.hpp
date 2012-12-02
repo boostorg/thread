@@ -97,6 +97,7 @@ namespace boost
      *
      * Return: *this
      */
+
     synchronized_value& operator=(synchronized_value const& rhs)
     {
       if(&rhs != this)
@@ -236,7 +237,7 @@ namespace boost
       BOOST_THREAD_MOVABLE_ONLY( strict_synchronizer )
 
       strict_synchronizer(BOOST_THREAD_RV_REF(strict_synchronizer) other)
-      : const_strict_synchronizer(boost::move(other))
+      : const_strict_synchronizer(boost::move(static_cast<const_strict_synchronizer&>(other)))
       {
       }
 
