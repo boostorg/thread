@@ -501,12 +501,17 @@ namespace boost
             BOOST_VERIFY(!sched_yield());
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
             BOOST_VERIFY(!pthread_yield());
-#   elif defined BOOST_THREAD_USES_DATETIME
+//#   elif defined BOOST_THREAD_USES_DATETIME
 //            xtime xt;
 //            xtime_get(&xt, TIME_UTC_);
 //            sleep(xt);
-//#   else
-            sleep_for(chrono::milliseconds(0));
+//            sleep_for(chrono::milliseconds(0));
+#   else
+#error
+            timespec ts;
+            ts.tv_sec= 0;
+            ts.tv_nsec= 0;
+            hiden::sleep_for(ts);
 #   endif
         }
     }
@@ -723,6 +728,7 @@ namespace boost
             }
         }
     }
+
     BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());

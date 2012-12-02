@@ -35,6 +35,7 @@ int main()
         threads.create_thread(&increment_count);
     threads.join_all();
   }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
   {
     boost::thread_group threads;
     for (int i = 0; i < 3; ++i)
@@ -42,6 +43,7 @@ int main()
     threads.interrupt_all();
     threads.join_all();
   }
+#endif
   {
     boost::thread_group threads;
     boost::thread* th = new boost::thread(&increment_count);

@@ -49,6 +49,8 @@ project boost/thread
       <toolset>gcc:<cxxflags>-Wno-long-long
       <define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
       <define>BOOST_SYSTEM_NO_DEPRECATED
+      #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+      
       <library>/boost/system//boost_system
        #-pedantic -ansi -std=gnu++0x -Wextra -fpermissive
         <warnings>all
