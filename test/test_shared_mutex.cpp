@@ -3,6 +3,9 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_PROVIDES_INTERRUPTIONS
+
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
@@ -11,7 +14,7 @@
 
 #define CHECK_LOCKED_VALUE_EQUAL(mutex_name,value,expected_value)    \
     {                                                                \
-        boost::mutex::scoped_lock lock(mutex_name);                  \
+        boost::unique_lock<boost::mutex> lock(mutex_name);                  \
         BOOST_CHECK_EQUAL(value,expected_value);                     \
     }
 
@@ -28,7 +31,7 @@ void test_multiple_readers()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     try
     {
@@ -39,7 +42,7 @@ void test_multiple_readers()
         }
 
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<number_of_threads)
             {
                 unblocked_condition.wait(lk);
@@ -75,7 +78,7 @@ void test_only_one_writer_permitted()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     try
     {
@@ -115,7 +118,7 @@ void test_reader_blocks_writer()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     try
     {
@@ -123,7 +126,7 @@ void test_reader_blocks_writer()
         pool.create_thread(locking_thread<boost::shared_lock<boost::shared_mutex> >(rw_mutex,unblocked_count,unblocked_count_mutex,unblocked_condition,
                                                                                     finish_mutex,simultaneous_running_count,max_simultaneous_running));
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<1)
             {
                 unblocked_condition.wait(lk);
@@ -162,7 +165,7 @@ void test_unlocking_writer_unblocks_all_readers()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_mutex;
-    boost::mutex::scoped_lock finish_lock(finish_mutex);
+    boost::unique_lock<boost::mutex> finish_lock(finish_mutex);
 
     unsigned const reader_count=10;
 
@@ -179,7 +182,7 @@ void test_unlocking_writer_unblocks_all_readers()
         write_lock.unlock();
 
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<reader_count)
             {
                 unblocked_condition.wait(lk);
@@ -214,9 +217,9 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
     boost::mutex unblocked_count_mutex;
     boost::condition_variable unblocked_condition;
     boost::mutex finish_reading_mutex;
-    boost::mutex::scoped_lock finish_reading_lock(finish_reading_mutex);
+    boost::unique_lock<boost::mutex> finish_reading_lock(finish_reading_mutex);
     boost::mutex finish_writing_mutex;
-    boost::mutex::scoped_lock finish_writing_lock(finish_writing_mutex);
+    boost::unique_lock<boost::mutex> finish_writing_lock(finish_writing_mutex);
 
     unsigned const reader_count=10;
     unsigned const writer_count=10;
@@ -235,7 +238,7 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
                                                                                         finish_writing_mutex,simultaneous_running_writers,max_simultaneous_writers));
         }
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<reader_count)
             {
                 unblocked_condition.wait(lk);
@@ -247,7 +250,7 @@ void test_unlocking_last_reader_only_unblocks_one_writer()
         finish_reading_lock.unlock();
 
         {
-            boost::mutex::scoped_lock lk(unblocked_count_mutex);
+            boost::unique_lock<boost::mutex> lk(unblocked_count_mutex);
             while(unblocked_count<(reader_count+1))
             {
                 unblocked_condition.wait(lk);

@@ -4,11 +4,13 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-10 Anthony Williams
-// (C) Copyright 2011 Vicente J. Botet Escriba
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
 #include <boost/thread/pthread/thread_data.hpp>
+#endif
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
@@ -20,10 +22,12 @@
 
 namespace boost
 {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     namespace this_thread
     {
         void BOOST_THREAD_DECL interruption_point();
     }
+#endif
 
     namespace thread_cv_detail
     {
@@ -56,34 +60,44 @@ namespace boost
         int res=0;
         {
             thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
             guard.activate(m);
             do {
               res = pthread_cond_wait(&cond,&internal_mutex);
             } while (res == EINTR);
         }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
+#endif
         if(res)
         {
             boost::throw_exception(condition_error(res, "boost:: condition_variable constructor failed in pthread_cond_wait"));
         }
     }
 
-    inline bool condition_variable::do_timed_wait(
+    inline bool condition_variable::do_wait_until(
                 unique_lock<mutex>& m,
                 struct timespec const &timeout)
     {
         if (!m.owns_lock())
-            boost::throw_exception(condition_error(EPERM, "condition_variable do_timed_wait: mutex not locked"));
+        {
+            boost::throw_exception(condition_error(EPERM, "condition_variable do_wait_until: mutex not locked"));
+        }
 
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
         {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
             guard.activate(m);
             cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
         }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
+#endif
         if(cond_res==ETIMEDOUT)
         {
             return false;
@@ -140,11 +154,15 @@ namespace boost
             int res=0;
             {
                 thread_cv_detail::lock_on_exit<lock_type> guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
                 guard.activate(m);
                 res=pthread_cond_wait(&cond,&internal_mutex);
             }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             this_thread::interruption_point();
+#endif
             if(res)
             {
                 boost::throw_exception(condition_error(res, "condition_variable_any failed in pthread_cond_wait"));
@@ -157,11 +175,12 @@ namespace boost
             while(!pred()) wait(m);
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& wait_until)
         {
-            struct timespec const timeout=detail::get_timespec(wait_until);
-            return do_timed_wait(m, timeout);
+            struct timespec const timeout=detail::to_timespec(wait_until);
+            return do_wait_until(m, timeout);
         }
         template<typename lock_type>
         bool timed_wait(lock_type& m,xtime const& wait_until)
@@ -197,7 +216,7 @@ namespace boost
         {
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class lock_type,class Duration>
         cv_status
@@ -274,17 +293,15 @@ namespace boost
         }
 
         template <class lock_type>
-        inline void wait_until(
+        cv_status wait_until(
             lock_type& lk,
             chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
         {
             using namespace chrono;
             nanoseconds d = tp.time_since_epoch();
-            timespec ts;
-            seconds s = duration_cast<seconds>(d);
-            ts.tv_sec = static_cast<long>(s.count());
-            ts.tv_nsec = static_cast<long>((d - s).count());
-            do_timed_wait(lk, ts);
+            timespec ts = boost::detail::to_timespec(d);
+            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
         }
 #endif
 
@@ -302,18 +319,22 @@ namespace boost
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>
-        inline bool do_timed_wait(
+        inline bool do_wait_until(
           lock_type& m,
           struct timespec const &timeout)
         {
           int res=0;
           {
               thread_cv_detail::lock_on_exit<lock_type> guard;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
               detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#endif
               guard.activate(m);
               res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
           }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           this_thread::interruption_point();
+#endif
           if(res==ETIMEDOUT)
           {
               return false;

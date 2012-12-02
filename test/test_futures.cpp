@@ -4,6 +4,8 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
+
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
@@ -18,7 +20,7 @@
 #define LOG \
   if (false) {} else std::cout << std::endl << __FILE__ << "[" << __LINE__ << "]"
 
-#ifndef BOOST_NO_RVALUE_REFERENCES
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     template<typename T>
     typename boost::remove_reference<T>::type&& cast_to_rval(T&& t)
     {

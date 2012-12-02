@@ -20,8 +20,18 @@ do the various lock types.
 
 [section:basic_lockable `BasicLockable` Concept]
 
+  // #include <boost/thread/lockable_concepts.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename L>
+    class BasicLockable;
+  }
+
+
 The __BasicLockable concept models exclusive ownership. 
-A type `L` meets the __BasicLockable requiremets if the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
+A type `L` meets the __BasicLockable requirements if the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
 
 * `m.__lock();`
 * `m.__unlock();`
@@ -38,7 +48,7 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 
 [[Return type:] [`void`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 [[Error Conditions:] [
 
@@ -59,21 +69,43 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 
 [variablelist
 
-[[Precondition:] [The current thread owns `m`.]]
+[[Requires:] [The current thread owns `m`.]]
 
-[[Effects:] [Releases ownership by the current thread.]]
+[[Effects:] [Releases a lock on `m` by the current thread.]]
 
 [[Return type:] [`void`.]]
-
-[[Postcondition:] [The current thread no longer owns `m`.]]
 
 [[Throws:] [Nothing.]]
 ]
 [endsect]
 
 
+[section:is_basic_lockable `is_basic_lockable` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_basic_lockable;
+    }
+  }
+
+Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of BasicLockable you could build. 
+
 [endsect]
+[endsect]
+
 [section:lockable `Lockable` Concept]
+
+  // #include <boost/thread/lockable_concepts.hpp> 
+  namespace boost 
+  {
+    template<typename L>
+    class Lockable;
+  }
 
 A type `L` meets the __Lockable requirements if it meets the __BasicLockable requirements and the following expressions are well-formed and have the specified semantics (`m` denotes a value of type `L`):
 
@@ -98,9 +130,63 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
 ]
 [endsect]
 
+[section:is_lockable `is_lockable` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_lockable;
+    }
+  }
+
+Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of Lockable you could build. 
+
+[endsect]
 [endsect]
 
+[section:recursive Recursive Lockable Concept]
+
+The user could require that the mutex passed to an algorithm is a recursive one. Whether a lockable is recursive or not can not be checked using template meta-programming. This is the motivation for the following trait.
+
+
+[section:is_recursive_mutex_sur_parolle `is_recursive_mutex_sur_parolle` trait]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_recursive_mutex_sur_parolle: false_type;
+      template<>
+      class is_recursive_mutex_sur_parolle<recursive_mutex>: true_type;
+      template<>
+      class is_recursive_mutex_sur_parolle<timed_recursive_mutex>: true_type;
+    }
+  }
+
+The trait `is_recursive_mutex_sur_parolle` is `false_type` by default and is specialized for the provide `recursive_mutex` and `timed_recursive_mutex`. 
+
+It should be specialized by the user providing other model of recursive lockable.
+
+[endsect]
+
+[endsect]
+
+
 [section:timed_lockable `TimedLockable` Concept]
+
+  // #include <boost/thread/lockable_concepts.hpp> 
+
+  namespace boost 
+  {
+    template<typename L>
+    class TimedLockable;
+  }
 
 The __timed_lockable_concept__ refines the __lockable_concept__ to add support for
 timeouts when trying to acquire the lock.
@@ -144,9 +230,14 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 ]
 [endsect]
 
-[heading Deprecated V3.0.0]
+[warning
+DEPRECATED since 3.00. The following expressions were required on version 2, but are now deprecated.
+ 
+Available only up to Boost 1.56. 
 
-The following expressions were required on version 2, but are now deprecated.
+Use instead __try_lock_for, __try_lock_until.  
+]
+
 
 [*Variables:]
 
@@ -171,7 +262,7 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 
 [[Postcondition:] [If the call returns `true`, the current thread owns `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 ]
 [endsect]
 
@@ -189,6 +280,15 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 [endsect]
 
 [section:shared_lockable `SharedLockable` Concept]
+
+  // #include <boost/thread/lockable_concepts.hpp> 
+
+  namespace boost 
+  {
+    template<typename L>
+    class SharedLockable;
+  }
+
 
 The __shared_lockable_concept__ is a refinement of the __timed_lockable_concept__ that
 allows for ['shared ownership] as well as ['exclusive ownership]. This is the
@@ -223,7 +323,7 @@ Lock ownership acquired through a call to __lock_shared_ref__, __try_lock_shared
 
 [[Postcondition:] [The current thread has shared ownership of `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -238,7 +338,7 @@ Lock ownership acquired through a call to __lock_shared_ref__, __try_lock_shared
 
 [[Postcondition:] [If the call returns `true`, the current thread has shared ownership of `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -255,7 +355,7 @@ specified duration is elapsed. If the specified duration is already elapsed, beh
 [[Postcondition:] [If the call returns `true`, the current thread has shared
 ownership of `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -272,7 +372,7 @@ specified time is reached. If the specified time has already passed, behaves as 
 [[Postcondition:] [If the call returns `true`, the current thread has shared
 ownership of `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -292,9 +392,13 @@ ownership of `m`.]]
 ]
 [endsect]
 
-[heading Deprecated V3]
+[warning
+DEPRECATED since 3.00. The following expressions were required on version 2, but are now deprecated.
+ 
+Available only up to Boost 1.56. 
 
-The following expressions were required on version 1, but are now deprecated.
+Use instead __try_lock_shared_for, __try_lock_shared_until.  
+]
 
 [*Variables:]
 
@@ -318,7 +422,7 @@ specified time is reached. If the specified time has already passed, behaves as 
 [[Postcondition:] [If the call returns `true`, the current thread has shared
 ownership of `m`.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -328,6 +432,15 @@ ownership of `m`.]]
 [endsect]
 
 [section:upgrade_lockable `UpgradeLockable` Concept]
+
+  // #include <boost/thread/lockable_concepts.hpp> 
+
+  namespace boost 
+  {
+    template<typename L>
+    class UpgradeLockable;
+  }
+
 
 The __upgrade_lockable_concept__ is a refinement of the __shared_lockable_concept__ that allows for ['upgradable ownership] as well
 as ['shared ownership] and ['exclusive ownership]. This is an extension to the multiple-reader / single-write model provided by the
@@ -395,7 +508,7 @@ call to the unlock function corresponding to the new level of ownership.
 
 [[Synchronization:] [Prior `__unlock_upgrade()` operations on the same object synchronize with this operation.]] 
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__lock_error__ if an error occurs.]]
 
 ]
 [endsect]
@@ -789,9 +902,10 @@ blocking.]]
 
 [endsect]
 
-[section:locks Lock Types]
+[section:lock_option Lock Options]
 
-  //#include <boost/thread/locks.hpp> 
+  // #include <boost/thread/locks.hpp> 
+  // #include <boost/thread/locks_options.hpp> 
 
   namespace boost 
   {
@@ -801,28 +915,11 @@ blocking.]]
     constexpr defer_lock_t defer_lock; 
     constexpr try_to_lock_t try_to_lock; 
     constexpr adopt_lock_t adopt_lock;
- 
-    template<typename Lockable>
-    class lock_guard
-    template<typename Lockable>
-    class unique_lock;
-    template<typename Mutex>
-    void swap(unique_lock <Mutex>& lhs, unique_lock <Mutex>& rhs);
-    template<typename Lockable>
-    class shared_lock;
-    template<typename Mutex>
-    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs);
-    template<typename Lockable>
-    class upgrade_lock;
-    template<typename Mutex>
-    void swap(upgrade_lock <Mutex>& lhs, upgrade_lock <Mutex>& rhs);
-    template <class Mutex>
-    class upgrade_to_unique_lock;
-  }
 
 [section:lock_tags Lock option tags] 
 
   #include <boost/thread/locks.hpp> 
+  #include <boost/thread/locks_options.hpp> 
 
   struct defer_lock_t {}; 
   struct try_to_lock_t {}; 
@@ -839,9 +936,28 @@ These tags are used in scoped locks constructors to specify a specific behavior.
 
 [endsect] 
 
+[endsect]
+
+[section:lock_guard Lock Guard]
+
+  // #include <boost/thread/locks.hpp> 
+  // #include <boost/thread/lock_guard.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename Lockable>
+    class lock_guard
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& mtx); // EXTENSION
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& mtx, adopt_lock_t); // EXTENSION
+  }
+
 [section:lock_guard Class template `lock_guard`]
 
-    //#include <boost/thread/locks.hpp>
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/lock_guard.hpp> 
 
     template<typename Lockable>
     class lock_guard
@@ -858,7 +974,7 @@ acquires ownership of the implementation of the __lockable_concept__ supplied as
 the constructor parameter. On destruction, the ownership is released. This
 provides simple RAII-style locking of a __lockable_concept_type__ object, to facilitate exception-safe
 locking and unlocking. In addition, the [link
-thread.synchronization.locks.lock_guard.constructor_adopt `lock_guard(Lockable &
+thread.synchronization.lock_guard.lock_guard.constructor_adopt `lock_guard(Lockable &
 m,boost::adopt_lock_t)` constructor] allows the __lock_guard__ object to
 take ownership of a lock already held by the current thread.
 
@@ -904,10 +1020,141 @@ object passed to the constructor.]]
 [endsect]
 
 [endsect]
+  
+[section:make_lock_guard Non Member Function `make_lock_guard`]
+
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& m); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a lock_guard as if initialized with `{m}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+
+[endsect]
+[section:make_lock_guard_adopt Non Member Function `make_lock_guard`]
+
+    template <typename Lockable>
+    lock_guard<Lockable> make_lock_guard(Lockable& m, adopt_lock_t); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a lock_guard as if initialized with `{m, adopt_lock}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+
+[endsect]
+[endsect]
+
+[section:lock_concepts Lock Concepts]
+[section:StrictLock StrictLock]
+
+  // #include <boost/thread/lock_concepts.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename Lock>
+    class StrictLock;
+  }
+
+  
+A StrictLock is a lock that ensures that the associated mutex is locked during the lifetime if the lock.
+
+A type `L` meets the StrictLock requirements if the following expressions are well-formed and have the specified semantics 
+
+* `L::mutex_type`
+* `is_strict_lock<L>`
+* `cl.owns_lock(m);`
+
+and BasicLockable<L::mutex_type>
+
+where
+
+* `cl` denotes a value of type `L const&`,
+* `m` denotes a value of type `L::mutex_type const*`,
+
+[section: mutex_type `L::mutex_type`]
+
+The type L::mutex_type denotes the mutex that is locked by this lock.
+
+[endsect] [/ mutex_type]
+
+[section:is_strict_lock_sur_parolle `is_strict_lock_sur_parolle<L>`]
+
+As the semantic "ensures that the associated mutex is locked during the lifetime if the lock. " can not be described by syntactic requirements a `is_strict_lock_sur_parolle` trait must be specialized by the user defining the lock so that the following assertion is true:
+
+  is_strict_lock_sur_parolle<L>::value == true
+
+[endsect] [/ is_strict_lock_sur_parolle]
+
+[section:mutex `cl.mutex();`]
+
+[variablelist
+
+[[Return Type:] [`L::mutex_type`]]
+[[Returns:] [A pointer to the `L::mutex_type` object that this lock `l` is locking]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+
+[endsect] [/ mutex]
+
+[section Models]
+
+The following classes are models of `StrictLock`:
+
+* strict_lock: ensured by construction,
+* nested_strict_lock: ensured by construction,
+* __lock_guard__: "sur parolle" as the user could use adopt_lock_t constructor overload without having locked the mutex.
+
+[endsect] [/ Models]
+
+[endsect] [/ Strict Lock]
+
+[endsect] [/ Lock Concepts]
+
+[section:locks Lock Types]
+
+  // #include <boost/thread/locks.hpp> 
+  // #include <boost/thread/lock_types.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename Lockable>
+    class unique_lock;
+    template<typename Mutex>
+    void swap(unique_lock <Mutex>& lhs, unique_lock <Mutex>& rhs);
+    template<typename Lockable>
+    class shared_lock;
+    template<typename Mutex>
+    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs);
+    template<typename Lockable>
+    class upgrade_lock;
+    template<typename Mutex>
+    void swap(upgrade_lock <Mutex>& lhs, upgrade_lock <Mutex>& rhs);
+    template <class Mutex>
+    class upgrade_to_unique_lock;
+  }
+
+
 
 [section:unique_lock Class template `unique_lock`]
 
-    //#include <boost/thread/locks.hpp>
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/lock_types.hpp> 
 
     template<typename Lockable>
     class unique_lock
@@ -961,7 +1208,7 @@ object passed to the constructor.]]
 
         Lockable* mutex() const noexcept;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USE_DATE_TIME || defined BOOST_THREAD_DONT_USE_CHRONO
         unique_lock(Lockable& m_,system_time const& target_time);
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const& relative_time);
@@ -1271,7 +1518,8 @@ __owns_lock_ref__ returns `false`.]]
 
 [section:shared_lock Class template `shared_lock`]
 
-    //#include <boost/thread/locks.hpp>
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/lock_types.hpp> 
 
     template<typename Lockable>
     class shared_lock
@@ -1320,7 +1568,7 @@ __owns_lock_ref__ returns `false`.]]
         bool owns_lock() const;
         mutex_type mutex() const;
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USE_DATE_TIME || defined BOOST_THREAD_DONT_USE_CHRONO
         shared_lock(Lockable& m_,system_time const& target_time);
         bool timed_lock(boost::system_time const& target_time);
     #endif
@@ -1512,7 +1760,8 @@ __owns_lock_shared_ref__ returns `false`.]]
 
 [section:upgrade_lock Class template `upgrade_lock`]
 
-    //#include <boost/thread/locks.hpp>
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/lock_types.hpp> 
 
     template<typename Lockable>
     class upgrade_lock
@@ -1593,7 +1842,8 @@ state (including the destructor) must be called by the same thread that acquired
 
 [section:upgrade_to_unique_lock Class template `upgrade_to_unique_lock`]
 
-    #include <boost/thread/locks.hpp>
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/lock_types.hpp> 
 
     template <class Lockable>
     class upgrade_to_unique_lock
@@ -1695,6 +1945,69 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
 ]
 
 [section:other_locks Other Lock Types]
+
+[section:strict_lock Strict Lock]
+
+  // #include <boost/thread/locks.hpp> 
+  // #include <boost/thread/strict_lock.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename Lockable>
+    class strict_lock;
+  }
+
+[section:strict_lock Class template `strict_lock`]
+
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/strict_lock.hpp> 
+
+    template<typename BasicLockable>
+    class strict_lock
+    {
+    public:
+        typedef BasicLockable mutex_type;
+        explicit strict_lock(mutex_type& m_);
+        ~strict_lock();
+
+        mutex_type* mutex() const;
+    };
+
+__strict_lock is a model of __StrictLock.
+
+__strict_lock is the simplest __StrictLock: on construction it acquires ownership of the implementation of the __BasicLockable concept supplied as the constructor parameter. On destruction, the ownership is released. This provides simple RAII-style locking of a __BasicLockable object, to facilitate exception-safe locking and unlocking. 
+
+[heading See also __lock_guard__]
+
+[section:constructor `strict_lock(Lockable & m)`]
+
+[variablelist
+
+[[Effects:] [Stores a reference to `m`. Invokes [lock_ref_link `m.lock()`].]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+[endsect]
+
+[section:destructor `~strict_lock()`]
+
+[variablelist
+
+[[Effects:] [Invokes [unlock_ref_link `m.unlock()`] on the __lockable_concept_type__
+object passed to the constructor.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[endsect]
+  
+[endsect]
 
 
 [section:shared_lock_guard Class template `shared_lock_guard`]
@@ -1816,7 +2129,7 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 [endsect]
 
 
-[endsect]
+[endsect] [/ reverse_lock<>]
 
 [endsect]
 
@@ -1826,6 +2139,7 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 [section:lock_multiple Non-member function `lock(Lockable1,Lockable2,...)`]
 
   // #include <boost/thread/locks.hpp>
+  // #include <boost/thread/lock_algorithms.hpp>
   namespace boost 
   {
 

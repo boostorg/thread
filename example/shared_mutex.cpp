@@ -10,6 +10,7 @@
 #include <iostream>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/shared_mutex.hpp>
+#include <boost/thread/lock_algorithms.hpp>
 #include <boost/thread/thread.hpp>
 #include <vector>
 

@@ -23,6 +23,8 @@ project
     : requirements
         <threading>multi
 
+        <define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+
         <warnings>all
         <toolset>gcc:<cxxflags>-Wextra
         <toolset>gcc:<cxxflags>-pedantic
@@ -43,7 +45,7 @@ project
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
         <toolset>clang:<cxxflags>-Wno-long-long
-        <toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive # doesn't work
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
@@ -66,6 +68,19 @@ project
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
 
+# Note: Some of the remarks from the Intel compiler are disabled
+# remark #193: zero used for undefined preprocessing identifier "XXX"
+# remark #304: access control not specified ("public" by default)
+# remark #593: variable "XXX" was set but never used
+# remark #1418: external function definition with no prior declaration
+# remark #2415: variable "XXX" of static storage duration was declared but never referenced
+
+        <toolset>intel:<cxxflags>-wd193,304,383,444
+        <toolset>intel:<cxxflags>-wd593,981
+        <toolset>intel:<cxxflags>-wd1418
+	<toolset>intel:<cxxflags>-wd2415
+
+
     ;
 
 rule thread-run ( sources )
@@ -76,6 +91,7 @@ rule thread-run ( sources )
         : : : : $(sources[1]:B)_lib ]
     ;
 }
+
 
 rule thread-test ( sources )
 {
@@ -101,6 +117,18 @@ rule thread-run2 ( sources : name )
       : $(name)_lib ]
     ;
 }
+
+rule thread-run2-h ( sources : name )
+{
+    return
+    [ run $(sources) : : :       
+      <library>/boost/system//boost_system
+      <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+      <define>BOOST_THREAD_VERSION=3 
+    : $(name)_h ]
+    ;
+}
+
 
 rule thread-run-lib2 ( sources : name )
 {
@@ -187,10 +215,11 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run test_5542_3.cpp ]
           [ thread-run test_5891.cpp ]
           [ thread-run test_6130.cpp ]
-          [ thread-run test_6170.cpp ]
+          #[ thread-run test_6170.cpp ]
           [ thread-run test_6174.cpp ]
-          [ thread-run test_7160.cpp ]
+          #[ thread-run test_7160.cpp ]
           [ thread-run test_7328.cpp ]
+          [ thread-run test_7571.cpp ]
     ;
 
 
@@ -228,7 +257,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
     ;
 
-    explicit ts_async ;
+    #explicit ts_async ;
     test-suite ts_async
     :
           [ thread-run2 ./sync/futures/async/async_pass.cpp : async__async_p ]
@@ -245,7 +274,17 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/futures/promise/get_future_pass.cpp : promise__get_future_p ]
           [ thread-run2 ./sync/futures/promise/move_ctor_pass.cpp : promise__move_ctor_p ]
           [ thread-run2 ./sync/futures/promise/move_assign_pass.cpp : promise__move_asign_p ]
+          [ thread-run2 ./sync/futures/promise/set_exception_pass.cpp : promise__set_exception_p ]
+          [ thread-run2 ./sync/futures/promise/set_lvalue_pass.cpp : promise__set_lvalue_p ]
+          [ thread-run2 ./sync/futures/promise/set_rvalue_pass.cpp : promise__set_rvalue_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_const_pass.cpp : promise__set_value_const_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_void_pass.cpp : promise__set_value_void_p ]
           [ thread-run2 ./sync/futures/promise/use_allocator_pass.cpp : promise__use_allocator_p ]
+          [ thread-run2 ./sync/futures/promise/set_exception_at_thread_exit_pass.cpp : promise__set_exception_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_lvalue_at_thread_exit_pass.cpp : promise__set_lvalue_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_rvalue_at_thread_exit_pass.cpp : promise__set_rvalue_at_thread_exit_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_at_thread_exit_const_pass.cpp : promise__set_value_at_thread_exit_const_p ]
+          [ thread-run2 ./sync/futures/promise/set_value_at_thread_exit_void_pass.cpp : promise__set_value_at_thread_exit_void_p ]
     ;
 
     #explicit ts_future ;
@@ -255,10 +294,23 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/futures/future/copy_ctor_fail.cpp : : future__copy_ctor_f ]
           [ thread-run2 ./sync/futures/future/default_pass.cpp : future__default_p ]
           [ thread-run2 ./sync/futures/future/dtor_pass.cpp : future__dtor_p ]
-          #[ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p ]
+          [ thread-run2 ./sync/futures/future/get_pass.cpp : future__get_p ]
           [ thread-run2 ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2 ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2 ./sync/futures/future/share_pass.cpp : future__share_p ]
+          [ thread-run2 ./sync/futures/future/then_pass.cpp : future__then_p ]
+    ;
+
+    #explicit ts_shared_future ;
+    test-suite ts_shared_future
+    :
+          [ thread-run2 ./sync/futures/shared_future/copy_assign_pass.cpp : shared_future__copy_assign_p ]
+          [ thread-run2 ./sync/futures/shared_future/copy_ctor_pass.cpp : shared_future__copy_ctor_p ]
+          [ thread-run2 ./sync/futures/shared_future/default_pass.cpp : shared_future__default_p ]
+          [ thread-run2 ./sync/futures/shared_future/dtor_pass.cpp : shared_future__dtor_p ]
+          [ thread-run2 ./sync/futures/shared_future/get_pass.cpp : shared_future__get_p ]
+          [ thread-run2 ./sync/futures/shared_future/move_ctor_pass.cpp : shared_future__move_ctor_p ]
+          [ thread-run2 ./sync/futures/shared_future/move_assign_pass.cpp : shared_future__move_asign_p ]
     ;
 
     #explicit ts_packaged_task ;
@@ -269,16 +321,17 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/futures/packaged_task/copy_ctor_fail.cpp : : packaged_task__copy_ctor_f ]
           [ thread-run2 ./sync/futures/packaged_task/default_ctor_pass.cpp : packaged_task__default_ctor_p ]
           [ thread-run2 ./sync/futures/packaged_task/func_ctor_pass.cpp : packaged_task__func_ctor_p ]
-          #[ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
+          [ thread-run2 ./sync/futures/packaged_task/dtor_pass.cpp : packaged_task__dtor_p ]
           [ thread-run2 ./sync/futures/packaged_task/get_future_pass.cpp : packaged_task__get_future_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_ctor_pass.cpp : packaged_task__move_ctor_p ]
           [ thread-run2 ./sync/futures/packaged_task/move_assign_pass.cpp : packaged_task__move_asign_p ]
-          #[ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p ]
+          [ thread-run2 ./sync/futures/packaged_task/operator_pass.cpp : packaged_task__operator_p ]
           [ thread-run2 ./sync/futures/packaged_task/reset_pass.cpp : packaged_task__reset_p ]
           [ thread-run2 ./sync/futures/packaged_task/use_allocator_pass.cpp : packaged_task__use_allocator_p ]
           [ thread-run2 ./sync/futures/packaged_task/types_pass.cpp : packaged_task__types_p ]
           [ thread-run2 ./sync/futures/packaged_task/member_swap_pass.cpp : packaged_task__member_swap_p ]
           [ thread-run2 ./sync/futures/packaged_task/non_member_swap_pass.cpp : packaged_task__non_member_swap_p ]
+          [ thread-run2 ./sync/futures/packaged_task/make_ready_at_thread_exit_pass.cpp : packaged_task__make_ready_at_thread_exit_p ]
     ;
 
 
@@ -290,6 +343,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/make_lock_guard_pass.cpp : make_lock_guard_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/lock_guard/make_lock_guard_adopt_lock_pass.cpp : make_lock_guard__adopt_lock_p ]
     ;
 
     #explicit ts_unique_lock ;
@@ -320,9 +375,23 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/mod/release_pass.cpp : unique_lock__release_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/mutex_pass.cpp : unique_lock__mutex_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/op_bool_pass.cpp : unique_lock__op_bool_p ]
-          [ thread-compile-fail ./sync/mutual_exclusion/locks/unique_lock/obs/op_int_fail.cpp : : unique_lock__op_int_f ]
+          #[ thread-compile-fail ./sync/mutual_exclusion/locks/unique_lock/obs/op_int_fail.cpp : : unique_lock__op_int_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/obs/owns_lock_pass.cpp : unique_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/types_pass.cpp : unique_lock__types_p ]
+
+
+    ;
+
+    #explicit ts_make_unique_lock ;
+    test-suite ts_make_unique_lock
+    :
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_mutex_pass.cpp : make_unique_lock__mutex_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_adopt_lock_pass.cpp : make_unique_lock__adopt_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_defer_lock_pass.cpp : make_unique_lock__defer_lock_p ]
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_lock_try_to_lock_pass.cpp : make_unique_lock__try_to_lock_p ]
+
+          [ thread-run2 ./sync/mutual_exclusion/locks/unique_lock/cons/make_unique_locks_mutex_pass.cpp : make_unique_locks__mutex_p ]
+
     ;
 
     #explicit ts_shared_lock ;
@@ -353,6 +422,10 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/op_bool_pass.cpp : shared_lock__op_bool_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/obs/owns_lock_pass.cpp : shared_lock__owns_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/shared_lock/types_pass.cpp : shared_lock__types_p ]
+
+          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/default_pass.cpp : shared_lock__cons__default_p ]
+          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/defer_lock_pass.cpp : shared_lock__cons__defer_lock_p ]
+
     ;
 
     #explicit ts_upgrade_lock ;
@@ -443,6 +516,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_pass.cpp : shared_mutex__try_lock_p ]
           [ thread-run2 ./sync/mutual_exclusion/shared_mutex/try_lock_until_pass.cpp : shared_mutex__try_lock_until_p ]
 
+          [ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
     ;
 
     #explicit ts_this_thread ;
@@ -463,7 +537,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run-lib2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
           [ thread-run-lib2 ./threads/thread/constr/FArgs_pass.cpp : thread__constr__FArgs_p ]
           [ thread-run2 ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_p ]
-          #[ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
+          [ thread-run2 ./threads/thread/constr/FrvalueArgs_pass.cpp : thread__constr__FrvalueArgs_p ]
           [ thread-run2 ./threads/thread/constr/move_pass.cpp : thread__constr__move_p ]
           [ thread-run2 ./threads/thread/destr/dtor_pass.cpp : thread__destr__dtor_p ]
           [ thread-run2 ./threads/thread/id/hash_pass.cpp : thread__id__hash_p ]
@@ -504,6 +578,15 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run ../example/shared_mutex.cpp ]
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
+          [ thread-run ../example/make_future.cpp ]
+          [ thread-run ../example/future_then.cpp ]
+          [ thread-run ../example/synchronized_value.cpp ]
+          [ thread-run ../example/synchronized_person.cpp ]
+          [ thread-run ../example/thread_guard.cpp ]
+          [ thread-run ../example/scoped_thread.cpp ]
+          [ thread-run ../example/strict_lock.cpp ]
+          [ thread-run ../example/ba_externallly_locked.cpp ]
+
     ;
 
     #explicit ts_shared_upwards ;
@@ -536,6 +619,14 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/locks/reverse_lock/copy_ctor_fail.cpp : : reverse_lock__copy_ctor_f ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/unique_lock_ctor_pass.cpp : reverse_lock__unique_lock_ctor_p ]
           [ thread-run2 ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
+    ;
+
+    explicit ts_ ;
+    test-suite ts_
+    :
+          #[ thread-run test_7665.cpp ]
+          #[ thread-run test_7666.cpp ]
+          #[ thread-run ../example/unwrap.cpp ]
     ;
 
 }

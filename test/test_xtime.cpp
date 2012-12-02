@@ -5,6 +5,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/xtime.hpp>
@@ -86,7 +88,7 @@ void test_xtime_condvar_backwards_compatibility()
     boost::condition_variable_any cond_any;
     boost::mutex m;
 
-    boost::mutex::scoped_lock lk(m);
+    boost::unique_lock<boost::mutex> lk(m);
     cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));
     cond.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)),predicate);
     cond_any.timed_wait(lk,boost::get_xtime(boost::get_system_time()+boost::posix_time::milliseconds(10)));

@@ -4,6 +4,8 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_PROVIDES_INTERRUPTIONS
+
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread.hpp>
@@ -26,7 +28,7 @@ void barrier_thread()
     {
         if (gen_barrier.wait())
         {
-            boost::mutex::scoped_lock lock(mutex);
+            boost::unique_lock<boost::mutex> lock(mutex);
             global_parameter++;
         }
     }

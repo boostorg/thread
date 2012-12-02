@@ -60,7 +60,7 @@ project boost/thread
 
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
-        <toolset>darwin:<cxxflags>-ansi
+        #<toolset>darwin:<cxxflags>-ansi
         <toolset>darwin:<cxxflags>-fpermissive
         <toolset>darwin:<cxxflags>-Wno-long-long
 
@@ -70,7 +70,7 @@ project boost/thread
 
         <toolset>clang:<cxxflags>-Wextra
         <toolset>clang:<cxxflags>-pedantic
-        <toolset>clang:<cxxflags>-ansi
+        #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long
 
@@ -91,6 +91,18 @@ project boost/thread
         <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
+        
+# Note: Some of the remarks from the Intel compiler are disabled
+# remark #193: zero used for undefined preprocessing identifier "XXX"
+# remark #304: access control not specified ("public" by default)
+# remark #593: variable "XXX" was set but never used
+# remark #1418: external function definition with no prior declaration
+# remark #2415: variable "XXX" of static storage duration was declared but never referenced
+
+        <toolset>intel:<cxxflags>-wd193,304,383,444
+        <toolset>intel:<cxxflags>-wd593,981
+        <toolset>intel:<cxxflags>-wd1418
+        <toolset>intel:<cxxflags>-wd2415 
 
 
     # : default-build <threading>multi

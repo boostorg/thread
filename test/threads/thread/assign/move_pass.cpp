@@ -92,7 +92,6 @@ int main()
   BOOST_TEST(G::n_alive == 0);
   {
     boost::thread t0(G(), 5, 5.5);
-    boost::thread::id id = t0.get_id();
     boost::thread t1;
     t0 = boost::move(t1);
     BOOST_TEST(false);

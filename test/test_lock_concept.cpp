@@ -3,9 +3,12 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 
+#define BOOST_THREAD_VERSION 2
+
 #include <boost/test/unit_test.hpp>
 #include <boost/mpl/vector.hpp>
 #include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -64,7 +67,7 @@ struct test_initially_unlocked_if_other_thread_has_lock
         try
         {
             {
-                boost::mutex::scoped_lock lk(done_mutex);
+                boost::unique_lock<boost::mutex> lk(done_mutex);
                 BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
@@ -122,7 +125,7 @@ struct test_initially_unlocked_with_try_lock_if_other_thread_has_unique_lock
         try
         {
             {
-                boost::mutex::scoped_lock lk(done_mutex);
+                boost::unique_lock<boost::mutex> lk(done_mutex);
                 BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
@@ -180,7 +183,7 @@ struct test_initially_locked_if_other_thread_has_shared_lock
         try
         {
             {
-                boost::mutex::scoped_lock lk(done_mutex);
+                boost::unique_lock<boost::mutex> lk(done_mutex);
                 BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(locked);
@@ -305,7 +308,7 @@ struct test_unlocked_after_try_lock_if_other_thread_has_lock
         try
         {
             {
-                boost::mutex::scoped_lock lk(done_mutex);
+                boost::unique_lock<boost::mutex> lk(done_mutex);
                 BOOST_CHECK(done_cond.timed_wait(lk,boost::posix_time::seconds(2),
                                                  boost::bind(&this_type::is_done,this)));
                 BOOST_CHECK(!locked);
