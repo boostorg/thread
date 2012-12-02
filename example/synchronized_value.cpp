@@ -57,6 +57,21 @@ int main()
       std::cout<<"v1="<<*u<<std::endl;
       g(u);
     }
+    boost::synchronized_value<int> v2(2);
+    std::cout<<"v2="<<*v2<<std::endl;
+    v2 = 3;
+    std::cout<<"v2="<<*v2<<std::endl;
+
+    boost::synchronized_value<int> v3(v2);
+    std::cout<<"v3="<<*v3<<std::endl;
+    v3 = v1;
+    std::cout<<"v3="<<*v3<<std::endl;
+
+    std::cout<<"v2="<<*v3<<std::endl;
+    std::cout<<"v3="<<*v3<<std::endl;
+    swap(v3,v2);
+    v1.swap(v2);
+    std::cout<<"v3="<<*v3<<std::endl;
   }
   {
     boost::synchronized_value<std::string> s;
@@ -65,21 +80,8 @@ int main()
   }
   {
     boost::synchronized_value<std::string> s;
-#if 1
     s->append("foo/");
-#else
     s.synchronize()->append("foo");
-#endif
-    addTrailingSlashIfMissing(s);
-    std::cout<<"s="<<std::string(*s)<<std::endl;
-  }
-  {
-    boost::synchronized_value<std::string> s;
-#if 1
-    s->append("foo");
-#else
-    s.synchronize()->append("foo");
-#endif
     addTrailingSlashIfMissing(s);
     std::cout<<"s="<<std::string(*s)<<std::endl;
   }
