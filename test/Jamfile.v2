@@ -121,11 +121,11 @@ rule thread-run2 ( sources : name )
 rule thread-run2-noit ( sources : name )
 {
     return
-    #[ run $(sources) ../build//boost_thread : : :
-    #  : $(name) ]
-    #[ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
-    #    : : :
-    #  : $(name)_lib ]
+    [ run $(sources) ../build//boost_thread : : :
+      : $(name) ]
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
+        : : :
+      : $(name)_lib ]
     [ run $(sources) ../build//boost_thread : : :
       <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
       : $(name)_noit ]
