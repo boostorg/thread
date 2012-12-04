@@ -438,8 +438,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/obs/owns_lock_pass.cpp : shared_lock__owns_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/types_pass.cpp : shared_lock__types_p ]
 
-          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/default_pass.cpp : shared_lock__cons__default_p ]
-          [ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/defer_lock_pass.cpp : shared_lock__cons__defer_lock_p ]
+          #[ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/default_pass.cpp : shared_lock__cons__default_p ]
+          #[ thread-run2-h ./sync/mutual_exclusion/locks/shared_lock/cons/defer_lock_pass.cpp : shared_lock__cons__defer_lock_p ]
 
     ;
 
@@ -531,7 +531,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/shared_mutex/try_lock_pass.cpp : shared_mutex__try_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/shared_mutex/try_lock_until_pass.cpp : shared_mutex__try_lock_until_p ]
 
-          [ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
+          #[ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
     ;
 
     #explicit ts_this_thread ;

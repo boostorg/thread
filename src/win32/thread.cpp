@@ -12,7 +12,7 @@
 #ifndef WINVER
 #define WINVER 0x400
 #endif
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 3
 
 #include <boost/thread/thread.hpp>
 #include <boost/thread/once.hpp>
