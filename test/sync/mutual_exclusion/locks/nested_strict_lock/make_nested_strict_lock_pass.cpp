@@ -1,28 +1,20 @@
-//===----------------------------------------------------------------------===//
-//
-//                     The LLVM Compiler Infrastructure
-//
-// This file is dual licensed under the MIT and the University of Illinois Open
-// Source Licenses. See LICENSE.TXT for details.
-//
-//===----------------------------------------------------------------------===//
-
 // Copyright (C) 2011 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/lock_guard.hpp>
+// <boost/thread/strict_lock.hpp>
 
 // template <class Lockable>
-// lock_guard<Lockable> make_lock_guard(Lockable &);
+// strict_lock<Lockable> make_strict_lock(Lockable &);
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS
 
 #include <boost/thread/detail/log.hpp>
-#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/lock_types.hpp>
+#include <boost/thread/strict_lock.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 
@@ -38,14 +30,15 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && BOOST_THREAD_USES_CHRONO
 
 void f()
 {
   time_point t0 = Clock::now();
   time_point t1;
+  boost::unique_lock<boost::mutex> lg(m);
   {
-    const auto&& lg = boost::make_lock_guard(m); (void)lg;
+    const auto&& nlg = boost::make_strict_lock(lg); (void)nlg;
     t1 = Clock::now();
     BOOST_THREAD_TRACE;
   }

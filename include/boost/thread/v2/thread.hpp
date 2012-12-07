@@ -40,7 +40,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-          duration<long double> Max = nanoseconds::max();
+          duration<long double> Max = nanoseconds::max BOOST_PREVENT_MACRO_SUBSTITUTION ();
           nanoseconds ns;
           if (d < Max)
           {
@@ -49,7 +49,7 @@ namespace boost
                   ++ns;
           }
           else
-              ns = nanoseconds::max();
+              ns = nanoseconds:: max BOOST_PREVENT_MACRO_SUBSTITUTION ();
           sleep_for(ns);
       }
     }

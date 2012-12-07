@@ -8,12 +8,12 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/lock_options.hpp>
-//#include <boost/thread/is_locked_by_this_thread.hpp>
 #include <boost/thread/lock_traits.hpp>
 #include <boost/thread/lockable_traits.hpp>
 #include <boost/thread/lockable_concepts.hpp>
 #include <boost/thread/lock_concepts.hpp>
 #include <boost/thread/exceptions.hpp>
+#include <boost/throw_exception.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
