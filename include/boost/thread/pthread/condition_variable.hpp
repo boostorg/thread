@@ -62,6 +62,8 @@ namespace boost
             thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#else
+            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
             guard.activate(m);
             do {
@@ -91,6 +93,8 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#else
+            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
             guard.activate(m);
             cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
@@ -156,6 +160,8 @@ namespace boost
                 thread_cv_detail::lock_on_exit<lock_type> guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#else
+            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
                 guard.activate(m);
                 res=pthread_cond_wait(&cond,&internal_mutex);
@@ -328,6 +334,8 @@ namespace boost
               thread_cv_detail::lock_on_exit<lock_type> guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
               detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
+#else
+            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
               guard.activate(m);
               res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);

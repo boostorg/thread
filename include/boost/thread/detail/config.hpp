@@ -78,9 +78,9 @@
 #define BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 #endif
 
-// Default version is 2
+// Default version is 3
 #if !defined BOOST_THREAD_VERSION
-#define BOOST_THREAD_VERSION 2
+#define BOOST_THREAD_VERSION 3
 #else
 #if BOOST_THREAD_VERSION!=2  && BOOST_THREAD_VERSION!=3 && BOOST_THREAD_VERSION!=4
 #error "BOOST_THREAD_VERSION must be 2, 3 or 4"

@@ -38,6 +38,7 @@ namespace boost
     }
   };
 
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
   struct interrupt_and_join_if_joinable
   {
     void operator()(thread& t)
@@ -49,7 +50,7 @@ namespace boost
       }
     }
   };
-
+#endif
 }
 #include <boost/config/abi_suffix.hpp>
 

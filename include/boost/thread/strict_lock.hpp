@@ -8,7 +8,7 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/lock_options.hpp>
-#include <boost/thread/is_locked_by_this_thread.hpp>
+//#include <boost/thread/is_locked_by_this_thread.hpp>
 #include <boost/thread/lock_traits.hpp>
 #include <boost/thread/lockable_traits.hpp>
 #include <boost/thread/lockable_concepts.hpp>
@@ -74,7 +74,7 @@ namespace boost
   public:
 
     /**
-     * @return whether if this lock is locking that mutex.
+     * @return whether this lock is locking that mutex.
      */
     bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT
     {

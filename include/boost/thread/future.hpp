@@ -267,28 +267,30 @@ namespace boost
             bool is_deferred_;
             launch policy_;
             bool is_constructed;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            bool thread_was_interrupted;
-#endif
             boost::mutex mutex;
             boost::condition_variable waiters;
             typedef std::list<boost::condition_variable_any*> waiter_list;
             waiter_list external_waiters;
             boost::function<void()> callback;
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+            bool thread_was_interrupted;
+//#endif
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             shared_ptr<future_continuation_base> continuation_ptr;
+#else
+            shared_ptr<void> continuation_ptr;
 #endif
             future_object_base():
                 done(false),
                 is_deferred_(false),
                 policy_(launch::any),
                 is_constructed(false)
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-               , thread_was_interrupted(false)
-#endif
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+              , thread_was_interrupted(false)
+//#endif
+//#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
                , continuation_ptr()
-#endif
+//#endif
             {}
             virtual ~future_object_base()
             {}
