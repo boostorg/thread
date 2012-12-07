@@ -22,10 +22,11 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-boost::mutex m;
 
 int main()
 {
+  boost::mutex m;
+
   boost::unique_lock<boost::mutex> lk0;
   BOOST_TEST(lk0.owns_lock() == false);
   boost::unique_lock<boost::mutex> lk1(m);

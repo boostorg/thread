@@ -14,6 +14,7 @@
 
 #include <boost/chrono/chrono.hpp>
 #include <boost/concept_check.hpp>
+#include <boost/static_assert.hpp>
 
 namespace boost
 {
@@ -174,7 +175,7 @@ namespace boost
   {
     typedef typename Lk::mutex_type mutex_type;
     BOOST_CONCEPT_ASSERT(( BasicLockable<mutex_type> ));
-    BOOST_STATIC_ASSERT(( is_strict_lock<Lk>::value));
+    BOOST_STATIC_ASSERT(( is_strict_lock<Lk>::value ));
 
     BOOST_CONCEPT_USAGE( StrictLock)
     {
