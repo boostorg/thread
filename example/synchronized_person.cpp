@@ -158,7 +158,7 @@ public:
 #if ! defined BOOST_NO_CXX11_AUTO_DECLARATIONS
         auto memberSync = member.synchronize();
 #else
-    boost::synchronized_value<Member>::const_strict_synchronizer  memberSync = member.synchronize();
+    boost::const_strict_lock_ptr<Member>  memberSync = member.synchronize();
 #endif
     Invariant(memberSync);
     return memberSync->name;
@@ -167,7 +167,7 @@ public:
 #if ! defined BOOST_NO_CXX11_AUTO_DECLARATIONS
     auto memberSync = member.synchronize();
 #else
-    boost::synchronized_value<Member>::strict_synchronizer memberSync = member.synchronize();
+    boost::strict_lock_ptr<Member> memberSync = member.synchronize();
 #endif
     Invariant(memberSync);
     memberSync->name = newName;
@@ -180,7 +180,7 @@ private:
     std::string name;
     unsigned int age;
   };
-  void Invariant(boost::synchronized_value<Member>::const_strict_synchronizer & mbr) const
+  void Invariant(boost::const_strict_lock_ptr<Member> & mbr) const
   {
     if (mbr->age < 1) throw std::runtime_error("Age cannot be negative");
   }
@@ -235,6 +235,25 @@ int main()
   {
     Person3_ts p(1);
     p->SetName("Vicente");
+  }
+  {
+    Person3_ts p1(1);
+    Person3_ts p2(2);
+    Person3_ts p3(3);
+#if ! defined BOOST_NO_CXX11_AUTO_DECLARATIONS
+    auto  lk1 = p1.unique_synchronize(boost::defer_lock);
+    auto  lk2 = p2.unique_synchronize(boost::defer_lock);
+    auto  lk3 = p3.unique_synchronize(boost::defer_lock);
+#else
+    boost::unique_lock_ptr<Person3>  lk1 = p1.unique_synchronize(boost::defer_lock);
+    boost::unique_lock_ptr<Person3>  lk2 = p2.unique_synchronize(boost::defer_lock);
+    boost::unique_lock_ptr<Person3>  lk3 = p3.unique_synchronize(boost::defer_lock);
+#endif
+    boost::lock(lk1,lk2,lk3);
+
+    lk1->SetName("Carmen");
+    lk2->SetName("Javier");
+    lk3->SetName("Matias");
   }
   return 0;
 }

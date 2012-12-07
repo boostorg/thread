@@ -23,6 +23,195 @@
 
 namespace boost
 {
+
+  /**
+   *
+   */
+  template <typename T, typename Lockable = mutex>
+  class const_strict_lock_ptr
+  {
+  public:
+    typedef T value_type;
+    typedef Lockable lockable_type;
+  protected:
+
+    // this should be a strict_lock, but we need to be able to return it.
+    boost::unique_lock<lockable_type> lk_;
+    T const& value_;
+
+  public:
+    BOOST_THREAD_MOVABLE_ONLY( const_strict_lock_ptr )
+
+    const_strict_lock_ptr(T const& value, Lockable & mtx) :
+      lk_(mtx), value_(value)
+    {
+    }
+
+    const_strict_lock_ptr(BOOST_THREAD_RV_REF(const_strict_lock_ptr) other)
+    : lk_(boost::move(BOOST_THREAD_RV(other).lk_)),value_(BOOST_THREAD_RV(other).value_)
+    {
+    }
+
+    ~const_strict_lock_ptr()
+    {
+    }
+
+    const T* operator->() const
+    {
+      return &value_;
+    }
+
+    const T& operator*() const
+    {
+      return value_;
+    }
+
+  };
+
+  /**
+   *
+   */
+  template <typename T, typename Lockable = mutex>
+  class strict_lock_ptr : public const_strict_lock_ptr<T,Lockable>
+  {
+    typedef const_strict_lock_ptr<T,Lockable> base_type;
+  public:
+    BOOST_THREAD_MOVABLE_ONLY( strict_lock_ptr )
+
+    strict_lock_ptr(T & value, Lockable & mtx) :
+    base_type(value, mtx)
+    {
+    }
+
+    strict_lock_ptr(BOOST_THREAD_RV_REF(strict_lock_ptr) other)
+    : base_type(boost::move(static_cast<base_type&>(other)))
+    {
+    }
+
+    ~strict_lock_ptr()
+    {
+    }
+
+    T* operator->()
+    {
+      return const_cast<T*>(&this->value_);
+    }
+
+    T& operator*()
+    {
+      return const_cast<T&>(this->value_);
+    }
+
+  };
+
+  /**
+   *
+   */
+  template <typename T, typename Lockable = mutex>
+  class const_unique_lock_ptr : public unique_lock<Lockable>
+  {
+    typedef unique_lock<Lockable> base_type;
+  public:
+    typedef T value_type;
+    typedef Lockable lockable_type;
+  protected:
+    T const& value_;
+
+  public:
+    BOOST_THREAD_MOVABLE_ONLY(const_unique_lock_ptr)
+
+    const_unique_lock_ptr(T const& value, Lockable & mtx)
+    : base_type(mtx), value_(value)
+    {
+    }
+    const_unique_lock_ptr(T const& value, Lockable & mtx, adopt_lock_t)
+    : base_type(mtx, adopt_lock), value_(value)
+    {
+    }
+    const_unique_lock_ptr(T const& value, Lockable & mtx, defer_lock_t)
+    : base_type(mtx, defer_lock), value_(value)
+    {
+    }
+    const_unique_lock_ptr(T const& value, Lockable & mtx, try_to_lock_t)
+    : base_type(mtx, try_to_lock), value_(value)
+    {
+    }
+    const_unique_lock_ptr(BOOST_THREAD_RV_REF(const_unique_lock_ptr) other)
+    : base_type(boost::move(static_cast<base_type&>(other))), value_(BOOST_THREAD_RV(other).value_)
+    {
+    }
+
+    ~const_unique_lock_ptr()
+    {
+    }
+
+    const T* operator->() const
+    {
+      BOOST_ASSERT (this->owns_lock());
+      return &value_;
+    }
+
+    const T& operator*() const
+    {
+      BOOST_ASSERT (this->owns_lock());
+      return value_;
+    }
+
+  };
+
+  /**
+   *
+   */
+  template <typename T, typename Lockable = mutex>
+  class unique_lock_ptr : public const_unique_lock_ptr<T, Lockable>
+  {
+    typedef const_unique_lock_ptr<T, Lockable> base_type;
+  public:
+    typedef T value_type;
+    typedef Lockable lockable_type;
+
+    BOOST_THREAD_MOVABLE_ONLY(unique_lock_ptr)
+
+    unique_lock_ptr(T & value, Lockable & mtx)
+    : base_type(value, mtx)
+    {
+    }
+    unique_lock_ptr(T & value, Lockable & mtx, adopt_lock_t)
+    : base_type(value, mtx, adopt_lock)
+    {
+    }
+    unique_lock_ptr(T & value, Lockable & mtx, defer_lock_t)
+    : base_type(value, mtx, defer_lock)
+    {
+    }
+    unique_lock_ptr(T & value, Lockable & mtx, try_to_lock_t)
+    : base_type(value, mtx, try_to_lock)
+    {
+    }
+    unique_lock_ptr(BOOST_THREAD_RV_REF(unique_lock_ptr) other)
+    : base_type(boost::move(static_cast<base_type&>(other)))
+    {
+    }
+
+    ~unique_lock_ptr()
+    {
+    }
+
+    T* operator->()
+    {
+      BOOST_ASSERT (this->owns_lock());
+      return const_cast<T*>(&this->value_);
+    }
+
+    T& operator*()
+    {
+      BOOST_ASSERT (this->owns_lock());
+      return const_cast<T&>(this->value_);
+    }
+
+
+  };
+
   /**
    *
    */
@@ -181,99 +370,24 @@ namespace boost
       boost::swap(value_, rhs.value_);
     }
 
-    /**
-     *
-     */
-    struct const_strict_synchronizer
-    {
-    protected:
-      friend class synchronized_value;
-
-      // this should be a strict_lock, but we need to be able to return it.
-      boost::unique_lock<lockable_type> lk_;
-      T const& value_;
-
-      explicit const_strict_synchronizer(synchronized_value const& outer) :
-        lk_(outer.mtx_), value_(outer.value_)
-      {
-      }
-    public:
-      BOOST_THREAD_MOVABLE_ONLY( const_strict_synchronizer )
-
-      const_strict_synchronizer(BOOST_THREAD_RV_REF(const_strict_synchronizer) other)
-      : lk_(boost::move(BOOST_THREAD_RV(other).lk_)),value_(BOOST_THREAD_RV(other).value_)
-      {
-      }
-
-      ~const_strict_synchronizer()
-      {
-      }
-
-      const T* operator->() const
-      {
-        return &value_;
-      }
-
-      const T& operator*() const
-      {
-        return value_;
-      }
-
-    };
-
-    /**
-     *
-     */
-    struct strict_synchronizer : const_strict_synchronizer
-    {
-    protected:
-      friend class synchronized_value;
-
-      explicit strict_synchronizer(synchronized_value& outer) :
-        const_strict_synchronizer(const_cast<synchronized_value&>(outer))
-      {
-      }
-    public:
-      BOOST_THREAD_MOVABLE_ONLY( strict_synchronizer )
-
-      strict_synchronizer(BOOST_THREAD_RV_REF(strict_synchronizer) other)
-      : const_strict_synchronizer(boost::move(static_cast<const_strict_synchronizer&>(other)))
-      {
-      }
-
-      ~strict_synchronizer()
-      {
-      }
-
-      T* operator->()
-      {
-        return const_cast<T*>(&this->value_);
-      }
-
-      T& operator*()
-      {
-        return const_cast<T&>(this->value_);
-      }
-
-    };
 
 
     /**
      * Essentially calling a method obj->foo(x, y, z) calls the method foo(x, y, z) inside a critical section as
      * long-lived as the call itself.
      */
-    strict_synchronizer operator->()
+    strict_lock_ptr<T,Lockable> operator->()
     {
-      return BOOST_THREAD_MAKE_RV_REF(strict_synchronizer(*this));
+      return BOOST_THREAD_MAKE_RV_REF((strict_lock_ptr<T,Lockable>(value_, mtx_)));
     }
     /**
      * If the synchronized_value object involved is const-qualified, then you'll only be able to call const methods
      * through operator->. So, for example, vec->push_back("xyz") won't work if vec were const-qualified.
      * The locking mechanism capitalizes on the assumption that const methods don't modify their underlying data.
      */
-    const_strict_synchronizer operator->() const
+    const_strict_lock_ptr<T,Lockable> operator->() const
     {
-      return BOOST_THREAD_MAKE_RV_REF(const_strict_synchronizer(*this));
+      return BOOST_THREAD_MAKE_RV_REF((const_strict_lock_ptr<T,Lockable>(value_, mtx_)));
     }
 
     /**
@@ -288,83 +402,32 @@ namespace boost
      *     assert(vec.back() == 42);
      *   }
      */
-    strict_synchronizer synchronize()
+    strict_lock_ptr<T,Lockable> synchronize()
     {
-      return BOOST_THREAD_MAKE_RV_REF(strict_synchronizer(*this));
+      return BOOST_THREAD_MAKE_RV_REF((strict_lock_ptr<T,Lockable>(value_, mtx_)));
     }
-    const_strict_synchronizer synchronize() const
+    const_strict_lock_ptr<T,Lockable> synchronize() const
     {
-      return BOOST_THREAD_MAKE_RV_REF(const_strict_synchronizer(*this));
+      return BOOST_THREAD_MAKE_RV_REF((const_strict_lock_ptr<T,Lockable>(value_, mtx_)));
     }
 
-    /**
-     *
-     */
-    struct unique_synchronizer : unique_lock<lockable_type>
+    unique_lock_ptr<T,Lockable> unique_synchronize()
     {
-    private:
-      //friend class synchronized_value;
-      typedef unique_lock<lockable_type> base_type;
+      return BOOST_THREAD_MAKE_RV_REF((unique_lock_ptr<T,Lockable>(value_, mtx_)));
+    }
+    unique_lock_ptr<T,Lockable> unique_synchronize(defer_lock_t tag)
+    {
+      return BOOST_THREAD_MAKE_RV_REF((unique_lock_ptr<T,Lockable>(value_, mtx_, tag)));
+    }
+    const_unique_lock_ptr<T,Lockable> unique_synchronize() const
+    {
+      return BOOST_THREAD_MAKE_RV_REF((const_unique_lock_ptr<T,Lockable>(value_, mtx_)));
+    }
+    const_unique_lock_ptr<T,Lockable> unique_synchronize(defer_lock_t tag) const
+    {
+      return BOOST_THREAD_MAKE_RV_REF((const_unique_lock_ptr<T,Lockable>(value_, mtx_, tag)));
+    }
 
-      T& value_;
-
-    public:
-      BOOST_THREAD_MOVABLE_ONLY(unique_synchronizer)
-
-      explicit unique_synchronizer(synchronized_value& outer)
-      : base_type(outer.mtx_), value_(outer.value_)
-      {
-      }
-      unique_synchronizer(synchronized_value& outer, adopt_lock_t)
-      : base_type(outer.mtx_, adopt_lock), value_(outer.value_)
-      {
-      }
-      unique_synchronizer(synchronized_value& outer, defer_lock_t)
-      : base_type(outer.mtx_, defer_lock), value_(outer.value_)
-      {
-      }
-      unique_synchronizer(synchronized_value& outer, try_to_lock_t)
-      : base_type(outer.mtx_, try_to_lock), value_(outer.value_)
-      {
-      }
-      unique_synchronizer(BOOST_THREAD_RV_REF(unique_synchronizer) other)
-      : base_type(boost::move(other)),value_(BOOST_THREAD_RV(other).value_)
-      {
-      }
-
-      ~unique_synchronizer()
-      {
-      }
-
-      T* operator->()
-      {
-        if (this->owns_lock())
-        return &value_;
-        else
-        return 0;
-      }
-
-      const T* operator->() const
-      {
-        if (this->owns_lock())
-          return &value_;
-        else
-          return 0;
-      }
-
-      T& operator*()
-      {
-        BOOST_ASSERT (this->owns_lock());
-        return value_;
-      }
-
-      const T& operator*() const
-      {
-        BOOST_ASSERT (this->owns_lock());
-        return value_;
-      }
-
-    };
 
   private:
     class deref_value
