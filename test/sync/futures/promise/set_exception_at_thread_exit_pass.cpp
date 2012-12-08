@@ -73,6 +73,27 @@ int main()
       BOOST_TEST(false);
     }
   }
+  {
+    typedef int T;
+    boost::promise<T> p2;
+    boost::future<T> f = p2.get_future();
+    //boost::thread(func, boost::move(p)).detach();
+    p = boost::move(p2);
+    boost::thread(func).detach();
+    try
+    {
+      f.get();
+      BOOST_TEST(false);
+    }
+    catch (boost::wrap<int> i)
+    {
+      BOOST_TEST(i.value == 3);
+    }
+    catch (...)
+    {
+      BOOST_TEST(false);
+    }
+  }
   return boost::report_errors();
 }
 

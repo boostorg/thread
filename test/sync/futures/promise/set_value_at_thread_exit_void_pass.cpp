@@ -19,8 +19,11 @@
 // void promise<void>::set_value_at_thread_exit();
 
 #define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_USES_LOG
+#define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/future.hpp>
+#include <boost/thread/detail/log.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int i = 0;
@@ -35,7 +38,7 @@ void func()
 void func2(boost::promise<void> p2)
 {
   p2.set_value_at_thread_exit();
-  i = 1;
+  i = 2;
 }
 
 int main()
@@ -57,20 +60,39 @@ int main()
     BOOST_TEST(false);
   }
 
+  try
+  {
+    boost::promise<void> p2;
+    boost::future<void> f = p2.get_future();
+    p = boost::move(p2);
+    boost::thread(func).detach();
+    f.get();
+    BOOST_TEST(i == 1);
+
+  }
+  catch(std::exception ex)
+  {
+    std::cout << __FILE__ << ":" << __LINE__ << " " << ex.what() << std::endl;
+    BOOST_TEST(false);
+  }
+  catch(...)
+  {
+    BOOST_TEST(false);
+  }
   // BUG when moving promise. fixme
 //  try
 //  {
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
 //    boost::promise<void> p2; // BUG
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
 //    boost::future<void> f = p2.get_future();
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
 //    boost::thread(func2, boost::move(p2)).detach(); // BUG
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
 //    f.get();
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
-//    BOOST_TEST(i == 1);
-//    std::cout << __FILE__ << ":" << __LINE__ <<std::endl;
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
+//    BOOST_TEST(i == 2);
+//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
 //
 //  }
 //  catch(std::exception ex)

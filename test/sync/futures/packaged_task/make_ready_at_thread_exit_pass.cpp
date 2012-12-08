@@ -99,7 +99,14 @@ int main()
   {
     boost::packaged_task<double(int, char)> p(A(5));
     boost::future<double> f = p.get_future();
-    // BUG boost::thread(func0, boost::move(p)).detach();
+    // fixme BUG boost::thread(func0, boost::move(p)).detach();
+    boost::thread(func0, &p).detach();
+    BOOST_TEST(f.get() == 105.0);
+  }
+  {
+    boost::packaged_task<double(int, char)> p2(A(5));
+    boost::future<double> f = p2.get_future();
+    boost::packaged_task<double(int, char)> p = boost::move(p2);
     boost::thread(func0, &p).detach();
     BOOST_TEST(f.get() == 105.0);
   }
@@ -119,6 +126,21 @@ int main()
     }
   }
   {
+    boost::packaged_task<double(int, char)> p2(A(5));
+    boost::future<double> f = p2.get_future();
+    boost::packaged_task<double(int, char)> p = boost::move(p2);
+    boost::thread(func1, &p).detach();
+    try
+    {
+      f.get();
+      BOOST_TEST(false);
+    }
+    catch (const E& e)
+    {
+      BOOST_TEST(e.data == 6);
+    }
+  }
+  {
     boost::packaged_task<double(int, char)> p(A(5));
     boost::future<double> f = p.get_future();
     //boost::thread(func2, boost::move(p)).detach();
@@ -126,8 +148,21 @@ int main()
     BOOST_TEST(f.get() == 105.0);
   }
   {
-    boost::packaged_task<double(int, char)> p;
+    boost::packaged_task<double(int, char)> p2(A(5));
+    boost::future<double> f = p2.get_future();
+    boost::packaged_task<double(int, char)> p = boost::move(p2);
+    boost::thread(func2, &p).detach();
+    BOOST_TEST(f.get() == 105.0);
+  }
+  {
+    boost::packaged_task<double(int, char)> p(A(5));
     //boost::thread t(func3, boost::move(p));
+    boost::thread t(func3, &p);
+    t.join();
+  }
+  {
+    boost::packaged_task<double(int, char)> p2(A(5));
+    boost::packaged_task<double(int, char)> p = boost::move(p2);
     boost::thread t(func3, &p);
     t.join();
   }
