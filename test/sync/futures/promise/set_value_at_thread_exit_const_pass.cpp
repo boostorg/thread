@@ -40,6 +40,13 @@ int main()
     boost::thread(func).detach();
     BOOST_TEST(f.get() == 5);
   }
+  {
+    boost::promise<int> p2;
+    boost::future<int> f = p2.get_future();
+    p = boost::move(p2);
+    boost::thread(func).detach();
+    BOOST_TEST(f.get() == 5);
+  }
   return boost::report_errors();
 }
 

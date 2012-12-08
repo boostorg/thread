@@ -228,7 +228,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run test_5542_2.cpp ]
           [ thread-run test_5542_3.cpp ]
           [ thread-run test_5891.cpp ]
-          [ thread-run test_6130.cpp ]
+          #[ thread-run test_6130.cpp ]
           #[ thread-run test_6170.cpp ]
           [ thread-run test_6174.cpp ]
           #[ thread-run test_7160.cpp ]
