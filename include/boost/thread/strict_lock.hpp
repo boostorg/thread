@@ -7,6 +7,7 @@
 #define BOOST_THREAD_STRICT_LOCK_HPP
 
 #include <boost/thread/detail/delete.hpp>
+#include <boost/thread/detail/lockable_wrapper.hpp>
 #include <boost/thread/lock_options.hpp>
 #include <boost/thread/lock_traits.hpp>
 #include <boost/thread/lockable_traits.hpp>
@@ -47,6 +48,15 @@ namespace boost
     {
       mtx.lock();
     } /*< locks on construction >*/
+
+
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+    strict_lock(std::initializer_list<thread_detail::lockable_wrapper<Lockable> > l_) :
+      mtx_(*(const_cast<thread_detail::lockable_wrapper<Lockable>*>(l_.begin())->m))
+    {
+      mtx_.lock();
+    }
+#endif
 
     /**
      * Destructor
@@ -97,7 +107,7 @@ namespace boost
 
   /**
    * A nested strict lock is a scoped lock guard ensuring the mutex is locked on its
-   * scope, by taking ownership of an nesting lock, and locking the mutex on construction if not already locked
+   * scope, by taking ownership of an nesting lock, locking the mutex on construction if not already locked
    * and restoring the ownership to the nesting lock on destruction.
    */
   //[nested_strict_lock
@@ -117,8 +127,8 @@ namespace boost
      *
      * __Requires: <c>lk.mutex() != null_ptr</c>
      * __Effects: Stores the reference to the lock parameter and takes ownership on it.
-     * If the lock doesn't owns the mutex @mtx lock it.
-     * __Postconditions: @c owns_lock()
+     * If the lock doesn't owns the mutex @c mtx lock it.
+     * __Postconditions: @c owns_lock(lk.mutex())
      * __StrongException
      * __Throws:
      *
@@ -127,7 +137,7 @@ namespace boost
      * - Any exception that @c lk.lock() can throw.
      *
      */
-    nested_strict_lock(Lock& lk) :
+    explicit nested_strict_lock(Lock& lk) :
       lk_(lk) /*< Store reference to lk >*/
     {
       /*< Define BOOST_THREAD_DONT_CHECK_PRECONDITIONS if you don't want to check lk ownership >*/
@@ -137,6 +147,19 @@ namespace boost
       if (!lk.owns_lock()) lk.lock(); /*< ensures it is locked >*/
       tmp_lk_ = move(lk); /*< Move ownership to temporary lk >*/
     }
+
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+    nested_strict_lock(std::initializer_list<thread_detail::lockable_wrapper<Lock> > l_) :
+      lk_(*(const_cast<thread_detail::lockable_wrapper<Lock>*>(l_.begin())->m))
+    {
+      /*< Define BOOST_THREAD_DONT_CHECK_PRECONDITIONS if you don't want to check lk ownership >*/
+      BOOST_THREAD_ASSERT_PRECONDITION(  lk_.mutex() != 0,
+          lock_error()
+      );
+      if (!lk_.owns_lock()) lk_.lock(); /*< ensures it is locked >*/
+      tmp_lk_ = move(lk_); /*< Move ownership to temporary lk >*/
+    }
+#endif
 
     /**
      * Destructor
@@ -180,6 +203,18 @@ public:
   {
   };
 
+#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+  template <typename Lockable>
+  strict_lock<Lockable> make_strict_lock(Lockable& mtx)
+  {
+    return { thread_detail::lockable_wrapper<Lockable>(mtx) };
+  }
+  template <typename Lock>
+  nested_strict_lock<Lock> make_nested_strict_lock(Lock& lk)
+  {
+    return { thread_detail::lockable_wrapper<Lock>(lk) };
+  }
+#endif
 }
 #include <boost/config/abi_suffix.hpp>
 

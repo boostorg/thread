@@ -29,7 +29,7 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && BOOST_THREAD_USES_CHRONO
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
 
 void f()
 {

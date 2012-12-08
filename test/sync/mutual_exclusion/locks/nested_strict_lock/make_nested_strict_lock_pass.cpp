@@ -30,7 +30,7 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && BOOST_THREAD_USES_CHRONO
+#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
 
 void f()
 {
@@ -38,7 +38,7 @@ void f()
   time_point t1;
   boost::unique_lock<boost::mutex> lg(m);
   {
-    const auto&& nlg = boost::make_strict_lock(lg); (void)nlg;
+    const auto&& nlg = boost::make_nested_strict_lock(lg); (void)nlg;
     t1 = Clock::now();
     BOOST_THREAD_TRACE;
   }
