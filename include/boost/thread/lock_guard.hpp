@@ -9,41 +9,17 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/detail/lockable_wrapper.hpp>
 #include <boost/thread/lock_options.hpp>
 #if ! defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
 #include <boost/thread/is_locked_by_this_thread.hpp>
-#endif
 #include <boost/assert.hpp>
-#include <iostream>
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
-#include <initializer_list>
 #endif
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
-
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
-  namespace thread_detail
-  {
-    template <typename Mutex>
-    struct lockable_wrapper
-    {
-      Mutex* m;
-      explicit lockable_wrapper(Mutex& m_) :
-        m(&m_)
-      {}
-    };
-    template <typename Mutex>
-    struct lockable_adopt_wrapper
-    {
-      Mutex* m;
-      explicit lockable_adopt_wrapper(Mutex& m_) :
-        m(&m_)
-      {}
-    };
-  }
-#endif
 
   template <typename Mutex>
   class lock_guard
