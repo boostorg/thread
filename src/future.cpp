@@ -19,12 +19,12 @@ namespace boost
       public boost::system::error_category
     {
     public:
-        virtual const char* name() const; //BOOST_NOEXCEPT;
+        virtual const char* name() const BOOST_SYSTEM_NOEXCEPT;
         virtual std::string message(int ev) const;
     };
 
     const char*
-    future_error_category::name() const //BOOST_NOEXCEPT
+    future_error_category::name() const BOOST_SYSTEM_NOEXCEPT
     {
         return "future";
     }
