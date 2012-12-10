@@ -472,6 +472,29 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/types_pass.cpp : upgrade_lock__types_p ]
     ;
 
+    #explicit ts_strict_lock ;
+    test-suite ts_strict_lock
+    :
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/strict_lock/copy_assign_fail.cpp : : strict_lock__cons__copy_assign_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/strict_lock/copy_ctor_fail.cpp : : strict_lock__cons__copy_ctor_f ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/default_pass.cpp : strict_lock__cons__default_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/owns_lock_pass.cpp : strict_lock__owns_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/types_pass.cpp : strict_lock__types_p ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/make_strict_lock_pass.cpp : make_strict_lock_p ]
+    ;
+
+    #explicit ts_nested_strict_lock ;
+    test-suite ts_nested_strict_lock
+    :
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_assign_fail.cpp : : nested_strict_lock__cons__copy_assign_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_ctor_fail.cpp : : nested_strict_lock__cons__copy_ctor_f ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/default_pass.cpp : nested_strict_lock__cons__default_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/owns_lock_pass.cpp : nested_strict_lock__owns_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/types_pass.cpp : nested_strict_lock__types_p ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/make_nested_strict_lock_pass.cpp : make_nested_strict_lock_p ]
+    ;
+
+
     #explicit ts_mutex ;
     test-suite ts_mutex
     :

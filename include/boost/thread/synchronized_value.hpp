@@ -59,7 +59,7 @@ namespace boost
     /**
      * Move Constructor from movable value.
      *
-     * Requires: T is CopyConstructible
+     * Requires: T is Movable
      */
     synchronized_value(BOOST_THREAD_RV_REF(T) other)
     : value_(boost::move(other))
@@ -303,7 +303,7 @@ namespace boost
     struct unique_synchronizer : unique_lock<lockable_type>
     {
     private:
-      friend class synchronized_value;
+      //friend class synchronized_value;
       typedef unique_lock<lockable_type> base_type;
 
       T& value_;
@@ -313,6 +313,18 @@ namespace boost
 
       explicit unique_synchronizer(synchronized_value& outer)
       : base_type(outer.mtx_), value_(outer.value_)
+      {
+      }
+      unique_synchronizer(synchronized_value& outer, adopt_lock_t)
+      : base_type(outer.mtx_, adopt_lock), value_(outer.value_)
+      {
+      }
+      unique_synchronizer(synchronized_value& outer, defer_lock_t)
+      : base_type(outer.mtx_, defer_lock), value_(outer.value_)
+      {
+      }
+      unique_synchronizer(synchronized_value& outer, try_to_lock_t)
+      : base_type(outer.mtx_, try_to_lock), value_(outer.value_)
       {
       }
       unique_synchronizer(BOOST_THREAD_RV_REF(unique_synchronizer) other)
@@ -335,9 +347,9 @@ namespace boost
       const T* operator->() const
       {
         if (this->owns_lock())
-        return &value_;
+          return &value_;
         else
-        return 0;
+          return 0;
       }
 
       T& operator*()
