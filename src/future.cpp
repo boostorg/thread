@@ -7,7 +7,7 @@
 #ifndef BOOST_NO_EXCEPTIONS
 
 
-#include <boost/thread/future.hpp>
+#include <boost/thread/future_error_code.hpp>
 
 namespace boost
 {
