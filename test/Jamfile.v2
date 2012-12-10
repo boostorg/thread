@@ -662,11 +662,9 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p2 ]
-          [ thread-run2-noit ./threads/thread/members/try_join_until_pass.cpp : thread__join_until_p2 ]
-          [ thread-run2-noit ./threads/thread/members/try_join_for_pass.cpp : thread__join_for_p2 ]
-          [ thread-run2-noit ./sync/futures/async/async_pass.cpp : async__async_p2 ]
+          #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
 
+          [ compile virtual_noexcept.cpp ]
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]

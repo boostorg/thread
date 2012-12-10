@@ -8,10 +8,13 @@
 // class future<R>
 
 // template<typename F>
-// auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+// auto then(F&& func) -> future<decltype(func(*this))>;
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
+//#define BOOST_THREAD_USES_LOG
+#define BOOST_THREAD_USES_LOG_THREAD_ID
+#include <boost/thread/detail/log.hpp>
 
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
@@ -30,23 +33,37 @@ int p2(boost::future<int>& f)
 
 int main()
 {
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
     boost::future<int> f1 = boost::async(p1);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f2 = f1.then(p2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     BOOST_TEST(f2.get()==2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   }
   {
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f2 = boost::async(p1).then(p2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     BOOST_TEST(f2.get()==2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   }
   {
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f1 = boost::async(p1);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f2 = f1.then(p2).then(p2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     BOOST_TEST(f2.get()==4);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   }
   {
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f2 = boost::async(p1).then(p2).then(p2);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     BOOST_TEST(f2.get()==4);
+    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   }
 
   return boost::report_errors();
