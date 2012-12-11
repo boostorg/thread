@@ -663,8 +663,10 @@ rule thread-compile-fail ( sources : reqs * : name )
     test-suite ts_
     :
           #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
+          #[ thread-run ../example/test_so.cpp ]
+          #[ thread-run ../example/test_so2.cpp ]
 
-          [ compile virtual_noexcept.cpp ]
+          #[ compile virtual_noexcept.cpp ]
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
