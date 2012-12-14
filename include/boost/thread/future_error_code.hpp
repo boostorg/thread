@@ -44,14 +44,14 @@ namespace boost
   {
     inline
     error_code
-    make_error_code(future_errc e) BOOST_SYSTEM_NOEXCEPT
+    make_error_code(future_errc e) BOOST_NOEXCEPT
     {
         return error_code(underlying_cast<int>(e), boost::future_category());
     }
 
     inline
     error_condition
-    make_error_condition(future_errc e) BOOST_SYSTEM_NOEXCEPT
+    make_error_condition(future_errc e) BOOST_NOEXCEPT
     {
         return error_condition(underlying_cast<int>(e), future_category());
     }
