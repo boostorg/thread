@@ -67,46 +67,46 @@
 namespace boost
 {
 
-  //enum class launch
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(launch)
-  {
-      none = 0,
-      async = 1,
-      deferred = 2,
-      any = async | deferred
-  }
-  BOOST_SCOPED_ENUM_DECLARE_END(launch)
+    //enum class launch
+    BOOST_SCOPED_ENUM_DECLARE_BEGIN(launch)
+    {
+        none = 0,
+        async = 1,
+        deferred = 2,
+        any = async | deferred
+    }
+    BOOST_SCOPED_ENUM_DECLARE_END(launch)
 
-  //enum class future_status
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_status)
-  {
-      ready,
-      timeout,
-      deferred
-  }
-  BOOST_SCOPED_ENUM_DECLARE_END(future_status)
+    //enum class future_status
+    BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_status)
+    {
+        ready,
+        timeout,
+        deferred
+    }
+    BOOST_SCOPED_ENUM_DECLARE_END(future_status)
 
-  class BOOST_SYMBOL_VISIBLE future_error
-      : public std::logic_error
-  {
-      system::error_code ec_;
-  public:
-      future_error(system::error_code ec)
-      : logic_error(ec.message()),
-        ec_(ec)
-      {
-      }
+    class BOOST_SYMBOL_VISIBLE future_error
+        : public std::logic_error
+    {
+        system::error_code ec_;
+    public:
+        future_error(system::error_code ec)
+        : logic_error(ec.message()),
+          ec_(ec)
+        {
+        }
 
-      const system::error_code& code() const BOOST_NOEXCEPT
-      {
-        return ec_;
-      }
-      const char* what() const BOOST_THREAD_NOEXCEPT_OR_THROW
-      {
-        return code().message().c_str();
-      }
+        const system::error_code& code() const BOOST_NOEXCEPT
+        {
+          return ec_;
+        }
+        const char* what() const BOOST_THREAD_NOEXCEPT_OR_THROW
+        {
+          return code().message().c_str();
+        }
 
-  };
+    };
 
     class BOOST_SYMBOL_VISIBLE future_uninitialized:
         public future_error
@@ -150,23 +150,23 @@ namespace boost
         {}
     };
 
-        class BOOST_SYMBOL_VISIBLE task_moved:
-            public future_error
-        {
-        public:
-            task_moved():
-              future_error(system::make_error_code(future_errc::no_state))
-            {}
-        };
+    class BOOST_SYMBOL_VISIBLE task_moved:
+        public future_error
+    {
+    public:
+        task_moved():
+          future_error(system::make_error_code(future_errc::no_state))
+        {}
+    };
 
-            class promise_moved:
-                public future_error
-            {
-            public:
-                  promise_moved():
-                  future_error(system::make_error_code(future_errc::no_state))
-                {}
-            };
+    class promise_moved:
+        public future_error
+    {
+    public:
+          promise_moved():
+          future_error(system::make_error_code(future_errc::no_state))
+        {}
+    };
 
     namespace future_state
     {
@@ -479,7 +479,9 @@ namespace boost
 #endif
                     );
             }
-            void is_deferred() {is_deferred_ = true;}
+            bool is_deferred()  const BOOST_NOEXCEPT {
+                return is_deferred_ == true;
+            }
 
             launch launch_policy() const BOOST_NOEXCEPT
             {
@@ -489,6 +491,7 @@ namespace boost
             template<typename F,typename U>
             void set_wait_callback(F f,U* u)
             {
+                boost::lock_guard<boost::mutex> lock(mutex);
                 callback=boost::bind(f,boost::ref(*u));
             }
             virtual void execute(boost::unique_lock<boost::mutex>&) {}
@@ -1294,7 +1297,7 @@ namespace boost
         launch launch_policy() const BOOST_NOEXCEPT
         {
             if ( future_ ) return future_->launch_policy();
-            else return launch(launch::any);
+            else return launch(launch::none);
         }
 
         bool valid() const BOOST_NOEXCEPT
