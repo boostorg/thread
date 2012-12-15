@@ -731,7 +731,7 @@ namespace boost
 
     namespace this_thread
     {
-        thread::id get_id() BOOST_NOEXCEPT
+        inline thread::id get_id() BOOST_NOEXCEPT
         {
         #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
              return pthread_self();
