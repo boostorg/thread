@@ -11,9 +11,14 @@
 
 [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2406.html Mutex, Lock, Condition Variable Rationale] adds rationale for the design decisions made for mutexes, locks and condition variables.
 
-[section:locks Locks]
 
 In addition to the C++11 standard locks, Boost.Thread provides other locks and some utilities that help the user to make their code thread-safe.
+
+[include internal_locking.qbk]
+
+[include external_locking.qbk]
+
+[section:with Executing Around a Function]
 
 In particular, the library provides some lock factories.
 
@@ -34,6 +39,6 @@ that can be used as
   });
 
 
-[endsect] [/ Locks]
+[endsect] [/ With]
 
 [endsect] [/ Tutorial]
