@@ -53,7 +53,7 @@ namespace boost
 
     /**
      * Requires: T is a model of Movable.
-     * Effects: Constructs an externally locked object copying the cloaked type.
+     * Effects: Constructs an externally locked object by moving the cloaked type.
      */
     BOOST_CONSTEXPR externally_locked(mutex_type& mtx, BOOST_THREAD_RV_REF(T) obj) :
       obj_(move(obj)), mtx_(&mtx)
@@ -83,7 +83,7 @@ namespace boost
      *
      * Returns: The address of the cloaked object..
      *
-     * Throws: lock_error if BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME is not defined and the lk parameter doesn't satisfy the preconditions
+     * Throws: lock_error if BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is not defined and the lk parameter doesn't satisfy the preconditions
      */
     T& get(strict_lock<mutex_type>& lk)
     {
@@ -117,7 +117,7 @@ namespace boost
      * Requires: The lk parameter must be locking the associated mtx.
      * Returns: The address of the cloaked object..
      *
-     * Throws: lock_error if BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME is not defined and the lk parameter doesn't satisfy the preconditions
+     * Throws: lock_error if BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is not defined and the lk parameter doesn't satisfy the preconditions
      */
     template <class Lock>
     T& get(Lock& lk)
@@ -203,7 +203,7 @@ namespace boost
      *
      * Returns: The address of the cloaked object..
      *
-     * Throws: lock_error if BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME is not defined and the lk parameter doesn't satisfy the preconditions
+     * Throws: lock_error if BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is not defined and the lk parameter doesn't satisfy the preconditions
      */
     T& get(strict_lock<mutex_type> const& lk)
     {
@@ -237,7 +237,7 @@ namespace boost
      * Requires: The lk parameter must be locking the associated mtx.
      * Returns: The address of the cloaked object..
      *
-     * Throws: lock_error if BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME is not defined and the lk parameter doesn't satisfy the preconditions
+     * Throws: lock_error if BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is not defined and the lk parameter doesn't satisfy the preconditions
      */
     template <class Lock>
     T& get(Lock const& lk)
@@ -245,7 +245,7 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
+      //BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
       BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
@@ -254,7 +254,7 @@ namespace boost
      * Requires: The lk parameter must be locking the associated mtx.
      * Returns: The address of the cloaked object..
      *
-     * Throws: lock_error if BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME is not defined and the lk parameter doesn't satisfy the preconditions
+     * Throws: lock_error if BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is not defined and the lk parameter doesn't satisfy the preconditions
      */
     template <class Lock>
     T const& get(Lock const& lk) const
@@ -262,7 +262,7 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-      BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
+      //BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
       BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }

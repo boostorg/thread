@@ -22,6 +22,9 @@
 
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_USES_LOG
+#define BOOST_THREAD_USES_LOG_THREAD_ID
+#include <boost/thread/detail/log.hpp>
 
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
@@ -87,49 +90,65 @@ void func6(boost::promise<void> p)
 
 int main()
 {
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
       typedef int T;
+//      {
+//          boost::promise<T> p;
+//          boost::future<T> f = p.get_future();
+//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+//           boost::thread(func1, boost::move(p)).detach();
+//#else
+//           p.set_value(3);
+//#endif
+//          BOOST_TEST(f.valid());
+//          BOOST_TEST(f.get() == 3);
+//#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
+//          BOOST_TEST(!f.valid());
+//#endif
+//      }
+      BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
       {
           boost::promise<T> p;
+          BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           boost::future<T> f = p.get_future();
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-           boost::thread(func1, boost::move(p)).detach();
-#else
-           p.set_value(3);
-#endif
-          BOOST_TEST(f.valid());
-          BOOST_TEST(f.get() == 3);
-#ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-          BOOST_TEST(!f.valid());
-#endif
-      }
-      {
-          boost::promise<T> p;
-          boost::future<T> f = p.get_future();
+          BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           boost::thread(func2, boost::move(p)).detach();
 #else
           p.set_exception(boost::make_exception_ptr(3));
 #endif
+          BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           try
           {
+            BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
               BOOST_TEST(f.valid());
+              BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
               BOOST_TEST(f.get() == 3);
+              BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
               BOOST_TEST(false);
+              BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           }
           catch (boost::wrap<int> const& i)
           {
+            BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
               BOOST_TEST(i.value == 3);
+              BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           }
           catch (...)
           {
+            BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
               BOOST_TEST(false);
+              BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           }
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
+          BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
           BOOST_TEST(!f.valid());
 #endif
+          BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
       }
   }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
       typedef int& T;
       {
@@ -147,6 +166,7 @@ int main()
           BOOST_TEST(!f.valid());
 #endif
       }
+      BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
       {
           boost::promise<T> p;
           boost::future<T> f = p.get_future();
@@ -170,6 +190,7 @@ int main()
 #endif
       }
   }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
 
   typedef void T;
   {
@@ -186,6 +207,7 @@ int main()
       BOOST_TEST(!f.valid());
 #endif
   }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
       boost::promise<T> p;
       boost::future<T> f = p.get_future();
@@ -212,6 +234,7 @@ int main()
       BOOST_TEST(!f.valid());
 #endif
   }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
 
   return boost::report_errors();
 }

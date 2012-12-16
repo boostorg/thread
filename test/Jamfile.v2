@@ -228,7 +228,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run test_5542_2.cpp ]
           [ thread-run test_5542_3.cpp ]
           [ thread-run test_5891.cpp ]
-          [ thread-run test_6130.cpp ]
+          #[ thread-run test_6130.cpp ]
           #[ thread-run test_6170.cpp ]
           [ thread-run test_6174.cpp ]
           #[ thread-run test_7160.cpp ]
@@ -480,7 +480,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/default_pass.cpp : strict_lock__cons__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/owns_lock_pass.cpp : strict_lock__owns_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/types_pass.cpp : strict_lock__types_p ]
-          #[ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/make_strict_lock_pass.cpp : make_strict_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/strict_lock/make_strict_lock_pass.cpp : make_strict_lock_p ]
     ;
 
     #explicit ts_nested_strict_lock ;
@@ -491,7 +491,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/default_pass.cpp : nested_strict_lock__cons__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/owns_lock_pass.cpp : nested_strict_lock__owns_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/types_pass.cpp : nested_strict_lock__types_p ]
-          #[ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/make_nested_strict_lock_pass.cpp : make_nested_strict_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/make_nested_strict_lock_pass.cpp : make_nested_strict_lock_p ]
     ;
 
 
@@ -662,11 +662,11 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p2 ]
-          [ thread-run2-noit ./threads/thread/members/try_join_until_pass.cpp : thread__join_until_p2 ]
-          [ thread-run2-noit ./threads/thread/members/try_join_for_pass.cpp : thread__join_for_p2 ]
-          [ thread-run2-noit ./sync/futures/async/async_pass.cpp : async__async_p2 ]
+          #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
+          #[ thread-run ../example/test_so.cpp ]
+          #[ thread-run ../example/test_so2.cpp ]
 
+          #[ compile virtual_noexcept.cpp ]
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]

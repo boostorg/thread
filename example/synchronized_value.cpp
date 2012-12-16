@@ -12,7 +12,7 @@
 
 void addTrailingSlashIfMissing(boost::synchronized_value<std::string> & path)
 {
-  boost::synchronized_value<std::string>::strict_synchronizer u=path.synchronize();
+  boost::strict_lock_ptr<std::string> u=path.synchronize();
 
   if(u->empty() || (*u->rbegin()!='/'))
   {
@@ -24,13 +24,13 @@ void f(const boost::synchronized_value<int> &v) {
   std::cout<<"v="<<*v<<std::endl;
 }
 
-void g(const boost::synchronized_value<int>::const_strict_synchronizer &v) {
+void g(const boost::const_strict_lock_ptr<int> &v) {
   std::cout<<"v="<<*v<<std::endl;
 }
 
 bool checkIfMissingTrailingSlash(boost::synchronized_value<std::string> & path)
 {
-  boost::synchronized_value<std::string>::strict_synchronizer u=path.synchronize();
+  boost::strict_lock_ptr<std::string> u=path.synchronize();
 
   return (u->empty() || (*u->rbegin()!='/'));
 }
@@ -46,7 +46,7 @@ int main()
     std::cout<<"i="<<i<<std::endl;
 
     {
-      boost::synchronized_value<int>::strict_synchronizer u=v1.synchronize();
+      boost::strict_lock_ptr<int> u=v1.synchronize();
 
       *u+=43;
       std::cout<<"v1="<<*u<<std::endl;

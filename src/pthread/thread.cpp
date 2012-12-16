@@ -395,7 +395,7 @@ namespace boost
 
     bool thread::joinable() const BOOST_NOEXCEPT
     {
-        return (get_thread_info)()!=0;
+        return (get_thread_info)()?true:false;
     }
 
 
