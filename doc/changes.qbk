@@ -46,23 +46,22 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 * [@http://svn.boost.org/trac/boost/ticket/7413 #7413] C++11 compliance: Add async when the launch policy is deferred.
 * [@http://svn.boost.org/trac/boost/ticket/7414 #7414] C++11 compliance: future::get post-condition should be valid()==false.
 * [@http://svn.boost.org/trac/boost/ticket/7414 #7444] Async: Add make_future/make_shared_future.
-* [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
 * [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
 * [@http://svn.boost.org/trac/boost/ticket/7540 #7540] Threads: Add a helper class that join a thread on destruction.
 * [@http://svn.boost.org/trac/boost/ticket/7541 #7541] Threads: Add a thread wrapper class that joins on destruction.
 * [@http://svn.boost.org/trac/boost/ticket/7575 #7575] C++11 compliance: A future created by async should "join" in the destructor.
-* [@http://svn.boost.org/trac/boost/ticket/7587 #7587] Synchro: Add strict_lock and nested_strict_lock
-* [@http://svn.boost.org/trac/boost/ticket/7588 #7588] Synchro: Split the locks.hpp in several files to limit dependencies
-* [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables
-* [@http://svn.boost.org/trac/boost/ticket/7590 #7590] Synchro: Add lockable concept checkers based on Boost.ConceptCheck
-* [@http://svn.boost.org/trac/boost/ticket/7591 #7591] Add lockable traits that can be used with enable_if
-* [@http://svn.boost.org/trac/boost/ticket/7592 #7592] Synchro: Add a null_mutex that is a no-op and that is a model of UpgardeLockable
-* [@http://svn.boost.org/trac/boost/ticket/7593 #7593] Synchro: Add a externally_locked class
-* [@http://svn.boost.org/trac/boost/ticket/7590 #7594] Threads: Allow to disable thread interruptions
+* [@http://svn.boost.org/trac/boost/ticket/7587 #7587] Synchro: Add strict_lock and nested_strict_lock.
+* [@http://svn.boost.org/trac/boost/ticket/7588 #7588] Synchro: Split the locks.hpp in several files to limit dependencies.
+* [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
+* [@http://svn.boost.org/trac/boost/ticket/7590 #7590] Synchro: Add lockable concept checkers based on Boost.ConceptCheck.
+* [@http://svn.boost.org/trac/boost/ticket/7591 #7591] Add lockable traits that can be used with enable_if.
+* [@http://svn.boost.org/trac/boost/ticket/7592 #7592] Synchro: Add a null_mutex that is a no-op and that is a model of UpgardeLockable.
+* [@http://svn.boost.org/trac/boost/ticket/7593 #7593] Synchro: Add a externally_locked class.
+* [@http://svn.boost.org/trac/boost/ticket/7590 #7594] Threads: Allow to disable thread interruptions.
 
 Fixed Bugs:
 
-* [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consuption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
+* [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consumption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
 * [@http://svn.boost.org/trac/boost/ticket/7668 #7668] thread_group::join_all() should check whether its threads are joinable.
 * [@http://svn.boost.org/trac/boost/ticket/7669 #7669] thread_group::join_all() should catch resource_deadlock_would_occur.
 * [@http://svn.boost.org/trac/boost/ticket/7672 #7672] lockable_traits.hpp syntax error: "defined" token misspelled.
@@ -335,23 +334,16 @@ been moved to __thread_id__.
 The following features will be included in next releases. 
 
 # Complete the C++11 missing features, in particular
-  * [@http://svn.boost.org/trac/boost/ticket/7413 #7413] c++11 compliance: Add async when the launch policy is deferred.
-  * [@http://svn.boost.org/trac/boost/ticket/7280 #7280] C++11 compliance: Add promise::...at_thread_exit functions.
-  * [@http://svn.boost.org/trac/boost/ticket/7282 #7282] C++11 compliance: Add packaged_task::make_ready_at_thread_exit function.
   * [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once. 
   * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] C++11 compliance: Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
 
 
 # Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations], in particular
 
-  * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then
-  * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any
-  * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all
-  * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter
-
-
-# Add a synchronized value class following the design in [@http://www.drdobbs.com/cpp/enforcing-correct-mutex-usage-with-synch/225200269 Enforcing Correct Mutex Usage with Synchronized Values]
- 	
+  * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
+  * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any.
+  * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all.
+  * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter.
 
 
 [endsect]

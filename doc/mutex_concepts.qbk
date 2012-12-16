@@ -26,7 +26,7 @@ do the various lock types.
   {
 
     template<typename L>
-    class BasicLockable;
+    class BasicLockable; // EXTENSION
   }
 
 
@@ -80,7 +80,7 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 [endsect]
 
 
-[section:is_basic_lockable `is_basic_lockable` trait]
+[section:is_basic_lockable `is_basic_lockable` trait -- EXTENSION]
 
   // #include <boost/thread/lockable_traits.hpp> 
 
@@ -89,7 +89,7 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
     namespace sync 
     {
       template<typename L>
-      class is_basic_lockable;
+      class is_basic_lockable;// EXTENSION
     }
   }
 
@@ -130,7 +130,7 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
 ]
 [endsect]
 
-[section:is_lockable `is_lockable` trait]
+[section:is_lockable `is_lockable` trait -- EXTENSION]
 
   // #include <boost/thread/lockable_traits.hpp> 
   namespace boost 
@@ -138,7 +138,7 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
     namespace sync 
     {
       template<typename L>
-      class is_lockable;
+      class is_lockable;// EXTENSION
     }
   }
 
@@ -152,7 +152,7 @@ Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_
 The user could require that the mutex passed to an algorithm is a recursive one. Whether a lockable is recursive or not can not be checked using template meta-programming. This is the motivation for the following trait.
 
 
-[section:is_recursive_mutex_sur_parolle `is_recursive_mutex_sur_parolle` trait]
+[section:is_recursive_mutex_sur_parolle `is_recursive_mutex_sur_parolle` trait -- EXTENSION]
 
   // #include <boost/thread/lockable_traits.hpp> 
 
@@ -161,11 +161,11 @@ The user could require that the mutex passed to an algorithm is a recursive one.
     namespace sync 
     {
       template<typename L>
-      class is_recursive_mutex_sur_parolle: false_type;
+      class is_recursive_mutex_sur_parolle: false_type; // EXTENSION
       template<>
-      class is_recursive_mutex_sur_parolle<recursive_mutex>: true_type;
+      class is_recursive_mutex_sur_parolle<recursive_mutex>: true_type; // EXTENSION
       template<>
-      class is_recursive_mutex_sur_parolle<timed_recursive_mutex>: true_type;
+      class is_recursive_mutex_sur_parolle<timed_recursive_mutex>: true_type; // EXTENSION
     }
   }
 
@@ -185,7 +185,7 @@ It should be specialized by the user providing other model of recursive lockable
   namespace boost 
   {
     template<typename L>
-    class TimedLockable;
+    class TimedLockable; // EXTENSION
   }
 
 The __timed_lockable_concept__ refines the __lockable_concept__ to add support for
@@ -279,14 +279,14 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 
 [endsect]
 
-[section:shared_lockable `SharedLockable` Concept]
+[section:shared_lockable `SharedLockable` Concept -- EXTENSION]
 
   // #include <boost/thread/lockable_concepts.hpp> 
 
   namespace boost 
   {
     template<typename L>
-    class SharedLockable;
+    class SharedLockable;  // EXTENSION
   }
 
 
@@ -431,14 +431,14 @@ ownership of `m`.]]
 
 [endsect]
 
-[section:upgrade_lockable `UpgradeLockable` Concept]
+[section:upgrade_lockable `UpgradeLockable` Concept -- EXTENSION]
 
   // #include <boost/thread/lockable_concepts.hpp> 
 
   namespace boost 
   {
     template<typename L>
-    class UpgradeLockable;
+    class UpgradeLockable; // EXTENSION
   }
 
 
@@ -948,10 +948,12 @@ These tags are used in scoped locks constructors to specify a specific behavior.
 
     template<typename Lockable>
     class lock_guard
+  #if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
     template <typename Lockable>
     lock_guard<Lockable> make_lock_guard(Lockable& mtx); // EXTENSION
     template <typename Lockable>
     lock_guard<Lockable> make_lock_guard(Lockable& mtx, adopt_lock_t); // EXTENSION
+  #endif
   }
 
 [section:lock_guard Class template `lock_guard`]
@@ -1056,7 +1058,7 @@ object passed to the constructor.]]
 [endsect]
 
 [section:lock_concepts Lock Concepts]
-[section:StrictLock StrictLock]
+[section:StrictLock StrictLock -- EXTENSION]
 
   // #include <boost/thread/lock_concepts.hpp> 
 
@@ -1097,19 +1099,19 @@ As the semantic "ensures that the associated mutex is locked during the lifetime
 
 [endsect] [/ is_strict_lock_sur_parolle]
 
-[section:mutex `cl.mutex();`]
+[section:owns_lock `cl.owns_lock(m);`]
 
 [variablelist
 
-[[Return Type:] [`L::mutex_type`]]
-[[Returns:] [A pointer to the `L::mutex_type` object that this lock `l` is locking]]
+[[Return Type:] [`bool`]]
+[[Returns:] [Whether the strict lock is locking the mutex `m`]]
 
 [[Throws:] [Nothing.]]
 
 ]
 
 
-[endsect] [/ mutex]
+[endsect] [/ owns_lock]
 
 [section Models]
 
@@ -1138,15 +1140,15 @@ The following classes are models of `StrictLock`:
     template<typename Mutex>
     void swap(unique_lock <Mutex>& lhs, unique_lock <Mutex>& rhs);
     template<typename Lockable>
-    class shared_lock;
+    class shared_lock; // EXTENSION
     template<typename Mutex>
-    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs);
+    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs); // EXTENSION
     template<typename Lockable>
-    class upgrade_lock;
+    class upgrade_lock; // EXTENSION
     template<typename Mutex>
-    void swap(upgrade_lock <Mutex>& lhs, upgrade_lock <Mutex>& rhs);
+    void swap(upgrade_lock <Mutex>& lhs, upgrade_lock <Mutex>& rhs); // EXTENSION
     template <class Mutex>
-    class upgrade_to_unique_lock;
+    class upgrade_to_unique_lock; // EXTENSION
   }
 
 
@@ -1516,7 +1518,7 @@ __owns_lock_ref__ returns `false`.]]
 
 [endsect]
 
-[section:shared_lock Class template `shared_lock`]
+[section:shared_lock Class template `shared_lock` - EXTENSION]
 
     // #include <boost/thread/locks.hpp>
     // #include <boost/thread/lock_types.hpp> 
@@ -1758,7 +1760,7 @@ __owns_lock_shared_ref__ returns `false`.]]
 
 [endsect]
 
-[section:upgrade_lock Class template `upgrade_lock`]
+[section:upgrade_lock Class template `upgrade_lock` - EXTENSION]
 
     // #include <boost/thread/locks.hpp>
     // #include <boost/thread/lock_types.hpp> 
@@ -1944,9 +1946,9 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
 
 ]
 
-[section:other_locks Other Lock Types]
+[section:other_locks Other Lock Types - EXTENSION]
 
-[section:strict_lock Strict Lock]
+[section:strict_locks Strict Locks]
 
   // #include <boost/thread/locks.hpp> 
   // #include <boost/thread/strict_lock.hpp> 
@@ -1956,6 +1958,20 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
 
     template<typename Lockable>
     class strict_lock;
+    template <typename Lock>
+    class nested_strict_lock;
+    template <typename Lockable>
+    struct is_strict_lock_sur_parolle<strict_lock<Lockable> >;
+    template <typename Lock>
+    struct is_strict_lock_sur_parolle<nested_strict_lock<Lock> >;
+
+  #if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+    template <typename Lockable>
+    strict_lock<Lockable> make_strict_lock(Lockable& mtx);
+    template <typename Lock>
+    nested_strict_lock<Lock> make_nested_strict_lock(Lock& lk);
+  #endif
+
   }
 
 [section:strict_lock Class template `strict_lock`]
@@ -1971,7 +1987,7 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
         explicit strict_lock(mutex_type& m_);
         ~strict_lock();
 
-        mutex_type* mutex() const;
+        bool owns_lock(mutex_type const* l) const noexcept;
     };
 
 __strict_lock is a model of __StrictLock.
@@ -2006,9 +2022,307 @@ object passed to the constructor.]]
 [endsect]
 
 [endsect]
+
+
+[section:nested_strict_lock Class template `nested_strict_lock`]
+
+    // #include <boost/thread/locks.hpp>
+    // #include <boost/thread/strict_lock.hpp> 
+
+    template<typename Lock>
+    class nested_strict_lock
+    {
+    public:
+        typedef BasicLockable mutex_type;
+        explicit nested_strict_lock(Lock& lk),
+        ~nested_strict_lock() noexcept;
+
+        bool owns_lock(mutex_type const* l) const noexcept;
+    };
+
+__nested_strict_lock is a model of __StrictLock.
+
+A nested strict lock is a scoped lock guard ensuring a mutex is locked on its
+scope, by taking ownership of an nesting lock, locking the mutex on construction if not already locked
+and restoring the ownership to the nesting lock on destruction.
+ 
+
+[heading See also __strict_lock, __unique_lock]
+
+[section:constructor `nested_strict_lock(Lock & lk)`]
+
+[variablelist
+
+[[Requires:] [`lk.mutex() != null_ptr`.]]
+
+[[Effects:] [Stores the reference to the lock parameter `lk` and takes ownership on it. 
+If the lock doesn't owns the mutex lock it.
+]]
+
+[[Postcondition:] [`owns_lock(lk.mutex())`.]]
+
+[[Throws:] [
+
+- lock_error when BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is defined and lk.mutex() == null_ptr
+
+- Any exception that @c lk.lock() can throw.
+
+
+]]
+
+]
+
+[endsect]
+
+[section:destructor `~nested_strict_lock() noexcept`]
+
+[variablelist
+
+[[Effects:] [Restores ownership to the nesting lock.]]
+
+]
+
+[endsect]
+
+
+[section:owns_lock `bool owns_lock(mutex_type const* l) const noexcept`]
+
+[variablelist
+
+[[Return:] [Whether if this lock is locking that mutex.]]
+
+]
+
+[endsect]
+
+[endsect]
+  
+[section:make_strict_lock Non Member Function `make_strict_lock`]
+
+    template <typename Lockable>
+    strict_lock<Lockable> make_strict_lock(Lockable& m); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a strict_lock as if initialized with `{m}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+
+[endsect]
+
+
+[section:make_nested_strict_lock Non Member Function `make_nested_strict_lock`]
+
+  template <typename Lock>
+  nested_strict_lock<Lock> make_nested_strict_lock(Lock& lk); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a nested_strict_lock as if initialized with `{lk}`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `lk.lock()`].]]
+
+]
+
+
+[endsect]
+
+
   
 [endsect]
 
+[section Externally Locked]
+
+  // #include <boost/thread/externally_locked.hpp>
+  template <class T, typename MutexType = boost::mutex>
+  class externally_locked;
+  template <typename T, typename MutexType>
+  void swap(externally_locked<T, MutexType> & lhs, externally_locked<T, MutexType> & rhs);
+
+[section Template Class `externally_locked`]
+
+  // #include <boost/thread/externally_locked.hpp>
+
+  template <class T, typename MutexType>
+  class externally_locked 
+  {
+    //BOOST_CONCEPT_ASSERT(( CopyConstructible<T> ));
+    BOOST_CONCEPT_ASSERT(( BasicLockable<MutexType> ));
+
+  public:
+    typedef MutexType mutex_type;
+
+    externally_locked(mutex_type& mtx, const T& obj);
+    externally_locked(mutex_type& mtx,T&& obj);
+    explicit externally_locked(mutex_type& mtx);
+    externally_locked(externally_locked&& rhs);
+
+    // observers
+    T& get(strict_lock<mutex_type>& lk);
+    const T& get(strict_lock<mutex_type>& lk) const;
+
+    template <class Lock>
+    T& get(nested_strict_lock<Lock>& lk);
+    template <class Lock>
+    const T& get(nested_strict_lock<Lock>& lk) const;
+
+    template <class Lock>
+    T& get(Lock& lk);
+    template <class Lock>
+    T const& get(Lock& lk) const;
+
+    mutex_type* mutex();
+
+    // modifiers
+    void lock();
+    void unlock();
+    bool try_lock();
+    void swap(externally_locked&);
+  };
+
+`externally_locked` is a model of __Lockable, it cloaks an object of type `T`, and actually provides full
+access to that object through the get and set member functions, provided you
+pass a reference to a strict lock object.
+
+Only the specificities respect to __Lockable are described here. 
+
+[///////////////////////////////]
+[section:constructor1 `externally_locked(mutex_type&, const T&)`]
+
+    externally_locked(mutex_type& mtx, const T& obj);
+
+[variablelist
+
+[[Requires:] [T is a model of CopyConstructible.]]
+
+[[Effects:] [Constructs an externally locked object copying the cloaked type.]]
+
+[[Throws:] [Any exception thrown by the call to `T(obj)`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:constructor2 `externally_locked(mutex_type&, T&&)`]
+
+    externally_locked(mutex_type& mtx,T&& obj);
+
+[variablelist
+
+[[Requires:] [T is a model of Movable.]]
+
+[[Effects:] [Constructs an externally locked object by moving the cloaked type.]]
+
+[[Throws:] [Any exception thrown by the call to `T(obj)`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:constructor3 `externally_locked(mutex_type&)`]
+
+    externally_locked(mutex_type& mtx);
+
+[variablelist
+
+[[Requires:] [T is a model of DefaultConstructible.]]
+
+[[Effects:] [Constructs an externally locked object by default constructing the cloaked type.]]
+
+[[Throws:] [Any exception thrown by the call to `T()`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:constructor4 `externally_locked(externally_locked&)`]
+
+    externally_locked(externally_locked&& rhs);
+
+[variablelist
+
+[[Requires:] [T is a model of Movable.]]
+
+[[Effects:] [Moves an externally locked object by moving the the cloaked type and copying the mutex reference ]]
+
+[[Throws:] [Any exception thrown by the call to `T(T&&)`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:get1 `get(strict_lock<mutex_type>&)`]
+
+    T& get(strict_lock<mutex_type>& lk);
+    const T& get(strict_lock<mutex_type>& lk) const;
+
+[variablelist
+
+[[Requires:] [The `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:get2 `get(strict_lock<nested_strict_lock<Lock>>&)`]
+
+    template <class Lock>
+    T& get(nested_strict_lock<Lock>& lk);
+    template <class Lock>
+    const T& get(nested_strict_lock<Lock>& lk) const;
+
+[variablelist
+
+[[Requires:] [`is_same<mutex_type, typename Lock::mutex_type>` and the `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+
+[///////////////////////////////]
+[section:get3 `get(strict_lock<nested_strict_lock<Lock>>&)`]
+
+    template <class Lock>
+    T& get(Lock& lk);
+    template <class Lock>
+    T const& get(Lock& lk) const;
+
+[variablelist
+
+[[Requires:] [`Lock` is a model of __StrictLock, `is_same<mutex_type, typename Lock::mutex_type>` and the `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+
+[endsect]
+[///////////////////////////////]
+[section:swap `swap(externally_locked, externally_locked&)`]
+
+  template <typename T, typename MutexType>
+  void swap(externally_locked<T, MutexType> & lhs, externally_locked<T, MutexType> & rhs)
+
+[endsect]
+
+
+[endsect]
 
 [section:shared_lock_guard Class template `shared_lock_guard`]
 
@@ -2178,7 +2492,7 @@ are locked by the calling thread.]]
 
 [endsect]
 
-[section:lock_range Non-member function `lock(begin,end)`]
+[section:lock_range Non-member function `lock(begin,end)` // EXTENSION]
 
     template<typename ForwardIterator>
     void lock(ForwardIterator begin,ForwardIterator end);
@@ -2247,7 +2561,7 @@ released.]]
 
 [endsect]
 
-[section:try_lock_range Non-member function `try_lock(begin,end)`]
+[section:try_lock_range Non-member function `try_lock(begin,end)` // EXTENSION]
 
     template<typename ForwardIterator>
     ForwardIterator try_lock(ForwardIterator begin,ForwardIterator end);
@@ -2280,6 +2594,84 @@ been released.]]
 ]
 
 [endsect]
+[endsect]
+
+[section:lock_factories Lock Factories - EXTENSION]
+
+  namespace boost
+  {
+
+    template <typename Lockable>
+    unique_lock<Lockable> make_unique_lock(Lockable& mtx); // EXTENSION
+
+    template <typename Lockable>
+    unique_lock<Lockable> make_unique_lock(Lockable& mtx, adopt_lock_t); // EXTENSION
+    template <typename Lockable>
+    unique_lock<Lockable> make_unique_lock(Lockable& mtx, defer_lock_t); // EXTENSION
+    template <typename Lockable>
+    unique_lock<Lockable> make_unique_lock(Lockable& mtx, try_to_lock_t); // EXTENSION
+
+  #if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+    template <typename ...Lockable>
+    std::tuple<unique_lock<Lockable> ...> make_unique_locks(Lockable& ...mtx); // EXTENSION
+  #endif
+  }
+
+[section:make_unique_lock Non Member Function `make_unique_lock(Lockable&)`]
+
+  template <typename Lockable>
+  unique_lock<Lockable> make_unique_lock(Lockable& mtx); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a __unique_lock as if initialized with `unique_lock<Lockable>(mtx)`.]]
+
+[[Throws:] [Any exception thrown by the call to `__unique_lock<Lockable>(mtx)`.]]
+
+]
+
+[endsect]
+
+[section:make_unique_lock_t Non Member Function `make_unique_lock(Lockable&,tag)`]
+
+  template <typename Lockable>
+  unique_lock<Lockable> make_unique_lock(Lockable& mtx, adopt_lock_t tag); // EXTENSION
+
+  template <typename Lockable>
+  unique_lock<Lockable> make_unique_lock(Lockable& mtx, defer_lock_t tag); // EXTENSION
+
+  template <typename Lockable>
+  unique_lock<Lockable> make_unique_lock(Lockable& mtx, try_to_lock_t tag); // EXTENSION
+
+
+[variablelist
+
+[[Returns:] [a __unique_lock as if initialized with `unique_lock<Lockable>(mtx, tag)`.]]
+
+[[Throws:] [Any exception thrown by the call to `__unique_lock<Lockable>(mtx, tag)`.]]
+
+]
+
+[endsect]
+
+
+[section:make_unique_locks Non Member Function `make_unique_locks(Lockable& ...)`]
+
+  template <typename ...Lockable>
+  std::tuple<unique_lock<Lockable> ...> make_unique_locks(Lockable& ...mtx); // EXTENSION
+
+[variablelist
+
+[[Effect:] [Locks all the mutexes.]]
+
+[[Returns:] [a std::tuple of unique __unique_lock owning each one of the mutex.]]
+
+[[Throws:] [Any exception thrown by `boost::lock(mtx...)`.]]
+
+]
 
 
 [endsect]
+[endsect]
+

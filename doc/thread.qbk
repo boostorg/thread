@@ -146,6 +146,7 @@
 [def __boost_thread__ [*Boost.Thread]]
 [def __not_a_thread__ ['Not-a-Thread]]
 [def __interruption_points__ [link interruption_points ['interruption points]]]
+[def __lock_error__ `lock_error`]
 
 [def __mutex__ [link thread.synchronization.mutex_types.mutex `boost::mutex`]]
 [def __try_mutex__ [link thread.synchronization.mutex_types.try_mutex `boost::try_mutex`]]
@@ -170,7 +171,8 @@
 [def __shared_lock_guard [link thread.synchronization.other_locks.shared_lock_guard `shared_lock_guard`]]
 [def __shared_lock_guard_constructor_adopt [link thread.synchronization.other_locks.shared_lock_guard `shared_lock_guard`]]
 
-[def __strict_lock [link thread.synchronization.other_locks.strict_lock `strict_lock`]]
+[def __strict_lock [link thread.synchronization.other_locks.strict_locks.strict_lock `strict_lock`]]
+[def __nested_strict_lock [link thread.synchronization.other_locks.strict_locks.nested_strict_lock `nested_strict_lock`]]
 
 
 [def __thread__ [link thread.thread_management.thread `boost::thread`]]
