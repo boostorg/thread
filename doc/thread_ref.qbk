@@ -1502,7 +1502,7 @@ specified by `rel_time` has elapsed or the time point specified by
 [variablelist
 
 [[Effects:] [Suspends the current thread until the time period
-specified by `rel_time` has elapsed or the time point specified by
+specified or the time point specified by
 `abs_time` has been reached.]]
 
 [[Throws:] [Nothing if Clock satisfies the TrivialClock requirements and operations of Duration
@@ -1526,8 +1526,8 @@ do not throw exceptions. __thread_interrupted__ if the current thread of executi
 
 [variablelist
 
-[[Effects:] [Suspends the current thread until the time point specified by
-`abs_time` has been reached.]]
+[[Effects:] [Suspends the current thread until the duration specified by
+by `rel_time` has elapsed.]]
 
 [[Throws:] [Nothing if operations of chrono::duration<Rep, Period> do not throw exceptions. __thread_interrupted__ if the current thread of execution is interrupted.]]
 
