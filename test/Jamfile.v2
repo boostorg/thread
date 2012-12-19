@@ -126,9 +126,9 @@ rule thread-run2-noit ( sources : name )
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
         : : :
       : $(name)_lib ]
-    [ run $(sources) ../build//boost_thread : : :
-      <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
-      : $(name)_noit ]
+    #[ run $(sources) ../build//boost_thread : : :
+    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+    #  : $(name)_noit ]
     ;
 }
 
@@ -662,6 +662,7 @@ rule thread-compile-fail ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+
           #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
           #[ thread-run ../example/test_so.cpp ]
           #[ thread-run ../example/test_so2.cpp ]
@@ -670,6 +671,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
+          [ thread-run ../example/perf_condition_variable.cpp ]
     ;
 
 }
