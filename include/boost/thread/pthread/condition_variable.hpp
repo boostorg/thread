@@ -57,18 +57,28 @@ namespace boost
 
     inline void condition_variable::wait(unique_lock<mutex>& m)
     {
+#if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
+        if(! m.owns_lock())
+        {
+            boost::throw_exception(condition_error(-1, "boost::condition_variable::wait precondition"));
+        }
+#endif
         int res=0;
         {
-            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
-#else
-            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-#endif
             guard.activate(m);
             do {
               res = pthread_cond_wait(&cond,&internal_mutex);
             } while (res == EINTR);
+#else
+            //boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
+            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
+            do {
+              res = pthread_cond_wait(&cond,the_mutex);
+            } while (res == EINTR);
+#endif
         }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
@@ -83,21 +93,24 @@ namespace boost
                 unique_lock<mutex>& m,
                 struct timespec const &timeout)
     {
+#if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
         if (!m.owns_lock())
         {
             boost::throw_exception(condition_error(EPERM, "condition_variable do_wait_until: mutex not locked"));
         }
-
+#endif
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
-#else
-            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-#endif
             guard.activate(m);
             cond_res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
+#else
+            //boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
+            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
+            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout);
+#endif
         }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
@@ -115,13 +128,17 @@ namespace boost
 
     inline void condition_variable::notify_one() BOOST_NOEXCEPT
     {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+#endif
         BOOST_VERIFY(!pthread_cond_signal(&cond));
     }
 
     inline void condition_variable::notify_all() BOOST_NOEXCEPT
     {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
+#endif
         BOOST_VERIFY(!pthread_cond_broadcast(&cond));
     }
 

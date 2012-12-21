@@ -346,8 +346,8 @@ the thread is unblocked (for whatever reason), the lock is reacquired by
 invoking `lock.lock()` before the call to `wait` returns. The lock is also
 reacquired by invoking `lock.lock()` if the function exits with an exception.]]
 
-[[Returns:] [`cv_status::no_timeout` if the call is returning because the time specified by
-`abs_time` was reached, `cv_status::timeout` otherwise.]]
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
 
 [[Postcondition:] [`lock` is locked by the current thread.]]
 
@@ -378,8 +378,8 @@ reason), the lock is reacquired by invoking `lock.lock()` before the call to
 `wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
 function exits with an exception.]]
 
-[[Returns:] [`cv_status::no_timeout ` if the call is returning because the time period specified
-by `rel_time` has elapsed, `cv_status::timeout ` otherwise.]]
+[[Returns:] [`cv_status::timeout ` if the call is returning because the time period specified
+by `rel_time` has elapsed, `cv_status::no_timeout ` otherwise.]]
 
 [[Postcondition:] [`lock` is locked by the current thread.]]
 

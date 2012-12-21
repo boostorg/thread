@@ -32,7 +32,9 @@ namespace boost
     class condition_variable
     {
     private:
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         pthread_mutex_t internal_mutex;
+#endif
         pthread_cond_t cond;
 
     public:
@@ -53,25 +55,31 @@ namespace boost
       BOOST_THREAD_NO_COPYABLE(condition_variable)
         condition_variable()
         {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             int const res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: condition_variable constructor failed in pthread_mutex_init"));
             }
+#endif
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
+#endif
                 boost::throw_exception(thread_resource_error(res2, "boost:: condition_variable constructor failed in pthread_cond_init"));
             }
         }
         ~condition_variable()
         {
             int ret;
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             do {
               ret = pthread_mutex_destroy(&internal_mutex);
             } while (ret == EINTR);
             BOOST_ASSERT(!ret);
+#endif
             do {
               ret = pthread_cond_destroy(&cond);
             } while (ret == EINTR);
