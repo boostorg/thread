@@ -45,7 +45,7 @@
         void unlock_upgrade_and_lock_shared();
     #endif
 
-    #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_shared(system_time const& timeout);
         bool timed_lock(system_time const& timeout);
     #endif
