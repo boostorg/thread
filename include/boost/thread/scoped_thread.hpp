@@ -49,13 +49,15 @@ namespace boost
      *
      * Effects: move the thread to own @c t.
      */
-    explicit strict_scoped_thread(BOOST_THREAD_RV_REF(thread) t) :
+    explicit strict_scoped_thread(BOOST_THREAD_RV_REF(thread) t) BOOST_NOEXCEPT :
     t_(boost::move(t))
     {
     }
 
     /**
      * Destructor
+     * Effects: Call the CallableThread functor before destroying the owned thread.
+     * Remark: The CallableThread should not throw when joining the thread as the scoped variable is on a scope outside the thread function.
      */
     ~strict_scoped_thread()
     {
@@ -112,7 +114,7 @@ namespace boost
      *
      * Effects: move the thread to own @c t.
      */
-    explicit scoped_thread(BOOST_THREAD_RV_REF(thread) t) :
+    explicit scoped_thread(BOOST_THREAD_RV_REF(thread) t) BOOST_NOEXCEPT :
     t_(boost::move(t))
     {
     }
@@ -125,14 +127,14 @@ namespace boost
     /**
      * Move constructor.
      */
-    scoped_thread(BOOST_RV_REF(scoped_thread) x) :
+    scoped_thread(BOOST_RV_REF(scoped_thread) x) BOOST_NOEXCEPT :
     t_(boost::move(x.t_))
     {}
 
     /**
      * Destructor
      *
-     * Effects: destroys the internal destroyer before destroying the owned thread.
+     * Effects: Call the CallableThread functor before destroying the owned thread.
      */
     ~scoped_thread()
     {
@@ -153,7 +155,7 @@ namespace boost
     /**
      *
      */
-    void swap(scoped_thread& x)BOOST_NOEXCEPT
+    void swap(scoped_thread& x) BOOST_NOEXCEPT
     {
       t_.swap(x.t_);
     }
