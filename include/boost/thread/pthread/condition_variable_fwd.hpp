@@ -221,12 +221,14 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          while (!pred())
-          {
-              if (wait_for(lock, d) == cv_status::timeout)
-                  return pred();
-          }
-          return true;
+          return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+
+//          while (!pred())
+//          {
+//              if (wait_for(lock, d) == cv_status::timeout)
+//                  return pred();
+//          }
+//          return true;
         }
 #endif
 
