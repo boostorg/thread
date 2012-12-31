@@ -419,14 +419,7 @@ return true;
 [variablelist
 
 [[Effects:] [As-if ``
-while(!pred())
-{
-    if(!wait_for(lock,rel_time))
-    {
-        return pred();
-    }
-}
-return true;
+return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
 ``]]
 
 ]
@@ -731,19 +724,12 @@ return true;
 
 [endsect]
 
-[section:wait_for_predicate `template <class lock_type, class Rep, class Period, class Predicate> bool wait_until(lock_type& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred)`]
+[section:wait_for_predicate `template <class lock_type, class Rep, class Period, class Predicate> bool wait_for(lock_type& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred)`]
 
 [variablelist
 
 [[Effects:] [As-if ``
-while(!pred())
-{
-    if(!__cvany_wait_for(lock,rel_time))
-    {
-        return pred();
-    }
-}
-return true;
+return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
 ``]]
 
 ]
