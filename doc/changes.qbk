@@ -10,13 +10,13 @@
 
 [heading Version 4.0.0 - boost 1.53]
 
-Breaking changes:
+[*Breaking changes:]
 
 [warning 
 BOOST_THREAD_VERSION==3 by default since Boost 1.53. So that all the deprecated features since 1.50 are not included by default. You can change this by setting the appropriated define (see Configuration section).
 ]
 
-Deprecated features:
+[*Deprecated features:]
 
 [warning Deprecated features since boost 1.53 will be available only until boost 1.58.]
 
@@ -25,12 +25,13 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 
 * [@http://svn.boost.org/trac/boost/ticket/7537 #7537] deprecate Mutex::scoped_lock and scoped_try_lock and boost::condition
 
-New Features:
+[*New Features:]
 
 * [@http://svn.boost.org/trac/boost/ticket/6270 #6270] c++11 compliance: Add thread constructor from movable callable and movable arguments
 Provided when BOOST_THREAD_PROVIDES_VARIADIC_THREAD is defined (Default value from Boost 1.55):
 See BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_DONT_PROVIDE_VARIADIC_THREAD.
 
+* [@http://svn.boost.org/trac/boost/ticket/7279 #7279] C++11 compliance: Add noexcept in system related functions
 * [@http://svn.boost.org/trac/boost/ticket/7280 #7280] C++11 compliance: Add promise::...at_thread_exit functions
 
 * [@http://svn.boost.org/trac/boost/ticket/7281 #7281] C++11 compliance: Add ArgTypes to packaged_task template. 
@@ -45,26 +46,29 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 
 * [@http://svn.boost.org/trac/boost/ticket/7413 #7413] C++11 compliance: Add async when the launch policy is deferred.
 * [@http://svn.boost.org/trac/boost/ticket/7414 #7414] C++11 compliance: future::get post-condition should be valid()==false.
+* [@http://svn.boost.org/trac/boost/ticket/7422 #7422] Provide a condition variable with zero-overhead performance penality.
 * [@http://svn.boost.org/trac/boost/ticket/7414 #7444] Async: Add make_future/make_shared_future.
-* [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
 * [@http://svn.boost.org/trac/boost/ticket/7540 #7540] Threads: Add a helper class that join a thread on destruction.
 * [@http://svn.boost.org/trac/boost/ticket/7541 #7541] Threads: Add a thread wrapper class that joins on destruction.
 * [@http://svn.boost.org/trac/boost/ticket/7575 #7575] C++11 compliance: A future created by async should "join" in the destructor.
 * [@http://svn.boost.org/trac/boost/ticket/7587 #7587] Synchro: Add strict_lock and nested_strict_lock.
 * [@http://svn.boost.org/trac/boost/ticket/7588 #7588] Synchro: Split the locks.hpp in several files to limit dependencies.
-* [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
 * [@http://svn.boost.org/trac/boost/ticket/7590 #7590] Synchro: Add lockable concept checkers based on Boost.ConceptCheck.
 * [@http://svn.boost.org/trac/boost/ticket/7591 #7591] Add lockable traits that can be used with enable_if.
 * [@http://svn.boost.org/trac/boost/ticket/7592 #7592] Synchro: Add a null_mutex that is a no-op and that is a model of UpgardeLockable.
 * [@http://svn.boost.org/trac/boost/ticket/7593 #7593] Synchro: Add a externally_locked class.
 * [@http://svn.boost.org/trac/boost/ticket/7590 #7594] Threads: Allow to disable thread interruptions.
 
-Fixed Bugs:
+[*Fixed Bugs:]
 
 * [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consumption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
+* [@http://svn.boost.org/trac/boost/ticket/7665 #7665] this_thread::sleep_for no longer uses steady_clock in thread.
 * [@http://svn.boost.org/trac/boost/ticket/7668 #7668] thread_group::join_all() should check whether its threads are joinable.
 * [@http://svn.boost.org/trac/boost/ticket/7669 #7669] thread_group::join_all() should catch resource_deadlock_would_occur.
 * [@http://svn.boost.org/trac/boost/ticket/7672 #7672] lockable_traits.hpp syntax error: "defined" token misspelled.
+* [@http://svn.boost.org/trac/boost/ticket/7798 #7798] boost::future set_wait_callback thread safety issues.
+* [@http://svn.boost.org/trac/boost/ticket/7808 #7808] Incorrect description of effects for this_thread::sleep_for and this_thread::sleep_until.
+* [@http://svn.boost.org/trac/boost/ticket/7812 #7812] Returns: cv_status::no_timeout if the call is returning because the time period specified by rel_time has elapsed, cv_status::timeout otherwise.
 
 
 [heading Version 3.1.0 - boost 1.52]
@@ -340,6 +344,8 @@ The following features will be included in next releases.
 
 # Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations], in particular
 
+  * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
+  * [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
   * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
   * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any.
   * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all.

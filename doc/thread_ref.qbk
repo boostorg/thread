@@ -547,7 +547,7 @@ Join the thread before moving.
 [[Effects:] [Transfers ownership of the thread managed by `other` (if
 any) to `*this`. 
 
-_ if defined BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE: If there was a thread previously associated with `*this` then that thread is detached, DEPRECATED
+- if defined BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE: If there was a thread previously associated with `*this` then that thread is detached, DEPRECATED
 
 - if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE: If the thread is joinable calls to std::terminate.
 ]]
@@ -755,13 +755,18 @@ Join the thread before destroying or use a scoped thread.
 
 [[Effects:] [If `*this` refers to a thread of execution, waits for that thread of execution to complete.]]
 
+[[Synchronization:] [The completion of the thread represented by `*this` synchronizes with the
+corresponding successful `join()` return. ]]
+[[Note:] [Operations on *this are not synchronized.
+ ]]
+
 [[Postconditions:] [If `*this` refers to a thread of execution on entry, that thread of execution has completed. `*this` no longer refers to any thread of execution.]]
 
 [[Throws:] [__thread_interrupted__ if the current thread of execution is interrupted or `system_error`]]
 
 [[Error Conditions:] [
 
-[*resource_deadlock_would_occur]: if deadlock is detected or `this->get_id() == boost::this_thread::get_id()` and `BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED` is defined..
+[*resource_deadlock_would_occur]: if deadlock is detected or `this->get_id() == boost::this_thread::get_id()`.
 
 [*invalid_argument]: if the thread is not joinable and `BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED` is defined.
 

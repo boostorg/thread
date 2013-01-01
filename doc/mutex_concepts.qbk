@@ -44,6 +44,8 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 
 [[Effects:] [The current thread blocks until ownership can be obtained for the current thread.]]
 
+[[Synchronization:] [Prior `unlock()` operations on the same object synchronizes with this operation. ]]
+
 [[Postcondition:] [The current thread owns `m`.]]
 
 [[Return type:] [`void`.]]
@@ -70,6 +72,8 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 [variablelist
 
 [[Requires:] [The current thread owns `m`.]]
+
+[[Synchronization:] [This operation synchronizes with subsequent lock operations that obtain ownership on the same object.]]
 
 [[Effects:] [Releases a lock on `m` by the current thread.]]
 
@@ -118,6 +122,12 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
 [variablelist
 
 [[Effects:] [Attempt to obtain ownership for the current thread without blocking.]]
+
+[[Synchronization:] [If `try_lock()` returns true, prior `unlock()` operations on the same object synchronize with this operation.]]
+
+[[Note:] [Since `lock()` does not synchronize with a failed subsequent
+`try_lock()`, the visibility rules are weak enough that little would be known about the state after a
+failure, even in the absence of spurious failures.]]
 
 [[Return type:] [`bool`.]]
 
@@ -213,6 +223,10 @@ Lock ownership acquired through a call to __try_lock_for or __try_lock_until mus
 [[Effects:] [Attempt to obtain ownership for the current thread. Blocks until ownership can be obtained, or the specified time is
 reached. If the specified time has already passed, behaves as __try_lock_ref__.]]
 
+[[Synchronization:] [If `try_lock_until()` returns true, prior `unlock()` operations on the same object synchronize with this operation.]]
+
+[[Return type:] [`bool`.]]
+
 [[Returns:] [`true` if ownership was obtained for the current thread, `false` otherwise.]]
 
 [[Postcondition:] [If the call returns `true`, the current thread owns `m`.]]
@@ -227,13 +241,15 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 
 [[Effects:] [As-if `__try_lock_until(chrono::steady_clock::now() + rel_time)`.]]
 
+[[Synchronization:] [If `try_lock_for()` returns true, prior `unlock()` operations on the same object synchronize with this operation.]]
+
 ]
 [endsect]
 
 [warning
-DEPRECATED since 3.00. The following expressions were required on version 2, but are now deprecated.
+DEPRECATED since 4.00. The following expressions were required on version 2, but are now deprecated.
  
-Available only up to Boost 1.56. 
+Available only up to Boost 1.58. 
 
 Use instead __try_lock_for, __try_lock_until.  
 ]
@@ -2415,6 +2431,7 @@ __reverse_lock reverse the operations of a lock: it provide for RAII-style, that
 
 An instance of __reverse_lock doesn't ['own] the lock never.
 
+
 [section:constructor `reverse_lock(Lock & m)`]
 
 [variablelist
@@ -2436,7 +2453,9 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 
 [[Effects:] [Let be mtx the stored mutex*. If not 0 Invokes `mtx->__lock()` and gives again the `mtx` to the `Lock` using the `adopt_lock_t` overload.]]
 
-[[Throws:] [Nothing.]]
+[[Throws:] [Any exception thrown by `mtx->__lock()`.]]
+
+[[Remarks:] [Note that if `mtx->__lock()` throws an exception while unwinding the program will terminate, so don't use reverse_lock if an exception can be thrown.]]
 
 ]
 
