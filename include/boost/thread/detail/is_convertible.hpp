@@ -23,7 +23,7 @@ namespace boost
 
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 
-#if defined(BOOST_INTEL_CXX_VERSION) && (BOOST_INTEL_CXX_VERSION <= 1001)
+#if defined(BOOST_INTEL_CXX_VERSION) && (BOOST_INTEL_CXX_VERSION <= 1300)
 
 #if defined BOOST_THREAD_USES_MOVE
     template <typename T1, typename T2>
