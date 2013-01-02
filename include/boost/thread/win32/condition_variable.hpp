@@ -405,7 +405,7 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-            return wait_until(lock, chrono::steady_clock::now() + d, pred);
+            return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
     };
@@ -519,7 +519,7 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-            return wait_until(lock, chrono::steady_clock::now() + d, pred);
+            return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
     };

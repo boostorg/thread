@@ -10,10 +10,12 @@
 
 [heading Version 4.0.0 - boost 1.53]
 
+[/
 [*Breaking changes:]
 
 [warning 
 BOOST_THREAD_VERSION==3 by default since Boost 1.53. So that all the deprecated features since 1.50 are not included by default. You can change this by setting the appropriated define (see Configuration section).
+]
 ]
 
 [*Deprecated features:]

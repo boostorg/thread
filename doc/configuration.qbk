@@ -37,7 +37,7 @@
     [[PROVIDES_NESTED_LOCKS]    [DONT_PROVIDE_NESTED_LOCKS]  [YES] [YES] [NO]  ]
     [[PROVIDES_SIGNATURE_PACKAGED_TASK]    [DONT_PROVIDE_SIGNATURE_PACKAGED_TASK]  [NO] [NO] [YES]  ]
     [[PROVIDES_FUTURE_INVALID_AFTER_GET]    [DONT_PROVIDE_FUTURE_INVALID_AFTER_GET]  [NO] [NO] [YES]  ]
-    [[PROVIDES_FUTURE_CONTINUATION]    [DONT_PROVIDE_FUTURE_CONTINUATION]  [NO] [NO] [YES]  ]
+   [/ [[PROVIDES_FUTURE_CONTINUATION]    [DONT_PROVIDE_FUTURE_CONTINUATION]  [NO] [NO] [YES]  ] ]
 
     [[PROVIDES_VARIADIC_THREAD]    [DONT_PROVIDE_VARIADIC_THREAD]  [NO] [NO] [C++11]  ]
 
@@ -69,8 +69,8 @@ The Boost.DateTime time related functions introduced in Boost 1.35.0, using the 
 * __timed_lock_ref__
 
 
-When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_DONT_USE_DATETIME ` if you don't want to use Boost.DateTime related interfaces.
-When `BOOST_THREAD_VERSION>=3` define `BOOST_THREAD_USES_DATETIME ` if you want to use Boost.DateTime related interfaces.
+When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_DONT_USE_DATETIME ` if you don't want to use Boost.DateTime related interfaces.
+When `BOOST_THREAD_VERSION>3` define `BOOST_THREAD_USES_DATETIME ` if you want to use Boost.DateTime related interfaces.
 
 [endsect]
 
@@ -91,8 +91,8 @@ Use instead
 
 [warning This is a breaking change respect to version 1.x.]
 
-When `BOOST_THREAD_VERSION>=3` define `BOOST_THREAD_PROVIDES_THREAD_EQ ` if you want this feature.
-When `BOOST_THREAD_VERSION<3` define `BOOST_THREAD_DONT_PROVIDE_THREAD_EQ ` if you don't want this feature.
+When `BOOST_THREAD_VERSION>=4` define `BOOST_THREAD_PROVIDES_THREAD_EQ ` if you want this feature.
+When `BOOST_THREAD_VERSION<4` define `BOOST_THREAD_DONT_PROVIDE_THREAD_EQ ` if you don't want this feature.
 
 [endsect]
 
@@ -104,8 +104,8 @@ Use instead `boost::condition_variable_any`.
 
 [warning This is a breaking change respect to version 1.x.]
 
-When `BOOST_THREAD_VERSION>=3` define `BOOST_THREAD_PROVIDES_CONDITION` if you want this feature.
-When `BOOST_THREAD_VERSION<3` define `BOOST_THREAD_DONT_PROVIDE_CONDITION` if you don't want this feature.
+When `BOOST_THREAD_VERSION>3` define `BOOST_THREAD_PROVIDES_CONDITION` if you want this feature.
+When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_DONT_PROVIDE_CONDITION` if you don't want this feature.
 
 [endsect]
 
@@ -142,8 +142,8 @@ Use instead
 
 [warning This is a breaking change respect to version 1.x.]
 
-When `BOOST_THREAD_VERSION>=3` define `BOOST_THREAD_PROVIDES_NESTED_LOCKS` if you want these features.
-When `BOOST_THREAD_VERSION<3` define `BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS` if you don't want thes features.
+When `BOOST_THREAD_VERSION>=4` define `BOOST_THREAD_PROVIDES_NESTED_LOCKS` if you want these features.
+When `BOOST_THREAD_VERSION<4` define `BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS` if you don't want thes features.
 
 [endsect]
 
@@ -151,8 +151,7 @@ When `BOOST_THREAD_VERSION<3` define `BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS` if
 
 Boost.Thread uses by default a thread::id on Posix based on the pthread type (BOOST_THREAD_PROVIDES_BASIC_THREAD_ID). For backward compatibility and also for compilers that don't work well with this modification the user can define `BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID`.
 
-When `BOOST_THREAD_VERSION==2` define `BOOST_THREAD_PROVIDES_BASIC_THREAD_ID ` if you want these features.
-When `BOOST_THREAD_VERSION>=3` define `BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID ` if you don't want these features.
+Define `BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID ` if you don't want these features.
 
 [endsect]
 [section:shared_gen  Shared Locking Generic]
@@ -283,8 +282,8 @@ C++11 packaged task class has a Signature template parameter. When `BOOST_THREAD
 
 [warning This is a breaking change respect to version 3.x.]
 
-When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK` if you want this feature.
-When `BOOST_THREAD_VERSION>4` define `BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK` if you don't want this feature.
+When `BOOST_THREAD_VERSION<4` define `BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK` if you want this feature.
+When `BOOST_THREAD_VERSION>=4` define `BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK` if you don't want this feature.
 
 [endsect]
 
@@ -308,8 +307,8 @@ C++11 future<>::get() invalidates the future once its value has been obtained. W
 
 [warning This is a breaking change respect to version 3.x.]
 
-When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET` if you want this feature.
-When `BOOST_THREAD_VERSION>4` define `BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET` if you don't want this feature.
+When `BOOST_THREAD_VERSION<4` define `BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET` if you want this feature.
+When `BOOST_THREAD_VERSION>=4` define `BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET` if you don't want this feature.
 
 [endsect]
 
@@ -344,7 +343,7 @@ The user can request the version 3 by defining `BOOST_THREAD_VERSION` to 3. In t
 
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
 
-The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.53.
+The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.54.
 
 The user can request the version 4 by defining `BOOST_THREAD_VERSION` to 4. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
