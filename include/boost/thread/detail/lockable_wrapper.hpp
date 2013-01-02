@@ -6,7 +6,9 @@
 #ifndef BOOST_THREAD_DETAIL_LOCKABLE_WRAPPER_HPP
 #define BOOST_THREAD_DETAIL_LOCKABLE_WRAPPER_HPP
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#include <boost/thread/detail/config.hpp>
+
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
 #include <initializer_list>
 #endif
 #include <boost/config/abi_prefix.hpp>
@@ -14,7 +16,7 @@
 namespace boost
 {
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
   namespace thread_detail
   {
     template <typename Mutex>

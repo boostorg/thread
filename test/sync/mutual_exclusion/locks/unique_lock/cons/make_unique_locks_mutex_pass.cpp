@@ -8,12 +8,14 @@
 // template <class Mutex>
 // unique_lock<Mutex> make_unique_lock(Mutex&);
 
+#define BOOST_THREAD_VERSION 4
+
 #include <boost/thread/lock_factories.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
 boost::mutex m1;
 boost::mutex m2;

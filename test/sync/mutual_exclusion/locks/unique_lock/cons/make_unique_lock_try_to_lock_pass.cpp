@@ -8,12 +8,13 @@
 // template <class Mutex> class unique_lock;
 // unique_lock<Mutex> make_unique_lock(Mutex&, try_to_lock_t);
 
+#define BOOST_THREAD_VERSION 4
+
+
 #include <boost/thread/lock_factories.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
-
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 
 boost::mutex m;
 
@@ -31,20 +32,40 @@ void f()
 #if defined BOOST_THREAD_USES_CHRONO
   time_point t0 = Clock::now();
   {
-    auto lk = boost::make_unique_lock(m, boost::try_to_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+    lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
   }
   {
-    auto lk = boost::make_unique_lock(m, boost::try_to_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+    lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
   }
   {
-    auto lk = boost::make_unique_lock(m, boost::try_to_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+    lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
   }
   while (true)
   {
-    auto lk = boost::make_unique_lock(m, boost::try_to_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+  lk = boost::make_unique_lock(m, boost::try_to_lock);
     if (lk.owns_lock()) break;
   }
   time_point t1 = Clock::now();
@@ -68,7 +89,12 @@ void f()
 //  }
   while (true)
   {
-    auto lk = boost::make_unique_lock(m, boost::try_to_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+    lk = boost::make_unique_lock(m, boost::try_to_lock);
     if (lk.owns_lock()) break;
   }
   //time_point t1 = Clock::now();
@@ -91,11 +117,3 @@ int main()
 
   return boost::report_errors();
 }
-
-#else
-int main()
-{
-  return boost::report_errors();
-}
-#endif
-
