@@ -15,7 +15,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
 boost::mutex m1;
 boost::mutex m2;
@@ -38,7 +38,7 @@ void f()
   time_point t0 = Clock::now();
   time_point t1;
   {
-    auto&& _ = boost::make_unique_locks(m1,m2,m3);
+    auto&& _ = boost::make_unique_locks(m1,m2,m3); (void)_;
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
@@ -48,7 +48,7 @@ void f()
   //time_point t0 = Clock::now();
   //time_point t1;
   {
-    auto&& _ = boost::make_unique_locks(m1,m2,m3);
+    auto&& _ = boost::make_unique_locks(m1,m2,m3); (void)_;
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);
