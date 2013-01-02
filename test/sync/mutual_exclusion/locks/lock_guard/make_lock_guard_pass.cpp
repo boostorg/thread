@@ -18,10 +18,7 @@
 // lock_guard<Lockable> make_lock_guard(Lockable &);
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
-#define BOOST_THREAD_DONT_PROVIDE_NESTED_LOCKS
 
-#include <boost/thread/detail/log.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -38,7 +35,7 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
 
 void f()
 {
@@ -47,9 +44,7 @@ void f()
   {
     const auto&& lg = boost::make_lock_guard(m); (void)lg;
     t1 = Clock::now();
-    BOOST_THREAD_TRACE;
   }
-  BOOST_THREAD_TRACE;
   ns d = t1 - t0 - ms(250);
   // This test is spurious as it depends on the time the thread system switches the threads
   BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
@@ -59,7 +54,7 @@ void f()
 int main()
 {
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
   {
     m.lock();
     boost::thread t(f);

@@ -10,26 +10,24 @@
 
 // unique_lock(mutex_type& m, adopt_lock_t);
 
+#define BOOST_THREAD_VERSION 4
+
 #include <boost/thread/lock_factories.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 int main()
 {
   boost::mutex m;
   m.lock();
-  auto lk = boost::make_unique_lock(m, boost::defer_lock);
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
+  auto
+#else
+  boost::unique_lock<boost::mutex>
+#endif
+  lk = boost::make_unique_lock(m, boost::defer_lock);
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == false);
 
   return boost::report_errors();
 }
-
-#else
-int main()
-{
-  return boost::report_errors();
-}
-#endif
-

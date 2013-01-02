@@ -7,6 +7,7 @@
 #ifndef BOOST_THREAD_LOCK_GUARD_HPP
 #define BOOST_THREAD_LOCK_GUARD_HPP
 
+#include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/lockable_wrapper.hpp>
@@ -45,7 +46,7 @@ namespace boost
 #endif
     }
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
     lock_guard(std::initializer_list<thread_detail::lockable_wrapper<Mutex> > l_) :
       m(*(const_cast<thread_detail::lockable_wrapper<Mutex>*>(l_.begin())->m))
     {
@@ -68,7 +69,7 @@ namespace boost
   };
 
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
   template <typename Lockable>
   lock_guard<Lockable> make_lock_guard(Lockable& mtx)
   {
