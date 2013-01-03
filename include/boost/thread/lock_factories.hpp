@@ -59,7 +59,7 @@ namespace boost
     );
   }
   template <typename L1, typename L2, typename L3>
-  std::tuple<unique_lock<L1>, unique_lock<L2>, unique_lock<L3> > make_unique_locks(L1& m1, L2& m2, L2& m3)
+  std::tuple<unique_lock<L1>, unique_lock<L2>, unique_lock<L3> > make_unique_locks(L1& m1, L2& m2, L3& m3)
   {
     boost::lock(m1, m2, m3);
     return std::tuple<unique_lock<L1>,unique_lock<L2>,unique_lock<L3> >(
