@@ -6,6 +6,7 @@
 #ifndef BOOST_THREAD_STRICT_LOCK_HPP
 #define BOOST_THREAD_STRICT_LOCK_HPP
 
+#include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/lockable_wrapper.hpp>
 #include <boost/thread/lock_options.hpp>
@@ -50,7 +51,7 @@ namespace boost
     } /*< locks on construction >*/
 
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
     strict_lock(std::initializer_list<thread_detail::lockable_wrapper<Lockable> > l_) :
       mtx_(*(const_cast<thread_detail::lockable_wrapper<Lockable>*>(l_.begin())->m))
     {
@@ -148,7 +149,7 @@ namespace boost
       tmp_lk_ = move(lk); /*< Move ownership to temporary lk >*/
     }
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
     nested_strict_lock(std::initializer_list<thread_detail::lockable_wrapper<Lock> > l_) :
       lk_(*(const_cast<thread_detail::lockable_wrapper<Lock>*>(l_.begin())->m))
     {
@@ -203,7 +204,7 @@ public:
   {
   };
 
-#if ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
   template <typename Lockable>
   strict_lock<Lockable> make_strict_lock(Lockable& mtx)
   {

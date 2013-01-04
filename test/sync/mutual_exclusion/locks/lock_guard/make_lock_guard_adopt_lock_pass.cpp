@@ -17,6 +17,8 @@
 // template <class Lockable>
 // lock_guard<Lockable> make_lock_guard(Lockable &, adopt_lock_t);
 
+#define BOOST_THREAD_VERSION 4
+
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -32,7 +34,7 @@ typedef boost::chrono::nanoseconds ns;
 #endif
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
 
 void f()
 {
@@ -63,7 +65,7 @@ void f()
 
 int main()
 {
-#if ! defined(BOOST_NO_CXX11_AUTO) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
   m.lock();
   boost::thread t(f);
 #ifdef BOOST_THREAD_USES_CHRONO

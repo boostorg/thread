@@ -8,12 +8,14 @@
 // template <class Mutex>
 // unique_lock<Mutex> make_unique_lock(Mutex&);
 
+#define BOOST_THREAD_VERSION 4
+
 #include <boost/thread/lock_factories.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined(BOOST_NO_CXX11_AUTO) && defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined BOOST_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
 boost::mutex m1;
 boost::mutex m2;
@@ -36,7 +38,7 @@ void f()
   time_point t0 = Clock::now();
   time_point t1;
   {
-    auto&& _ = boost::make_unique_locks(m1,m2,m3);
+    auto&& _ = boost::make_unique_locks(m1,m2,m3); (void)_;
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
@@ -46,7 +48,7 @@ void f()
   //time_point t0 = Clock::now();
   //time_point t1;
   {
-    auto&& _ = boost::make_unique_locks(m1,m2,m3);
+    auto&& _ = boost::make_unique_locks(m1,m2,m3); (void)_;
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);

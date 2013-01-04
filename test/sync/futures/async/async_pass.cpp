@@ -166,6 +166,7 @@ int main()
     BOOST_TEST(f.get() == 3);
     Clock::time_point t1 = Clock::now();
     BOOST_TEST(t1 - t0 < ms(100));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
@@ -216,6 +217,7 @@ int main()
     BOOST_TEST(&f.get() == &i);
     Clock::time_point t1 = Clock::now();
     BOOST_TEST(t1 - t0 < ms(100));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
@@ -303,6 +305,7 @@ int main()
     f.get();
     Clock::time_point t1 = Clock::now();
     BOOST_TEST(t1 - t0 < ms(100));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
