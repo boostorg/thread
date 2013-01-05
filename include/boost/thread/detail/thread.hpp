@@ -767,7 +767,7 @@ namespace boost
         else
         {
           BOOST_THREAD_THROW_ELSE_RETURN(
-            thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable"),
+            (thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable")),
             false
           );
         }
