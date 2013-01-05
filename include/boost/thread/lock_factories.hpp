@@ -39,7 +39,7 @@ namespace boost
   {
     return unique_lock<Lockable> (mtx, try_to_lock);
   }
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 #if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
   template <typename ...Lockable>
