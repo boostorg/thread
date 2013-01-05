@@ -225,7 +225,7 @@ rule usage-requirements ( properties * )
         }
     }
 
-    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties)
+    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  
     {
       result += <library>/boost/chrono//boost_chrono ;
     }
@@ -253,7 +253,7 @@ rule requirements ( properties * )
             }
         }
     }
-    result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    //result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
 
     return $(result) ;
 }
