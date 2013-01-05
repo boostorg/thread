@@ -132,6 +132,20 @@ rule thread-run2-noit ( sources : name )
     ;
 }
 
+rule thread-run2-noit-pthread ( sources : name )
+{
+    return
+    [ run $(sources) ../build//boost_thread : : : <threadapi>win32:<build>no
+      : $(name) ]
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
+        : : : <threadapi>win32:<build>no
+      : $(name)_lib ]
+    #[ run $(sources) ../build//boost_thread : : :
+    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+    #  : $(name)_noit ]
+    ;
+}
+
 rule thread-run2-h ( sources : name )
 {
     return
@@ -253,7 +267,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/conditions/condition_variable/copy_fail.cpp : : condition_variable__copy_f ]
           [ thread-run2-noit ./sync/conditions/condition_variable/default_pass.cpp : condition_variable__default_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/dtor_pass.cpp : condition_variable__dtor_p ]
-          [ thread-run2-noit ./sync/conditions/condition_variable/native_handle_pass.cpp : condition_variable__native_handle_p ]
+          [ thread-run2-noit-pthread ./sync/conditions/condition_variable/native_handle_pass.cpp : condition_variable__native_handle_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_pass.cpp : condition_variable__wait_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_for_pass.cpp : condition_variable__wait_for_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_for_pred_pass.cpp : condition_variable__wait_for_pred_p ]
@@ -502,7 +516,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutex__copy_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/default_pass.cpp : mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/lock_pass.cpp : mutex__lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutex__native_handle_p ]
+          [ thread-run2-noit-pthread ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutex__native_handle_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/try_lock_pass.cpp : mutex__try_lock_p ]
     ;
 
@@ -513,7 +527,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/recursive_mutex/copy_fail.cpp : : recursive_mutex__copy_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_mutex/default_pass.cpp : recursive_mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_mutex/lock_pass.cpp : recursive_mutex__lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/recursive_mutex/native_handle_pass.cpp : recursive_mutex__native_handle_p ]
+          [ thread-run2-noit-pthread ./sync/mutual_exclusion/recursive_mutex/native_handle_pass.cpp : recursive_mutex__native_handle_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_mutex/try_lock_pass.cpp : recursive_mutex__try_lock_p ]
     ;
 
@@ -524,7 +538,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : recursive_timed_mutex__copy_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/default_pass.cpp : recursive_timed_mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/lock_pass.cpp : recursive_timed_mutex__lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/native_handle_pass.cpp : recursive_timed_mutex__native_handle_p ]
+          [ thread-run2-noit-pthread ./sync/mutual_exclusion/recursive_timed_mutex/native_handle_pass.cpp : recursive_timed_mutex__native_handle_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_for_pass.cpp : recursive_timed_mutex__try_lock_for_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_pass.cpp : recursive_timed_mutex__try_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_until_pass.cpp : recursive_timed_mutex__try_lock_until_p ]
@@ -537,7 +551,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/timed_mutex/copy_fail.cpp : : timed_mutex__copy_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/default_pass.cpp : timed_mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/lock_pass.cpp : timed_mutex__lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/native_handle_pass.cpp : timed_mutex__native_handle_p ]
+          [ thread-run2-noit-pthread ./sync/mutual_exclusion/timed_mutex/native_handle_pass.cpp : timed_mutex__native_handle_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/try_lock_for_pass.cpp : timed_mutex__try_lock_for_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/try_lock_pass.cpp : timed_mutex__try_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/timed_mutex/try_lock_until_pass.cpp : timed_mutex__try_lock_until_p ]
@@ -672,6 +686,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
           [ thread-run ../example/perf_condition_variable.cpp ]
+          #[ thread-run ../example/not_interleaved.cpp ]
     ;
 
 }
