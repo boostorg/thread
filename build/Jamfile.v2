@@ -253,7 +253,7 @@ rule requirements ( properties * )
             }
         }
     }
-    //result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
 
     return $(result) ;
 }
