@@ -48,8 +48,13 @@ int main()
   scoped_thread<> t2(thread(use_cout, boost::ref(mcout)));
   this_thread::sleep_for(chrono::seconds(2));
   std::string nm;
-  mcout << "Enter name: ";
-  //mcin >> nm;
+  {
+    strict_lock<recursive_mutex> lk(terminal_mutex);
+    auto& gcout = mcout.hold(lk);
+    auto& gcin = mcin.hold(lk);
+    gcout << "Enter name: ";
+    //gcin >> nm;
+  }
   t1.join();
   mcout << nm << '\n';
   return 1;

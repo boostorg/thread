@@ -14,6 +14,7 @@
 #include <boost/thread/externally_locked.hpp>
 #include <boost/thread/lock_traits.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/strict_lock.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -32,11 +33,6 @@ namespace boost
   template <class Stream>
   class stream_guard
   {
-    stream_guard(externally_locked_stream<Stream>& mtx, adopt_lock_t) :
-      mtx_(mtx)
-    {
-    }
-
 
     friend class externally_locked_stream<Stream> ;
   public:
@@ -48,6 +44,11 @@ namespace boost
       mtx_(&mtx)
     {
       mtx.lock();
+    }
+
+    stream_guard(externally_locked_stream<Stream>& mtx, adopt_lock_t) :
+      mtx_(&mtx)
+    {
     }
 
     stream_guard(BOOST_THREAD_RV_REF(stream_guard) rhs)
@@ -106,6 +107,12 @@ namespace boost
     {
       return stream_guard<Stream> (*this);
     }
+
+    Stream& hold(strict_lock<recursive_mutex>& lk)
+    {
+      return this->get(lk);
+    }
+
 
   };
   //]
