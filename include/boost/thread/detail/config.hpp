@@ -69,8 +69,13 @@
 
 #if defined BOOST_NO_CXX11_UNIFIED_INITIALIZATION_SYNTAX || defined BOOST_NO_CXX11_HDR_INITIALIZER_LIST
 #define BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
-//#elif defined __GNUC__ && (__GNUC__ < 4 || ( __GNUC__ == 4 && __GNUC_MINOR__ <= 6 ))
-//#define BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
+#endif
+
+#if defined(BOOST_NO_CXX11_HDR_TUPLE) || defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#define BOOST_THREAD_NO_CXX11_HDR_TUPLE
+#elif defined _MSC_VER && _MSC_VER <= 1600
+// C++ features supported by VC++ 10 (aka 2010)
+#define BOOST_THREAD_NO_CXX11_HDR_TUPLE
 #endif
 
 /// BASIC_THREAD_ID
