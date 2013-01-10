@@ -14,6 +14,7 @@
 #include <boost/thread/externally_locked.hpp>
 #include <boost/thread/lock_traits.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <boost/thread/strict_lock.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -26,28 +27,28 @@ namespace boost
   //    return mtx;
   //  }
 
-  template <typename Stream>
+  template <typename Stream, typename RecursiveMutex=recursive_mutex>
   class externally_locked_stream;
 
-  template <class Stream>
+  template <class Stream, typename RecursiveMutex=recursive_mutex>
   class stream_guard
   {
-    stream_guard(externally_locked_stream<Stream>& mtx, adopt_lock_t) :
-      mtx_(mtx)
-    {
-    }
 
-
-    friend class externally_locked_stream<Stream> ;
+    friend class externally_locked_stream<Stream, RecursiveMutex> ;
   public:
-    typedef typename externally_locked_stream<Stream>::mutex_type mutex_type;
+    typedef typename externally_locked_stream<Stream, RecursiveMutex>::mutex_type mutex_type;
 
     BOOST_THREAD_MOVABLE_ONLY( stream_guard)
 
-    stream_guard(externally_locked_stream<Stream>& mtx) :
+    stream_guard(externally_locked_stream<Stream, RecursiveMutex>& mtx) :
       mtx_(&mtx)
     {
       mtx.lock();
+    }
+
+    stream_guard(externally_locked_stream<Stream, RecursiveMutex>& mtx, adopt_lock_t) :
+      mtx_(&mtx)
+    {
     }
 
     stream_guard(BOOST_THREAD_RV_REF(stream_guard) rhs)
@@ -72,85 +73,91 @@ namespace boost
     }
 
   private:
-    externally_locked_stream<Stream>* mtx_;
+    externally_locked_stream<Stream, RecursiveMutex>* mtx_;
   };
 
-  template <typename Stream>
-  struct is_strict_lock_sur_parolle<stream_guard<Stream> > : true_type
+  template <typename Stream, typename RecursiveMutex>
+  struct is_strict_lock_sur_parolle<stream_guard<Stream, RecursiveMutex> > : true_type
   {
   };
 
   /**
-   * externally_locked_stream_stream cloaks a reference to an stream of type Stream, and actually
+   * externally_locked_stream cloaks a reference to an stream of type Stream, and actually
    * provides full access to that object through the get and set member functions, provided you
    * pass a reference to a strict lock object.
    */
 
   //[externally_locked_stream
-  template <typename Stream>
-  class externally_locked_stream: public externally_locked<Stream&, recursive_mutex>
+  template <typename Stream, typename RecursiveMutex>
+  class externally_locked_stream: public externally_locked<Stream&, RecursiveMutex>
   {
-    typedef externally_locked<Stream&, recursive_mutex> base_type;
+    typedef externally_locked<Stream&, RecursiveMutex> base_type;
   public:
     BOOST_THREAD_NO_COPYABLE( externally_locked_stream)
 
     /**
      * Effects: Constructs an externally locked object storing the cloaked reference object.
      */
-    externally_locked_stream(Stream& stream, recursive_mutex& mtx) :
+    externally_locked_stream(Stream& stream, RecursiveMutex& mtx) :
       base_type(stream, mtx)
     {
     }
 
-    stream_guard<Stream> hold()
+    stream_guard<Stream, RecursiveMutex> hold()
     {
-      return stream_guard<Stream> (*this);
+      return stream_guard<Stream, RecursiveMutex> (*this);
     }
+
+    Stream& hold(strict_lock<RecursiveMutex>& lk)
+    {
+      return this->get(lk);
+    }
+
 
   };
   //]
 
-  template <typename Stream, typename T>
-  inline const stream_guard<Stream>& operator<<(const stream_guard<Stream>& lck, T arg)
+  template <typename Stream, typename RecursiveMutex, typename T>
+  inline const stream_guard<Stream, RecursiveMutex>& operator<<(const stream_guard<Stream, RecursiveMutex>& lck, T arg)
   {
     lck.get() << arg;
     return lck;
   }
 
-  template <typename Stream>
-  inline const stream_guard<Stream>& operator<<(const stream_guard<Stream>& lck, Stream& (*arg)(Stream&))
+  template <typename Stream, typename RecursiveMutex>
+  inline const stream_guard<Stream, RecursiveMutex>& operator<<(const stream_guard<Stream, RecursiveMutex>& lck, Stream& (*arg)(Stream&))
   {
     lck.get() << arg;
     return lck;
   }
 
-  template <typename Stream, typename T>
-  inline const stream_guard<Stream>& operator>>(const stream_guard<Stream>& lck, T& arg)
+  template <typename Stream, typename RecursiveMutex, typename T>
+  inline const stream_guard<Stream, RecursiveMutex>& operator>>(const stream_guard<Stream, RecursiveMutex>& lck, T& arg)
   {
     lck.get() >> arg;
     return lck;
   }
 
-  template <typename Stream, typename T>
-  inline stream_guard<Stream> operator<<(externally_locked_stream<Stream>& mtx, T arg)
+  template <typename Stream, typename RecursiveMutex, typename T>
+  inline stream_guard<Stream, RecursiveMutex> operator<<(externally_locked_stream<Stream, RecursiveMutex>& mtx, T arg)
   {
-    stream_guard<Stream> lk(mtx);
+    stream_guard<Stream, RecursiveMutex> lk(mtx);
     mtx.get(lk) << arg;
     return boost::move(lk);
   }
 
-  template <typename Stream>
-  inline stream_guard<Stream> operator<<(externally_locked_stream<Stream>& mtx, Stream& (*arg)(Stream&))
+  template <typename Stream, typename RecursiveMutex>
+  inline stream_guard<Stream, RecursiveMutex> operator<<(externally_locked_stream<Stream, RecursiveMutex>& mtx, Stream& (*arg)(Stream&))
   {
-    stream_guard<Stream> lk(mtx);
+    stream_guard<Stream, RecursiveMutex> lk(mtx);
     mtx.get(lk) << arg;
     return boost::move(lk);
   }
 
-  template <typename Stream, typename T>
-  inline stream_guard<Stream> operator>>(externally_locked_stream<Stream>& mtx, T& arg)
+  template <typename Stream, typename RecursiveMutex, typename T>
+  inline stream_guard<Stream, RecursiveMutex> operator>>(externally_locked_stream<Stream, RecursiveMutex>& mtx, T& arg)
   {
-    stream_guard<Stream> lk(mtx);
+    stream_guard<Stream, RecursiveMutex> lk(mtx);
     mtx.get(lk) >> arg;
     return boost::move(lk);
   }
