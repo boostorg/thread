@@ -30,8 +30,8 @@ typedef boost::chrono::nanoseconds ns;
 void f()
 {
 #if defined BOOST_THREAD_USES_CHRONO
-  time_point t0 = Clock::now();
   {
+    time_point t0 = Clock::now();
 #if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
   auto
 #else
@@ -39,8 +39,13 @@ void f()
 #endif
     lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
+    time_point t1 = Clock::now();
+    ns d = t1 - t0 - ms(250);
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
   }
   {
+    time_point t0 = Clock::now();
 #if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
   auto
 #else
@@ -48,8 +53,13 @@ void f()
 #endif
     lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
+    time_point t1 = Clock::now();
+    ns d = t1 - t0 - ms(250);
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
   }
   {
+    time_point t0 = Clock::now();
 #if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
   auto
 #else
@@ -57,22 +67,28 @@ void f()
 #endif
     lk = boost::make_unique_lock(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
+    time_point t1 = Clock::now();
+    ns d = t1 - t0 - ms(250);
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
   }
-  while (true)
   {
+    time_point t0 = Clock::now();
+    while (true)
+    {
 #if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS)
-  auto
+      auto
 #else
-  boost::unique_lock<boost::mutex>
+      boost::unique_lock<boost::mutex>
 #endif
-  lk = boost::make_unique_lock(m, boost::try_to_lock);
-    if (lk.owns_lock()) break;
+      lk = boost::make_unique_lock(m, boost::try_to_lock);
+      if (lk.owns_lock()) break;
+    }
+    time_point t1 = Clock::now();
+    ns d = t1 - t0 - ms(250);
+    // This test is spurious as it depends on the time the thread system switches the threads
+    BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
   }
-  time_point t1 = Clock::now();
-  //m.unlock();
-  ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
 #else
 //  time_point t0 = Clock::now();
 //  {
