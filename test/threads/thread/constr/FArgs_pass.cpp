@@ -84,7 +84,7 @@ public:
   void operator()(int i, double j)
   {
     BOOST_TEST(alive_ == 1);
-    BOOST_TEST(n_alive >= 1);
+    //BOOST_TEST(n_alive >= 1);
     BOOST_TEST(i == 5);
     BOOST_TEST(j == 5.5);
     op_run = true;
