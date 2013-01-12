@@ -15,7 +15,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined BOOST_THREAD_NO_CXX11_HDR_TUPLE && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS && ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
 boost::mutex m1;
 boost::mutex m2;

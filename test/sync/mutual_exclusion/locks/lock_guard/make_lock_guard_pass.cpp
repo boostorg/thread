@@ -35,7 +35,7 @@ typedef boost::chrono::nanoseconds ns;
 
 boost::mutex m;
 
-#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST && defined BOOST_THREAD_USES_CHRONO
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_MAKE_LOCK_GUARD && defined BOOST_THREAD_USES_CHRONO
 
 void f()
 {
@@ -54,7 +54,7 @@ void f()
 int main()
 {
 
-#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_MAKE_LOCK_GUARD
   {
     m.lock();
     boost::thread t(f);
