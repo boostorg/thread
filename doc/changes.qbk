@@ -63,6 +63,7 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 
 [*Fixed Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/7464 #7464] BOOST_TEST(n_alive == 1); fails due to race condition in a regression test tool.
 * [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consumption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
 * [@http://svn.boost.org/trac/boost/ticket/7665 #7665] this_thread::sleep_for no longer uses steady_clock in thread.
 * [@http://svn.boost.org/trac/boost/ticket/7668 #7668] thread_group::join_all() should check whether its threads are joinable.
@@ -71,6 +72,9 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 * [@http://svn.boost.org/trac/boost/ticket/7798 #7798] boost::future set_wait_callback thread safety issues.
 * [@http://svn.boost.org/trac/boost/ticket/7808 #7808] Incorrect description of effects for this_thread::sleep_for and this_thread::sleep_until.
 * [@http://svn.boost.org/trac/boost/ticket/7812 #7812] Returns: cv_status::no_timeout if the call is returning because the time period specified by rel_time has elapsed, cv_status::timeout otherwise.
+* [@http://svn.boost.org/trac/boost/ticket/7874 #7874] compile warning: thread.hpp:342: warning: type attributes are honored only at type definition.
+* [@http://svn.boost.org/trac/boost/ticket/7875 #7875] BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED should not be enabled by default.
+* [@http://svn.boost.org/trac/boost/ticket/7882 #7882] wrong exception text from condition_variable::wait(unique_lock<mutex>&).
 
 
 [heading Version 3.1.0 - boost 1.52]
