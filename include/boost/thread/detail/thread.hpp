@@ -451,7 +451,7 @@ namespace boost
             thread_info.swap(x.thread_info);
         }
 
-        class BOOST_SYMBOL_VISIBLE id;
+        class id;
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
         inline id get_id()  const BOOST_NOEXCEPT;
 #else

@@ -59,7 +59,7 @@ namespace boost
             int const res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
-                boost::throw_exception(thread_resource_error(res, "boost:: condition_variable constructor failed in pthread_mutex_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in pthread_mutex_init"));
             }
 #endif
             int const res2=pthread_cond_init(&cond,NULL);
@@ -68,7 +68,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 #endif
-                boost::throw_exception(thread_resource_error(res2, "boost:: condition_variable constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable::condition_variable() constructor failed in pthread_cond_init"));
             }
         }
         ~condition_variable()

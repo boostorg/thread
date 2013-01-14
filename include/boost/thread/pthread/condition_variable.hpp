@@ -60,7 +60,7 @@ namespace boost
 #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
         if(! m.owns_lock())
         {
-            boost::throw_exception(condition_error(-1, "boost::condition_variable::wait precondition"));
+            boost::throw_exception(condition_error(-1, "boost::condition_variable::wait() failed precondition mutex not owned"));
         }
 #endif
         int res=0;
@@ -85,7 +85,7 @@ namespace boost
 #endif
         if(res)
         {
-            boost::throw_exception(condition_error(res, "boost:: condition_variable constructor failed in pthread_cond_wait"));
+            boost::throw_exception(condition_error(res, "boost::condition_variable::wait failed in pthread_cond_wait"));
         }
     }
 
@@ -96,7 +96,7 @@ namespace boost
 #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
         if (!m.owns_lock())
         {
-            boost::throw_exception(condition_error(EPERM, "condition_variable do_wait_until: mutex not locked"));
+            boost::throw_exception(condition_error(EPERM, "boost::condition_variable::do_wait_until() failed precondition mutex not owned"));
         }
 #endif
         thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
@@ -121,7 +121,7 @@ namespace boost
         }
         if(cond_res)
         {
-            boost::throw_exception(condition_error(cond_res, "condition_variable failed in pthread_cond_timedwait"));
+            boost::throw_exception(condition_error(cond_res, "boost::condition_variable::do_wait_until failed in pthread_cond_timedwait"));
         }
         return true;
     }
@@ -154,13 +154,13 @@ namespace boost
             int const res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
-                boost::throw_exception(thread_resource_error(res, "condition_variable_any failed in pthread_mutex_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable_any::condition_variable_any() failed in pthread_mutex_init"));
             }
             int const res2=pthread_cond_init(&cond,NULL);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
-                boost::throw_exception(thread_resource_error(res, "condition_variable_any failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable_any::condition_variable_any() failed in pthread_cond_init"));
             }
         }
         ~condition_variable_any()
@@ -188,7 +188,7 @@ namespace boost
 #endif
             if(res)
             {
-                boost::throw_exception(condition_error(res, "condition_variable_any failed in pthread_cond_wait"));
+                boost::throw_exception(condition_error(res, "boost::condition_variable_any::wait() failed in pthread_cond_wait"));
             }
         }
 
@@ -368,7 +368,7 @@ namespace boost
           }
           if(res)
           {
-              boost::throw_exception(condition_error(res, "condition_variable_any failed in pthread_cond_timedwait"));
+              boost::throw_exception(condition_error(res, "boost::condition_variable_any::do_wait_until() failed in pthread_cond_timedwait"));
           }
           return true;
         }

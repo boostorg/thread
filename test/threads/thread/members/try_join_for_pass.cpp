@@ -88,7 +88,7 @@ int main()
   {
     boost::thread t0( (G()));
     BOOST_TEST(t0.joinable());
-    BOOST_TEST(t0.try_join_for(boost::chrono::milliseconds(50)));
+    BOOST_TEST(t0.try_join_for(boost::chrono::milliseconds(150)));
     BOOST_TEST(!t0.joinable());
   }
   {
