@@ -204,7 +204,7 @@ public:
   {
   };
 
-#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_MAKE_STRICT_LOCK
   template <typename Lockable>
   strict_lock<Lockable> make_strict_lock(Lockable& mtx)
   {

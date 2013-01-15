@@ -8,7 +8,7 @@
 
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/lock_algorithms.hpp>
-#if ! defined(BOOST_THREAD_NO_CXX11_HDR_TUPLE)
+#if ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
 #include <tuple> // todo change to <boost/tuple.hpp> once Boost.Tuple or Boost.Fusion provides Move semantics.
 #endif
 #include <boost/config/abi_prefix.hpp>
@@ -39,7 +39,7 @@ namespace boost
   {
     return unique_lock<Lockable> (mtx, try_to_lock);
   }
-#if ! defined(BOOST_THREAD_NO_CXX11_HDR_TUPLE)
+#if ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
 
 #if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
   template <typename ...Lockable>
@@ -71,18 +71,6 @@ namespace boost
 
 #endif
 #endif
-//  int main()
-//  {
-//    std::mutex m1;
-//    std::mutex m2;
-//    std::mutex m3;
-//
-//    {
-//      auto lks = make_unique_locks(m1, m2, m3);
-//
-//    }
-//    return 0;
-//  }
 
 }
 

@@ -69,7 +69,7 @@ namespace boost
   };
 
 
-#if ! defined BOOST_THREAD_NO_CXX11_HDR_INITIALIZER_LIST
+#if ! defined BOOST_THREAD_NO_MAKE_LOCK_GUARD
   template <typename Lockable>
   lock_guard<Lockable> make_lock_guard(Lockable& mtx)
   {
