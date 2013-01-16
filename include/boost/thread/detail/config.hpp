@@ -109,6 +109,20 @@
 #define BOOST_THREAD_USES_CHRONO
 #endif
 
+#if ! defined BOOST_THREAD_DONT_USE_ATOMIC \
+  && ! defined BOOST_THREAD_USES_ATOMIC
+#define BOOST_THREAD_USES_ATOMIC
+//#define BOOST_THREAD_DONT_USE_ATOMIC
+#endif
+
+#if defined BOOST_THREAD_USES_ATOMIC
+// Andrey Semashev
+#define BOOST_THREAD_ONCE_ATOMIC
+#else
+//#elif ! defined BOOST_NO_CXX11_THREAD_LOCAL && ! defined BOOST_NO_THREAD_LOCAL && ! defined BOOST_THREAD_NO_UINT32_PSEUDO_ATOMIC
+// http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2444.html#Appendix
+#define BOOST_THREAD_ONCE_FAST_EPOCH
+#endif
 #if BOOST_THREAD_VERSION==2
 
 // PROVIDE_PROMISE_LAZY
@@ -131,7 +145,7 @@
 // fixme BOOST_THREAD_PROVIDES_ONCE_CXX11 doesn't works when thread.cpp is compiled BOOST_THREAD_VERSION 3
 #if ! defined BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11 \
  && ! defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#define BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11
+#define BOOST_THREAD_PROVIDES_ONCE_CXX11
 #endif
 
 // THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
@@ -276,6 +290,15 @@
 && ! defined BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 #define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 #endif
+
+// For C++11 call_once interface the compiler MUST support constexpr.
+// Otherwise once_flag would be initialized during dynamic initialization stage, which is not thread-safe.
+#if defined(BOOST_THREAD_PROVIDES_ONCE_CXX11)
+#if defined(BOOST_NO_CXX11_CONSTEXPR)
+#undef BOOST_THREAD_PROVIDES_ONCE_CXX11
+#endif
+#endif
+
 
 // BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 defined by default up to Boost 1.52
 // BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0 defined by default up to Boost 1.55
