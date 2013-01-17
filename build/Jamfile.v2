@@ -229,6 +229,12 @@ rule usage-requirements ( properties * )
     {
       result += <library>/boost/chrono//boost_chrono ;
     }
+    
+    if <toolset>pgi in $(properties)   
+    {
+      result += <library>/boost/atomic//boost_atomic ;
+    }
+    
 
     return $(result) ;
 }
