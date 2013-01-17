@@ -111,7 +111,9 @@
 
 #if ! defined BOOST_THREAD_DONT_USE_ATOMIC \
   && ! defined BOOST_THREAD_USES_ATOMIC
+//#if ! defined __PGIC__
 #define BOOST_THREAD_USES_ATOMIC
+//#endif
 //#define BOOST_THREAD_DONT_USE_ATOMIC
 #endif
 

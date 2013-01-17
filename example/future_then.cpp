@@ -45,11 +45,12 @@ int main()
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
   try
   {
-    boost::future<int> f1 = boost::async(&p1);
+    boost::future<int> f1 = boost::async(boost::launch::async, &p1);
     BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
     boost::future<int> f2 = f1.then(&p2);
     BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
-    BOOST_THREAD_LOG << f2.get() << BOOST_THREAD_END_LOG;
+    int i = f2.get();
+    BOOST_THREAD_LOG << i << BOOST_THREAD_END_LOG;
   }
   catch (std::exception& ex)
   {
