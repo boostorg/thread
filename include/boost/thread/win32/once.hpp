@@ -19,6 +19,7 @@
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/interlocked_read.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
+#include <boost/thread/detail/move.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -32,6 +33,16 @@ namespace std
 
 namespace boost
 {
+  struct once_flag;
+  namespace detail
+  {
+  struct once_context;
+
+  inline bool enter_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT;
+  inline void commit_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT;
+  inline void rollback_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT;
+  }
+
 #ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
 
   struct once_flag
@@ -40,12 +51,15 @@ namespace boost
       BOOST_CONSTEXPR once_flag() BOOST_NOEXCEPT
         : status(0), count(0)
       {}
-  private:
       long status;
       long count;
+  private:
       template<typename Function>
       friend
       void call_once(once_flag& flag,Function f);
+      friend inline bool enter_once_region(once_flag& flag, detail::once_context& ctx) BOOST_NOEXCEPT;
+      friend inline void commit_once_region(once_flag& flag, detail::once_context& ctx) BOOST_NOEXCEPT;
+      friend inline void rollback_once_region(once_flag& flag, detail::once_context& ctx) BOOST_NOEXCEPT;
   };
 
 #define BOOST_ONCE_INIT once_flag()
@@ -136,91 +150,335 @@ namespace boost
                 ::boost::detail::win32::event_initially_reset,
                 mutex_name);
         }
+
+        struct once_context {
+          long const function_complete_flag_value;
+          long const running_value;
+          bool counted;
+          detail::win32::handle_manager event_handle;
+          detail::once_char_type mutex_name[once_mutex_name_length];
+          once_context() :
+            function_complete_flag_value(0xc15730e2),
+            running_value(0x7f0725e3),
+            counted(false)
+          {
+            mutex_name[0]=0;
+          }
+        };
+        enum once_action {try_, break_, continue_};
+
+        inline bool enter_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT
+        {
+          long status=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag.status,ctx.running_value,0);
+          if(!status)
+          {
+            if(!ctx.event_handle)
+            {
+                ctx.event_handle=detail::open_once_event(ctx.mutex_name,&flag);
+            }
+            if(ctx.event_handle)
+            {
+                ::boost::detail::win32::ResetEvent(ctx.event_handle);
+            }
+            return true;
+          }
+          return false;
+        }
+        inline void commit_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT
+        {
+          if(!ctx.counted)
+          {
+              BOOST_INTERLOCKED_INCREMENT(&flag.count);
+              ctx.counted=true;
+          }
+          BOOST_INTERLOCKED_EXCHANGE(&flag.status,ctx.function_complete_flag_value);
+          if(!ctx.event_handle &&
+             (::boost::detail::interlocked_read_acquire(&flag.count)>1))
+          {
+              ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+          }
+          if(ctx.event_handle)
+          {
+              ::boost::detail::win32::SetEvent(ctx.event_handle);
+          }
+        }
+        inline void rollback_once_region(once_flag& flag, once_context& ctx) BOOST_NOEXCEPT
+        {
+          BOOST_INTERLOCKED_EXCHANGE(&flag.status,0);
+          if(!ctx.event_handle)
+          {
+              ctx.event_handle=detail::open_once_event(ctx.mutex_name,&flag);
+          }
+          if(ctx.event_handle)
+          {
+              ::boost::detail::win32::SetEvent(ctx.event_handle);
+          }
+        }
     }
 
-
+#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+//#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
+//#error
+    inline void call_once(once_flag& flag, void (*f)())
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  f();
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+//#endif
+    template<typename Function, class ...ArgTypes>
+    inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  f(boost::forward<ArgTypes>(args)...);
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+#else
     template<typename Function>
     void call_once(once_flag& flag,Function f)
     {
         // Try for a quick win: if the procedure has already been called
         // just skip through:
-        long const function_complete_flag_value=0xc15730e2;
-        long const running_value=0x7f0725e3;
-        long status;
-        bool counted=false;
-        detail::win32::handle_manager event_handle;
-        detail::once_char_type mutex_name[detail::once_mutex_name_length];
-        mutex_name[0]=0;
-
-        while((status=::boost::detail::interlocked_read_acquire(&flag.status))
-              !=function_complete_flag_value)
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
         {
-            status=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&flag.status,running_value,0);
-            if(!status)
+            if(detail::enter_once_region(flag, ctx))
             {
                 BOOST_TRY
                 {
-                    if(!event_handle)
-                    {
-                        event_handle=detail::open_once_event(mutex_name,&flag);
-                    }
-                    if(event_handle)
-                    {
-                        ::boost::detail::win32::ResetEvent(event_handle);
-                    }
                     f();
-                    if(!counted)
-                    {
-                        BOOST_INTERLOCKED_INCREMENT(&flag.count);
-                        counted=true;
-                    }
-                    BOOST_INTERLOCKED_EXCHANGE(&flag.status,function_complete_flag_value);
-                    if(!event_handle &&
-                       (::boost::detail::interlocked_read_acquire(&flag.count)>1))
-                    {
-                        event_handle=detail::create_once_event(mutex_name,&flag);
-                    }
-                    if(event_handle)
-                    {
-                        ::boost::detail::win32::SetEvent(event_handle);
-                    }
-                    break;
                 }
                 BOOST_CATCH(...)
                 {
-                    BOOST_INTERLOCKED_EXCHANGE(&flag.status,0);
-                    if(!event_handle)
-                    {
-                        event_handle=detail::open_once_event(mutex_name,&flag);
-                    }
-                    if(event_handle)
-                    {
-                        ::boost::detail::win32::SetEvent(event_handle);
-                    }
+                    detail::rollback_once_region(flag, ctx);
                     BOOST_RETHROW
                 }
                 BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
             }
-
-            if(!counted)
+            if(!ctx.counted)
             {
                 BOOST_INTERLOCKED_INCREMENT(&flag.count);
-                counted=true;
-                status=::boost::detail::interlocked_read_acquire(&flag.status);
-                if(status==function_complete_flag_value)
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
                 {
                     break;
                 }
-                if(!event_handle)
+                if(!ctx.event_handle)
                 {
-                    event_handle=detail::create_once_event(mutex_name,&flag);
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
                     continue;
                 }
             }
             BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
-                             event_handle,::boost::detail::win32::infinite));
+                             ctx.event_handle,::boost::detail::win32::infinite));
         }
     }
+    template<typename Function, typename T1>
+    void call_once(once_flag& flag,Function f, T1 p1)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                    f(p1);
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2>
+    void call_once(once_flag& flag,Function f, T1 p1, T2 p2)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                    f(p1, p2);
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2, typename T3>
+    void call_once(once_flag& flag,Function f, T1 p1, T2 p2, T3 p3)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                    f(p1, p2, p3);
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+#endif
 }
 
 #include <boost/config/abi_suffix.hpp>
