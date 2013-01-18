@@ -73,8 +73,6 @@ void f3()
     }
 }
 
-#if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES && defined(BOOST_THREAD_PLATFORM_PTHREAD)
-
 struct init1
 {
     static int called;
@@ -107,8 +105,6 @@ void f2()
     boost::call_once(flg2, init2(), 2, 3);
     boost::call_once(flg2, init2(), 4, 5);
 }
-
-#endif  // BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
 boost::once_flag flg41 BOOST_INIT_ONCE_INIT;
 boost::once_flag flg42 BOOST_INIT_ONCE_INIT;
@@ -189,7 +185,6 @@ int main()
         BOOST_TEST(init41_called == 1);
         BOOST_TEST(init42_called == 1);
     }
-#if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES && defined(BOOST_THREAD_PLATFORM_PTHREAD)
     // check functors with 1 arg
     {
         boost::thread t0(f1);
@@ -206,6 +201,7 @@ int main()
         t1.join();
         BOOST_TEST(init2::called == 5);
     }
+#if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), MoveOnly());
