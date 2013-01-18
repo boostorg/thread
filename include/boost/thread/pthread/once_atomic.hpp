@@ -68,7 +68,7 @@ namespace boost
 #ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
   template<typename Function, class ...ArgTypes>
-  inline void call_once(once_flag& flag, Function f, BOOST_THREAD_RV_REF(ArgTypes)... args)
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
   {
     if (thread_detail::enter_once_region(flag))
     {

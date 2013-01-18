@@ -37,15 +37,12 @@ namespace boost
     #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_C2(value) value##u
     #define BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_MAX_C BOOST_THREAD_DETAIL_UINTMAX_ATOMIC_C2(~0)
 
-    inline bool enter_once_region(once_flag& flag) BOOST_NOEXCEPT;
-    inline void commit_once_region(once_flag& flag) BOOST_NOEXCEPT;
-    inline void rollback_once_region(once_flag& flag) BOOST_NOEXCEPT;
   }
 
 #ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
 #ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename Function, class ...ArgTypes>
-    inline void call_once(once_flag& flag, Function f, BOOST_THREAD_RV_REF(ArgTypes)... args);
+    inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args);
 #else
     template<typename Function>
     inline void call_once(once_flag& flag, Function f);
@@ -68,7 +65,7 @@ namespace boost
 
 #ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
       template<typename Function, class ...ArgTypes>
-      friend void call_once(once_flag& flag, Function f, BOOST_THREAD_RV_REF(ArgTypes)... args);
+      friend void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args);
 #else
       template<typename Function>
       friend void call_once(once_flag& flag, Function f);
@@ -78,10 +75,6 @@ namespace boost
       friend void call_once(once_flag& flag, Function f, T1 p1, T2 p2);
       template<typename Function, typename T1, typename T2, typename T3>
       friend void call_once(once_flag& flag, Function f, T1 p1, T2 p2, T3 p3);
-
-      friend inline bool thread_detail::enter_once_region(once_flag& flag) BOOST_NOEXCEPT;
-      friend inline void thread_detail::commit_once_region(once_flag& flag) BOOST_NOEXCEPT;
-      friend inline void thread_detail::rollback_once_region(once_flag& flag) BOOST_NOEXCEPT;
 
 #endif
 
@@ -110,140 +103,227 @@ namespace boost
     // Based on Mike Burrows fast_pthread_once algorithm as described in
     // http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2007/n2444.html
 
-  namespace thread_detail
+
+#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+
+
+  template<typename Function, class ...ArgTypes>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
   {
     static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
     static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
-    inline bool thread_detail::enter_once_region(once_flag& flag) BOOST_NOEXCEPT
-    {
-      thread_detail::uintmax_atomic_t const epoch=flag.epoch;
-      thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
-      if(epoch<this_thread_epoch)
-      {
-          pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
 
-          while(flag.epoch<=being_initialized)
-          {
-              if(flag.epoch==uninitialized_flag)
-              {
-                  flag.epoch=being_initialized;
-                  return false;
-              }
-          }
-      }
-      return false;
-    }
-    inline void thread_detail::commit_once_region(once_flag& flag) BOOST_NOEXCEPT
+    if(epoch<this_thread_epoch)
     {
-      {
         pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
-        flag.epoch=uninitialized_flag;
-      }
-      BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
-    }
-    inline void thread_detail::rollback_once_region(once_flag& flag) BOOST_NOEXCEPT
-    {
-      {
-        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
-        flag.epoch=--thread_detail::once_global_epoch;
-      }
-      BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
-    }
-  }
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
-  template<typename Function, class ...ArgTypes>
-  inline void call_once(once_flag& flag, Function f, BOOST_THREAD_RV_REF(ArgTypes)... args)
-  {
-    if (thread_detail::enter_once_region(flag))
-    {
-      BOOST_TRY
-      {
-        f(boost::forward<ArgTypes>(args)...);
-      }
-      BOOST_CATCH (...)
-      {
-        thread_detail::rollback_once_region(flag);
-        BOOST_RETHROW
-      }
-      BOOST_CATCH_END
-      thread_detail::commit_once_region(flag);
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f(boost::forward<ArgTypes>(args)...);
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
+
     }
   }
 #else
   template<typename Function>
   inline void call_once(once_flag& flag, Function f)
   {
-    if (thread_detail::enter_once_region(flag))
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
     {
-      BOOST_TRY
-      {
-        f();
-      }
-      BOOST_CATCH (...)
-      {
-        thread_detail::rollback_once_region(flag);
-        BOOST_RETHROW
-      }
-      BOOST_CATCH_END
-      thread_detail::commit_once_region(flag);
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f();
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
     }
   }
 
   template<typename Function, typename T1>
   inline void call_once(once_flag& flag, Function f, T1 p1)
   {
-    if (thread_detail::enter_once_region(flag))
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
     {
-      BOOST_TRY
-      {
-        f(p1);
-      }
-      BOOST_CATCH (...)
-      {
-        thread_detail::rollback_once_region(flag);
-        BOOST_RETHROW
-      }
-      BOOST_CATCH_END
-      thread_detail::commit_once_region(flag);
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f(p1);
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
     }
   }
-
   template<typename Function, typename T1, typename T2>
   inline void call_once(once_flag& flag, Function f, T1 p1, T2 p2)
   {
-    if (thread_detail::enter_once_region(flag))
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
     {
-      BOOST_TRY
-      {
-        f(p1, p2);
-      }
-      BOOST_CATCH (...)
-      {
-        thread_detail::rollback_once_region(flag);
-        BOOST_RETHROW
-      }
-      BOOST_CATCH_END
-      thread_detail::commit_once_region(flag);
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f(p1, p2);
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
     }
   }
 
   template<typename Function, typename T1, typename T2, typename T3>
   inline void call_once(once_flag& flag, Function f, T1 p1, T2 p2, T3 p3)
   {
-    if (thread_detail::enter_once_region(flag))
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
     {
-      BOOST_TRY
-      {
-        f(p1, p2, p3);
-      }
-      BOOST_CATCH (...)
-      {
-        thread_detail::rollback_once_region(flag);
-        BOOST_RETHROW
-      }
-      BOOST_CATCH_END
-      thread_detail::commit_once_region(flag);
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f(p1, p2, p3);
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
     }
   }
 
