@@ -17,9 +17,11 @@
 // struct once_flag;
 
 // template<class Callable, class ...Args>
-//   void call_once(once_flag& flag, Callable func, Args&&... args);
+//   void call_once(once_flag& flag, Callable&& func, Args&&... args);
 
 //#define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_USES_MOVE
+#define BOOST_THREAD_USES_MOVE
 
 #include <boost/thread/once.hpp>
 #include <boost/thread/thread.hpp>
@@ -76,8 +78,10 @@ void f3()
 struct init1
 {
     static int called;
+    typedef void result_type;
 
     void operator()(int i) {called += i;}
+    void operator()(int i) const {called += i;}
 };
 
 int init1::called = 0;
@@ -89,10 +93,33 @@ void f1()
     boost::call_once(flg1, init1(), 1);
 }
 
+boost::once_flag flg1_member BOOST_INIT_ONCE_INIT;
+
+struct init1_member
+{
+    static int called;
+    typedef void result_type;
+    void call(int i) {
+      called += i;
+    }
+};
+int init1_member::called = 0;
+
+void f1_member()
+{
+    init1_member o;
+#if defined BOOST_THREAD_PLATFORM_PTHREAD && defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+    boost::call_once(flg1_member, &init1_member::call, o, 1);
+#else
+    boost::call_once(flg1_member, boost::bind(&init1_member::call, o, 1));
+#endif
+}
 struct init2
 {
     static int called;
+    typedef void result_type;
 
+    void operator()(int i, int j) {called += i + j;}
     void operator()(int i, int j) const {called += i + j;}
 };
 
@@ -138,11 +165,11 @@ void f42()
     boost::call_once(flg41, init41);
 }
 
-#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
-
 class MoveOnly
 {
 public:
+  typedef void result_type;
+
   BOOST_THREAD_MOVABLE_ONLY(MoveOnly)
   MoveOnly()
   {
@@ -154,8 +181,6 @@ public:
   {
   }
 };
-
-#endif
 
 int main()
 {
@@ -201,12 +226,23 @@ int main()
         t1.join();
         BOOST_TEST(init2::called == 5);
     }
-#if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#if defined BOOST_THREAD_PLATFORM_PTHREAD
+    //&& defined BOOST_THREAD_PROVIDES_INVOKE
+    // check member function with 1 arg
+    {
+        boost::thread t0(f1_member);
+        boost::thread t1(f1_member);
+        t0.join();
+        t1.join();
+        BOOST_TEST(init1_member::called == 1);
+    }
+#endif  // BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_PLATFORM_PTHREAD && defined BOOST_THREAD_PROVIDES_INVOKE
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), MoveOnly());
     }
-#endif  // BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#endif  // BOOST_THREAD_PLATFORM_PTHREAD
     return boost::report_errors();
 }
 

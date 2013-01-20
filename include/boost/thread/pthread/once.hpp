@@ -12,11 +12,13 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/detail/invoke.hpp>
 
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
 
+#include <boost/bind.hpp>
 #include <boost/assert.hpp>
 #include <boost/config/abi_prefix.hpp>
 
@@ -127,7 +129,23 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-                    f(boost::forward<ArgTypes>(args)...);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+#if defined BOOST_THREAD_PROVIDES_INVOKE
+                    detail::invoke(
+                        thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                        );
+#else
+                    boost::bind(
+                        thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                        )();
+#endif
+#else
+                    f(
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                    );
+#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -216,7 +234,11 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+                    boost::bind(f,p1)();
+#else
                     f(p1);
+#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -259,8 +281,12 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-                    f(p1, p2);
-                }
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2)();
+#else
+        f(p1,p2);
+#endif
+        }
                 BOOST_CATCH (...)
                 {
                     flag.epoch=uninitialized_flag;
@@ -303,7 +329,219 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-                    f(p1, p2, p3);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2,p3)();
+#else
+        f(p1,p2,p3);
+#endif
+        }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
+    }
+  }
+
+  template<typename Function>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f)
+  {
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
+    {
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+                    f();
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
+    }
+  }
+
+  template<typename Function, typename T1>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1)
+  {
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
+    {
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1))
+        );
+#endif
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
+    }
+  }
+  template<typename Function, typename T1, typename T2>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1, BOOST_THREAD_RV_REF(T2) p2)
+  {
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
+    {
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2))
+        );
+#endif
+                }
+                BOOST_CATCH (...)
+                {
+                    flag.epoch=uninitialized_flag;
+                    BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                flag.epoch=--thread_detail::once_global_epoch;
+                BOOST_VERIFY(!pthread_cond_broadcast(&thread_detail::once_epoch_cv));
+            }
+            else
+            {
+                while(flag.epoch==being_initialized)
+                {
+                    BOOST_VERIFY(!pthread_cond_wait(&thread_detail::once_epoch_cv,&thread_detail::once_epoch_mutex));
+                }
+            }
+        }
+        this_thread_epoch=thread_detail::once_global_epoch;
+    }
+  }
+
+  template<typename Function, typename T1, typename T2, typename T3>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1, BOOST_THREAD_RV_REF(T2) p2, BOOST_THREAD_RV_REF(T3) p3)
+  {
+    static thread_detail::uintmax_atomic_t const uninitialized_flag=BOOST_ONCE_INITIAL_FLAG_VALUE;
+    static thread_detail::uintmax_atomic_t const being_initialized=uninitialized_flag+1;
+    thread_detail::uintmax_atomic_t const epoch=flag.epoch;
+    thread_detail::uintmax_atomic_t& this_thread_epoch=thread_detail::get_once_per_thread_epoch();
+
+    if(epoch<this_thread_epoch)
+    {
+        pthread::pthread_mutex_scoped_lock lk(&thread_detail::once_epoch_mutex);
+
+        while(flag.epoch<=being_initialized)
+        {
+            if(flag.epoch==uninitialized_flag)
+            {
+                flag.epoch=being_initialized;
+                BOOST_TRY
+                {
+                    pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2)),
+            thread_detail::decay_copy(boost::forward<T1>(p3))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2)),
+            thread_detail::decay_copy(boost::forward<T1>(p3))
+        );
+#endif
                 }
                 BOOST_CATCH (...)
                 {
