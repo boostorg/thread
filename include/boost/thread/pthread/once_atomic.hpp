@@ -14,7 +14,9 @@
 
 #include <boost/cstdint.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/detail/invoke.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
+#include <boost/bind.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -74,7 +76,23 @@ namespace boost
     {
       BOOST_TRY
       {
-        f(boost::forward<ArgTypes>(args)...);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+#if defined BOOST_THREAD_PROVIDES_INVOKE
+                    detail::invoke(
+                        thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                        );
+#else
+                    boost::bind(
+                        thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                        )();
+#endif
+#else
+                    f(
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                    );
+#endif
       }
       BOOST_CATCH (...)
       {
@@ -112,7 +130,11 @@ namespace boost
     {
       BOOST_TRY
       {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1)();
+#else
         f(p1);
+#endif
       }
       BOOST_CATCH (...)
       {
@@ -131,7 +153,11 @@ namespace boost
     {
       BOOST_TRY
       {
-        f(p1, p2);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2)();
+#else
+        f(p1,p2);
+#endif
       }
       BOOST_CATCH (...)
       {
@@ -150,7 +176,11 @@ namespace boost
     {
       BOOST_TRY
       {
-        f(p1, p2, p3);
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2,p3)();
+#else
+        f(p1,p2,p3);
+#endif
       }
       BOOST_CATCH (...)
       {
@@ -161,6 +191,117 @@ namespace boost
       thread_detail::commit_once_region(flag);
     }
   }
+
+  template<typename Function>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f)
+  {
+    if (thread_detail::enter_once_region(flag))
+    {
+      BOOST_TRY
+      {
+        f();
+      }
+      BOOST_CATCH (...)
+      {
+        thread_detail::rollback_once_region(flag);
+        BOOST_RETHROW
+      }
+      BOOST_CATCH_END
+      thread_detail::commit_once_region(flag);
+    }
+  }
+
+  template<typename Function, typename T1>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1)
+  {
+    if (thread_detail::enter_once_region(flag))
+    {
+      BOOST_TRY
+      {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1))
+        );
+#endif
+
+      }
+      BOOST_CATCH (...)
+      {
+        thread_detail::rollback_once_region(flag);
+        BOOST_RETHROW
+      }
+      BOOST_CATCH_END
+      thread_detail::commit_once_region(flag);
+    }
+  }
+  template<typename Function, typename T1, typename T2>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1, BOOST_THREAD_RV_REF(T2) p2)
+  {
+    if (thread_detail::enter_once_region(flag))
+    {
+      BOOST_TRY
+      {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2))
+        );
+#endif
+      }
+      BOOST_CATCH (...)
+      {
+        thread_detail::rollback_once_region(flag);
+        BOOST_RETHROW
+      }
+      BOOST_CATCH_END
+      thread_detail::commit_once_region(flag);
+    }
+  }
+  template<typename Function, typename T1, typename T2, typename T3>
+  inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1, BOOST_THREAD_RV_REF(T2) p2, BOOST_THREAD_RV_REF(T3) p3)
+  {
+    if (thread_detail::enter_once_region(flag))
+    {
+      BOOST_TRY
+      {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(
+            thread_detail::decay_copy(boost::forward<Function>(f)),
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2)),
+            thread_detail::decay_copy(boost::forward<T1>(p3))
+         )();
+#else
+        f(
+            thread_detail::decay_copy(boost::forward<T1>(p1)),
+            thread_detail::decay_copy(boost::forward<T1>(p2)),
+            thread_detail::decay_copy(boost::forward<T1>(p3))
+        );
+#endif
+
+      }
+      BOOST_CATCH (...)
+      {
+        thread_detail::rollback_once_region(flag);
+        BOOST_RETHROW
+      }
+      BOOST_CATCH_END
+      thread_detail::commit_once_region(flag);
+    }
+  }
+
+
 
 #endif
 }

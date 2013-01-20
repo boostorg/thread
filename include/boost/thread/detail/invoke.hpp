@@ -31,6 +31,8 @@ namespace boost
     ! defined(BOOST_NO_CXX11_AUTO) && \
     ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
+#define BOOST_THREAD_PROVIDES_INVOKE
+
     //      // bullets 1 and 2
 
     template <class Fp, class A0, class ...Args>
