@@ -21,7 +21,7 @@
 
 //#define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_USES_MOVE
-#define BOOST_THREAD_USES_MOVE
+#define BOOST_THREAD_PROVIDES_ONCE_CXX11
 
 #include <boost/thread/once.hpp>
 #include <boost/thread/thread.hpp>
