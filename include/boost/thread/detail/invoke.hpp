@@ -18,6 +18,9 @@
 
 #include <boost/config.hpp>
 #include <boost/static_assert.hpp>
+#ifndef BOOST_NO_CXX11_HDR_FUNCTIONAL
+#include <functional>
+#endif
 
 namespace boost
 {
@@ -82,6 +85,22 @@ namespace boost
     {
       return boost::forward<Fp>(f)(boost::forward<Args>(args)...);
     }
+#else
+#if ! defined(BOOST_NO_SFINAE_EXPR) && \
+    ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
+    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL && \
+    ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
+    template <class Ret, class Fp, class ...Args>
+    inline
+    Ret invoke(Fp&& f, Args&& ...args)
+    {
+      return std::bind(boost::forward<Fp>(f), boost::forward<Args>(args)...)();
+    }
+
+#define BOOST_THREAD_PROVIDES_INVOKE_RET
+
+#endif
 
 #endif
       }

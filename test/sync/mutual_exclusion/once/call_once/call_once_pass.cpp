@@ -180,6 +180,12 @@ public:
   void operator()(BOOST_THREAD_RV_REF(MoveOnly))
   {
   }
+  void operator()(int)
+  {
+  }
+  void operator()()
+  {
+  }
 };
 
 int main()
@@ -235,6 +241,14 @@ int main()
         t0.join();
         t1.join();
         BOOST_TEST(init1_member::called == 1);
+    }
+    {
+        boost::once_flag f BOOST_INIT_ONCE_INIT;
+        boost::call_once(f, MoveOnly());
+    }
+    {
+        boost::once_flag f BOOST_INIT_ONCE_INIT;
+        boost::call_once(f, MoveOnly(), 1);
     }
 #endif  // BOOST_THREAD_PLATFORM_PTHREAD
 #if defined BOOST_THREAD_PLATFORM_PTHREAD && defined BOOST_THREAD_PROVIDES_INVOKE

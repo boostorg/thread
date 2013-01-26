@@ -725,7 +725,7 @@ namespace boost
         return const_cast<thread*>(this)->native_handle();
     #else
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
-        return (local_thread_info? id(local_thread_info) id());
+        return (local_thread_info? id(local_thread_info) : id());
     #endif
     }
 

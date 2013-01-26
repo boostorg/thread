@@ -82,6 +82,11 @@ namespace boost
                         thread_detail::decay_copy(boost::forward<Function>(f)),
                         thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
                         );
+#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
+                    detail::invoke<void>(
+                        thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                        );
 #else
                     boost::bind(
                         thread_detail::decay_copy(boost::forward<Function>(f)),
