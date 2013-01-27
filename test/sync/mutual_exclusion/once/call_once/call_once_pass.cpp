@@ -105,15 +105,17 @@ struct init1_member
 };
 int init1_member::called = 0;
 
+//#if defined BOOST_THREAD_PLATFORM_PTHREAD
 void f1_member()
 {
     init1_member o;
-#if defined BOOST_THREAD_PLATFORM_PTHREAD && defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
     boost::call_once(flg1_member, &init1_member::call, o, 1);
 #else
     boost::call_once(flg1_member, boost::bind(&init1_member::call, o, 1));
 #endif
 }
+//#endif
 struct init2
 {
     static int called;
@@ -232,8 +234,7 @@ int main()
         t1.join();
         BOOST_TEST(init2::called == 5);
     }
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
-    //&& defined BOOST_THREAD_PROVIDES_INVOKE
+
     // check member function with 1 arg
     {
         boost::thread t0(f1_member);
@@ -242,6 +243,7 @@ int main()
         t1.join();
         BOOST_TEST(init1_member::called == 1);
     }
+#if defined BOOST_THREAD_PLATFORM_PTHREAD || (__GNUC__*10000 + __GNUC_MINOR__*100 + __GNUC_PATCHLEVEL__ > 40600)
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly());
@@ -250,8 +252,8 @@ int main()
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), 1);
     }
-#endif  // BOOST_THREAD_PLATFORM_PTHREAD
-#if defined BOOST_THREAD_PLATFORM_PTHREAD && defined BOOST_THREAD_PROVIDES_INVOKE
+#endif
+#if defined BOOST_THREAD_PROVIDES_INVOKE
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), MoveOnly());
