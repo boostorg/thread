@@ -644,8 +644,8 @@ namespace boost
                 detail::get_current_thread_data()->interruption_enabled=false;
             }
         }
-    }
 #endif
+    }
 
     namespace detail
     {
