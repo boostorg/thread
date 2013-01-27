@@ -8,7 +8,6 @@
 // This performance test is based on the performance test provided by maxim.yegorushkin
 // at https://svn.boost.org/trac/boost/ticket/7422
 
-#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 #define BOOST_THREAD_USES_CHRONO
 
 #include <iostream>
