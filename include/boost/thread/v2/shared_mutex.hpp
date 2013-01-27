@@ -175,8 +175,8 @@ namespace boost {
       static const count_t n_readers_ = ~write_entered_;
 
     public:
-      shared_mutex();
-      ~shared_mutex();
+      BOOST_THREAD_DECL shared_mutex();
+      BOOST_THREAD_DECL ~shared_mutex();
 
 #ifndef BOOST_NO_DELETED_FUNCTIONS
       shared_mutex(shared_mutex const&) = delete;
@@ -190,8 +190,8 @@ namespace boost {
 
       // Exclusive ownership
 
-      void lock();
-      bool try_lock();
+      BOOST_THREAD_DECL void lock();
+      BOOST_THREAD_DECL bool try_lock();
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
@@ -201,12 +201,12 @@ namespace boost {
       bool
       try_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock();
+      BOOST_THREAD_DECL void unlock();
 
       // Shared ownership
 
-      void lock_shared();
-      bool try_lock_shared();
+      BOOST_THREAD_DECL void lock_shared();
+      BOOST_THREAD_DECL bool try_lock_shared();
       template <class Rep, class Period>
       bool
       try_lock_shared_for(const boost::chrono::duration<Rep, Period>& rel_time)
@@ -218,7 +218,7 @@ namespace boost {
       bool
       try_lock_shared_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_shared();
+      BOOST_THREAD_DECL void unlock_shared();
     };
 
     template <class Clock, class Duration>
@@ -297,8 +297,8 @@ namespace boost {
 
     public:
 
-      upgrade_mutex();
-      ~upgrade_mutex();
+      BOOST_THREAD_DECL upgrade_mutex();
+      BOOST_THREAD_DECL ~upgrade_mutex();
 
 #ifndef BOOST_NO_DELETED_FUNCTIONS
       upgrade_mutex(const upgrade_mutex&) = delete;
@@ -312,8 +312,8 @@ namespace boost {
 
       // Exclusive ownership
 
-      void lock();
-      bool try_lock();
+      BOOST_THREAD_DECL void lock();
+      BOOST_THREAD_DECL bool try_lock();
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
@@ -323,12 +323,12 @@ namespace boost {
       bool
       try_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock();
+      BOOST_THREAD_DECL void unlock();
 
       // Shared ownership
 
-      void lock_shared();
-      bool try_lock_shared();
+      BOOST_THREAD_DECL void lock_shared();
+      BOOST_THREAD_DECL bool try_lock_shared();
       template <class Rep, class Period>
       bool
       try_lock_shared_for(const boost::chrono::duration<Rep, Period>& rel_time)
@@ -340,12 +340,12 @@ namespace boost {
       bool
       try_lock_shared_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_shared();
+      BOOST_THREAD_DECL void unlock_shared();
 
       // Upgrade ownership
 
-      void lock_upgrade();
-      bool try_lock_upgrade();
+      BOOST_THREAD_DECL void lock_upgrade();
+      BOOST_THREAD_DECL bool try_lock_upgrade();
       template <class Rep, class Period>
       bool
       try_lock_upgrade_for(
@@ -358,11 +358,11 @@ namespace boost {
       bool
       try_lock_upgrade_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_upgrade();
+      BOOST_THREAD_DECL void unlock_upgrade();
 
       // Shared <-> Exclusive
 
-      bool try_unlock_shared_and_lock();
+      BOOST_THREAD_DECL bool try_unlock_shared_and_lock();
       template <class Rep, class Period>
       bool
       try_unlock_shared_and_lock_for(
@@ -375,11 +375,11 @@ namespace boost {
       bool
       try_unlock_shared_and_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_and_lock_shared();
+      BOOST_THREAD_DECL void unlock_and_lock_shared();
 
       // Shared <-> Upgrade
 
-      bool try_unlock_shared_and_lock_upgrade();
+      BOOST_THREAD_DECL bool try_unlock_shared_and_lock_upgrade();
       template <class Rep, class Period>
       bool
       try_unlock_shared_and_lock_upgrade_for(
@@ -392,12 +392,12 @@ namespace boost {
       bool
       try_unlock_shared_and_lock_upgrade_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_upgrade_and_lock_shared();
+      BOOST_THREAD_DECL void unlock_upgrade_and_lock_shared();
 
       // Upgrade <-> Exclusive
 
-      void unlock_upgrade_and_lock();
-      bool try_unlock_upgrade_and_lock();
+      BOOST_THREAD_DECL void unlock_upgrade_and_lock();
+      BOOST_THREAD_DECL bool try_unlock_upgrade_and_lock();
       template <class Rep, class Period>
       bool
       try_unlock_upgrade_and_lock_for(
@@ -410,7 +410,7 @@ namespace boost {
       bool
       try_unlock_upgrade_and_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
-      void unlock_and_lock_upgrade();
+      BOOST_THREAD_DECL void unlock_and_lock_upgrade();
     };
 
     template <class Clock, class Duration>
