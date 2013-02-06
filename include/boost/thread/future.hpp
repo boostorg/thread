@@ -56,7 +56,7 @@
 #endif
 
 #include <boost/utility/result_of.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
