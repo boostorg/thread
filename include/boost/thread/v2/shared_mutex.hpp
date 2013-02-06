@@ -204,6 +204,7 @@ namespace boost {
           const boost::chrono::time_point<Clock, Duration>& abs_time);
       BOOST_THREAD_INLINE void unlock();
 
+
       // Shared ownership
 
       BOOST_THREAD_INLINE void lock_shared();
@@ -220,6 +221,21 @@ namespace boost {
       try_lock_shared_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
       BOOST_THREAD_INLINE void unlock_shared();
+
+#if defined BOOST_THREAD_USES_DATETIME
+      bool timed_lock(system_time const& timeout);
+      template<typename TimeDuration>
+      bool timed_lock(TimeDuration const & relative_time)
+      {
+          return timed_lock(get_system_time()+relative_time);
+      }
+      bool timed_lock_shared(system_time const& timeout);
+      template<typename TimeDuration>
+      bool timed_lock_shared(TimeDuration const & relative_time)
+      {
+        return timed_lock_shared(get_system_time()+relative_time);
+      }
+#endif
     };
 
     template <class Clock, class Duration>
@@ -281,6 +297,70 @@ namespace boost {
       return true;
     }
 
+#if defined BOOST_THREAD_USES_DATETIME
+    bool shared_mutex::timed_lock(system_time const& abs_time)
+    {
+      boost::unique_lock<mutex_t> lk(mut_);
+      if (state_ & write_entered_)
+      {
+        while (true)
+        {
+          bool status = gate1_.timed_wait(lk, abs_time);
+          if ((state_ & write_entered_) == 0)
+            break;
+          if (!status)
+            return false;
+        }
+      }
+      state_ |= write_entered_;
+      if (state_ & n_readers_)
+      {
+        while (true)
+        {
+          bool status = gate2_.timed_wait(lk, abs_time);
+          if ((state_ & n_readers_) == 0)
+            break;
+          if (!status)
+          {
+            state_ &= ~write_entered_;
+            return false;
+          }
+        }
+      }
+      return true;
+    }
+      bool shared_mutex::timed_lock_shared(system_time const& abs_time)
+      {
+        boost::unique_lock<mutex_t> lk(mut_);
+        if (state_ & write_entered_)
+        {
+          while (true)
+          {
+            bool status = gate1_.timed_wait(lk, abs_time);
+            if ((state_ & write_entered_) == 0)
+              break;
+            if (!status )
+              return false;
+          }
+        }
+        state_ |= write_entered_;
+        if (state_ & n_readers_)
+        {
+          while (true)
+          {
+            bool status = gate2_.timed_wait(lk, abs_time);
+            if ((state_ & n_readers_) == 0)
+              break;
+            if (!status)
+            {
+              state_ &= ~write_entered_;
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+#endif
     class upgrade_mutex
     {
       typedef boost::mutex              mutex_t;
@@ -412,6 +492,28 @@ namespace boost {
       try_unlock_upgrade_and_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
       BOOST_THREAD_INLINE void unlock_and_lock_upgrade();
+
+#if defined BOOST_THREAD_USES_DATETIME
+      inline bool timed_lock(system_time const& abs_time);
+      template<typename TimeDuration>
+      bool timed_lock(TimeDuration const & relative_time)
+      {
+          return timed_lock(get_system_time()+relative_time);
+      }
+      inline bool timed_lock_shared(system_time const& abs_time);
+      template<typename TimeDuration>
+      bool timed_lock_shared(TimeDuration const & relative_time)
+      {
+        return timed_lock_shared(get_system_time()+relative_time);
+      }
+      inline bool timed_lock_upgrade(system_time const& abs_time);
+      template<typename TimeDuration>
+      bool timed_lock_upgrade(TimeDuration const & relative_time)
+      {
+          return timed_lock_upgrade(get_system_time()+relative_time);
+      }
+#endif
+
     };
 
     template <class Clock, class Duration>
@@ -498,6 +600,81 @@ namespace boost {
       return true;
     }
 
+#if defined BOOST_THREAD_USES_DATETIME
+      bool upgrade_mutex::timed_lock(system_time const& abs_time)
+      {
+        boost::unique_lock<mutex_t> lk(mut_);
+        if (state_ & (write_entered_ | upgradable_entered_))
+        {
+          while (true)
+          {
+            bool status = gate1_.timed_wait(lk, abs_time);
+            if ((state_ & (write_entered_ | upgradable_entered_)) == 0)
+              break;
+            if (!status)
+              return false;
+          }
+        }
+        state_ |= write_entered_;
+        if (state_ & n_readers_)
+        {
+          while (true)
+          {
+            bool status = gate2_.timed_wait(lk, abs_time);
+            if ((state_ & n_readers_) == 0)
+              break;
+            if (!status)
+            {
+              state_ &= ~write_entered_;
+              return false;
+            }
+          }
+        }
+        return true;
+      }
+      bool upgrade_mutex::timed_lock_shared(system_time const& abs_time)
+      {
+        boost::unique_lock<mutex_t> lk(mut_);
+        if ((state_ & write_entered_) || (state_ & n_readers_) == n_readers_)
+        {
+          while (true)
+          {
+            bool status = gate1_.timed_wait(lk, abs_time);
+            if ((state_ & write_entered_) == 0 &&
+                (state_ & n_readers_) < n_readers_)
+              break;
+            if (!status)
+              return false;
+          }
+        }
+        count_t num_readers = (state_ & n_readers_) + 1;
+        state_ &= ~n_readers_;
+        state_ |= num_readers;
+        return true;
+      }
+      bool upgrade_mutex::timed_lock_upgrade(system_time const& abs_time)
+      {
+        boost::unique_lock<mutex_t> lk(mut_);
+        if ((state_ & (write_entered_ | upgradable_entered_)) ||
+            (state_ & n_readers_) == n_readers_)
+        {
+          while (true)
+          {
+            bool status = gate1_.timed_wait(lk, abs_time);
+            if ((state_ & (write_entered_ | upgradable_entered_)) == 0 &&
+                (state_ & n_readers_) < n_readers_)
+              break;
+            if (!status)
+              return false;
+          }
+        }
+        count_t num_readers = (state_ & n_readers_) + 1;
+        state_ &= ~n_readers_;
+        state_ |= upgradable_entered_ | num_readers;
+        return true;
+      }
+
+#endif
     template <class Clock, class Duration>
     bool
     upgrade_mutex::try_unlock_shared_and_lock_until(
