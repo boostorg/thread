@@ -8,7 +8,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
 #endif
@@ -435,7 +435,11 @@ namespace boost
               {
 
   #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+  #     if defined(__IBMCPP__)
+                BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
+  #     else
                 BOOST_VERIFY(!pthread_delay_np(&ts));
+  #     endif
   #   elif defined(BOOST_HAS_NANOSLEEP)
                 //  nanosleep takes a timespec that is an offset, not
                 //  an absolute time.
