@@ -255,11 +255,10 @@ rule requirements ( properties * )
     }
     result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
     
-    if <toolset>pgi in $(properties)   
+    if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)     
     {
       result += <library>/boost/atomic//boost_atomic ;
     }
-    
 
     return $(result) ;
 }
