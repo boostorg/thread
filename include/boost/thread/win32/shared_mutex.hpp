@@ -133,7 +133,11 @@ namespace boost
 
         void lock_shared()
         {
+#if defined BOOST_THREAD_USES_DATETIME
             BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
+#else
+            BOOST_VERIFY(try_lock_shared_until(chrono::steady_clock::now()));
+#endif
         }
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -379,14 +383,20 @@ namespace boost
 
         void lock()
         {
+#if defined BOOST_THREAD_USES_DATETIME
             BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
+#else
+            BOOST_VERIFY(try_lock_until(chrono::steady_clock::now()));
+#endif
         }
 
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
             return timed_lock(get_system_time()+relative_time);
         }
+#endif
 
         bool try_lock()
         {
@@ -414,6 +424,7 @@ namespace boost
         }
 
 
+#if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(boost::system_time const& wait_until)
         {
             for(;;)
@@ -492,7 +503,7 @@ namespace boost
                 BOOST_ASSERT(wait_res<2);
             }
         }
-
+#endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)

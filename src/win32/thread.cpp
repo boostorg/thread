@@ -14,7 +14,7 @@
 #endif
 //#define BOOST_THREAD_VERSION 3
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
 #include <boost/thread/condition_variable.hpp>
