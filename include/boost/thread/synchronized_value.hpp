@@ -274,7 +274,7 @@ namespace boost
     synchronized_value(BOOST_THREAD_RV_REF(synchronized_value) other)
     {
       strict_lock<lockable_type> lk(other.mtx_);
-      value_= boost::move(other);
+      value_= boost::move(other.value);
     }
 
     /**
