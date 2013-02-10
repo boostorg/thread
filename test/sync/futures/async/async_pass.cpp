@@ -25,6 +25,7 @@
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
 
+#include <iostream>
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/detail/memory.hpp>
@@ -56,19 +57,39 @@ class MoveOnly
 public:
   typedef int result_type;
 
+  int value;
+
   BOOST_THREAD_MOVABLE_ONLY(MoveOnly)
   MoveOnly()
   {
+    value=0;
   }
   MoveOnly(BOOST_THREAD_RV_REF(MoveOnly))
-  {}
+  {
+    value=1;
+  }
+  MoveOnly& operator=(BOOST_THREAD_RV_REF(MoveOnly))
+  {
+    value=2;
+    return *this;
+  }
 
   int operator()()
   {
     boost::this_thread::sleep_for(ms(200));
     return 3;
   }
+  template <typename OS>
+  friend OS& operator<<(OS& os, MoveOnly const& v)
+  {
+    os << v.value;
+    return os;
+  }
 };
+
+namespace boost {
+BOOST_THREAD_DCL_MOVABLE(MoveOnly)
+}
 
 int f0()
 {
@@ -87,6 +108,19 @@ int& f1()
 void f2()
 {
   boost::this_thread::sleep_for(ms(200));
+}
+
+boost::interprocess::unique_ptr<int, boost::default_delete<int> > f3_0()
+{
+  boost::this_thread::sleep_for(ms(200));
+  boost::interprocess::unique_ptr<int, boost::default_delete<int> > r((new int(3)));
+  return boost::move(r);
+}
+MoveOnly f3_1()
+{
+  boost::this_thread::sleep_for(ms(200));
+  MoveOnly r;
+  return boost::move(r);
 }
 
 boost::interprocess::unique_ptr<int, boost::default_delete<int> > f3(int i)
@@ -114,7 +148,6 @@ int main()
     BOOST_TEST(f.get() == 3);
     Clock::time_point t1 = Clock::now();
     BOOST_TEST(t1 - t0 < ms(200));
-    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
@@ -285,15 +318,10 @@ int main()
   {
     try {
     boost::future<void> f = boost::async(f2);
-    std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
     boost::this_thread::sleep_for(ms(300));
-    std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
     Clock::time_point t0 = Clock::now();
-    std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
     f.get();
-    std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
     Clock::time_point t1 = Clock::now();
-    std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
     BOOST_TEST(t1 - t0 < ms(200));
     std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
@@ -356,8 +384,59 @@ int main()
   }
 #endif
 
-  // todo fixme
-#if 0 && defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
+  {
+    try {
+      boost::future<MoveOnly> f = boost::async(&f3_1);
+    boost::this_thread::sleep_for(ms(300));
+    Clock::time_point t0 = Clock::now();
+    BOOST_TEST(f.get().value == 1);
+    Clock::time_point t1 = Clock::now();
+    BOOST_TEST(t1 - t0 < ms(200));
+    } catch (std::exception& ex) {
+      std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    } catch (...) {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
+  {
+    try {
+      boost::future<MoveOnly> f;
+      f = boost::async(&f3_1);
+    boost::this_thread::sleep_for(ms(300));
+    Clock::time_point t0 = Clock::now();
+    BOOST_TEST(f.get().value == 1);
+    Clock::time_point t1 = Clock::now();
+    BOOST_TEST(t1 - t0 < ms(200));
+    } catch (std::exception& ex) {
+      std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    } catch (...) {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
+  {
+    try {
+    boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f3_0);
+    boost::this_thread::sleep_for(ms(300));
+    Clock::time_point t0 = Clock::now();
+    BOOST_TEST(*f.get() == 3);
+    Clock::time_point t1 = Clock::now();
+    BOOST_TEST(t1 - t0 < ms(200));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+    } catch (std::exception& ex) {
+      std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    } catch (...) {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
   std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
   {
     try {
@@ -375,10 +454,44 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
+  {
+    try {
+    boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f3, 3);
+    boost::this_thread::sleep_for(ms(300));
+    Clock::time_point t0 = Clock::now();
+    BOOST_TEST(*f.get() == 3);
+    Clock::time_point t1 = Clock::now();
+    BOOST_TEST(t1 - t0 < ms(200));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+    } catch (std::exception& ex) {
+      std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    } catch (...) {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
 #endif
 
-  // todo fixme
-#if 0 && defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
+  {
+    try {
+    boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(boost::launch::async, &f4, boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(3)));
+    boost::this_thread::sleep_for(ms(300));
+    Clock::time_point t0 = Clock::now();
+    BOOST_TEST(*f.get() == 3);
+    Clock::time_point t1 = Clock::now();
+    BOOST_TEST(t1 - t0 < ms(200));
+    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+    } catch (std::exception& ex) {
+      std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    } catch (...) {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  std::cout << __FILE__ <<"["<<__LINE__<<"]"<<std::endl;
   {
     try {
     boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f4, boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(3)));
