@@ -11,6 +11,7 @@
 #ifndef BOOST_THREAD_NULL_MUTEX_HPP
 #define BOOST_THREAD_NULL_MUTEX_HPP
 
+#include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/chrono/chrono.hpp>
 
@@ -27,6 +28,8 @@ namespace boost
   public:
 
     BOOST_THREAD_NO_COPYABLE( null_mutex) /*< no copyable >*/
+
+    null_mutex() {}
 
     /// Simulates a mutex lock() operation. Empty function.
     void lock()

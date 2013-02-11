@@ -580,6 +580,19 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
     ;
 
+    #explicit ts_null_mutex ;
+    test-suite ts_null_mutex
+    :
+          [ thread-compile-fail ./sync/mutual_exclusion/null_mutex/assign_fail.cpp : : null_mutex__assign_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/null_mutex/copy_fail.cpp : : null_mutex__copy_f ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/default_pass.cpp : null_mutex__default_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/lock_pass.cpp : null_mutex__lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_for_pass.cpp : null_mutex__try_lock_for_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_pass.cpp : null_mutex__try_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_until_pass.cpp : null_mutex__try_lock_until_p ]
+    ;
+
+
     #explicit ts_this_thread ;
     test-suite ts_this_thread
     :
