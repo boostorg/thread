@@ -93,10 +93,13 @@ namespace boost
             {
                 for(;;)
                 {
-                    long const new_count=(old_count&lock_flag_value)?(old_count+1):(old_count|lock_flag_value);
+                    bool const was_locked=(old_count&lock_flag_value);
+                    long const new_count=was_locked?(old_count+1):(old_count|lock_flag_value);
                     long const current=BOOST_INTERLOCKED_COMPARE_EXCHANGE(&active_count,new_count,old_count);
                     if(current==old_count)
                     {
+                        if(was_locked)
+                            old_count=new_count;
                         break;
                     }
                     old_count=current;
