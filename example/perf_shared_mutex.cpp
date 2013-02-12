@@ -13,7 +13,6 @@
 #include <iostream>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread.hpp>
-#include <boost/chrono/stopwatches/simple_stopwatch.hpp>
 #include <boost/chrono/chrono_io.hpp>
 
 #include <boost/thread/shared_mutex.hpp>
@@ -40,7 +39,6 @@ void unique()
     unique_lock<shared_mutex> lock(mtx);
   }
 }
-typedef boost::chrono::simple_stopwatch<> Stopwatch;
 
 int main()
 {
