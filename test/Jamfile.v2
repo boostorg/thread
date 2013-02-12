@@ -509,6 +509,15 @@ rule thread-compile-fail ( sources : reqs * : name )
     ;
 
 
+    #explicit ts_once ;
+    test-suite ts_once
+    :
+          #[ thread-compile-fail ./sync/mutual_exclusion/once/once_flag/assign_fail.cpp : : once_flag__assign_f ]
+          #[ thread-compile-fail ./sync/mutual_exclusion/once/once_flag/copy_fail.cpp : : once_flag__copy_f ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/once/once_flag/default_pass.cpp : once_flag__default_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/once/call_once/call_once_pass.cpp : call_once_p ]
+    ;
+
     #explicit ts_mutex ;
     test-suite ts_mutex
     :
@@ -570,6 +579,19 @@ rule thread-compile-fail ( sources : reqs * : name )
 
           #[ thread-run2-h ./sync/mutual_exclusion/shared_mutex/default_pass.cpp : shared_mutex__default_p ]
     ;
+
+    #explicit ts_null_mutex ;
+    test-suite ts_null_mutex
+    :
+          [ thread-compile-fail ./sync/mutual_exclusion/null_mutex/assign_fail.cpp : : null_mutex__assign_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/null_mutex/copy_fail.cpp : : null_mutex__copy_f ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/default_pass.cpp : null_mutex__default_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/lock_pass.cpp : null_mutex__lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_for_pass.cpp : null_mutex__try_lock_for_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_pass.cpp : null_mutex__try_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_until_pass.cpp : null_mutex__try_lock_until_p ]
+    ;
+
 
     #explicit ts_this_thread ;
     test-suite ts_this_thread
@@ -677,7 +699,6 @@ rule thread-compile-fail ( sources : reqs * : name )
     test-suite ts_
     :
 
-          #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
           #[ thread-run ../example/test_so.cpp ]
           #[ thread-run ../example/test_so2.cpp ]
 
