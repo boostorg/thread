@@ -30,7 +30,7 @@ namespace boost
   struct BasicLock
   {
     typedef typename Lk::mutex_type mutex_type;
-    void cvt_mutex_ptr(mutex_type*);
+    void cvt_mutex_ptr(mutex_type*) {}
     BOOST_CONCEPT_ASSERT(( BasicLockable<mutex_type> ));
 
     BOOST_CONCEPT_USAGE(BasicLock)
