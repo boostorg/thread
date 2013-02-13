@@ -429,7 +429,9 @@ namespace boost
     }
 
 
-  private:
+#if ! defined __IBMCPP__
+    private:
+#endif
     class deref_value
     {
     private:
