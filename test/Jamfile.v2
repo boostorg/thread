@@ -31,12 +31,18 @@ project
         <toolset>gcc:<cxxflags>-Wno-long-long
         #<toolset>gcc:<cxxflags>-ansi
         #<toolset>gcc:<cxxflags>-fpermissive
+        <toolset>gcc:<cxxflags>-Wno-variadic-macros
+        #<toolset>gcc:<cxxflags>-Wunused-local-typedefs
+        <toolset>gcc:<cxxflags>-Wunused-function
 
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
         <toolset>darwin:<cxxflags>-Wno-long-long
         #<toolset>darwin:<cxxflags>-ansi # doesn't work for 4.1.2
         <toolset>darwin:<cxxflags>-fpermissive
+        <toolset>darwin:<cxxflags>-Wno-variadic-macros
+        <toolset>darwin-latest_11:<cxxflags>-Wunused-local-typedefs
+        <toolset>darwin:<cxxflags>-Wunused-function
 
         #<toolset>pathscale:<cxxflags>-Wextra
         <toolset>pathscale:<cxxflags>-Wno-long-long
@@ -47,6 +53,7 @@ project
         <toolset>clang:<cxxflags>-Wno-long-long
         #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive # doesn't work
+        <toolset>clang:<cxxflags>-Wunused-function
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
@@ -706,7 +713,8 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run test_7665.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
-          [ thread-run ../example/perf_condition_variable.cpp ]
+          #[ thread-run ../example/perf_condition_variable.cpp ]
+          [ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/not_interleaved.cpp ]
     ;
 
