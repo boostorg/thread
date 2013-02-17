@@ -62,10 +62,6 @@ namespace boost
     }
 
   private:
-//  #if defined(__GNUC__)
-//    __attribute__((may_alias))
-//  #endif
-//    thread_detail::atomic_int_type storage;
     thread_detail::atomic_type storage;
 
     friend BOOST_THREAD_DECL bool thread_detail::enter_once_region(once_flag& flag) BOOST_NOEXCEPT;
@@ -88,10 +84,10 @@ namespace boost
 #else // BOOST_THREAD_PROVIDES_ONCE_CXX11
   struct once_flag
   {
-  #if defined(__GNUC__)
-    __attribute__((may_alias))
-  #endif
-    thread_detail::atomic_int_type storage;
+    // The thread_detail::atomic_int_type storage is marked
+    // with this attribute in order to let the compiler know that it will alias this member
+    // and silence compilation warnings.
+    BOOST_THREAD_ATTRIBUTE_MAY_ALIAS thread_detail::atomic_int_type storage;
   };
 
   #define BOOST_ONCE_INIT {0}

@@ -1,6 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
-// Copyright (C) 2011-2012 Vicente J. Botet Escriba
+// Copyright (C) 2011-2013 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -8,14 +8,26 @@
 #ifndef BOOST_THREAD_CONFIG_WEK01032003_HPP
 #define BOOST_THREAD_CONFIG_WEK01032003_HPP
 
-// Force SIG_ATOMIC_MAX to be defined
-//#ifndef __STDC_LIMIT_MACROS
-//#define __STDC_LIMIT_MACROS
-//#endif
-
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/thread/detail/platform.hpp>
+
+//#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+
+
+// ATTRIBUTE_MAY_ALIAS
+
+#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) > 302 \
+    && !defined(__INTEL_COMPILER)
+
+  // GCC since 3.3 has may_alias attribute that helps to alleviate optimizer issues with
+  // regard to violation of the strict aliasing rules.
+
+  #define BOOST_THREAD_DETAIL_USE_ATTRIBUTE_MAY_ALIAS
+  #define BOOST_THREAD_ATTRIBUTE_MAY_ALIAS __attribute__((__may_alias__))
+#else
+  #define BOOST_THREAD_ATTRIBUTE_MAY_ALIAS
+#endif
 
 #if ! defined BOOST_THREAD_NOEXCEPT_OR_THROW
 #ifdef BOOST_NO_CXX11_NOEXCEPT
@@ -82,7 +94,6 @@
 #endif
 
 /// BASIC_THREAD_ID
-// todo to be removed for 1.54
 #if ! defined BOOST_THREAD_DONT_PROVIDE_BASIC_THREAD_ID \
  && ! defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #define BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
@@ -246,6 +257,16 @@
 #endif
 #endif
 
+
+// MAKE_READY_AT_THREAD_EXIT
+#if ! defined BOOST_THREAD_PROVIDES_MAKE_READY_AT_THREAD_EXIT \
+ && ! defined BOOST_THREAD_DONT_PROVIDE_MAKE_READY_AT_THREAD_EXIT
+
+//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#define BOOST_THREAD_PROVIDES_MAKE_READY_AT_THREAD_EXIT
+//#endif
+#endif
+
 // FUTURE_CONTINUATION
 #if ! defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
  && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CONTINUATION
@@ -302,7 +323,7 @@
 #endif
 
 
-// BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 defined by default up to Boost 1.52
+// BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0 defined by default up to Boost 1.55
 // BOOST_THREAD_DONT_PROVIDE_DEPRECATED_FEATURES_SINCE_V3_0_0 defined by default up to Boost 1.55
 #if defined BOOST_THREAD_PROVIDES_DEPRECATED_FEATURES_SINCE_V3_0_0
 
