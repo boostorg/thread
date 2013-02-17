@@ -134,7 +134,7 @@ rule thread-run2-noit ( sources : name )
         : : :
       : $(name)_lib ]
     #[ run $(sources) ../build//boost_thread : : :
-    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
     #  : $(name)_noit ]
     ;
 }
@@ -148,7 +148,7 @@ rule thread-run2-noit-pthread ( sources : name )
         : : : <threadapi>win32:<build>no
       : $(name)_lib ]
     #[ run $(sources) ../build//boost_thread : : :
-    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+    #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
     #  : $(name)_noit ]
     ;
 }
@@ -156,10 +156,10 @@ rule thread-run2-noit-pthread ( sources : name )
 rule thread-run2-h ( sources : name )
 {
     return
-    [ run $(sources) : : :       
+    [ run $(sources) : : :
       <library>/boost/system//boost_system
-      <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
-      <define>BOOST_THREAD_VERSION=3 
+      <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+      <define>BOOST_THREAD_VERSION=3
     : $(name)_h ]
     ;
 }
@@ -710,11 +710,12 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/test_so2.cpp ]
 
           #[ compile virtual_noexcept.cpp ]
-          #[ thread-run test_7665.cpp ]
+          [ thread-run test_7720.cpp ]
+          #[ thread-run test_7666.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
-          [ thread-run ../example/perf_shared_mutex.cpp ]
+          #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/not_interleaved.cpp ]
     ;
 

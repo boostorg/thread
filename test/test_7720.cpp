@@ -4,7 +4,10 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 ////////////////////////////////////////////
+
+//#define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 #include <boost/thread/thread.hpp>
+#include <boost/thread/shared_mutex.hpp>
 using namespace boost;
 
 shared_mutex mtx;
