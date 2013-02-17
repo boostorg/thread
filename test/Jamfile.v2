@@ -41,7 +41,7 @@ project
         #<toolset>darwin:<cxxflags>-ansi # doesn't work for 4.1.2
         <toolset>darwin:<cxxflags>-fpermissive
         <toolset>darwin:<cxxflags>-Wno-variadic-macros
-        <toolset>darwin-latest_11:<cxxflags>-Wunused-local-typedefs
+        #<toolset>darwin:<cxxflags>-Wunused-local-typedefs
         <toolset>darwin:<cxxflags>-Wunused-function
 
         #<toolset>pathscale:<cxxflags>-Wextra

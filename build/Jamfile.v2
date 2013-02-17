@@ -59,12 +59,18 @@ project boost/thread
         <toolset>gcc:<cxxflags>-Wno-long-long
         #<toolset>gcc:<cxxflags>-ansi
         #<toolset>gcc:<cxxflags>-fpermissive
+        <toolset>gcc:<cxxflags>-Wno-variadic-macros
+        #<toolset>gcc:<cxxflags>-Wunused-local-typedefs
+        <toolset>gcc:<cxxflags>-Wunused-function
 
         <toolset>darwin:<cxxflags>-Wextra
         <toolset>darwin:<cxxflags>-pedantic
         #<toolset>darwin:<cxxflags>-ansi
         <toolset>darwin:<cxxflags>-fpermissive
         <toolset>darwin:<cxxflags>-Wno-long-long
+        <toolset>darwin:<cxxflags>-Wno-variadic-macros
+        #<toolset>darwin:<cxxflags>-Wunused-local-typedefs
+        <toolset>darwin:<cxxflags>-Wunused-function
 
         #<toolset>pathscale:<cxxflags>-Wextra
         <toolset>pathscale:<cxxflags>-Wno-long-long
@@ -75,6 +81,8 @@ project boost/thread
         #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long
+        <toolset>clang:<cxxflags>-Wunused-function
+        <toolset>clang:<cxxflags>-Wno-variadic-macros
 
         <toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
