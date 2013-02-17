@@ -49,8 +49,8 @@ project boost/thread
       <toolset>gcc:<cxxflags>-Wno-long-long
       #<define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
       #<define>BOOST_SYSTEM_NO_DEPRECATED
-      #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
-      
+      #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+
       <library>/boost/system//boost_system
        #-pedantic -ansi -std=gnu++0x -Wextra -fpermissive
         <warnings>all
@@ -90,6 +90,7 @@ project boost/thread
         <toolset>gcc-mingw-4.6.3:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.7.0:<cxxflags>-fdiagnostics-show-option
         <toolset>gcc-mingw-4.8.0:<cxxflags>-fdiagnostics-show-option
+        #<toolset>gcc:<cxxflags>-Wno-missing-field-initializers
 
         <toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor
         <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
@@ -101,7 +102,7 @@ project boost/thread
         <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
-        
+
 # Note: Some of the remarks from the Intel compiler are disabled
 # remark #193: zero used for undefined preprocessing identifier "XXX"
 # remark #304: access control not specified ("public" by default)
@@ -112,7 +113,9 @@ project boost/thread
         <toolset>intel:<cxxflags>-wd193,304,383,444
         <toolset>intel:<cxxflags>-wd593,981
         <toolset>intel:<cxxflags>-wd1418
-        <toolset>intel:<cxxflags>-wd2415 
+        <toolset>intel:<cxxflags>-wd2415
+
+        <toolset>msvc:<cxxflags>/wd4512
 
 
     # : default-build <threading>multi
@@ -123,7 +126,7 @@ project boost/thread
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
       #<define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
       #<define>BOOST_SYSTEM_NO_DEPRECATED
-      #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS 
+      #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <library>/boost/system//boost_system
     ;
 
@@ -233,11 +236,11 @@ rule usage-requirements ( properties * )
         }
     }
 
-    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  || <toolset-vacpp:version>12.1 in $(properties)  
+    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  || <toolset-vacpp:version>12.1 in $(properties)
     {
       result += <library>/boost/chrono//boost_chrono ;
     }
-    
+
     return $(result) ;
 }
 
@@ -262,8 +265,8 @@ rule requirements ( properties * )
         }
     }
     result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
-    
-    if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)     
+
+    if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)
     {
       result += <library>/boost/atomic//boost_atomic ;
     }
