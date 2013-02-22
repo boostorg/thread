@@ -225,6 +225,7 @@ namespace boost
     T value_;
     mutable lockable_type mtx_;
   public:
+    // construction/destruction
     /**
      * Default constructor.
      *
@@ -277,6 +278,7 @@ namespace boost
       value_= boost::move(other.value);
     }
 
+    // mutation
     /**
      * Assignment operator.
      *
@@ -314,6 +316,7 @@ namespace boost
       return *this;
     }
 
+    //observers
     /**
      * Explicit conversion to value type.
      *
@@ -339,7 +342,6 @@ namespace boost
       return get();
     }
 #endif
-
     /**
      * Swap
      *
@@ -497,8 +499,99 @@ namespace boost
       return BOOST_THREAD_MAKE_RV_REF(const_deref_value(*this));
     }
 
+    template <typename OStream>
+    void save(OStream& os) const
+    {
+      strict_lock<lockable_type> lk(mtx_);
+      os << value_;
+    }
+    template <typename IStream>
+    void load(IStream& is) const
+    {
+      strict_lock<lockable_type> lk(mtx_);
+      is >> value_;
+    }
+
+    bool operator==(synchronized_value const& rhs)  const
+    {
+      unique_lock<lockable_type> lk1(mtx_, defer_lock);
+      unique_lock<lockable_type> lk2(rhs.mtx_, defer_lock);
+      lock(lk1,lk2);
+
+      return value_ == rhs.value_;
+    }
+    bool operator<(synchronized_value const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_, defer_lock);
+      unique_lock<lockable_type> lk2(rhs.mtx_, defer_lock);
+      lock(lk1,lk2);
+
+      return value_ < rhs.value_;
+    }
+    bool operator>(synchronized_value const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_, defer_lock);
+      unique_lock<lockable_type> lk2(rhs.mtx_, defer_lock);
+      lock(lk1,lk2);
+
+      return value_ > rhs.value_;
+    }
+    bool operator<=(synchronized_value const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_, defer_lock);
+      unique_lock<lockable_type> lk2(rhs.mtx_, defer_lock);
+      lock(lk1,lk2);
+
+      return value_ <= rhs.value_;
+    }
+    bool operator>=(synchronized_value const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_, defer_lock);
+      unique_lock<lockable_type> lk2(rhs.mtx_, defer_lock);
+      lock(lk1,lk2);
+
+      return value_ >= rhs.value_;
+    }
+    bool operator==(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ == rhs;
+    }
+    bool operator!=(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ != rhs;
+    }
+    bool operator<(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ < rhs;
+    }
+    bool operator<=(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ <= rhs;
+    }
+    bool operator>(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ > rhs;
+    }
+    bool operator>=(value_type const& rhs) const
+    {
+      unique_lock<lockable_type> lk1(mtx_);
+
+      return value_ >= rhs;
+    }
+
   };
 
+  // Specialized algorithms
   /**
    *
    */
@@ -506,6 +599,66 @@ namespace boost
   inline void swap(synchronized_value<T,L> & lhs, synchronized_value<T,L> & rhs)
   {
     lhs.swap(rhs);
+  }
+
+  //Hash support
+
+  template <class T> struct hash;
+  template <typename T, typename L>
+  struct hash<synchronized_value<T,L> >;
+
+  // Comparison with T
+  template <typename T, typename L>
+  bool operator!=(synchronized_value<T,L> const&lhs, synchronized_value<T,L> const& rhs)
+  {
+    return ! (lhs==rhs);
+  }
+
+  template <typename T, typename L>
+  bool operator==(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs==lhs;
+  }
+  template <typename T, typename L>
+  bool operator!=(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs!=lhs;
+  }
+  template <typename T, typename L>
+  bool operator<(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs>=lhs;
+  }
+  template <typename T, typename L>
+  bool operator<=(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs>lhs;
+  }
+  template <typename T, typename L>
+  bool operator>(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs<=lhs;
+  }
+  template <typename T, typename L>
+  bool operator>=(T const& lhs, synchronized_value<T,L> const&rhs)
+  {
+    return rhs<lhs;
+  }
+
+  /**
+   *
+   */
+  template <typename OStream, typename T, typename L>
+  inline OStream& operator<<(OStream& os, synchronized_value<T,L> const& rhs)
+  {
+    rhs.save(os);
+    return os;
+  }
+  template <typename IStream, typename T, typename L>
+  inline IStream& operator>>(IStream& is, synchronized_value<T,L> const& rhs)
+  {
+    rhs.load(is);
+    return is;
   }
 
 }

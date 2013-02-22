@@ -10,15 +10,15 @@
 #include <string>
 #include <boost/thread/synchronized_value.hpp>
 
-void addTrailingSlashIfMissing(boost::synchronized_value<std::string> & path)
-{
-  boost::strict_lock_ptr<std::string> u=path.synchronize();
-
-  if(u->empty() || (*u->rbegin()!='/'))
+  void addTrailingSlashIfMissing(boost::synchronized_value<std::string> & path)
   {
-    *u+='/';
+    boost::strict_lock_ptr<std::string> u=path.synchronize();
+
+    if(u->empty() || (*u->rbegin()!='/'))
+    {
+      *u+='/';
+    }
   }
-}
 
 void f(const boost::synchronized_value<int> &v) {
   std::cout<<"v="<<*v<<std::endl;
@@ -80,6 +80,68 @@ int main()
     addTrailingSlashIfMissing(s);
     std::cout<<"s="<<std::string(*s)<<std::endl;
   }
-  return 0;
+  {
+    boost::synchronized_value<std::string> s;
+    s = std::string("foo/");
+    std::cout<<"ss="<< s << std::endl;
+  }
+  {
+    boost::synchronized_value<std::string> s;
+    s = "foo/";
+    std::cout<<"ss="<< s << std::endl;
+  }
+  {
+    boost::synchronized_value<std::string> s1("a");
+    boost::synchronized_value<std::string> s2;
+    s2=s1;
+    std::cout<<"s1="<< s1 << std::endl;
+    std::cout<<"s2="<< s2 << std::endl;
+  }
+  {
+    boost::synchronized_value<std::string> s1("a");
+    boost::synchronized_value<std::string> s2("b");
+    std::cout<<"s1="<< s1 << std::endl;
+    std::cout<<"s2="<< s2 << std::endl;
+    swap(s1,s2);
+    std::cout<<"s1="<< s1 << std::endl;
+    std::cout<<"s2="<< s2 << std::endl;
+  }
+#if ! defined(BOOST_NO_CXX11_EXPLICIT_CONVERSION_OPERATORS)
+  {
+    boost::synchronized_value<std::string> sts("a");
+    std::string s(sts);
+    std::cout<<"ssts="<< s << std::endl;
+  }
+#endif
+  {
+    boost::synchronized_value<int> s1(1);
+    boost::synchronized_value<int> s2(1);
+    BOOST_ASSERT(s1==s2);
+    BOOST_ASSERT(s1<=s2);
+    BOOST_ASSERT(s1>=s2);
+    BOOST_ASSERT(s1==1);
+    BOOST_ASSERT(s1<=1);
+    BOOST_ASSERT(s1>=1);
+  }
+  {
+    boost::synchronized_value<int> s1(1);
+    boost::synchronized_value<int> s2(2);
+    BOOST_ASSERT(s1!=s2);
+    BOOST_ASSERT(s1!=2);
+    BOOST_ASSERT(2!=s1);
+  }
+  {
+    boost::synchronized_value<int> s1(1);
+    boost::synchronized_value<int> s2(2);
+    BOOST_ASSERT(s1<s2);
+    BOOST_ASSERT(s1<=s2);
+    BOOST_ASSERT(s2>s1);
+    BOOST_ASSERT(s2>=s1);
+    BOOST_ASSERT(s1<2);
+    BOOST_ASSERT(s1<=2);
+    BOOST_ASSERT(s2>1);
+    BOOST_ASSERT(s2>=1);
+  }
+  return 1;
 }
 
