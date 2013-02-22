@@ -41,6 +41,7 @@ Provided when BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined (Default 
 See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKAGED_TASK.
 
 * [@http://svn.boost.org/trac/boost/ticket/7282 #7282] C++11 compliance: Add packaged_task::make_ready_at_thread_exit function
+* [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once
 
 * [@http://svn.boost.org/trac/boost/ticket/7412 #7412] C++11 compliance: Add async from movable callable and movable arguments
 Provided when BOOST_THREAD_PROVIDES_VARIADIC_THREAD and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK are defined (Default value from Boost 1.55):
@@ -63,11 +64,13 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 
 [*Fixed Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/5752 #5752] boost::call_once() is unreliable on some platforms
 * [@http://svn.boost.org/trac/boost/ticket/7464 #7464] BOOST_TEST(n_alive == 1); fails due to race condition in a regression test tool.
 * [@http://svn.boost.org/trac/boost/ticket/7657 #7657] Serious performance and memory consumption hit if condition_variable methods condition notify_one or notify_all is used repeatedly.
 * [@http://svn.boost.org/trac/boost/ticket/7665 #7665] this_thread::sleep_for no longer uses steady_clock in thread.
 * [@http://svn.boost.org/trac/boost/ticket/7668 #7668] thread_group::join_all() should check whether its threads are joinable.
 * [@http://svn.boost.org/trac/boost/ticket/7669 #7669] thread_group::join_all() should catch resource_deadlock_would_occur.
+* [@http://svn.boost.org/trac/boost/ticket/7671 #7671] Error including boost/thread.hpp header on iOS.
 * [@http://svn.boost.org/trac/boost/ticket/7672 #7672] lockable_traits.hpp syntax error: "defined" token misspelled.
 * [@http://svn.boost.org/trac/boost/ticket/7798 #7798] boost::future set_wait_callback thread safety issues.
 * [@http://svn.boost.org/trac/boost/ticket/7808 #7808] Incorrect description of effects for this_thread::sleep_for and this_thread::sleep_until.
@@ -75,6 +78,8 @@ See BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK and BOOST_THREAD_DONT_PROVIDE_
 * [@http://svn.boost.org/trac/boost/ticket/7874 #7874] compile warning: thread.hpp:342: warning: type attributes are honored only at type definition.
 * [@http://svn.boost.org/trac/boost/ticket/7875 #7875] BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED should not be enabled by default.
 * [@http://svn.boost.org/trac/boost/ticket/7882 #7882] wrong exception text from condition_variable::wait(unique_lock<mutex>&).
+* [@http://svn.boost.org/trac/boost/ticket/7890 #7890] thread::do_try_join_until() is missing a return type.
+
 
 
 [heading Version 3.1.0 - boost 1.52]

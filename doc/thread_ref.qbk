@@ -201,7 +201,7 @@ __thread_interrupted__, `std::terminate()` is called.
 
 [endsect]
 
-[section:detac Detaching thread]
+[section:detach Detaching thread]
 
 A thread can  be detached by explicitly invoking the __detach__ member function on the __thread__
 object. In this case, the __thread__ object ceases to represent the now-detached thread, and instead represents __not_a_thread__.

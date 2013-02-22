@@ -55,6 +55,9 @@ The following example includes a bank account of a person (Joe) and two componen
 
 From time to time, the `bankAgent` will deposit $500 in `JoesAccount`. Joe will similarly withdraw $100 from his account. These sentences describe that the bankAgent and Joe are executed concurrently.
 
+[endsect]
+[section  Internal locking]
+
 The above example works well as long as the bankAgent and Joe doesn't access JoesAccount at the same time. There is, however, no guarantee that this will not happen. We may use a mutex to guarantee exclusive access to each bank.
 
   class BankAccount {
@@ -104,6 +107,9 @@ With the RAII idiom we can simplify a lot this using the scoped locks. In the co
   };
 
 The object-level locking idiom doesn't cover the entire richness of a threading model. For example, the model above is quite deadlock-prone when you try to coordinate multi-object transactions. Nonetheless, object-level locking is useful in many cases, and in combination with other mechanisms can provide a satisfactory solution to many threaded access problems in object-oriented programs.
+
+[endsect]
+[section  Internal and external locking]
 
 The BankAccount class above uses internal locking. Basically, a class that uses internal locking guarantees that any concurrent calls to its public member functions don't corrupt an instance of that class. This is typically ensured by having each public member function acquire a lock on the object upon entry. This way, for any given object of that class, there can be only one member function call active at any moment, so the operations are nicely serialized.
 
@@ -202,6 +208,24 @@ As `boost::mutex` is not recursive, we need to use its recursive version `boost:
   
       // ...
   };
+
+The caller-ensured locking approach is more flexible and the most efficient, but very dangerous. In an implementation using caller-ensured locking, BankAccount still holds a mutex, but its member functions don't manipulate it at all. Deposit and Withdraw are not thread-safe anymore. Instead, the client code is responsible for locking BankAccount properly.
+
+    class BankAccount
+        : public basic_lockable_adapter<boost:mutex> {
+        int balance_;
+    public:
+        void Deposit(int amount) {
+            balance_ += amount;
+        }
+        void Withdraw(int amount) {
+            balance_ -= amount;
+        }
+    };
+
+Obviously, the caller-ensured locking approach has a safety problem. BankAccount's implementation code is finite, and easy to reach and maintain, but there's an unbounded amount of client code that manipulates BankAccount objects. In designing applications, it's important to differentiate between requirements imposed on bounded code and unbounded code. If your class makes undue requirements on unbounded code, that's usually a sign that encapsulation is out the window.
+
+To conclude, if in designing a multi-threaded class you settle on internal locking, you expose yourself to inefficiency or deadlocks. On the other hand, if you rely on caller-provided locking, you make your class error-prone and difficult to use. Finally, external locking completely avoids the issue by leaving it all to the client code.
 
 
 [endsect]
@@ -439,11 +463,6 @@ Monitors and conditions are useful for describing simple cases of shared objects
 
 [endsect] [/Monitors]
 ]
-
-[section Synchronized variables]
-[/include synchronized_value.qbk]
-[endsect] [/Synchronized variables]
-
 
 [endsect] [/Internal Locking]
 
