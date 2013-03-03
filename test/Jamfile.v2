@@ -702,6 +702,26 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/reverse_lock/types_pass.cpp : reverse_lock__types_p ]
     ;
 
+
+    explicit ts_synchronized_value ;
+    test-suite ts_synchronized_value
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/copy_assign_pass.cpp : synchronized_value__copy_assign_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/copy_ctor_pass.cpp : synchronized_value__copy_ctor_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/copy_T_assign_pass.cpp : synchronized_value__copy_T_assign_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/copy_T_ctor_pass.cpp : synchronized_value__copy_T_ctor_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/default_ctor_pass.cpp : synchronized_value__default_ctor_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/indirect_pass.cpp : synchronized_value__indirect_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/move_assign_pass.cpp : synchronized_value__move_assign_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/move_ctor_pass.cpp : synchronized_value__move_ctor_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/move_T_assign_pass.cpp : synchronized_value__move_T_assign_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/move_T_ctor_pass.cpp : synchronized_value__move_T_ctor_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/swap_pass.cpp : synchronized_value__swap_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/swap_T_pass.cpp : synchronized_value__swap_T_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/synchronize_pass.cpp : synchronized_value__synchronize_p ]
+
+    ;
+
     explicit ts_ ;
     test-suite ts_
     :
@@ -710,13 +730,14 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/test_so2.cpp ]
 
           #[ compile virtual_noexcept.cpp ]
-          [ thread-run test_7720.cpp ]
+          #[ thread-run test_7720.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/not_interleaved.cpp ]
+
     ;
 
 }
