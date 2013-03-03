@@ -17,6 +17,12 @@
 #include <boost/detail/interlocked.hpp>
 #include <algorithm>
 
+#ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+#if WINNT >= 0x0600
+#define BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+#endif
+#endif
+
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
 
@@ -26,6 +32,11 @@ namespace boost
     {
         namespace win32
         {
+#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+            typedef unsigned long long ticks_type;
+#else
+            typedef unsigned long ticks_type;
+#endif
             typedef ULONG_PTR ulong_ptr;
             typedef HANDLE handle;
             unsigned const infinite=INFINITE;
@@ -61,6 +72,11 @@ namespace boost
             using ::Sleep;
             using ::QueueUserAPC;
             using ::GetTickCount;
+#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+            using ::GetTickCount64;
+#else
+            inline ticks_type GetTickCount64() { return GetTickCount(); }
+#endif
         }
     }
 }
@@ -88,13 +104,18 @@ typedef void* HANDLE;
 #  endif
 # endif
 
+
 namespace boost
 {
     namespace detail
     {
         namespace win32
         {
-
+#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+            typedef unsigned long long ticks_type;
+#else
+            typedef unsigned long ticks_type;
+#endif
 # ifdef _WIN64
             typedef unsigned __int64 ulong_ptr;
 # else
@@ -133,7 +154,11 @@ namespace boost
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
 
                 __declspec(dllimport) unsigned long __stdcall GetTickCount();
-
+#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+                __declspec(dllimport) ticks_type __stdcall GetTickCount64();
+#else
+                inline ticks_type GetTickCount64() { return GetTickCount(); }
+#endif
 # ifndef UNDER_CE
                 __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
                 __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
