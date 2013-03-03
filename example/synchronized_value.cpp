@@ -142,6 +142,6 @@ int main()
     BOOST_ASSERT(s2>1);
     BOOST_ASSERT(s2>=1);
   }
-  return 1;
+  return 0;
 }
 
