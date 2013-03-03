@@ -590,7 +590,7 @@ namespace boost
     void swap(value_type & rhs)
     {
       strict_lock<mutex_type> lk(mtx_);
-      boost::swap(value_, rhs.value_);
+      boost::swap(value_, rhs);
     }
 
 
