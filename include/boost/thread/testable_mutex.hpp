@@ -9,7 +9,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
-#include <boost/thread/detail/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 #include <boost/atomic.hpp>
 #include <boost/assert.hpp>
@@ -26,7 +26,7 @@ namespace boost
    *
    * Many mutex services (including boost::mutex) don't provide a way to ask,
    * "Do I already hold a lock on this mutex?"
-   * Sometimes it is needed to know if a method like is_held to be available.
+   * Sometimes it is needed to know if a method like is_locked to be available.
    * This wrapper associates an arbitrary lockable type with a thread id that stores the ID of the thread that
    * currently holds the lockable. The thread id initially holds an invalid value that means no threads own the mutex.
    * When we acquire a lock, we set the thread id; and when we release a lock, we reset it back to its default no id state.
@@ -44,6 +44,8 @@ namespace boost
     /// Non copyable
     BOOST_THREAD_NO_COPYABLE(testable_mutex)
 
+    testable_mutex() {}
+
     void lock()
     {
       mtx_.lock();
@@ -52,7 +54,7 @@ namespace boost
 
     void unlock()
     {
-      BOOST_ASSERT(is_locked(mtx_));
+      BOOST_ASSERT(is_locked_by_this_thread());
       id_ = thread::id();
       mtx_.unlock();
     }
@@ -70,40 +72,44 @@ namespace boost
       }
     }
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class Rep, class Period>
-        bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
-        {
-          if (mtx_.try_lock_for(rel_time))
-          {
-            id_ = this_thread::get_id();
-            return true;
-          }
-          else
-          {
-            return false;
-          }
-        }
-        template <class Clock, class Duration>
-        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
-        {
-          if (mtx_.try_lock_until(abs_time))
-          {
-            id_ = this_thread::get_id();
-            return true;
-          }
-          else
-          {
-            return false;
-          }
-        }
+    template <class Rep, class Period>
+    bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
+    {
+      if (mtx_.try_lock_for(rel_time))
+      {
+        id_ = this_thread::get_id();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
+    template <class Clock, class Duration>
+    bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
+    {
+      if (mtx_.try_lock_until(abs_time))
+      {
+        id_ = this_thread::get_id();
+        return true;
+      }
+      else
+      {
+        return false;
+      }
+    }
 #endif
 
-    bool is_locked_by_this_thread()
+    bool is_locked_by_this_thread() const
     {
       return this_thread::get_id() == id_;
     }
+    bool is_locked() const
+    {
+      return ! (thread::id() == id_);
+    }
 
-    bool get_id()
+    thread::id get_id() const
     {
       return id_;
     }
