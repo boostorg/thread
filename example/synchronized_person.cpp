@@ -255,5 +255,28 @@ int main()
     lk2->SetName("Javier");
     lk3->SetName("Matias");
   }
+#if ! defined BOOST_NO_CXX11_AUTO_DECLARATIONS \
+&& ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
+  {
+    Person3_ts p1(1);
+    Person3_ts p2(2);
+    Person3_ts p3(3);
+
+    auto t  = boost::synchronize(p1,p2,p3);
+    std::get<0>(t)->SetName("Carmen");
+    std::get<1>(t)->SetName("Javier");
+    std::get<2>(t)->SetName("Matias");
+  }
+  {
+    const Person3_ts p1(1);
+    Person3_ts p2(2);
+    const Person3_ts p3(3);
+
+    auto t  = boost::synchronize(p1,p2,p3);
+    //std::get<0>(t)->SetName("Carmen");
+    std::get<1>(t)->SetName("Javier");
+    //std::get<2>(t)->SetName("Matias");
+  }
+#endif
   return 0;
 }
