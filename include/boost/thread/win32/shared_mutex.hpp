@@ -95,7 +95,7 @@ namespace boost
               detail::win32::release_semaphore(semaphores[exclusive_sem],LONG_MAX);
               boost::throw_exception(thread_resource_error());
             }
-            state_data state_={0};
+            state_data state_={0,0,0,0,0,0};
             state=state_;
         }
 
