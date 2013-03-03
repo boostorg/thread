@@ -44,7 +44,7 @@ namespace boost
     /// Non copyable
     BOOST_THREAD_NO_COPYABLE(testable_mutex)
 
-    testable_mutex() {}
+    testable_mutex() : id_(thread::id()) {}
 
     void lock()
     {
