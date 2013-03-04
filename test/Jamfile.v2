@@ -703,7 +703,7 @@ rule thread-compile-fail ( sources : reqs * : name )
     ;
 
 
-    explicit ts_synchronized_value ;
+    #explicit ts_synchronized_value ;
     test-suite ts_synchronized_value
     :
           [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/copy_assign_pass.cpp : synchronized_value__copy_assign_p ]
@@ -732,7 +732,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ compile virtual_noexcept.cpp ]
           #[ thread-run test_7720.cpp ]
           #[ thread-run test_7666.cpp ]
-          #[ thread-run test_7666.cpp ]
+          #[ thread-run test_7755.cpp ]
           #[ thread-run ../example/unwrap.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
