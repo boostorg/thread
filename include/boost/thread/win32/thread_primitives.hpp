@@ -18,7 +18,7 @@
 #include <algorithm>
 
 #ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-#if WINNT >= 0x0600
+#if _WIN32_WINNT >= 0x0600
 #define BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
 #endif
 #endif
