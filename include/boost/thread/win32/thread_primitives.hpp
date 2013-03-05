@@ -154,11 +154,9 @@ namespace boost
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
 
                 __declspec(dllimport) unsigned long __stdcall GetTickCount();
-#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+# ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
                 __declspec(dllimport) ticks_type __stdcall GetTickCount64();
-#else
-                inline ticks_type GetTickCount64() { return GetTickCount(); }
-#endif
+# endif
 # ifndef UNDER_CE
                 __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
                 __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
@@ -175,6 +173,9 @@ namespace boost
                 using ::ResetEvent;
 # endif
             }
+# ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+            inline ticks_type GetTickCount64() { return GetTickCount(); }
+# endif
         }
     }
 }
