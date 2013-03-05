@@ -1708,7 +1708,6 @@ registered with `at_thread_exit()`]]
 [section:threadgroup Class `thread_group` EXTENSION]
 
     #include <boost/thread/thread.hpp>
-    #include <boost/thread/thread_group.hpp>
 
     class thread_group
     {

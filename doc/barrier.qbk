@@ -63,7 +63,10 @@ are unblocked, and the barrier is reset. ]]
 
 [[Returns:] [`true` for exactly one thread from each batch of waiting threads, `false` otherwise.]]
 
-[[Throws:] [__thread_resource_error__ if an error occurs.]]
+[[Throws:] [__thread_resource_error__ if an error occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+[[Notes:] [`wait()` is an ['interruption point].]]
 
 ]
 
