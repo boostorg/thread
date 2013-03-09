@@ -3234,7 +3234,7 @@ namespace boost
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
     p.set_value(boost::forward<T>(value));
-    return p.get_future();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
 
@@ -3254,14 +3254,14 @@ namespace boost
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
     p.set_value(boost::forward<T>(value));
-    return p.get_future().share();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
   }
 
 
   inline shared_future<void> make_shared_future()
   {
     promise<void> p;
-    return p.get_future().share();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
 
   }
 
