@@ -1134,7 +1134,7 @@ As the semantic "ensures that the associated mutex is locked during the lifetime
 The following classes are models of `StrictLock`:
 
 * strict_lock: ensured by construction,
-* nested_strict_lock: ensured by construction,
+* nested_strict_lock: "sur parolle" as the user could use adopt_lock_t on unique_lock constructor overload without having locked the mutex,
 * __lock_guard__: "sur parolle" as the user could use adopt_lock_t constructor overload without having locked the mutex.
 
 [endsect] [/ Models]
@@ -2002,6 +2002,8 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
     {
     public:
         typedef BasicLockable mutex_type;
+        strict_lock(strict_lock const& m_) = delete;
+        strict_lock& operator=(strict_lock const& m_) = delete;
         explicit strict_lock(mutex_type& m_);
         ~strict_lock();
 
@@ -2052,6 +2054,8 @@ object passed to the constructor.]]
     {
     public:
         typedef BasicLockable mutex_type;
+        nested_strict_lock(nested_strict_lock const& m_) = delete;
+        nested_strict_lock& operator=(nested_strict_lock const& m_) = delete;
         explicit nested_strict_lock(Lock& lk),
         ~nested_strict_lock() noexcept;
 
@@ -2153,6 +2157,235 @@ If the lock doesn't owns the mutex lock it.
 
   
 [endsect]
+
+[section:lock_ptrs Locking pointers]
+
+  // #include <boost/thread/synchroniezd_value.hpp> 
+  // #include <boost/thread/strict_lock_ptr.hpp> 
+
+  namespace boost 
+  {
+
+    template<typename T, typename Lockable = mutex>
+    class strict_lock_ptr;
+    template<typename T, typename Lockable = mutex>
+    class const_strict_lock_ptr;
+  }
+  
+
+[/
+    template<typename T, typename Lockable = mutex>
+    class unique_lock_ptr;
+    template<typename T, typename Lockable = mutex>
+    class const_unique_lock_ptr;
+
+]
+
+[section:const_strict_lock_ptr Class template `const_strict_lock_ptr `]
+
+  // #include <boost/thread/synchroniezd_value.hpp> 
+  // #include <boost/thread/strict_lock_ptr.hpp> 
+
+
+  template <typename T, typename Lockable = mutex>
+  class const_strict_lock_ptr
+  {
+  public:
+    typedef T value_type;
+    typedef Lockable mutex_type;
+
+    const_strict_lock_ptr(const_strict_lock_ptr const& m_) = delete;
+    const_strict_lock_ptr& operator=(const_strict_lock_ptr const& m_) = delete;
+
+    const_strict_lock_ptr(T const& val, Lockable & mtx);
+    const_strict_lock_ptr(T const& val, Lockable & mtx, adopt_lock_t tag);
+
+    ~const_strict_lock_ptr();
+
+    const T* operator->() const;
+    const T& operator*() const;
+
+  };
+
+
+[section:constructor `const_strict_lock_ptr(T const&,Lockable&)`]
+
+
+    const_strict_lock_ptr(T const& val, Lockable & m);
+
+[variablelist
+
+[[Effects:] [Invokes [lock_ref_link `m.lock()`], stores a reference to it and to the value type `val`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+[endsect]
+[section:constructor_adopt `const_strict_lock_ptr(T const&,Lockable&,adopt_lock_t)`]
+
+    const_strict_lock_ptr(T const& val, Lockable & m, adopt_lock_t tag);
+
+[variablelist
+
+[[Effects:] [Stores a reference to it and to the value type `val`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[section:destructor `~const_strict_lock_ptr()`]
+
+    ~const_strict_lock_ptr();
+
+[variablelist
+
+[[Effects:] [Invokes [unlock_ref_link `m.unlock()`] on the __lockable_concept_type__
+object passed to the constructor.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:indir `operator->() const`]
+
+    const T* operator->() const;
+
+
+[variablelist
+
+[[Return:] [return a constant pointer to the protected value.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:deref `operator*() const`]
+
+    const T& operator*() const;
+
+
+[variablelist
+
+[[Return:] [return a constant reference to the protected value.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[endsect] [/ const_strict_lock_ptr ]
+
+[section:strict_lock_ptr Class template `strict_lock_ptr`]
+
+  // #include <boost/thread/synchroniezd_value.hpp> 
+  // #include <boost/thread/strict_lock_ptr.hpp> 
+
+  template <typename T, typename Lockable = mutex>
+  class strict_lock_ptr : public const_strict_lock_ptr<T,Lockable>
+  {
+  public:
+    strict_lock_ptr(strict_lock_ptr const& m_) = delete;
+    strict_lock_ptr& operator=(strict_lock_ptr const& m_) = delete;
+
+    strict_lock_ptr(T & val, Lockable & mtx);
+    strict_lock_ptr(T & val, Lockable & mtx, adopt_lock_t tag);
+    ~strict_lock_ptr();
+
+    T* operator->();
+    T& operator*();
+
+  };
+
+
+[section:constructor `strict_lock_ptr(T const&,Lockable&)`]
+
+
+    strict_lock_ptr(T const& val, Lockable & m);
+
+[variablelist
+
+[[Effects:] [Invokes [lock_ref_link `m.lock()`], stores a reference to it and to the value type `val`.]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+[endsect]
+[section:constructor_adopt `strict_lock_ptr(T const&,Lockable&,adopt_lock_t)`]
+
+    strict_lock_ptr(T const& val, Lockable & m, adopt_lock_t tag);
+
+[variablelist
+
+[[Effects:] [Stores a reference to it and to the value type `val`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[section:destructor `~strict_lock_ptr()`]
+
+    ~ strict_lock_ptr();
+
+[variablelist
+
+[[Effects:] [Invokes [unlock_ref_link `m.unlock()`] on the __lockable_concept_type__
+object passed to the constructor.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:indir `operator->()`]
+
+    T* operator->();
+
+
+[variablelist
+
+[[Return:] [return a pointer to the protected value.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:deref `operator*()`]
+
+    T& operator*();
+
+
+[variablelist
+
+[[Return:] [return a reference to the protected value.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[endsect] [/ strict_lock_ptr ]
+
+[endsect] [/ lock_ptrs ]
+
 
 [section Externally Locked]
 

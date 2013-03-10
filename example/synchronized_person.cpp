@@ -256,7 +256,7 @@ int main()
     lk3->SetName("Matias");
   }
 #if ! defined BOOST_NO_CXX11_AUTO_DECLARATIONS \
-&& ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
+&& ! defined(BOOST_THREAD_NO_SYNCHRONIZE)
   {
     Person3_ts p1(1);
     Person3_ts p2(2);
