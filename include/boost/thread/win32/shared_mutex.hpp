@@ -471,6 +471,7 @@ namespace boost
                 {
                     for(;;)
                     {
+                        bool must_notify = false;
                         state_data new_state=old_state;
                         if(new_state.shared_count || new_state.exclusive)
                         {
@@ -479,6 +480,7 @@ namespace boost
                                 if(!--new_state.exclusive_waiting)
                                 {
                                     new_state.exclusive_waiting_blocked=false;
+                                    must_notify = true;
                                 }
                             }
                         }
@@ -488,6 +490,11 @@ namespace boost
                         }
 
                         state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                        if (must_notify)
+                        {
+                          BOOST_VERIFY(detail::win32::ReleaseSemaphore(semaphores[unlock_sem],1,0)!=0);
+                        }
+
                         if(current_state==old_state)
                         {
                             break;
@@ -580,6 +587,7 @@ namespace boost
             {
               for(;;)
               {
+                bool must_notify = false;
                 state_data new_state=old_state;
                 if(new_state.shared_count || new_state.exclusive)
                 {
@@ -588,6 +596,7 @@ namespace boost
                     if(!--new_state.exclusive_waiting)
                     {
                       new_state.exclusive_waiting_blocked=false;
+                      must_notify = true;
                     }
                   }
                 }
@@ -597,6 +606,10 @@ namespace boost
                 }
 
                 state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
+                if (must_notify)
+                {
+                  BOOST_VERIFY(detail::win32::ReleaseSemaphore(semaphores[unlock_sem],1,0)!=0);
+                }
                 if(current_state==old_state)
                 {
                   break;
