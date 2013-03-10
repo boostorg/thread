@@ -25,7 +25,7 @@
 //#include <type_traits>
 //#endif
 
-#if ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
+#if ! defined(BOOST_THREAD_NO_SYNCHRONIZE)
 #include <tuple> // todo change to <boost/tuple.hpp> once Boost.Tuple or Boost.Fusion provides Move semantics.
 #include <functional>
 #endif
@@ -65,7 +65,7 @@ namespace boost
       lk_(mtx), value_(val)
     {
     }
-    const_strict_lock_ptr(T const& val, Lockable & mtx, adopt_lock_t tag) :
+    const_strict_lock_ptr(T const& val, Lockable & mtx, adopt_lock_t tag) BOOST_NOEXCEPT :
       lk_(mtx, tag), value_(val)
     {
     }
@@ -73,7 +73,7 @@ namespace boost
      * Move constructor.
      * @effects takes ownership of the mutex owned by @c other, stores a reference to the mutex and the value type of @c other.
      */
-    const_strict_lock_ptr(BOOST_THREAD_RV_REF(const_strict_lock_ptr) other)
+    const_strict_lock_ptr(BOOST_THREAD_RV_REF(const_strict_lock_ptr) other) BOOST_NOEXCEPT
     : lk_(boost::move(BOOST_THREAD_RV(other).lk_)),value_(BOOST_THREAD_RV(other).value_)
     {
     }
@@ -479,7 +479,7 @@ namespace boost
      * Assignment operator.
      *
      * Effects: Copies the underlying value on a scope protected by the two mutexes.
-     * The mutexes are not copied. The locks are acquired using lock, so deadlock is avoided.
+     * The mutex is not copied. The locks are acquired using lock, so deadlock is avoided.
      * For example, there is no problem if one thread assigns a = b and the other assigns b = a.
      *
      * Return: *this
@@ -697,7 +697,7 @@ namespace boost
       deref_value(BOOST_THREAD_RV_REF(deref_value) other):
       lk_(boost::move(BOOST_THREAD_RV(other).lk_)),value_(BOOST_THREAD_RV(other).value_)
       {}
-      operator T()
+      operator T&()
       {
         return value_;
       }
@@ -727,7 +727,7 @@ namespace boost
       lk_(boost::move(BOOST_THREAD_RV(other).lk_)), value_(BOOST_THREAD_RV(other).value_)
       {}
 
-      operator T()
+      operator const T&()
       {
         return value_;
       }
@@ -938,7 +938,7 @@ namespace boost
     return is;
   }
 
-#if ! defined(BOOST_THREAD_NO_MAKE_UNIQUE_LOCKS)
+#if ! defined(BOOST_THREAD_NO_SYNCHRONIZE)
 #if ! defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
   template <typename ...SV>

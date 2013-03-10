@@ -108,12 +108,27 @@ In order to be able to use the dead-lock free lock algorithms we need to use ins
     }
   }
 
+While the preceding takes care of dead-lock, the access to the synchronized_value via unique_lock_ptr requires a lock that is not forced by the interface.
+An alternative on compilers providing a standard library that supports movable std::tuple is to use the free synchronize function, which will lock all the mutexes associated to the synchronized values and return a tuple os strict_lock_ptr.
+
+  synchronized_value<std::queue<MessageType> > q1,q2;
+  void transferMessage()
+  {
+    auto lks = synchronize(u1,u2); // dead-lock free algorithm
+
+    if(!std::get<1>(lks)->empty())
+    {
+      std::get<2>(lks)->push_back(u1->front());
+      std::get<1>(lks)->pop_front();
+    }
+  }
+  
 
 [endsect] [/Operations Across Multiple Objects]
 
 [section Value semantics]
 
-synchronized_value has value semantics even if the syntax let it appear as a pointer.
+synchronized_value has value semantics even if the syntax lets is close to a pointer (this is just because we are unable to define smart references).
 
 [endsect] [/Value semantics]
 
