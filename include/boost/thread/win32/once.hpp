@@ -5,7 +5,7 @@
 //
 //  (C) Copyright 2005-7 Anthony Williams
 //  (C) Copyright 2005 John Maddock
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2013 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -327,7 +327,6 @@ namespace boost
     }
 #else
 #ifndef BOOST_MSVC
-
     template<typename Function>
     void call_once(once_flag& flag,Function f)
     {
@@ -467,6 +466,192 @@ namespace boost
     }
     template<typename Function, typename T1, typename T2, typename T3>
     void call_once(once_flag& flag,Function f, T1 p1, T2 p2, T3 p3)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2,p3)();
+#else
+        f(p1,p2,p3);
+#endif
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+#elif defined BOOST_NO_CXX11_RVALUE_REFERENCES
+
+    template<typename Function>
+    void call_once(once_flag& flag,Function const&f)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                    f();
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+                    boost::bind(f,p1)();
+#else
+                    f(p1);
+#endif
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1, T2 const&p2)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+        boost::bind(f,p1,p2)();
+#else
+        f(p1,p2);
+#endif
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2, typename T3>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1, T2 const&p2, T3 const&p3)
     {
         // Try for a quick win: if the procedure has already been called
         // just skip through:
