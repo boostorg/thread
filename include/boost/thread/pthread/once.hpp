@@ -129,7 +129,7 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
 #if defined BOOST_THREAD_PROVIDES_INVOKE
                     detail::invoke(
                         thread_detail::decay_copy(boost::forward<Function>(f)),
@@ -146,11 +146,11 @@ namespace boost
                         thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
                         )();
 #endif
-#else
-                    f(
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                    );
-#endif
+//#else
+//                    f(
+//                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+//                    );
+//#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -239,11 +239,11 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
                     boost::bind(f,p1)();
-#else
-                    f(p1);
-#endif
+//#else
+//                    f(p1);
+//#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -286,11 +286,11 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
         boost::bind(f,p1,p2)();
-#else
-        f(p1,p2);
-#endif
+//#else
+//        f(p1,p2);
+//#endif
         }
                 BOOST_CATCH (...)
                 {
@@ -334,11 +334,11 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
         boost::bind(f,p1,p2,p3)();
-#else
-        f(p1,p2,p3);
-#endif
+//#else
+//        f(p1,p2,p3);
+//#endif
         }
                 BOOST_CATCH (...)
                 {
@@ -426,16 +426,16 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
         boost::bind(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1))
          )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1))
-        );
-#endif
+//#else
+//        f(
+//            thread_detail::decay_copy(boost::forward<T1>(p1))
+//        );
+//#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -478,18 +478,18 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
         boost::bind(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1)),
             thread_detail::decay_copy(boost::forward<T1>(p2))
          )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2))
-        );
-#endif
+//#else
+//        f(
+//            thread_detail::decay_copy(boost::forward<T1>(p1)),
+//            thread_detail::decay_copy(boost::forward<T1>(p2))
+//        );
+//#endif
                 }
                 BOOST_CATCH (...)
                 {
@@ -533,20 +533,20 @@ namespace boost
                 BOOST_TRY
                 {
                     pthread::pthread_mutex_scoped_unlock relocker(&thread_detail::once_epoch_mutex);
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
         boost::bind(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1)),
             thread_detail::decay_copy(boost::forward<T1>(p2)),
             thread_detail::decay_copy(boost::forward<T1>(p3))
          )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2)),
-            thread_detail::decay_copy(boost::forward<T1>(p3))
-        );
-#endif
+//#else
+//        f(
+//            thread_detail::decay_copy(boost::forward<T1>(p1)),
+//            thread_detail::decay_copy(boost::forward<T1>(p2)),
+//            thread_detail::decay_copy(boost::forward<T1>(p3))
+//        );
+//#endif
                 }
                 BOOST_CATCH (...)
                 {
