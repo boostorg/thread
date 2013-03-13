@@ -18,6 +18,7 @@
 
 #include <boost/config.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/thread/detail/move.hpp>
 #ifndef BOOST_NO_CXX11_HDR_FUNCTIONAL
 #include <functional>
 #endif
@@ -31,8 +32,9 @@ namespace boost
     ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE_N3276) && \
-    ! defined(BOOST_NO_CXX11_AUTO) && \
-    ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    ! defined(BOOST_NO_CXX11_AUTO)
+
+    //! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
 #define BOOST_THREAD_PROVIDES_INVOKE
 
@@ -41,7 +43,7 @@ namespace boost
     template <class Fp, class A0, class ...Args>
     inline
     auto
-    invoke(Fp&& f, A0&& a0, Args&& ...args)
+    invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(Args) ...args)
         -> decltype((boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...))
     {
         return (boost::forward<A0>(a0).*f)(boost::forward<Args>(args)...);
@@ -50,7 +52,7 @@ namespace boost
     template <class Fp, class A0, class ...Args>
     inline
     auto
-    invoke(Fp&& f, A0&& a0, Args&& ...args)
+    invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(Args) ...args)
         -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...))
     {
         return ((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(args)...);
@@ -61,7 +63,7 @@ namespace boost
     template <class Fp, class A0>
     inline
     auto
-    invoke(Fp&& f, A0&& a0)
+    invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0)
         -> decltype(boost::forward<A0>(a0).*f)
     {
         return boost::forward<A0>(a0).*f;
@@ -70,7 +72,7 @@ namespace boost
     template <class Fp, class A0>
     inline
     auto
-    invoke(Fp&& f, A0&& a0)
+    invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0)
         -> decltype((*boost::forward<A0>(a0)).*f)
     {
         return (*boost::forward<A0>(a0)).*f;
@@ -80,7 +82,7 @@ namespace boost
 
     template <class Fp, class ...Args>
     inline
-    auto invoke(Fp&& f, Args&& ...args)
+    auto invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(Args) ...args)
     -> decltype(boost::forward<Fp>(f)(boost::forward<Args>(args)...))
     {
       return boost::forward<Fp>(f)(boost::forward<Args>(args)...);
@@ -88,12 +90,13 @@ namespace boost
 #else
 #if ! defined(BOOST_NO_SFINAE_EXPR) && \
     ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL && \
-    ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL
+
+    //! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 
     template <class Ret, class Fp, class ...Args>
     inline
-    Ret invoke(Fp&& f, Args&& ...args)
+    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(Args) ...args)
     {
       return std::bind(boost::forward<Fp>(f), boost::forward<Args>(args)...)();
     }
