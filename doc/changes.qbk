@@ -8,7 +8,27 @@
 
 [section:changes History]
 
+[heading Version 4.1.0 - boost 1.54]
+
+* [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once.
+* [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class
+
 [heading Version 4.0.0 - boost 1.53]
+
+* [@http://svn.boost.org/trac/boost/ticket/4882 #4882] Win32 shared_mutex does not handle timeouts correctly.
+* [@http://svn.boost.org/trac/boost/ticket/6652 #6652] Boost.Thread shared_mutex.hpp:50:99: warning: dereferencing type-punned pointer will break strict-aliasing rules [-Wstrict-aliasing]
+* [@http://svn.boost.org/trac/boost/ticket/7720 #7720] exception lock_error while intensive locking/unlocking of mutex
+* [@http://svn.boost.org/trac/boost/ticket/7755 #7755] Thread: deadlock with shared_mutex on Windows
+* [@http://svn.boost.org/trac/boost/ticket/4882 #8070] prefer GetTickCount64 over GetTickCount
+* [@http://svn.boost.org/trac/boost/ticket/8136 #8136] boost::this_thread::sleep_for() sleeps longer than it should in Windows
+* [@http://svn.boost.org/trac/boost/ticket/8212 #8212] Boost thread compilation error on Solaris 10
+* [@http://svn.boost.org/trac/boost/ticket/8237 #8237] fix documentation for 'thread_group'
+* [@http://svn.boost.org/trac/boost/ticket/8239 #8239] barrier::wait() not marked as interruption_point
+
+
+[*New Features:]
+
+[*Fixed Bugs:]
 
 [/
 [*Breaking changes:]
