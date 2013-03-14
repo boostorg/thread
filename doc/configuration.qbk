@@ -31,7 +31,7 @@
     [[PROVIDES_ONCE_CXX11]    [DONT_PROVIDE_ONCE_CXX11]  [NO] [YES] [YES]  ]
     [[USES_MOVE]                [DONT_USE_MOVE]              [NO] [YES] [YES] ]
 
-    [[USES_DATETIME]            [DONT_USE_DATETIME]          [YES] [YES] [NO]  ]
+    [[USES_DATETIME]            [DONT_USE_DATETIME]          [YES] [YES] [YES/NO]  ]
     [[PROVIDES_THREAD_EQ]       [DONT_PROVIDE_THREAD_EQ]     [YES] [YES] [NO]  ]
     [[PROVIDES_CONDITION]       [DONT_PROVIDE_CONDITION]     [YES] [YES] [NO]  ]
     [[PROVIDES_NESTED_LOCKS]    [DONT_PROVIDE_NESTED_LOCKS]  [YES] [YES] [NO]  ]
@@ -69,8 +69,10 @@ The Boost.DateTime time related functions introduced in Boost 1.35.0, using the 
 * __timed_lock_ref__
 
 
-When `BOOST_THREAD_VERSION<=3` define `BOOST_THREAD_DONT_USE_DATETIME ` if you don't want to use Boost.DateTime related interfaces.
-When `BOOST_THREAD_VERSION>3` define `BOOST_THREAD_USES_DATETIME ` if you want to use Boost.DateTime related interfaces.
+When `BOOST_THREAD_VERSION<=3` && defined BOOST_THREAD_PLATFORM_PTHREAD define `BOOST_THREAD_DONT_USE_DATETIME` if you don't want to use Boost.DateTime related interfaces.
+When `BOOST_THREAD_VERSION>3`  && defined BOOST_THREAD_PLATFORM_PTHREAD define `BOOST_THREAD_USES_DATETIME` if you want to use Boost.DateTime related interfaces.
+
+When defined BOOST_THREAD_PLATFORM_WIN32 BOOST_THREAD_USES_DATETIME is defined by default.
 
 [endsect]
 
@@ -343,7 +345,7 @@ The user can request the version 3 by defining `BOOST_THREAD_VERSION` to 3. In t
 
 * Breaking change `BOOST_THREAD_DONT_PROVIDE_PROMISE_LAZY`
 
-The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.54.
+[/The default value for `BOOST_THREAD_VERSION` will be changed to 3 since Boost 1.54.]
 
 The user can request the version 4 by defining `BOOST_THREAD_VERSION` to 4. In this case the following breaking or extending macros are defined if the opposite is not requested: 
 
@@ -354,7 +356,7 @@ The user can request the version 4 by defining `BOOST_THREAD_VERSION` to 4. In t
 * Breaking change `BOOST_THREAD_DONT_USE_DATETIME`
 
 
-The default value for `BOOST_THREAD_VERSION` will be changed to 4 since Boost 1.56.
+[/The default value for `BOOST_THREAD_VERSION` will be changed to 4 since Boost 1.58.]
 
 [endsect]
 
