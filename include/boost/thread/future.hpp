@@ -2941,8 +2941,8 @@ namespace boost
             else if(!future_obtained)
             {
                 future_obtained=true;
+                return BOOST_THREAD_FUTURE<R>(task);
                 //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<R>(task));
-                return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<R>(task));
             }
             else
             {
