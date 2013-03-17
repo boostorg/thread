@@ -74,6 +74,17 @@ namespace boost
 #define BOOST_ONCE_INIT {0,0}
 #endif  // BOOST_THREAD_PROVIDES_ONCE_CXX11
 
+#if defined BOOST_THREAD_PROVIDES_INVOKE
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke<void>
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#else
+#define BOOST_THREAD_INVOKE_RET_VOID boost::bind
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL ()
+#endif
+
     namespace detail
     {
 #ifdef BOOST_NO_ANSI_APIS
@@ -274,7 +285,6 @@ namespace boost
             {
                 BOOST_TRY
                 {
-
                     f();
                 }
                 BOOST_CATCH(...)
@@ -318,31 +328,11 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#if defined BOOST_THREAD_PROVIDES_INVOKE
-                    detail::invoke(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<A>(A)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
-                    detail::invoke<void>(
+                  BOOST_THREAD_INVOKE_RET_VOID(
                         thread_detail::decay_copy(boost::forward<Function>(f)),
                         thread_detail::decay_copy(boost::forward<A>(a)),
                         thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#else
-                    boost::bind(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<A>(a)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        )();
-#endif
-//#else
-//                    f(
-//                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-//                    );
-//#endif
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -430,11 +420,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-                    boost::bind(f,p1)();
-//#else
-//                    f(p1);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -477,11 +463,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2)();
-//#else
-//        f(p1,p2);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -524,11 +506,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2,p3)();
-//#else
-//        f(p1,p2,p3);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2,p3) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -616,11 +594,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-                    boost::bind(f,p1)();
-//#else
-//                    f(p1);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -663,11 +637,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2)();
-//#else
-//        f(p1,p2);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -710,11 +680,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2,p3)();
-//#else
-//        f(p1,p2,p3);
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2,p3) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -985,16 +951,10 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1))
-         )();
-//#else
-//        f(
-//            thread_detail::decay_copy(boost::forward<T1>(p1))
-//        );
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -1037,18 +997,11 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T2>(p2))
-         )();
-//#else
-//        f(
-//            thread_detail::decay_copy(boost::forward<T1>(p1)),
-//            thread_detail::decay_copy(boost::forward<T2>(p2))
-//        );
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1)),
+                      thread_detail::decay_copy(boost::forward<T2>(p2))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -1091,20 +1044,13 @@ namespace boost
             {
                 BOOST_TRY
                 {
-//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T2>(p2)),
-            thread_detail::decay_copy(boost::forward<T3>(p3))
-         )();
-//#else
-//        f(
-//            thread_detail::decay_copy(boost::forward<T1>(p1)),
-//            thread_detail::decay_copy(boost::forward<T1>(p2)),
-//            thread_detail::decay_copy(boost::forward<T1>(p3))
-//        );
-//#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1)),
+                      thread_detail::decay_copy(boost::forward<T2>(p2)),
+                      thread_detail::decay_copy(boost::forward<T3>(p3))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
+
                 }
                 BOOST_CATCH(...)
                 {
