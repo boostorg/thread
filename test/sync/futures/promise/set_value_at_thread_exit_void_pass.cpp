@@ -19,11 +19,8 @@
 // void promise<void>::set_value_at_thread_exit();
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
-#define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/future.hpp>
-#include <boost/thread/detail/log.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int i = 0;
@@ -35,12 +32,17 @@ void func()
   i = 1;
 }
 
-void func2(boost::promise<void> p2)
+void func2_mv(BOOST_THREAD_RV_REF(boost::promise<void>) p2)
 {
   p2.set_value_at_thread_exit();
   i = 2;
 }
 
+void func2(boost::promise<void> *p2)
+{
+  p2->set_value_at_thread_exit();
+  i = 2;
+}
 int main()
 {
   try
@@ -51,7 +53,7 @@ int main()
     BOOST_TEST(i == 1);
 
   }
-  catch(std::exception ex)
+  catch(std::exception& ex)
   {
     BOOST_TEST(false);
   }
@@ -70,7 +72,7 @@ int main()
     BOOST_TEST(i == 1);
 
   }
-  catch(std::exception ex)
+  catch(std::exception& ex)
   {
     std::cout << __FILE__ << ":" << __LINE__ << " " << ex.what() << std::endl;
     BOOST_TEST(false);
@@ -79,31 +81,28 @@ int main()
   {
     BOOST_TEST(false);
   }
-  // BUG when moving promise. fixme
-//  try
-//  {
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//    boost::promise<void> p2; // BUG
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//    boost::future<void> f = p2.get_future();
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//    boost::thread(func2, boost::move(p2)).detach(); // BUG
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//    f.get();
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//    BOOST_TEST(i == 2);
-//    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG
-//
-//  }
-//  catch(std::exception ex)
-//  {
-//    std::cout << __FILE__ << ":" << __LINE__ << " " << ex.what() << std::endl;
-//    BOOST_TEST(false);
-//  }
-//  catch(...)
-//  {
-//    BOOST_TEST(false);
-//  }
+
+  try
+  {
+    boost::promise<void> p2;
+    boost::future<void> f = p2.get_future();
+#if defined BOOST_THREAD_PROVIDES_VARIADIC_THREAD
+    boost::thread(func2_mv, boost::move(p2)).detach();
+#else
+    boost::thread(func2, &p2).detach();
+#endif
+    f.wait();
+    BOOST_TEST(i == 2);
+  }
+  catch(std::exception& ex)
+  {
+    std::cout << __FILE__ << ":" << __LINE__ << " " << ex.what() << std::endl;
+    BOOST_TEST(false);
+  }
+  catch(...)
+  {
+    BOOST_TEST(false);
+  }
   return boost::report_errors();
 }
 

@@ -57,12 +57,17 @@ public:
   }
 };
 
+void func0_mv(BOOST_THREAD_RV_REF(boost::packaged_task<double(int, char)>) p)
+//void func0(boost::packaged_task<double(int, char)> p)
+{
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+  p.make_ready_at_thread_exit(3, 'a');
+}
 void func0(boost::packaged_task<double(int, char)> *p)
 {
   boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
   p->make_ready_at_thread_exit(3, 'a');
 }
-
 void func1(boost::packaged_task<double(int, char)> *p)
 {
   boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
@@ -99,8 +104,11 @@ int main()
   {
     boost::packaged_task<double(int, char)> p(A(5));
     boost::future<double> f = p.get_future();
-    // fixme BUG boost::thread(func0, boost::move(p)).detach();
+#if defined BOOST_THREAD_PROVIDES_VARIADIC_THREAD
+    boost::thread(func0_mv, boost::move(p)).detach();
+#else
     boost::thread(func0, &p).detach();
+#endif
     BOOST_TEST(f.get() == 105.0);
   }
   {
