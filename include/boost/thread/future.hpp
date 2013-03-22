@@ -1380,6 +1380,7 @@ namespace boost
     } // detail
     BOOST_THREAD_DCL_MOVABLE_BEG(R) detail::basic_future<R> BOOST_THREAD_DCL_MOVABLE_END
 
+#if (!defined _MSC_VER || _MSC_VER >= 1400) // _MSC_VER == 1400 on MSVC 2005
     namespace detail
     {
         template <class Rp, class Fp>
@@ -1390,6 +1391,7 @@ namespace boost
         BOOST_THREAD_FUTURE<Rp>
         make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f);
     }
+#endif // #if (!defined _MSC_VER || _MSC_VER >= 1400)
 
     template <typename R>
     class BOOST_THREAD_FUTURE : public detail::basic_future<R>
@@ -1430,7 +1432,7 @@ namespace boost
         BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
         typedef future_state::state state;
 
-        BOOST_THREAD_FUTURE() {}
+        BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
 
         ~BOOST_THREAD_FUTURE() {}
 
@@ -1522,7 +1524,7 @@ namespace boost
 
         typedef future_state::state state;
 
-        shared_future()
+        BOOST_CONSTEXPR shared_future()
         {}
 
         ~shared_future()
