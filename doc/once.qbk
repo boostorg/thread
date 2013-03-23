@@ -21,6 +21,11 @@
 
   }
 
+[warning the variadic prototype is provided only on C++11 compilers supporting variadic templates, otherwise the interface is limited up to 3 parameters.]
+
+[warning the move semantics is ensured only on C++11 compilers supporting SFINAE expression, decltype N3276 and auto. Waiting for a boost::bind that is move aware.]
+
+
 `boost::call_once` provides a mechanism for ensuring that an initialization routine is run exactly once without data races or deadlocks.
 
 [section:once_flag Typedef `once_flag`]
@@ -70,6 +75,9 @@ that assumes the code knows it has been called recursively, and can
 proceed even though the call to `call_once` didn't actually call the
 function, in which case it could also avoid calling `call_once`
 recursively.]]
+
+
+[[Note:] [On some compilers this function has some restrictions, e.g. if variadic templates are not supported the number of arguments is limited to 3; .]]
 
 ]
 

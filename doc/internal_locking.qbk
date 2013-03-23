@@ -78,7 +78,7 @@ The above example works well as long as the bankAgent and Joe doesn't access Joe
           mtx_.lock();
           int b = balance_;
           mtx_.unlock();
-          return balance_;
+          return b;
       }
   };
 
