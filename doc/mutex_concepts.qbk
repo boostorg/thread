@@ -42,6 +42,8 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
 
 [variablelist
 
+[[Requires:] [The calling thread doesn't owns the mutex if the mutex is not recursive.]]
+
 [[Effects:] [The current thread blocks until ownership can be obtained for the current thread.]]
 
 [[Synchronization:] [Prior `unlock()` operations on the same object synchronizes with this operation. ]]
@@ -97,7 +99,12 @@ Lock ownership acquired through a call to __lock_ref__ must be released through 
     }
   }
 
-Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of BasicLockable you could build. 
+
+Some of the algorithms on mutexes use this trait via SFINAE. 
+
+This trait is true_type if the parameter L meets the __Lockable requirements.
+
+[warning If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of BasicLockable you could build.] 
 
 [endsect]
 [endsect]
@@ -120,6 +127,9 @@ Lock ownership acquired through a call to __try_lock_ref__ must be released thro
 [section:try_lock `m.try_lock()`]
 
 [variablelist
+
+
+[[Requires:] [The calling thread doesn't owns the mutex if the mutex is not recursive.]]
 
 [[Effects:] [Attempt to obtain ownership for the current thread without blocking.]]
 
@@ -152,7 +162,11 @@ failure, even in the absence of spurious failures.]]
     }
   }
 
-Some of the algorithms on mutexes use this trait via SFINAE. If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of Lockable you could build. 
+Some of the algorithms on mutexes use this trait via SFINAE. 
+
+This trait is true_type if the parameter L meets the __Locable requirements.
+
+[warning If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of Lockable you could build.] 
 
 [endsect]
 [endsect]
@@ -182,6 +196,37 @@ The user could require that the mutex passed to an algorithm is a recursive one.
 The trait `is_recursive_mutex_sur_parolle` is `false_type` by default and is specialized for the provide `recursive_mutex` and `timed_recursive_mutex`. 
 
 It should be specialized by the user providing other model of recursive lockable.
+
+[endsect]
+
+[section:is_recursive_basic_lockable `is_recursive_basic_lockable` trait -- EXTENSION]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_recursive_basic_lockable;// EXTENSION
+    }
+  }
+
+This traits is true_type if is_basic_lockable and is_recursive_mutex_sur_parolle.
+
+[endsect]
+[section:is_recursive_lockable `is_recursive_lockable` trait -- EXTENSION]
+
+  // #include <boost/thread/lockable_traits.hpp> 
+  namespace boost 
+  {
+    namespace sync 
+    {
+      template<typename L>
+      class is_recursive_lockable;// EXTENSION
+    }
+  }
+
+This traits is true_type if is_lockable and is_recursive_mutex_sur_parolle.
 
 [endsect]
 
@@ -220,6 +265,8 @@ Lock ownership acquired through a call to __try_lock_for or __try_lock_until mus
 
 [variablelist
 
+[[Requires:] [The calling thread doesn't owns the mutex if the mutex is not recursive.]]
+
 [[Effects:] [Attempt to obtain ownership for the current thread. Blocks until ownership can be obtained, or the specified time is
 reached. If the specified time has already passed, behaves as __try_lock_ref__.]]
 
@@ -238,6 +285,8 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 [section:try_lock_for `m.try_lock_for(rel_time)`]
 
 [variablelist
+
+[[Requires:] [The calling thread doesn't owns the mutex if the mutex is not recursive.]]
 
 [[Effects:] [As-if `__try_lock_until(chrono::steady_clock::now() + rel_time)`.]]
 
