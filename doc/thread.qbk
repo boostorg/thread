@@ -235,6 +235,7 @@
 [include sync_tutorial.qbk]
 [include mutex_concepts.qbk]
 [include mutexes.qbk]
+[/include synchronized_value_ref.qbk]
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]

@@ -17,6 +17,7 @@
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/detail/no_exceptions_support.hpp>
 #include <boost/bind.hpp>
+#include <boost/atomic.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -27,9 +28,28 @@ namespace boost
 
   namespace thread_detail
   {
+
+#if BOOST_ATOMIC_INT_LOCK_FREE == 2
+    typedef unsigned int atomic_int_type;
+#elif BOOST_ATOMIC_SHORT_LOCK_FREE == 2
+    typedef unsigned short atomic_int_type;
+#elif BOOST_ATOMIC_CHAR_LOCK_FREE == 2
+    typedef unsigned char atomic_int_type;
+#elif BOOST_ATOMIC_LONG_LOCK_FREE == 2
+    typedef unsigned long atomic_int_type;
+#elif defined(BOOST_HAS_LONG_LONG) && BOOST_ATOMIC_LLONG_LOCK_FREE == 2
+    typedef ulong_long_type atomic_int_type;
+#else
+    // All tested integer types are not atomic, the spinlock pool will be used
+    typedef unsigned int atomic_int_type;
+#endif
+
+    typedef boost::atomic<atomic_int_type> atomic_type;
+
     BOOST_THREAD_DECL bool enter_once_region(once_flag& flag) BOOST_NOEXCEPT;
     BOOST_THREAD_DECL void commit_once_region(once_flag& flag) BOOST_NOEXCEPT;
     BOOST_THREAD_DECL void rollback_once_region(once_flag& flag) BOOST_NOEXCEPT;
+    inline atomic_type& get_atomic_storage(once_flag& flag)  BOOST_NOEXCEPT;
   }
 
 #ifdef BOOST_THREAD_PROVIDES_ONCE_CXX11
@@ -42,30 +62,58 @@ namespace boost
     }
 
   private:
-  #if defined(__GNUC__)
-    __attribute__((may_alias))
-  #endif
-    uintmax_t storage;
+    thread_detail::atomic_type storage;
 
     friend BOOST_THREAD_DECL bool thread_detail::enter_once_region(once_flag& flag) BOOST_NOEXCEPT;
     friend BOOST_THREAD_DECL void thread_detail::commit_once_region(once_flag& flag) BOOST_NOEXCEPT;
     friend BOOST_THREAD_DECL void thread_detail::rollback_once_region(once_flag& flag) BOOST_NOEXCEPT;
+    friend thread_detail::atomic_type& thread_detail::get_atomic_storage(once_flag& flag) BOOST_NOEXCEPT;
   };
 
 #define BOOST_ONCE_INIT boost::once_flag()
 
+  namespace thread_detail
+  {
+    inline atomic_type& get_atomic_storage(once_flag& flag) BOOST_NOEXCEPT
+    {
+      //return reinterpret_cast< atomic_type& >(flag.storage);
+      return flag.storage;
+    }
+  }
+
 #else // BOOST_THREAD_PROVIDES_ONCE_CXX11
   struct once_flag
   {
-  #if defined(__GNUC__)
-    __attribute__((may_alias))
-  #endif
-    uintmax_t storage;
+    // The thread_detail::atomic_int_type storage is marked
+    // with this attribute in order to let the compiler know that it will alias this member
+    // and silence compilation warnings.
+    BOOST_THREAD_ATTRIBUTE_MAY_ALIAS thread_detail::atomic_int_type storage;
   };
 
   #define BOOST_ONCE_INIT {0}
 
+  namespace thread_detail
+  {
+    inline atomic_type& get_atomic_storage(once_flag& flag) BOOST_NOEXCEPT
+    {
+      return reinterpret_cast< atomic_type& >(flag.storage);
+    }
+
+  }
+
 #endif // BOOST_THREAD_PROVIDES_ONCE_CXX11
+
+#if defined BOOST_THREAD_PROVIDES_INVOKE
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke<void>
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#else
+#define BOOST_THREAD_INVOKE_RET_VOID boost::bind
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL ()
+#endif
+
 
 #ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
@@ -76,28 +124,10 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#if defined BOOST_THREAD_PROVIDES_INVOKE
-                    detail::invoke(
+        BOOST_THREAD_INVOKE_RET_VOID(
                         thread_detail::decay_copy(boost::forward<Function>(f)),
                         thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
-                    detail::invoke<void>(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#else
-                    boost::bind(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        )();
-#endif
-#else
-                    f(
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                    );
-#endif
+        ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -135,11 +165,7 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1)();
-#else
-        f(p1);
-#endif
+        BOOST_THREAD_INVOKE_RET_VOID(f, p1) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -158,11 +184,7 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2)();
-#else
-        f(p1,p2);
-#endif
+        BOOST_THREAD_INVOKE_RET_VOID(f, p1, p2) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -181,11 +203,7 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2,p3)();
-#else
-        f(p1,p2,p3);
-#endif
+        BOOST_THREAD_INVOKE_RET_VOID(f, p1, p2, p3) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -223,17 +241,10 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
+        BOOST_THREAD_INVOKE_RET_VOID(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1))
-        );
-#endif
-
+        ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -251,18 +262,11 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
+        BOOST_THREAD_INVOKE_RET_VOID(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1)),
             thread_detail::decay_copy(boost::forward<T1>(p2))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2))
-        );
-#endif
+        ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
       }
       BOOST_CATCH (...)
       {
@@ -280,20 +284,12 @@ namespace boost
     {
       BOOST_TRY
       {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
+        BOOST_THREAD_INVOKE_RET_VOID(
             thread_detail::decay_copy(boost::forward<Function>(f)),
             thread_detail::decay_copy(boost::forward<T1>(p1)),
             thread_detail::decay_copy(boost::forward<T1>(p2)),
             thread_detail::decay_copy(boost::forward<T1>(p3))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2)),
-            thread_detail::decay_copy(boost::forward<T1>(p3))
-        );
-#endif
+        ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
 
       }
       BOOST_CATCH (...)

@@ -5,7 +5,7 @@
 //
 //  (C) Copyright 2005-7 Anthony Williams
 //  (C) Copyright 2005 John Maddock
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2013 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -73,6 +73,17 @@ namespace boost
 
 #define BOOST_ONCE_INIT {0,0}
 #endif  // BOOST_THREAD_PROVIDES_ONCE_CXX11
+
+#if defined BOOST_THREAD_PROVIDES_INVOKE
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
+#define BOOST_THREAD_INVOKE_RET_VOID detail::invoke<void>
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL
+#else
+#define BOOST_THREAD_INVOKE_RET_VOID boost::bind
+#define BOOST_THREAD_INVOKE_RET_VOID_CALL ()
+#endif
 
     namespace detail
     {
@@ -261,8 +272,8 @@ namespace boost
         }
     }
 //#endif
-    template<typename Function, class ...ArgTypes>
-    inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(ArgTypes)... args)
+    template<typename Function>
+    inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f)
     {
         // Try for a quick win: if the procedure has already been called
         // just skip through:
@@ -274,28 +285,54 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#if defined BOOST_THREAD_PROVIDES_INVOKE
-                    detail::invoke(
+                    f();
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, class A, class ...ArgTypes>
+    inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(A) a, BOOST_THREAD_RV_REF(ArgTypes)... args)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  BOOST_THREAD_INVOKE_RET_VOID(
                         thread_detail::decay_copy(boost::forward<Function>(f)),
+                        thread_detail::decay_copy(boost::forward<A>(a)),
                         thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#elif defined BOOST_THREAD_PROVIDES_INVOKE_RET
-                    detail::invoke<void>(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        );
-#else
-                    boost::bind(
-                        thread_detail::decay_copy(boost::forward<Function>(f)),
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                        )();
-#endif
-#else
-                    f(
-                        thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-                    );
-#endif
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -327,7 +364,6 @@ namespace boost
     }
 #else
 #ifndef BOOST_MSVC
-
     template<typename Function>
     void call_once(once_flag& flag,Function f)
     {
@@ -384,11 +420,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-                    boost::bind(f,p1)();
-#else
-                    f(p1);
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -431,11 +463,7 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2)();
-#else
-        f(p1,p2);
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -478,11 +506,181 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(f,p1,p2,p3)();
-#else
-        f(p1,p2,p3);
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2,p3) BOOST_THREAD_INVOKE_RET_VOID_CALL;
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+#elif defined BOOST_NO_CXX11_RVALUE_REFERENCES
+
+    template<typename Function>
+    void call_once(once_flag& flag,Function const&f)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                    f();
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1) BOOST_THREAD_INVOKE_RET_VOID_CALL;
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1, T2 const&p2)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2) BOOST_THREAD_INVOKE_RET_VOID_CALL;
+                }
+                BOOST_CATCH(...)
+                {
+                    detail::rollback_once_region(flag, ctx);
+                    BOOST_RETHROW
+                }
+                BOOST_CATCH_END
+                detail::commit_once_region(flag, ctx);
+                break;
+            }
+            if(!ctx.counted)
+            {
+                BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                ctx.counted=true;
+                long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                if(status==ctx.function_complete_flag_value)
+                {
+                    break;
+                }
+                if(!ctx.event_handle)
+                {
+                    ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                    continue;
+                }
+            }
+            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                             ctx.event_handle,::boost::detail::win32::infinite));
+        }
+    }
+    template<typename Function, typename T1, typename T2, typename T3>
+    void call_once(once_flag& flag,Function const&f, T1 const&p1, T2 const&p2, T3 const&p3)
+    {
+        // Try for a quick win: if the procedure has already been called
+        // just skip through:
+        detail::once_context ctx;
+        while(::boost::detail::interlocked_read_acquire(&flag.status)
+              !=ctx.function_complete_flag_value)
+        {
+            if(detail::enter_once_region(flag, ctx))
+            {
+                BOOST_TRY
+                {
+                  BOOST_THREAD_INVOKE_RET_VOID(f,p1,p2,p3) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -617,7 +815,54 @@ namespace boost
                     {
                       f(
                           thread_detail::decay_copy(boost::forward<T1>(p1)),
-                          thread_detail::decay_copy(boost::forward<T1>(p2))
+                          thread_detail::decay_copy(boost::forward<T2>(p2))
+                      );
+                    }
+                    BOOST_CATCH(...)
+                    {
+                        detail::rollback_once_region(flag, ctx);
+                        BOOST_RETHROW
+                    }
+                    BOOST_CATCH_END
+                    detail::commit_once_region(flag, ctx);
+                    break;
+                }
+                if(!ctx.counted)
+                {
+                    BOOST_INTERLOCKED_INCREMENT(&flag.count);
+                    ctx.counted=true;
+                    long status=::boost::detail::interlocked_read_acquire(&flag.status);
+                    if(status==ctx.function_complete_flag_value)
+                    {
+                        break;
+                    }
+                    if(!ctx.event_handle)
+                    {
+                        ctx.event_handle=detail::create_once_event(ctx.mutex_name,&flag);
+                        continue;
+                    }
+                }
+                BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
+                                 ctx.event_handle,::boost::detail::win32::infinite));
+            }
+        }
+        template<typename Function, typename T1, typename T2, typename T3>
+        void call_once(once_flag& flag,void (*f)(BOOST_THREAD_RV_REF(T1),BOOST_THREAD_RV_REF(T2)), BOOST_THREAD_RV_REF(T1) p1, BOOST_THREAD_RV_REF(T2) p2, BOOST_THREAD_RV_REF(T3) p3)
+        {
+            // Try for a quick win: if the procedure has already been called
+            // just skip through:
+            detail::once_context ctx;
+            while(::boost::detail::interlocked_read_acquire(&flag.status)
+                  !=ctx.function_complete_flag_value)
+            {
+                if(detail::enter_once_region(flag, ctx))
+                {
+                    BOOST_TRY
+                    {
+                      f(
+                          thread_detail::decay_copy(boost::forward<T1>(p1)),
+                          thread_detail::decay_copy(boost::forward<T2>(p2)),
+                          thread_detail::decay_copy(boost::forward<T3>(p3))
                       );
                     }
                     BOOST_CATCH(...)
@@ -706,16 +951,10 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1))
-        );
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -758,18 +997,11 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2))
-        );
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1)),
+                      thread_detail::decay_copy(boost::forward<T2>(p2))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
                 }
                 BOOST_CATCH(...)
                 {
@@ -812,20 +1044,13 @@ namespace boost
             {
                 BOOST_TRY
                 {
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-        boost::bind(
-            thread_detail::decay_copy(boost::forward<Function>(f)),
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2)),
-            thread_detail::decay_copy(boost::forward<T1>(p3))
-         )();
-#else
-        f(
-            thread_detail::decay_copy(boost::forward<T1>(p1)),
-            thread_detail::decay_copy(boost::forward<T1>(p2)),
-            thread_detail::decay_copy(boost::forward<T1>(p3))
-        );
-#endif
+                  BOOST_THREAD_INVOKE_RET_VOID(
+                      thread_detail::decay_copy(boost::forward<Function>(f)),
+                      thread_detail::decay_copy(boost::forward<T1>(p1)),
+                      thread_detail::decay_copy(boost::forward<T2>(p2)),
+                      thread_detail::decay_copy(boost::forward<T3>(p3))
+                  ) BOOST_THREAD_INVOKE_RET_VOID_CALL;
+
                 }
                 BOOST_CATCH(...)
                 {

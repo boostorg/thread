@@ -109,11 +109,11 @@ int init1_member::called = 0;
 void f1_member()
 {
     init1_member o;
-#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
+//#if defined BOOST_THREAD_PROVIDES_ONCE_CXX11
     boost::call_once(flg1_member, &init1_member::call, o, 1);
-#else
-    boost::call_once(flg1_member, boost::bind(&init1_member::call, o, 1));
-#endif
+//#else
+//    boost::call_once(flg1_member, boost::bind(&init1_member::call, boost::ref(o), 1));
+//#endif
 }
 //#endif
 struct init2
@@ -248,12 +248,12 @@ int main()
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly());
     }
+#endif
+#if defined BOOST_THREAD_PROVIDES_INVOKE
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), 1);
     }
-#endif
-#if defined BOOST_THREAD_PROVIDES_INVOKE
     {
         boost::once_flag f BOOST_INIT_ONCE_INIT;
         boost::call_once(f, MoveOnly(), MoveOnly());

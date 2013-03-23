@@ -1677,7 +1677,11 @@ namespace boost
                 boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
-            return BOOST_THREAD_FUTURE<R>(future_);
+            return
+                //BOOST_THREAD_MAKE_RV_REF(
+                BOOST_THREAD_FUTURE<R>(future_)
+                //)
+                ;
         }
 
         void set_value(typename detail::future_traits<R>::source_reference_type r)
@@ -1845,6 +1849,7 @@ namespace boost
             }
             future_obtained=true;
             return BOOST_THREAD_FUTURE<R&>(future_);
+            //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<R&>(future_));
         }
 
         void set_value(R& r)
@@ -1990,6 +1995,9 @@ namespace boost
             }
             future_obtained=true;
             return BOOST_THREAD_FUTURE<void>(future_);
+            //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<void>(future_));
+            //BOOST_THREAD_FUTURE<void> res;
+            //return boost::move(res);
         }
 
         void set_value()
@@ -2938,8 +2946,8 @@ namespace boost
             else if(!future_obtained)
             {
                 future_obtained=true;
-                //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<R>(task));
                 return BOOST_THREAD_FUTURE<R>(task);
+                //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<R>(task));
             }
             else
             {
@@ -3139,12 +3147,12 @@ namespace boost
         if (int(policy) & int(launch::async))
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return boost::detail::make_future_async_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_object<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
-          );
+          ));
 #else
           packaged_task_type pt( boost::forward<F>(f) );
 
@@ -3160,12 +3168,12 @@ namespace boost
         else if (int(policy) & int(launch::deferred))
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return boost::detail::make_future_deferred_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_object<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
-          );
+          ));
 #else
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
@@ -3194,14 +3202,14 @@ namespace boost
         BOOST_THREAD_FUTURE<R>
         async(R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
-          return async(launch(launch::any), f, boost::forward<ArgTypes>(args)...);
+          return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), f, boost::forward<ArgTypes>(args)...));
         }
 #else
         template <class R>
         BOOST_THREAD_FUTURE<R>
         async(R(*f)())
         {
-          return async(launch(launch::any), f);
+          return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), f));
         }
 #endif
 #endif
@@ -3213,14 +3221,14 @@ namespace boost
         )>::type>
         async(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
-            return async(launch(launch::any), boost::forward<F>(f), boost::forward<ArgTypes>(args)...);
+            return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), boost::forward<F>(f), boost::forward<ArgTypes>(args)...));
         }
 #else
         template <class F>
         BOOST_THREAD_FUTURE<typename boost::result_of<F()>::type>
         async(BOOST_THREAD_RV_REF(F) f)
         {
-            return async(launch(launch::any), boost::forward<F>(f));
+            return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), boost::forward<F>(f)));
         }
 #endif
 
@@ -3234,16 +3242,17 @@ namespace boost
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
     p.set_value(boost::forward<T>(value));
-    return p.get_future();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
-
+#if defined BOOST_THREAD_USES_MOVE
   inline BOOST_THREAD_FUTURE<void> make_future()
   {
     promise<void> p;
-    return p.get_future();
-
+    p.set_value();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
+#endif
 
   ////////////////////////////////
   // make_shared_future
@@ -3254,14 +3263,14 @@ namespace boost
     typedef typename decay<T>::type future_type;
     promise<future_type> p;
     p.set_value(boost::forward<T>(value));
-    return p.get_future().share();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
   }
 
 
   inline shared_future<void> make_shared_future()
   {
     promise<void> p;
-    return p.get_future().share();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
 
   }
 
@@ -3397,10 +3406,10 @@ namespace boost
           new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func), policy);
       if (ptr==0)
       {
-        return BOOST_THREAD_FUTURE<future_type>();
+        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
       }
       this->future_->set_continuation_ptr(ptr, lock);
-      return ptr->next.get_future();
+      return BOOST_THREAD_MAKE_RV_REF(ptr->next.get_future());
     }
     else
     {
@@ -3421,16 +3430,20 @@ namespace boost
     {
       boost::unique_lock<boost::mutex> lock(this->future_->mutex);
       detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F > *ptr =
-          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func));
+          new
+          //BOOST_THREAD_MAKE_RV_REF((
+              detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(*this, boost::forward<F>(func))
+              //))
+              ;
       if (ptr==0)
       {
-        return BOOST_THREAD_FUTURE<future_type>();
+        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
       }
       this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
       // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
+      return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
     }
 
   }
@@ -3447,16 +3460,20 @@ namespace boost
     {
       boost::unique_lock<boost::mutex> lock(this->future_->mutex);
       detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
-          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func);
+          new
+          //BOOST_THREAD_MAKE_RV_REF((
+              detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func)
+           //   ))
+      ;
       if (ptr==0)
       {
-        return BOOST_THREAD_FUTURE<future_type>();
+        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
       }
       this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
       // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
+      return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
     }
 
   }
@@ -3472,16 +3489,20 @@ namespace boost
     {
       boost::unique_lock<boost::mutex> lock(this->future_->mutex);
       detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
-          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func, policy);
+          new
+          //BOOST_THREAD_MAKE_RV_REF((
+              detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func, policy)
+            //  ))
+      ;
       if (ptr==0)
       {
-        return BOOST_THREAD_FUTURE<future_type>();
+        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
       }
       this->future_->set_continuation_ptr(ptr, lock);
       return ptr->next.get_future();
     } else {
       // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
+      return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
     }
 
   }

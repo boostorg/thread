@@ -11,7 +11,8 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/barrier.hpp>
 
-#include <boost/test/unit_test.hpp>
+#include <boost/detail/lightweight_test.hpp>
+//#include <boost/test/unit_test.hpp>
 #include <vector>
 
 namespace {
@@ -54,16 +55,21 @@ void test_barrier()
         throw;
     }
 
-    BOOST_CHECK_EQUAL(global_parameter,5);
+    //BOOST_CHECK_EQUAL(global_parameter,5);
+    BOOST_TEST(global_parameter==5);
+
 }
 
-boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
+//boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
+int main()
 {
-    boost::unit_test::test_suite* test =
-        BOOST_TEST_SUITE("Boost.Threads: barrier test suite");
+//    boost::unit_test::test_suite* test =
+//        BOOST_TEST_SUITE("Boost.Threads: barrier test suite");
+//
+//    test->add(BOOST_TEST_CASE(&test_barrier));
 
-    test->add(BOOST_TEST_CASE(&test_barrier));
-
-    return test;
+    test_barrier();
+    return boost::report_errors();
+    //return test;
 }
 

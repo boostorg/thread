@@ -10,6 +10,15 @@
 
 int p1() { return 5; }
 
+void p() { }
+
+#if defined BOOST_THREAD_USES_MOVE
+boost::future<void> void_compute()
+{
+  return BOOST_THREAD_MAKE_RV_REF(boost::make_future());
+}
+#endif
+
 boost::future<int> compute(int x)
 {
   if (x == 0) return boost::make_future(0);
@@ -30,8 +39,18 @@ boost::shared_future<int> shared_compute(int x)
 
 int main()
 {
+#if defined BOOST_THREAD_USES_MOVE
+  {
+    boost::future<void> f = void_compute();
+    f.get();
+  }
+#endif
   {
     boost::future<int> f = compute(2);
+    std::cout << f.get() << std::endl;
+  }
+  {
+    boost::future<int> f = compute(0);
     std::cout << f.get() << std::endl;
   }
   {
