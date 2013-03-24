@@ -6,7 +6,7 @@
 #define BOOST_THREAD_VERSION 2
 
 #include <boost/test/unit_test.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/xtime.hpp>
 #include "./util.inl"
 #include "./shared_mutex_locking_thread.hpp"

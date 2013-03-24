@@ -5,7 +5,7 @@
 
 #define BOOST_THREAD_VERSION 2
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/shared_ptr.hpp>

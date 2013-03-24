@@ -6,7 +6,7 @@
 #define BOOST_DATE_TIME_POSIX_TIME_STD_CONFIG
 
 #include <iostream>
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 class ThreadClass
 {

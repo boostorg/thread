@@ -7,7 +7,7 @@
 #define BOOST_THREAD_USES_LOG
 
 #include <iostream>
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/detail/log.hpp>
 
 void thread()

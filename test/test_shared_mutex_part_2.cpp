@@ -51,7 +51,7 @@ public:
 
 void test_only_one_upgrade_lock_permitted()
 {
-    unsigned const number_of_threads=10;
+    unsigned const number_of_threads=2;
 
     boost::thread_group pool;
 

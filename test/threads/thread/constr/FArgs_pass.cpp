@@ -20,7 +20,7 @@
 #include <new>
 #include <cstdlib>
 #include <cassert>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 unsigned throw_one = 0xFFFF;

@@ -7,7 +7,7 @@
 
 #include <boost/date_time.hpp>
 #include <boost/thread/mutex.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <iostream>
 
 // Number should be big enough to allow context switch between threads, otherwise the bug doesn't show.

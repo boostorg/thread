@@ -5,7 +5,7 @@
 
 #define BOOST_THREAD_VERSION 3
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/ref.hpp>
 #include <boost/utility.hpp>
