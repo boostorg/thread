@@ -19,7 +19,7 @@
 
 #define BOOST_THREAD_VERSION 4
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <new>
 #include <cstdlib>
 #include <cassert>

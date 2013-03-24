@@ -6,7 +6,7 @@
 #define BOOST_THREAD_PROVIDES_INTERRUPTIONS
 
 #include <iostream>
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 #if defined BOOST_THREAD_USES_CHRONO

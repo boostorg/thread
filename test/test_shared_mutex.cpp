@@ -20,6 +20,7 @@
 
 void test_multiple_readers()
 {
+  std::cout << __LINE__ << std::endl;
     unsigned const number_of_threads=10;
 
     boost::thread_group pool;
@@ -67,6 +68,7 @@ void test_multiple_readers()
 
 void test_only_one_writer_permitted()
 {
+  std::cout << __LINE__ << std::endl;
     unsigned const number_of_threads=10;
 
     boost::thread_group pool;
@@ -109,6 +111,7 @@ void test_only_one_writer_permitted()
 
 void test_reader_blocks_writer()
 {
+  std::cout << __LINE__ << std::endl;
     boost::thread_group pool;
 
     boost::shared_mutex rw_mutex;
@@ -155,6 +158,7 @@ void test_reader_blocks_writer()
 
 void test_unlocking_writer_unblocks_all_readers()
 {
+  std::cout << __LINE__ << std::endl;
     boost::thread_group pool;
 
     boost::shared_mutex rw_mutex;
@@ -206,6 +210,7 @@ void test_unlocking_writer_unblocks_all_readers()
 
 void test_unlocking_last_reader_only_unblocks_one_writer()
 {
+  std::cout << __LINE__ << std::endl;
     boost::thread_group pool;
 
     boost::shared_mutex rw_mutex;

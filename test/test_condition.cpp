@@ -11,7 +11,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/condition.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/xtime.hpp>
 
 #include <boost/test/unit_test.hpp>

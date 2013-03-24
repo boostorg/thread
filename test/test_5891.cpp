@@ -6,7 +6,7 @@
 #define BOOST_THREAD_VERSION 2
 
 #include <iostream>
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 using namespace std;
 using namespace boost;

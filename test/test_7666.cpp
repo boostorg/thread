@@ -6,7 +6,7 @@
 #define BOOST_CHRONO_VERSION 2
 #define BOOST_THREAD_VERSION 2
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 void myFunc()
 {
