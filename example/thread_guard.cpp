@@ -7,7 +7,7 @@
 
 #include <iostream>
 #include <string>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/thread_guard.hpp>
 
 void do_something(int& i)
