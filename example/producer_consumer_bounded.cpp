@@ -11,9 +11,9 @@
 #include <iostream>
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/thread/externally_locked_stream.hpp>
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/sync_bounded_queue.hpp>
 
-void producer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_queue<int> & sbq)
+void producer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
@@ -35,7 +35,7 @@ void producer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_qu
   }
 }
 
-void consumer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_queue<int> & sbq)
+void consumer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
@@ -57,7 +57,7 @@ void consumer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_qu
     mos << "exception !!!\n";
   }
 }
-void consumer2(boost::externally_locked_stream<std::ostream> &mos, boost::sync_queue<int> & sbq)
+void consumer2(boost::externally_locked_stream<std::ostream> &mos, boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
@@ -76,7 +76,7 @@ void consumer2(boost::externally_locked_stream<std::ostream> &mos, boost::sync_q
     mos << "exception !!!\n";
   }
 }
-//void consumer3(boost::externally_locked_stream<std::ostream> &mos, boost::sync_queue<int> & sbq)
+//void consumer3(boost::externally_locked_stream<std::ostream> &mos, boost::sync_bounded_queue<int> & sbq)
 //{
 //  using namespace boost;
 //  bool closed=false;
@@ -106,7 +106,7 @@ int main()
   externally_locked_stream<std::ostream> mcout(std::cout, terminal_mutex);
   externally_locked_stream<std::istream> mcin(std::cin, terminal_mutex);
 
-  sync_queue<int> sbq;
+  sync_bounded_queue<int> sbq(10);
 
   {
     mcout << "begin of main" << std::endl;
@@ -116,7 +116,6 @@ int main()
 
     this_thread::sleep_for(chrono::seconds(1));
 
-    mcout << "closed()" << std::endl;
     sbq.close();
     mcout << "closed()" << std::endl;
 
