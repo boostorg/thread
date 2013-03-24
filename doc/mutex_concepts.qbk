@@ -164,7 +164,7 @@ failure, even in the absence of spurious failures.]]
 
 Some of the algorithms on mutexes use this trait via SFINAE. 
 
-This trait is true_type if the parameter L meets the __Locable requirements.
+This trait is true_type if the parameter L meets the __Lockable requirements.
 
 [warning If BOOST_THREAD_NO_AUTO_DETECT_MUTEX_TYPES is defined you will need to specialize this traits for the models of Lockable you could build.] 
 
