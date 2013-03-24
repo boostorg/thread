@@ -667,6 +667,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ../example/scoped_thread.cpp : ex_scoped_thread ]
           [ thread-run2-noit ../example/strict_lock.cpp : ex_strict_lock ]
           [ thread-run2-noit ../example/ba_externallly_locked.cpp : ex_ba_externallly_locked ]
+          [ thread-run ../example/producer_consumer_bounded.cpp ]
           [ thread-run ../example/producer_consumer.cpp ]
 
     ;
@@ -738,7 +739,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/not_interleaved.cpp ]
-                    
+         
     ;
 
 }

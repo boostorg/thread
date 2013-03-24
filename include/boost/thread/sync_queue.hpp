@@ -1,5 +1,5 @@
-#ifndef BOOST_THREAD_SYNC_BOUNDED_QUEUE_HPP
-#define BOOST_THREAD_SYNC_BOUNDED_QUEUE_HPP
+#ifndef BOOST_THREAD_SYNC_QUEUE_HPP
+#define BOOST_THREAD_SYNC_QUEUE_HPP
 
 //////////////////////////////////////////////////////////////////////////////
 //
@@ -19,39 +19,33 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
 
+#include <boost/thread/sync_bounded_queue.hpp>
+#include <boost/container/deque.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
 
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(queue_op_status)
-  { success = 0, empty, full, closed, busy }
-  BOOST_SCOPED_ENUM_DECLARE_END(queue_op_status)
-
-  struct no_block_tag{};
-  BOOST_CONSTEXPR_OR_CONST no_block_tag no_block = {};
-
-  struct sync_queue_is_closed : std::exception {};
 
   template <typename ValueType>
-  class sync_bounded_queue
+  class sync_queue
   {
   public:
     typedef ValueType value_type;
     typedef std::size_t size_type;
 
 
-    BOOST_THREAD_NO_COPYABLE(sync_bounded_queue)
+    BOOST_THREAD_NO_COPYABLE(sync_queue)
 
-    explicit sync_bounded_queue(size_type max_elems);
+    explicit sync_queue();
     template <typename Range>
-    sync_bounded_queue(size_type max_elems, Range range);
-    ~sync_bounded_queue();
+    sync_queue(Range range);
+    ~sync_queue();
 
     // Observers
     bool empty() const;
     bool full() const;
-    size_type capacity() const;
     size_type size() const;
     bool closed() const;
 
@@ -79,35 +73,25 @@ namespace boost
   private:
     mutable mutex mtx_;
     condition_variable not_empty_;
-    condition_variable not_full_;
-    size_type waiting_full_;
     size_type waiting_empty_;
-    value_type* data_;
-    size_type in_;
-    size_type out_;
-    size_type capacity_;
+    boost::container::deque<ValueType> data_;
     bool closed_;
 
-    size_type inc(size_type idx) const BOOST_NOEXCEPT
-    {
-      return (idx + 1) % capacity_;
-    }
 
     bool empty(unique_lock<mutex>& ) const BOOST_NOEXCEPT
     {
-      return in_ == out_;
+      //std::cout << __LINE__ << std::endl;
+      return data_.empty();
     }
     bool empty(lock_guard<mutex>& ) const BOOST_NOEXCEPT
     {
-      return in_ == out_;
+      //std::cout << __LINE__ << std::endl;
+      return data_.empty();
     }
-    size_type capacity(lock_guard<mutex>& ) const BOOST_NOEXCEPT
-    {
-      return capacity;
-    }
+
     size_type size(lock_guard<mutex>& ) const BOOST_NOEXCEPT
     {
-      return ((out_+capacity_-in_) % capacity_)-1;
+      return data_.size();
     }
 
     void throw_if_closed(unique_lock<mutex>&);
@@ -119,8 +103,6 @@ namespace boost
 
     void wait_until_not_empty(unique_lock<mutex>& lk);
     void wait_until_not_empty(unique_lock<mutex>& lk, bool&);
-    size_type wait_until_not_full(unique_lock<mutex>& lk);
-    size_type wait_until_not_full(unique_lock<mutex>& lk, bool&);
 
 
     void notify_not_empty_if_needed(unique_lock<mutex>& lk)
@@ -132,79 +114,56 @@ namespace boost
         not_empty_.notify_one();
       }
     }
-    void notify_not_full_if_needed(unique_lock<mutex>& lk)
-    {
-      if (waiting_full_ > 0)
-      {
-        --waiting_full_;
-        lk.unlock();
-        not_full_.notify_one();
-      }
-    }
 
-    void pop(value_type& elem, unique_lock<mutex>& lk)
+    void pop(value_type& elem, unique_lock<mutex>& )
     {
-      elem = boost::move(data_[out_]);
-      out_ = inc(out_);
-      notify_not_full_if_needed(lk);
+      elem = boost::move(data_.front());
+      data_.pop_front();
     }
-    boost::shared_ptr<value_type> pop(unique_lock<mutex>& lk)
+    boost::shared_ptr<value_type> pop(unique_lock<mutex>& )
     {
-      shared_ptr<value_type> res = make_shared<value_type>(boost::move(data_[out_]));
-      out_ = inc(out_);
-      notify_not_full_if_needed(lk);
+      shared_ptr<value_type> res = make_shared<value_type>(boost::move(data_.front()));
+      data_.pop_front();
       return res;
     }
 
-
-    void set_in(size_type in, unique_lock<mutex>& lk)
+    void push_at(const value_type& elem, unique_lock<mutex>& lk)
     {
-      in_ = in;
+      data_.push_back(elem);
       notify_not_empty_if_needed(lk);
     }
 
-    void push_at(const value_type& elem, size_type in_p_1, unique_lock<mutex>& lk)
+    void push_at(BOOST_THREAD_RV_REF(value_type) elem, unique_lock<mutex>& lk)
     {
-      data_[in_] = elem;
-      set_in(in_p_1, lk);
-    }
-
-    void push_at(BOOST_THREAD_RV_REF(value_type) elem, size_type in_p_1, unique_lock<mutex>& lk)
-    {
-      data_[in_] = boost::move(elem);
-      set_in(in_p_1, lk);
+      data_.push(boost::move(elem));
+      notify_not_empty_if_needed(lk);
     }
 
 
   };
 
   template <typename ValueType>
-  sync_bounded_queue<ValueType>::sync_bounded_queue(typename sync_bounded_queue<ValueType>::size_type max_elems) :
-    waiting_full_(0), waiting_empty_(0), data_(new value_type[max_elems + 1]), in_(0), out_(0), capacity_(max_elems + 1),
-        closed_(false)
+  sync_queue<ValueType>::sync_queue() :
+    waiting_empty_(0), data_(), closed_(false)
   {
-    BOOST_ASSERT_MSG(max_elems >= 1, "number of elements must be > 1");
+    BOOST_ASSERT(data_.empty());
   }
 
 //  template <typename ValueType>
 //  template <typename Range>
-//  sync_bounded_queue<ValueType>::sync_bounded_queue(size_type max_elems, Range range) :
-//    waiting_full_(0), waiting_empty_(0), data_(new value_type[max_elems + 1]), in_(0), out_(0), capacity_(max_elems + 1),
-//        closed_(false)
+//  sync_queue<ValueType>::sync_queue(size_type max_elems, Range range) :
+//    waiting_empty_(0), data_(), closed_(false)
 //  {
-//    BOOST_ASSERT_MSG(max_elems >= 1, "number of elements must be > 1");
-//    BOOST_ASSERT_MSG(max_elems == size(range), "number of elements must match range's size");
 //    try
 //    {
 //      typedef typename Range::iterator iterator_t;
 //      iterator_t first = boost::begin(range);
 //      iterator_t end = boost::end(range);
-//      size_type in = 0;
-//      for (iterator_t cur = first; cur != end; ++cur, ++in)
+//      for (iterator_t cur = first; cur != end; ++cur)
 //      {
-//        data_[in] = *cur;
+//        data_.push(boost::move(*cur));;
 //      }
-//      set_in(in);
+//      notify_not_empty_if_needed(lk);
 //    }
 //    catch (...)
 //    {
@@ -213,51 +172,41 @@ namespace boost
 //  }
 
   template <typename ValueType>
-  sync_bounded_queue<ValueType>::~sync_bounded_queue()
+  sync_queue<ValueType>::~sync_queue()
   {
-    delete[] data_;
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::close()
+  void sync_queue<ValueType>::close()
   {
     {
       lock_guard<mutex> lk(mtx_);
       closed_ = true;
     }
     not_empty_.notify_all();
-    not_full_.notify_all();
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::closed() const
+  bool sync_queue<ValueType>::closed() const
   {
     lock_guard<mutex> lk(mtx_);
     return closed_;
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::empty() const
+  bool sync_queue<ValueType>::empty() const
   {
     lock_guard<mutex> lk(mtx_);
     return empty(lk);
   }
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::full() const
+  bool sync_queue<ValueType>::full() const
   {
-    lock_guard<mutex> lk(mtx_);
-    return full(lk);
+    return false;
   }
 
   template <typename ValueType>
-  typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::capacity() const
-  {
-    lock_guard<mutex> lk(mtx_);
-    return capacity(lk);
-  }
-
-  template <typename ValueType>
-  typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::size() const
+  typename sync_queue<ValueType>::size_type sync_queue<ValueType>::size() const
   {
     lock_guard<mutex> lk(mtx_);
     return size(lk);
@@ -265,7 +214,7 @@ namespace boost
 
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(ValueType& elem, unique_lock<mutex>& lk)
+  bool sync_queue<ValueType>::try_pop(ValueType& elem, unique_lock<mutex>& lk)
   {
     if (empty(lk))
     {
@@ -276,7 +225,7 @@ namespace boost
     return true;
   }
   template <typename ValueType>
-  shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pop(unique_lock<mutex>& lk)
+  shared_ptr<ValueType> sync_queue<ValueType>::try_pop(unique_lock<mutex>& lk)
   {
     if (empty(lk))
     {
@@ -287,7 +236,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(ValueType& elem)
+  bool sync_queue<ValueType>::try_pop(ValueType& elem)
   {
     try
     {
@@ -302,7 +251,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(no_block_tag,ValueType& elem)
+  bool sync_queue<ValueType>::try_pop(no_block_tag,ValueType& elem)
   {
     try
     {
@@ -320,7 +269,7 @@ namespace boost
     }
   }
   template <typename ValueType>
-  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pop()
+  boost::shared_ptr<ValueType> sync_queue<ValueType>::try_pop()
   {
     try
     {
@@ -335,31 +284,37 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::throw_if_closed(unique_lock<mutex>&)
+  void sync_queue<ValueType>::throw_if_closed(unique_lock<mutex>&)
   {
+    //std::cout << __LINE__ << std::endl;
     if (closed_)
     {
+      std::cout << __LINE__ << std::endl;
       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
     }
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_until_not_empty(unique_lock<mutex>& lk)
+  void sync_queue<ValueType>::wait_until_not_empty(unique_lock<mutex>& lk)
   {
     for (;;)
     {
-      if (out_ != in_) break;
+      //std::cout << __LINE__ << std::endl;
+      if (! empty(lk)) break;
+      //std::cout << __LINE__ << std::endl;
+
       throw_if_closed(lk);
       ++waiting_empty_;
       not_empty_.wait(lk);
     }
   }
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_until_not_empty(unique_lock<mutex>& lk, bool & closed)
+  void sync_queue<ValueType>::wait_until_not_empty(unique_lock<mutex>& lk, bool & closed)
   {
     for (;;)
     {
-      if (out_ != in_) break;
+      if (! empty(lk)) break;
+      //std::cout << __LINE__ << std::endl;
       if (closed_) {closed=true; return;}
       ++waiting_empty_;
       not_empty_.wait(lk);
@@ -367,11 +322,12 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_pop(ValueType& elem)
+  void sync_queue<ValueType>::wait_and_pop(ValueType& elem)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
+      //std::cout << __LINE__ << std::endl;
       wait_until_not_empty(lk);
       pop(elem, lk);
     }
@@ -382,11 +338,12 @@ namespace boost
     }
   }
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_pop(ValueType& elem, bool & closed)
+  void sync_queue<ValueType>::wait_and_pop(ValueType& elem, bool & closed)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
+      //std::cout << __LINE__ << std::endl;
       wait_until_not_empty(lk, closed);
       if (closed) {return;}
       pop(elem, lk);
@@ -400,7 +357,7 @@ namespace boost
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
-  ValueType sync_bounded_queue<ValueType>::value_pop()
+  ValueType sync_queue<ValueType>::value_pop()
   {
     try
     {
@@ -415,7 +372,7 @@ namespace boost
     }
   }
   template <typename ValueType>
-  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::wait_and_pop()
+  boost::shared_ptr<ValueType> sync_queue<ValueType>::wait_and_pop()
   {
     try
     {
@@ -431,20 +388,15 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(const ValueType& elem, unique_lock<mutex>& lk)
+  bool sync_queue<ValueType>::try_push(const ValueType& elem, unique_lock<mutex>& lk)
   {
     throw_if_closed(lk);
-    size_type in_p_1 = inc(in_);
-    if (in_p_1 == out_)  // full()
-    {
-      return false;
-    }
-    push_at(elem, in_p_1, lk);
+    push_at(elem, lk);
     return true;
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(const ValueType& elem)
+  bool sync_queue<ValueType>::try_push(const ValueType& elem)
   {
     try
     {
@@ -459,7 +411,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(no_block_tag, const ValueType& elem)
+  bool sync_queue<ValueType>::try_push(no_block_tag, const ValueType& elem)
   {
     try
     {
@@ -474,30 +426,14 @@ namespace boost
     }
   }
 
-
   template <typename ValueType>
-  typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::wait_until_not_full(unique_lock<mutex>& lk)
-  {
-    for (;;)
-    {
-      throw_if_closed(lk);
-      size_type in_p_1 = inc(in_);
-      if (in_p_1 != out_) // ! full()
-      {
-        return in_p_1;
-      }
-      ++waiting_full_;
-      not_full_.wait(lk);
-    }
-  }
-
-  template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_push(const ValueType& elem)
+  void sync_queue<ValueType>::wait_and_push(const ValueType& elem)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
-      push_at(elem, wait_until_not_full(lk), lk);
+      throw_if_closed(lk);
+      push_at(elem, lk);
     }
     catch (...)
     {
@@ -507,20 +443,15 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
+  bool sync_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     throw_if_closed(lk);
-    size_type in_p_1 = inc(in_);
-    if (in_p_1 == out_) // full()
-    {
-      return false;
-    }
-    push_at(boost::move(elem), in_p_1, lk);
+    push_at(boost::forward<ValueType>(elem), lk);
     return true;
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem)
+  bool sync_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     try
     {
@@ -535,7 +466,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_push(no_block_tag, BOOST_THREAD_RV_REF(ValueType) elem)
+  bool sync_queue<ValueType>::try_push(no_block_tag, BOOST_THREAD_RV_REF(ValueType) elem)
   {
     try
     {
@@ -554,12 +485,13 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_push(BOOST_THREAD_RV_REF(ValueType) elem)
+  void sync_queue<ValueType>::wait_and_push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
-      push_at(elem, wait_until_not_full(lk), lk);
+      throw_if_closed(lk);
+      push_at(elem, lk);
     }
     catch (...)
     {
@@ -569,21 +501,21 @@ namespace boost
   }
 
   template <typename ValueType>
-  sync_bounded_queue<ValueType>& operator<<(sync_bounded_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
+  sync_queue<ValueType>& operator<<(sync_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
     sbq.wait_and_push(boost::forward<ValueType>(elem));
     return sbq;
   }
 
   template <typename ValueType>
-  sync_bounded_queue<ValueType>& operator<<(sync_bounded_queue<ValueType>& sbq, ValueType const&elem)
+  sync_queue<ValueType>& operator<<(sync_queue<ValueType>& sbq, ValueType const&elem)
   {
     sbq.wait_and_push(elem);
     return sbq;
   }
 
   template <typename ValueType>
-  sync_bounded_queue<ValueType>& operator>>(sync_bounded_queue<ValueType>& sbq, ValueType &elem)
+  sync_queue<ValueType>& operator>>(sync_queue<ValueType>& sbq, ValueType &elem)
   {
     sbq.wait_and_pop(elem);
     return sbq;
