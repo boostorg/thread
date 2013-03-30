@@ -58,6 +58,6 @@ int main()
   t1.join();
   t2.join();
   mcout << nm << '\n';
-  return 1;
+  return 0;
 }
 
