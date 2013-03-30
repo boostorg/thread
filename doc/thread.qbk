@@ -8,7 +8,7 @@
 
 [library Thread
     [quickbook 1.5]
-    [version 4.0.0]
+    [version 4.1.0]
     [authors [Williams, Anthony] [Botet Escriba, Vicente J.]]
     [copyright 2007-11 Anthony Williams]
     [copyright 2011-12 Vicente J. Botet Escriba]
@@ -235,14 +235,20 @@
 [include sync_tutorial.qbk]
 [include mutex_concepts.qbk]
 [include mutexes.qbk]
-[/include synchronized_value_ref.qbk]
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]
 [include futures.qbk]
 [endsect]
 
+
 [include tss.qbk]
+
+[section:sds Synchronized Data Structures]
+[include synchronized_value.qbk]
+[/include sync_queues_ref.qbk]
+[/include sync_streams.qbk]
+[endsect]
 
 [include time.qbk]
 

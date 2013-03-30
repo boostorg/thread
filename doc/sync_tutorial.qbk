@@ -18,8 +18,6 @@ In addition to the C++11 standard locks, Boost.Thread provides other locks and s
 
 [include external_locking.qbk]
 
-[include synchronized_value.qbk]
-
 [section:with Executing Around a Function]
 
 In particular, the library provides some lock factories.
