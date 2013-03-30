@@ -15,7 +15,7 @@
 void use_cerr(boost::externally_locked_stream<std::ostream> &mcerr)
 {
   using namespace boost;
-  auto tf = chrono::steady_clock::now() + chrono::seconds(10);
+  chrono::steady_clock::time_point tf = chrono::steady_clock::now() + chrono::seconds(10);
   while (chrono::steady_clock::now() < tf)
   {
     mcerr << "logging data to cerr\n";
@@ -26,7 +26,7 @@ void use_cerr(boost::externally_locked_stream<std::ostream> &mcerr)
 void use_cout(boost::externally_locked_stream<std::ostream> &mcout)
 {
   using namespace boost;
-  auto tf = chrono::steady_clock::now() + chrono::seconds(5);
+  chrono::steady_clock::time_point tf = chrono::steady_clock::now() + chrono::seconds(5);
   while (chrono::steady_clock::now() < tf)
   {
     mcout << "logging data to cout\n";
@@ -50,8 +50,8 @@ int main()
   std::string nm;
   {
     strict_lock<recursive_mutex> lk(terminal_mutex);
-    auto& gcout = mcout.hold(lk);
-    auto& gcin = mcin.hold(lk);
+    std::ostream & gcout = mcout.hold(lk);
+    //std::istream & gcin = mcin.hold(lk);
     gcout << "Enter name: ";
     //gcin >> nm;
   }

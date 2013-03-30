@@ -19,9 +19,9 @@ void producer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_qu
   try {
     for(int i=0; ;++i)
     {
-      //sbq.wait_and_push(i);
+      //sbq.push(i);
       sbq << i;
-      mos << "wait_and_push(" << i << ") "<< sbq.size()<<"\n";
+      mos << "push(" << i << ") "<< sbq.size()<<"\n";
       this_thread::sleep_for(chrono::milliseconds(200));
     }
   }
@@ -42,9 +42,9 @@ void consumer(boost::externally_locked_stream<std::ostream> &mos, boost::sync_qu
     for(int i=0; ;++i)
     {
       int r;
-      //sbq.wait_and_pop(r);
+      //sbq.pull(r);
       sbq >> r;
-      mos << i << " wait_and_pop(" << r << ") "<< sbq.size()<<"\n";
+      mos << i << " pull(" << r << ") "<< sbq.size()<<"\n";
       this_thread::sleep_for(chrono::milliseconds(250));
     }
   }
@@ -65,9 +65,9 @@ void consumer2(boost::externally_locked_stream<std::ostream> &mos, boost::sync_q
     for(int i=0; ;++i)
     {
       int r;
-      sbq.wait_and_pop(r, closed);
+      sbq.pull(r, closed);
       if (closed) break;
-      mos << i << " wait_and_pop(" << r << ")\n";
+      mos << i << " pull(" << r << ")\n";
       this_thread::sleep_for(chrono::milliseconds(250));
     }
   }
@@ -84,9 +84,9 @@ void consumer2(boost::externally_locked_stream<std::ostream> &mos, boost::sync_q
 //    for(int i=0; ;++i)
 //    {
 //      int r;
-//      queue_op_status res = sbq.wait_and_pop(r);
+//      queue_op_status res = sbq.wait_and_pull(r);
 //      if (res==queue_op_status::closed) break;
-//      mos << i << " wait_and_pop(" << r << ")\n";
+//      mos << i << " wait_and_pull(" << r << ")\n";
 //      this_thread::sleep_for(chrono::milliseconds(250));
 //    }
 //  }
