@@ -40,9 +40,8 @@ namespace boost
     typedef ValueType value_type;
     typedef std::size_t size_type;
 
-
+    // Constructors/Assignment/Destructors
     BOOST_THREAD_NO_COPYABLE(sync_bounded_queue)
-
     explicit sync_bounded_queue(size_type max_elems);
     template <typename Range>
     sync_bounded_queue(size_type max_elems, Range range);
@@ -56,25 +55,24 @@ namespace boost
     bool closed() const;
 
     // Modifiers
-    void wait_and_push(const value_type& x);
-    void wait_and_push(BOOST_THREAD_RV_REF(value_type) x);
+    void close();
+
+    void push(const value_type& x);
+    void push(BOOST_THREAD_RV_REF(value_type) x);
     bool try_push(const value_type& x);
     bool try_push(BOOST_THREAD_RV_REF(value_type) x);
     bool try_push(no_block_tag, const value_type& x);
     bool try_push(no_block_tag, BOOST_THREAD_RV_REF(value_type) x);
 
-    void wait_and_pop(value_type&);
-    void wait_and_pop(ValueType& elem, bool & closed);
-
-    // enable_if is_nothrow_movable<value_type>
-    value_type value_pop();
-    shared_ptr<ValueType> wait_and_pop();
-
-    bool try_pop(value_type&);
-    bool try_pop(no_block_tag,value_type&);
-    shared_ptr<ValueType> try_pop();
-
-    void close();
+    // Observers/Modifiers
+    void pull(value_type&);
+    void pull(ValueType& elem, bool & closed);
+    // enable_if is_nothrow_copy_movable<value_type>
+    value_type pull();
+    shared_ptr<ValueType> ptr_pull();
+    bool try_pull(value_type&);
+    bool try_pull(no_block_tag,value_type&);
+    shared_ptr<ValueType> try_pull();
 
   private:
     mutable mutex mtx_;
@@ -112,10 +110,10 @@ namespace boost
 
     void throw_if_closed(unique_lock<mutex>&);
 
-    bool try_pop(value_type& x, unique_lock<mutex>& lk);
+    bool try_pull(value_type& x, unique_lock<mutex>& lk);
     bool try_push(const value_type& x, unique_lock<mutex>& lk);
     bool try_push(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
-    shared_ptr<value_type> try_pop(unique_lock<mutex>& lk);
+    shared_ptr<value_type> try_pull(unique_lock<mutex>& lk);
 
     void wait_until_not_empty(unique_lock<mutex>& lk);
     void wait_until_not_empty(unique_lock<mutex>& lk, bool&);
@@ -142,13 +140,13 @@ namespace boost
       }
     }
 
-    void pop(value_type& elem, unique_lock<mutex>& lk)
+    void pull(value_type& elem, unique_lock<mutex>& lk)
     {
       elem = boost::move(data_[out_]);
       out_ = inc(out_);
       notify_not_full_if_needed(lk);
     }
-    boost::shared_ptr<value_type> pop(unique_lock<mutex>& lk)
+    boost::shared_ptr<value_type> ptr_pull(unique_lock<mutex>& lk)
     {
       shared_ptr<value_type> res = make_shared<value_type>(boost::move(data_[out_]));
       out_ = inc(out_);
@@ -265,34 +263,34 @@ namespace boost
 
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(ValueType& elem, unique_lock<mutex>& lk)
+  bool sync_bounded_queue<ValueType>::try_pull(ValueType& elem, unique_lock<mutex>& lk)
   {
     if (empty(lk))
     {
       throw_if_closed(lk);
       return false;
     }
-    pop(elem, lk);
+    pull(elem, lk);
     return true;
   }
   template <typename ValueType>
-  shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pop(unique_lock<mutex>& lk)
+  shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pull(unique_lock<mutex>& lk)
   {
     if (empty(lk))
     {
       throw_if_closed(lk);
       return shared_ptr<ValueType>();
     }
-    return pop(lk);
+    return ptr_pull(lk);
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(ValueType& elem)
+  bool sync_bounded_queue<ValueType>::try_pull(ValueType& elem)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
-      return try_pop(elem, lk);
+      return try_pull(elem, lk);
     }
     catch (...)
     {
@@ -302,7 +300,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  bool sync_bounded_queue<ValueType>::try_pop(no_block_tag,ValueType& elem)
+  bool sync_bounded_queue<ValueType>::try_pull(no_block_tag,ValueType& elem)
   {
     try
     {
@@ -311,7 +309,7 @@ namespace boost
       {
         return false;
       }
-      return try_pop(elem, lk);
+      return try_pull(elem, lk);
     }
     catch (...)
     {
@@ -320,12 +318,12 @@ namespace boost
     }
   }
   template <typename ValueType>
-  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pop()
+  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pull()
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
-      return try_pop(lk);
+      return try_pull(lk);
     }
     catch (...)
     {
@@ -367,13 +365,13 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_pop(ValueType& elem)
+  void sync_bounded_queue<ValueType>::pull(ValueType& elem)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
-      pop(elem, lk);
+      pull(elem, lk);
     }
     catch (...)
     {
@@ -382,14 +380,14 @@ namespace boost
     }
   }
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_pop(ValueType& elem, bool & closed)
+  void sync_bounded_queue<ValueType>::pull(ValueType& elem, bool & closed)
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk, closed);
       if (closed) {return;}
-      pop(elem, lk);
+      pull(elem, lk);
     }
     catch (...)
     {
@@ -400,12 +398,12 @@ namespace boost
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
-  ValueType sync_bounded_queue<ValueType>::value_pop()
+  ValueType sync_bounded_queue<ValueType>::pull()
   {
     try
     {
       value_type elem;
-      wait_and_pop(elem);
+      pull(elem);
       return boost::move(elem);
     }
     catch (...)
@@ -415,13 +413,13 @@ namespace boost
     }
   }
   template <typename ValueType>
-  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::wait_and_pop()
+  boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::ptr_pull()
   {
     try
     {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
-      return pop(lk);
+      return ptr_pull(lk);
     }
     catch (...)
     {
@@ -492,7 +490,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_push(const ValueType& elem)
+  void sync_bounded_queue<ValueType>::push(const ValueType& elem)
   {
     try
     {
@@ -554,7 +552,7 @@ namespace boost
   }
 
   template <typename ValueType>
-  void sync_bounded_queue<ValueType>::wait_and_push(BOOST_THREAD_RV_REF(ValueType) elem)
+  void sync_bounded_queue<ValueType>::push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     try
     {
@@ -571,21 +569,21 @@ namespace boost
   template <typename ValueType>
   sync_bounded_queue<ValueType>& operator<<(sync_bounded_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    sbq.wait_and_push(boost::forward<ValueType>(elem));
+    sbq.push(boost::forward<ValueType>(elem));
     return sbq;
   }
 
   template <typename ValueType>
   sync_bounded_queue<ValueType>& operator<<(sync_bounded_queue<ValueType>& sbq, ValueType const&elem)
   {
-    sbq.wait_and_push(elem);
+    sbq.push(elem);
     return sbq;
   }
 
   template <typename ValueType>
   sync_bounded_queue<ValueType>& operator>>(sync_bounded_queue<ValueType>& sbq, ValueType &elem)
   {
-    sbq.wait_and_pop(elem);
+    sbq.pull(elem);
     return sbq;
   }
 
