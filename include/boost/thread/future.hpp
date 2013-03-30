@@ -101,11 +101,6 @@ namespace boost
         {
           return ec_;
         }
-        const char* what() const BOOST_THREAD_NOEXCEPT_OR_THROW
-        {
-          return code().message().c_str();
-        }
-
     };
 
     class BOOST_SYMBOL_VISIBLE future_uninitialized:
@@ -262,6 +257,7 @@ namespace boost
             }
             void set_async()
             {
+              is_deferred_ = false;
               set_launch_policy(launch::async);
             }
             void set_launch_policy(launch policy)
@@ -3257,7 +3253,55 @@ namespace boost
 #endif
 
   ////////////////////////////////
-  // make_shared_future
+  // make_ready_future
+  ////////////////////////////////
+  template <typename T>
+  BOOST_THREAD_FUTURE<typename decay<T>::type> make_ready_future(BOOST_THREAD_FWD_REF(T) value)
+  {
+    typedef typename decay<T>::type future_type;
+    promise<future_type> p;
+    p.set_value(boost::forward<T>(value));
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+
+#if defined BOOST_THREAD_USES_MOVE
+  inline BOOST_THREAD_FUTURE<void> make_ready_future()
+  {
+    promise<void> p;
+    p.set_value();
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+#endif
+
+  ////////////////////////////////
+  // make_exceptional_future
+  ////////////////////////////////
+  template <typename T>
+  BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr ex)
+  {
+    promise<T> p;
+    p.set_exception(ex);
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+
+#if 0
+  template<typename CLOSURE>
+  make_future(CLOSURE closure) -> BOOST_THREAD_FUTURE<decltype(closure())> {
+      typedef decltype(closure() T;
+      promise<T> p;
+      try
+      {
+        p.set_value(closure());
+      }
+      catch(...)
+      {
+        p.set_exception(std::current_exception());
+      }
+      return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+#endif
+  ////////////////////////////////
+  // make_shared_future deprecated
   ////////////////////////////////
   template <typename T>
   shared_future<typename decay<T>::type> make_shared_future(BOOST_THREAD_FWD_REF(T) value)
@@ -3276,6 +3320,36 @@ namespace boost
 
   }
 
+  ////////////////////////////////
+  // make_ready_shared_future
+  ////////////////////////////////
+  template <typename T>
+  shared_future<typename decay<T>::type> make_ready_shared_future(BOOST_THREAD_FWD_REF(T) value)
+  {
+    typedef typename decay<T>::type future_type;
+    promise<future_type> p;
+    p.set_value(boost::forward<T>(value));
+    return p.get_future().share();
+  }
+
+
+  inline shared_future<void> make_ready_shared_future()
+  {
+    promise<void> p;
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
+
+  }
+
+  ////////////////////////////////
+  // make_exceptional_shared_future
+  ////////////////////////////////
+  template <typename T>
+  shared_future<T> make_exceptional_shared_future(exception_ptr ex)
+  {
+    promise<T> p;
+    p.set_exception(ex);
+    return p.get_future().share();
+  }
   ////////////////////////////////
   // detail::future_continuation
   ////////////////////////////////
