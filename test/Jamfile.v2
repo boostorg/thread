@@ -334,6 +334,9 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/future/move_ctor_pass.cpp : future__move_ctor_p ]
           [ thread-run2-noit ./sync/futures/future/move_assign_pass.cpp : future__move_asign_p ]
           [ thread-run2-noit ./sync/futures/future/share_pass.cpp : future__share_p ]
+          [ thread-run2-noit ./sync/futures/future/wait_pass.cpp : future__wait_p ]
+          [ thread-run2-noit ./sync/futures/future/wait_for_pass.cpp : future__wait_for_p ]
+          [ thread-run2-noit ./sync/futures/future/wait_until_pass.cpp : future__wait_until_p ]
           #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
     ;
 
