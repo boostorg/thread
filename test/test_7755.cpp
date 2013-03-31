@@ -7,7 +7,7 @@
 
 //#define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
 #include <iostream>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/shared_mutex.hpp>
 // shared_mutex_deadlock.cpp : Defines the entry point for the console application.
 //

@@ -6,7 +6,8 @@
 
 #define BOOST_THREAD_VERSION 3
 
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
+#include <boost/thread/future.hpp>
 #include <boost/config.hpp>
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES

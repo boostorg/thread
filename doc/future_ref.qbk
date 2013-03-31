@@ -1621,7 +1621,7 @@ provides the result of the function in a future object with which it shares a sh
 
 [warning `async(launch::deferred, F)` is NOT YET IMPLEMENTED!]
 
-[warning the variadic prototype is provided only on C++11 compilers supporting rvalue references, variadic templates, decltype and a standard library providing <tuple>, and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined.]
+[warning the variadic prototype is provided only on C++11 compilers supporting rvalue references, variadic templates, decltype and a standard library providing <tuple> (waiting for a boost::tuple that is move aware), and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined.]
 
 [heading Non-Variadic variant]
 

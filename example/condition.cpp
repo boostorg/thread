@@ -8,7 +8,7 @@
 #include <vector>
 #include <boost/utility.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include "../test/remove_error_code_unused_warning.hpp"
 
 class bounded_buffer : private boost::noncopyable

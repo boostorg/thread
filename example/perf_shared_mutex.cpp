@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <boost/thread/lock_types.hpp>
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/chrono/chrono_io.hpp>
 
 #include <boost/thread/shared_mutex.hpp>

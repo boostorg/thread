@@ -6,7 +6,13 @@
  /]
 
 
-[section  Synchronized values]
+[section:synchronized_valuesxxx Synchronized values - EXPERIMENTAL]
+
+[warning These features are experimental and subject to change in future versions. There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
+
+[section:tutorial Tutorial]
+
+
 [note This tutorial is an adaptation of the paper of Anthony Williams  "Enforcing Correct Mutex Usage with Synchronized Values" to the Boost library.]
 
 [section The Problem with Mutexes]
@@ -133,8 +139,9 @@ synchronized_value has value semantics even if the syntax lets is close to a poi
 [endsect] [/Value semantics]
 
 
-[endsect] [/Synchronized variables]
+[endsect] [/tutorial]
 
+[include synchronized_value_ref.qbk]
 
-
+[endsect] [/Synchronized values]
 

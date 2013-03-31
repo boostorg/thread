@@ -5,7 +5,7 @@
 
 #define BOOST_THREAD_USES_MOVE
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/test/unit_test.hpp>
 
 void do_nothing(boost::thread::id* my_id)

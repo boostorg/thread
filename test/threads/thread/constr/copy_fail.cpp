@@ -18,7 +18,7 @@
 
 // thread(const thread&) = delete;
 
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <new>
 #include <cstdlib>
 #include <boost/detail/lightweight_test.hpp>

@@ -6,7 +6,7 @@
 ////////////////////////////////////////////
 
 //#define BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN
-#include <boost/thread/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/thread/shared_mutex.hpp>
 using namespace boost;
 

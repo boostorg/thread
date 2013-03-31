@@ -5,7 +5,7 @@
 
 #define BOOST_THREAD_VERSION 2
 
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 #include <boost/date_time/posix_time/posix_time_io.hpp>
 #include <assert.h>
 #include <iostream>

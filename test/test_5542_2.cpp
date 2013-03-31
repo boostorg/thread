@@ -5,7 +5,7 @@
 
 #define BOOST_THREAD_VERSION 2
 
-#include <boost/thread.hpp>
+#include <boost/thread/thread_only.hpp>
 
 void run_thread() {
         return;

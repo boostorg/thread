@@ -4,9 +4,9 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 //#define BOOST_THREAD_VERSION 4
-//#define BOOST_THREAD_USES_LOG
+#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
-//#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
+#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
 
 #include <boost/thread/detail/log.hpp>
 #include <boost/thread/future.hpp>
