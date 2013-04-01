@@ -1,4 +1,4 @@
-// Copyright (C) 2012 Vicente Botet
+// Copyright (C) 2012-2013 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -6,7 +6,6 @@
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
-#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
 
 #include <boost/thread/detail/log.hpp>
 #include <boost/thread/future.hpp>
@@ -47,7 +46,7 @@ int main()
   {
     boost::future<int> f1 = boost::async(boost::launch::async, &p1);
     boost::future<int> f2 = f1.then(&p2);
-    int i = f2.get();
+    (void)f2.get();
   }
   catch (std::exception& ex)
   {
