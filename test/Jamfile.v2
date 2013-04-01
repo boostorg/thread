@@ -337,7 +337,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/future/wait_pass.cpp : future__wait_p ]
           [ thread-run2-noit ./sync/futures/future/wait_for_pass.cpp : future__wait_for_p ]
           [ thread-run2-noit ./sync/futures/future/wait_until_pass.cpp : future__wait_until_p ]
-          #[ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
+          [ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
     ;
 
     #explicit ts_shared_future ;
@@ -666,7 +666,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run ../example/make_future.cpp ]
-          #[ thread-run ../example/future_then.cpp ]
+          [ thread-run ../example/future_then.cpp ]
           [ thread-run2-noit ../example/synchronized_value.cpp : ex_synchronized_value ]
           [ thread-run2-noit ../example/synchronized_person.cpp : ex_synchronized_person ]
           [ thread-run2-noit ../example/thread_guard.cpp : ex_thread_guard ]
