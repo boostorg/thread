@@ -1,4 +1,4 @@
-// Copyright (C) 2011 Vicente J. Botet Escriba
+// Copyright (C) 2012-2013 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -11,8 +11,6 @@
 // auto then(F&& func) -> future<decltype(func(*this))>;
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_DONT_PROVIDE_FUTURE_INVALID_AFTER_GET
-//#define BOOST_THREAD_DONT_PROVIDE_THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
 #define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #include <boost/thread/detail/log.hpp>
