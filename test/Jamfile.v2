@@ -184,6 +184,15 @@ rule thread-compile-fail ( sources : reqs * : name )
     ;
 }
 
+rule thread-compile ( sources : reqs * : name )
+{
+    return
+    [ compile $(sources)
+        : $(reqs)
+        : $(name) ]
+    ;
+}
+
 {
     test-suite t_threads
     :
@@ -621,6 +630,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           [ thread-run2-noit ./threads/thread/assign/move_pass.cpp : thread__assign__move_p ]
           [ thread-compile-fail ./threads/thread/constr/copy_fail.cpp : : thread__constr__copy_f ]
           [ thread-run2-noit ./threads/thread/constr/default_pass.cpp : thread__constr__default_p ]
+          [ thread-run-lib2 ./threads/thread/constr/lambda_pass.cpp : thread__constr__lambda_p ]
           [ thread-run-lib2 ./threads/thread/constr/F_pass.cpp : thread__constr__F_p ]
           [ thread-run-lib2 ./threads/thread/constr/FArgs_pass.cpp : thread__constr__FArgs_p ]
           [ thread-run2-noit ./threads/thread/constr/Frvalue_pass.cpp : thread__constr__Frvalue_p ]
@@ -651,31 +661,32 @@ rule thread-compile-fail ( sources : reqs * : name )
     test-suite ts_examples
     :
           [ thread-run2-noit ../example/monitor.cpp : ex_monitor ]
-          [ compile ../example/starvephil.cpp ]
-          #[ compile ../example/tennis.cpp ]
-          [ compile ../example/condition.cpp ]
+          [ thread-compile ../example/starvephil.cpp : : ex_starvephil ]
+          #[ thread-compile ../example/tennis.cpp : : ex_tennis ]
+          [ thread-compile ../example/condition.cpp : : ex_condition ]
           [ thread-run2-noit ../example/mutex.cpp : ex_mutex ]
           [ thread-run2-noit ../example/once.cpp : ex_once ]
           [ thread-run2-noit ../example/recursive_mutex.cpp : ex_recursive_mutex ]
           [ thread-run2-noit ../example/thread.cpp : ex_thread ]
           [ thread-run2-noit ../example/thread_group.cpp : ex_thread_group ]
           [ thread-run2-noit ../example/tss.cpp : ex_tss ]
-          [ thread-run ../example/xtime.cpp ]
-          [ thread-run ../example/shared_monitor.cpp ]
-          [ thread-run ../example/shared_mutex.cpp ]
+          [ thread-run2 ../example/xtime.cpp : ex_xtime ]
+          [ thread-run2 ../example/shared_monitor.cpp : ex_shared_monitor ]
+          [ thread-run2 ../example/shared_mutex.cpp : ex_shared_mutex ]
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
-          [ thread-run ../example/make_future.cpp ]
-          [ thread-run ../example/future_then.cpp ]
+          [ thread-run2 ../example/make_future.cpp : ex_make_future ]
+          [ thread-run2 ../example/future_then.cpp : ex_future_then ]
           [ thread-run2-noit ../example/synchronized_value.cpp : ex_synchronized_value ]
           [ thread-run2-noit ../example/synchronized_person.cpp : ex_synchronized_person ]
           [ thread-run2-noit ../example/thread_guard.cpp : ex_thread_guard ]
           [ thread-run2-noit ../example/scoped_thread.cpp : ex_scoped_thread ]
           [ thread-run2-noit ../example/strict_lock.cpp : ex_strict_lock ]
           [ thread-run2-noit ../example/ba_externallly_locked.cpp : ex_ba_externallly_locked ]
-          [ thread-run ../example/producer_consumer_bounded.cpp ]
-          [ thread-run ../example/producer_consumer.cpp ]
-          [ thread-run ../example/not_interleaved.cpp ]
+          [ thread-run2 ../example/producer_consumer_bounded.cpp : ex_producer_consumer_bounded ]
+          [ thread-run2 ../example/producer_consumer.cpp : ex_producer_consumer ]
+          [ thread-run2 ../example/not_interleaved.cpp : ex_not_interleaved ]
+          [ thread-run2 ../example/lambda_future.cpp : ex_lambda_future ]
 
     ;
 
@@ -745,6 +756,7 @@ rule thread-compile-fail ( sources : reqs * : name )
           #[ thread-run ../example/unwrap.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
+          #[ thread-run ../example/std_async_test.cpp ]
     ;
 
 }

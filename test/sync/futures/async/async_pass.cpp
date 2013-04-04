@@ -197,12 +197,12 @@ int main()
   {
     try {
     boost::future<int> f = boost::async(boost::launch::async, BOOST_THREAD_MAKE_RV_REF(MoveOnly()));
-    boost::this_thread::sleep_for(ms(300));
-    Clock::time_point t0 = Clock::now();
-    BOOST_TEST(f.get() == 3);
-    Clock::time_point t1 = Clock::now();
-    BOOST_TEST(t1 - t0 < ms(200));
-    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+//    boost::this_thread::sleep_for(ms(300));
+//    Clock::time_point t0 = Clock::now();
+//    BOOST_TEST(f.get() == 3);
+//    Clock::time_point t1 = Clock::now();
+//    BOOST_TEST(t1 - t0 < ms(200));
+//    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
