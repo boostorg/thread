@@ -662,7 +662,7 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-run2-noit ../example/monitor.cpp : ex_monitor ]
           [ thread-compile ../example/starvephil.cpp : : ex_starvephil ]
-          #[ thread-compile ../example/tennis.cpp : : ex_tennis ]
+          [ thread-run2 ../example/tennis.cpp : ex_tennis ]
           [ thread-compile ../example/condition.cpp : : ex_condition ]
           [ thread-run2-noit ../example/mutex.cpp : ex_mutex ]
           [ thread-run2-noit ../example/once.cpp : ex_once ]
