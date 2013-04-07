@@ -158,7 +158,7 @@
 // fixme BOOST_THREAD_PROVIDES_ONCE_CXX11 doesn't works when thread.cpp is compiled BOOST_THREAD_VERSION 3
 #if ! defined BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11 \
  && ! defined BOOST_THREAD_PROVIDES_ONCE_CXX11
-#define BOOST_THREAD_PROVIDES_ONCE_CXX11
+#define BOOST_THREAD_DONT_PROVIDE_ONCE_CXX11
 #endif
 
 // THREAD_DESTRUCTOR_CALLS_TERMINATE_IF_JOINABLE
@@ -371,8 +371,9 @@
 #elif defined(BOOST_THREAD_USE_LIB)   //Use lib
 #else //Use default
 #   if defined(BOOST_THREAD_PLATFORM_WIN32)
-#       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN)
-            //For compilers supporting auto-tss cleanup
+#       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN) \
+      || defined(__MINGW32__) || defined(MINGW32) || defined(BOOST_MINGW32)
+      //For compilers supporting auto-tss cleanup
             //with Boost.Threads lib, use Boost.Threads lib
 #           define BOOST_THREAD_USE_LIB
 #       else
