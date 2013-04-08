@@ -269,7 +269,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       then(S& scheduler, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
-      then(launch policy, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
+      then(launch policy, F&& func); // EXTENSION
             
       void swap(__unique_future__& other) noexcept; // EXTENSION
 
@@ -689,7 +689,15 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
       then(S& scheduler, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
-      then(launch policy, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
+      then(launch policy, F&& func); // EXTENSION
+
+
+[warning These functions are experimental and subject to change in future versions. 
+There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
+
+[note These functions are based on the [@http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3558.pdf [*N3558 - A Standardized Representation of Asynchronous Operations]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
+
+  
 
 [variablelist
 
