@@ -39,11 +39,10 @@ char* player_name(int state)
     return 0;
 }
 
-void player(void* param)
+void player(int active)
 {
     boost::unique_lock<boost::mutex> lock(mutex);
 
-    int active = (int)param;
     int other = active == PLAYER_A ? PLAYER_B : PLAYER_A;
 
     while (state < GAME_OVER)
@@ -100,8 +99,8 @@ int main(int argc, char* argv[])
 {
     state = START;
 
-    boost::thread thrda(thread_adapter(&player, (void*)PLAYER_A));
-    boost::thread thrdb(thread_adapter(&player, (void*)PLAYER_B));
+    boost::thread thrda(&player, PLAYER_A);
+    boost::thread thrdb(&player, PLAYER_B);
 
     boost::xtime xt;
     boost::xtime_get(&xt, boost::TIME_UTC_);
@@ -112,7 +111,7 @@ int main(int argc, char* argv[])
         std::cout << "---Noise ON..." << std::endl;
     }
 
-    for (int i = 0; i < 1000000000; ++i)
+    for (int i = 0; i < 10; ++i)
         cond.notify_all();
 
     {
