@@ -686,10 +686,10 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
       then(F&& func); // EXTENSION
       template<typename S, typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
-      then(S& scheduler, F&& func); // EXTENSION
+      then(S& scheduler, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
-      then(launch policy, F&& func); // EXTENSION
+      then(launch policy, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
 
 [variablelist
 
@@ -717,7 +717,7 @@ launch::deferred
 
 ]]
 
-[[Returns:] [An object of type future<decltype(func(*this))> that refers to the shared state created by the continuation.]]
+[[Returns:] [An object of type future<typename boost::result_of<F(__unique_future__&)> that refers to the shared state created by the continuation.]]
 
 [[Postconditions:] [
 

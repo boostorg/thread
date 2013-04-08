@@ -11,7 +11,7 @@
     [version 4.1.0]
     [authors [Williams, Anthony] [Botet Escriba, Vicente J.]]
     [copyright 2007-11 Anthony Williams]
-    [copyright 2011-12 Vicente J. Botet Escriba]
+    [copyright 2011-13 Vicente J. Botet Escriba]
     [purpose C++ Library for launching threads and synchronizing data between them]
     [category text]
     [license

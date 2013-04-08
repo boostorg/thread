@@ -25,6 +25,7 @@
 [*New Features:]
 
 * [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once.
+* [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then
 * [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class
 
 [*Fixed Bugs:]
