@@ -279,6 +279,7 @@ alias thread_sources
       win32/thread.cpp
       win32/tss_dll.cpp
       win32/tss_pe.cpp
+      future.cpp
     : ## requirements ##
       <threadapi>win32
     ;
@@ -287,6 +288,7 @@ alias thread_sources
     : ## pthread sources ##
       pthread/thread.cpp
       pthread/once.cpp
+      future.cpp
     : ## requirements ##
       <threadapi>pthread
     ;
@@ -294,7 +296,7 @@ alias thread_sources
 explicit thread_sources ;
 
 lib boost_thread
-    : thread_sources future.cpp
+    : thread_sources
     : <conditional>@requirements
     :
     : <link>shared:<define>BOOST_THREAD_USE_DLL=1
