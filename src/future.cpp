@@ -51,6 +51,7 @@ namespace boost
     future_error_category future_error_category_var;
   }
 
+  BOOST_THREAD_DECL
   const system::error_category&
   future_category() BOOST_NOEXCEPT
   {
@@ -59,3 +60,4 @@ namespace boost
 
 }
 #endif
+
