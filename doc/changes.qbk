@@ -49,8 +49,8 @@
 * [@http://svn.boost.org/trac/boost/ticket/8323 #8323] boost::thread::try_join_for/try_join_until may block indefinitely due to a combination of problems in Boost.Thread and Boost.Chrono 	
 * [@http://svn.boost.org/trac/boost/ticket/8337 #8337] The internal representation of "std::string(this->code()->message())" escapes, but is destroyed when it exits scope.
 * [@http://svn.boost.org/trac/boost/ticket/8371 #8371] C++11 once_flag enabled when constexpr is not available
-
-
+* [@http://svn.boost.org/trac/boost/ticket/8443 #8443] Header file inclusion order may cause crashes
+* [@http://svn.boost.org/trac/boost/ticket/8451 #8451] Mmissing documented function 'boost::scoped_thread::joinable'
 
 
 [heading Version 4.0.0 - boost 1.53]
