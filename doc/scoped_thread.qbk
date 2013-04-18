@@ -105,6 +105,8 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
     strict_scoped_thread& operator=(strict_scoped_thread const&) = delete;
 
     explicit strict_scoped_thread(thread&& t) noexcept;
+    template <typename F&&, typename ...Args>
+    explicit strict_scoped_thread(F&&, Args&&...);
 
     ~strict_scoped_thread();
 
@@ -125,7 +127,7 @@ This wrapper can be used to join the thread before destroying it seems a natural
 
   boost::strict_scoped_thread<> t((boost::thread(F)));
 
-[section:default_constructor Default Constructor]
+[section:default_constructor Constructor from a __thread]
 
     explicit strict_scoped_thread(thread&& t) noexcept;
 
@@ -134,6 +136,24 @@ This wrapper can be used to join the thread before destroying it seems a natural
 [[Effects:] [move the thread to own `t_`]]
 
 [[Throws:] [Nothing]]
+
+]
+
+[endsect]
+
+
+[section:call_constructor Move Constructor from a Callable]
+
+        template <typename F&&, typename ...Args>
+        explicit strict_scoped_thread(F&&, Args&&...);
+
+[variablelist
+
+[[Effects:] [Construct a internal thread in place.]]
+
+[[Postconditions:] [`*this.t_` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
+
+[[Throws:] [Any exception the thread construction can throw.]]
 
 ]
 
@@ -149,7 +169,6 @@ This wrapper can be used to join the thread before destroying it seems a natural
 
 [[Throws:] [Nothing: The `CallableThread()(t_)` should not throw when joining the thread as the scoped variable is on a scope outside the thread function.]]
 
-
 ]
 
 [endsect]
@@ -160,6 +179,7 @@ This wrapper can be used to join the thread before destroying it seems a natural
 
     #include <boost/thread/scoped_thread.hpp>
 
+    template <class CallableThread>
     class scoped_thread
     {
       thread t_; // for exposition purposes only
@@ -169,6 +189,8 @@ This wrapper can be used to join the thread before destroying it seems a natural
         scoped_thread& operator=(const scoped_thread&) = delete;
 
         explicit scoped_thread(thread&& th) noexcept;
+        template <typename F&&, typename ...Args>
+        explicit strict_scoped_thread(F&&, Args&&...);
 
         ~scoped_thread();
 
@@ -293,6 +315,23 @@ any) to `*this`.
 [[Postconditions:] [`*this.t_` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
 
 [[Throws:] [Nothing]]
+
+]
+
+[endsect]
+
+[section:call_constructor Move Constructor from a Callable]
+
+        template <typename F&&, typename ...Args>
+        explicit strict_scoped_thread(F&&, Args&&...);
+
+[variablelist
+
+[[Effects:] [Construct a internal thread in place.]]
+
+[[Postconditions:] [`*this.t_` refers to the newly created thread of execution and `this->get_id()!=thread::id()`.]]
+
+[[Throws:] [Any exception the thread construction can throw.]]
 
 ]
 
