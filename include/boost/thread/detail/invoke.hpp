@@ -199,39 +199,39 @@ namespace boost
 
 #endif // BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
-//#elif ! defined(BOOST_NO_SFINAE_EXPR) &&
-//    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL
-//
-//    template <class Ret, class Fp>
-//    inline
-//    Ret invoke(BOOST_THREAD_RV_REF(Fp) f)
-//    {
-//      return f();
-//    }
-//    template <class Ret, class Fp, class A1>
-//    inline
-//    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1)
-//    {
-//      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1))();
-//    }
-//    template <class Ret, class Fp, class A1, class A2>
-//    inline
-//    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2)
-//    {
-//      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1), boost::forward<A2>(a2))();
-//    }
-//    template <class Ret, class Fp, class A1, class A2, class A3>
-//    inline
-//    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2, BOOST_THREAD_RV_REF(A3) a3)
-//    {
-//      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1), boost::forward<A2>(a2), boost::forward<A3>(a3))();
-//    }
-//
-//#define BOOST_THREAD_PROVIDES_INVOKE_RET
+#elif ! defined(BOOST_NO_SFINAE_EXPR) && \
+    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL
+
+    template <class Ret, class Fp>
+    inline
+    Ret invoke(BOOST_THREAD_RV_REF(Fp) f)
+    {
+      return f();
+    }
+    template <class Ret, class Fp, class A1>
+    inline
+    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1)
+    {
+      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1))();
+    }
+    template <class Ret, class Fp, class A1, class A2>
+    inline
+    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2)
+    {
+      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1), boost::forward<A2>(a2))();
+    }
+    template <class Ret, class Fp, class A1, class A2, class A3>
+    inline
+    Ret invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2, BOOST_THREAD_RV_REF(A3) a3)
+    {
+      return std::bind(boost::forward<Fp>(f), boost::forward<A1>(a1), boost::forward<A2>(a2), boost::forward<A3>(a3))();
+    }
+
+#define BOOST_THREAD_PROVIDES_INVOKE_RET
 
 #else // all
 //!!!!!  WARNING !!!!! THIS DOESN'T WORKS YET
-#define BOOST_THREAD_PROVIDES_INVOKE_RET
+//#define BOOST_THREAD_PROVIDES_INVOKE_RET
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
