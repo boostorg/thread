@@ -200,7 +200,8 @@ namespace boost
 #endif // BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
 #elif ! defined(BOOST_NO_SFINAE_EXPR) && \
-    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL
+    ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL && \
+    defined  BOOST_MSVC
 
     template <class Ret, class Fp>
     inline
@@ -229,9 +230,9 @@ namespace boost
 
 #define BOOST_THREAD_PROVIDES_INVOKE_RET
 
-#else // all
+#elif ! defined  BOOST_MSVC
 //!!!!!  WARNING !!!!! THIS DOESN'T WORKS YET
-//#define BOOST_THREAD_PROVIDES_INVOKE_RET
+#define BOOST_THREAD_PROVIDES_INVOKE_RET
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
