@@ -190,8 +190,40 @@ public:
   }
 };
 
+
+struct id_string
+{
+    static boost::once_flag flag;
+    static void do_init(id_string & )
+    {}
+    void operator()()
+    {
+      boost::call_once(flag, &id_string::do_init, boost::ref(*this));
+    }
+//    void operator()(int,int)
+//    {
+//      // This should fail but works with gcc-4.6.3
+//      //std::bind(&id_string::do_init, *this)();
+//      std::bind(&id_string::do_init, std::ref(*this))();
+//    }
+//    void operator()(int) const
+//    {
+//      //std::bind(&id_string::do_init, *this)();
+//    }
+};
+
+
+boost::once_flag id_string::flag BOOST_INIT_ONCE_INIT;
+
 int main()
 {
+
+  //
+  {
+    id_string id;
+    id();
+    //id(1,1);
+  }
     // check basic functionality
     {
         boost::thread t0(f0);
