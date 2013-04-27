@@ -45,7 +45,9 @@ void test_latch()
       g.create_thread(&latch_thread);
 
     if (! gen_latch.try_wait())
-      gen_latch.wait(); // All the threads have been updated the global_parameter
+      if (gen_latch.wait_for(boost::chrono::milliseconds(100)) ==  boost::cv_status::timeout)
+        if (gen_latch.wait_until(boost::chrono::steady_clock::now()+boost::chrono::milliseconds(100)) ==  boost::cv_status::timeout)
+          gen_latch.wait(); // All the threads have been updated the global_parameter
     BOOST_TEST_EQ(global_parameter, N_THREADS);
 
     g.join_all();
