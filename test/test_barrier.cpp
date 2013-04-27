@@ -1,5 +1,6 @@
 // Copyright (C) 2001-2003
 // William E. Kempf
+// (C) Copyright 2013 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -12,7 +13,6 @@
 #include <boost/thread/barrier.hpp>
 
 #include <boost/detail/lightweight_test.hpp>
-//#include <boost/test/unit_test.hpp>
 #include <vector>
 
 namespace {
@@ -55,21 +55,14 @@ void test_barrier()
         throw;
     }
 
-    //BOOST_CHECK_EQUAL(global_parameter,5);
     BOOST_TEST(global_parameter==5);
 
 }
 
-//boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
 int main()
 {
-//    boost::unit_test::test_suite* test =
-//        BOOST_TEST_SUITE("Boost.Threads: barrier test suite");
-//
-//    test->add(BOOST_TEST_CASE(&test_barrier));
 
     test_barrier();
     return boost::report_errors();
-    //return test;
 }
 
