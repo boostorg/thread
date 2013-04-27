@@ -7,6 +7,7 @@
 #define BOOST_THREAD_COMPLETION_LATCH_HPP
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/delete.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -43,7 +44,7 @@ namespace boost
     /// noop completion function factory
     static completion_function noop()
     {
-      return completion_function (&thread_detail::noop);
+      return completion_function(&thread_detail::noop);
     }
 
   private:
@@ -158,6 +159,11 @@ namespace boost
     {
     }
 
+    ///
+    ~completion_latch()
+    {
+
+    }
     /// Blocks until the latch has counted down to zero.
     void wait()
     {
@@ -183,34 +189,34 @@ namespace boost
       boost::unique_lock<boost::mutex> lk(mutex_);
       pre_wait(lk);
       cv_status res;
-      if (count_ > 0)
+      while(count_ > 0)
       {
-        res = count_cond_.wait_for(rel_time);
+          if (count_cond_.wait_for(lk,rel_time)==cv_status::timeout)
+          {
+            res = (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
+          }
       }
-      else
-      {
-        res = cv_status::no_timeout;
-      }
+      res = cv_status::no_timeout;
       post_wait(lk);
       return res;
     }
 
     /// try to wait until the specified time_point is reached
     /// @return whether there is a timeout or not.
-    template <class lock_type, class Clock, class Duration>
+    template <class Clock, class Duration>
     cv_status wait_until(const chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
       pre_wait(lk);
       cv_status res;
-      if (count_ > 0)
+      while(count_ > 0)
       {
-        res = count_cond_.wait_until(abs_time);
+          if (count_cond_.wait_until(lk,abs_time)==cv_status::timeout)
+          {
+            res = (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
+          }
       }
-      else
-      {
-        res = cv_status::no_timeout;
-      }
+      res = cv_status::no_timeout;
       post_wait(lk);
       return res;
     }
@@ -261,14 +267,14 @@ namespace boost
     /// @Returns the old completion function if any or noop if
 
 #ifdef BOOST_NO_CXX11_HDR_FUNCTIONAL
-        template <typename F>
-        completion_function then(BOOST_THREAD_RV_REF(F) funct)
-        {
-          boost::lock_guard<boost::mutex> lk(mutex_);
-          completion_function tmp(funct_);
-          funct_ = boost::move(funct);
-          return tmp;
-        }
+    template <typename F>
+    completion_function then(BOOST_THREAD_RV_REF(F) funct)
+    {
+      boost::lock_guard<boost::mutex> lk(mutex_);
+      completion_function tmp(funct_);
+      funct_ = boost::move(funct);
+      return tmp;
+    }
 #endif
     completion_function then(void(*funct)())
     {

@@ -7,6 +7,7 @@
 #define BOOST_THREAD_LATCH_HPP
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/thread/detail/delete.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -14,10 +15,6 @@
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/time_point.hpp>
 #include <boost/assert.hpp>
-
-//#include <boost/throw_exception.hpp>
-//#include <stdexcept>
-//#include <string>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -30,7 +27,7 @@ namespace boost
     {
       while (count_ > 0)
       {
-        cond_.wait(lk);
+        count_cond_.wait(lk);
       }
     }
     /// Decrement the count and notify anyone waiting if we reach zero.
@@ -41,7 +38,7 @@ namespace boost
       BOOST_ASSERT(count_ > 0);
       if (--count_ == 0)
       {
-        cond_.notify_all();
+        count_cond_.notify_all();
         lk.unlock();
         return true;
       }
@@ -49,12 +46,18 @@ namespace boost
     }
 
   public:
-    BOOST_THREAD_NO_COPYABLE( latch )
+    BOOST_THREAD_NO_COPYABLE( latch)
 
     /// Constructs a latch with a given count.
     latch(std::size_t count) :
       count_(count)
     {
+    }
+
+    ///
+    ~latch()
+    {
+
     }
 
     /// Blocks until the latch has counted down to zero.
@@ -77,30 +80,31 @@ namespace boost
     cv_status wait_for(const chrono::duration<Rep, Period>& rel_time)
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      if (count_ > 0)
+      while(count_ > 0)
       {
-        return cond_.wait_for(rel_time);
+          if (count_cond_.wait_for(lk,rel_time)==cv_status::timeout)
+          {
+              return (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
+          }
       }
-      else
-      {
-        return cv_status::no_timeout;
-      }
+      return cv_status::no_timeout;
+
     }
 
     /// try to wait until the specified time_point is reached
     /// @return whether there is a timeout or not.
-    template <class lock_type, class Clock, class Duration>
+    template <class Clock, class Duration>
     cv_status wait_until(const chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      if (count_ > 0)
+      while(count_ > 0)
       {
-        return cond_.wait_until(abs_time);
+          if (count_cond_.wait_until(lk,abs_time)==cv_status::timeout)
+          {
+              return (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
+          }
       }
-      else
-      {
-        return cv_status::no_timeout;
-      }
+      return cv_status::no_timeout;
     }
 
     /// Decrement the count and notify anyone waiting if we reach zero.
@@ -110,7 +114,10 @@ namespace boost
       boost::unique_lock<boost::mutex> lk(mutex_);
       count_down(lk);
     }
-    void signal() {count_down();}
+    void signal()
+    {
+      count_down();
+    }
 
     /// Decrement the count and notify anyone waiting if we reach zero.
     /// Blocks until the latch has counted down to zero.
@@ -124,7 +131,10 @@ namespace boost
       }
       wait(lk);
     }
-    void sync() {count_down_and_wait();}
+    void sync()
+    {
+      count_down_and_wait();
+    }
 
     /// Reset the counter
     /// #Requires This method may only be invoked when there are no other threads currently inside the count_down_and_wait() method.
@@ -137,7 +147,7 @@ namespace boost
 
   private:
     mutex mutex_;
-    condition_variable cond_;
+    condition_variable count_cond_;
     std::size_t count_;
   };
 

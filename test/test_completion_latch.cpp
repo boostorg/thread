@@ -64,8 +64,9 @@ void test_completion_latch_reset()
         g.create_thread(&latch_thread);
 
       if (!gen_latch.try_wait())
-        gen_latch.wait(); // All the threads have been updated the global_parameter
-      //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
+        if (gen_latch.wait_for(boost::chrono::milliseconds(100)) ==  boost::cv_status::timeout)
+          if (gen_latch.wait_until(boost::chrono::steady_clock::now()+boost::chrono::milliseconds(100)) ==  boost::cv_status::timeout)
+            gen_latch.wait(); // All the threads have been updated the global_parameter
       g.join_all();
     }
     catch (...)
@@ -75,21 +76,16 @@ void test_completion_latch_reset()
       throw;
     }
   }
-  //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
   gen_latch.then(&test_global_parameter);
   {
-    //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
     global_parameter = 0;
     try
     {
-      //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
       for (int i = 0; i < N_THREADS; ++i)
         g2.create_thread(&latch_thread);
 
-      //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
-      //if (!gen_latch.try_wait())
+      if (!gen_latch.try_wait())
         gen_latch.wait(); // All the threads have been updated the global_parameter
-      //std::cout << __FILE__ << ':' << __LINE__ << std::endl;
 
       g2.join_all();
     }
@@ -101,18 +97,10 @@ void test_completion_latch_reset()
     }
   }
 }
-//template <bool b>
-//struct xx {
-//  static BOOST_CONSTEXPR_OR_CONST bool value = !b;
-//};
 
 int main()
 {
-  //test_completion_latch();
   test_completion_latch_reset();
   return boost::report_errors();
-
-  //BOOST_CONSTEXPR_OR_CONST bool a = boost::integral_constant<bool,false>::value;
-  //xx<a>
 }
 
