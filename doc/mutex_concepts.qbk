@@ -2614,7 +2614,7 @@ Only the specificities respect to __Lockable are described here.
 
 [endsect]
 [///////////////////////////////]
-[section:swap `swap(externally_locked, externally_locked&)`]
+[section:swap `swap(externally_locked&, externally_locked&)`]
 
   template <typename T, typename MutexType>
   void swap(externally_locked<T, MutexType> & lhs, externally_locked<T, MutexType> & rhs)
