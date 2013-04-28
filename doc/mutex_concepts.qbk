@@ -2441,10 +2441,13 @@ object passed to the constructor.]]
   // #include <boost/thread/externally_locked.hpp>
   template <class T, typename MutexType = boost::mutex>
   class externally_locked;
+  template <class T, typename MutexType>
+  class externally_locked<T&, MutexType>;
+
   template <typename T, typename MutexType>
   void swap(externally_locked<T, MutexType> & lhs, externally_locked<T, MutexType> & rhs);
 
-[section Template Class `externally_locked`]
+[section:externally_locked Template Class `externally_locked`]
 
   // #include <boost/thread/externally_locked.hpp>
 
@@ -2460,8 +2463,11 @@ object passed to the constructor.]]
     externally_locked(mutex_type& mtx, const T& obj);
     externally_locked(mutex_type& mtx,T&& obj);
     explicit externally_locked(mutex_type& mtx);
+    externally_locked(externally_locked const& rhs);
     externally_locked(externally_locked&& rhs);
-
+    externally_locked& operator=(externally_locked const& rhs);
+    externally_locked& operator=(externally_locked&& rhs);
+ 
     // observers
     T& get(strict_lock<mutex_type>& lk);
     const T& get(strict_lock<mutex_type>& lk) const;
@@ -2476,7 +2482,7 @@ object passed to the constructor.]]
     template <class Lock>
     T const& get(Lock& lk) const;
 
-    mutex_type* mutex();
+   mutex_type* mutex() const noexcept;
 
     // modifiers
     void lock();
@@ -2540,7 +2546,7 @@ Only the specificities respect to __Lockable are described here.
 
 [endsect]
 [///////////////////////////////]
-[section:constructor4 `externally_locked(externally_locked&)`]
+[section:constructor4 `externally_locked(externally_locked&&)`]
 
     externally_locked(externally_locked&& rhs);
 
@@ -2548,13 +2554,62 @@ Only the specificities respect to __Lockable are described here.
 
 [[Requires:] [T is a model of Movable.]]
 
-[[Effects:] [Moves an externally locked object by moving the the cloaked type and copying the mutex reference ]]
+[[Effects:] [Move constructs an externally locked object by moving the cloaked type and copying the mutex reference ]]
 
 [[Throws:] [Any exception thrown by the call to `T(T&&)`.]]
 
 ]
 
 [endsect]
+[///////////////////////////////]
+[section:constructor5 `externally_locked(externally_locked&)`]
+
+    externally_locked(externally_locked& rhs);
+
+[variablelist
+
+[[Requires:] [T is a model of Copyable.]]
+
+[[Effects:] [Copy constructs an externally locked object by copying the cloaked type and copying the mutex reference ]]
+
+[[Throws:] [Any exception thrown by the call to `T(T&)`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:assign4 `externally_locked(externally_locked&&)`]
+
+    externally_locked& operator=(externally_locked&& rhs);
+
+[variablelist
+
+[[Requires:] [T is a model of Movable.]]
+
+[[Effects:] [Move assigns an externally locked object by moving the cloaked type and copying the mutex reference ]]
+
+[[Throws:] [Any exception thrown by the call to `T::operator=(T&&)`.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:assign5 `externally_locked(externally_locked&)`]
+
+    externally_locked& operator=(externally_locked const& rhs);
+
+[variablelist
+
+[[Requires:] [T is a model of Copyable.]]
+
+[[Effects:] [Copy assigns an externally locked object by copying the cloaked type and copying the mutex reference ]]
+
+[[Throws:] [Any exception thrown by the call to `T::operator=(T&)`.]]
+
+]
+
+[endsect]
+
 [///////////////////////////////]
 [section:get1 `get(strict_lock<mutex_type>&)`]
 
@@ -2613,6 +2668,170 @@ Only the specificities respect to __Lockable are described here.
 [endsect]
 
 [endsect]
+[section:externally_locked_ref Template Class `externally_locked<T&>`]
+
+  // #include <boost/thread/externally_locked.hpp>
+
+  template <class T, typename MutexType>
+  class externally_locked<T&, MutexType> 
+  {
+    //BOOST_CONCEPT_ASSERT(( CopyConstructible<T> ));
+    BOOST_CONCEPT_ASSERT(( BasicLockable<MutexType> ));
+
+  public:
+    typedef MutexType mutex_type;
+
+    externally_locked(mutex_type& mtx, T& obj);
+    explicit externally_locked(mutex_type& mtx);
+    externally_locked(externally_locked const& rhs) noexcept;
+    externally_locked(externally_locked&& rhs) noexcept;
+    externally_locked& operator=(externally_locked const& rhs) noexcept;
+    externally_locked& operator=(externally_locked&& rhs) noexcept;
+
+    // observers
+    T& get(strict_lock<mutex_type>& lk);
+    const T& get(strict_lock<mutex_type>& lk) const;
+
+    template <class Lock>
+    T& get(nested_strict_lock<Lock>& lk);
+    template <class Lock>
+    const T& get(nested_strict_lock<Lock>& lk) const;
+
+    template <class Lock>
+    T& get(Lock& lk);
+    template <class Lock>
+    T const& get(Lock& lk) const;
+
+   mutex_type* mutex() const noexcept;
+
+    // modifiers
+    void lock();
+    void unlock();
+    bool try_lock();
+    void swap(externally_locked&) noexcept;
+  };
+
+`externally_locked` is a model of __Lockable, it cloaks an object of type `T`, and actually provides full
+access to that object through the get and set member functions, provided you
+pass a reference to a strict lock object.
+
+Only the specificities respect to __Lockable are described here. 
+
+[///////////////////////////////]
+[section:constructor1 `externally_locked<T&>(mutex_type&, T&)`]
+
+    externally_locked<T&>(mutex_type& mtx, T& obj) noexcept;
+
+[variablelist
+
+
+[[Effects:] [Constructs an externally locked object copying the cloaked reference.]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:constructor4 `externally_locked<T&>(externally_locked&&)`]
+
+    externally_locked(externally_locked&& rhs) noexcept;
+
+[variablelist
+
+[[Effects:] [Moves an externally locked object by moving the cloaked type and copying the mutex reference ]]
+
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:assign4 `externally_locked(externally_locked&&)`]
+
+    externally_locked& operator=(externally_locked&& rhs);
+
+[variablelist
+
+[[Effects:] [Move assigns an externally locked object by copying the cloaked reference and copying the mutex reference ]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:assign5 `externally_locked(externally_locked&)`]
+
+    externally_locked& operator=(externally_locked const& rhs);
+
+[variablelist
+
+[[Requires:] [T is a model of Copyable.]]
+
+[[Effects:] [Copy assigns an externally locked object by copying the cloaked reference and copying the mutex reference ]]
+
+[[Throws:] [Any exception thrown by the call to `T::operator=(T&)`.]]
+
+]
+
+[endsect]
+
+[///////////////////////////////]
+[section:get1 `get(strict_lock<mutex_type>&)`]
+
+    T& get(strict_lock<mutex_type>& lk);
+    const T& get(strict_lock<mutex_type>& lk) const;
+
+[variablelist
+
+[[Requires:] [The `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+[///////////////////////////////]
+[section:get2 `get(strict_lock<nested_strict_lock<Lock>>&)`]
+
+    template <class Lock>
+    T& get(nested_strict_lock<Lock>& lk);
+    template <class Lock>
+    const T& get(nested_strict_lock<Lock>& lk) const;
+
+[variablelist
+
+[[Requires:] [`is_same<mutex_type, typename Lock::mutex_type>` and the `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+
+[///////////////////////////////]
+[section:get3 `get(strict_lock<nested_strict_lock<Lock>>&)`]
+
+    template <class Lock>
+    T& get(Lock& lk);
+    template <class Lock>
+    T const& get(Lock& lk) const;
+
+[variablelist
+
+[[Requires:] [`Lock` is a model of __StrictLock, `is_same<mutex_type, typename Lock::mutex_type>` and the `lk` parameter must be locking the associated mutex.]]
+
+[[Returns:] [A reference to the cloaked object ]]
+
+[[Throws:] [__lock_error__ if `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined and the run-time preconditions are not satisfied .]]
+
+]
+
+[endsect]
+
+[endsect]
+
+
 [///////////////////////////////]
 [section:swap `swap(externally_locked&, externally_locked&)`]
 
