@@ -8,6 +8,7 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
+#include <boost/thread/detail/counter.hpp>
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -20,7 +21,7 @@
 #else
 #include <functional>
 #endif
-#include <boost/thread/latch.hpp>
+//#include <boost/thread/latch.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -48,86 +49,35 @@ namespace boost
     }
 
   private:
+    struct around_wait;
+    friend struct around_wait;
+    struct around_wait
+    {
+      completion_latch &that_;
+      boost::unique_lock<boost::mutex> &lk_;
+      around_wait(completion_latch &that, boost::unique_lock<boost::mutex> &lk)
+      : that_(that), lk_(lk)
+      {
+        that_.leavers_.cond_.wait(lk, detail::counter_is_zero(that_.leavers_));
+        that_.waiters_.inc_and_notify_all();
+        that_.leavers_.cond_.wait(lk, detail::counter_is_not_zero(that_.leavers_));
+      }
+      ~around_wait()
+      {
+        that_.waiters_.dec_and_notify_all();
+      }
+    };
 
-    void wait_for_no_leaver(unique_lock<mutex> &lk)
-    {
-      // wait until all preceding waiting threads have leave
-      while (leavers_ > 0)
-      {
-        idle_.wait(lk);
-      }
-    }
-    void wait_for_leavers(unique_lock<mutex> &lk)
-    {
-      while (leavers_ == 0)
-      {
-        idle_.wait(lk);
-      }
-    }
-    void inc_waiters(boost::unique_lock<boost::mutex> &)
-    {
-      ++waiters_;
-      waiters_cnd_.notify_all();
-    }
-    void dec_waiters(boost::unique_lock<boost::mutex> &)
-    {
-      --waiters_;
-      waiters_cnd_.notify_all();
-    }
-    void pre_wait(boost::unique_lock<boost::mutex> &lk)
-    {
-      wait_for_no_leaver(lk);
-      inc_waiters(lk);
-      wait_for_leavers(lk);
-    }
-    void post_wait(boost::unique_lock<boost::mutex> &lk)
-    {
-      dec_waiters(lk);
-    }
-    void wait(boost::unique_lock<boost::mutex> &lk)
-    {
-      pre_wait(lk);
-      while (count_ > 0)
-      {
-        count_cond_.wait(lk);
-      }
-      post_wait(lk);
-    }
-
-    void wait_for_waiters(unique_lock<mutex> &lk)
-    {
-      // waits at least for a waiter.
-      while (waiters_ == 0)
-      {
-        waiters_cnd_.wait(lk);
-      }
-    }
-    void set_leavers()
-    {
-      leavers_ = waiters_;
-      idle_.notify_all();
-    }
-    void wait_for_no_waiter(unique_lock<mutex> &lk)
-    {
-      while (waiters_ > 0)
-        waiters_cnd_.wait(lk);
-    }
-    void reset_waiters_and_readers()
-    {
-      waiters_ = 0;
-      leavers_ = 0;
-      idle_.notify_all();
-    }
     bool count_down(unique_lock<mutex> &lk)
     {
       BOOST_ASSERT(count_ > 0);
       if (--count_ == 0)
       {
-        wait_for_waiters(lk);
-        set_leavers();
-        count_cond_.notify_all();
-        wait_for_no_waiter(lk);
-        reset_waiters_and_readers();
+        waiters_.cond_.wait(lk, detail::counter_is_not_zero(waiters_));
+        leavers_.assign_and_notify_all(waiters_);
+        count_.cond_.notify_all();
+        waiters_.cond_.wait(lk, detail::counter_is_zero(waiters_));
+        leavers_.assign_and_notify_all(0);
         lk.unlock();
         funct_();
         return true;
@@ -136,7 +86,7 @@ namespace boost
     }
 
   public:
-    BOOST_THREAD_NO_COPYABLE( completion_latch)
+    BOOST_THREAD_NO_COPYABLE( completion_latch )
 
     /// Constructs a latch with a given count.
     completion_latch(std::size_t count) :
@@ -162,23 +112,22 @@ namespace boost
     ///
     ~completion_latch()
     {
-
     }
+
     /// Blocks until the latch has counted down to zero.
     void wait()
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      wait(lk);
+      around_wait aw(*this, lk);
+      count_.cond_.wait(lk, detail::counter_is_zero(count_));
     }
 
     /// @return true if the internal counter is already 0, false otherwise
     bool try_wait()
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      pre_wait(lk);
-      bool res = (count_ == 0);
-      post_wait(lk);
-      return res;
+      around_wait aw(*this, lk);
+      return (count_ == 0);
     }
 
     /// try to wait for a specified amount of time
@@ -187,18 +136,10 @@ namespace boost
     cv_status wait_for(const chrono::duration<Rep, Period>& rel_time)
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      pre_wait(lk);
-      cv_status res;
-      while(count_ > 0)
-      {
-          if (count_cond_.wait_for(lk,rel_time)==cv_status::timeout)
-          {
-            res = (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
-          }
-      }
-      res = cv_status::no_timeout;
-      post_wait(lk);
-      return res;
+      around_wait aw(*this, lk);
+      return count_.cond_.wait_for(lk, rel_time, detail::counter_is_zero(count_))
+              ? cv_status::no_timeout
+              : cv_status::timeout;
     }
 
     /// try to wait until the specified time_point is reached
@@ -207,18 +148,10 @@ namespace boost
     cv_status wait_until(const chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<boost::mutex> lk(mutex_);
-      pre_wait(lk);
-      cv_status res;
-      while(count_ > 0)
-      {
-          if (count_cond_.wait_until(lk,abs_time)==cv_status::timeout)
-          {
-            res = (count_ == 0 ? cv_status::no_timeout : cv_status::timeout);
-          }
-      }
-      res = cv_status::no_timeout;
-      post_wait(lk);
-      return res;
+      around_wait aw(*this, lk);
+      return count_.cond_.wait_until(lk, abs_time, detail::counter_is_zero(count_))
+          ? cv_status::no_timeout
+          : cv_status::timeout;
     }
 
     /// Decrement the count and notify anyone waiting if we reach zero.
@@ -243,7 +176,8 @@ namespace boost
       {
         return;
       }
-      wait(lk);
+      around_wait aw(*this, lk);
+      count_.cond_.wait(lk, detail::counter_is_zero(count_));
     }
     void sync()
     {
@@ -255,7 +189,7 @@ namespace boost
     void reset(std::size_t count)
     {
       boost::lock_guard<boost::mutex> lk(mutex_);
-      BOOST_ASSERT(count_ == 0);
+      //BOOST_ASSERT(count_ == 0);
       count_ = count;
     }
 
@@ -286,13 +220,10 @@ namespace boost
 
   private:
     mutex mutex_;
-    condition_variable count_cond_;
-    std::size_t count_;
+    detail::counter count_;
     completion_function funct_;
-    condition_variable waiters_cnd_;
-    std::size_t waiters_;
-    condition_variable idle_;
-    std::size_t leavers_;
+    detail::counter waiters_;
+    detail::counter leavers_;
   };
 
 } // namespace boost
