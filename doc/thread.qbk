@@ -203,6 +203,7 @@
 [def __thread_resource_error__ `boost::thread_resource_error`]
 [def __thread_interrupted__ `boost::thread_interrupted`]
 [def __barrier__ [link thread.synchronization.barriers.barrier `boost::barrier`]]
+[def __latch__   [link thread.synchronization.latches.latch `latch`]]
 
 [template cond_wait_link[link_text] [link thread.synchronization.condvar_ref.condition_variable.wait [link_text]]]
 [def __cond_wait__ [cond_wait_link `wait()`]]
@@ -238,7 +239,9 @@
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]
+[/include latch.qbk]
 [include futures.qbk]
+[/include async_executors.qbk]
 [endsect]
 
 
