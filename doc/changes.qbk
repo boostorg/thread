@@ -15,6 +15,8 @@
 
 * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
 * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
+* [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
+* [@http://svn.boost.org/trac/boost/ticket/XXXX #XXXX] Sync: Add a completion_latch class
 
 [*Fixed Bugs:]
 
@@ -394,18 +396,29 @@ been moved to __thread_id__.
 The following features will be included in next releases. 
 
 # Complete the C++11 missing features, in particular
-  * [@http://svn.boost.org/trac/boost/ticket/7285 #7285] C++11 compliance: Allow to pass movable arguments for call_once. 
   * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] C++11 compliance: Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
 
-
-# Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations], in particular
-
+# Add some minor features, in particular
   * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
-  * [@http://svn.boost.org/trac/boost/ticket/7449 #7449] Synchro: Add a synchronized value class.
-  * [@http://svn.boost.org/trac/boost/ticket/7445 #7445] Async: Add future<>.then.
+
+# Add some features based on C++ proposals, in particular
+  * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
+  * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
+  * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
+  * [@http://svn.boost.org/trac/boost/ticket/XXXX #XXXX] Sync: Add a completion_latch class
+  * [@http://svn.boost.org/trac/boost/ticket/8513 #8513] Async: Add a basic thread_pool executor.
+  * [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
+
+# Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations] or extension to them, in particular
+
   * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any.
   * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all.
   * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter.
+  * [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then
+  * [@http://svn.boost.org/trac/boost/ticket/8516 #8516] Async: Add future/shared_future::then taking a scheduler as parameter.
+  * [@http://svn.boost.org/trac/boost/ticket/8517 #8517] Async: Add a variadic future/shared_future::then  
+
+
 
 
 [endsect]
