@@ -18,6 +18,9 @@ arrived. Once the `n`-th thread has reached the barrier, all the waiting threads
     class barrier
     {
     public:
+        barrier(barrier const&) = delete;
+        barrier& operator=(barrier const&) = delete;
+
         barrier(unsigned int count);
         ~barrier();
 

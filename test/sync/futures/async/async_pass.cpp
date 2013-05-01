@@ -147,7 +147,7 @@ int main()
     Clock::time_point t0 = Clock::now();
     BOOST_TEST(f.get() == 3);
     Clock::time_point t1 = Clock::now();
-    BOOST_TEST(t1 - t0 < ms(200));
+    BOOST_TEST(t1 - t0 < ms(300));
     } catch (std::exception& ex) {
       std::cout << __FILE__ <<"["<<__LINE__<<"]"<<ex.what() << std::endl;
       BOOST_TEST(false && "exception thrown");
