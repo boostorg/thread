@@ -50,8 +50,8 @@ int main()
   std::string nm;
   {
     strict_lock<recursive_mutex> lk(terminal_mutex);
-    std::ostream & gcout = mcout.hold(lk);
-    //std::istream & gcin = mcin.hold(lk);
+    std::ostream & gcout = mcout.get(lk);
+    //std::istream & gcin = mcin.get(lk);
     gcout << "Enter name: ";
     //gcin >> nm;
   }

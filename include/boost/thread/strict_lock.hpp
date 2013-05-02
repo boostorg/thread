@@ -73,7 +73,6 @@ namespace boost
 
 
     // observers
-  private:
 
     /**
      * @return the owned mutex.
@@ -82,12 +81,19 @@ namespace boost
     {
       return &mtx_;
     }
-  public:
+
+    /**
+     * @return whether this lock is locking a mutex.
+     */
+    bool owns_lock() const BOOST_NOEXCEPT
+    {
+      return true;
+    }
 
     /**
      * @return whether this lock is locking that mutex.
      */
-    bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT
+    bool owns_lock(const mutex_type* l) const BOOST_NOEXCEPT
     {
       return l == mutex();
     } /*< strict locks specific function >*/
@@ -173,7 +179,6 @@ namespace boost
     }
 
     // observers
-private:
     /**
      * return @c the owned mutex.
      */
@@ -181,7 +186,15 @@ private:
     {
       return tmp_lk_.mutex();
     }
-public:
+
+    /**
+     * @return whether this lock is locking a mutex.
+     */
+    bool owns_lock() const BOOST_NOEXCEPT
+    {
+      return true;
+    }
+
     /**
      * @return whether if this lock is locking that mutex.
      */
