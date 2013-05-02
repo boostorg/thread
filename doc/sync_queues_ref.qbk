@@ -381,7 +381,7 @@ Non-blocking operations are provided by BlockingQueues
 
 [endsect]
 
-[section:sync_bounded_queue Class `sync_bounded_queue<>`]
+[section:sync_bounded_queue Class template `sync_bounded_queue<>`]
 
   #include <boost/thread/sync_bounded_queue.hpp>
   namespace boost
@@ -470,7 +470,7 @@ Non-blocking operations are provided by BlockingQueues
     sync_queue<ValueType>& operator>>(sync_queue<ValueType>& sbq, ValueType &elem);
   }
 
-[section:sync_queue Class `sync_queue<>`]
+[section:sync_queue Class template `sync_queue<>`]
 
   #include <boost/thread/sync_queue.hpp>
 
