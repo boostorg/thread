@@ -157,7 +157,7 @@ namespace boost
 #endif
     }
 
-    class thread
+    class BOOST_THREAD_DECL thread
     {
     public:
       typedef thread_attributes attributes;
@@ -167,13 +167,13 @@ namespace boost
 
         struct dummy;
 
-        BOOST_THREAD_DECL void release_handle();
+        void release_handle();
 
         detail::thread_data_ptr thread_info;
 
     private:
-        BOOST_THREAD_DECL bool start_thread_noexcept();
-        BOOST_THREAD_DECL bool start_thread_noexcept(const attributes& attr);
+        bool start_thread_noexcept();
+        bool start_thread_noexcept(const attributes& attr);
     public:
         void start_thread()
         {
@@ -190,9 +190,9 @@ namespace boost
           }
         }
 
-        BOOST_THREAD_DECL explicit thread(detail::thread_data_ptr data);
+        explicit thread(detail::thread_data_ptr data);
 
-        BOOST_THREAD_DECL detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
+        detail::thread_data_ptr get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const;
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -243,7 +243,7 @@ namespace boost
         thread(const volatile thread&);
 #endif
 #endif
-        BOOST_THREAD_DECL thread() BOOST_NOEXCEPT;
+        thread() BOOST_NOEXCEPT;
         ~thread()
         {
 
@@ -459,9 +459,9 @@ namespace boost
 #endif
 
 
-        BOOST_THREAD_DECL bool joinable() const BOOST_NOEXCEPT;
+        bool joinable() const BOOST_NOEXCEPT;
     private:
-        BOOST_THREAD_DECL bool join_noexcept();
+        bool join_noexcept();
     public:
         inline void join();
 
@@ -494,10 +494,10 @@ namespace boost
 #endif
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
     private:
-        BOOST_THREAD_DECL bool do_try_join_until_noexcept(uintmax_t milli, bool& res);
+        bool do_try_join_until_noexcept(uintmax_t milli, bool& res);
         inline bool do_try_join_until(uintmax_t milli);
     public:
-        BOOST_THREAD_DECL bool timed_join(const system_time& abs_time);
+        bool timed_join(const system_time& abs_time);
         //{
         //  return do_try_join_until(get_milliseconds_until(wait_until));
         //}
@@ -543,13 +543,13 @@ namespace boost
             return timed_join(get_system_time()+rel_time);
         }
 #endif
-        BOOST_THREAD_DECL void detach();
+        void detach();
 
-        BOOST_THREAD_DECL static unsigned hardware_concurrency() BOOST_NOEXCEPT;
+        static unsigned hardware_concurrency() BOOST_NOEXCEPT;
 
 #define BOOST_THREAD_DEFINES_THREAD_NATIVE_HANDLE
         typedef detail::thread_data_base::native_handle_type native_handle_type;
-        BOOST_THREAD_DECL native_handle_type native_handle();
+        native_handle_type native_handle();
 
 #if defined BOOST_THREAD_PROVIDES_THREAD_EQ
         // Use thread::id when comparisions are needed
@@ -571,8 +571,8 @@ namespace boost
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         // extensions
-        BOOST_THREAD_DECL void interrupt();
-        BOOST_THREAD_DECL bool interruption_requested() const BOOST_NOEXCEPT;
+        void interrupt();
+        bool interruption_requested() const BOOST_NOEXCEPT;
 #endif
     };
 
