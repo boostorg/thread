@@ -156,7 +156,6 @@ namespace boost
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
 
-      //BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
       BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
 
       return obj_;
@@ -295,7 +294,6 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-      //BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
       BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }
@@ -312,7 +310,6 @@ namespace boost
       BOOST_CONCEPT_ASSERT(( StrictLock<Lock> ));
       BOOST_STATIC_ASSERT( (is_strict_lock<Lock>::value)); /*< lk is a strict lock "sur parolle" >*/
       BOOST_STATIC_ASSERT( (is_same<mutex_type, typename Lock::mutex_type>::value)); /*< that locks the same type >*/
-      //BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(), lock_error() ); /*< run time check throw if no locked >*/
       BOOST_THREAD_ASSERT_PRECONDITION(  lk.owns_lock(mtx_), lock_error() ); /*< run time check throw if not locks the same >*/
       return *obj_;
     }

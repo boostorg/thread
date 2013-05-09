@@ -21,12 +21,6 @@
 namespace boost
 {
 
-  //  inline static recursive_mutex& terminal_mutex()
-  //  {
-  //    static recursive_mutex mtx;
-  //    return mtx;
-  //  }
-
   template <typename Stream, typename RecursiveMutex=recursive_mutex>
   class externally_locked_stream;
 
@@ -51,7 +45,7 @@ namespace boost
     {
     }
 
-    stream_guard(BOOST_THREAD_RV_REF(stream_guard) rhs)
+    stream_guard(BOOST_THREAD_RV_REF(stream_guard) rhs) BOOST_NOEXCEPT
     : mtx_(rhs.mtx_)
     {
       rhs.mtx_= 0;
@@ -62,15 +56,24 @@ namespace boost
       if (mtx_ != 0) mtx_->unlock();
     }
 
-    bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT
+    bool owns_lock(const mutex_type * l) const BOOST_NOEXCEPT
     {
       return l == mtx_->mutex();
     }
 
+    /**
+     * @Requires mtx_
+     */
     Stream& get() const
     {
+      BOOST_THREAD_ASSERT_PRECONDITION(  mtx_, lock_error() );
       return mtx_->get(*this);
     }
+    Stream& bypass() const
+    {
+      return get();
+    }
+
 
   private:
     externally_locked_stream<Stream, RecursiveMutex>* mtx_;
@@ -98,22 +101,20 @@ namespace boost
     /**
      * Effects: Constructs an externally locked object storing the cloaked reference object.
      */
-    externally_locked_stream(Stream& stream, RecursiveMutex& mtx) :
+    externally_locked_stream(Stream& stream, RecursiveMutex& mtx) BOOST_NOEXCEPT :
       base_type(stream, mtx)
     {
     }
 
-    stream_guard<Stream, RecursiveMutex> hold()
+    stream_guard<Stream, RecursiveMutex> hold() BOOST_NOEXCEPT
     {
       return stream_guard<Stream, RecursiveMutex> (*this);
     }
-
-    Stream& hold(strict_lock<RecursiveMutex>& lk)
+    Stream& bypass() const
     {
-      return this->get(lk);
+      stream_guard<Stream, RecursiveMutex> lk(*this);
+      return get(lk);
     }
-
-
   };
   //]
 

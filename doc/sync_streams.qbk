@@ -65,14 +65,75 @@
       stream_guard& operator=(stream_guard const&) = delete;
       stream_guard(externally_locked_stream<Stream, RecursiveMutex>& mtx);
       stream_guard(externally_locked_stream<Stream, RecursiveMutex>& mtx, adopt_lock_t);
-      stream_guard(BOOST_THREAD_RV_REF(stream_guard) rhs);
+      stream_guard(stream_guard&& rhs);
       ~stream_guard();
 
       // Observers  
       bool owns_lock(mutex_type const* l) const BOOST_NOEXCEPT;
       Stream& get() const;
+      Stream& bypass() const;
+
     };
   }
+
+`stream_guard` is a model of __StrictLock.
+
+[section:constructor `stream_guard(mutex_type & m)`]
+
+[variablelist
+
+[[Effects:] [Stores a reference to `m`. Invokes [lock_ref_link `m.lock()`].]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+[endsect]
+
+[section:constructor_adopt `stream_guard(mutex_type & m,boost::adopt_lock_t)`]
+
+[variablelist
+
+[[Precondition:] [The current thread owns a lock on `m` equivalent to one
+obtained by a call to [lock_ref_link `m.lock()`].]]
+
+[[Effects:] [Stores a reference to `m`. Takes ownership of the lock state of
+`m`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+
+[section:move_constructor `stream_guard(stream_guard && m)`]
+
+
+[variablelist
+
+[[Effects:] [Stores a reference to `m`. Invokes [lock_ref_link `m.lock()`].]]
+
+[[Throws:] [Any exception thrown by the call to [lock_ref_link `m.lock()`].]]
+
+]
+
+[endsect]
+
+
+[section:destructor `~stream_guard()`]
+
+[variablelist
+
+[[Effects:] [Invokes [unlock_ref_link `m.unlock()`] on the __lockable_concept_type__
+object passed to the constructor.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
 
 [endsect]
 [section:externally_locked_stream Class `externally_locked_stream `]
@@ -87,12 +148,12 @@
       // Constructors, Assignment and Destructors
       externally_locked_stream(externally_locked_stream const&) = delete;
       externally_locked_stream& operator=(externally_locked_stream const&) = delete;
-      // Effects: Constructs an externally locked object storing the cloaked reference object.
       externally_locked_stream(Stream& stream, RecursiveMutex& mtx);
   
-      // Observers  
+      // Modifiers  
       stream_guard<Stream, RecursiveMutex> hold();
-      Stream& hold(strict_lock<RecursiveMutex>& lk);
+      Stream& bypass() const;
+
     };
   }
 
@@ -100,6 +161,26 @@
 provides full access to that object through the `get` member functions, provided you
 pass a reference to a strict lock object.
 
+
+[section:constructor `externally_locked_stream(Stream&, RecursiveMutex&)`]
+
+[variablelist
+
+[[Effects:] [Constructs an externally locked object storing the cloaked reference object and its locking mutex.]]
+
+]
+
+[endsect]
+
+[section:hold `hold()`]
+
+[variablelist
+
+[[Returns:] [A stream_guard which will hold the mutex during it lifetime .]]
+
+]
+
+[endsect]
 
 [endsect]
 

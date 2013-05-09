@@ -29,7 +29,7 @@ int state;
 boost::mutex mutex;
 boost::condition cond;
 
-char* player_name(int state)
+const char* player_name(int state)
 {
     if (state == PLAYER_A)
         return "PLAYER-A";
@@ -95,7 +95,7 @@ private:
     void* _param;
 };
 
-int main(int argc, char* argv[])
+int main()
 {
     state = START;
 
