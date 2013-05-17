@@ -179,15 +179,15 @@ namespace boost {
       BOOST_THREAD_INLINE shared_mutex();
       BOOST_THREAD_INLINE ~shared_mutex();
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
+#ifndef BOOST_NO_CXX11_DELETED_FUNCTIONS
       shared_mutex(shared_mutex const&) = delete;
       shared_mutex& operator=(shared_mutex const&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
+#else // BOOST_NO_CXX11_DELETED_FUNCTIONS
     private:
       shared_mutex(shared_mutex const&);
       shared_mutex& operator=(shared_mutex const&);
     public:
-#endif // BOOST_NO_DELETED_FUNCTIONS
+#endif // BOOST_NO_CXX11_DELETED_FUNCTIONS
 
       // Exclusive ownership
 

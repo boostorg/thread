@@ -1552,7 +1552,7 @@ namespace boost
             static_cast<base_type*>(this)->swap(other);
         }
 
-        // todo this functioˆn must be private and friendship provided to the internal users.
+        // todo this function must be private and friendship provided to the internal users.
         void set_async()
         {
           this->future_->set_async();
