@@ -108,7 +108,7 @@ namespace boost
   };
   //]
   template <typename Lockable>
-  struct is_strict_lock_sur_parolle<strict_lock<Lockable> > : true_type
+  struct is_strict_lock_sur_parole<strict_lock<Lockable> > : true_type
   {
   };
 
@@ -213,7 +213,7 @@ namespace boost
   //]
 
   template <typename Lock>
-  struct is_strict_lock_sur_parolle<nested_strict_lock<Lock> > : true_type
+  struct is_strict_lock_sur_parole<nested_strict_lock<Lock> > : true_type
   {
   };
 
