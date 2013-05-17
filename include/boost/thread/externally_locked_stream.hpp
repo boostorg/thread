@@ -80,7 +80,7 @@ namespace boost
   };
 
   template <typename Stream, typename RecursiveMutex>
-  struct is_strict_lock_sur_parolle<stream_guard<Stream, RecursiveMutex> > : true_type
+  struct is_strict_lock_sur_parole<stream_guard<Stream, RecursiveMutex> > : true_type
   {
   };
 

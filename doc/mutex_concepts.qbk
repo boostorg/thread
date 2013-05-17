@@ -176,7 +176,7 @@ This trait is true_type if the parameter L meets the __Lockable requirements.
 The user could require that the mutex passed to an algorithm is a recursive one. Whether a lockable is recursive or not can not be checked using template meta-programming. This is the motivation for the following trait.
 
 
-[section:is_recursive_mutex_sur_parolle `is_recursive_mutex_sur_parolle` trait -- EXTENSION]
+[section:is_recursive_mutex_sur_parole `is_recursive_mutex_sur_parole` trait -- EXTENSION]
 
   // #include <boost/thread/lockable_traits.hpp> 
 
@@ -185,15 +185,15 @@ The user could require that the mutex passed to an algorithm is a recursive one.
     namespace sync 
     {
       template<typename L>
-      class is_recursive_mutex_sur_parolle: false_type; // EXTENSION
+      class is_recursive_mutex_sur_parole: false_type; // EXTENSION
       template<>
-      class is_recursive_mutex_sur_parolle<recursive_mutex>: true_type; // EXTENSION
+      class is_recursive_mutex_sur_parole<recursive_mutex>: true_type; // EXTENSION
       template<>
-      class is_recursive_mutex_sur_parolle<timed_recursive_mutex>: true_type; // EXTENSION
+      class is_recursive_mutex_sur_parole<timed_recursive_mutex>: true_type; // EXTENSION
     }
   }
 
-The trait `is_recursive_mutex_sur_parolle` is `false_type` by default and is specialized for the provide `recursive_mutex` and `timed_recursive_mutex`. 
+The trait `is_recursive_mutex_sur_parole` is `false_type` by default and is specialized for the provide `recursive_mutex` and `timed_recursive_mutex`. 
 
 It should be specialized by the user providing other model of recursive lockable.
 
@@ -211,7 +211,7 @@ It should be specialized by the user providing other model of recursive lockable
     }
   }
 
-This traits is true_type if is_basic_lockable and is_recursive_mutex_sur_parolle.
+This traits is true_type if is_basic_lockable and is_recursive_mutex_sur_parole.
 
 [endsect]
 [section:is_recursive_lockable `is_recursive_lockable` trait -- EXTENSION]
@@ -226,7 +226,7 @@ This traits is true_type if is_basic_lockable and is_recursive_mutex_sur_parolle
     }
   }
 
-This traits is true_type if is_lockable and is_recursive_mutex_sur_parolle.
+This traits is true_type if is_lockable and is_recursive_mutex_sur_parole.
 
 [endsect]
 
@@ -1156,13 +1156,13 @@ The type L::mutex_type denotes the mutex that is locked by this lock.
 
 [endsect] [/ mutex_type]
 
-[section:is_strict_lock_sur_parolle `is_strict_lock_sur_parolle<L>`]
+[section:is_strict_lock_sur_parole `is_strict_lock_sur_parole<L>`]
 
-As the semantic "ensures that the associated mutex is locked during the lifetime if the lock. " can not be described by syntactic requirements a `is_strict_lock_sur_parolle` trait must be specialized by the user defining the lock so that the following assertion is true:
+As the semantic "ensures that the associated mutex is locked during the lifetime if the lock. " can not be described by syntactic requirements a `is_strict_lock_sur_parole` trait must be specialized by the user defining the lock so that the following assertion is true:
 
-  is_strict_lock_sur_parolle<L>::value == true
+  is_strict_lock_sur_parole<L>::value == true
 
-[endsect] [/ is_strict_lock_sur_parolle]
+[endsect] [/ is_strict_lock_sur_parole]
 
 [section:owns_lock `cl.owns_lock(m);`]
 
@@ -1183,8 +1183,8 @@ As the semantic "ensures that the associated mutex is locked during the lifetime
 The following classes are models of `StrictLock`:
 
 * strict_lock: ensured by construction,
-* nested_strict_lock: "sur parolle" as the user could use adopt_lock_t on unique_lock constructor overload without having locked the mutex,
-* __lock_guard__: "sur parolle" as the user could use adopt_lock_t constructor overload without having locked the mutex.
+* nested_strict_lock: "sur parole" as the user could use adopt_lock_t on unique_lock constructor overload without having locked the mutex,
+* __lock_guard__: "sur parole" as the user could use adopt_lock_t constructor overload without having locked the mutex.
 
 [endsect] [/ Models]
 
@@ -2026,9 +2026,9 @@ __reverse_mutex reverse the operations of a __BasicLockable, that unlocks the lo
     template <typename Lock>
     class nested_strict_lock;
     template <typename Lockable>
-    struct is_strict_lock_sur_parolle<strict_lock<Lockable> >;
+    struct is_strict_lock_sur_parole<strict_lock<Lockable> >;
     template <typename Lock>
-    struct is_strict_lock_sur_parolle<nested_strict_lock<Lock> >;
+    struct is_strict_lock_sur_parole<nested_strict_lock<Lock> >;
 
   #if ! defined BOOST_THREAD_NO_MAKE_STRICT_LOCK
     template <typename Lockable>
