@@ -381,15 +381,15 @@ namespace boost {
       BOOST_THREAD_INLINE upgrade_mutex();
       BOOST_THREAD_INLINE ~upgrade_mutex();
 
-#ifndef BOOST_NO_DELETED_FUNCTIONS
+#ifndef BOOST_CXX11_NO_DELETED_FUNCTIONS
       upgrade_mutex(const upgrade_mutex&) = delete;
       upgrade_mutex& operator=(const upgrade_mutex&) = delete;
-#else // BOOST_NO_DELETED_FUNCTIONS
+#else // BOOST_CXX11_NO_DELETED_FUNCTIONS
     private:
       upgrade_mutex(const upgrade_mutex&);
       upgrade_mutex& operator=(const upgrade_mutex&);
     public:
-#endif // BOOST_NO_DELETED_FUNCTIONS
+#endif // BOOST_CXX11_NO_DELETED_FUNCTIONS
 
       // Exclusive ownership
 
