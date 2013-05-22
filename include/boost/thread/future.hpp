@@ -1557,7 +1557,7 @@ namespace boost
         {
           this->future_->set_async();
         }
-        // todo this functioˆn must be private and friendship provided to the internal users.
+        // todo this function must be private and friendship provided to the internal users.
         void set_deferred()
         {
           this->future_->set_deferred();
