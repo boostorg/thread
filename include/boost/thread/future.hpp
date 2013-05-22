@@ -2275,18 +2275,12 @@ namespace boost
           task_object(task_object&);
         public:
             F f;
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-            task_object(BOOST_THREAD_RV_REF(F) f_):
-              f(boost::forward<F>(f_))
-            {}
-#else
             task_object(F const& f_):
                 f(f_)
             {}
             task_object(BOOST_THREAD_RV_REF(F) f_):
-                f(boost::move(f_)) // TODO forward
+              f(boost::move(f_))
             {}
-#endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
@@ -2837,12 +2831,11 @@ namespace boost
 #endif
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F>
-        explicit packaged_task(BOOST_THREAD_RV_REF(F) f
+        explicit packaged_task(BOOST_THREAD_FWD_REF(F) f
             , typename disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
             )
         {
-          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
-          typedef F FR;
+          typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
@@ -2921,10 +2914,9 @@ namespace boost
 
 #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F, class Allocator>
-        packaged_task(boost::allocator_arg_t, Allocator a, BOOST_THREAD_RV_REF(F) f)
+        packaged_task(boost::allocator_arg_t, Allocator a, BOOST_THREAD_FWD_REF(F) f)
         {
-          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
-          typedef F FR;
+          typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
@@ -3150,11 +3142,6 @@ namespace boost
     // future<R> async(launch policy, F&&, ArgTypes&&...);
     ////////////////////////////////
 
-    ////////////////////////////////
-    // template <class F, class... ArgTypes>
-    // future<R> async(F&&, ArgTypes&&...);
-    ////////////////////////////////
-
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -3163,8 +3150,9 @@ namespace boost
         BOOST_THREAD_FUTURE<R>
         async(launch policy, R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
-          //typedef packaged_task<R(BOOST_THREAD_FWD_REF(ArgTypes)...)> packaged_task_type;
-          typedef packaged_task<R(ArgTypes...)> packaged_task_type;
+          typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
+          typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+          typedef typename BF::result_type Rp;
   #else
         template <class R>
         BOOST_THREAD_FUTURE<R>
@@ -3181,37 +3169,44 @@ namespace boost
 #endif
           if (int(policy) & int(launch::async))
             {
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_object<Rp>(
+              BF(
+                  thread_detail::decay_copy(boost::forward<F>(f))
+                  , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+              )
+          ));
+#else
               packaged_task_type pt( f );
 
               BOOST_THREAD_FUTURE<R> ret = BOOST_THREAD_MAKE_RV_REF(pt.get_future());
               ret.set_async();
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-              boost::thread( boost::move(pt),  boost::forward<ArgTypes>(args)... ).detach();
-#else
               boost::thread( boost::move(pt) ).detach();
-#endif
               return ::boost::move(ret);
+#endif
             }
             else if (int(policy) & int(launch::deferred))
             {
-              packaged_task_type pt( f );
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_object<Rp>(
+              BF(
+                  thread_detail::decay_copy(boost::forward<F>(f))
+                  , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+              )
+          ));
+#else
+          std::terminate();
+          BOOST_THREAD_FUTURE<R> ret;
+          return ::boost::move(ret);
 
-              BOOST_THREAD_FUTURE<R> ret = pt.get_future();
-              ret.set_deferred();
-              return ::boost::move(ret);
+#endif
             } else {
-              //BOOST_THREAD_LOG << "ERROR async "<< int(policy) << BOOST_THREAD_END_LOG;
+              std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
             }
         }
 
-//        template <class R>
-//        BOOST_THREAD_FUTURE<R>
-//        async(R(*f)())
-//        {
-//            return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), f));
-//        }
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -3227,7 +3222,6 @@ namespace boost
           typedef typename boost::result_of<typename decay<F>::type(
               typename decay<ArgTypes>::type...
           )>::type R;
-          typedef packaged_task<R(ArgTypes...)> packaged_task_type;
 
           typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
           typedef typename BF::result_type Rp;
@@ -3265,11 +3259,11 @@ namespace boost
 
           BOOST_THREAD_FUTURE<R> ret = pt.get_future();
           ret.set_async();
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          boost::thread( boost::move(pt), boost::forward<ArgTypes>(args)... ).detach(); // todo forward
-#else
+//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+//          boost::thread( boost::move(pt), boost::forward<ArgTypes>(args)... ).detach(); // todo forward
+//#else
           boost::thread( boost::move(pt) ).detach();
-#endif
+//#endif
           return ::boost::move(ret);
 #endif
         }
@@ -3283,6 +3277,7 @@ namespace boost
               )
           ));
 #else
+              std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
 //          return boost::detail::make_future_deferred_object<Rp>(
@@ -3293,7 +3288,7 @@ namespace boost
 #endif
 
         } else {
-          //BOOST_THREAD_LOG << "ERROR async "<< int(policy) << BOOST_THREAD_END_LOG;
+          std::terminate();
           BOOST_THREAD_FUTURE<R> ret;
           return ::boost::move(ret);
         }

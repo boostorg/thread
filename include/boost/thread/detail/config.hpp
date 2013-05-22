@@ -13,8 +13,6 @@
 #include <boost/thread/detail/platform.hpp>
 
 //#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
-
-
 // ATTRIBUTE_MAY_ALIAS
 
 #if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) > 302 \
@@ -95,9 +93,9 @@
 #endif
 
 /// RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
-#if defined BOOST_NO_CXX11_RVALUE_REFERENCES || defined BOOST_MSVC
+//#if defined BOOST_NO_CXX11_RVALUE_REFERENCES || defined BOOST_MSVC
 #define BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
-#endif
+//#endif
 
 // Default version
 #if !defined BOOST_THREAD_VERSION
