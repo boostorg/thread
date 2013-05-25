@@ -52,8 +52,8 @@
 * [@http://svn.boost.org/trac/boost/ticket/8371 #8371] C++11 once_flag enabled when constexpr is not available
 * [@http://svn.boost.org/trac/boost/ticket/8443 #8443] Header file inclusion order may cause crashes
 * [@http://svn.boost.org/trac/boost/ticket/8451 #8451] Missing documented function 'boost::scoped_thread::joinable'
-* [@http://svn.boost.org/trac/boost/ticket/8451 #8530] [Coverity] Unused variable thread_handle, uninitialized variable cond_mutex in thread/pthread/thread_data.hpp
-
+* [@http://svn.boost.org/trac/boost/ticket/8530 #8530] [Coverity] Unused variable thread_handle, uninitialized variable cond_mutex in thread/pthread/thread_data.hpp
+* [@http://svn.boost.org/trac/boost/ticket/8596 #8596] With C++0x enabled, boost::packaged_task stores a reference to function objects, instead of a copy.
 
 [heading Version 4.0.0 - boost 1.53]
 
