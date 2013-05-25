@@ -99,12 +99,20 @@
     unsigned wait_for_any(F1& f1,Fs&... fs);
     
     template <typename T>
-    future<typename decay<T>::type> make_future(T&& value);  // EXTENSION
-    future<void> make_future();  // EXTENSION
+    future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
+    future<void> make_future();  // DEPRECATED
     
     template <typename T>
-    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // EXTENSION
-    shared_future<void> make_shared_future();  // EXTENSION
+    future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
+    future<void> make_ready_future();  // EXTENSION
+    template <typename T>
+    future<T> make_ready_future(exception_ptr ex);  // EXTENSION
+    template <typename T, typename E>
+    future<T> make_ready_future(E ex);  // EXTENSION
+    
+    template <typename T>
+    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
+    shared_future<void> make_shared_future();  // DEPRECATED
     
 [section:future_state Enumeration `state`]
 
@@ -1841,17 +1849,61 @@ __unique_future__ or __shared_future__.]]
 
 [endsect]
 
-[section:make_future Non-member function `make_future()`]
+[section:make_ready_future Non-member function `make_ready_future()` EXTENSION]
 
     template <typename T>
-    future<typename decay<T>::type> make_future(T&& value);  // EXTENSION
-    future<void> make_future();  // EXTENSION
+    future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
+    future<void> make_ready_future();  // EXTENSION
+    template <typename T>
+    future<T> make_ready_future(exception_ptr ex);  // EXTENSION
+    template <typename T, typename E>
+    future<T> make_ready_future(E ex);  // EXTENSION
+
+[variablelist
+
+[[Effects:] [
+- value prototype: The value that is passed into the function is moved to the shared state of the returned function if it is an rvalue. 
+Otherwise the value is copied to the shared state of the returned function.
+
+- exception: The exception that is passed into the function is copied to the shared state of the returned function.
+
+.]]
+
+[[Returns:] [
+
+- a ready future with the value set with `value`
+
+- a ready future with the exception set with `ex`
+
+- a ready future<void> with the value set (void).
+
+]]
+
+[[Postcondition:] [
+
+- Returned future, valid() == true
+
+- Returned future, is_ready() = true
+
+- Returned future, has_value() = true or has_exception() depending on the prototype. 
+
+]]
+
+]
+    
+[endsect]
+
+[section:make_future Non-member function `make_future()` DEPRECATED]
+
+    template <typename T>
+    future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
+    future<void> make_future();  // DEPRECATED
     
 
 [variablelist
 
 [[Effects:] [
-The value that is passed in to the function is moved to the shared state of the returned function if it is an rvalue. 
+The value that is passed into the function is moved to the shared state of the returned function if it is an rvalue. 
 Otherwise the value is copied to the shared state of the returned function.
 .]]
 
@@ -1871,15 +1923,17 @@ Otherwise the value is copied to the shared state of the returned function.
 
 ]]
 
+[[See:] [`make_ready_future()`]]
+
 ]
 
     
 [endsect]
-[section:make_shared_future Non-member function `make_shared_future()`]
+[section:make_shared_future Non-member function `make_shared_future()` DEPRECATED]
 
     template <typename T>
-    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // EXTENSION
-    shared_future<void> make_shared_future();  // EXTENSION
+    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
+    shared_future<void> make_shared_future();  // DEPRECATED
  
 [variablelist
 
@@ -1903,6 +1957,8 @@ Otherwise the value is copied to the shared state of the returned function.
 - Returned shared_future<T>, is_ready() = true
 
 ]]
+
+[[See:] [`make_ready_future()` and `future<>::share()`]]
 
 ]
     
