@@ -204,7 +204,7 @@ namespace boost
             relocker& operator=(relocker const&);
         };
 
-        struct future_object_base : enable_shared_from_this<future_object_base>
+        struct shared_state_base : enable_shared_from_this<shared_state_base>
         {
 
             boost::exception_ptr exception;
@@ -221,7 +221,7 @@ namespace boost
             bool thread_was_interrupted;
 //#endif
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-            typedef shared_ptr<future_object_base> continuation_ptr_type;
+            typedef shared_ptr<shared_state_base> continuation_ptr_type;
 #else
             typedef shared_ptr<void> continuation_ptr_type;
 #endif
@@ -233,7 +233,7 @@ namespace boost
             {
             }
 //#endif
-            future_object_base():
+            shared_state_base():
                 done(false),
                 is_deferred_(false),
                 policy_(launch::none),
@@ -248,7 +248,7 @@ namespace boost
                , continuation_ptr()
 //#endif
             {}
-            virtual ~future_object_base()
+            virtual ~shared_state_base()
             {}
 
             void set_deferred()
@@ -497,8 +497,8 @@ namespace boost
             virtual void execute(boost::unique_lock<boost::mutex>&) {}
 
         private:
-            future_object_base(future_object_base const&);
-            future_object_base& operator=(future_object_base const&);
+            shared_state_base(shared_state_base const&);
+            shared_state_base& operator=(shared_state_base const&);
         };
 
         template<typename T>
@@ -589,8 +589,8 @@ namespace boost
 
         // Used to create stand-alone futures
         template<typename T>
-        struct future_object:
-            detail::future_object_base
+        struct shared_state:
+            detail::shared_state_base
         {
             typedef typename future_traits<T>::storage_type storage_type;
             typedef typename future_traits<T>::source_reference_type source_reference_type;
@@ -600,11 +600,11 @@ namespace boost
 
             storage_type result;
 
-            future_object():
+            shared_state():
                 result(0)
             {}
 
-            ~future_object()
+            ~shared_state()
             {}
 
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
@@ -653,7 +653,7 @@ namespace boost
                 return *result;
             }
 
-            // todo move this to detail::future_object_base
+            // todo move this to detail::shared_state_base
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -696,13 +696,13 @@ namespace boost
 
 
         private:
-            future_object(future_object const&);
-            future_object& operator=(future_object const&);
+            shared_state(shared_state const&);
+            shared_state& operator=(shared_state const&);
         };
 
         template<typename T>
-        struct future_object<T&>:
-            detail::future_object_base
+        struct shared_state<T&>:
+            detail::shared_state_base
         {
             typedef typename future_traits<T&>::storage_type storage_type;
             typedef typename future_traits<T&>::source_reference_type source_reference_type;
@@ -712,11 +712,11 @@ namespace boost
 
             T* result;
 
-            future_object():
+            shared_state():
                 result(0)
             {}
 
-            ~future_object()
+            ~shared_state()
             {
             }
 
@@ -760,7 +760,7 @@ namespace boost
                 return *result;
             }
 
-            // todo move this to detail::future_object_base
+            // todo move this to detail::shared_state_base
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -796,17 +796,17 @@ namespace boost
 
 
         private:
-            future_object(future_object const&);
-            future_object& operator=(future_object const&);
+            shared_state(shared_state const&);
+            shared_state& operator=(shared_state const&);
         };
 
         template<>
-        struct future_object<void>:
-            detail::future_object_base
+        struct shared_state<void>:
+            detail::shared_state_base
         {
           typedef void shared_future_get_result_type;
 
-            future_object()
+            shared_state()
             {}
 
             void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
@@ -828,7 +828,7 @@ namespace boost
             {
                 wait();
             }
-            // todo move this to detail::future_object_base
+            // todo move this to detail::shared_state_base
             future_state::state get_state()
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
@@ -852,17 +852,17 @@ namespace boost
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
             }
         private:
-            future_object(future_object const&);
-            future_object& operator=(future_object const&);
+            shared_state(shared_state const&);
+            shared_state& operator=(shared_state const&);
         };
 
         /////////////////////////
         /// future_async_object
         /////////////////////////
         template<typename Rp, typename Fp>
-        struct future_async_object: future_object<Rp>
+        struct future_async_object: shared_state<Rp>
         {
-          typedef future_object<Rp> base_type;
+          typedef shared_state<Rp> base_type;
           typedef typename base_type::move_dest_type move_dest_type;
 
           boost::thread thr_;
@@ -911,9 +911,9 @@ namespace boost
         };
 
         template<typename Fp>
-        struct future_async_object<void, Fp>: public future_object<void>
+        struct future_async_object<void, Fp>: public shared_state<void>
         {
-          typedef future_object<void> base_type;
+          typedef shared_state<void> base_type;
           boost::thread thr_;
 
         public:
@@ -949,9 +949,9 @@ namespace boost
         };
 
         template<typename Rp, typename Fp>
-        struct future_async_object<Rp&, Fp>: future_object<Rp&>
+        struct future_async_object<Rp&, Fp>: shared_state<Rp&>
         {
-          typedef future_object<Rp&> base_type;
+          typedef shared_state<Rp&> base_type;
           typedef typename base_type::move_dest_type move_dest_type;
 
           boost::thread thr_;
@@ -1002,9 +1002,9 @@ namespace boost
         /// future_deferred_object
         //////////////////////////
         template<typename Rp, typename Fp>
-        struct future_deferred_object: future_object<Rp>
+        struct future_deferred_object: shared_state<Rp>
         {
-          typedef future_object<Rp> base_type;
+          typedef shared_state<Rp> base_type;
           Fp func_;
 
         public:
@@ -1026,9 +1026,9 @@ namespace boost
           }
         };
         template<typename Rp, typename Fp>
-        struct future_deferred_object<Rp&,Fp>: future_object<Rp&>
+        struct future_deferred_object<Rp&,Fp>: shared_state<Rp&>
         {
-          typedef future_object<Rp&> base_type;
+          typedef shared_state<Rp&> base_type;
           Fp func_;
 
         public:
@@ -1051,9 +1051,9 @@ namespace boost
         };
 
         template<typename Fp>
-        struct future_deferred_object<void,Fp>: future_object<void>
+        struct future_deferred_object<void,Fp>: shared_state<void>
         {
-          typedef future_object<void> base_type;
+          typedef shared_state<void> base_type;
           Fp func_;
 
         public:
@@ -1077,13 +1077,13 @@ namespace boost
         };
 
 //        template<typename T, typename Allocator>
-//        struct future_object_alloc: public future_object<T>
+//        struct shared_state_alloc: public shared_state<T>
 //        {
-//          typedef future_object<T> base;
+//          typedef shared_state<T> base;
 //          Allocator alloc_;
 //
 //        public:
-//          explicit future_object_alloc(const Allocator& a)
+//          explicit shared_state_alloc(const Allocator& a)
 //              : alloc_(a) {}
 //
 //        };
@@ -1094,12 +1094,12 @@ namespace boost
 
             struct registered_waiter
             {
-                boost::shared_ptr<detail::future_object_base> future_;
-                detail::future_object_base::waiter_list::iterator wait_iterator;
+                boost::shared_ptr<detail::shared_state_base> future_;
+                detail::shared_state_base::waiter_list::iterator wait_iterator;
                 count_type index;
 
-                registered_waiter(boost::shared_ptr<detail::future_object_base> const& a_future,
-                                  detail::future_object_base::waiter_list::iterator wait_iterator_,
+                registered_waiter(boost::shared_ptr<detail::shared_state_base> const& a_future,
+                                  detail::shared_state_base::waiter_list::iterator wait_iterator_,
                                   count_type index_):
                     future_(a_future),wait_iterator(wait_iterator_),index(index_)
                 {}
@@ -1332,7 +1332,7 @@ namespace boost
       {
       protected:
 
-        typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
+        typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
 
         future_ptr future_;
 
@@ -1672,7 +1672,7 @@ namespace boost
         }
 
         // retrieving the value
-        typename detail::future_object<R>::shared_future_get_result_type get()
+        typename detail::shared_state<R>::shared_future_get_result_type get()
         {
             if(!this->future_)
             {
@@ -1699,7 +1699,7 @@ namespace boost
     template <typename R>
     class promise
     {
-        typedef boost::shared_ptr<detail::future_object<R> > future_ptr;
+        typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
 
         future_ptr future_;
         bool future_obtained;
@@ -1711,7 +1711,7 @@ namespace boost
           if(!atomic_load(&future_))
             {
                 future_ptr blank;
-                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<R>));
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R>));
             }
 #include <boost/detail/atomic_redef_macros.hpp>
 #endif
@@ -1723,11 +1723,11 @@ namespace boost
         template <class Allocator>
         promise(boost::allocator_arg_t, Allocator a)
         {
-          typedef typename Allocator::template rebind<detail::future_object<R> >::other A2;
+          typedef typename Allocator::template rebind<detail::shared_state<R> >::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<R>(), D(a2, 1) );
+          future_ = future_ptr(::new(a2.allocate(1)) detail::shared_state<R>(), D(a2, 1) );
           future_obtained = false;
         }
 #endif
@@ -1735,7 +1735,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             future_(),
 #else
-            future_(new detail::future_object<R>()),
+            future_(new detail::shared_state<R>()),
 #endif
             future_obtained(false)
         {}
@@ -1868,7 +1868,7 @@ namespace boost
     template <typename R>
     class promise<R&>
     {
-        typedef boost::shared_ptr<detail::future_object<R&> > future_ptr;
+        typedef boost::shared_ptr<detail::shared_state<R&> > future_ptr;
 
         future_ptr future_;
         bool future_obtained;
@@ -1880,7 +1880,7 @@ namespace boost
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
-                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<R&>));
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R&>));
             }
 #include <boost/detail/atomic_redef_macros.hpp>
 #endif
@@ -1892,11 +1892,11 @@ namespace boost
         template <class Allocator>
         promise(boost::allocator_arg_t, Allocator a)
         {
-          typedef typename Allocator::template rebind<detail::future_object<R&> >::other A2;
+          typedef typename Allocator::template rebind<detail::shared_state<R&> >::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<R&>(), D(a2, 1) );
+          future_ = future_ptr(::new(a2.allocate(1)) detail::shared_state<R&>(), D(a2, 1) );
           future_obtained = false;
         }
 #endif
@@ -1904,7 +1904,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             future_(),
 #else
-            future_(new detail::future_object<R&>()),
+            future_(new detail::shared_state<R&>()),
 #endif
             future_obtained(false)
         {}
@@ -2012,7 +2012,7 @@ namespace boost
     template <>
     class promise<void>
     {
-        typedef boost::shared_ptr<detail::future_object<void> > future_ptr;
+        typedef boost::shared_ptr<detail::shared_state<void> > future_ptr;
 
         future_ptr future_;
         bool future_obtained;
@@ -2023,7 +2023,7 @@ namespace boost
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
-                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::future_object<void>));
+                atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<void>));
             }
 #endif
         }
@@ -2034,11 +2034,11 @@ namespace boost
         template <class Allocator>
         promise(boost::allocator_arg_t, Allocator a)
         {
-          typedef typename Allocator::template rebind<detail::future_object<void> >::other A2;
+          typedef typename Allocator::template rebind<detail::shared_state<void> >::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          future_ = future_ptr(::new(a2.allocate(1)) detail::future_object<void>(), D(a2, 1) );
+          future_ = future_ptr(::new(a2.allocate(1)) detail::shared_state<void>(), D(a2, 1) );
           future_obtained = false;
         }
 #endif
@@ -2046,7 +2046,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
             future_(),
 #else
-            future_(new detail::future_object<void>),
+            future_(new detail::shared_state<void>),
 #endif
             future_obtained(false)
         {}
@@ -2183,7 +2183,7 @@ namespace boost
       template<typename R>
       struct task_base:
 #endif
-            detail::future_object<R>
+            detail::shared_state<R>
         {
             bool started;
 
@@ -3470,11 +3470,11 @@ namespace boost
     /////////////////////////
 
     template<typename F, typename Rp, typename Fp>
-    struct future_async_continuation: future_object<Rp>
+    struct future_async_continuation: shared_state<Rp>
     {
-      typedef future_object<Rp> base_type;
+      typedef shared_state<Rp> base_type;
       typedef typename base_type::move_dest_type move_dest_type;
-      typedef weak_ptr<future_object_base> parent_ptr_type;
+      typedef weak_ptr<shared_state_base> parent_ptr_type;
 
       F parent;
       Fp continuation;
@@ -3541,9 +3541,9 @@ namespace boost
     };
 
     template<typename F, typename Fp>
-    struct future_async_continuation<F, void, Fp>: public future_object<void>
+    struct future_async_continuation<F, void, Fp>: public shared_state<void>
     {
-      typedef future_object<void> base_type;
+      typedef shared_state<void> base_type;
       F& parent;
       Fp continuation;
       boost::thread thr_;
@@ -3599,9 +3599,9 @@ namespace boost
     /// future_deferred_continuation
     //////////////////////////
     template<typename F, typename Rp, typename Fp>
-    struct future_deferred_continuation: future_object<Rp>
+    struct future_deferred_continuation: shared_state<Rp>
     {
-      typedef future_object<Rp> base_type;
+      typedef shared_state<Rp> base_type;
       F& parent;
       Fp continuation;
 
@@ -3634,9 +3634,9 @@ namespace boost
     };
 
     template<typename F, typename Fp>
-    struct future_deferred_continuation<F,void,Fp>: future_object<void>
+    struct future_deferred_continuation<F,void,Fp>: shared_state<void>
     {
-      typedef future_object<void> base_type;
+      typedef shared_state<void> base_type;
       F& parent;
       Fp continuation;
 
@@ -3700,7 +3700,7 @@ namespace boost
     }
 
 //      template <typename F, typename R, typename C>
-//      struct future_continuation : future_object<R>
+//      struct future_continuation : shared_state<R>
 //      {
 //        F& parent;
 //        C continuation;
@@ -3753,7 +3753,7 @@ namespace boost
 //      };
 //#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
 //      template <typename F, typename R, typename CR>
-//      struct future_continuation<F,R,CR(*)(F&)> : future_object<R>
+//      struct future_continuation<F,R,CR(*)(F&)> : shared_state<R>
 //      {
 //        F& parent;
 //        CR(*continuation)(F&) ;
