@@ -16,6 +16,7 @@
 * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
 * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
 * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
+* [@http://svn.boost.org/trac/boost/ticket/8615 #8615] Async: Replace make_future/make_shared_future by make_ready_future
 
 [*Fixed Bugs:]
 
