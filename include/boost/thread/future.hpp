@@ -1466,6 +1466,7 @@ namespace boost
     public:
         BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
         typedef future_state::state state;
+        typedef R value_type;
 
         BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
 
@@ -1564,6 +1565,7 @@ namespace boost
 
     public:
         BOOST_THREAD_MOVABLE(shared_future)
+        typedef R value_type;
 
         shared_future(shared_future const& other):
         base_type(other)
@@ -3327,7 +3329,7 @@ namespace boost
   BOOST_THREAD_FUTURE<T> make_ready_future(E ex)
   {
     promise<T> p;
-    p.set_exception(copy_exception(ex));
+    p.set_exception(boost::copy_exception(ex));
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
