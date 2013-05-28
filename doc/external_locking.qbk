@@ -251,7 +251,8 @@ Silence can be sometimes louder than words-what's forbidden to do with a `strict
 
 Fortunately, references don't engender as bad aliasing as pointers because they're much less versatile (references cannot be copied or reseated).
 
-* You can even make `strict_lock` final; that is, impossible to derive from. This task is left in the form of an exercise to the reader.
+[/* You can even make `strict_lock` final; that is, impossible to derive from. This task is left in the form of an exercise to the reader.
+]
 
 All these rules were put in place with one purpose-enforcing that owning a `strict_lock<T>` is a reasonably strong guarantee that
 
@@ -399,7 +400,7 @@ The solution is to use a little bridge template `externally_locked` that control
       T& get(strict_lock<Lockable>& lock) {
   
   #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  // define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check locker check the same lockable
-          if (!lock.is_locking(&lockable_)) throw lock_error(); run time check throw if not locks the same
+          if (!lock.owns_lock(&lockable_)) throw lock_error(); run time check throw if not locks the same
   #endif
           return obj_;
       }
@@ -524,7 +525,7 @@ First `nested_strict_lock` class will store on a temporary lock the `Locker`, an
       bool operator!() const { return false; }
       bool owns_lock() const { return true; }
       const lockable_type* mutex() const { return tmp_lock_.mutex(); }
-      bool is_locking(lockable_type* l) const { return l==mutex(); }
+      bool owns_lock(lockable_type* l) const { return l==mutex(); }
   
       BOOST_ADRESS_OF_DELETE(nested_strict_lock)
       BOOST_HEAP_ALLOCATEION_DELETE(nested_strict_lock)
@@ -555,7 +556,7 @@ We can add test in debug mode that ensure that the Lockable object is locked.
           if (! lock ) throw lock_error(); // run time check throw if no locked 
   #endif
   #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME
-          if (!lock.is_locking(&lockable_)) throw lock_error();
+          if (!lock.owns_lock(&lockable_)) throw lock_error();
   #endif
           return obj_;
       }
