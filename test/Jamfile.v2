@@ -66,6 +66,14 @@ project
         #<toolset>darwin-4.6.2:<cxxflags>-Wno-delete-non-virtual-dtor # doesn't work
         <toolset>darwin-4.7.0:<cxxflags>-ansi
         <toolset>darwin-4.7.0:<cxxflags>-Wno-delete-non-virtual-dtor
+        #<toolset>darwin-4.6.2:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.7.1:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.7.2:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.8.0:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.6.2x:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.7.1x:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.7.2x:<cxxflags>-Wno-unused-local-typedefs
+        #<toolset>darwin-4.8.0x:<cxxflags>-Wno-unused-local-typedefs
 
         #<toolset>clang-2.8:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-2.8:<cxxflags>-Wno-unused-function
@@ -74,6 +82,8 @@ project
         <toolset>clang-3.0:<cxxflags>-Wno-delete-non-virtual-dtor
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-function
         #<toolset>clang-3.0:<cxxflags>-Wno-unused-variable
+        #<toolset>clang-3.1:<cxxflags>-Wno-bind-to-temporary-copy
+        #<toolset>clang-3.2:<cxxflags>-Wno-bind-to-temporary-copy
 
 # Note: Some of the remarks from the Intel compiler are disabled
 # remark #193: zero used for undefined preprocessing identifier "XXX"
@@ -364,6 +374,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/shared_future/wait_pass.cpp : shared_future__wait_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_for_pass.cpp : shared_future__wait_for_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_until_pass.cpp : shared_future__wait_until_p ]
+          [ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
     ;
 
     #explicit ts_packaged_task ;
@@ -759,6 +770,11 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/std_async_test.cpp ]
+          #[ thread-run test_8508.cpp ]
+          #[ thread-run test_8586.cpp ]
+          #[ thread-run test_8596.cpp ]
+          #[ thread-run test_8600.cpp ]
+          
     ;
 
 }
