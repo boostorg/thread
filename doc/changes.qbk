@@ -15,6 +15,7 @@
 
 * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
 * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
+* [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then
 * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
 * [@http://svn.boost.org/trac/boost/ticket/8615 #8615] Async: Replace make_future/make_shared_future by make_ready_future
 
@@ -406,7 +407,7 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
   * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
   * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
-  * [@http://svn.boost.org/trac/boost/ticket/XXXX #XXXX] Sync: Add a completion_latch class
+  * [@http://svn.boost.org/trac/boost/ticket/8519 #8519] Sync: Add a completion_latch class
   * [@http://svn.boost.org/trac/boost/ticket/8513 #8513] Async: Add a basic thread_pool executor.
   * [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
 
@@ -417,7 +418,8 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter.
   * [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then
   * [@http://svn.boost.org/trac/boost/ticket/8516 #8516] Async: Add future/shared_future::then taking a scheduler as parameter.
-  * [@http://svn.boost.org/trac/boost/ticket/8517 #8517] Async: Add a variadic future/shared_future::then  
+  * [@http://svn.boost.org/trac/boost/ticket/8517 #8517] Async: Add a variadic shared_future::then  
+  * [@http://svn.boost.org/trac/boost/ticket/8627 #8627] Async: Add future<>::unwrap.
 
 
 
