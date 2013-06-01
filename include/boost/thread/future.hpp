@@ -2334,18 +2334,12 @@ namespace boost
           task_shared_state(task_shared_state&);
         public:
             F f;
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
-              f(boost::forward<F>(f_))
-            {}
-#else
             task_shared_state(F const& f_):
                 f(f_)
             {}
             task_shared_state(BOOST_THREAD_RV_REF(F) f_):
-                f(boost::move(f_)) // TODO forward
+                f(boost::move(f_))
             {}
-#endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
@@ -2588,18 +2582,12 @@ namespace boost
           task_shared_state(task_shared_state&);
         public:
             F f;
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
-              f(boost::forward<F>(f_))
-            {}
-#else
             task_shared_state(F const& f_):
                 f(f_)
             {}
             task_shared_state(BOOST_THREAD_RV_REF(F) f_):
-                f(boost::move(f_)) // TODO forward
+                f(boost::move(f_))
             {}
-#endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
