@@ -772,7 +772,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/std_async_test.cpp ]
           #[ thread-run test_8508.cpp ]
           #[ thread-run test_8586.cpp ]
-          #[ thread-run test_8596.cpp ]
+          [ thread-run test_8596.cpp ]
           #[ thread-run test_8600.cpp ]
           
     ;
