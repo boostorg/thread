@@ -220,6 +220,7 @@ namespace boost
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuation_ptr_type continuation_ptr;
 
+            // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation(boost::unique_lock<boost::mutex>&)
             {
             }
@@ -793,10 +794,10 @@ namespace boost
         };
 
         /////////////////////////
-        /// future_async_object
+        /// future_async_shared_state
         /////////////////////////
         template<typename Rp, typename Fp>
-        struct future_async_object: shared_state<Rp>
+        struct future_async_shared_state: shared_state<Rp>
         {
           typedef shared_state<Rp> base_type;
           typedef typename base_type::move_dest_type move_dest_type;
@@ -804,13 +805,13 @@ namespace boost
           boost::thread thr_;
 
         public:
-          explicit future_async_object(BOOST_THREAD_FWD_REF(Fp) f) :
-            thr_(&future_async_object::run, this, boost::forward<Fp>(f))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
+            thr_(&future_async_shared_state::run, this, boost::forward<Fp>(f))
           {
             this->set_async();
           }
 
-          ~future_async_object()
+          ~future_async_shared_state()
           {
             if (thr_.joinable()) thr_.join();
           }
@@ -827,7 +828,7 @@ namespace boost
               //return boost::move<Rp>(*(this->result));
               return boost::move(*(this->result));
           }
-          static void run(future_async_object* that, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
           {
             try
             {
@@ -847,24 +848,24 @@ namespace boost
         };
 
         template<typename Fp>
-        struct future_async_object<void, Fp>: public shared_state<void>
+        struct future_async_shared_state<void, Fp>: public shared_state<void>
         {
           typedef shared_state<void> base_type;
           boost::thread thr_;
 
         public:
-          explicit future_async_object(BOOST_THREAD_FWD_REF(Fp) f) :
-            thr_(&future_async_object::run, this, boost::forward<Fp>(f))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
+            thr_(&future_async_shared_state::run, this, boost::forward<Fp>(f))
           {
             this->set_async();
           }
 
-          ~future_async_object()
+          ~future_async_shared_state()
           {
             if (thr_.joinable()) thr_.join();
           }
 
-          static void run(future_async_object* that, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
           {
             try
             {
@@ -885,7 +886,7 @@ namespace boost
         };
 
         template<typename Rp, typename Fp>
-        struct future_async_object<Rp&, Fp>: shared_state<Rp&>
+        struct future_async_shared_state<Rp&, Fp>: shared_state<Rp&>
         {
           typedef shared_state<Rp&> base_type;
           typedef typename base_type::move_dest_type move_dest_type;
@@ -893,13 +894,13 @@ namespace boost
           boost::thread thr_;
 
         public:
-          explicit future_async_object(BOOST_THREAD_FWD_REF(Fp) f) :
-            thr_(&future_async_object::run, this, boost::forward<Fp>(f))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
+            thr_(&future_async_shared_state::run, this, boost::forward<Fp>(f))
           {
             this->set_async();
           }
 
-          ~future_async_object()
+          ~future_async_shared_state()
           {
             if (thr_.joinable()) thr_.join();
           }
@@ -915,7 +916,7 @@ namespace boost
               //return static_cast<move_dest_type>(*(this->result));
               return boost::move(*(this->result));
           }
-          static void run(future_async_object* that, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
           {
             try
             {
@@ -935,16 +936,16 @@ namespace boost
         };
 
         //////////////////////////
-        /// future_deferred_object
+        /// future_deferred_shared_state
         //////////////////////////
         template<typename Rp, typename Fp>
-        struct future_deferred_object: shared_state<Rp>
+        struct future_deferred_shared_state: shared_state<Rp>
         {
           typedef shared_state<Rp> base_type;
           Fp func_;
 
         public:
-          explicit future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f)
+          explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::forward<Fp>(f))
           {
             this->set_deferred();
@@ -962,13 +963,13 @@ namespace boost
           }
         };
         template<typename Rp, typename Fp>
-        struct future_deferred_object<Rp&,Fp>: shared_state<Rp&>
+        struct future_deferred_shared_state<Rp&,Fp>: shared_state<Rp&>
         {
           typedef shared_state<Rp&> base_type;
           Fp func_;
 
         public:
-          explicit future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f)
+          explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::forward<Fp>(f))
           {
             this->set_deferred();
@@ -987,13 +988,13 @@ namespace boost
         };
 
         template<typename Fp>
-        struct future_deferred_object<void,Fp>: shared_state<void>
+        struct future_deferred_shared_state<void,Fp>: shared_state<void>
         {
           typedef shared_state<void> base_type;
           Fp func_;
 
         public:
-          explicit future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f)
+          explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::forward<Fp>(f))
           {
             this->set_deferred();
@@ -1059,7 +1060,7 @@ namespace boost
 #if defined __DECCXX || defined __SUNPRO_CC || defined __hpux
                         locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
 #else
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex); // TODO shouldn't be moved explicitly
+                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex);
 #endif
                     }
                 }
@@ -1393,25 +1394,25 @@ namespace boost
 #if (!defined _MSC_VER || _MSC_VER >= 1400) // _MSC_VER == 1400 on MSVC 2005
         template <class Rp, class Fp>
         BOOST_THREAD_FUTURE<Rp>
-        make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f);
+        make_future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
         template <class Rp, class Fp>
         BOOST_THREAD_FUTURE<Rp>
-        make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f);
+        make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 #endif // #if (!defined _MSC_VER || _MSC_VER >= 1400)
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
         template<typename F, typename Rp, typename Fp>
-        struct future_deferred_continuation;
+        struct future_deferred_continuation_shared_state;
         template<typename F, typename Rp, typename Fp>
-        struct future_async_continuation;
+        struct future_async_continuation_shared_state;
 
         template <class F, class Rp, class Fp>
         BOOST_THREAD_FUTURE<Rp>
-        make_future_async_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        make_future_async_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 
         template <class F, class Rp, class Fp>
         BOOST_THREAD_FUTURE<Rp>
-        make_future_deferred_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        make_future_deferred_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 #endif
 
     }
@@ -1427,17 +1428,17 @@ namespace boost
         friend class promise<R>;
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
         template <typename, typename, typename>
-        friend struct detail::future_async_continuation;
+        friend struct detail::future_async_continuation_shared_state;
         template <typename, typename, typename>
-        friend struct detail::future_deferred_continuation;
+        friend struct detail::future_deferred_continuation_shared_state;
 
         template <class F, class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_async_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        detail::make_future_async_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 
         template <class F, class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_deferred_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        detail::make_future_deferred_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 #endif
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
         template <class> friend class packaged_task; // todo check if this works in windows
@@ -1448,11 +1449,11 @@ namespace boost
 
         template <class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f);
+        detail::make_future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
         template <class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f);
+        detail::make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
 
         typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
@@ -1555,17 +1556,17 @@ namespace boost
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
         template <typename, typename, typename>
-        friend struct detail::future_async_continuation;
+        friend struct detail::future_async_continuation_shared_state;
         template <typename, typename, typename>
-        friend struct detail::future_deferred_continuation;
+        friend struct detail::future_deferred_continuation_shared_state;
 
         template <class F, class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_async_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        detail::make_future_async_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 
         template <class F, class Rp, class Fp>
         friend BOOST_THREAD_FUTURE<Rp>
-        detail::make_future_deferred_continuation(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
+        detail::make_future_deferred_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 #endif
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
         template <class> friend class packaged_task;// todo check if this works in windows
@@ -2142,23 +2143,23 @@ namespace boost
     {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
       template<typename R>
-      struct task_base;
+      struct task_base_shared_state;
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       template<typename R, typename ...ArgTypes>
-      struct task_base<R(ArgTypes...)>:
+      struct task_base_shared_state<R(ArgTypes...)>:
 #else
       template<typename R>
-      struct task_base<R()>:
+      struct task_base_shared_state<R()>:
 #endif
 #else
       template<typename R>
-      struct task_base:
+      struct task_base_shared_state:
 #endif
             detail::shared_state<R>
         {
             bool started;
 
-            task_base():
+            task_base_shared_state():
                 started(false)
             {}
 
@@ -2226,30 +2227,30 @@ namespace boost
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
         template<typename F, typename R>
-        struct task_object;
+        struct task_shared_state;
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename F, typename R, typename ...ArgTypes>
-        struct task_object<F, R(ArgTypes...)>:
-          task_base<R(ArgTypes...)>
+        struct task_shared_state<F, R(ArgTypes...)>:
+          task_base_shared_state<R(ArgTypes...)>
 #else
         template<typename F, typename R>
-        struct task_object<F, R()>:
-          task_base<R()>
+        struct task_shared_state<F, R()>:
+          task_base_shared_state<R()>
 #endif
 #else
         template<typename F, typename R>
-        struct task_object:
-            task_base<R>
+        struct task_shared_state:
+            task_base_shared_state<R>
 #endif
         {
         private:
-          task_object(task_object&);
+          task_shared_state(task_shared_state&);
         public:
             F f;
-            task_object(F const& f_):
+            task_shared_state(F const& f_):
                 f(f_)
             {}
-            task_object(BOOST_THREAD_RV_REF(F) f_):
+            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
               f(boost::move(f_))
             {}
 
@@ -2316,32 +2317,32 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename F, typename R, typename ...ArgTypes>
-        struct task_object<F, R&(ArgTypes...)>:
-          task_base<R&(ArgTypes...)>
+        struct task_shared_state<F, R&(ArgTypes...)>:
+          task_base_shared_state<R&(ArgTypes...)>
 #else
         template<typename F, typename R>
-        struct task_object<F, R&()>:
-          task_base<R&()>
+        struct task_shared_state<F, R&()>:
+          task_base_shared_state<R&()>
 #endif
 #else
         template<typename F, typename R>
-        struct task_object<F,R&>:
-            task_base<R&>
+        struct task_shared_state<F,R&>:
+            task_base_shared_state<R&>
 #endif
         {
         private:
-          task_object(task_object&);
+          task_shared_state(task_shared_state&);
         public:
             F f;
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-            task_object(BOOST_THREAD_RV_REF(F) f_):
+            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
               f(boost::forward<F>(f_))
             {}
 #else
-            task_object(F const& f_):
+            task_shared_state(F const& f_):
                 f(f_)
             {}
-            task_object(BOOST_THREAD_RV_REF(F) f_):
+            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
                 f(boost::move(f_)) // TODO forward
             {}
 #endif
@@ -2407,24 +2408,24 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename R, typename ...ArgTypes>
-        struct task_object<R (*)(ArgTypes...), R(ArgTypes...)>:
-          task_base<R(ArgTypes...)>
+        struct task_shared_state<R (*)(ArgTypes...), R(ArgTypes...)>:
+          task_base_shared_state<R(ArgTypes...)>
 #else
         template<typename R>
-        struct task_object<R (*)(), R()>:
-          task_base<R()>
+        struct task_shared_state<R (*)(), R()>:
+          task_base_shared_state<R()>
 #endif
 #else
         template<typename R>
-        struct task_object<R (*)(), R> :
-           task_base<R>
+        struct task_shared_state<R (*)(), R> :
+           task_base_shared_state<R>
 #endif
             {
             private:
-              task_object(task_object&);
+              task_shared_state(task_shared_state&);
             public:
                 R (*f)();
-                task_object(R (*f_)()):
+                task_shared_state(R (*f_)()):
                     f(f_)
                 {}
 
@@ -2489,24 +2490,24 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename R, typename ...ArgTypes>
-        struct task_object<R& (*)(ArgTypes...), R&(ArgTypes...)>:
-          task_base<R&(ArgTypes...)>
+        struct task_shared_state<R& (*)(ArgTypes...), R&(ArgTypes...)>:
+          task_base_shared_state<R&(ArgTypes...)>
 #else
         template<typename R>
-        struct task_object<R& (*)(), R&()>:
-          task_base<R&()>
+        struct task_shared_state<R& (*)(), R&()>:
+          task_base_shared_state<R&()>
 #endif
 #else
         template<typename R>
-        struct task_object<R& (*)(), R&> :
-           task_base<R&>
+        struct task_shared_state<R& (*)(), R&> :
+           task_base_shared_state<R&>
 #endif
             {
             private:
-              task_object(task_object&);
+              task_shared_state(task_shared_state&);
             public:
                 R& (*f)();
-                task_object(R& (*f_)()):
+                task_shared_state(R& (*f_)()):
                     f(f_)
                 {}
 
@@ -2570,32 +2571,32 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename F, typename ...ArgTypes>
-        struct task_object<F, void(ArgTypes...)>:
-          task_base<void(ArgTypes...)>
+        struct task_shared_state<F, void(ArgTypes...)>:
+          task_base_shared_state<void(ArgTypes...)>
 #else
         template<typename F>
-        struct task_object<F, void()>:
-          task_base<void()>
+        struct task_shared_state<F, void()>:
+          task_base_shared_state<void()>
 #endif
 #else
         template<typename F>
-        struct task_object<F,void>:
-          task_base<void>
+        struct task_shared_state<F,void>:
+          task_base_shared_state<void>
 #endif
         {
         private:
-          task_object(task_object&);
+          task_shared_state(task_shared_state&);
         public:
             F f;
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-            task_object(BOOST_THREAD_RV_REF(F) f_):
+            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
               f(boost::forward<F>(f_))
             {}
 #else
-            task_object(F const& f_):
+            task_shared_state(F const& f_):
                 f(f_)
             {}
-            task_object(BOOST_THREAD_RV_REF(F) f_):
+            task_shared_state(BOOST_THREAD_RV_REF(F) f_):
                 f(boost::move(f_)) // TODO forward
             {}
 #endif
@@ -2658,24 +2659,24 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template<typename ...ArgTypes>
-        struct task_object<void (*)(ArgTypes...), void(ArgTypes...)>:
-        task_base<void(ArgTypes...)>
+        struct task_shared_state<void (*)(ArgTypes...), void(ArgTypes...)>:
+        task_base_shared_state<void(ArgTypes...)>
 #else
         template<>
-        struct task_object<void (*)(), void()>:
-        task_base<void()>
+        struct task_shared_state<void (*)(), void()>:
+        task_base_shared_state<void()>
 #endif
 #else
         template<>
-        struct task_object<void (*)(),void>:
-          task_base<void>
+        struct task_shared_state<void (*)(),void>:
+          task_base_shared_state<void>
 #endif
         {
         private:
-          task_object(task_object&);
+          task_shared_state(task_shared_state&);
         public:
             void (*f)();
-            task_object(void (*f_)()):
+            task_shared_state(void (*f_)()):
                 f(f_)
             {}
 
@@ -2742,21 +2743,21 @@ namespace boost
     template<typename R, typename ...ArgTypes>
     class packaged_task<R(ArgTypes...)>
     {
-      typedef boost::shared_ptr<detail::task_base<R(ArgTypes...)> > task_ptr;
-      boost::shared_ptr<detail::task_base<R(ArgTypes...)> > task;
+      typedef boost::shared_ptr<detail::task_base_shared_state<R(ArgTypes...)> > task_ptr;
+      boost::shared_ptr<detail::task_base_shared_state<R(ArgTypes...)> > task;
   #else
     template<typename R>
     class packaged_task<R()>
     {
-      typedef boost::shared_ptr<detail::task_base<R()> > task_ptr;
-      boost::shared_ptr<detail::task_base<R()> > task;
+      typedef boost::shared_ptr<detail::task_base_shared_state<R()> > task_ptr;
+      boost::shared_ptr<detail::task_base_shared_state<R()> > task;
   #endif
 #else
     template<typename R>
     class packaged_task
     {
-      typedef boost::shared_ptr<detail::task_base<R> > task_ptr;
-      boost::shared_ptr<detail::task_base<R> > task;
+      typedef boost::shared_ptr<detail::task_base_shared_state<R> > task_ptr;
+      boost::shared_ptr<detail::task_base_shared_state<R> > task;
 #endif
         bool future_obtained;
         struct dummy;
@@ -2777,16 +2778,16 @@ namespace boost
         explicit packaged_task(R(*f)(), BOOST_THREAD_FWD_REF(ArgTypes)... args)
         {
             typedef R(*FR)(BOOST_THREAD_FWD_REF(ArgTypes)...);
-            typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
-            task= task_ptr(new task_object_type(f, boost::forward<ArgTypes>(args)...));
+            typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
+            task= task_ptr(new task_shared_state_type(f, boost::forward<ArgTypes>(args)...));
             future_obtained=false;
         }
   #else
         explicit packaged_task(R(*f)())
         {
             typedef R(*FR)();
-            typedef detail::task_object<FR,R()> task_object_type;
-            task= task_ptr(new task_object_type(f));
+            typedef detail::task_shared_state<FR,R()> task_shared_state_type;
+            task= task_ptr(new task_shared_state_type(f));
             future_obtained=false;
         }
   #endif
@@ -2794,8 +2795,8 @@ namespace boost
         explicit packaged_task(R(*f)())
         {
               typedef R(*FR)();
-            typedef detail::task_object<FR,R> task_object_type;
-            task= task_ptr(new task_object_type(f));
+            typedef detail::task_shared_state<FR,R> task_shared_state_type;
+            task= task_ptr(new task_shared_state_type(f));
             future_obtained=false;
         }
 #endif
@@ -2809,14 +2810,14 @@ namespace boost
           typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
+            typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
   #else
-            typedef detail::task_object<FR,R()> task_object_type;
+            typedef detail::task_shared_state<FR,R()> task_shared_state_type;
   #endif
 #else
-            typedef detail::task_object<FR,R> task_object_type;
+            typedef detail::task_shared_state<FR,R> task_shared_state_type;
 #endif
-            task = task_ptr(new task_object_type(boost::forward<F>(f)));
+            task = task_ptr(new task_shared_state_type(boost::forward<F>(f)));
             future_obtained = false;
 
         }
@@ -2829,14 +2830,14 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef detail::task_object<F,R(ArgTypes...)> task_object_type;
+            typedef detail::task_shared_state<F,R(ArgTypes...)> task_shared_state_type;
   #else
-            typedef detail::task_object<F,R()> task_object_type;
+            typedef detail::task_shared_state<F,R()> task_shared_state_type;
   #endif
 #else
-            typedef detail::task_object<F,R> task_object_type;
+            typedef detail::task_shared_state<F,R> task_shared_state_type;
 #endif
-            task = task_ptr(new task_object_type(f));
+            task = task_ptr(new task_shared_state_type(f));
             future_obtained=false;
         }
         template <class F>
@@ -2844,15 +2845,15 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef detail::task_object<F,R(ArgTypes...)> task_object_type;
-            task = task_ptr(new task_object_type(boost::forward<F>(f)));
+            typedef detail::task_shared_state<F,R(ArgTypes...)> task_shared_state_type;
+            task = task_ptr(new task_shared_state_type(boost::forward<F>(f)));
 #else
-            typedef detail::task_object<F,R()> task_object_type;
-            task = task_ptr(new task_object_type(boost::move<F>(f))); // TODO forward
+            typedef detail::task_shared_state<F,R()> task_shared_state_type;
+            task = task_ptr(new task_shared_state_type(boost::move<F>(f))); // TODO forward
 #endif
 #else
-            typedef detail::task_object<F,R> task_object_type;
-            task = task_ptr(new task_object_type(boost::forward<F>(f)));
+            typedef detail::task_shared_state<F,R> task_shared_state_type;
+            task = task_ptr(new task_shared_state_type(boost::forward<F>(f)));
 #endif
             future_obtained=false;
 
@@ -2867,18 +2868,18 @@ namespace boost
           typedef R(*FR)();
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
+          typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
   #else
-          typedef detail::task_object<FR,R()> task_object_type;
+          typedef detail::task_shared_state<FR,R()> task_shared_state_type;
   #endif
 #else
-          typedef detail::task_object<FR,R> task_object_type;
+          typedef detail::task_shared_state<FR,R> task_shared_state_type;
 #endif
-          typedef typename Allocator::template rebind<task_object_type>::other A2;
+          typedef typename Allocator::template rebind<task_shared_state_type>::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          task = task_ptr(::new(a2.allocate(1)) task_object_type(f), D(a2, 1) );
+          task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(f), D(a2, 1) );
           future_obtained = false;
         }
 #endif // BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
@@ -2890,18 +2891,18 @@ namespace boost
           typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          typedef detail::task_object<FR,R(ArgTypes...)> task_object_type;
+          typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
   #else
-          typedef detail::task_object<FR,R()> task_object_type;
+          typedef detail::task_shared_state<FR,R()> task_shared_state_type;
   #endif
 #else
-          typedef detail::task_object<FR,R> task_object_type;
+          typedef detail::task_shared_state<FR,R> task_shared_state_type;
 #endif
-          typedef typename Allocator::template rebind<task_object_type>::other A2;
+          typedef typename Allocator::template rebind<task_shared_state_type>::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          task = task_ptr(::new(a2.allocate(1)) task_object_type(boost::forward<F>(f)), D(a2, 1) );
+          task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(boost::forward<F>(f)), D(a2, 1) );
           future_obtained = false;
         }
 #else // ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -2910,18 +2911,18 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          typedef detail::task_object<F,R(ArgTypes...)> task_object_type;
+          typedef detail::task_shared_state<F,R(ArgTypes...)> task_shared_state_type;
   #else
-          typedef detail::task_object<F,R()> task_object_type;
+          typedef detail::task_shared_state<F,R()> task_shared_state_type;
   #endif
 #else
-          typedef detail::task_object<F,R> task_object_type;
+          typedef detail::task_shared_state<F,R> task_shared_state_type;
 #endif
-          typedef typename Allocator::template rebind<task_object_type>::other A2;
+          typedef typename Allocator::template rebind<task_shared_state_type>::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
-          task = task_ptr(::new(a2.allocate(1)) task_object_type(f), D(a2, 1) );
+          task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(f), D(a2, 1) );
           future_obtained = false;
         }
         template <class F, class Allocator>
@@ -2929,21 +2930,21 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          typedef detail::task_object<F,R(ArgTypes...)> task_object_type;
+          typedef detail::task_shared_state<F,R(ArgTypes...)> task_shared_state_type;
   #else
-          typedef detail::task_object<F,R()> task_object_type;
+          typedef detail::task_shared_state<F,R()> task_shared_state_type;
   #endif
 #else
-          typedef detail::task_object<F,R> task_object_type;
+          typedef detail::task_shared_state<F,R> task_shared_state_type;
 #endif
-          typedef typename Allocator::template rebind<task_object_type>::other A2;
+          typedef typename Allocator::template rebind<task_shared_state_type>::other A2;
           A2 a2(a);
           typedef thread_detail::allocator_destructor<A2> D;
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          task = task_ptr(::new(a2.allocate(1)) task_object_type(boost::forward<F>(f)), D(a2, 1) );
+          task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(boost::forward<F>(f)), D(a2, 1) );
 #else
-          task = task_ptr(::new(a2.allocate(1)) task_object_type(boost::move(f)), D(a2, 1) );  // TODO forward
+          task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(boost::move(f)), D(a2, 1) );  // TODO forward
 #endif
           future_obtained = false;
         }
@@ -3083,26 +3084,26 @@ namespace boost
     namespace detail
     {
     ////////////////////////////////
-    // make_future_deferred_object
+    // make_future_deferred_shared_state
     ////////////////////////////////
     template <class Rp, class Fp>
     BOOST_THREAD_FUTURE<Rp>
-    make_future_deferred_object(BOOST_THREAD_FWD_REF(Fp) f)
+    make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
     {
-      shared_ptr<future_deferred_object<Rp, Fp> >
-          h(new future_deferred_object<Rp, Fp>(boost::forward<Fp>(f)));
+      shared_ptr<future_deferred_shared_state<Rp, Fp> >
+          h(new future_deferred_shared_state<Rp, Fp>(boost::forward<Fp>(f)));
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
     ////////////////////////////////
-    // make_future_async_object
+    // make_future_async_shared_state
     ////////////////////////////////
     template <class Rp, class Fp>
     BOOST_THREAD_FUTURE<Rp>
-    make_future_async_object(BOOST_THREAD_FWD_REF(Fp) f)
+    make_future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
     {
-      shared_ptr<future_async_object<Rp, Fp> >
-          h(new future_async_object<Rp, Fp>(boost::forward<Fp>(f)));
+      shared_ptr<future_async_shared_state<Rp, Fp> >
+          h(new future_async_shared_state<Rp, Fp>(boost::forward<Fp>(f)));
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
@@ -3141,7 +3142,7 @@ namespace boost
           if (int(policy) & int(launch::async))
             {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
@@ -3159,7 +3160,7 @@ namespace boost
             else if (int(policy) & int(launch::deferred))
             {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
@@ -3219,7 +3220,7 @@ namespace boost
         if (int(policy) & int(launch::async))
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
@@ -3241,7 +3242,7 @@ namespace boost
         else if (int(policy) & int(launch::deferred))
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_object<Rp>(
+          return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
@@ -3251,7 +3252,7 @@ namespace boost
               std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
-//          return boost::detail::make_future_deferred_object<Rp>(
+//          return boost::detail::make_future_deferred_shared_state<Rp>(
 //              BF(
 //                  thread_detail::decay_copy(boost::forward<F>(f))
 //              )
@@ -3434,18 +3435,18 @@ namespace boost
 //  }
 
   ////////////////////////////////
-  // detail::future_async_continuation
+  // detail::future_async_continuation_shared_state
   ////////////////////////////////
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
   namespace detail
   {
 
     /////////////////////////
-    /// future_async_continuation
+    /// future_async_continuation_shared_state
     /////////////////////////
 
     template<typename F, typename Rp, typename Fp>
-    struct future_async_continuation: shared_state<Rp>
+    struct future_async_continuation_shared_state: shared_state<Rp>
     {
       typedef shared_state<Rp> base_type;
       typedef typename base_type::move_dest_type move_dest_type;
@@ -3456,22 +3457,22 @@ namespace boost
       boost::thread thr_;
 
     public:
-      explicit future_async_continuation(
+      explicit future_async_continuation_shared_state(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
       parent(f.future_),
-      //continuation(boost::move(c)),
+      //continuation(boost::forward<Fp>(c)
       continuation(c),
       thr_()
       {
         this->set_async();
       }
 
-      ~future_async_continuation()
+      ~future_async_continuation_shared_state()
       {
         if (thr_.get_id()==thread::id())
         {
-          //BOOST_THREAD_LOG << "ERRORRRRRRRRR ~future_async_continuation " << this << " " << thr_.get_id() << BOOST_THREAD_END_LOG;
+          //BOOST_THREAD_LOG << "ERRORRRRRRRRR ~future_async_continuation_shared_state " << this << " " << thr_.get_id() << BOOST_THREAD_END_LOG;
           return;
         }
         if (thr_.joinable()) {
@@ -3482,7 +3483,7 @@ namespace boost
       void launch_continuation(boost::unique_lock<boost::mutex>& lock)
       {
         lock.unlock();
-        thr_ = thread(&future_async_continuation::run, this);
+        thr_ = thread(&future_async_continuation_shared_state::run, this);
       }
 
       move_dest_type get()
@@ -3496,7 +3497,7 @@ namespace boost
           // fixme use boost::move
           return static_cast<move_dest_type>(*(this->result));
       }
-      static void run(future_async_continuation* that)
+      static void run(future_async_continuation_shared_state* that)
       {
         try
         {
@@ -3516,7 +3517,7 @@ namespace boost
     };
 
     template<typename F, typename Fp>
-    struct future_async_continuation<F, void, Fp>: public shared_state<void>
+    struct future_async_continuation_shared_state<F, void, Fp>: public shared_state<void>
     {
       typedef shared_state<void> base_type;
       F& parent;
@@ -3524,17 +3525,18 @@ namespace boost
       boost::thread thr_;
 
     public:
-      explicit future_async_continuation(
+      explicit future_async_continuation_shared_state(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
       parent(f),
+      //continuation(boost::forward<Fp>(c)
       continuation(boost::move(c)),
       thr_()
       {
         this->set_async();
       }
 
-      ~future_async_continuation()
+      ~future_async_continuation_shared_state()
       {
         if (thr_.get_id()==thread::id())
         {
@@ -3546,10 +3548,10 @@ namespace boost
       void launch_continuation(boost::unique_lock<boost::mutex>& lk)
       {
         lk.unlock();
-        thr_ = thread(&future_async_continuation::run, this);
+        thr_ = thread(&future_async_continuation_shared_state::run, this);
       }
 
-      static void run(future_async_continuation* that)
+      static void run(future_async_continuation_shared_state* that)
       {
         try
         {
@@ -3571,21 +3573,21 @@ namespace boost
 
 
     //////////////////////////
-    /// future_deferred_continuation
+    /// future_deferred_continuation_shared_state
     //////////////////////////
     template<typename F, typename Rp, typename Fp>
-    struct future_deferred_continuation: shared_state<Rp>
+    struct future_deferred_continuation_shared_state: shared_state<Rp>
     {
       typedef shared_state<Rp> base_type;
       F& parent;
       Fp continuation;
 
     public:
-      explicit future_deferred_continuation(
+      explicit future_deferred_continuation_shared_state(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
           parent(f),
-          //continuation(boost::move(c))
+          //continuation(boost::forward<Fp>(c)
           continuation(c)
       {
         this->set_deferred();
@@ -3609,17 +3611,18 @@ namespace boost
     };
 
     template<typename F, typename Fp>
-    struct future_deferred_continuation<F,void,Fp>: shared_state<void>
+    struct future_deferred_continuation_shared_state<F,void,Fp>: shared_state<void>
     {
       typedef shared_state<void> base_type;
       F& parent;
       Fp continuation;
 
     public:
-      explicit future_deferred_continuation(
+      explicit future_deferred_continuation_shared_state(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ):
           parent(f),
+          //continuation(boost::forward<Fp>(c)
           continuation(boost::move(c))
       {
         this->set_deferred();
@@ -3643,32 +3646,32 @@ namespace boost
     };
 
     ////////////////////////////////
-    // make_future_deferred_continuation
+    // make_future_deferred_continuation_shared_state
     ////////////////////////////////
     template<typename F, typename Rp, typename Fp>
     BOOST_THREAD_FUTURE<Rp>
-    make_future_deferred_continuation(
+    make_future_deferred_continuation_shared_state(
         boost::unique_lock<boost::mutex> &lock,
         F& f, BOOST_THREAD_FWD_REF(Fp) c
         )
     {
-      shared_ptr<future_deferred_continuation<F, Rp, Fp> >
-          h(new future_deferred_continuation<F, Rp, Fp>(f, boost::forward<Fp>(c)));
+      shared_ptr<future_deferred_continuation_shared_state<F, Rp, Fp> >
+          h(new future_deferred_continuation_shared_state<F, Rp, Fp>(f, boost::forward<Fp>(c)));
       f.future_->set_continuation_ptr(h, lock);
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
     ////////////////////////////////
-    // make_future_async_continuation
+    // make_future_async_continuation_shared_state
     ////////////////////////////////
     template<typename F, typename Rp, typename Fp>
     BOOST_THREAD_FUTURE<Rp>
-    make_future_async_continuation(
+    make_future_async_continuation_shared_state(
         boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c
         )
     {
-      shared_ptr<future_async_continuation<F,Rp, Fp> >
-          h(new future_async_continuation<F,Rp, Fp>(f, boost::forward<Fp>(c)));
+      shared_ptr<future_async_continuation_shared_state<F,Rp, Fp> >
+          h(new future_async_continuation_shared_state<F,Rp, Fp>(f, boost::forward<Fp>(c)));
       f.future_->set_continuation_ptr(h, lock);
 
       return BOOST_THREAD_FUTURE<Rp>(h);
@@ -3802,13 +3805,13 @@ namespace boost
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(policy) & int(launch::async))
     {
-      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, *this, boost::forward<F>(func)
               )));
     }
     else if (int(policy) & int(launch::deferred))
     {
-      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, *this, boost::forward<F>(func)
               )));
     }
@@ -3837,14 +3840,14 @@ namespace boost
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(this->launch_policy()) & int(launch::async))
     {
-      return boost::detail::make_future_async_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(
+      return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, *this, boost::forward<F>(func)
       );
     }
     else if (int(this->launch_policy()) & int(launch::deferred))
     {
       this->future_->wait_internal(lock);
-      return boost::detail::make_future_deferred_continuation<BOOST_THREAD_FUTURE<R>, future_type, F>(
+      return boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, *this, boost::forward<F>(func)
       );
     }
@@ -3926,13 +3929,13 @@ namespace boost
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(policy) & int(launch::async))
     {
-      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation<shared_future<R>, future_type, F>(
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
                   lock, *this, boost::forward<F>(func)
               )));
     }
     else if (int(policy) & int(launch::deferred))
     {
-      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation<shared_future<R>, future_type, F>(
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<shared_future<R>, future_type, F>(
                   lock, *this, boost::forward<F>(func)
               )));
     }
@@ -3961,14 +3964,14 @@ namespace boost
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(this->launch_policy()) & int(launch::async))
     {
-      return boost::detail::make_future_async_continuation<shared_future<R>, future_type, F>(
+      return boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, *this, boost::forward<F>(func)
       );
     }
     else if (int(this->launch_policy()) & int(launch::deferred))
     {
       this->future_->wait_internal(lock);
-      return boost::detail::make_future_deferred_continuation<shared_future<R>, future_type, F>(
+      return boost::detail::make_future_deferred_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, *this, boost::forward<F>(func)
       );
     }
