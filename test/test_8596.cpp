@@ -6,6 +6,8 @@
 #define BOOST_THREAD_VERSION 4
 
 #include <iostream>
+#include <functional>
+#include <future>
 
 #include <boost/thread.hpp>
 #include <boost/shared_ptr.hpp>
@@ -26,6 +28,17 @@ boost::packaged_task<int()>* schedule(boost::function<int ()> const& fn)
   return result;
 }
 
+struct MyFunc
+{
+  MyFunc(MyFunc const&) = delete;
+  MyFunc& operator=(MyFunc const&) = delete;
+  MyFunc() {};
+  MyFunc(MyFunc &&) {};
+  MyFunc& operator=(MyFunc &&) { return *this;};
+  void operator()()const {}
+};
+
+
 int main()
 {
   boost::packaged_task<int()>* p(schedule(f));
@@ -34,5 +47,36 @@ int main()
   boost::future<int> fut = p->get_future();
   std::cout << "The answer to the ultimate question: " << fut.get() << std::endl;
 
+  {
+    boost::function<void()> f;
+    MyFunc mf;
+
+    boost::packaged_task<void()> t1(f);
+    boost::packaged_task<void()> t2(boost::move(mf));
+  }
+//  {
+//    MyFunc mf;
+//    //std::packaged_task<void()> t1(mf);
+//    //std::function<void()> f1(std::move(mf));
+//    std::function<void()> f1;
+//    f1 = std::move(mf);
+//
+//    //std::function<void()> f2((std::packaged_task<void()>(mf)));
+//  }
+//  {
+//    MyFunc mf;
+//    std::packaged_task<void()> t1(mf);
+//
+//    std::function<void()> f2(std::move(t1));
+//  }
+//  {
+//    MyFunc mf;
+//    boost::packaged_task<void()> t1(mf);
+//
+//    std::function<void()> f2(boost::move(t1));
+//  }
+
   return 0;
 }
+
+
