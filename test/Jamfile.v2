@@ -759,6 +759,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/std_async_test.cpp ]
+          [ thread-run test_8596.cpp ]
     ;
 
 }

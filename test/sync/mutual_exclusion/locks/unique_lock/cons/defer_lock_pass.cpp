@@ -25,7 +25,6 @@
 int main()
 {
   boost::mutex m;
-  m.lock();
   boost::unique_lock<boost::mutex> lk(m, boost::defer_lock);
   BOOST_TEST(lk.mutex() == &m);
   BOOST_TEST(lk.owns_lock() == false);
