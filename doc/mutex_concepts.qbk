@@ -1135,7 +1135,7 @@ object passed to the constructor.]]
   }
 
   
-A StrictLock is a lock that ensures that the associated mutex is locked during the lifetime if the lock.
+A StrictLock is a lock that ensures that the associated mutex is locked during the lifetime of the lock.
 
 A type `L` meets the StrictLock requirements if the following expressions are well-formed and have the specified semantics 
 
@@ -1158,7 +1158,7 @@ The type L::mutex_type denotes the mutex that is locked by this lock.
 
 [section:is_strict_lock_sur_parole `is_strict_lock_sur_parole<L>`]
 
-As the semantic "ensures that the associated mutex is locked during the lifetime if the lock. " can not be described by syntactic requirements a `is_strict_lock_sur_parole` trait must be specialized by the user defining the lock so that the following assertion is true:
+As the semantic "ensures that the associated mutex is locked during the lifetime of the lock. " can not be described by syntactic requirements a `is_strict_lock_sur_parole` trait must be specialized by the user defining the lock so that the following assertion is true:
 
   is_strict_lock_sur_parole<L>::value == true
 
