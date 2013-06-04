@@ -478,7 +478,7 @@ We need a way to transfer the ownership from the `unique_lock` to a `strict_lock
 
 In order to make this code compilable we need to store either a Lockable or a `unique_lock<Lockable>` reference depending on the constructor. Store which kind of reference we have stored,and in the destructor call either to the Lockable `unlock` or restore the ownership.
 
-This seams too complicated to me. Another possibility is to define a nested strict lock class. The drawback is that instead of having only one strict lock we have two and we need either to duplicate every function taking a `strict\_lock` or make these function templates functions. The problem with template functions is that we don't profit anymore of the C++ type system. We must add some static metafunction that check that the Locker parameter is a strict lock. The problem is that we can not really check this or can we?. The `is_strict_lock` metafunction must be specialized by the strict lock developer. We need to belive it "sur parolle". The advantage is that now we can manage with more than two strict locks without changing our code. Ths is really nice.
+This seams too complicated to me. Another possibility is to define a nested strict lock class. The drawback is that instead of having only one strict lock we have two and we need either to duplicate every function taking a `strict\_lock` or make these function templates functions. The problem with template functions is that we don't profit anymore of the C++ type system. We must add some static metafunction that check that the Locker parameter is a strict lock. The problem is that we can not really check this or can we?. The `is_strict_lock` metafunction must be specialized by the strict lock developer. We need to belive it "sur parole". The advantage is that now we can manage with more than two strict locks without changing our code. Ths is really nice.
 
 Now we need to state that both classes are `strict_lock`s.
 
@@ -548,7 +548,7 @@ We can add test in debug mode that ensure that the Lockable object is locked.
       T& get(Locker& lock) {
           BOOST_CONCEPT_ASSERT((StrictLockerConcept<Locker>));
   
-          BOOST_STATIC_ASSERT((is_strict_lock<Locker>::value)); // locker is a strict locker "sur parolle" 
+          BOOST_STATIC_ASSERT((is_strict_lock<Locker>::value)); // locker is a strict locker "sur parole" 
           BOOST_STATIC_ASSERT((is_same<Lockable,
                   typename lockable_type<Locker>::type>::value)); // that locks the same type 
   #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP  // define BOOST_THREAD_EXTERNALLY_LOCKED_NO_CHECK_OWNERSHIP if you don't want to check locker ownership
