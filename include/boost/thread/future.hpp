@@ -429,6 +429,7 @@ namespace boost
                   throw_exception(promise_already_satisfied());
               }
               exception=e;
+              this->is_constructed = true;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
             }
 
@@ -1399,7 +1400,11 @@ namespace boost
         BOOST_THREAD_FUTURE<Rp>
         make_future_deferred_continuation_shared_state(boost::unique_lock<boost::mutex> &lock, F& f, BOOST_THREAD_FWD_REF(Fp) c);
 #endif
-
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
+        template <class F, class Rp>
+        typename BOOST_THREAD_FUTURE<Rp>::value_type
+        make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_FUTURE<Rp>& f);
+#endif
     }
 
     template <typename R>
@@ -1525,6 +1530,15 @@ namespace boost
         inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE&)>::type>
         then(launch policy, BOOST_THREAD_FWD_REF(F) func);
 #endif
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
+        inline
+        typename enable_if_c<
+          is_future<value_type>::value,
+          BOOST_THREAD_FUTURE<typename value_type::value_type>
+        >::type
+        unwrap();
+#endif
+
     };
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) BOOST_THREAD_FUTURE<T> BOOST_THREAD_DCL_MOVABLE_END
@@ -1639,6 +1653,15 @@ namespace boost
         inline BOOST_THREAD_FUTURE<typename boost::result_of<F(shared_future&)>::type>
         then(launch policy, BOOST_THREAD_FWD_REF(F) func);
 #endif
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
+        inline
+        typename enable_if_c<
+          is_future<value_type>::value,
+          BOOST_THREAD_FUTURE<typename value_type::value_type>
+        >::type
+        unwrap();
+#endif
+
     };
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) shared_future<T> BOOST_THREAD_DCL_MOVABLE_END
@@ -1703,7 +1726,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -1785,7 +1808,11 @@ namespace boost
             }
             future_->mark_exceptional_finish_internal(p, lock);
         }
-
+        template <typename E>
+        void set_exception(E ex)
+        {
+          set_exception(copy_exception(ex));
+        }
         // setting the result with deferred notification
         void set_value_at_thread_exit(const R& r)
         {
@@ -1811,6 +1838,11 @@ namespace boost
               boost::throw_exception(promise_moved());
           }
           future_->set_exception_at_thread_exit(e);
+        }
+        template <typename E>
+        void set_exception_at_thread_exit(E ex)
+        {
+          set_exception_at_thread_exit(copy_exception(ex));
         }
 
         template<typename F>
@@ -1872,7 +1904,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -1938,6 +1970,11 @@ namespace boost
             }
             future_->mark_exceptional_finish_internal(p, lock);
         }
+        template <typename E>
+        void set_exception(E ex)
+        {
+          set_exception(copy_exception(ex));
+        }
 
         // setting the result with deferred notification
         void set_value_at_thread_exit(R& r)
@@ -1956,6 +1993,11 @@ namespace boost
               boost::throw_exception(promise_moved());
           }
           future_->set_exception_at_thread_exit(e);
+        }
+        template <typename E>
+        void set_exception_at_thread_exit(E ex)
+        {
+          set_exception_at_thread_exit(copy_exception(ex));
         }
 
         template<typename F>
@@ -2014,7 +2056,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -2083,6 +2125,11 @@ namespace boost
             }
             future_->mark_exceptional_finish_internal(p,lock);
         }
+        template <typename E>
+        void set_exception(E ex)
+        {
+          set_exception(copy_exception(ex));
+        }
 
         // setting the result with deferred notification
         void set_value_at_thread_exit()
@@ -2101,6 +2148,11 @@ namespace boost
               boost::throw_exception(promise_moved());
           }
           future_->set_exception_at_thread_exit(e);
+        }
+        template <typename E>
+        void set_exception_at_thread_exit(E ex)
+        {
+          set_exception_at_thread_exit(copy_exception(ex));
         }
 
         template<typename F>
@@ -3607,12 +3659,13 @@ namespace boost
   {
 
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    if (this->future_==0)
-    {
-      // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
-    }
+//    if (this->future_==0)
+//    {
+//      // fixme what to do when the future has no associated state?
+//      return BOOST_THREAD_FUTURE<future_type>();
+//    }
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(policy) & int(launch::async))
@@ -3630,7 +3683,8 @@ namespace boost
     else
     {
       // fixme what to do when the policy is invalid?
-      return BOOST_THREAD_FUTURE<future_type>();
+      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //return BOOST_THREAD_FUTURE<future_type>();
     }
 
   }
@@ -3641,13 +3695,14 @@ namespace boost
   {
 
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>&)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    if (this->future_==0)
-    {
-      //BOOST_THREAD_LOG << "ERROR future::then " << this << BOOST_THREAD_END_LOG;
-      // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
-    }
+//    if (this->future_==0)
+//    {
+//      //BOOST_THREAD_LOG << "ERROR future::then " << this << BOOST_THREAD_END_LOG;
+//      // fixme what to do when the future has no associated state?
+//      return BOOST_THREAD_FUTURE<future_type>();
+//    }
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(this->launch_policy()) & int(launch::async))
@@ -3666,7 +3721,8 @@ namespace boost
     else
     {
       // fixme what to do when the policy is invalid?
-      return BOOST_THREAD_FUTURE<future_type>();
+      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //return BOOST_THREAD_FUTURE<future_type>();
     }
   }
 
@@ -3731,12 +3787,13 @@ namespace boost
   {
 
     typedef typename boost::result_of<F(shared_future<R>&)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    if (this->future_==0)
-    {
-      // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
-    }
+//    if (this->future_==0)
+//    {
+//      // fixme what to do when the future has no associated state?
+//      return BOOST_THREAD_FUTURE<future_type>();
+//    }
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(policy) & int(launch::async))
@@ -3754,7 +3811,8 @@ namespace boost
     else
     {
       // fixme what to do when the policy is invalid?
-      return BOOST_THREAD_FUTURE<future_type>();
+      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //return BOOST_THREAD_FUTURE<future_type>();
     }
 
   }
@@ -3766,12 +3824,13 @@ namespace boost
 
     typedef typename boost::result_of<F(shared_future<R>&)>::type future_type;
 
-    if (this->future_==0)
-    {
-      //BOOST_THREAD_LOG << "ERROR future::then " << this << BOOST_THREAD_END_LOG;
-      // fixme what to do when the future has no associated state?
-      return BOOST_THREAD_FUTURE<future_type>();
-    }
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+//    if (this->future_==0)
+//    {
+//      //BOOST_THREAD_LOG << "ERROR future::then " << this << BOOST_THREAD_END_LOG;
+//      // fixme what to do when the future has no associated state?
+//      return BOOST_THREAD_FUTURE<future_type>();
+//    }
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (int(this->launch_policy()) & int(launch::async))
@@ -3790,11 +3849,36 @@ namespace boost
     else
     {
       // fixme what to do when the policy is invalid?
-      return BOOST_THREAD_FUTURE<future_type>();
+      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //return BOOST_THREAD_FUTURE<future_type>();
     }
   }
 #endif
-
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
+  namespace detail
+  {
+    template <class Rp>
+    typename BOOST_THREAD_FUTURE<Rp>::value_type
+    make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_FUTURE<Rp>& f)
+    {
+      shared_ptr<future_unwrap_shared_state<Rp> >
+          h(new future_unwrap_shared_state<Rp>(f, boost::forward<Fp>(c)));
+      f.future_->set_continuation_ptr(h, lock);
+      return BOOST_THREAD_FUTURE<Rp>(h);
+    }
+  }
+  template <typename R>
+  typename enable_if_c<
+    is_future<value_type>::value,
+    value_type>
+  >::type
+  future<R>::unwrap()
+  {
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized())
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    return boost::detail::make_future_unwrap_shared_state(lock, *this);
+  }
+#endif
 }
 
 #endif // BOOST_NO_EXCEPTION

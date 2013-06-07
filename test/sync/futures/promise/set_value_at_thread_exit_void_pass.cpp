@@ -32,7 +32,8 @@ void func()
   i = 1;
 }
 
-void func2_mv(BOOST_THREAD_RV_REF(boost::promise<void>) p2)
+//void func2_mv(BOOST_THREAD_RV_REF(boost::promise<void>) p2)
+void func2_mv(boost::promise<void> p2)
 {
   p2.set_value_at_thread_exit();
   i = 2;
@@ -92,6 +93,7 @@ int main()
     boost::thread(func2, &p2).detach();
 #endif
     f.wait();
+    f.get();
     BOOST_TEST(i == 2);
   }
   catch(std::exception& ex)
