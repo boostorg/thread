@@ -54,27 +54,6 @@ int main()
     boost::packaged_task<void()> t1(f);
     boost::packaged_task<void()> t2(boost::move(mf));
   }
-//  {
-//    MyFunc mf;
-//    //std::packaged_task<void()> t1(mf);
-//    //std::function<void()> f1(std::move(mf));
-//    std::function<void()> f1;
-//    f1 = std::move(mf);
-//
-//    //std::function<void()> f2((std::packaged_task<void()>(mf)));
-//  }
-//  {
-//    MyFunc mf;
-//    std::packaged_task<void()> t1(mf);
-//
-//    std::function<void()> f2(std::move(t1));
-//  }
-//  {
-//    MyFunc mf;
-//    boost::packaged_task<void()> t1(mf);
-//
-//    std::function<void()> f2(boost::move(t1));
-//  }
 
   return 0;
 }
