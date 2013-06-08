@@ -20,6 +20,7 @@
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 
+
 int p1()
 {
   BOOST_THREAD_LOG << "p1 < " << BOOST_THREAD_END_LOG;
@@ -38,10 +39,20 @@ int p2(boost::future<int>& f)
   return 2 * i;
 }
 
+void p3(boost::future<int>& f)
+{
+  BOOST_THREAD_LOG << "p3 <" << &f << BOOST_THREAD_END_LOG;
+  BOOST_TEST(f.valid());
+  int i = f.get();
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(500));
+  BOOST_THREAD_LOG << "p3 <" << &f << " " <<i << BOOST_THREAD_END_LOG;
+  return;
+}
+
 int main()
 {
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
-    BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
     boost::future<int> f1 = boost::async(boost::launch::async, &p1);
     BOOST_TEST(f1.valid());
     boost::future<int> f2 = f1.then(&p2);
@@ -49,6 +60,27 @@ int main()
     try
     {
       BOOST_TEST(f2.get()==2);
+    }
+    catch (std::exception& ex)
+    {
+      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
+      BOOST_TEST(false);
+    }
+    catch (...)
+    {
+      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
+      BOOST_TEST(false);
+    }
+  }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
+  {
+    boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+    BOOST_TEST(f1.valid());
+    boost::future<void> f2 = f1.then(&p3);
+    BOOST_TEST(f2.valid());
+    try
+    {
+      f2.wait();
     }
     catch (std::exception& ex)
     {
