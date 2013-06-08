@@ -1200,10 +1200,14 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
       // Set the value
       void set_value(see below);
       void set_exception(boost::exception_ptr e);
+      template <typename E>
+      void set_exception(E e); // EXTENSION
 
       // setting the result with deferred notification
       void set_value_at_thread_exit(see below);
       void set_exception_at_thread_exit(exception_ptr p);
+      template <typename E>
+      void set_exception_at_thread_exit(E p);  // EXTENSION
 
       template<typename F>
       void set_wait_callback(F f); // EXTENSION
@@ -1343,6 +1347,8 @@ __shared_future_has_value__ for those futures shall return `true`.]]
 [section:set_exception Member Function `set_exception()`]
 
     void set_exception(boost::exception_ptr e);
+    template <typename E>
+    void set_exception(E e); // EXTENSION
 
 [variablelist
 
@@ -1400,6 +1406,8 @@ associated with the current thread have been destroyed.]]
 [section:set_exception_at_thread_exit Member Function `set_exception_at_thread_exit()`]
 
     void set_exception_at_thread_exit(boost::exception_ptr e);
+    template <typename E>
+    void set_exception_at_thread_exit(E p);  // EXTENSION
 
 [variablelist
 
