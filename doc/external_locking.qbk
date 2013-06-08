@@ -524,7 +524,7 @@ First `nested_strict_lock` class will store on a temporary lock the `Locker`, an
       operator bool_type() const { return &nested_strict_lock::owns_lock; }
       bool operator!() const { return false; }
       bool owns_lock() const { return true; }
-      const lockable_type* mutex() const { return tmp_lock_.mutex(); }
+      lockable_type* mutex() const { return tmp_lock_.mutex(); }
       bool owns_lock(lockable_type* l) const { return l==mutex(); }
   
       BOOST_ADRESS_OF_DELETE(nested_strict_lock)
