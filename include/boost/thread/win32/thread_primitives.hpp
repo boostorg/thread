@@ -44,6 +44,8 @@ namespace boost
             handle const invalid_handle_value=INVALID_HANDLE_VALUE;
             unsigned const event_modify_state=EVENT_MODIFY_STATE;
             unsigned const synchronize=SYNCHRONIZE;
+            unsigned const wait_abandoned=WAIT_ABANDONED;
+
 
 # ifdef BOOST_NO_ANSI_APIS
             using ::CreateMutexW;
@@ -127,6 +129,7 @@ namespace boost
             handle const invalid_handle_value=(handle)(-1);
             unsigned const event_modify_state=2;
             unsigned const synchronize=0x100000u;
+            unsigned const wait_abandoned=0x00000080u;
 
             extern "C"
             {
