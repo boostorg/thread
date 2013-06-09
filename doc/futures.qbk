@@ -293,7 +293,7 @@ that is to allow multiple concurrent get operations.
 
 [heading Multiple get]
 
-The second `get()` call in the following example future  
+The second `get()` call in the following example is undefined.  
 
   void bad_second_use( type arg ) {
       
@@ -372,14 +372,14 @@ and a `shared_future` that can be shared between several threads, but there were
 [section:make_ready_future Making immediate futures easier]
 
 Some functions may know the value at the point of construction. In these cases the value is immediately available, 
-but needs to be returned as a future or shared_future. By using make_ready_future (make_shared_future) a future (shared_future) 
+but needs to be returned as a future or shared_future. By using make_ready_future a future  
 can be created which holds a pre-computed result in its shared state.
  
 Without these features it is non-trivial to create a future directly from a value. 
 First a promise must be created, then the promise is set, and lastly the future is retrieved from the promise. 
 This can now be done with one operation.
 
-[heading make_ready_future / make_shared_future]
+[heading make_ready_future]
 
 This function creates a future for a given value. If no value is given then a future<void> is returned. 
 This function is primarily useful in cases where sometimes, the return value is immediately available, but sometimes 
@@ -396,9 +396,7 @@ the function must return an eventual value represented as a future.
   }
   
 There are two variations of this function. The first takes a value of any type, and returns a future of that type. 
-The input value is passed to the shared state of the returned future. The second version takes no input and returns a future<void>.
-make_shared_future has the same functionality as make_ready_future, except has a return type of shared_future.
-  
+The input value is passed to the shared state of the returned future. The second version takes no input and returns a future<void>. 
 
 [endsect]
 
