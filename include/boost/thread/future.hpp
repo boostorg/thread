@@ -443,6 +443,7 @@ namespace boost
                   throw_exception(promise_already_satisfied());
               }
               exception=e;
+              this->is_constructed = true;
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
             }
             bool has_value()
@@ -1746,7 +1747,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -1915,7 +1916,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -2057,7 +2058,7 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(future_->mutex);
 
-                if(!future_->done)
+                if(!future_->done && !future_->is_constructed)
                 {
                     future_->mark_exceptional_finish_internal(boost::copy_exception(broken_promise()), lock);
                 }
@@ -3469,7 +3470,7 @@ namespace boost
       boost::thread thr_;
 
     public:
-      explicit future_async_continuation(
+      future_async_continuation(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
       parent(f.future_),
@@ -3532,15 +3533,15 @@ namespace boost
     struct future_async_continuation<F, void, Fp>: public future_object<void>
     {
       typedef future_object<void> base_type;
-      F& parent;
+      F parent;
       Fp continuation;
       boost::thread thr_;
 
     public:
-      explicit future_async_continuation(
+      future_async_continuation(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
-      parent(f),
+      parent(f.future_),
       continuation(boost::move(c)),
       thr_()
       {
@@ -3590,14 +3591,14 @@ namespace boost
     struct future_deferred_continuation: future_object<Rp>
     {
       typedef future_object<Rp> base_type;
-      F& parent;
+      F parent;
       Fp continuation;
 
     public:
-      explicit future_deferred_continuation(
+      future_deferred_continuation(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
-          parent(f),
+          parent(f.future_),
           //continuation(boost::move(c))
           continuation(c)
       {
@@ -3625,14 +3626,14 @@ namespace boost
     struct future_deferred_continuation<F,void,Fp>: future_object<void>
     {
       typedef future_object<void> base_type;
-      F& parent;
+      F parent;
       Fp continuation;
 
     public:
-      explicit future_deferred_continuation(
+      future_deferred_continuation(
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ):
-          parent(f),
+          parent(f.future_),
           continuation(boost::move(c))
       {
         this->set_deferred();
