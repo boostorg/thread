@@ -260,18 +260,20 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 
     public:
       typedef R value_type;  // EXTENSION
-      __unique_future__(__unique_future__ & rhs);// = delete;
-      __unique_future__& operator=(__unique_future__& rhs);// = delete;
+      __unique_future__(__unique_future__ const& rhs) = delete;
+      __unique_future__& operator=(__unique_future__ const& rhs) = delete;
 
       __unique_future__() noexcept;
       ~__unique_future__();
 
       // move support
       __unique_future__(__unique_future__ && other) noexcept;
+      __unique_future__(__unique_future__<__unique_future__<R>>&& rhs);  // EXTENSION
       __unique_future__& operator=(__unique_future__ && other) noexcept;
       
       // factories
       shared_future<R> share();
+      
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
       then(F&& func); // EXTENSION
@@ -281,11 +283,15 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
       then(launch policy, F&& func); // EXTENSION
-            
+
+      see below unwrap();  // EXTENSION
+      __unique_future__ fallback_to();  // EXTENSION
+                  
       void swap(__unique_future__& other) noexcept;
 
       // retrieving the value
       see below get();
+      see below get_or(see below);  // EXTENSION
 
       // functions to check state
       bool valid() const noexcept;
@@ -300,7 +306,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       template <class Clock, class Duration>
       future_status wait_until(const chrono::time_point<Clock, Duration>& abs_time) const;
 
-    #if defined BOOST_THREAD_USES_DATE_TIME || defined BOOST_THREAD_DONT_USE_CHRONO
+    #if defined BOOST_THREAD_USES_DATE_TIME
       template<typename Duration>
       bool timed_wait(Duration const& rel_time) const; // DEPRECATED SINCE V3.0.0
       bool timed_wait_until(boost::system_time const& abs_time) const; // DEPRECATED SINCE V3.0.0
@@ -309,6 +315,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       state get_state() const;  // EXTENSION
     };
 
+[///////////////////////////////////////////////]
 [section:default_constructor Default Constructor]
 
     __unique_future__();
@@ -339,7 +346,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////]
 [section:move_constructor Move Constructor]
 
     __unique_future__(__unique_future__ && other);
@@ -359,7 +366,31 @@ associated with `*this`. `other` is not associated with any shared state.]]
 ]
 
 [endsect]
+[///////////////////////////////////////////////////////////////////]
+[section:unwrap_move_constructor Unwrap Move Constructor - EXTENSION]
 
+      __unique_future__(__unique_future__<__unique_future__<R>>&& other);  // EXTENSION
+
+[warning This constructor is experimental and subject to change in future versions. 
+There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
+
+[variablelist
+
+[[Requires:] [`other.valid()`.]
+[[Effects:] [Constructs a new __unique_future__, and transfers ownership of the shared state associated with `other` and unwrapping the inner future (see `unwrap()`).]]
+
+[[Postconditions:] [[unique_future_get_state_link `this->get_state()`] returns the value of `other->get_state()` prior to the
+call. `other->get_state()` returns __uninitialized__. The associated shared state is now
+unwrapped and the inner future shared state is associated with `*this`. `other` is not associated with any shared state, `! other.valid()`.]]
+
+[[Throws:] [Nothing.]]
+
+[[Notes:] [If the compiler does not support rvalue-references, this is implemented using the boost.thread move emulation.]]
+
+]
+
+[endsect]
+[////////////////////////////////////////////////]
 [section:move_assignment Move Assignment Operator]
 
     __unique_future__& operator=(__unique_future__ && other);
@@ -380,7 +411,7 @@ result prior to the call, that result no longer has an associated __unique_futur
 ]
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:swap Member function `swap()`]
 
     void swap(__unique_future__ & other) no_except;
@@ -399,8 +430,7 @@ associated with a shared state, that result is now associated with `other`, othe
 ]
 
 [endsect]
-
-
+[///////////////////////////////////]
 [section:get Member function `get()`]
 
     R get();
@@ -439,7 +469,47 @@ __unique_future_wait__, and retrieves the result (whether that is a value or an 
 ]
 
 [endsect]
+[/////////////////////////////////////////////////////]
+[section:get_or Member function `get_or()` - EXTENSION]
 
+    R get_or(R&& v); // EXTENSION
+    R get_or(R const& v);  // EXTENSION
+    R& __unique_future__<R&>::get_or(R& v);  // EXTENSION
+    void __unique_future__<void>::get_or();  // EXTENSION
+
+[warning These functions are experimental and subject to change in future versions. 
+There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
+
+[variablelist
+
+[[Effects:] [If `*this` is associated with a shared state, waits until the result is ready as-if by a call to
+__unique_future_wait__, and depending on whether the shared state `has_value()` the retrieves the result.]]
+
+[[Returns:] [
+
+- `__unique_future__<R&>::get_or(v)` return the stored reference if has_value() and the passes parameter otherwise. 
+
+- `__unique_future__<void>::get_or()`, there is no return value, but the function doesn't throws even if the shared state contained an exception. 
+
+- `__unique_future__<R>::get_or(v)` returns an rvalue-reference to the value stored in the shared state if `has_value()` and an rvalue-reference build with the parameter `v`.
+
+]]
+
+[[Postconditions:] [[unique_future_is_ready_link `this->is_ready()`] returns `true`. [unique_future_get_state_link
+`this->get_state()`] returns __ready__.]]
+
+[[Throws:] [
+
+- __future_uninitialized__ if `*this` is not associated with a shared state. 
+
+]]
+
+[[Notes:] [`get_or()` is an ['interruption point].]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
 [section:wait Member function `wait()`]
 
     void wait() const;
@@ -466,7 +536,7 @@ associated with `*this` is not ready at the point of the call, and the current t
 ]
 
 [endsect]
-
+[//////////////////////////////////////////////////////////////////////////////////]
 [section:timed_wait_duration Member function `timed_wait()` DEPRECATED SINCE V3.0.0]
 
     template<typename Duration>
@@ -505,7 +575,7 @@ elapsed, `false` otherwise.]]
 ]
 
 [endsect]
-
+[//////////////////////////////////////////////////////////////////////////////////]
 [section:timed_wait_absolute Member function `timed_wait()` DEPRECATED SINCE V3.0.0]
 
     bool timed_wait(boost::system_time const& wait_timeout);
@@ -543,7 +613,7 @@ passed, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////]
 [section:wait_for Member function `wait_for()`]
 
       template <class Rep, class Period>
@@ -581,7 +651,7 @@ invoked prior to waiting.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////]
 [section:wait_until Member function `wait_until()`]
 
       template <class Clock, class Duration>
@@ -619,8 +689,7 @@ prior to waiting.]]
 ]
 
 [endsect]
-
-
+[///////////////////////////////////////]
 [section:valid Member function `valid()`]
 
     bool valid() const noexcept;
@@ -635,6 +704,7 @@ otherwise.]]
 ]
 
 [endsect]
+[///////////////////////////////////////////////////////]
 [section:is_ready Member function `is_ready()` EXTENSION]
 
     bool is_ready() const;
@@ -649,7 +719,7 @@ otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////]
 [section:has_value Member function `has_value()` EXTENSION]
 
     bool has_value() const;
@@ -664,7 +734,7 @@ stored value, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////]
 [section:has_exception Member function `has_exception()` EXTENSION]
 
     bool has_exception() const;
@@ -679,7 +749,7 @@ stored exception, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////]
 [section:get_state Member function `get_state()` EXTENSION]
 
     future_state::state get_state();
@@ -695,9 +765,25 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 
 ]
 
-[endsect]
 
-[section:then Member function `then()` EXTENSION]
+[endsect]
+[///////////////////////////////////////]
+[section:share Member function `share()`]
+
+      shared_future<R> share();
+
+[variablelist
+
+[[Returns:] [`shared_future<R>(boost::move(*this))`.]]
+
+[[Postconditions:] [`this->valid() == false`.]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////////////////]
+[section:then Member function `then()` - EXTENSION]
 
       template<typename F>
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
@@ -709,13 +795,10 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
       __unique_future__<typename boost::result_of<F(__unique_future__&)>::type> 
       then(launch policy, F&& func); // EXTENSION
 
-
 [warning These functions are experimental and subject to change in future versions. 
 There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
 
-[note These functions are based on the [@http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3558.pdf [*N3558 - A Standardized Representation of Asynchronous Operations]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
-
-  
+[note These functions are based on the [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3634.pdf [*N3634 - Improvements to std::future<T> and related APIs]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
 
 [variablelist
 
@@ -747,7 +830,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 [[Postconditions:] [
 
-- The `shared_future` object passed to the parameter of the continuation function is a copy of the original `shared_future`.
+- The `__unique_future__` object passed to the parameter of the continuation function is a copy of the original `__unique_future__`.
 
 - `valid() == false` on original future object immediately after it returns.
 
@@ -756,12 +839,44 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 ]
 
 [endsect]
+[///////////////////////////////////////////////////]
+[section:unwrap Member function `unwrap()` EXTENSION]
 
+      template <typename R2>
+      __unique_future__<R2> __unique_future__<__unique_future__<R2>>::unwrap();  // EXTENSION
+      template <typename R2>
+      __shared_future__<R2> __unique_future__<__shared_future__<R2>>::unwrap();  // EXTENSION
 
-      
+[warning These functions are experimental and subject to change in future versions. 
+There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
+
+[note These functions are based on the [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3634.pdf [*N3634 - Improvements to std::future<T> and related APIs]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
+  
+[variablelist
+
+[[Notes:] [Removes the outermost future and returns a future with the associated state been a proxy of inner future.]]
+
+[[Effects:] [
+
+- Returns a future that becomes ready when the shared state of the inner future is ready.
+
+]]
+
+[[Returns:] [An object of type future with the associated state been a proxy of inner future.]]
+
+[[Postconditions:] [
+
+- The returned future has `valid() == true` regardless of the validity of the inner future.
+
+]]
+
+]
+
 
 [endsect]
 
+[endsect]
+[////////////////////////////////////////////////////]
 [section:shared_future `shared_future` class template]
 
     template <typename R>
@@ -838,7 +953,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 ]
 
 [endsect]
-
+[///////////////////////////////////]
 [section:get Member function `get()`]
 
     const R& get();
@@ -872,7 +987,7 @@ __shared_future_wait__, and returns a `const` reference to the result.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:wait Member function `wait()`]
 
     void wait() const;
@@ -898,7 +1013,7 @@ entry, and the result has a ['wait callback] set, that callback is invoked prior
 ]
 
 [endsect]
-
+[//////////////////////////////////////////////////////////]
 [section:timed_wait_duration Member function `timed_wait()`]
 
     template<typename Duration>
@@ -929,7 +1044,7 @@ elapsed, `false` otherwise.]]
 ]
 
 [endsect]
-
+[//////////////////////////////////////////////////////////]
 [section:timed_wait_absolute Member function `timed_wait()`]
 
     bool timed_wait(boost::system_time const& wait_timeout);
@@ -958,7 +1073,7 @@ passed, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////]
 [section:wait_for Member function `wait_for()`]
 
       template <class Rep, class Period>
@@ -996,7 +1111,7 @@ invoked prior to waiting.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////]
 [section:wait_until Member function `wait_until()`]
 
       template <class Clock, class Duration>
@@ -1034,7 +1149,7 @@ prior to waiting.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////]
 [section:valid Member function `valid()`]
 
     bool valid() const noexcept;
@@ -1049,7 +1164,7 @@ otherwise.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////////////]
 [section:is_ready Member function `is_ready()` EXTENSION]
 
     bool is_ready() const;
@@ -1064,7 +1179,7 @@ otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////]
 [section:has_value Member function `has_value()` EXTENSION]
 
     bool has_value() const;
@@ -1079,7 +1194,7 @@ stored value, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////]
 [section:has_exception Member function `has_exception()` EXTENSION]
 
     bool has_exception() const;
@@ -1094,7 +1209,7 @@ stored exception, `false` otherwise.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////]
 [section:get_state Member function `get_state()` EXTENSION]
 
     future_state::state get_state();
@@ -1111,7 +1226,7 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////]
 [section:then Member function `then()` EXTENSION]
 
       template<typename F>
@@ -1128,9 +1243,7 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 [warning These functions are experimental and subject to change in future versions. 
 There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
 
-[note These functions are based on the [@http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3558.pdf [*N3558 - A Standardized Representation of Asynchronous Operations]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
-
-  
+[note These functions are based on the [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3634.pdf [*N3634 - Improvements to std::future<T> and related APIs]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
 
 [variablelist
 
@@ -1174,6 +1287,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 [endsect]
 
+[////////////////////////////////////////]
 [section:promise `promise` class template]
 
     template <typename R>
@@ -1185,8 +1299,8 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
       promise();
       template <class Allocator>
       promise(allocator_arg_t, Allocator a);
-      promise & operator=(const promise & rhs);// = delete;
-      promise(const promise & rhs);// = delete;
+      promise & operator=(promise const& rhs) = delete;
+      promise(promise const& rhs) = delete;
       ~promise();
 
       // Move support
@@ -1226,7 +1340,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////]
 [section:alloc_constructor Allocator Constructor]
 
       template <class Allocator>
@@ -1243,9 +1357,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 ]
 
 [endsect]
-
-
-
+[/////////////////////////////////////////]
 [section:move_constructor Move Constructor]
 
     promise(promise && other);
@@ -1262,7 +1374,7 @@ with no associated result.]]
 ]
 
 [endsect]
-
+[////////////////////////////////////////////////]
 [section:move_assignment Move Assignment Operator]
 
     promise& operator=(promise && other);
@@ -1280,7 +1392,7 @@ was already a result associated with `*this`, and that result was not ['ready], 
 ]
 
 [endsect]
-
+[/////////////////////////////]
 [section:destructor Destructor]
 
     ~promise();
@@ -1295,7 +1407,7 @@ associated with that task to ['ready] with a __broken_promise__ exception as the
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////]
 [section:get_future Member Function `get_future()`]
 
     __unique_future__<R> get_future();
@@ -1311,7 +1423,7 @@ memory necessary could not be allocated.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////]
 [section:set_value Member Function `set_value()`]
 
     void set_value(R&& r);
@@ -1343,7 +1455,7 @@ __shared_future_has_value__ for those futures shall return `true`.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////////////]
 [section:set_exception Member Function `set_exception()`]
 
     void set_exception(boost::exception_ptr e);
@@ -1373,7 +1485,7 @@ __shared_future_has_exception__ for those futures shall return `true`.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////////////////]
 [section:set_value_at_thread_exit Member Function `set_value_at_thread_exit()`]
 
     void set_value_at_thread_exit(R&& r);
@@ -1402,7 +1514,7 @@ associated with the current thread have been destroyed.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////////////////////////]
 [section:set_exception_at_thread_exit Member Function `set_exception_at_thread_exit()`]
 
     void set_exception_at_thread_exit(boost::exception_ptr e);
@@ -1430,6 +1542,7 @@ __shared_future_has_exception__ for those futures shall return `true`.]]
 ]
 
 [endsect]
+[/////////////////////////////////////////////////////////////////////////]
 [section:set_wait_callback Member Function `set_wait_callback()` EXTENSION]
 
     template<typename F>
@@ -1451,7 +1564,7 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 [endsect]
 
 [endsect]
-
+[////////////////////////////////////////////////////]
 [section:packaged_task `packaged_task` class template]
 
     template<typename S>
@@ -1462,8 +1575,8 @@ or __shared_future__ associated with this result, and the result is not ['ready]
     class packaged_task<R(ArgTypes)>
     {
     public:
-      packaged_task(packaged_task&);// = delete;
-      packaged_task& operator=(packaged_task&);// = delete;
+      packaged_task(packaged_task const&) = delete;
+      packaged_task& operator=(packaged_task const&) = delete;
 
       // construction and destruction
       packaged_task() noexcept;
@@ -1529,7 +1642,7 @@ as invoking `f`.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////]
 [section:alloc_constructor Allocator Constructor]
 
       template <class Allocator>
@@ -1553,7 +1666,7 @@ structures could not be allocated.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////]
 [section:move_constructor Move Constructor]
 
     packaged_task(packaged_task && other);
@@ -1570,8 +1683,7 @@ with no associated task.]]
 ]
 
 [endsect]
-
-
+[////////////////////////////////////////////////]
 [section:move_assignment Move Assignment Operator]
 
     packaged_task& operator=(packaged_task && other);
@@ -1589,7 +1701,7 @@ was already a task associated with `*this`, and that task has not been invoked, 
 ]
 
 [endsect]
-
+[/////////////////////////////]
 [section:destructor Destructor]
 
     ~packaged_task();
@@ -1604,7 +1716,7 @@ associated with that task to ['ready] with a __broken_promise__ exception as the
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////]
 [section:get_future Member Function `get_future()`]
 
     __unique_future__<R> get_future();
