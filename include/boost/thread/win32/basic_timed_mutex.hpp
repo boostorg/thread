@@ -81,8 +81,10 @@ namespace boost
 
                     do
                     {
-                        BOOST_VERIFY(win32::WaitForSingleObject(
-                                         sem,::boost::detail::win32::infinite)==0);
+                        unsigned const retval(win32::WaitForSingleObject(sem, ::boost::detail::win32::infinite));
+                        BOOST_VERIFY(0 == retval || ::boost::detail::win32::wait_abandoned == retval);
+//                        BOOST_VERIFY(win32::WaitForSingleObject(
+//                                         sem,::boost::detail::win32::infinite)==0);
                         clear_waiting_and_try_lock(old_count);
                         lock_acquired=!(old_count&lock_flag_value);
                     }
