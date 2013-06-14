@@ -6,6 +6,7 @@
 ]
 
 
+[///////////////////////////////////]
 [section:reference Futures Reference]
 
   //#include <boost/thread/futures.hpp>
@@ -94,9 +95,9 @@
     void wait_for_all(F1& f1,Fs&... fs); // EXTENSION
 
     template<typename Iterator>
-    Iterator wait_for_any(Iterator begin,Iterator end);
+    Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
     template<typename F1,typename... Fs>
-    unsigned wait_for_any(F1& f1,Fs&... fs);
+    unsigned wait_for_any(F1& f1,Fs&... fs); // EXTENSION
     
     template <typename T>
     future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
@@ -114,6 +115,7 @@
     shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
     shared_future<void> make_shared_future();  // DEPRECATED
     
+[////////////////////////////////////////]
 [section:future_state Enumeration `state`]
 
     namespace future_state
@@ -123,8 +125,7 @@
 
 
 [endsect]
-
-
+[/////////////////////////////////////////////]
 [section:future_errc Enumeration `future_errc`]
 
   enum class future_errc
@@ -139,6 +140,7 @@
  The enum values of future_errc are distinct and not zero. 
  
 [endsect]
+[///////////////////////////////////]
 [section:launch Enumeration `launch`]
 
     enum class launch
@@ -151,6 +153,7 @@
 The enum type launch is a bitmask type with launch::async and launch::deferred denoting individual bits. 
 
 [endsect]
+[///////////////////////////////////////////////////////////////////////////]
 [section:is_error_code_enum Specialization `is_error_code_enum<future_errc>`]
 
   namespace system
@@ -161,6 +164,7 @@ The enum type launch is a bitmask type with launch::async and launch::deferred d
   }
 
 [endsect]
+[///////////////////////////////////////////////////////////////]
 [section:make_error_code Non-member function `make_error_code()`]
 
   namespace system
@@ -175,6 +179,7 @@ The enum type launch is a bitmask type with launch::async and launch::deferred d
 ]  
 
 [endsect]
+[/////////////////////////////////////////////////////////////////////////]
 [section:make_error_condition Non-member function `make_error_condition()`]
 
   namespace system
@@ -189,6 +194,7 @@ The enum type launch is a bitmask type with launch::async and launch::deferred d
 ]  
 
 [endsect]
+[///////////////////////////////////////////////////////////////]
 [section:future_category Non-member function `future_category()`]
 
   const system::error_category& future_category();
@@ -203,6 +209,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 ]  
 
 [endsect]
+[/////////////////////////////////////////]
 [section:future_error Class `future_error`]
 
   class future_error
@@ -214,6 +221,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       const system::error_code& code() const no_except;
   };
 
+[///////////////////////////////]
 [section:constructor Constructor]
 
       future_error(system::error_code ec);
@@ -229,6 +237,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 ]
 
 [endsect]
+[/////////////////////////////////////]
 [section:code Member function `code()`]
 
       const system::error_code& code() const no_except;
@@ -243,7 +252,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 
 
 [endsect]
-
+[/////////////////////////////////////////////////]
 [section:future_status Enumeration `future_status`]
 
   enum class future_status {
@@ -251,7 +260,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
   };
 
 [endsect]
-
+[////////////////////////////////////////////////////]
 [section:unique_future __unique_future class template]
 
     template <typename R>
@@ -333,6 +342,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 
 [endsect]
 
+[/////////////////////////////]
 [section:destructor Destructor]
 
     ~__unique_future__();
@@ -937,6 +947,7 @@ There are not too much tests yet, so it is possible that you can find out some t
             
     };
 
+[///////////////////////////////////////////////]
 [section:default_constructor Default Constructor]
 
     shared_future();
@@ -1327,6 +1338,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
       void set_wait_callback(F f); // EXTENSION
     };
 
+[///////////////////////////////////////////////]
 [section:default_constructor Default Constructor]
 
     promise();
@@ -1613,6 +1625,7 @@ or __shared_future__ associated with this result, and the result is not ['ready]
       void set_wait_callback(F f);  // EXTENSION
     };
 
+[/////////////////////////////////////////]
 [section:task_constructor Task Constructor]
 
     packaged_task(R(*f)(ArgTypes...));
@@ -1731,7 +1744,7 @@ __packaged_task__. __future_already_retrieved__ if the future associated with th
 ]
 
 [endsect]
-
+[////////////////////////////////////////////////////]
 [section:call_operator Member Function `operator()()`]
 
     void operator()();
@@ -1753,7 +1766,7 @@ shared state associated with this task are woken.]]
 ]
 
 [endsect]
-
+[///////////////////////////////////////////////////////////////////////////////]
 [section:make_ready_at_thread_exit Member Function `make_ready_at_thread_exit()`]
 
       void make_ready_at_thread_exit(ArgTypes...);
@@ -1776,8 +1789,7 @@ duration associated with the current thread have been destroyed.]]
 ]
 
 [endsect]
-
-
+[///////////////////////////////////////]
 [section:reset Member Function `reset()`]
 
       void reset();
@@ -1792,7 +1804,7 @@ __packaged_task__.]]
 ]
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////////////]
 [section:set_wait_callback Member Function `set_wait_callback()` EXTENSION]
 
     template<typename F>
@@ -1816,8 +1828,7 @@ __packaged_task__.]]
 
 
 [endsect]
-
-
+[//////////////////////////////////////////////////////]
 [section:decay_copy  Non-member function `decay_copy()`]
   template <class T>
   typename decay<T>::type decay_copy(T&& v)
@@ -1826,7 +1837,7 @@ __packaged_task__.]]
   }
 
 [endsect]
-
+[///////////////////////////////////////////]
 [section:async Non-member function `async()`]
 
    
@@ -1984,24 +1995,23 @@ with the return from the last function that releases the shared state, whichever
 
 
 [endsect]
-
-
-[section:wait_for_any Non-member function `wait_for_any()`]
+[/////////////////////////////////////////////////////////////////////]
+[section:wait_for_any Non-member function `wait_for_any()` - EXTENSION]
 
     template<typename Iterator>
-    Iterator wait_for_any(Iterator begin,Iterator end);
+    Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
 
     template<typename F1,typename F2>
-    unsigned wait_for_any(F1& f1,F2& f2);
+    unsigned wait_for_any(F1& f1,F2& f2); // EXTENSION
 
     template<typename F1,typename F2,typename F3>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3);
+    unsigned wait_for_any(F1& f1,F2& f2,F3& f3); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4);
+    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5);
+    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
 
 [variablelist
 
@@ -2025,23 +2035,23 @@ with any of the futures being waited for.  `std::bad_alloc` if memory could not 
 
 
 [endsect]
-
-[section:wait_for_all Non-member function `wait_for_all()`]
+[/////////////////////////////////////////////////////////////////////]
+[section:wait_for_all Non-member function `wait_for_all()` - EXTENSION]
 
     template<typename Iterator>
-    void wait_for_all(Iterator begin,Iterator end);
+    void wait_for_all(Iterator begin,Iterator end); // EXTENSION
 
     template<typename F1,typename F2>
-    void wait_for_all(F1& f1,F2& f2);
+    void wait_for_all(F1& f1,F2& f2); // EXTENSION
 
     template<typename F1,typename F2,typename F3>
-    void wait_for_all(F1& f1,F2& f2,F3& f3);
+    void wait_for_all(F1& f1,F2& f2,F3& f3); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4>
-    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4);
+    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5);
+    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
 
 [variablelist
 
@@ -2060,7 +2070,7 @@ __unique_future__ or __shared_future__.]]
 
 
 [endsect]
-
+[/////////////////////////////////////////////////////////////////////////////]
 [section:make_ready_future Non-member function `make_ready_future()` EXTENSION]
 
     template <typename T>
@@ -2104,7 +2114,7 @@ Otherwise the value is copied to the shared state of the returned function.
 ]
     
 [endsect]
-
+[//////////////////////////////////////////////////////////////////]
 [section:make_future Non-member function `make_future()` DEPRECATED]
 
     template <typename T>
@@ -2138,9 +2148,9 @@ Otherwise the value is copied to the shared state of the returned function.
 [[See:] [`make_ready_future()`]]
 
 ]
-
-    
+   
 [endsect]
+[////////////////////////////////////////////////////////////////////////////////]
 [section:make_shared_future Non-member function `make_shared_future()` DEPRECATED]
 
     template <typename T>
