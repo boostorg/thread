@@ -182,10 +182,12 @@ For now, let's make a couple of enhancements to the `lock_guard` class template 
 We'll call the enhanced version `strict_lock`. Essentially, a `strict_lock`'s role is only to live on the stack as an automatic variable. 
 `strict_lock` must adhere to a non-copy and non-alias policy. 
 `strict_lock` disables copying by making the copy constructor and the assignment operator private. 
-While we're at it, let's disable operator new and operator delete; 
+While we're at it, let's disable operator new and operator delete. 
+
+[/
 `strict_lock` are not intended to be allocated on the heap. 
 `strict_lock` avoids aliasing by using a slightly less orthodox and less well-known technique: disable address taking.
-
+]
 
     template <typename Lockable>
     class strict_lock  {
@@ -229,6 +231,7 @@ Silence can be sometimes louder than words-what's forbidden to do with a `strict
     // ok, Bar takes a reference to strict_lock<BankAccount>
     extern void Bar(strict_lock<BankAccount>&);
 
+[/
 * You cannot allocate a `strict_lock` on the heap. However, you still can put `strict_lock`s on the heap if they're members of a class.
 
     strict_lock<BankAccount>* pL =
@@ -250,7 +253,7 @@ Silence can be sometimes louder than words-what's forbidden to do with a `strict
     strict_lock<BankAccount>& rAlias = myLock; // ok
 
 Fortunately, references don't engender as bad aliasing as pointers because they're much less versatile (references cannot be copied or reseated).
-
+]
 [/* You can even make `strict_lock` final; that is, impossible to derive from. This task is left in the form of an exercise to the reader.
 ]
 
@@ -399,7 +402,7 @@ The solution is to use a little bridge template `externally_locked` that control
   
       T& get(strict_lock<Lockable>& lock) {
   
-  #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME  // define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME if you don't want to check locker check the same lockable
+  #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
           if (!lock.owns_lock(&lockable_)) throw lock_error(); run time check throw if not locks the same
   #endif
           return obj_;
@@ -479,7 +482,7 @@ We need a way to transfer the ownership from the `unique_lock` to a `strict_lock
 
 In order to make this code compilable we need to store either a Lockable or a `unique_lock<Lockable>` reference depending on the constructor. Store which kind of reference we have stored,and in the destructor call either to the Lockable `unlock` or restore the ownership.
 
-This seams too complicated to me. Another possibility is to define a nested strict lock class. The drawback is that instead of having only one strict lock we have two and we need either to duplicate every function taking a `strict\_lock` or make these function templates functions. The problem with template functions is that we don't profit anymore of the C++ type system. We must add some static metafunction that check that the Locker parameter is a strict lock. The problem is that we can not really check this or can we?. The `is_strict_lock` metafunction must be specialized by the strict lock developer. We need to belive it "sur parole". The advantage is that now we can manage with more than two strict locks without changing our code. Ths is really nice.
+This seams too complicated to me. Another possibility is to define a nested strict lock class. The drawback is that instead of having only one strict lock we have two and we need either to duplicate every function taking a `strict_lock` or make these function templates functions. The problem with template functions is that we don't profit anymore of the C++ type system. We must add some static metafunction that check that the Locker parameter is a strict lock. The problem is that we can not really check this or can we?. The `is_strict_lock` metafunction must be specialized by the strict lock developer. We need to belive it "sur parole". The advantage is that now we can manage with more than two strict locks without changing our code. Ths is really nice.
 
 Now we need to state that both classes are `strict_lock`s.
 
@@ -509,7 +512,7 @@ First `nested_strict_lock` class will store on a temporary lock the `Locker`, an
           : lock_(lock)  // Store reference to locker
           , tmp_lock_(lock.move()) // Move ownership to temporaty locker 
       {
-          #ifndef BOOST_THREAD_STRCIT_LOCKER_DONT_CHECK_OWNERSHIP  // Define BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP if you don't want to check locker ownership
+          #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
           if (tmp_lock_.mutex()==0) {
               lock_=tmp_lock_.move(); // Rollback for coherency purposes 
               throw lock_error();
@@ -520,23 +523,28 @@ First `nested_strict_lock` class will store on a temporary lock the `Locker`, an
       ~nested_strict_lock() {
           lock_=tmp_lock_.move(); // Move ownership to nesting locker 
       }
-      typedef bool (nested_strict_lock::*bool_type)() const;
-      operator bool_type() const { return &nested_strict_lock::owns_lock; }
-      bool operator!() const { return false; }
       bool owns_lock() const { return true; }
       lockable_type* mutex() const { return tmp_lock_.mutex(); }
       bool owns_lock(lockable_type* l) const { return l==mutex(); }
   
-      BOOST_ADRESS_OF_DELETE(nested_strict_lock)
-      BOOST_HEAP_ALLOCATEION_DELETE(nested_strict_lock)
-      BOOST_DEFAULT_CONSTRUCTOR_DELETE(nested_strict_lock) 8
-      BOOST_COPY_CONSTRUCTOR_DELETE(nested_strict_lock) 9
-      BOOST_COPY_ASSIGNEMENT_DELETE(nested_strict_lock) 10
   
   private:
       Locker& lock_;
       Locker tmp_lock_;
   };
+
+[/
+      typedef bool (nested_strict_lock::*bool_type)() const;
+      operator bool_type() const { return &nested_strict_lock::owns_lock; }
+      bool operator!() const { return false; }
+      
+      BOOST_ADRESS_OF_DELETE(nested_strict_lock)
+      BOOST_HEAP_ALLOCATEION_DELETE(nested_strict_lock)
+      BOOST_DEFAULT_CONSTRUCTOR_DELETE(nested_strict_lock)
+      BOOST_COPY_CONSTRUCTOR_DELETE(nested_strict_lock)
+      BOOST_COPY_ASSIGNEMENT_DELETE(nested_strict_lock)
+      
+]
 
 The `externally_locked` get function is now a template function taking a Locker as parameters instead of a `strict_lock`. 
 We can add test in debug mode that ensure that the Lockable object is locked.
@@ -555,7 +563,7 @@ We can add test in debug mode that ensure that the Lockable object is locked.
   #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_OWNERSHIP  // define BOOST_THREAD_EXTERNALLY_LOCKED_NO_CHECK_OWNERSHIP if you don't want to check locker ownership
           if (! lock ) throw lock_error(); // run time check throw if no locked 
   #endif
-  #ifndef BOOST_THREAD_EXTERNALLY_LOCKED_DONT_CHECK_SAME
+  #ifdef BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
           if (!lock.owns_lock(&lockable_)) throw lock_error();
   #endif
           return obj_;

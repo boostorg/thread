@@ -344,14 +344,14 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 
 [endsect]
 
-[section:shared_lockable `SharedLockable` Concept -- EXTENSION]
+[section:shared_lockable `SharedLockable` Concept -- C++14]
 
   // #include <boost/thread/lockable_concepts.hpp> 
 
   namespace boost 
   {
     template<typename L>
-    class SharedLockable;  // EXTENSION
+    class SharedLockable;  // C++14
   }
 
 
@@ -1205,9 +1205,9 @@ The following classes are models of `StrictLock`:
     template<typename Mutex>
     void swap(unique_lock <Mutex>& lhs, unique_lock <Mutex>& rhs);
     template<typename Lockable>
-    class shared_lock; // EXTENSION
+    class shared_lock; // C++14
     template<typename Mutex>
-    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs); // EXTENSION
+    void swap(shared_lock<Mutex>& lhs,shared_lock<Mutex>& rhs); // C++14
     template<typename Lockable>
     class upgrade_lock; // EXTENSION
     template<typename Mutex>
@@ -1235,13 +1235,13 @@ The following classes are models of `StrictLock`:
         unique_lock(Lockable& m_,try_to_lock_t);
 
     #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSION
-        unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t)
+        unique_lock(shared_lock<mutex_type>&& sl, try_to_lock_t); // C++14 
         template <class Clock, class Duration>
         unique_lock(shared_lock<mutex_type>&& sl,
-                    const chrono::time_point<Clock, Duration>& abs_time);
+                    const chrono::time_point<Clock, Duration>& abs_time); // C++14
         template <class Rep, class Period>
         unique_lock(shared_lock<mutex_type>&& sl,
-                    const chrono::duration<Rep, Period>& rel_time)
+                    const chrono::duration<Rep, Period>& rel_time); // C++14
     #endif
 
         template <class Clock, class Duration>
@@ -1253,7 +1253,7 @@ The following classes are models of `StrictLock`:
         unique_lock(unique_lock const&) = delete;
         unique_lock& operator=(unique_lock const&) = delete;
         unique_lock(unique_lock<Lockable>&& other) noexcept;
-        explicit unique_lock(upgrade_lock<Lockable>&& other) noexcept;
+        explicit unique_lock(upgrade_lock<Lockable>&& other) noexcept; // EXTENSION
 
         unique_lock& operator=(unique_lock<Lockable>&& other) noexcept;
 
@@ -1583,7 +1583,7 @@ __owns_lock_ref__ returns `false`.]]
 
 [endsect]
 
-[section:shared_lock Class template `shared_lock` - EXTENSION]
+[section:shared_lock Class template `shared_lock` - C++14]
 
     // #include <boost/thread/locks.hpp>
     // #include <boost/thread/lock_types.hpp> 
@@ -1621,7 +1621,7 @@ __owns_lock_ref__ returns `false`.]]
         void unlock();
 
         // Conversion from upgrade locking
-        explicit shared_lock(upgrade_lock<Lockable> && other);
+        explicit shared_lock(upgrade_lock<Lockable> && other); // EXTENSION
 
         // Conversion from exclusive locking
         explicit shared_lock(unique_lock<Lockable> && other);
