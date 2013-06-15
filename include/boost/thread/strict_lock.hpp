@@ -77,7 +77,7 @@ namespace boost
     /**
      * @return the owned mutex.
      */
-    const mutex_type* mutex() const BOOST_NOEXCEPT
+    mutex_type* mutex() const BOOST_NOEXCEPT
     {
       return &mtx_;
     }
@@ -182,7 +182,7 @@ namespace boost
     /**
      * return @c the owned mutex.
      */
-    const mutex_type* mutex() const BOOST_NOEXCEPT
+    mutex_type* mutex() const BOOST_NOEXCEPT
     {
       return tmp_lk_.mutex();
     }

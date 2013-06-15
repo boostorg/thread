@@ -263,8 +263,11 @@ rule requirements ( properties * )
                 result = <build>no ;
             }
         }
+        result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+    } else {
+        result += <define>BOOST_THREAD_USES_CHRONO ;
+        result += <library>/boost/chrono//boost_chrono ;
     }
-    result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
 
     if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)
     {

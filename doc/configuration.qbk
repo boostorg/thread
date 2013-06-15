@@ -11,7 +11,7 @@
 
 [table Default Values for Configurable Features
     [[Feature]                  [Anti-Feature]               [V2]  [V3]  [V4]  ]
-    [[USES_CHRONO]              [DONT_USE_CHRONO]            [YES] [YES] [YES] ]
+    [[USES_CHRONO]              [DONT_USE_CHRONO]            [YES/NO] [YES/NO] [YES/NO] ]
     [[PROVIDES_INTERRUPTIONS]   [DONT_PROVIDE_INTERRUPTIONS] [YES] [YES] [YES]  ]
     [[THROW_IF_PRECONDITION_NOT_SATISFIED]   [-] [NO] [NO] [NO]  ]
 
@@ -31,7 +31,7 @@
     [[PROVIDES_ONCE_CXX11]    [DONT_PROVIDE_ONCE_CXX11]  [NO] [YES] [YES]  ]
     [[USES_MOVE]                [DONT_USE_MOVE]              [NO] [YES] [YES] ]
 
-    [[USES_DATETIME]            [DONT_USE_DATETIME]          [YES] [YES] [YES/NO]  ]
+    [[USES_DATETIME]            [DONT_USE_DATETIME]          [YES/NO] [YES/NO] [YES/NO]  ]
     [[PROVIDES_THREAD_EQ]       [DONT_PROVIDE_THREAD_EQ]     [YES] [YES] [NO]  ]
     [[PROVIDES_CONDITION]       [DONT_PROVIDE_CONDITION]     [YES] [YES] [NO]  ]
     [[PROVIDES_NESTED_LOCKS]    [DONT_PROVIDE_NESTED_LOCKS]  [YES] [YES] [NO]  ]
@@ -46,6 +46,8 @@
 [section:chrono Boost.Chrono]
 
 Boost.Thread uses by default Boost.Chrono for the time related functions and define `BOOST_THREAD_USES_CHRONO` if `BOOST_THREAD_DONT_USE_CHRONO` is not defined. The user should define `BOOST_THREAD_DONT_USE_CHRONO` for compilers that don't work well with Boost.Chrono.
+
+[warning When defined BOOST_THREAD_PLATFORM_WIN32 BOOST_THREAD_USES_CHRONO is defined independently of user settings.]
 
 [endsect]
 
@@ -72,7 +74,7 @@ The Boost.DateTime time related functions introduced in Boost 1.35.0, using the 
 When `BOOST_THREAD_VERSION<=3` && defined BOOST_THREAD_PLATFORM_PTHREAD define `BOOST_THREAD_DONT_USE_DATETIME` if you don't want to use Boost.DateTime related interfaces.
 When `BOOST_THREAD_VERSION>3`  && defined BOOST_THREAD_PLATFORM_PTHREAD define `BOOST_THREAD_USES_DATETIME` if you want to use Boost.DateTime related interfaces.
 
-When defined BOOST_THREAD_PLATFORM_WIN32 BOOST_THREAD_USES_DATETIME is defined by default.
+[warning When defined BOOST_THREAD_PLATFORM_WIN32 BOOST_THREAD_USES_DATETIME is defined independently of user settings.]
 
 [endsect]
 
