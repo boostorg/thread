@@ -1480,6 +1480,7 @@ namespace boost
         base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
         {
         }
+        inline BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R> >) other);
 
         BOOST_THREAD_FUTURE& operator=(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE) other) BOOST_NOEXCEPT
         {
@@ -4164,6 +4165,13 @@ namespace boost
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
   }
+
+  template <typename R>
+  inline BOOST_THREAD_FUTURE<R>::BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R> >) other):
+  base_type(other.unwrap())
+  {
+  }
+
   template <typename R2>
   BOOST_THREAD_FUTURE<R2>
   BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::unwrap()
