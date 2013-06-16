@@ -231,6 +231,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-test test_condition.cpp ]
           [ thread-test test_once.cpp ]
           [ thread-run test_barrier.cpp ]
+          [ thread-run test_barrier_void_fct.cpp ]
+          [ thread-run test_barrier_size_fct.cpp ]
           [ thread-test test_lock_concept.cpp ]
           [ thread-test test_generic_locks.cpp ]
           [ thread-run  test_latch.cpp ]
