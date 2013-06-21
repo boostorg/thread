@@ -23,7 +23,7 @@
       CLASS& operator=(CLASS const&) = delete;
 
 #else // BOOST_NO_CXX11_DELETED_FUNCTIONS
-#if defined(BOOST_MSVC)
+#if defined(BOOST_MSVC) && _MSC_VER >= 1600
 #define BOOST_THREAD_DELETE_COPY_CTOR(CLASS) \
     private: \
       CLASS(CLASS const&); \
