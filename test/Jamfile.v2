@@ -630,6 +630,15 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/null_mutex/try_lock_until_pass.cpp : null_mutex__try_lock_until_p ]
     ;
 
+    test-suite ts_sync_queue
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_queue/single_thread_pass.cpp : sync_queue__single_thread_p ]
+    ;
+
+    test-suite ts_sync_bounded_queue
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/single_thread_pass.cpp : sync_bounded_queue__single_thread_p ]
+    ;
 
     #explicit ts_this_thread ;
     test-suite ts_this_thread
@@ -779,6 +788,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_8586.cpp ]
           #[ thread-run test_8596.cpp ]
           #[ thread-run test_8600.cpp ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_queue__multi_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_queue/multi_thread_pass.cpp : sync_queue__multi_thread_p ]
           
     ;
 
