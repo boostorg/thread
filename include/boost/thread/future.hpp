@@ -4140,7 +4140,7 @@ namespace boost
       parent(f.future_)
       {
       }
-      virtual void wait(bool rethrow)
+      virtual void wait(bool ) // todo see if rethrow must be used
       {
           boost::unique_lock<boost::mutex> lock(mutex);
           parent.get().wait();
