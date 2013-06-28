@@ -17,57 +17,51 @@
 #define BOOST_THREAD_VERSION 4
 
 #include <boost/thread/sync_queue.hpp>
-#include <boost/thread/thread_only.hpp>
 #include <boost/thread/future.hpp>
+#include <boost/thread/barrier.hpp>
 
 #include <boost/detail/lightweight_test.hpp>
 
 struct call_push
 {
   boost::sync_queue<int> &q_;
-  boost::shared_future<void> ready_;
-  boost::promise<void> &op_ready_;
+  boost::barrier& go_;
 
-  call_push(boost::sync_queue<int> &q, boost::shared_future<void> ready, boost::promise<void> &op_ready) :
-    q_(q), ready_(ready), op_ready_(op_ready)
+  call_push(boost::sync_queue<int> &q, boost::barrier &go) :
+    q_(q), go_(go)
   {
   }
   typedef void result_type;
   void operator()()
   {
-    op_ready_.set_value();
-    ready_.wait();
+    go_.count_down_and_wait();
     q_.push(42);
-  }
 
+  }
 };
 
 struct call_pull
 {
   boost::sync_queue<int> &q_;
-  boost::shared_future<void> ready_;
-  boost::promise<void> &op_ready_;
+  boost::barrier& go_;
 
-  call_pull(boost::sync_queue<int> &q, boost::shared_future<void> ready, boost::promise<void> &op_ready) :
-    q_(q), ready_(ready), op_ready_(op_ready)
+  call_pull(boost::sync_queue<int> &q, boost::barrier &go) :
+    q_(q), go_(go)
   {
   }
   typedef int result_type;
   int operator()()
   {
-    op_ready_.set_value();
-    ready_.wait();
+    go_.count_down_and_wait();
     return q_.pull();
   }
-
 };
 
 void test_concurrent_push_and_pull_on_empty_queue()
 {
   boost::sync_queue<int> q;
 
-  boost::promise<void> go, push_ready, pull_ready;
-  boost::shared_future<void> ready(go.get_future());
+  boost::barrier go(2);
 
   boost::future<void> push_done;
   boost::future<int> pull_done;
@@ -76,31 +70,26 @@ void test_concurrent_push_and_pull_on_empty_queue()
   {
     push_done=boost::async(boost::launch::async,
 #if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,ready,&push_ready]()
+        [&q,&go]()
         {
-          push_ready.set_value();
-          ready.wait();
+          go.wait();
           q.push(42);
         }
 #else
-        call_push(q,ready,push_ready)
+        call_push(q,go)
 #endif
     );
     pull_done=boost::async(boost::launch::async,
 #if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,ready,&pull_ready]()
+        [&q,&go]()
         {
-          pull_ready.set_value();
-          ready.wait();
+          go.wait();
           return q.pull();
         }
 #else
-        call_pull(q,ready,pull_ready)
+        call_pull(q,go)
 #endif
     );
-    push_ready.get_future().wait();
-    pull_ready.get_future().wait();
-    go.set_value();
 
     push_done.get();
     BOOST_TEST_EQ(pull_done.get(), 42);
@@ -108,7 +97,6 @@ void test_concurrent_push_and_pull_on_empty_queue()
   }
   catch (...)
   {
-    go.set_value();
     BOOST_TEST(false);
   }
 }
@@ -117,10 +105,7 @@ void test_concurrent_push_on_empty_queue()
 {
   boost::sync_queue<int> q;
   const unsigned int n = 3;
-  boost::promise<void> go;
-  boost::shared_future<void> ready(go.get_future());
-
-  boost::promise<void> push_ready[n];
+  boost::barrier go(n);
   boost::future<void> push_done[n];
 
   try
@@ -128,23 +113,19 @@ void test_concurrent_push_on_empty_queue()
     for (unsigned int i =0; i< n; ++i)
       push_done[i]=boost::async(boost::launch::async,
 #if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,ready,&push_ready,i]()
+        [&q,&go]()
         {
-          push_ready[i].set_value();
-          ready.wait();
+          go.wait();
           q.push(42);
         }
 #else
-        call_push(q,ready,push_ready[i])
+        call_push(q,go)
 #endif
     );
 
     for (unsigned int i = 0; i < n; ++i)
-      push_ready[i].get_future().wait();
-    go.set_value();
-
-    for (unsigned int i = 0; i < n; ++i)
       push_done[i].get();
+
     BOOST_TEST(!q.empty());
     for (unsigned int i =0; i< n; ++i)
       BOOST_TEST_EQ(q.pull(), 42);
@@ -153,7 +134,6 @@ void test_concurrent_push_on_empty_queue()
   }
   catch (...)
   {
-    go.set_value();
     BOOST_TEST(false);
   }
 }
@@ -162,10 +142,8 @@ void test_concurrent_pull_on_queue()
 {
   boost::sync_queue<int> q;
   const unsigned int n = 3;
-  boost::promise<void> go;
-  boost::shared_future<void> ready(go.get_future());
+  boost::barrier go(n);
 
-  boost::promise<void> pull_ready[n];
   boost::future<int> pull_done[n];
 
   try
@@ -176,20 +154,15 @@ void test_concurrent_pull_on_queue()
     for (unsigned int i =0; i< n; ++i)
       pull_done[i]=boost::async(boost::launch::async,
 #if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,ready,&pull_ready,i]()
+        [&q,&go]()
         {
-          pull_ready[i].set_value();
-          ready.wait();
+          go.wait();
           return q.pull();
         }
 #else
-        call_pull(q,ready,pull_ready[i])
+        call_pull(q,go)
 #endif
     );
-
-    for (unsigned int i = 0; i < n; ++i)
-      pull_ready[i].get_future().wait();
-    go.set_value();
 
     for (unsigned int i = 0; i < n; ++i)
       BOOST_TEST_EQ(pull_done[i].get(), 42);
@@ -197,7 +170,6 @@ void test_concurrent_pull_on_queue()
   }
   catch (...)
   {
-    go.set_value();
     BOOST_TEST(false);
   }
 }
