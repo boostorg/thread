@@ -23,8 +23,8 @@ int main()
       boost::sync_bounded_queue<int> q(2);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
-      BOOST_TEST_EQ(q.capacity(), 2);
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST_EQ(q.capacity(), 2u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -34,7 +34,7 @@ int main()
       BOOST_TEST(! q.try_pull(i));
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -43,7 +43,7 @@ int main()
       BOOST_TEST(! q.try_pull());
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -52,7 +52,7 @@ int main()
       q.push(1);
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -62,7 +62,7 @@ int main()
       q.push(2);
       BOOST_TEST(! q.empty());
       BOOST_TEST( q.full());
-      BOOST_TEST_EQ(q.size(), 2);
+      BOOST_TEST_EQ(q.size(), 2u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -72,7 +72,7 @@ int main()
       q.push(i);
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -81,7 +81,7 @@ int main()
       BOOST_TEST(q.try_push(1));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -91,7 +91,7 @@ int main()
       BOOST_TEST(q.try_push(i));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -100,7 +100,7 @@ int main()
       BOOST_TEST(q.try_push(boost::no_block, 1));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -112,7 +112,7 @@ int main()
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -123,7 +123,7 @@ int main()
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -135,7 +135,7 @@ int main()
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -147,7 +147,7 @@ int main()
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -158,7 +158,7 @@ int main()
       BOOST_TEST_EQ(*i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -169,7 +169,7 @@ int main()
       BOOST_TEST(! q.try_push(3));
       BOOST_TEST(! q.empty());
       BOOST_TEST( q.full());
-      BOOST_TEST_EQ(q.size(), 2);
+      BOOST_TEST_EQ(q.size(), 2u);
       BOOST_TEST(! q.closed());
   }
   {
@@ -180,7 +180,7 @@ int main()
       BOOST_TEST(q.try_pull());
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1);
+      BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
 
@@ -190,7 +190,7 @@ int main()
       q.close();
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(q.closed());
   }
   {
@@ -203,7 +203,7 @@ int main()
       } catch (...) {
         BOOST_TEST(q.empty());
         BOOST_TEST(! q.full());
-        BOOST_TEST_EQ(q.size(), 0);
+        BOOST_TEST_EQ(q.size(), 0u);
         BOOST_TEST(q.closed());
       }
   }
@@ -217,7 +217,7 @@ int main()
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0);
+      BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(q.closed());
   }
 
