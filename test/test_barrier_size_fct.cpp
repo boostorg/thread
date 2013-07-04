@@ -20,7 +20,7 @@ namespace {
 long global_parameter;
 const int N_THREADS=3;
 
-std::size_t size_fct() {
+unsigned int size_fct() {
   global_parameter++;
   return N_THREADS;
 }

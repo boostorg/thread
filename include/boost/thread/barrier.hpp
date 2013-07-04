@@ -142,7 +142,7 @@ namespace boost
         F funct,
 #endif
         typename enable_if<
-        typename is_same<typename result_of<F>::type, std::size_t>::type, dummy*
+        typename is_same<typename result_of<F>::type, unsigned int>::type, dummy*
         >::type=0
     )
     : m_count(check(count)),
@@ -165,7 +165,7 @@ namespace boost
       )
     {
     }
-    barrier(unsigned int count, std::size_t(*funct)()) :
+    barrier(unsigned int count, unsigned int(*funct)()) :
       m_count(check(count)), m_generation(0),
       fct_(funct
           ? thread_detail::size_completion_function(funct)
