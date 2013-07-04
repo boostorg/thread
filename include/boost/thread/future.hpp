@@ -146,23 +146,23 @@ namespace boost
         {}
     };
 
-        class BOOST_SYMBOL_VISIBLE task_moved:
-            public future_error
-        {
-        public:
-            task_moved():
-              future_error(system::make_error_code(future_errc::no_state))
-            {}
-        };
+    class BOOST_SYMBOL_VISIBLE task_moved:
+        public future_error
+    {
+    public:
+        task_moved():
+          future_error(system::make_error_code(future_errc::no_state))
+        {}
+    };
 
-            class promise_moved:
-                public future_error
-            {
-            public:
-                  promise_moved():
-                  future_error(system::make_error_code(future_errc::no_state))
-                {}
-            };
+    class promise_moved:
+        public future_error
+    {
+    public:
+          promise_moved():
+          future_error(system::make_error_code(future_errc::no_state))
+        {}
+    };
 
     namespace future_state
     {
@@ -3630,7 +3630,7 @@ namespace boost
 #if 0
   template<typename CLOSURE>
   make_future(CLOSURE closure) -> BOOST_THREAD_FUTURE<decltype(closure())> {
-      typedef decltype(closure() T;
+      typedef decltype(closure()) T;
       promise<T> p;
       try
       {
@@ -3717,7 +3717,7 @@ namespace boost
           F& f, BOOST_THREAD_FWD_REF(Fp) c
           ) :
       parent(f.future_),
-      continuation(c)
+      continuation(boost::move(c))
       {
       }
 
@@ -3804,7 +3804,7 @@ namespace boost
           ) :
           parent(f.future_),
           //continuation(boost::forward<Fp>(c)
-          continuation(c)
+          continuation(boost::move(c))
       {
         this->set_deferred();
       }
@@ -3922,7 +3922,11 @@ namespace boost
     }
     else
     {
-      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+                  lock, *this, boost::forward<F>(func)
+              )));
+
     }
 
   }
@@ -3951,7 +3955,10 @@ namespace boost
     }
     else
     {
-      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+          lock, *this, boost::forward<F>(func)
+      );
     }
   }
 
@@ -4033,7 +4040,10 @@ namespace boost
     }
     else
     {
-      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
+                  lock, *this, boost::forward<F>(func)
+              )));
     }
 
   }
@@ -4063,7 +4073,10 @@ namespace boost
     }
     else
     {
-      BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
+      return boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
+          lock, *this, boost::forward<F>(func)
+      );
     }
   }
   namespace detail
