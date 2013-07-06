@@ -182,7 +182,7 @@ namespace boost
       if (--m_count == 0)
       {
         m_generation++;
-        m_count = fct_();
+        m_count = static_cast<unsigned int>(fct_());
         BOOST_ASSERT(m_count != 0);
         m_cond.notify_all();
         return true;
