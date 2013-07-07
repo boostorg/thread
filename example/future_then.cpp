@@ -19,7 +19,7 @@ int p1()
   return 123;
 }
 
-int p2(boost::future<int>& f)
+int p2(boost::future<int> f)
 {
   BOOST_THREAD_LOG << "<P2" << BOOST_THREAD_END_LOG;
   try
@@ -38,7 +38,7 @@ int p2(boost::future<int>& f)
   }
   BOOST_THREAD_LOG << "P2>" << BOOST_THREAD_END_LOG;
 }
-int p2s(boost::shared_future<int>& f)
+int p2s(boost::shared_future<int> f)
 {
   BOOST_THREAD_LOG << "<P2" << BOOST_THREAD_END_LOG;
   try
