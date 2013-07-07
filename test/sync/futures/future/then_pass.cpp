@@ -29,7 +29,7 @@ int p1()
   return 1;
 }
 
-int p2(boost::future<int>& f)
+int p2(boost::future<int> f)
 {
   BOOST_THREAD_LOG << "p2 <" << &f << BOOST_THREAD_END_LOG;
   BOOST_TEST(f.valid());
@@ -39,7 +39,7 @@ int p2(boost::future<int>& f)
   return 2 * i;
 }
 
-void p3(boost::future<int>& f)
+void p3(boost::future<int> f)
 {
   BOOST_THREAD_LOG << "p3 <" << &f << BOOST_THREAD_END_LOG;
   BOOST_TEST(f.valid());
@@ -57,6 +57,7 @@ int main()
     BOOST_TEST(f1.valid());
     boost::future<int> f2 = f1.then(&p2);
     BOOST_TEST(f2.valid());
+    BOOST_TEST(! f1.valid());
     try
     {
       BOOST_TEST(f2.get()==2);
