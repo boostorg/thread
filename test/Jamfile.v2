@@ -782,7 +782,6 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_7720.cpp ]
           #[ thread-run test_7666.cpp ]
           #[ thread-run test_7755.cpp ]
-          #[ thread-run ../example/unwrap.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/std_async_test.cpp ]

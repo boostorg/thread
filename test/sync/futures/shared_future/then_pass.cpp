@@ -28,7 +28,7 @@ int p1()
   return 1;
 }
 
-int p2(boost::shared_future<int>& f)
+int p2(boost::shared_future<int> f)
 {
   BOOST_THREAD_LOG << "p2 <" << &f << BOOST_THREAD_END_LOG;
   BOOST_TEST(f.valid());
@@ -38,7 +38,7 @@ int p2(boost::shared_future<int>& f)
   return 2 * i;
 }
 
-void p3(boost::shared_future<int>& f)
+void p3(boost::shared_future<int> f)
 {
   BOOST_THREAD_LOG << "p3 <" << &f << BOOST_THREAD_END_LOG;
   BOOST_TEST(f.valid());
