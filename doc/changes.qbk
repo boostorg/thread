@@ -8,23 +8,24 @@
 
 [section:changes History]
 
-[/
+[/]
 [heading Version 4.2.0 - boost 1.55]
 
 [*New Features:]
 
-* [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Synchro:Add externally locked streams.
-* [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Synchro:Add concurrent queue.
-* [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then.
+* [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Synchro: Add concurrent queue
 * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Synchro: Add a latch class.
+* [@http://svn.boost.org/trac/boost/ticket/8519 #8519] Synchro: Update class barrier with a completion function.
+
 * [@http://svn.boost.org/trac/boost/ticket/8615 #8615] Async: Replace make_future/make_shared_future by make_ready_future.
-* [@http://svn.boost.org/trac/boost/ticket/8627 #8627] Async: Add future<>::unwrap.
+* [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then.
+* [@http://svn.boost.org/trac/boost/ticket/8627 #8627] Async: Add future<>::unwrap and unwrapping constructor.
 * [@http://svn.boost.org/trac/boost/ticket/8677 #8677] Async: Add future<>::get_or.
 * [@http://svn.boost.org/trac/boost/ticket/8678 #8678] Async: Add future<>::fallback_to.
 
 [*Fixed Bugs:]
 
-]
+[/]
 
 [heading Version 4.1.0 - boost 1.54]
 
@@ -416,10 +417,7 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
 
 # Add some features based on C++ proposals, in particular
-  * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Add externally locked streams
-  * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Add concurrent queue
-  * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Sync: Add a latch class
-  * [@http://svn.boost.org/trac/boost/ticket/8519 #8519] Sync: Add a completion_latch class
+  * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Synchro: Add externally locked streams.
   * [@http://svn.boost.org/trac/boost/ticket/8513 #8513] Async: Add a basic thread_pool executor.
   * [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
 
@@ -428,14 +426,10 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/7446 #7446] Async: Add when_any.
   * [@http://svn.boost.org/trac/boost/ticket/7447 #7447] Async: Add when_all.
   * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter.
-  * [@http://svn.boost.org/trac/boost/ticket/8515 #8515] Async: Add shared_future::then.
   * [@http://svn.boost.org/trac/boost/ticket/8516 #8516] Async: Add future/shared_future::then taking a scheduler as parameter.
-  * [@http://svn.boost.org/trac/boost/ticket/8627 #8627] Async: Add future<>::unwrap.
 
 # And some additional extensions related to futures as:
 
-  * [@http://svn.boost.org/trac/boost/ticket/8677 #8677] Async: Add future<>::get_or.
-  * [@http://svn.boost.org/trac/boost/ticket/8678 #8678] Async: Add future<>::fallback_to.
   * [@http://svn.boost.org/trac/boost/ticket/8517 #8517] Async: Add a variadic shared_future::then.
 
 

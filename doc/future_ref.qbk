@@ -836,7 +836,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 ]]
 
-[[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(__unique_future__&)>` that refers to the shared state created by the continuation.]]
+[[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(__unique_future__)>` that refers to the shared state created by the continuation.]]
 
 [[Postconditions:] [
 
@@ -1282,7 +1282,7 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 ]]
 
-[[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(shared_future&)>` that refers to the shared state created by the continuation.]]
+[[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(shared_future)>` that refers to the shared state created by the continuation.]]
 
 [[Postconditions:] [
 
