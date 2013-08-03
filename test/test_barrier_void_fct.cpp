@@ -1,5 +1,3 @@
-// Copyright (C) 2001-2003
-// William E. Kempf
 // (C) Copyright 2013 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
@@ -17,21 +15,22 @@
 
 namespace {
 
+
 // Shared variables for generation barrier test
-const int N_THREADS=3;
-boost::barrier gen_barrier(N_THREADS);
-boost::mutex mutex;
 long global_parameter;
+
+void void_fct() {
+  global_parameter++;
+}
+
+const int N_THREADS=3;
+boost::barrier gen_barrier(N_THREADS, void_fct);
 
 void barrier_thread()
 {
     for (int i = 0; i < 5; ++i)
     {
-        if (gen_barrier.wait())
-        {
-            boost::unique_lock<boost::mutex> lock(mutex);
-            global_parameter++;
-        }
+        gen_barrier.count_down_and_wait();
     }
 }
 

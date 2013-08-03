@@ -1,13 +1,8 @@
-// Copyright (C) 2013 Vicente Botet
+// Copyright (C) 2012-2013 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-
-#include <boost/config.hpp>
-#if ! defined  BOOST_NO_CXX11_DECLTYPE
-#define BOOST_RESULT_OF_USE_DECLTYPE
-#endif
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
@@ -16,27 +11,31 @@
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
 #include <string>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
 
-#if    defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
-  && ! defined BOOST_NO_CXX11_LAMBDAS
+int p1()
+{
+  BOOST_THREAD_LOG << "P1" << BOOST_THREAD_END_LOG;
+  return 123;
+}
+
+boost::future<int> p2()
+{
+  BOOST_THREAD_LOG << "<P2" << BOOST_THREAD_END_LOG;
+  boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+  BOOST_THREAD_LOG << "P2>" << BOOST_THREAD_END_LOG;
+  return boost::move(f1);
+}
 
 int main()
 {
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
-
   try
   {
-    {
-      boost::future<int> f1 = boost::async(boost::launch::async, []()  {return 123;});
-      int result = f1.get();
-      BOOST_THREAD_LOG << "f1 " << result << BOOST_THREAD_END_LOG;
-    }
-    {
-      boost::future<int> f1 = boost::async(boost::launch::async, []() {return 123;});
-      boost::future<int> f2 = f1.then([](boost::future<int> f)  {return 2*f.get(); });
-      int result = f2.get();
-      BOOST_THREAD_LOG << "f2 " << result << BOOST_THREAD_END_LOG;
-    }
+    boost::future<boost::future<int> > outer_future = boost::async(boost::launch::async, &p2);
+    boost::future<int> inner_future = outer_future.unwrap();
+    int i = inner_future.get();
+    BOOST_THREAD_LOG << "i= "<< i << "" << BOOST_THREAD_END_LOG;
   }
   catch (std::exception& ex)
   {
