@@ -768,6 +768,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/swap_pass.cpp : synchronized_value__swap_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/swap_T_pass.cpp : synchronized_value__swap_T_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/synchronize_pass.cpp : synchronized_value__synchronize_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/synchronized_value/call_pass.cpp : synchronized_value__call_p ]
 
     ;
 
@@ -789,7 +790,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_8586.cpp ]
           #[ thread-run test_8596.cpp ]
           #[ thread-run test_8600.cpp ]
-          #[ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_queue__multi_thread_p ]
+          #[ thread-run test_8943.cpp ]
+          #[ thread-run test_8960.cpp ]
           
     ;
 
