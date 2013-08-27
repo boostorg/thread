@@ -23,9 +23,9 @@ In addition to the C++11 standard locks, Boost.Thread provides other locks and s
 In particular, the library provides some lock factories.
 
   template <class Lockable, class Function>
-  auto with_lock_guard(Lockable& m, Function f) -> decltype(fn())
+  auto with_lock_guard(Lockable& m, Function f) -> decltype(f())
   {
-    auto&& _ = boost::make_lock_guard(f);
+    auto&& _ = boost::make_lock_guard(m);
     f();
   }
 
