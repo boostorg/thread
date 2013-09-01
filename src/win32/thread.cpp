@@ -22,6 +22,7 @@
 #include <boost/thread/future.hpp>
 
 #include <boost/assert.hpp>
+#include <boost/cstdint.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
 #endif
@@ -128,7 +129,7 @@ namespace boost
             return ret;
         }
 
-        typedef void* uintptr_t;
+        //typedef void* uintptr_t;
 
         inline uintptr_t _beginthreadex(void* security, unsigned stack_size, unsigned (__stdcall* start_address)(void*),
                                               void* arglist, unsigned initflag, unsigned* thrdaddr)
