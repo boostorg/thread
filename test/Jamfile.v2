@@ -792,7 +792,9 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_8600.cpp ]
           #[ thread-run test_8943.cpp ]
           #[ thread-run test_8960.cpp ]
-          
+          [ thread-run test_9079_a.cpp ]
+          [ thread-run test_9079_b.cpp ]
+
     ;
 
 }
