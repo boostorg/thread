@@ -236,10 +236,10 @@ rule usage-requirements ( properties * )
         }
     }
 
-    if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  || <toolset-vacpp:version>12.1 in $(properties)
-    {
+    #if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  || <toolset-vacpp:version>12.1 in $(properties)
+    #{
       result += <library>/boost/chrono//boost_chrono ;
-    }
+    #}
 
     return $(result) ;
 }
@@ -269,10 +269,10 @@ rule requirements ( properties * )
         result += <library>/boost/chrono//boost_chrono ;
     }
 
-    if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)
-    {
+    #if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)
+    #{
       result += <library>/boost/atomic//boost_atomic ;
-    }
+    #}
 
     return $(result) ;
 }
