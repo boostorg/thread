@@ -239,7 +239,7 @@
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]
-[include latch.qbk]
+[/include latch.qbk]
 [include futures.qbk]
 [/include async_executors.qbk]
 [endsect]
@@ -249,7 +249,7 @@
 
 [section:sds Synchronized Data Structures]
 [include synchronized_value.qbk]
-[include sync_queues_ref.qbk]
+[/include sync_queues_ref.qbk]
 [/include sync_streams.qbk]
 [endsect]
 
