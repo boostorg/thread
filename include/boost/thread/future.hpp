@@ -213,7 +213,7 @@ namespace boost
             bool is_deferred_;
             launch policy_;
             bool is_constructed;
-            boost::mutex mutex;
+            mutable boost::mutex mutex;
             boost::condition_variable waiters;
             waiter_list external_waiters;
             boost::function<void()> callback;
@@ -434,7 +434,7 @@ namespace boost
               get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
             }
 
-            bool has_value()
+            bool has_value() const
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
                 return done && !(exception
@@ -444,7 +444,7 @@ namespace boost
                 );
             }
 
-            bool has_value(unique_lock<boost::mutex>& )
+            bool has_value(unique_lock<boost::mutex>& )  const
             {
                 return done && !(exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -453,7 +453,7 @@ namespace boost
                 );
             }
 
-            bool has_exception()
+            bool has_exception()  const
             {
                 boost::lock_guard<boost::mutex> lock(mutex);
                 return done && (exception
@@ -463,7 +463,7 @@ namespace boost
                     );
             }
 
-            bool has_exception(unique_lock<boost::mutex>&)
+            bool has_exception(unique_lock<boost::mutex>&) const
             {
                 return done && (exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -472,16 +472,16 @@ namespace boost
                     );
             }
 
-            bool is_deferred()  const BOOST_NOEXCEPT {
+            bool is_deferred(boost::lock_guard<boost::mutex>&)  const {
                 return is_deferred_;
             }
 
-            launch launch_policy() const BOOST_NOEXCEPT
+            launch launch_policy(boost::unique_lock<boost::mutex>&) const
             {
                 return policy_;
             }
 
-            future_state::state get_state()
+            future_state::state get_state() const
             {
                 boost::lock_guard<boost::mutex> guard(mutex);
                 if(!done)
@@ -492,6 +492,23 @@ namespace boost
                 {
                     return future_state::ready;
                 }
+            }
+
+            exception_ptr get_exception_ptr()
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                return get_exception_ptr(lock);
+            }
+            exception_ptr get_exception_ptr(boost::unique_lock<boost::mutex>& lock)
+            {
+                wait_internal(lock, false);
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+                if(thread_was_interrupted)
+                {
+                    return copy_exception(boost::thread_interrupted());
+                }
+#endif
+                return exception;
             }
 
             template<typename F,typename U>
@@ -1294,7 +1311,7 @@ namespace boost
           future_.swap(that.future_);
         }
         // functions to check state, and wait for ready
-        state get_state() const BOOST_NOEXCEPT
+        state get_state() const
         {
             if(!future_)
             {
@@ -1303,25 +1320,32 @@ namespace boost
             return future_->get_state();
         }
 
-        bool is_ready() const BOOST_NOEXCEPT
+        bool is_ready() const
         {
             return get_state()==future_state::ready;
         }
 
-        bool has_exception() const BOOST_NOEXCEPT
+        bool has_exception() const
         {
             return future_ && future_->has_exception();
         }
 
-        bool has_value() const BOOST_NOEXCEPT
+        bool has_value() const
         {
             return future_ && future_->has_value();
         }
 
-        launch launch_policy() const BOOST_NOEXCEPT
+        launch launch_policy(boost::unique_lock<boost::mutex>& lk) const
         {
-            if ( future_ ) return future_->launch_policy();
+            if ( future_ ) return future_->launch_policy(lk);
             else return launch(launch::none);
+        }
+
+        exception_ptr get_exception_ptr()
+        {
+            return future_
+                ? future_->get_exception_ptr()
+                : exception_ptr();
         }
 
         bool valid() const BOOST_NOEXCEPT
@@ -3938,13 +3962,13 @@ namespace boost
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(this->launch_policy()) & int(launch::async))
+    if (int(this->launch_policy(lock)) & int(launch::async))
     {
       return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
     }
-    else if (int(this->launch_policy()) & int(launch::deferred))
+    else if (int(this->launch_policy(lock)) & int(launch::deferred))
     {
       this->future_->wait_internal(lock);
       return boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
@@ -4056,13 +4080,13 @@ namespace boost
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(this->launch_policy()) & int(launch::async))
+    if (int(this->launch_policy(lock)) & int(launch::async))
     {
       return boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
     }
-    else if (int(this->launch_policy()) & int(launch::deferred))
+    else if (int(this->launch_policy(lock)) & int(launch::deferred))
     {
       this->future_->wait_internal(lock);
       return boost::detail::make_future_deferred_continuation_shared_state<shared_future<R>, future_type, F>(
