@@ -91,15 +91,15 @@ Define `BOOST_THREAD_DONT_USE_ATOMIC ` if you don't want to use Boost.Atomic or 
 
 The following operators are deprecated: 
 
-* `boost::thread::oprator==`
-* `boost::thread::oprator!=`
+* `boost::thread::operator==`
+* `boost::thread::operator!=`
 
 When `BOOST_THREAD_PROVIDES_THREAD_EQ` is defined Boost.Thread provides these deprecated feature. 
 
 Use instead 
 
-* `boost::thread::id::oprator==`
-* `boost::thread::id::oprator!=`
+* `boost::thread::id::operator==`
+* `boost::thread::id::operator!=`
 
 [warning This is a breaking change respect to version 1.x.]
 

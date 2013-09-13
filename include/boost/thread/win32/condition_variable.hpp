@@ -366,7 +366,11 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          do_wait(lock, ceil<milliseconds>(t-Clock::now()).count());
+          chrono::time_point<Clock, Duration> now = Clock::now();
+          if (t<=now) {
+            return cv_status::timeout;
+          }
+          do_wait(lock, ceil<milliseconds>(t-now).count());
           return Clock::now() < t ? cv_status::no_timeout :
                                              cv_status::timeout;
         }
@@ -378,6 +382,10 @@ namespace boost
                 const chrono::duration<Rep, Period>& d)
         {
           using namespace chrono;
+          if (d<=chrono::duration<Rep, Period>::zero()) {
+            return cv_status::timeout;
+          }
+
           steady_clock::time_point c_now = steady_clock::now();
           do_wait(lock, ceil<milliseconds>(d).count());
           return steady_clock::now() - c_now < d ? cv_status::no_timeout :
@@ -479,7 +487,11 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          do_wait(lock, ceil<milliseconds>(t-Clock::now()).count());
+          chrono::time_point<Clock, Duration> now = Clock::now();
+          if (t<=now) {
+            return cv_status::timeout;
+          }
+          do_wait(lock, ceil<milliseconds>(t-now).count());
           return Clock::now() < t ? cv_status::no_timeout :
                                              cv_status::timeout;
         }
@@ -491,6 +503,9 @@ namespace boost
                 const chrono::duration<Rep, Period>& d)
         {
           using namespace chrono;
+          if (d<=chrono::duration<Rep, Period>::zero()) {
+            return cv_status::timeout;
+          }
           steady_clock::time_point c_now = steady_clock::now();
           do_wait(lock, ceil<milliseconds>(d).count());
           return steady_clock::now() - c_now < d ? cv_status::no_timeout :
