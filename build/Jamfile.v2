@@ -36,6 +36,7 @@ import os ;
 import feature ;
 import indirect ;
 import path ;
+import configure ; 
 
 project boost/thread
     : source-location ../src
@@ -139,6 +140,8 @@ local rule default_threadapi ( )
 
 feature.feature threadapi : pthread win32 : propagated ;
 feature.set-default threadapi : [ default_threadapi ] ;
+
+exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ; 
 
 rule tag ( name : type ? : property-set )
 {
@@ -264,15 +267,14 @@ rule requirements ( properties * )
             }
         }
         result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
+        if ! [ configure.builds has_atomic_flag_lockfree 
+            : $(properties) : "lockfree boost::atomic_flag" ]  { 
+           result += <library>/boost/atomic//boost_atomic ; 
+        } 
     } else {
         result += <define>BOOST_THREAD_USES_CHRONO ;
         result += <library>/boost/chrono//boost_chrono ;
     }
-
-    #if <toolset>pgi in $(properties)  || <toolset>vacpp in $(properties)
-    #{
-      result += <library>/boost/atomic//boost_atomic ;
-    #}
 
     return $(result) ;
 }

@@ -85,7 +85,7 @@ int main()
     do_something_in_current_thread();
   }
   {
-    boost::scoped_thread<> g( f, 1, 2 );
+    boost::scoped_thread<> g( &f, 1, 2 );
     do_something_in_current_thread();
   }
   return 0;

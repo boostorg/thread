@@ -301,6 +301,8 @@ The object's `name` virtual function returns a pointer to the string "future".]]
       // retrieving the value
       see below get();
       see below get_or(see below);  // EXTENSION
+      
+      exception_ptr get_exception_ptr(); // EXTENSION
 
       // functions to check state
       bool valid() const noexcept;
@@ -759,6 +761,23 @@ stored exception, `false` otherwise.]]
 ]
 
 [endsect]
+[/////////////////////////////////////////////////////////////////]
+[section:get_exception_ptr Member function `get_exception_ptr()` EXTENSION]
+
+      exception_ptr get_exception_ptr();
+
+[variablelist
+
+[[Effects:] [If `*this` is associated with a shared state, waits until the result is ready. If the result is not ready on
+entry, and the result has a ['wait callback] set, that callback is invoked prior to waiting.]]
+
+[[Returns:] [a exception_ptr, storring or not an exception.]]
+
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
+
+]
+
+[endsect]
 [/////////////////////////////////////////////////////////]
 [section:get_state Member function `get_state()` EXTENSION]
 
@@ -924,6 +943,8 @@ There are not too much tests yet, so it is possible that you can find out some t
 
       // retrieving the value
       see below get();
+
+      exception_ptr get_exception_ptr(); // EXTENSION
 
       // functions to check state, and wait for ready
       bool valid() const noexcept;
@@ -1185,7 +1206,7 @@ otherwise.]]
 [[Returns:] [`true` if `*this` is associated with a shared state, and that result is ready for retrieval, `false`
 otherwise.]]
 
-[[Throws:] [Nothing.]]
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
 
 ]
 
@@ -1200,7 +1221,7 @@ otherwise.]]
 [[Returns:] [`true` if `*this` is associated with a shared state, that result is ready for retrieval, and the result is a
 stored value, `false` otherwise.]]
 
-[[Throws:] [Nothing.]]
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
 
 ]
 
@@ -1215,7 +1236,24 @@ stored value, `false` otherwise.]]
 [[Returns:] [`true` if `*this` is associated with a shared state, that result is ready for retrieval, and the result is a
 stored exception, `false` otherwise.]]
 
-[[Throws:] [Nothing.]]
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////////////////////////////////]
+[section:get_exception_ptr Member function `get_exception_ptr()` EXTENSION]
+
+      exception_ptr get_exception_ptr();
+
+[variablelist
+
+[[Effects:] [If `*this` is associated with a shared state, waits until the result is ready. If the result is not ready on
+entry, and the result has a ['wait callback] set, that callback is invoked prior to waiting.]]
+
+[[Returns:] [a exception_ptr, storring or not an exception.]]
+
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
 
 ]
 
@@ -1232,7 +1270,7 @@ stored exception, `false` otherwise.]]
 [[Returns:] [__uninitialized__ if `*this` is not associated with a shared state. __ready__ if the shared state
 associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 
-[[Throws:] [Nothing.]]
+[[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
 
 ]
 

@@ -32,7 +32,7 @@ In particular, the library provides some lock factories.
 
 that can be used as
 
-  int i = with_lock_guard(mtx, {}() -> bool 
+  int i = with_lock_guard(mtx, []() 
   { 
     // access the protected state 
     return true;
