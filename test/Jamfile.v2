@@ -716,6 +716,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/producer_consumer.cpp : ex_producer_consumer ]
           [ thread-run2 ../example/not_interleaved.cpp : ex_not_interleaved ]
           [ thread-run2 ../example/lambda_future.cpp : ex_lambda_future ]
+          [ thread-run2 ../example/not_interleaved2.cpp : ex_not_interleaved2 ]
 
     ;
 
@@ -794,6 +795,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_8960.cpp ]
           [ thread-run test_9079_a.cpp ]
           [ thread-run test_9079_b.cpp ]
+          #[ thread-run clang_main.cpp ]
 
     ;
 
