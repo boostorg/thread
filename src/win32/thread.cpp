@@ -279,12 +279,12 @@ namespace boost
                 interruption_enabled=false;
 #endif
             }
-//            ~externally_launched_thread() {
-//              BOOST_ASSERT(notify.empty());
-//              notify.clear();
-//              BOOST_ASSERT(async_states_.empty());
-//              async_states_.clear();
-//            }
+            ~externally_launched_thread() {
+              BOOST_ASSERT(notify.empty());
+              notify.clear();
+              BOOST_ASSERT(async_states_.empty());
+              async_states_.clear();
+            }
 
             void run()
             {}
