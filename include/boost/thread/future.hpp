@@ -418,7 +418,7 @@ namespace boost
               {
                   throw_exception(promise_already_satisfied());
               }
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
             }
 #endif
 
@@ -431,7 +431,8 @@ namespace boost
               }
               exception=e;
               this->is_constructed = true;
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
+
             }
 
             bool has_value() const
@@ -688,7 +689,7 @@ namespace boost
               result.reset(new T(result_));
 
               this->is_constructed = true;
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
             }
             //void set_value_at_thread_exit(BOOST_THREAD_RV_REF(T) result_)
             void set_value_at_thread_exit(rvalue_source_type result_)
@@ -699,7 +700,7 @@ namespace boost
               result.reset(new T(boost::move(result_)));
               //future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
               this->is_constructed = true;
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
             }
 
 
@@ -760,7 +761,7 @@ namespace boost
               //future_traits<T>::init(result,result_);
               result= &result_;
               this->is_constructed = true;
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
             }
 
         private:
@@ -806,7 +807,7 @@ namespace boost
                   throw_exception(promise_already_satisfied());
               }
               this->is_constructed = true;
-              get_current_thread_data()->make_ready_at_thread_exit(shared_from_this());
+              detail::make_ready_at_thread_exit(shared_from_this());
             }
         private:
             shared_state(shared_state const&);
