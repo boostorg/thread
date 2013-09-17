@@ -191,18 +191,17 @@ namespace boost
             struct entry_manager
             {
                 entry_ptr const entry;
+                boost::mutex& internal_mutex;
 
                 BOOST_THREAD_NO_COPYABLE(entry_manager)
-                entry_manager(entry_ptr const& entry_):
-                    entry(entry_)
+                entry_manager(entry_ptr const& entry_, boost::mutex& mutex_):
+                    entry(entry_), internal_mutex(mutex_)
                 {}
 
                 ~entry_manager()
                 {
-                  //if(! entry->is_notified()) // several regression #7657
-                  {
+                    boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     entry->remove_waiter();
-                  }
                 }
 
                 list_entry* operator->()
@@ -218,7 +217,7 @@ namespace boost
             {
                 relocker<lock_type> locker(lock);
 
-                entry_manager entry(get_wait_entry());
+                entry_manager entry(get_wait_entry(), internal_mutex);
 
                 locker.unlock();
 
