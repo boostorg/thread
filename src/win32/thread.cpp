@@ -279,6 +279,12 @@ namespace boost
                 interruption_enabled=false;
 #endif
             }
+            ~externally_launched_thread() {
+              BOOST_ASSERT(notify.empty());
+              notify.clear();
+              BOOST_ASSERT(async_states_.empty());
+              async_states_.clear();
+            }
 
             void run()
             {}
@@ -430,7 +436,7 @@ namespace boost
                 LARGE_INTEGER due_time={{0,0}};
                 if(target_time.relative)
                 {
-                    unsigned long const elapsed_milliseconds=GetTickCount()-target_time.start;
+                    unsigned long const elapsed_milliseconds=detail::win32::GetTickCount64()-target_time.start;
                     LONGLONG const remaining_milliseconds=(target_time.milliseconds-elapsed_milliseconds);
                     LONGLONG const hundred_nanoseconds_in_one_millisecond=10000;
 
@@ -748,5 +754,16 @@ namespace boost
         current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
       }
     }
+//namespace detail {
+//
+//    void BOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
+//    {
+//      detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
+//      if(current_thread_data)
+//      {
+//        current_thread_data->make_ready_at_thread_exit(as);
+//      }
+//    }
+//}
 }
 

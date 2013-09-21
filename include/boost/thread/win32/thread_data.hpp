@@ -148,7 +148,7 @@ namespace boost
 
             virtual void run()=0;
 
-            void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
+            virtual void notify_all_at_thread_exit(condition_variable* cv, mutex* m)
             {
               notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
             }
