@@ -217,7 +217,7 @@ namespace boost
 
         thread_data_base* make_external_thread_data()
         {
-            thread_data_base* const me(new externally_launched_thread());
+            thread_data_base* const me(detail::heap_new<externally_launched_thread>());
             me->self.reset(me);
             set_current_thread_data(me);
             return me;
@@ -670,7 +670,7 @@ namespace boost
         {
             detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
             thread_exit_callback_node* const new_node=
-                new thread_exit_callback_node(func,current_thread_data->thread_exit_callbacks);
+                heap_new<thread_exit_callback_node>(func,current_thread_data->thread_exit_callbacks);
             current_thread_data->thread_exit_callbacks=new_node;
         }
 
