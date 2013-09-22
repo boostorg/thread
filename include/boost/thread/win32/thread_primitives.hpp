@@ -15,7 +15,7 @@
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/detail/interlocked.hpp>
-//#include <boost/detail/win/synchronization.hpp>
+//#include <boost/detail/winapi/synchronization.hpp>
 #include <algorithm>
 
 #ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
