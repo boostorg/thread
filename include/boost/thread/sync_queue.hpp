@@ -52,10 +52,11 @@ namespace boost
     inline void close();
 
     inline void push(const value_type& x);
-    inline void push(BOOST_THREAD_RV_REF(value_type) x);
     inline bool try_push(const value_type& x);
-    inline bool try_push(BOOST_THREAD_RV_REF(value_type) x);
     inline bool try_push(no_block_tag, const value_type& x);
+
+    inline void push(BOOST_THREAD_RV_REF(value_type) x);
+    inline bool try_push(BOOST_THREAD_RV_REF(value_type) x);
     inline bool try_push(no_block_tag, BOOST_THREAD_RV_REF(value_type) x);
 
     // Observers/Modifiers
@@ -129,7 +130,7 @@ namespace boost
 
     inline void push(BOOST_THREAD_RV_REF(value_type) elem, unique_lock<mutex>& lk)
     {
-      data_.push(boost::move(elem));
+      data_.push_back(boost::move(elem));
       notify_not_empty_if_needed(lk);
     }
   };
@@ -441,7 +442,7 @@ namespace boost
     try
     {
       unique_lock<mutex> lk(mtx_);
-      return try_push(elem, lk);
+      return try_push(boost::forward<ValueType>(elem), lk);
     }
     catch (...)
     {
@@ -460,7 +461,7 @@ namespace boost
       {
         return false;
       }
-      return try_push(elem, lk);
+      return try_push(boost::forward<ValueType>(elem), lk);
     }
     catch (...)
     {
@@ -476,7 +477,7 @@ namespace boost
     {
       unique_lock<mutex> lk(mtx_);
       throw_if_closed(lk);
-      push(elem, lk);
+      push(boost::move(elem), lk);
     }
     catch (...)
     {
