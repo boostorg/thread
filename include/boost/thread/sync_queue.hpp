@@ -115,6 +115,12 @@ namespace boost
       elem = boost::move(data_.front());
       data_.pop_front();
     }
+    inline value_type pull(unique_lock<mutex>& )
+    {
+      value_type e = boost::move(data_.front());
+      data_.pop_front();
+      return boost::move(e);
+    }
     inline boost::shared_ptr<value_type> ptr_pull(unique_lock<mutex>& )
     {
       shared_ptr<value_type> res = make_shared<value_type>(boost::move(data_.front()));
@@ -347,9 +353,9 @@ namespace boost
   {
     try
     {
-      value_type elem;
-      pull(elem);
-      return boost::move(elem);
+      unique_lock<mutex> lk(mtx_);
+      wait_until_not_empty(lk);
+      return pull(lk);
     }
     catch (...)
     {
