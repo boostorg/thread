@@ -432,7 +432,7 @@ namespace boost
   bool sync_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     throw_if_closed(lk);
-    push(boost::forward<ValueType>(elem), lk);
+    push(boost::move(elem), lk);
     return true;
   }
 
@@ -442,7 +442,7 @@ namespace boost
     try
     {
       unique_lock<mutex> lk(mtx_);
-      return try_push(boost::forward<ValueType>(elem), lk);
+      return try_push(boost::move(elem), lk);
     }
     catch (...)
     {
@@ -461,7 +461,7 @@ namespace boost
       {
         return false;
       }
-      return try_push(boost::forward<ValueType>(elem), lk);
+      return try_push(boost::move(elem), lk);
     }
     catch (...)
     {
@@ -489,7 +489,7 @@ namespace boost
   template <typename ValueType>
   sync_queue<ValueType>& operator<<(sync_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    sbq.push(boost::forward<ValueType>(elem));
+    sbq.push(boost::move(elem));
     return sbq;
   }
 

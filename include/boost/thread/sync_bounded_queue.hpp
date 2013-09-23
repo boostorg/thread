@@ -31,7 +31,9 @@ namespace boost
   struct no_block_tag{};
   BOOST_CONSTEXPR_OR_CONST no_block_tag no_block = {};
 
-  struct sync_queue_is_closed : std::exception {};
+  struct sync_queue_is_closed : std::exception
+  {
+  };
 
   template <typename ValueType>
   class sync_bounded_queue
@@ -529,7 +531,7 @@ namespace boost
     try
     {
       unique_lock<mutex> lk(mtx_);
-      return try_push(elem, lk);
+      return try_push(boost::move(elem), lk);
     }
     catch (...)
     {
@@ -548,7 +550,7 @@ namespace boost
       {
         return false;
       }
-      return try_push(elem, lk);
+      return try_push(boost::move(elem), lk);
     }
     catch (...)
     {
@@ -563,7 +565,7 @@ namespace boost
     try
     {
       unique_lock<mutex> lk(mtx_);
-      push_at(elem, wait_until_not_full(lk), lk);
+      push_at(boost::move(elem), wait_until_not_full(lk), lk);
     }
     catch (...)
     {
@@ -575,7 +577,7 @@ namespace boost
   template <typename ValueType>
   sync_bounded_queue<ValueType>& operator<<(sync_bounded_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    sbq.push(boost::forward<ValueType>(elem));
+    sbq.push(boost::move(elem));
     return sbq;
   }
 
