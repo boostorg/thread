@@ -470,6 +470,7 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         void detach();
 
         static unsigned hardware_concurrency() noexcept;
+        static unsigned physical_concurrency() noexcept;
 
         typedef platform-specific-type native_handle_type;
         native_handle_type native_handle();
@@ -984,6 +985,21 @@ predefined __interruption_points__ with interruption enabled .]]
 
 [[Returns:] [The number of hardware threads available on the current system (e.g. number of CPUs or cores or hyperthreading units),
 or 0 if this information is not available.]]
+
+[[Throws:] [Nothing]]
+
+]
+
+[endsect]
+
+[section:physical_concurrency Static member function `physical_concurrency()`]
+
+    unsigned physical_concurrency() noexecpt;
+
+[variablelist
+
+[[Returns:] [The number of physical cores available on the current system. In contrast to `hardware_concurrency()` it does not return
+ the number of virtual cores, but it counts only physical cores.]]
 
 [[Throws:] [Nothing]]
 

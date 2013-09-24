@@ -27,6 +27,15 @@
 #include <unistd.h>
 #endif
 
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <fstream>
+#include <string>
+#include <set>
+#include <vector>
+
 #include "./timeconv.inl"
 
 namespace boost
@@ -540,6 +549,56 @@ namespace boost
         return get_nprocs();
 #else
         return 0;
+#endif
+    }
+
+    unsigned thread::physical_concurrency() BOOST_NOEXCEPT
+    {
+#ifdef __linux__
+        try {
+            using namespace std;
+
+            ifstream proc_cpuinfo ("/proc/cpuinfo");
+
+            unsigned current_processor = 0;
+            const string physical_id("physical id"), core_id("core id");
+
+            typedef std::pair<unsigned, unsigned> core_entry; // [physical ID, core id]
+
+            std::set<core_entry> cores;
+
+            core_entry current_core_entry;
+
+            for (string line; getline(proc_cpuinfo, line); ) {
+                vector<string> key_val(2);
+                boost::split(key_val, line, boost::is_any_of(":"));
+
+                string key   = key_val[0];
+                string value = key_val[1];
+                boost::trim(key);
+                boost::trim(value);
+
+                if (key == physical_id) {
+                    current_core_entry.first = boost::lexical_cast<unsigned>(value);
+                    continue;
+                }
+
+                if (key == core_id) {
+                    current_core_entry.second = boost::lexical_cast<unsigned>(value);
+                    cores.insert(current_core_entry);
+                    continue;
+                }
+            }
+            return cores.size();
+        } catch(...) {
+            return 0;
+        }
+#elif defined(__APPLE__)
+        int count;
+        size_t size=sizeof(count);
+        return sysctlbyname("hw.physicalcpu",&count,&size,NULL,0)?0:count;
+#else
+        return hardware_concurrency();
 #endif
     }
 

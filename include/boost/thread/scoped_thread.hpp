@@ -261,11 +261,15 @@ namespace boost
     }
 #endif
 
-    static unsigned hardware_concurrency()BOOST_NOEXCEPT
+    static unsigned hardware_concurrency() BOOST_NOEXCEPT
     {
       return thread::hardware_concurrency();
     }
 
+    static unsigned physical_concurrency() BOOST_NOEXCEPT
+    {
+      return thread::physical_concurrency();
+    }
   };
 
   /**

@@ -407,6 +407,8 @@ namespace boost
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
     }
 
+#endif
+
     unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
     {
         //SYSTEM_INFO info={{0}};
@@ -414,7 +416,28 @@ namespace boost
         GetSystemInfo(&info);
         return info.dwNumberOfProcessors;
     }
-#endif
+
+    unsigned thread::physical_concurrency() BOOST_NOEXCEPT
+    {
+        unsigned cores = 0;
+        DWORD size = 0;
+
+        GetLogicalProcessorInformation(NULL, &size);
+        if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
+            return 0;
+
+        std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(size);
+        if (GetLogicalProcessorInformation(buffer.data(), &size) == FALSE)
+            return 0;
+
+        const size_t Elements = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
+
+        for (size_t i = 0; i < Elements; ++i) {
+            if (buffer[i].Relationship == RelationProcessorCore)
+                ++cores;
+        }
+        return cores;
+    }
 
     thread::native_handle_type thread::native_handle()
     {
