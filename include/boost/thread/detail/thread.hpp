@@ -546,7 +546,9 @@ namespace boost
         void detach();
 
         static unsigned hardware_concurrency() BOOST_NOEXCEPT;
+#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
         static unsigned physical_concurrency() BOOST_NOEXCEPT;
+#endif
 
 #define BOOST_THREAD_DEFINES_THREAD_NATIVE_HANDLE
         typedef detail::thread_data_base::native_handle_type native_handle_type;
