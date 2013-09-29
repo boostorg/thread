@@ -821,8 +821,12 @@ namespace boost
         struct future_async_shared_state_base: shared_state<Rp>
         {
           typedef shared_state<Rp> base_type;
+        protected:
           boost::thread thr_;
-
+          void join()
+          {
+              if (thr_.joinable()) thr_.join();
+          }
         public:
           future_async_shared_state_base()
           {
@@ -836,12 +840,12 @@ namespace boost
 
           ~future_async_shared_state_base()
           {
-            if (thr_.joinable()) thr_.join();
+            join();
           }
 
           virtual void wait(bool rethrow)
           {
-              if (thr_.joinable()) thr_.join();
+              join();
               this->base_type::wait(rethrow);
           }
         };
@@ -3769,6 +3773,10 @@ namespace boost
           that->mark_exceptional_finish();
         }
       }
+      ~future_async_continuation_shared_state()
+      {
+        this->join();
+      }
     };
 
     template<typename F, typename Fp>
@@ -3809,6 +3817,10 @@ namespace boost
         {
           that->mark_exceptional_finish();
         }
+      }
+      ~future_async_continuation_shared_state()
+      {
+        this->join();
       }
     };
 
