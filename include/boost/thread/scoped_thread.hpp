@@ -266,10 +266,12 @@ namespace boost
       return thread::hardware_concurrency();
     }
 
+#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
     static unsigned physical_concurrency() BOOST_NOEXCEPT
     {
       return thread::physical_concurrency();
     }
+#endif
   };
 
   /**
