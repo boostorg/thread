@@ -201,12 +201,8 @@ namespace boost
         struct shared_state_base : enable_shared_from_this<shared_state_base>
         {
             typedef std::list<boost::condition_variable_any*> waiter_list;
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+            // This type should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             typedef shared_ptr<shared_state_base> continuation_ptr_type;
-#else
-            // This type shouldn't be included, but is included to maintain the same layout.
-            typedef shared_ptr<void> continuation_ptr_type;
-#endif
 
             boost::exception_ptr exception;
             bool done;
@@ -217,7 +213,7 @@ namespace boost
             boost::condition_variable waiters;
             waiter_list external_waiters;
             boost::function<void()> callback;
-            // This declaration should be only included conditionally, but is included to maintain the same layout.
+            // This declaration should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             bool thread_was_interrupted;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuation_ptr_type continuation_ptr;
