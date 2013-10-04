@@ -52,6 +52,7 @@ namespace boost
     /// A move aware vector
     thread_vector threads;
 
+  public:
     /**
      * Effects: try to execute one task.
      * Returns: whether a task has been executed.
@@ -78,6 +79,7 @@ namespace boost
         return false;
       }
     }
+  private:
     /**
      * Effects: schedule one task or yields
      * Throws: whatever the current task constructor throws or the task() throws.
@@ -89,14 +91,18 @@ namespace boost
           this_thread::yield();
         }
     }
+
     /**
      * The main loop of the worker threads
      */
     void worker_thread()
     {
-      while (!is_closed())
+      while (!closed())
       {
         schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
       }
     }
 
@@ -105,7 +111,9 @@ namespace boost
     BOOST_THREAD_NO_COPYABLE(thread_pool)
 
     /**
-     * Effects: creates a thread pool that runs closures on @c thread_count threads.
+     * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
+     *
+     * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     thread_pool(unsigned const thread_count = thread::hardware_concurrency())
     {
@@ -123,8 +131,9 @@ namespace boost
       }
     }
     /**
-     * Effects: Destroys the thread pool.
-     * Synchronization: The completion of all the closures happen before the completion of the thread pool destructor.
+     * \b Effects: Destroys the thread pool.
+     *
+     * \b Synchronization: The completion of all the closures happen before the completion of the \c thread_pool destructor.
      */
     ~thread_pool()
     {
@@ -134,7 +143,8 @@ namespace boost
     }
 
     /**
-     * Effects: close the thread_pool for submissions. The worker threads will work until
+     * \b Effects: close the \c thread_pool for submissions.
+     * The worker threads will work until there is no more closures to run.
      */
     void close()
     {
@@ -142,19 +152,23 @@ namespace boost
     }
 
     /**
-     * Returns: whether the pool is closed for submissions.
+     * \b Returns: whether the pool is closed for submissions.
      */
-    bool is_closed()
+    bool closed()
     {
       return work_queue.closed();
     }
 
     /**
-     * Effects: The specified function will be scheduled for execution at some point in the future.
-     * If invoking closure throws an exception the thread pool will call std::terminate, as is the case with threads.
-     * Synchronization: completion of closure on a particular thread happens before destruction of thread's thread local variables.
-     * Throws: sync_queue_is_closed if the thread pool is closed.
+     * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
      *
+     * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
+     * If invoked closure throws an exception the \c thread_pool will call \c std::terminate, as is the case with threads.
+     *
+     * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
+     *
+     * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
+     * Whatever exception that can be throw while storing the closure.
      */
     template <typename Closure>
     void submit(Closure const& closure)
@@ -172,15 +186,21 @@ namespace boost
     }
 
     /**
-     * This must be called from an scheduled task.
-     * Effects: reschedule functions until pred()
+     * \b Requires: This must be called from an scheduled task.
+     *
+     * \b Effects: reschedule functions until pred()
      */
     template <typename Pred>
-    void reschedule_until(Pred const& pred)
+    bool reschedule_until(Pred const& pred)
     {
       do {
-        schedule_one_or_yield();
+        //schedule_one_or_yield();
+        if ( ! try_executing_one())
+        {
+          return false;
+        }
       } while (! pred());
+      return true;
     }
 
   };
