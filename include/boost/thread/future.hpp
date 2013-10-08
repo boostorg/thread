@@ -201,12 +201,8 @@ namespace boost
         struct shared_state_base : enable_shared_from_this<shared_state_base>
         {
             typedef std::list<boost::condition_variable_any*> waiter_list;
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+            // This type should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             typedef shared_ptr<shared_state_base> continuation_ptr_type;
-#else
-            // This type shouldn't be included, but is included to maintain the same layout.
-            typedef shared_ptr<void> continuation_ptr_type;
-#endif
 
             boost::exception_ptr exception;
             bool done;
@@ -217,7 +213,7 @@ namespace boost
             boost::condition_variable waiters;
             waiter_list external_waiters;
             boost::function<void()> callback;
-            // This declaration should be only included conditionally, but is included to maintain the same layout.
+            // This declaration should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             bool thread_was_interrupted;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuation_ptr_type continuation_ptr;
@@ -1553,7 +1549,7 @@ namespace boost
         }
 
         template <typename R2>
-        typename disable_if< is_void<R2>, move_dest_type>::type
+        typename boost::disable_if< is_void<R2>, move_dest_type>::type
         get_or(BOOST_THREAD_RV_REF(R2) v)
         {
             if(!this->future_)
@@ -1574,7 +1570,7 @@ namespace boost
         }
 
         template <typename R2>
-        typename disable_if< is_void<R2>, move_dest_type>::type
+        typename boost::disable_if< is_void<R2>, move_dest_type>::type
         get_or(R2 const& v)  // EXTENSION
         {
             if(!this->future_)
@@ -1614,17 +1610,17 @@ namespace boost
         then(launch policy, BOOST_THREAD_FWD_REF(F) func);  // EXTENSION
 
         template <typename R2>
-        inline typename disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
+        inline typename boost::disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
         fallback_to(BOOST_THREAD_RV_REF(R2) v);  // EXTENSION
         template <typename R2>
-        inline typename disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
+        inline typename boost::disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
         fallback_to(R2 const& v);  // EXTENSION
 
 #endif
 
 //#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
 //        inline
-//        typename enable_if<
+//        typename boost::enable_if<
 //          is_future_type<value_type>,
 //          value_type
 //        //BOOST_THREAD_FUTURE<typename is_future_type<value_type>::type>
@@ -1895,7 +1891,7 @@ namespace boost
         }
 
         template <typename R2>
-        typename disable_if< is_void<R2>, typename detail::shared_state<R>::shared_future_get_result_type>::type
+        typename boost::disable_if< is_void<R2>, typename detail::shared_state<R>::shared_future_get_result_type>::type
         get_or(BOOST_THREAD_RV_REF(R2) v) // EXTENSION
         {
             if(!this->future_)
@@ -1930,7 +1926,7 @@ namespace boost
 #endif
 //#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
 //        inline
-//        typename enable_if_c<
+//        typename boost::enable_if_c<
 //          is_future_type<value_type>::value,
 //          BOOST_THREAD_FUTURE<typename is_future_type<value_type>::type>
 //        >::type
@@ -3102,7 +3098,7 @@ namespace boost
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F>
         explicit packaged_task(BOOST_THREAD_FWD_REF(F) f
-            , typename disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
+            , typename boost::disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
             )
         {
           typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
@@ -3123,7 +3119,7 @@ namespace boost
 #else
         template <class F>
         explicit packaged_task(F const& f
-            , typename disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
+            , typename boost::disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
             )
         {
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -3957,7 +3953,6 @@ namespace boost
     }
     else
     {
-      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -3990,7 +3985,6 @@ namespace boost
     }
     else
     {
-      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
       return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
@@ -4075,7 +4069,6 @@ namespace boost
     }
     else
     {
-      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4108,7 +4101,6 @@ namespace boost
     }
     else
     {
-      //BOOST_THREAD_ASSERT_PRECONDITION(false && "invalid launch parameter", std::logic_error("invalid launch parameter"));
       return boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
@@ -4153,7 +4145,7 @@ namespace boost
 
   template <typename R>
   template <typename R2>
-  inline typename disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
+  inline typename boost::disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
   BOOST_THREAD_FUTURE<R>::fallback_to(BOOST_THREAD_RV_REF(R2) v)
   {
     return then(detail::mfallbacker_to<R>(boost::move(v)));
@@ -4161,7 +4153,7 @@ namespace boost
 
   template <typename R>
   template <typename R2>
-  inline typename disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
+  inline typename boost::disable_if< is_void<R2>, BOOST_THREAD_FUTURE<R> >::type
   BOOST_THREAD_FUTURE<R>::fallback_to(R2 const& v)
   {
     return then(detail::cfallbacker_to<R>(v));
@@ -4206,8 +4198,6 @@ namespace boost
     make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_RV_REF(F) f)
     {
       shared_ptr<future_unwrap_shared_state<F, Rp> >
-      //shared_ptr<basic_future<Rp> >
-      //typename boost::detail::basic_future<Rp>::future_ptr
           h(new future_unwrap_shared_state<F, Rp>(boost::move(f)));
       h->parent.future_->set_continuation_ptr(h, lock);
       return BOOST_THREAD_FUTURE<Rp>(h);
