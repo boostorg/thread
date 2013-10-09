@@ -27,7 +27,6 @@
 #include <unistd.h>
 #endif
 
-#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
@@ -36,7 +35,6 @@
 #include <string>
 #include <set>
 #include <vector>
-#endif
 
 #include "./timeconv.inl"
 
@@ -554,7 +552,6 @@ namespace boost
 #endif
     }
 
-#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
 #ifdef __linux__
@@ -604,7 +601,6 @@ namespace boost
         return hardware_concurrency();
 #endif
     }
-#endif
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     void thread::interrupt()

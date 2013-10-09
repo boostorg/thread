@@ -209,7 +209,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-test test_thread.cpp ]
           [ thread-test test_thread_id.cpp ]
           [ thread-test test_hardware_concurrency.cpp ]
-          #[ thread-test test_physical_concurrency.cpp ]
+          [ thread-test test_physical_concurrency.cpp ]
           [ thread-test test_thread_move.cpp ]
           [ thread-test test_thread_return_local.cpp ]
           [ thread-test test_thread_move_return.cpp ]

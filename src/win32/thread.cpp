@@ -417,7 +417,6 @@ namespace boost
         return info.dwNumberOfProcessors;
     }
 
-#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
         unsigned cores = 0;
@@ -439,7 +438,6 @@ namespace boost
         }
         return cores;
     }
-#endif
 
     thread::native_handle_type thread::native_handle()
     {
