@@ -560,7 +560,6 @@ namespace boost
 
             ifstream proc_cpuinfo ("/proc/cpuinfo");
 
-            unsigned current_processor = 0;
             const string physical_id("physical id"), core_id("core id");
 
             typedef std::pair<unsigned, unsigned> core_entry; // [physical ID, core id]
@@ -569,9 +568,16 @@ namespace boost
 
             core_entry current_core_entry;
 
-            for (string line; getline(proc_cpuinfo, line); ) {
+            string line;
+            while ( getline(proc_cpuinfo, line) ) {
+                if (line.empty())
+                    continue;
+
                 vector<string> key_val(2);
                 boost::split(key_val, line, boost::is_any_of(":"));
+
+                if (key_val.size() != 2)
+                    return 0;
 
                 string key   = key_val[0];
                 string value = key_val[1];
