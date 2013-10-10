@@ -427,7 +427,7 @@ namespace boost
             return 0;
 
         std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(size);
-        if (GetLogicalProcessorInformation(buffer.data(), &size) == FALSE)
+        if (GetLogicalProcessorInformation(&buffer.front(), &size) == FALSE)
             return 0;
 
         const size_t Elements = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
