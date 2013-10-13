@@ -119,6 +119,7 @@ namespace boost
     {
       try
       {
+        threads.reserve(thread_count);
         for (unsigned i = 0; i < thread_count; ++i)
         {
           threads.push_back(thread_t(&thread_pool::worker_thread, this));
