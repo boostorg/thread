@@ -59,6 +59,18 @@
 #include <boost/utility/result_of.hpp>
 #include <boost/thread/thread_only.hpp>
 
+#if defined BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+#include <tuple>
+#define BOOST_THREAD_TUPLE std::tuple
+#endif
+
+#include <boost/container/vector.hpp>
+#define BOOST_THREAD_VECTOR boost::container::vector
+//#include <vector>
+//#define BOOST_THREAD_VECTOR std::vector
+#endif
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
 #else
@@ -1486,6 +1498,7 @@ namespace boost
 
 
         typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+    public: // when_all
 
         BOOST_THREAD_FUTURE(future_ptr a_future):
           base_type(a_future)
@@ -4219,6 +4232,307 @@ namespace boost
     return boost::detail::make_future_unwrap_shared_state<BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >, R2>(lock, boost::move(*this));
   }
 #endif
+
+#if defined BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
+  namespace detail
+  {
+
+    struct input_iterator_tag
+    {
+    };
+    struct vector_tag
+    {
+    };
+    struct values_tag
+    {
+    };
+    template <typename T>
+    struct alias_t { typedef T type; };
+
+    BOOST_CONSTEXPR_OR_CONST input_iterator_tag input_iterator_tag_value = {};
+    BOOST_CONSTEXPR_OR_CONST vector_tag vector_tag_value = {};
+    BOOST_CONSTEXPR_OR_CONST values_tag values_tag_value = {};
+    ////////////////////////////////
+    // detail::future_async_when_all_shared_state
+    ////////////////////////////////
+    template<typename F>
+    struct future_when_all_vector_shared_state: future_async_shared_state_base<BOOST_THREAD_VECTOR<F> >
+    {
+      typedef BOOST_THREAD_VECTOR<F> vector_type;
+      typedef typename F::value_type value_type;
+      BOOST_THREAD_VECTOR<F> vec_;
+
+      static void run(future_when_all_vector_shared_state* that)
+      {
+        try
+        {
+          boost::wait_for_all(that->vec_.begin(), that->vec_.end());
+          that->mark_finished_with_result(boost::move(that->vec_));
+        }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        catch(thread_interrupted& )
+        {
+          that->mark_interrupted_finish();
+        }
+#endif
+        catch(...)
+        {
+          that->mark_exceptional_finish();
+        }
+      }
+      void init()
+      {
+        this->thr_ = thread(&future_when_all_vector_shared_state::run, this);
+      }
+
+    public:
+      template< typename InputIterator>
+      future_when_all_vector_shared_state(input_iterator_tag,
+          InputIterator first, InputIterator last
+      )
+      : vec_(std::make_move_iterator(first), std::make_move_iterator(last))
+      {
+        init();
+      }
+
+      future_when_all_vector_shared_state(vector_tag,
+          BOOST_THREAD_RV_REF(BOOST_THREAD_VECTOR<F>) v
+      )
+      : vec_(boost::move(v))
+      {
+        init();
+      }
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+      template< typename T0, typename ...T>
+      future_when_all_vector_shared_state(values_tag,
+          BOOST_THREAD_RV_REF(T0) f, BOOST_THREAD_RV_REF(T) ... futures
+      )
+      {
+        vec_.push_back(boost::forward<T0>(f));
+        typename alias_t<char[]>::type{
+            ( //first part of magic unpacker
+            vec_.push_back(boost::forward<T>(futures))
+            ,'0'
+            )...,
+            '0'
+        }; //second part of magic unpacker
+
+        init();
+      }
+#else
+#endif
+      ~future_when_all_vector_shared_state()
+      {
+        this->join();
+      }
+
+    };
+
+    ////////////////////////////////
+    // detail::future_async_when_any_shared_state
+    ////////////////////////////////
+    template<typename F>
+    struct future_when_any_vector_shared_state: future_async_shared_state_base<BOOST_THREAD_VECTOR<F> >
+    {
+      typedef BOOST_THREAD_VECTOR<F> vector_type;
+      typedef typename F::value_type value_type;
+      BOOST_THREAD_VECTOR<F> vec_;
+
+      static void run(future_when_any_vector_shared_state* that)
+      {
+        try
+        {
+          boost::wait_for_any(that->vec_.begin(), that->vec_.end());
+          that->mark_finished_with_result(boost::move(that->vec_));
+        }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        catch(thread_interrupted& )
+        {
+          that->mark_interrupted_finish();
+        }
+#endif
+        catch(...)
+        {
+          that->mark_exceptional_finish();
+        }
+      }
+      void init()
+      {
+        this->thr_ = thread(&future_when_any_vector_shared_state::run, this);
+      }
+
+    public:
+      template< typename InputIterator>
+      future_when_any_vector_shared_state(input_iterator_tag,
+          InputIterator first, InputIterator last
+      )
+      : vec_(std::make_move_iterator(first), std::make_move_iterator(last))
+      {
+        init();
+      }
+
+      future_when_any_vector_shared_state(vector_tag,
+          BOOST_THREAD_RV_REF(BOOST_THREAD_VECTOR<F>) v
+      )
+      : vec_(boost::move(v))
+      {
+        init();
+      }
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+      template< typename T0, typename ...T>
+      future_when_any_vector_shared_state(values_tag,
+          BOOST_THREAD_RV_REF(T0) f, BOOST_THREAD_RV_REF(T) ... futures
+      )
+      {
+        vec_.push_back(boost::forward<T0>(f));
+        typename alias_t<char[]>::type{
+            ( //first part of magic unpacker
+            vec_.push_back(boost::forward<T>(futures))
+            ,'0'
+            )...,
+            '0'
+        }; //second part of magic unpacker
+        init();
+      }
+#endif
+
+      ~future_when_any_vector_shared_state()
+      {
+        this->join();
+      }
+
+    };
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+    template< typename T0, typename ...T>
+    struct future_when_all_tuple_shared_state: future_async_shared_state_base<
+      BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+    >
+    {
+
+    };
+    template< typename T0, typename ...T>
+    struct future_when_any_tuple_shared_state: future_async_shared_state_base<
+      BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+    >
+    {
+
+    };
+#endif
+#endif
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+    template< typename ...T>
+    struct are_same : true_type {};
+    template< typename T0 >
+    struct are_same<T0> : true_type {};
+    template< typename T0, typename T1, typename ...T>
+    struct are_same<T0, T1, T...> : integral_constant<bool, is_same<T0,T1>::value && are_same<T1, T...>::value> {};
+
+    template< bool AreSame, typename T0, typename ...T>
+    struct when_type_impl;
+
+    template< typename T0, typename ...T>
+    struct when_type_impl<true, T0, T...>
+    {
+      typedef BOOST_THREAD_VECTOR<typename decay<T0>::type> container_type;
+      typedef typename container_type::value_type value_type;
+      typedef detail::future_when_all_vector_shared_state<value_type> factory_all_type;
+      typedef detail::future_when_any_vector_shared_state<value_type> factory_any_type;
+    };
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+    template< typename T0, typename ...T>
+    struct when_type_impl<false, T0, T...>
+    {
+      typedef BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > container_type;
+      typedef detail::future_when_all_tuple_shared_state<T0, T...> factory_all_type;
+      typedef detail::future_when_any_tuple_shared_state<T0, T...> factory_any_type;
+    };
+#endif
+
+    template< typename T0, typename ...T>
+    struct when_type : when_type_impl<are_same<T0, T...>::value, T0, T...> {};
+#endif
+    }
+
+  template< typename InputIterator>
+  typename boost::disable_if<is_future_type<InputIterator>,
+    BOOST_THREAD_FUTURE<BOOST_THREAD_VECTOR<typename InputIterator::value_type>  >
+  >::type
+  when_all(InputIterator first, InputIterator last)
+  {
+    typedef  typename InputIterator::value_type value_type;
+    typedef  BOOST_THREAD_VECTOR<value_type> container_type;
+    typedef  detail::future_when_all_vector_shared_state<value_type> factory_type;
+
+    if (first==last) return make_ready_future(container_type());
+
+    shared_ptr<factory_type >
+        h(new factory_type>(detail::input_iterator_tag_value, first,last));
+    return BOOST_THREAD_FUTURE<container_type>(h);
+  }
+
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+  BOOST_THREAD_FUTURE<BOOST_THREAD_TUPLE<> > when_all()
+  {
+    return make_ready_future(BOOST_THREAD_TUPLE<>());
+  }
+#endif
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  template< typename T0, typename ...T>
+  BOOST_THREAD_FUTURE<typename detail::when_type<T0, T...>::container_type>
+  when_all(BOOST_THREAD_RV_REF(T0) f, BOOST_THREAD_RV_REF(T) ... futures)
+  {
+    typedef  typename detail::when_type<T0, T...>::container_type container_type;
+    typedef  typename detail::when_type<T0, T...>::factory_all_type factory_type;
+
+    shared_ptr<factory_type>
+        h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
+    return BOOST_THREAD_FUTURE<container_type>(h);
+  }
+#endif
+
+  template< typename InputIterator>
+  typename boost::disable_if<is_future_type<InputIterator>,
+    BOOST_THREAD_FUTURE<BOOST_THREAD_VECTOR<typename InputIterator::value_type>  >
+  >::type
+  when_any(InputIterator first, InputIterator last)
+  {
+    typedef  typename InputIterator::value_type value_type;
+    typedef  BOOST_THREAD_VECTOR<value_type> container_type;
+    typedef  detail::future_when_any_vector_shared_state<value_type> factory_type;
+
+    if (first==last) return make_ready_future(container_type());
+
+    shared_ptr<factory_type >
+        h(new factory_type>(detail::input_iterator_tag_value, first,last));
+    return BOOST_THREAD_FUTURE<container_type>(h);
+  }
+
+#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+  BOOST_THREAD_FUTURE<BOOST_THREAD_TUPLE<> > when_any()
+  {
+    return make_ready_future(BOOST_THREAD_TUPLE<>());
+  }
+#endif
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  template< typename T0, typename ...T>
+  BOOST_THREAD_FUTURE<typename detail::when_type<T0, T...>::container_type> when_any(BOOST_THREAD_RV_REF(T0) f, BOOST_THREAD_RV_REF(T) ... futures)
+  {
+    typedef  typename detail::when_type<T0, T...>::container_type container_type;
+    typedef  typename detail::when_type<T0, T...>::factory_any_type factory_type;
+
+    shared_ptr<factory_type>
+        h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
+    return BOOST_THREAD_FUTURE<container_type>(h);
+  }
+#endif
+#endif // BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
 }
 
 #endif // BOOST_NO_EXCEPTION

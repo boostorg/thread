@@ -720,6 +720,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/not_interleaved2.cpp : ex_not_interleaved2 ]
           [ thread-run2 ../example/thread_pool.cpp : ex_thread_pool ]
           [ thread-run2 ../example/executor.cpp : ex_executor ]
+          [ thread-run2 ../example/future_when_all.cpp : future_when_all ]
 
     ;
 
