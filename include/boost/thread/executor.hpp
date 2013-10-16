@@ -135,6 +135,9 @@ namespace boost
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template <typename ...Args>
     executor_adaptor(BOOST_THREAD_RV_REF(Args) ... args) : ex(boost::forward<Args>(args)...) {}
+#else
+    template <typename A1>
+    executor_adaptor(BOOST_THREAD_FWD_REF(A1) a1) : ex(boost::forward<A1>(a1)) {}
 #endif
     /**
      * \b Effects: close the \c executor for submissions.

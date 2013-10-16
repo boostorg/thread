@@ -14,13 +14,22 @@
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
 #include <boost/type_traits/decay.hpp>
+#include <boost/type_traits/conditional.hpp>
+#include <boost/type_traits/remove_extent.hpp>
+#include <boost/type_traits/is_array.hpp>
+#include <boost/type_traits/is_function.hpp>
+#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/add_pointer.hpp>
+#include <boost/type_traits/decay.hpp>
 #endif
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/move/utility.hpp>
 #include <boost/move/traits.hpp>
 #include <boost/config/abi_prefix.hpp>
-
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#include <type_traits>
+#endif
 namespace boost
 {
 
@@ -237,8 +246,51 @@ namespace detail
 
 
 namespace boost
-{  namespace thread_detail
+{
+  namespace thread_detail
   {
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    template <class Tp>
+    struct remove_reference : boost::remove_reference<Tp> {};
+    template <class Tp>
+    struct  decay : boost::decay<Tp> {};
+#else
+  template <class Tp>
+  struct remove_reference
+  {
+    typedef Tp type;
+  };
+  template <class Tp>
+  struct remove_reference<Tp&>
+  {
+    typedef Tp type;
+  };
+  template <class Tp>
+  struct remove_reference< rv<Tp> > {
+    typedef Tp type;
+  };
+
+  template <class Tp>
+  struct  decay
+  {
+  private:
+    typedef typename boost::move_detail::remove_rvalue_reference<Tp>::type Up0;
+    typedef typename boost::remove_reference<Up0>::type Up;
+  public:
+      typedef typename conditional
+                       <
+                           is_array<Up>::value,
+                           typename remove_extent<Up>::type*,
+                           typename conditional
+                           <
+                                is_function<Up>::value,
+                                typename add_pointer<Up>::type,
+                                typename remove_cv<Up>::type
+                           >::type
+                       >::type type;
+  };
+#endif
+
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
       template <class T>
       typename decay<T>::type

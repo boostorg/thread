@@ -71,6 +71,10 @@
 //#define BOOST_THREAD_VECTOR std::vector
 #endif
 
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+#include <boost/thread/executor.hpp>
+#endif
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
 #else
@@ -86,6 +90,9 @@ namespace boost
       none = 0,
       async = 1,
       deferred = 2,
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+      executor = 4,
+#endif
       any = async | deferred
   }
   BOOST_SCOPED_ENUM_DECLARE_END(launch)
@@ -256,7 +263,13 @@ namespace boost
               is_deferred_ = false;
               policy_ = launch::async;
             }
-
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+            void set_executor()
+            {
+              is_deferred_ = false;
+              policy_ = launch::executor;
+            }
+#endif
             waiter_list::iterator register_external_waiter(boost::condition_variable_any& cv)
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
@@ -3564,6 +3577,248 @@ namespace boost
           return ::boost::move(ret);
         }
     }
+
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+  namespace detail {
+    /////////////////////////
+    /// shared_state_nullary_task
+    /////////////////////////
+    template<typename Rp, typename Fp>
+    struct shared_state_nullary_task
+    {
+      shared_state<Rp>* that;
+      Fp f_;
+    public:
+      shared_state_nullary_task(shared_state<Rp>* st, BOOST_THREAD_FWD_REF(Fp) f)
+      : that(st), f_(boost::forward<Fp>(f))
+      {};
+      void operator()()
+      {
+        try
+        {
+          that->mark_finished_with_result(f_());
+        }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        catch(thread_interrupted& )
+        {
+          that->mark_interrupted_finish();
+        }
+#endif
+        catch(...)
+        {
+          that->mark_exceptional_finish();
+        }
+
+      }
+    };
+
+    template<typename Fp>
+    struct shared_state_nullary_task<void, Fp>
+    {
+      shared_state<void>* that;
+      Fp f_;
+    public:
+      shared_state_nullary_task(shared_state<void>* st, BOOST_THREAD_FWD_REF(Fp) f)
+      : that(st), f_(boost::forward<Fp>(f))
+      {};
+      void operator()()
+      {
+        try
+        {
+          f_();
+          that->mark_finished_with_result();
+        }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        catch(thread_interrupted& )
+        {
+          that->mark_interrupted_finish();
+        }
+#endif
+        catch(...)
+        {
+          that->mark_exceptional_finish();
+        }
+      }
+    };
+
+    template<typename Rp, typename Fp>
+    struct shared_state_nullary_task<Rp&, Fp>
+    {
+      shared_state<Rp&>* that;
+      Fp f_;
+    public:
+      shared_state_nullary_task(shared_state<Rp&>* st, BOOST_THREAD_FWD_REF(Fp) f)
+        : that(st), f_(boost::forward<Fp>(f))
+        {};
+      void operator()()
+      {
+        try
+        {
+          that->mark_finished_with_result(f_());
+        }
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+        catch(thread_interrupted& )
+        {
+          that->mark_interrupted_finish();
+        }
+#endif
+        catch(...)
+        {
+          that->mark_exceptional_finish();
+        }
+      }
+    };
+
+    /////////////////////////
+    /// future_executor_shared_state_base
+    /////////////////////////
+    template<typename Rp>
+    struct future_executor_shared_state: shared_state<Rp>
+    {
+      typedef shared_state<Rp> base_type;
+    protected:
+      boost::executor& ex_;
+    public:
+      template<typename Fp>
+      future_executor_shared_state(boost::executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
+      : ex_(ex)
+      {
+        this->set_executor();
+        shared_state_nullary_task<Rp,Fp> t(this, boost::forward<Fp>(f));
+        ex_.submit(boost::move(t));
+      }
+
+      ~future_executor_shared_state()
+      {
+        this->wait(false);
+      }
+    };
+
+    ////////////////////////////////
+    // make_future_executor_shared_state
+    ////////////////////////////////
+    template <class Rp, class Fp>
+    BOOST_THREAD_FUTURE<Rp>
+    make_future_executor_shared_state(executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
+    {
+      shared_ptr<future_executor_shared_state<Rp> >
+          h(new future_executor_shared_state<Rp>(ex, boost::forward<Fp>(f)));
+      return BOOST_THREAD_FUTURE<Rp>(h);
+    }
+
+    } // detail
+
+    ////////////////////////////////
+    // template <class F, class... ArgTypes>
+    // future<R> async(executor& ex, F&&, ArgTypes&&...);
+    ////////////////////////////////
+
+  #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+    #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+
+            template <class R, class... ArgTypes>
+            BOOST_THREAD_FUTURE<R>
+            async(executor& ex, R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
+            {
+              typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
+              typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                      , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                  )
+              ));
+            }
+    #endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+
+            template <class F, class ...ArgTypes>
+            BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
+                typename decay<ArgTypes>::type...
+            )>::type>
+            async(executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args)
+            {
+              typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                      , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+                  )
+              ));
+            }
+  #else // ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+    #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+
+            template <class R>
+            BOOST_THREAD_FUTURE<R>
+            async(executor& ex, R(*f)())
+            {
+              typedef R(*F)();
+              typedef detail::async_func<typename decay<F>::type> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                  )
+              ));
+            }
+
+            template <class R, class A1>
+            BOOST_THREAD_FUTURE<R>
+            async(executor& ex, R(*f)(BOOST_THREAD_FWD_REF(A1)), BOOST_THREAD_FWD_REF(A1) a1)
+            {
+              typedef R(*F)(BOOST_THREAD_FWD_REF(A1));
+              typedef detail::async_func<typename decay<F>::type, typename decay<A1>::type> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                      , thread_detail::decay_copy(boost::forward<A1>(a1))
+                  )
+              ));
+            }
+
+    #endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+            template <class F>
+            BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
+            async(executor& ex, BOOST_THREAD_FWD_REF(F) f)
+            {
+              typedef detail::async_func<typename decay<F>::type> BF;
+              typedef typename BF::result_type Rp;
+
+              return boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                  )
+              );
+            }
+
+            template <class F, class A1>
+            BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
+                typename decay<A1>::type
+            )>::type>
+            async(executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1)
+            {
+              typedef detail::async_func<typename decay<F>::type, typename decay<A1>::type> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+                      , thread_detail::decay_copy(boost::forward<A1>(a1))
+                  )
+              ));
+            }
+
+  #endif //! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+
+
+#endif
 
         ////////////////////////////////
         // template <class F, class... ArgTypes>
