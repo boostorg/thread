@@ -10,6 +10,28 @@
 
 [heading Version 4.2.0 - boost 1.55]
 
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/2442 #2442] Application statically linked with Boost.Thread crashes when Google Desktop is installed (Windows XP)
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+* [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
+* [@http://svn.boost.org/trac/boost/ticket/6782 #6782] call_once uses incorrect barrier intrinsic on Visual Studio
+* [@http://svn.boost.org/trac/boost/ticket/7319 #7319] Take care of c++std-lib-32966 issue
+* [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
+* [@http://svn.boost.org/trac/boost/ticket/9307 #9307] future::fallback_to assert with ERRORRRRR boost: mutex lock failed in pthread_mutex_lock: Invalid argument
+* [@http://svn.boost.org/trac/boost/ticket/9308 #9308] future::async fails with terminate called throwing an exception when called with a lambda - clang-darwin-asan11
+* [@http://svn.boost.org/trac/boost/ticket/9311 #9311] ex_lambda_future fails on msvc-11.0
+* [@http://svn.boost.org/trac/boost/ticket/9310 #9310] test_4648_lib fails on clang-darwin-asan11
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread trunk regression test] to see the current state.
+
+[*Sever limitations:]
+
+There are some severe bugs that prevent the use of the library on concrete contexts, in particular:
+
+* on thread specific storage that prevent the library to be used with dynamic libraries,
+* The experimental features of boost::future have some severe holes that make the program crash unexpectedly.
+
 [*New Features:]
 
 * [@http://svn.boost.org/trac/boost/ticket/8519 #8519] Synchro: Update class barrier with a completion function.
