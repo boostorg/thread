@@ -35,8 +35,8 @@ int main()
   {
     boost::future<boost::future<int> > outer_future = boost::async(boost::launch::async, &p2);
     boost::future<int> inner_future = outer_future.unwrap();
-    int i = inner_future.get();
-    BOOST_THREAD_LOG << "i= "<< i << "" << BOOST_THREAD_END_LOG;
+    int ii = inner_future.get();
+    BOOST_THREAD_LOG << "ii= "<< ii << "" << BOOST_THREAD_END_LOG;
   }
   catch (std::exception& ex)
   {
