@@ -24,6 +24,7 @@ int main()
 {
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
 
+  for (int i=0; i< 10; i++)
   try
   {
     {

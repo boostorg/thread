@@ -30,6 +30,7 @@ boost::future<int> p2()
 int main()
 {
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
+  for (int i=0; i< 10; i++)
   try
   {
     boost::future<boost::future<int> > outer_future = boost::async(boost::launch::async, &p2);

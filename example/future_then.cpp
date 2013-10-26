@@ -21,7 +21,7 @@ int p1()
 
 int p2(boost::future<int> f)
 {
-  BOOST_THREAD_LOG << "<P2" << BOOST_THREAD_END_LOG;
+  BOOST_THREAD_LOG << "P2<" << BOOST_THREAD_END_LOG;
   try
   {
     return 2 * f.get();
@@ -40,7 +40,7 @@ int p2(boost::future<int> f)
 }
 int p2s(boost::shared_future<int> f)
 {
-  BOOST_THREAD_LOG << "<P2" << BOOST_THREAD_END_LOG;
+  BOOST_THREAD_LOG << "<P2S" << BOOST_THREAD_END_LOG;
   try
   {
     return 2 * f.get();
@@ -55,47 +55,59 @@ int p2s(boost::shared_future<int> f)
     BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
     BOOST_ASSERT(false);
   }
-  BOOST_THREAD_LOG << "P2>" << BOOST_THREAD_END_LOG;
+  BOOST_THREAD_LOG << "P2S>" << BOOST_THREAD_END_LOG;
 }
 
 int main()
 {
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
   {
-  try
-  {
-    boost::future<int> f1 = boost::async(boost::launch::async, &p1);
-    boost::future<int> f2 = f1.then(&p2);
-    (void)f2.get();
+    for (int i=0; i< 10; i++)
+    try
+    {
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      //boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+      boost::future<int> f1 = boost::async(&p1);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      boost::future<int> f2 = f1.then(&p2);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      (void)f2.get();
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+    }
+    catch (std::exception& ex)
+    {
+      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
+      return 1;
+    }
+    catch (...)
+    {
+      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
+      return 2;
+    }
   }
-  catch (std::exception& ex)
   {
-    BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
-    return 1;
-  }
-  catch (...)
-  {
-    BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
-    return 2;
-  }
-  }
-  {
-  try
-  {
-    boost::shared_future<int> f1 = boost::async(boost::launch::async, &p1).share();
-    boost::future<int> f2 = f1.then(&p2s);
-    (void)f2.get();
-  }
-  catch (std::exception& ex)
-  {
-    BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
-    return 1;
-  }
-  catch (...)
-  {
-    BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
-    return 2;
-  }
+    for (int i=0; i< 10; i++)
+    try
+    {
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      //boost::shared_future<int> f1 = boost::async(boost::launch::async, &p1).share();
+      boost::shared_future<int> f1 = boost::async(&p1).share();
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      boost::future<int> f2 = f1.then(&p2s);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      (void)f2.get();
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+    }
+    catch (std::exception& ex)
+    {
+      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
+      return 1;
+    }
+    catch (...)
+    {
+      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
+      return 2;
+    }
   }
   BOOST_THREAD_LOG << "MAIN>" << BOOST_THREAD_END_LOG;
   return 0;
