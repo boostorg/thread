@@ -97,7 +97,7 @@ namespace boost
     /// move assignment
     externally_locked& operator=(BOOST_THREAD_RV_REF(externally_locked) rhs) // BOOST_NOEXCEPT
     {
-      obj_=move(rhs.obj_);
+      obj_=move(BOOST_THREAD_RV(rhs).obj_);
       mtx_=rhs.mtx_;
       return *this;
     }

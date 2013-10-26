@@ -472,8 +472,8 @@ namespace boost
      */
     synchronized_value(BOOST_THREAD_RV_REF(synchronized_value) other)
     {
-      strict_lock<mutex_type> lk(other.mtx_);
-      value_= boost::move(other.value_);
+      strict_lock<mutex_type> lk(BOOST_THREAD_RV(other).mtx_);
+      value_= boost::move(BOOST_THREAD_RV(other).value_);
     }
 
     // mutation
