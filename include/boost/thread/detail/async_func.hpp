@@ -29,13 +29,7 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/make_tuple_indices.hpp>
-
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-#include <tuple>
-#else
-#include <boost/tuple/tuple.hpp>
-#endif
+#include <boost/thread/csbl/tuple.hpp>
 
 namespace boost
 {
@@ -48,7 +42,7 @@ namespace boost
     template <class Fp, class ... Args>
     class async_func
     {
-      std::tuple<Fp, Args...> f_;
+      csbl::tuple<Fp, Args...> f_;
 
     public:
       BOOST_THREAD_MOVABLE_ONLY( async_func)

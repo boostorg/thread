@@ -18,11 +18,11 @@
 #include <boost/thread/detail/work.hpp>
 
 
-#ifdef BOOST_NO_CXX11_HDR_FUNCTIONAL
-#include <boost/function.hpp>
-#else
-#include <functional>
-#endif
+//#ifdef BOOST_NO_CXX11_HDR_FUNCTIONAL
+//#include <boost/function.hpp>
+//#else
+//#include <functional>
+//#endif
 
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #include <boost/container/vector.hpp>
@@ -173,38 +173,29 @@ namespace boost
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
-#ifndef BOOST_THREAD_USES_NULLARY_FUNCTION_AS_WORK
+
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
-    void submit(Closure const & closure)
+    void submit(Closure & closure)
     {
       work w ((closure));
       work_queue.push(boost::move(w));
-      //work_queue.push(work(closure));
+      //work_queue.push(work(closure)); // todo check why this doesn't work
     }
-#else
-    #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-        template <typename Closure>
-        void submit(Closure & closure)
-        {
-          work w ((closure));
-          work_queue.push(boost::move(w));
-          //work_queue.push(work(closure));
-        }
-    #endif
-        void submit(void (*closure)())
-        {
-          work w ((closure));
-          work_queue.push(boost::move(w));
-          //work_queue.push(work(closure));
-        }
-
 #endif
+    void submit(void (*closure)())
+    {
+      work w ((closure));
+      work_queue.push(boost::move(w));
+      //work_queue.push(work(closure)); // todo check why this doesn't work
+    }
+
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
       work w =boost::move(closure);
       work_queue.push(boost::move(w));
-      //work_queue.push(work(boost::move(closure)));
+      //work_queue.push(work(boost::move(closure))); // todo check why this doesn't work
     }
 
     /**
@@ -216,7 +207,6 @@ namespace boost
     bool reschedule_until(Pred const& pred)
     {
       do {
-        //schedule_one_or_yield();
         if ( ! try_executing_one())
         {
           return false;

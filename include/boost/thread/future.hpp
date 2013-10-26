@@ -60,15 +60,8 @@
 #include <boost/thread/thread_only.hpp>
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-#include <tuple>
-#define BOOST_THREAD_TUPLE std::tuple
-#endif
-
-#include <boost/container/vector.hpp>
-#define BOOST_THREAD_VECTOR boost::container::vector
-//#include <vector>
-//#define BOOST_THREAD_VECTOR std::vector
+#include <boost/thread/csbl/tuple.hpp>
+#include <boost/thread/csbl/vector.hpp>
 #endif
 
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
@@ -4511,11 +4504,11 @@ namespace boost
     // detail::future_async_when_all_shared_state
     ////////////////////////////////
     template<typename F>
-    struct future_when_all_vector_shared_state: future_async_shared_state_base<BOOST_THREAD_VECTOR<F> >
+    struct future_when_all_vector_shared_state: future_async_shared_state_base<csbl::vector<F> >
     {
-      typedef BOOST_THREAD_VECTOR<F> vector_type;
+      typedef csbl::vector<F> vector_type;
       typedef typename F::value_type value_type;
-      BOOST_THREAD_VECTOR<F> vec_;
+      csbl::vector<F> vec_;
 
       static void run(future_when_all_vector_shared_state* that)
       {
@@ -4551,7 +4544,7 @@ namespace boost
       }
 
       future_when_all_vector_shared_state(vector_tag,
-          BOOST_THREAD_RV_REF(BOOST_THREAD_VECTOR<F>) v
+          BOOST_THREAD_RV_REF(csbl::vector<F>) v
       )
       : vec_(boost::move(v))
       {
@@ -4588,11 +4581,11 @@ namespace boost
     // detail::future_async_when_any_shared_state
     ////////////////////////////////
     template<typename F>
-    struct future_when_any_vector_shared_state: future_async_shared_state_base<BOOST_THREAD_VECTOR<F> >
+    struct future_when_any_vector_shared_state: future_async_shared_state_base<csbl::vector<F> >
     {
-      typedef BOOST_THREAD_VECTOR<F> vector_type;
+      typedef csbl::vector<F> vector_type;
       typedef typename F::value_type value_type;
-      BOOST_THREAD_VECTOR<F> vec_;
+      csbl::vector<F> vec_;
 
       static void run(future_when_any_vector_shared_state* that)
       {
@@ -4628,7 +4621,7 @@ namespace boost
       }
 
       future_when_any_vector_shared_state(vector_tag,
-          BOOST_THREAD_RV_REF(BOOST_THREAD_VECTOR<F>) v
+          BOOST_THREAD_RV_REF(csbl::vector<F>) v
       )
       : vec_(boost::move(v))
       {
@@ -4661,22 +4654,22 @@ namespace boost
     };
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
     template< typename T0, typename ...T>
     struct future_when_all_tuple_shared_state: future_async_shared_state_base<
-      BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+      csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
     >
     {
 
     };
     template< typename T0, typename ...T>
     struct future_when_any_tuple_shared_state: future_async_shared_state_base<
-      BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+      csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
     >
     {
 
     };
-#endif
+//#endif
 #endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
@@ -4693,20 +4686,20 @@ namespace boost
     template< typename T0, typename ...T>
     struct when_type_impl<true, T0, T...>
     {
-      typedef BOOST_THREAD_VECTOR<typename decay<T0>::type> container_type;
+      typedef csbl::vector<typename decay<T0>::type> container_type;
       typedef typename container_type::value_type value_type;
       typedef detail::future_when_all_vector_shared_state<value_type> factory_all_type;
       typedef detail::future_when_any_vector_shared_state<value_type> factory_any_type;
     };
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
     template< typename T0, typename ...T>
     struct when_type_impl<false, T0, T...>
     {
-      typedef BOOST_THREAD_TUPLE<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > container_type;
+      typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > container_type;
       typedef detail::future_when_all_tuple_shared_state<T0, T...> factory_all_type;
       typedef detail::future_when_any_tuple_shared_state<T0, T...> factory_any_type;
     };
-#endif
+//#endif
 
     template< typename T0, typename ...T>
     struct when_type : when_type_impl<are_same<T0, T...>::value, T0, T...> {};
@@ -4715,12 +4708,12 @@ namespace boost
 
   template< typename InputIterator>
   typename boost::disable_if<is_future_type<InputIterator>,
-    BOOST_THREAD_FUTURE<BOOST_THREAD_VECTOR<typename InputIterator::value_type>  >
+    BOOST_THREAD_FUTURE<csbl::vector<typename InputIterator::value_type>  >
   >::type
   when_all(InputIterator first, InputIterator last)
   {
     typedef  typename InputIterator::value_type value_type;
-    typedef  BOOST_THREAD_VECTOR<value_type> container_type;
+    typedef  csbl::vector<value_type> container_type;
     typedef  detail::future_when_all_vector_shared_state<value_type> factory_type;
 
     if (first==last) return make_ready_future(container_type());
@@ -4730,12 +4723,12 @@ namespace boost
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-  BOOST_THREAD_FUTURE<BOOST_THREAD_TUPLE<> > when_all()
+//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+  BOOST_THREAD_FUTURE<csbl::tuple<> > when_all()
   {
-    return make_ready_future(BOOST_THREAD_TUPLE<>());
+    return make_ready_future(csbl::tuple<>());
   }
-#endif
+//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
@@ -4753,12 +4746,12 @@ namespace boost
 
   template< typename InputIterator>
   typename boost::disable_if<is_future_type<InputIterator>,
-    BOOST_THREAD_FUTURE<BOOST_THREAD_VECTOR<typename InputIterator::value_type>  >
+    BOOST_THREAD_FUTURE<csbl::vector<typename InputIterator::value_type>  >
   >::type
   when_any(InputIterator first, InputIterator last)
   {
     typedef  typename InputIterator::value_type value_type;
-    typedef  BOOST_THREAD_VECTOR<value_type> container_type;
+    typedef  csbl::vector<value_type> container_type;
     typedef  detail::future_when_any_vector_shared_state<value_type> factory_type;
 
     if (first==last) return make_ready_future(container_type());
@@ -4768,12 +4761,12 @@ namespace boost
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-  BOOST_THREAD_FUTURE<BOOST_THREAD_TUPLE<> > when_any()
+//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+  BOOST_THREAD_FUTURE<csbl::tuple<> > when_any()
   {
-    return make_ready_future(BOOST_THREAD_TUPLE<>());
+    return make_ready_future(csbl::tuple<>());
   }
-#endif
+//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>

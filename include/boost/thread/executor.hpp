@@ -71,14 +71,7 @@ namespace boost
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
-#ifndef BOOST_THREAD_USES_NULLARY_FUNCTION_AS_WORK
-    template <typename Closure>
-    void submit(Closure const& closure)
-    {
-      work w ((closure));
-      submit(boost::move(w));
-    }
-#else
+
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>
     void submit(Closure & closure)
@@ -92,7 +85,6 @@ namespace boost
       work w ((closure));
       submit(boost::move(w));
     }
-#endif
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
