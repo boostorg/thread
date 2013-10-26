@@ -24,17 +24,17 @@ void p2()
     << boost::this_thread::get_id()  << " P2" << BOOST_THREAD_END_LOG;
 }
 
-void push(boost::container::deque<boost::detail::function_wrapper> &data_, BOOST_THREAD_RV_REF(boost::detail::function_wrapper) closure)
+void push(boost::container::deque<boost::thread_detail::work> &data_, BOOST_THREAD_RV_REF(boost::thread_detail::work) closure)
 {
   try
   {
     BOOST_THREAD_LOG
       << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
-    boost::detail::function_wrapper  v;
+    boost::thread_detail::work  v;
     BOOST_THREAD_LOG
       << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
     //v = boost::move(closure);
-    //v = boost::forward<boost::detail::function_wrapper>(closure);
+    //v = boost::forward<boost::thread_detail::work>(closure);
     BOOST_THREAD_LOG
       << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
 
@@ -42,7 +42,7 @@ void push(boost::container::deque<boost::detail::function_wrapper> &data_, BOOST
     BOOST_THREAD_LOG
       << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
 
-    //data_.push_back(boost::forward<boost::detail::function_wrapper>(closure));
+    //data_.push_back(boost::forward<boost::thread_detail::work>(closure));
     BOOST_THREAD_LOG
       << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
 
@@ -60,14 +60,14 @@ void push(boost::container::deque<boost::detail::function_wrapper> &data_, BOOST
 }
 
 template <typename Closure>
-void submit(boost::container::deque<boost::detail::function_wrapper> &data_, BOOST_THREAD_FWD_REF(Closure) closure)
+void submit(boost::container::deque<boost::thread_detail::work> &data_, BOOST_THREAD_FWD_REF(Closure) closure)
 {
   BOOST_THREAD_LOG
     << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
   //work w =boost::move(closure);
   //work_queue.push(boost::move(w));
-  //push(data_, boost::detail::function_wrapper(boost::forward<Closure>(closure)));
-  boost::detail::function_wrapper  v =boost::forward<Closure>(closure);
+  //push(data_, boost::thread_detail::work(boost::forward<Closure>(closure)));
+  boost::thread_detail::work  v =boost::forward<Closure>(closure);
   BOOST_THREAD_LOG
     << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
   push(data_, boost::move(v));
@@ -84,11 +84,11 @@ int main()
   {
     try
     {
-      boost::detail::function_wrapper f(&p1);
+      boost::thread_detail::work f(&p1);
 
-    boost::container::deque<boost::detail::function_wrapper> data_;
+    boost::container::deque<boost::thread_detail::work> data_;
     data_.push_back(boost::move(f));
-    data_.push_back(boost::detail::function_wrapper(&p1));
+    data_.push_back(boost::thread_detail::work(&p1));
     submit(data_, &p1);
     }
     catch (std::exception& ex)

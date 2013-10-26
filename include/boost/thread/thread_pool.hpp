@@ -15,7 +15,8 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/thread/sync_queue.hpp>
-#include <boost/thread/detail/function_wrapper.hpp>
+#include <boost/thread/detail/work.hpp>
+
 
 #ifdef BOOST_NO_CXX11_HDR_FUNCTIONAL
 #include <boost/function.hpp>
@@ -34,10 +35,11 @@
 namespace boost
 {
 
+
   class thread_pool
   {
     /// type-erasure to store the works to do
-    typedef  detail::function_wrapper work;
+    typedef  thread_detail::work work;
     /// the kind of stored threads are scoped threads to ensure that the threads are joined.
     /// A move aware vector type
     typedef scoped_thread<> thread_t;
@@ -171,13 +173,32 @@ namespace boost
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
+#ifndef BOOST_THREAD_USES_NULLARY_FUNCTION_AS_WORK
     template <typename Closure>
-    void submit(Closure const& closure)
+    void submit(Closure const & closure)
     {
       work w ((closure));
       work_queue.push(boost::move(w));
       //work_queue.push(work(closure));
     }
+#else
+    #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+        template <typename Closure>
+        void submit(Closure & closure)
+        {
+          work w ((closure));
+          work_queue.push(boost::move(w));
+          //work_queue.push(work(closure));
+        }
+    #endif
+        void submit(void (*closure)())
+        {
+          work w ((closure));
+          work_queue.push(boost::move(w));
+          //work_queue.push(work(closure));
+        }
+
+#endif
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {

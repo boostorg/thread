@@ -14,8 +14,7 @@
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/detail/function_wrapper.hpp>
-
+#include <boost/thread/detail/work.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -26,7 +25,7 @@ namespace boost
   {
   public:
     /// type-erasure to store the works to do
-    typedef  detail::function_wrapper work;
+    typedef  thread_detail::work work;
 
     /// executor is not copyable.
     BOOST_THREAD_NO_COPYABLE(executor)
@@ -72,14 +71,28 @@ namespace boost
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
-//#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+#ifndef BOOST_THREAD_USES_NULLARY_FUNCTION_AS_WORK
     template <typename Closure>
     void submit(Closure const& closure)
     {
       work w ((closure));
       submit(boost::move(w));
     }
-//#endif
+#else
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template <typename Closure>
+    void submit(Closure & closure)
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+#endif
+    void submit(void (*closure)())
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+#endif
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
@@ -119,7 +132,7 @@ namespace boost
     Executor ex;
   public:
     /// type-erasure to store the works to do
-    typedef  detail::function_wrapper work;
+    typedef  executor::work work;
 
     /// executor is not copyable.
     BOOST_THREAD_NO_COPYABLE(executor_adaptor)
