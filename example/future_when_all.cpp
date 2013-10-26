@@ -26,6 +26,7 @@
 
 
 #include <boost/thread/future.hpp>
+#include <boost/thread/csbl/vector.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/detail/log.hpp>
 #include <string>
@@ -103,9 +104,9 @@ int main()
       boost::future<int> f1 = boost::async(boost::launch::async, &p1);
       boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
       boost::future<std::tuple<> > all0 = boost::when_all();
-      boost::future<BOOST_THREAD_VECTOR<boost::future<int> > > all = boost::when_all(boost::move(f1), boost::move(f2));
+      boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1), boost::move(f2));
       //(void) all.wait();
-      BOOST_THREAD_VECTOR<boost::future<int> > res = all.get();
+      boost::csbl::vector<boost::future<int> > res = all.get();
       BOOST_THREAD_LOG
         << res[0].get() <<" " << BOOST_THREAD_END_LOG;
       BOOST_THREAD_LOG
@@ -130,9 +131,9 @@ int main()
       boost::future<int> f1 = boost::async(boost::launch::async, &p1);
       boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
       boost::future<std::tuple<> > all0 = boost::when_any();
-      boost::future<BOOST_THREAD_VECTOR<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+      boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
       //(void) all.wait();
-      BOOST_THREAD_VECTOR<boost::future<int> > res = all.get();
+      boost::csbl::vector<boost::future<int> > res = all.get();
       BOOST_THREAD_LOG
         << res[0].get() <<" " << BOOST_THREAD_END_LOG;
       BOOST_THREAD_LOG
@@ -156,21 +157,17 @@ int main()
   return 0;
 }
 #else
-#include <boost/container/vector.hpp>
-#define BOOST_THREAD_VECTOR boost::container::vector
+#include <boost/thread/csbl/vector.hpp>
 using namespace boost;
-//#include <vector>
-//#define BOOST_THREAD_VECTOR std::vector
-//using namespace std;
 
-void f(  BOOST_THREAD_VECTOR<future<int> > &//vec
+void f(  boost::csbl::vector<future<int> > &//vec
     , BOOST_THREAD_RV_REF(future<int>) //f
     ) {
   //vec.push_back(boost::forward<future<int> >(f));
 }
 int main()
 {
-  BOOST_THREAD_VECTOR<future<int> > vec;
+  boost::csbl::vector<future<int> > vec;
   f(vec, make_ready_future(0));
   return 0;
 }
