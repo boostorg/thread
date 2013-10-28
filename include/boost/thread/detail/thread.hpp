@@ -4,7 +4,7 @@
 // accompanying file LICENSE_1_0.txt or copy at
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007-2010 Anthony Williams
-// (C) Copyright 20011-2012 Vicente J. Botet Escriba
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/detail/config.hpp>
 
@@ -334,7 +334,7 @@ namespace boost
             start_thread(attrs);
         }
 #endif
-        thread(BOOST_THREAD_RV_REF(thread) x)
+        thread(BOOST_THREAD_RV_REF(thread) x) BOOST_NOEXCEPT
         {
             thread_info=BOOST_THREAD_RV(x).thread_info;
             BOOST_THREAD_RV(x).thread_info.reset();
