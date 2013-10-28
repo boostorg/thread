@@ -30,6 +30,7 @@
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/make_tuple_indices.hpp>
 #include <boost/thread/csbl/tuple.hpp>
+#include <boost/tuple/tuple.hpp>
 
 namespace boost
 {
