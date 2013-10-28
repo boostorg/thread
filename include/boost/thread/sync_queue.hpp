@@ -20,7 +20,7 @@
 #include <boost/smart_ptr/make_shared.hpp>
 
 #include <boost/thread/sync_bounded_queue.hpp>
-#include <boost/container/deque.hpp>
+#include <boost/thread/csbl/deque.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -73,7 +73,7 @@ namespace boost
     mutable mutex mtx_;
     condition_variable not_empty_;
     size_type waiting_empty_;
-    boost::container::deque<ValueType> data_;
+    csbl::deque<ValueType> data_;
     bool closed_;
 
     inline bool empty(unique_lock<mutex>& ) const BOOST_NOEXCEPT

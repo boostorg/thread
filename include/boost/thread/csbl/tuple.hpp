@@ -11,7 +11,7 @@
 
 #include <boost/config.hpp>
 
-#ifdef BOOST_NO_CXX11_HDR_TUPLE
+#if defined BOOST_NO_CXX11_HDR_TUPLE || defined BOOST_NO_CXX11_RVALUE_REFERENCES
 #include <boost/tuple/tuple.hpp>
 #else
 #include <tuple>
@@ -21,12 +21,17 @@ namespace boost
 {
   namespace csbl
   {
-#ifdef BOOST_NO_CXX11_HDR_TUPLE
+#if defined BOOST_NO_CXX11_HDR_TUPLE || defined BOOST_NO_CXX11_RVALUE_REFERENCES
     using ::boost::tuple;
-
 #else
+    // 20.4.2, class template tuple:
     using ::std::tuple;
-
+    // 20.4.2.4, tuple creation functions:
+    // 20.4.2.5, tuple helper classes:
+    // 20.4.2.6, element access:
+    // 20.4.2.7, relational operators:
+    // 20.4.2.8, allocator-related traits
+    // 20.4.2.9, specialized algorithms:
 #endif
 
   }

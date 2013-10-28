@@ -6,25 +6,25 @@
 // 2013/10 Vicente J. Botet Escriba
 //   Creation.
 
-#ifndef BOOST_CSBL_VECTOR_HPP
-#define BOOST_CSBL_VECTOR_HPP
+#ifndef BOOST_CSBL_LIST_HPP
+#define BOOST_CSBL_LIST_HPP
 
 #include <boost/config.hpp>
 
-#if defined BOOST_NO_CXX11_HDR_VECTOR || defined BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <boost/container/vector.hpp>
+#if defined BOOST_NO_CXX11_HDR_LIST || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#include <boost/container/list.hpp>
 #else
-#include <vector>
+#include <list>
 #endif
 
 namespace boost
 {
   namespace csbl
   {
-#if defined BOOST_NO_CXX11_HDR_VECTOR || defined BOOST_NO_CXX11_RVALUE_REFERENCES
-    using ::boost::container::vector;
+#if defined BOOST_NO_CXX11_HDR_LIST || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+    using ::boost::container::list;
 #else
-    using ::std::vector;
+    using ::std::list;
 #endif
 
   }

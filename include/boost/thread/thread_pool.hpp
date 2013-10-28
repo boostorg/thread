@@ -24,11 +24,13 @@
 //#include <functional>
 //#endif
 
-#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-#include <boost/container/vector.hpp>
-#else
-#include <vector>
-#endif
+#include <boost/thread/csbl/vector.hpp>
+
+//#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+//#include <boost/container/vector.hpp>
+//#else
+//#include <vector>
+//#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -43,11 +45,7 @@ namespace boost
     /// the kind of stored threads are scoped threads to ensure that the threads are joined.
     /// A move aware vector type
     typedef scoped_thread<> thread_t;
-#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-    typedef container::vector<thread_t> thread_vector;
-#else
-    typedef std::vector<thread_t> thread_vector;
-#endif
+    typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
     sync_queue<work > work_queue;

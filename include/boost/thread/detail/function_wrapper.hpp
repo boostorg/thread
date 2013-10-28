@@ -14,7 +14,7 @@
 #include <boost/thread/detail/memory.hpp>
 #include <boost/thread/detail/move.hpp>
 
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
+#include <boost/thread/csbl/memory/unique_ptr.hpp>
 
 #include <memory>
 #include <functional>
@@ -32,8 +32,8 @@ namespace boost
         {
         }
       };
-      //typedef boost::interprocess::unique_ptr<impl_base, boost::default_delete<impl_base> > impl_base_type;
-      impl_base* impl;
+      typedef boost::csbl::unique_ptr<impl_base> impl_base_type;
+      impl_base_type impl;
       template <typename F>
       struct impl_type: impl_base
       {
@@ -74,7 +74,6 @@ namespace boost
       }
       ~function_wrapper()
       {
-        delete impl;
       }
 
       function_wrapper& operator=(BOOST_THREAD_RV_REF(function_wrapper) other) BOOST_NOEXCEPT

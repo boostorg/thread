@@ -54,6 +54,10 @@
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <boost/thread/detail/memory.hpp>
+#include <boost/container/scoped_allocator.hpp>
+#if ! defined  BOOST_NO_CXX11_ALLOCATOR
+#include <memory>
+#endif
 #endif
 
 #include <boost/utility/result_of.hpp>
@@ -2453,16 +2457,26 @@ namespace boost
         }
 
     };
-
+}
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
-    namespace container
+namespace boost { namespace container {
+    template <class R, class Alloc>
+    struct uses_allocator< ::boost::promise<R> , Alloc> : true_type
     {
-      template <class R, class Alloc>
-      struct uses_allocator<promise<R> , Alloc> : true_type
-      {
-      };
-    }
+    };
+}}
+#if ! defined  BOOST_NO_CXX11_ALLOCATOR
+namespace std {
+    template <class R, class Alloc>
+    struct uses_allocator< ::boost::promise<R> , Alloc> : true_type
+    {
+    };
+}
 #endif
+#endif
+
+namespace boost
+{
 
     BOOST_THREAD_DCL_MOVABLE_BEG(T) promise<T> BOOST_THREAD_DCL_MOVABLE_END
 
@@ -3378,16 +3392,26 @@ namespace boost
             task->set_wait_callback(f,this);
         }
     };
-
+}
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
-    namespace container
+namespace boost { namespace container {
+    template <class R, class Alloc>
+    struct uses_allocator< ::boost::packaged_task<R> , Alloc> : true_type
     {
-      template <class R, class Alloc>
-      struct uses_allocator<packaged_task<R>, Alloc>
-        : public true_type {};
-    }
+    };
+}}
+#if ! defined  BOOST_NO_CXX11_ALLOCATOR
+namespace std {
+    template <class R, class Alloc>
+    struct uses_allocator< ::boost::packaged_task<R> , Alloc> : true_type
+    {
+    };
+}
+#endif
 #endif
 
+namespace boost
+{
     BOOST_THREAD_DCL_MOVABLE_BEG(T) packaged_task<T> BOOST_THREAD_DCL_MOVABLE_END
 
     namespace detail

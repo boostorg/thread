@@ -24,7 +24,7 @@ void p2()
     << boost::this_thread::get_id()  << " P2" << BOOST_THREAD_END_LOG;
 }
 
-void push(boost::container::deque<boost::thread_detail::work> &data_, BOOST_THREAD_RV_REF(boost::thread_detail::work) closure)
+void push(boost::csbl::deque<boost::thread_detail::work> &data_, BOOST_THREAD_RV_REF(boost::thread_detail::work) closure)
 {
   try
   {
@@ -60,7 +60,7 @@ void push(boost::container::deque<boost::thread_detail::work> &data_, BOOST_THRE
 }
 
 template <typename Closure>
-void submit(boost::container::deque<boost::thread_detail::work> &data_, BOOST_THREAD_FWD_REF(Closure) closure)
+void submit(boost::csbl::deque<boost::thread_detail::work> &data_, BOOST_THREAD_FWD_REF(Closure) closure)
 {
   BOOST_THREAD_LOG
     << boost::this_thread::get_id()  << " <MAIN" << BOOST_THREAD_END_LOG;
@@ -86,7 +86,7 @@ int main()
     {
       boost::thread_detail::work f(&p1);
 
-    boost::container::deque<boost::thread_detail::work> data_;
+    boost::csbl::deque<boost::thread_detail::work> data_;
     data_.push_back(boost::move(f));
     data_.push_back(boost::thread_detail::work(&p1));
     submit(data_, &p1);
@@ -102,7 +102,7 @@ int main()
         << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
     }
 
-    typedef boost::container::vector<boost::thread> thread_vector;
+    typedef boost::csbl::vector<boost::thread> thread_vector;
     thread_vector threads;
 
   }
