@@ -750,10 +750,10 @@ namespace boost
 #endif
     void thread::join() {
         if (this_thread::get_id() == get_id())
-          boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+          boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
 
         BOOST_THREAD_VERIFY_PRECONDITION( join_noexcept(),
-            thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable")
+            thread_resource_error(static_cast<int>(system::errc::invalid_argument), "boost thread: thread not joinable")
         );
     }
 
@@ -764,7 +764,7 @@ namespace boost
 #endif
     {
         if (this_thread::get_id() == get_id())
-          boost::throw_exception(thread_resource_error(system::errc::resource_deadlock_would_occur, "boost thread: trying joining itself"));
+          boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
         bool res;
         if (do_try_join_until_noexcept(timeout, res))
         {
@@ -773,7 +773,7 @@ namespace boost
         else
         {
           BOOST_THREAD_THROW_ELSE_RETURN(
-            (thread_resource_error(system::errc::invalid_argument, "boost thread: thread not joinable")),
+            (thread_resource_error(static_cast<int>(system::errc::invalid_argument), "boost thread: thread not joinable")),
             false
           );
         }
