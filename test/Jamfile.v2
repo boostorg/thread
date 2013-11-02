@@ -279,6 +279,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_7160.cpp ]
           [ thread-run test_7328.cpp ]
           [ thread-run test_7571.cpp ]
+          [ thread-run test_9319.cpp ]
+          
     ;
 
 
@@ -777,31 +779,40 @@ rule thread-compile ( sources : reqs * : name )
 
     ;
 
+    explicit ts_more ;
+    test-suite ts_more
+    :
+          [ thread-run test_7666.cpp ]
+          [ thread-run test_7720.cpp ]
+          [ thread-run test_7755.cpp ]
+          [ thread-run test_8455.cpp ]
+          [ thread-run test_8508.cpp ]
+          #[ thread-run test_8557.cpp ]
+          [ thread-run test_8586.cpp ]
+          [ thread-run test_8943.cpp ]
+          [ thread-run test_8960.cpp ]
+          [ thread-run test_9079_a.cpp ]
+          [ thread-run test_9079_b.cpp ]
+          [ thread-run test_9192.cpp ]
+    ;
+    
+    explicit ts_more_cpp11 ;
+    test-suite ts_more_cpp11
+    :
+          [ thread-run test_8596.cpp ]
+          [ thread-run test_8600.cpp ]
+    ;
+    
     explicit ts_ ;
     test-suite ts_
     :
-
           #[ thread-run ../example/test_so.cpp ]
           #[ thread-run ../example/test_so2.cpp ]
-
-          #[ compile virtual_noexcept.cpp ]
-          #[ thread-run test_7720.cpp ]
-          #[ thread-run test_7666.cpp ]
-          #[ thread-run test_7755.cpp ]
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
           #[ thread-run ../example/std_async_test.cpp ]
-          #[ thread-run test_8508.cpp ]
-          #[ thread-run test_8586.cpp ]
-          #[ thread-run test_8596.cpp ]
-          #[ thread-run test_8600.cpp ]
-          #[ thread-run test_8943.cpp ]
-          #[ thread-run test_8960.cpp ]
-          #[ thread-run test_9079_a.cpp ]
-          #[ thread-run test_9079_b.cpp ]
-          #[ thread-run clang_main.cpp ]
-          #[ thread-run test_8557.cpp ]
-
+          #[ compile virtual_noexcept.cpp ]
+          #[ thread-run clang_main.cpp ]         
     ;
 
 }
