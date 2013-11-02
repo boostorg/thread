@@ -70,7 +70,7 @@ namespace boost
         }
         return false;
       }
-      catch (std::exception& ex)
+      catch (std::exception& )
       {
         return false;
       }
@@ -122,7 +122,12 @@ namespace boost
         threads.reserve(thread_count);
         for (unsigned i = 0; i < thread_count; ++i)
         {
+#if 1
+          thread th (&thread_pool::worker_thread, this);
+          threads.push_back(thread_t(boost::move(th)));
+#else
           threads.push_back(thread_t(&thread_pool::worker_thread, this));
+#endif
         }
       }
       catch (...)
