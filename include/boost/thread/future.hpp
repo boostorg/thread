@@ -30,8 +30,9 @@
 #include <boost/scoped_ptr.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
-#include <boost/type_traits/remove_reference.hpp>
-#include <boost/type_traits/remove_cv.hpp>
+//#include <boost/type_traits/remove_reference.hpp>
+//#include <boost/type_traits/remove_cv.hpp>
+#include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/mpl/if.hpp>
 #include <boost/config.hpp>
@@ -2766,11 +2767,17 @@ namespace boost
             private:
               task_shared_state(task_shared_state&);
             public:
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+                R (*f)(BOOST_THREAD_RV_REF(ArgTypes) ... );
+                task_shared_state(R (*f_)(BOOST_THREAD_RV_REF(ArgTypes) ... )):
+                    f(f_)
+                {}
+#else
                 R (*f)();
                 task_shared_state(R (*f_)()):
                     f(f_)
                 {}
-
+#endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
                 void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
@@ -2848,11 +2855,17 @@ namespace boost
             private:
               task_shared_state(task_shared_state&);
             public:
+#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+                R& (*f)(BOOST_THREAD_RV_REF(ArgTypes) ... );
+                task_shared_state(R& (*f_)(BOOST_THREAD_RV_REF(ArgTypes) ... )):
+                    f(f_)
+                {}
+#else
                 R& (*f)();
                 task_shared_state(R& (*f_)()):
                     f(f_)
                 {}
-
+#endif
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
                 void do_apply(BOOST_THREAD_RV_REF(ArgTypes) ... args)
@@ -3141,7 +3154,8 @@ namespace boost
             , typename boost::disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
             )
         {
-          typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
+          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
+          typedef typename decay<F>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
@@ -3222,7 +3236,9 @@ namespace boost
         template <class F, class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, BOOST_THREAD_FWD_REF(F) f)
         {
-          typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
+          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
+          typedef typename decay<F>::type FR;
+
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           typedef detail::task_shared_state<FR,R(ArgTypes...)> task_shared_state_type;
