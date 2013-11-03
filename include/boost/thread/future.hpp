@@ -959,7 +959,11 @@ namespace boost
           virtual void execute(boost::unique_lock<boost::mutex>& lck) {
             try
             {
-              this->mark_finished_with_result_internal(func_(), lck);
+              Fp local_fuct=boost::move(func_);
+              relocker relock(lck);
+              Rp res = local_fuct();
+              relock.lock();
+              this->mark_finished_with_result_internal(boost::move(res), lck);
             }
             catch (...)
             {
@@ -1008,7 +1012,10 @@ namespace boost
           virtual void execute(boost::unique_lock<boost::mutex>& lck) {
             try
             {
-              func_();
+              Fp local_fuct=boost::move(func_);
+              relocker relock(lck);
+              local_fuct();
+              relock.lock();
               this->mark_finished_with_result_internal(lck);
             }
             catch (...)
@@ -3848,7 +3855,12 @@ namespace boost
       virtual void execute(boost::unique_lock<boost::mutex>& lck) {
         try
         {
-          this->mark_finished_with_result_internal(continuation(boost::move(parent)), lck);
+          Fp local_fuct=boost::move(continuation);
+          F ftmp = boost::move(parent);
+          relocker relock(lck);
+          Rp res = local_fuct(boost::move(ftmp));
+          relock.lock();
+          this->mark_finished_with_result_internal(boost::move(res), lck);
         }
         catch (...)
         {
@@ -3880,7 +3892,11 @@ namespace boost
       virtual void execute(boost::unique_lock<boost::mutex>& lck) {
         try
         {
-          continuation(boost::move(parent));
+          Fp local_fuct=boost::move(continuation);
+          F ftmp = boost::move(parent);
+          relocker relock(lck);
+          local_fuct(boost::move(ftmp));
+          relock.lock();
           this->mark_finished_with_result_internal(lck);
         }
         catch (...)
