@@ -144,6 +144,8 @@ namespace boost
     template <typename A1>
     executor_adaptor(BOOST_THREAD_FWD_REF(A1) a1) : ex(boost::forward<A1>(a1)) {}
 #endif
+    Executor& underlying_executor() { return ex; }
+
     /**
      * \b Effects: close the \c executor for submissions.
      * The worker threads will work until there is no more closures to run.

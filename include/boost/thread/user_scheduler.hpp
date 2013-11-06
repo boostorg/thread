@@ -3,39 +3,30 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-// 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
-//    first implementation of a simple pool thread using a vector of threads and a sync_queue.
+// 2013/11 Vicente J. Botet Escriba
+//    first implementation of a simple serial scheduler.
 
-#ifndef BOOST_THREAD_THREAD_POOL_HPP
-#define BOOST_THREAD_THREAD_POOL_HPP
+#ifndef BOOST_THREAD_USER_SCHEDULER_HPP
+#define BOOST_THREAD_USER_SCHEDULER_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/scoped_thread.hpp>
 #include <boost/thread/sync_queue.hpp>
 #include <boost/thread/detail/work.hpp>
-#include <boost/thread/csbl/vector.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
 
-  class thread_pool
+  class user_scheduler
   {
     /// type-erasure to store the works to do
     typedef  thread_detail::work work;
-    /// the kind of stored threads are scoped threads to ensure that the threads are joined.
-    /// A move aware vector type
-    typedef scoped_thread<> thread_t;
-    typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
     sync_queue<work > work_queue;
-    /// A move aware vector
-    thread_vector threads;
 
   public:
     /**
@@ -77,8 +68,9 @@ namespace boost
         }
     }
 
+
     /**
-     * The main loop of the worker threads
+     * The main loop of the worker thread
      */
     void worker_thread()
     {
@@ -92,50 +84,35 @@ namespace boost
     }
 
   public:
-    /// thread_pool is not copyable.
-    BOOST_THREAD_NO_COPYABLE(thread_pool)
+    /// user_scheduler is not copyable.
+    BOOST_THREAD_NO_COPYABLE(user_scheduler)
 
     /**
-     * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
+     * \b Effects: creates a thread pool that runs closures using one of its closure-executing methods.
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    thread_pool(unsigned const thread_count = thread::hardware_concurrency())
+    user_scheduler()
     {
-      try
-      {
-        threads.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-#if 1
-          thread th (&thread_pool::worker_thread, this);
-          threads.push_back(thread_t(boost::move(th)));
-#else
-          threads.push_back(thread_t(&thread_pool::worker_thread, this));
-#endif
-        }
-      }
-      catch (...)
-      {
-        close();
-        throw;
-      }
     }
     /**
      * \b Effects: Destroys the thread pool.
      *
-     * \b Synchronization: The completion of all the closures happen before the completion of the \c thread_pool destructor.
+     * \b Synchronization: The completion of all the closures happen before the completion of the \c user_scheduler destructor.
      */
-    ~thread_pool()
+    ~user_scheduler()
     {
-      // signal to all the worker threads that there will be no more submissions.
+      // signal to all the worker thread that there will be no more submissions.
       close();
-      // joins all the threads as the threads were scoped_threads
     }
 
     /**
-     * \b Effects: close the \c thread_pool for submissions.
-     * The worker threads will work until there is no more closures to run.
+     * loop
+     */
+    void loop() { worker_thread(); }
+    /**
+     * \b Effects: close the \c user_scheduler for submissions.
+     * The loop will work until there is no more closures to run.
      */
     void close()
     {
@@ -154,7 +131,7 @@ namespace boost
      * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
      *
      * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
-     * If invoked closure throws an exception the \c thread_pool will call \c std::terminate, as is the case with threads.
+     * If invoked closure throws an exception the \c user_scheduler will call \c std::terminate, as is the case with threads.
      *
      * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
      *
@@ -201,6 +178,19 @@ namespace boost
         }
       } while (! pred());
       return true;
+    }
+    /**
+     * run queued closures
+     */
+    void run_queued_closures()
+    {
+      sync_queue<work>::underlying_queue_type q = work_queue.underlying_queue();
+      while (q.empty())
+      {
+        work task = q.front();
+        q.pop_front();
+        task();
+      }
     }
 
   };

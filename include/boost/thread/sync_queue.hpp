@@ -33,6 +33,7 @@ namespace boost
   {
   public:
     typedef ValueType value_type;
+    typedef csbl::deque<ValueType> underlying_queue_type;
     typedef std::size_t size_type;
 
     // Constructors/Assignment/Destructors
@@ -68,12 +69,16 @@ namespace boost
     inline bool try_pull(value_type&);
     inline bool try_pull(no_block_tag,value_type&);
     inline shared_ptr<ValueType> try_pull();
+    inline underlying_queue_type underlying_queue() {
+      lock_guard<mutex> lk(mtx_);
+      return boost::move(data_);
+    }
 
   private:
     mutable mutex mtx_;
     condition_variable not_empty_;
     size_type waiting_empty_;
-    csbl::deque<ValueType> data_;
+    underlying_queue_type data_;
     bool closed_;
 
     inline bool empty(unique_lock<mutex>& ) const BOOST_NOEXCEPT
