@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
+//#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/detail/log.hpp>
@@ -28,6 +28,7 @@ int p2(boost::future<int> f)
   }
   catch (std::exception& ex)
   {
+    std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
     BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
     BOOST_ASSERT(false);
   }
@@ -47,6 +48,7 @@ int p2s(boost::shared_future<int> f)
   }
   catch (std::exception& ex)
   {
+    std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
     BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
     BOOST_ASSERT(false);
   }
@@ -60,9 +62,10 @@ int p2s(boost::shared_future<int> f)
 
 int main()
 {
+  const int number_of_tests = 100;
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
   {
-    for (int i=0; i< 10; i++)
+    for (int i=0; i< number_of_tests; i++)
     try
     {
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
@@ -86,7 +89,7 @@ int main()
     }
   }
   {
-    for (int i=0; i< 10; i++)
+    for (int i=0; i< number_of_tests; i++)
     try
     {
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;

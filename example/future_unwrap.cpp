@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
+//#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/detail/log.hpp>
@@ -29,8 +29,9 @@ boost::future<int> p2()
 
 int main()
 {
+  const int number_of_tests = 100;
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
-  for (int i=0; i< 10; i++)
+  for (int i=0; i< number_of_tests; i++)
   try
   {
     boost::future<boost::future<int> > outer_future = boost::async(boost::launch::async, &p2);
@@ -40,11 +41,13 @@ int main()
   }
   catch (std::exception& ex)
   {
+    std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
     BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
     return 1;
   }
   catch (...)
   {
+    std::cout << " ERRORRRRR exception thrown" << std::endl;
     BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
     return 2;
   }

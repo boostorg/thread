@@ -21,13 +21,23 @@ namespace boost
   {
   public:
     typedef std::basic_ostringstream<typename OStream::char_type, typename OStream::traits_type> stream_type;
-    ostream_buffer(OStream& os) : os_(os) {}
-    ~ostream_buffer() { os_ << o_str_.str(); }
-    stream_type& stream() { return o_str_; }
+    ostream_buffer(OStream& os) :
+      os_(os)
+    {
+    }
+    ~ostream_buffer()
+    {
+      os_ << o_str_.str();
+    }
+    stream_type& stream()
+    {
+      return o_str_;
+    }
   private:
     OStream& os_;
     stream_type o_str_;
   };
+
 }
 
 #include <boost/config/abi_suffix.hpp>

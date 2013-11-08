@@ -142,7 +142,32 @@ namespace boost
     executor_adaptor(BOOST_THREAD_RV_REF(Args) ... args) : ex(boost::forward<Args>(args)...) {}
 #else
     template <typename A1>
-    executor_adaptor(BOOST_THREAD_FWD_REF(A1) a1) : ex(boost::forward<A1>(a1)) {}
+    executor_adaptor(
+        BOOST_THREAD_FWD_REF(A1) a1
+        ) :
+      ex(
+          boost::forward<A1>(a1)
+          ) {}
+    template <typename A1, typename A2>
+    executor_adaptor(
+        BOOST_THREAD_FWD_REF(A1) a1,
+        BOOST_THREAD_FWD_REF(A2) a2
+        ) :
+      ex(
+          boost::forward<A1>(a1),
+          boost::forward<A2>(a2)
+          ) {}
+    template <typename A1, typename A2, typename A3>
+    executor_adaptor(
+        BOOST_THREAD_FWD_REF(A1) a1,
+        BOOST_THREAD_FWD_REF(A2) a2,
+        BOOST_THREAD_FWD_REF(A3) a3
+        ) :
+      ex(
+          boost::forward<A1>(a1),
+          boost::forward<A2>(a2),
+          boost::forward<A3>(a3)
+          ) {}
 #endif
     Executor& underlying_executor() { return ex; }
 
@@ -166,8 +191,30 @@ namespace boost
      * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
-    void submit(BOOST_THREAD_RV_REF(work) closure)  { return ex.submit(boost::move(closure)); }
+    void submit(BOOST_THREAD_RV_REF(work) closure)  {
+      return ex.submit(boost::move(closure));
+    }
 
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template <typename Closure>
+    void submit(Closure & closure)
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+#endif
+    void submit(void (*closure)())
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+
+    template <typename Closure>
+    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    {
+      work w =boost::move(closure);
+      submit(boost::move(w));
+    }
 
     /**
      * Effects: try to execute one task.

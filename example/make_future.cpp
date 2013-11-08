@@ -51,7 +51,8 @@ boost::shared_future<int> shared_compute(int x)
 
 int main()
 {
-  for (int i=0; i< 10; i++)
+  const int number_of_tests = 100;
+  for (int i=0; i< number_of_tests; i++)
   try
   {
 #if defined BOOST_THREAD_USES_MOVE
