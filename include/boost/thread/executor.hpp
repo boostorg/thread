@@ -118,6 +118,10 @@ namespace boost
       return true;
     }
   };
+
+  /**
+   * Polymorphic adaptor of a model of Executor to an executor.
+   */
   template <typename Executor>
   class executor_adaptor : public executor
   {

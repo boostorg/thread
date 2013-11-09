@@ -22,9 +22,9 @@
 //     future<typename result_of<F(Args...)>::type>
 //     async(launch policy, F&& f, Args&&... args);
 
-// template <class F, class... Args>
+// template <class Executor, class F, class... Args>
 //     future<typename result_of<F(Args...)>::type>
-//     async(executor& ex, F&& f, Args&&... args);
+//     async(Executor& ex, F&& f, Args&&... args);
 
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
@@ -37,9 +37,8 @@
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
-#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/thread/thread_pool.hpp>
-#endif
+#include <boost/thread/executor.hpp>
 
 typedef boost::chrono::high_resolution_clock Clock;
 typedef boost::chrono::milliseconds ms;
