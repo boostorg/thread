@@ -42,6 +42,7 @@ int main()
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
       boost::future<int> f2 = f1.fallback_to(-1);
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      f2.wait();
       BOOST_ASSERT(f2.get()==1);
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
     }
@@ -68,6 +69,7 @@ int main()
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
       boost::future<int> f2 = f1.fallback_to(-1);
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      f2.wait();
       BOOST_ASSERT(f2.get()==-1);
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
     }

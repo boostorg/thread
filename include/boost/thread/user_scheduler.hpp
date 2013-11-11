@@ -39,7 +39,7 @@ namespace boost
       work task;
       try
       {
-        if (work_queue.try_pull(task))
+        if (work_queue.try_pull_front(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -144,23 +144,23 @@ namespace boost
     void submit(Closure & closure)
     {
       work w ((closure));
-      work_queue.push(boost::move(w));
+      work_queue.push_back(boost::move(w));
       //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
-      work_queue.push(boost::move(w));
-      //work_queue.push(work(closure)); // todo check why this doesn't work
+      work_queue.push_back(boost::move(w));
+      //work_queue.push_back(work(closure)); // todo check why this doesn't work
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
       work w =boost::move(closure);
-      work_queue.push(boost::move(w));
-      //work_queue.push(work(boost::move(closure))); // todo check why this doesn't work
+      work_queue.push_back(boost::move(w));
+      //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
     }
 
     /**

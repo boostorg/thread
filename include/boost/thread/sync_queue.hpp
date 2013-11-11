@@ -27,7 +27,6 @@
 namespace boost
 {
 
-
   template <typename ValueType>
   class sync_queue
   {
@@ -52,23 +51,43 @@ namespace boost
     // Modifiers
     inline void close();
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline void push(const value_type& x);
     inline bool try_push(const value_type& x);
     inline bool try_push(no_block_tag, const value_type& x);
-
     inline void push(BOOST_THREAD_RV_REF(value_type) x);
     inline bool try_push(BOOST_THREAD_RV_REF(value_type) x);
     inline bool try_push(no_block_tag, BOOST_THREAD_RV_REF(value_type) x);
+#endif
+    inline void push_back(const value_type& x);
+    inline queue_op_status try_push_back(const value_type& x);
+    inline queue_op_status nonblocking_push_back(const value_type& x);
+    inline void push_back(BOOST_THREAD_RV_REF(value_type) x);
+    inline queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x);
+    inline queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x);
+
 
     // Observers/Modifiers
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline void pull(value_type&);
     inline void pull(ValueType& elem, bool & closed);
     // enable_if is_nothrow_copy_movable<value_type>
     inline value_type pull();
     inline shared_ptr<ValueType> ptr_pull();
+#endif
+    inline void pull_front(value_type&);
+    inline void pull_front(ValueType& elem, bool & closed);
+    // enable_if is_nothrow_copy_movable<value_type>
+    inline value_type pull_front();
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline bool try_pull(value_type&);
     inline bool try_pull(no_block_tag,value_type&);
     inline shared_ptr<ValueType> try_pull();
+#endif
+    inline queue_op_status try_pull_front(value_type&);
+    inline queue_op_status nonblocking_pull_front(value_type&);
+
     inline underlying_queue_type underlying_queue() {
       lock_guard<mutex> lk(mtx_);
       return boost::move(data_);
@@ -96,11 +115,17 @@ namespace boost
     }
 
     inline void throw_if_closed(unique_lock<mutex>&);
+    inline bool closed(unique_lock<mutex>& lk) const;
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline bool try_pull(value_type& x, unique_lock<mutex>& lk);
     inline bool try_push(const value_type& x, unique_lock<mutex>& lk);
     inline bool try_push(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
     inline shared_ptr<value_type> try_pull(unique_lock<mutex>& lk);
+#endif
+    inline queue_op_status try_pull_front(value_type& x, unique_lock<mutex>& lk);
+    inline queue_op_status try_push_back(const value_type& x, unique_lock<mutex>& lk);
+    inline queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
 
     inline void wait_until_not_empty(unique_lock<mutex>& lk);
     inline void wait_until_not_empty(unique_lock<mutex>& lk, bool&);
@@ -115,6 +140,7 @@ namespace boost
       }
     }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline void pull(value_type& elem, unique_lock<mutex>& )
     {
       elem = boost::move(data_.front());
@@ -132,7 +158,20 @@ namespace boost
       data_.pop_front();
       return res;
     }
+#endif
+    inline void pull_front(value_type& elem, unique_lock<mutex>& )
+    {
+      elem = boost::move(data_.front());
+      data_.pop_front();
+    }
+    inline value_type pull_front(unique_lock<mutex>& )
+    {
+      value_type e = boost::move(data_.front());
+      data_.pop_front();
+      return boost::move(e);
+    }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     inline void push(const value_type& elem, unique_lock<mutex>& lk)
     {
       data_.push_back(elem);
@@ -140,6 +179,18 @@ namespace boost
     }
 
     inline void push(BOOST_THREAD_RV_REF(value_type) elem, unique_lock<mutex>& lk)
+    {
+      data_.push_back(boost::move(elem));
+      notify_not_empty_if_needed(lk);
+    }
+#endif
+    inline void push_back(const value_type& elem, unique_lock<mutex>& lk)
+    {
+      data_.push_back(elem);
+      notify_not_empty_if_needed(lk);
+    }
+
+    inline void push_back(BOOST_THREAD_RV_REF(value_type) elem, unique_lock<mutex>& lk)
     {
       data_.push_back(boost::move(elem));
       notify_not_empty_if_needed(lk);
@@ -196,6 +247,11 @@ namespace boost
     lock_guard<mutex> lk(mtx_);
     return closed_;
   }
+  template <typename ValueType>
+  bool sync_queue<ValueType>::closed(unique_lock<mutex>&) const
+  {
+    return closed_;
+  }
 
   template <typename ValueType>
   bool sync_queue<ValueType>::empty() const
@@ -217,6 +273,7 @@ namespace boost
   }
 
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_pull(ValueType& elem, unique_lock<mutex>& lk)
   {
@@ -238,7 +295,20 @@ namespace boost
     }
     return ptr_pull(lk);
   }
+#endif
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_pull_front(ValueType& elem, unique_lock<mutex>& lk)
+  {
+    if (empty(lk))
+    {
+      if (closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    pull_front(elem, lk);
+    return queue_op_status::success;
+  }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_pull(ValueType& elem)
   {
@@ -253,7 +323,15 @@ namespace boost
       throw;
     }
   }
+#endif
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_pull_front(ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return try_pull_front(elem, lk);
+  }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_pull(no_block_tag,ValueType& elem)
   {
@@ -285,6 +363,17 @@ namespace boost
       close();
       throw;
     }
+  }
+#endif
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::nonblocking_pull_front(ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_, try_to_lock);
+    if (!lk.owns_lock())
+    {
+      return queue_op_status::busy;
+    }
+    return try_pull_front(elem, lk);
   }
 
   template <typename ValueType>
@@ -320,6 +409,7 @@ namespace boost
     closed=false;
   }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   void sync_queue<ValueType>::pull(ValueType& elem)
   {
@@ -383,7 +473,42 @@ namespace boost
       throw;
     }
   }
+#endif
 
+  template <typename ValueType>
+  void sync_queue<ValueType>::pull_front(ValueType& elem)
+  {
+    try
+    {
+      unique_lock<mutex> lk(mtx_);
+      wait_until_not_empty(lk);
+      pull_front(elem, lk);
+    }
+    catch (...)
+    {
+      close();
+      throw;
+    }
+  }
+
+  // enable if ValueType is nothrow movable
+  template <typename ValueType>
+  ValueType sync_queue<ValueType>::pull_front()
+  {
+    try
+    {
+      unique_lock<mutex> lk(mtx_);
+      wait_until_not_empty(lk);
+      return pull_front(lk);
+    }
+    catch (...)
+    {
+      close();
+      throw;
+    }
+  }
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_push(const ValueType& elem, unique_lock<mutex>& lk)
   {
@@ -406,7 +531,24 @@ namespace boost
       throw;
     }
   }
+#endif
 
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_push_back(const ValueType& elem, unique_lock<mutex>& lk)
+  {
+    if (closed(lk)) return queue_op_status::closed;
+    push_back(elem, lk);
+    return queue_op_status::success;
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_push_back(const ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return try_push_back(elem, lk);
+  }
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_push(no_block_tag, const ValueType& elem)
   {
@@ -422,7 +564,16 @@ namespace boost
       throw;
     }
   }
+#endif
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::nonblocking_push_back(const ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_, try_to_lock);
+    if (!lk.owns_lock()) return queue_op_status::busy;
+    return try_push(elem, lk);
+  }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   void sync_queue<ValueType>::push(const ValueType& elem)
   {
@@ -438,7 +589,25 @@ namespace boost
       throw;
     }
   }
+#endif
 
+  template <typename ValueType>
+  void sync_queue<ValueType>::push_back(const ValueType& elem)
+  {
+    try
+    {
+      unique_lock<mutex> lk(mtx_);
+      throw_if_closed(lk);
+      push_back(elem, lk);
+    }
+    catch (...)
+    {
+      close();
+      throw;
+    }
+  }
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
@@ -461,7 +630,24 @@ namespace boost
       throw;
     }
   }
+#endif
 
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
+  {
+    if (closed(lk)) return queue_op_status::closed;
+    push_back(boost::move(elem), lk);
+    return queue_op_status::success;
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return try_push_back(boost::move(elem), lk);
+  }
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_push(no_block_tag, BOOST_THREAD_RV_REF(ValueType) elem)
   {
@@ -480,7 +666,20 @@ namespace boost
       throw;
     }
   }
+#endif
 
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::nonblocking_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  {
+    unique_lock<mutex> lk(mtx_, try_to_lock);
+    if (!lk.owns_lock())
+    {
+      return queue_op_status::busy;
+    }
+    return try_push_back(boost::move(elem), lk);
+  }
+
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   void sync_queue<ValueType>::push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
@@ -496,25 +695,42 @@ namespace boost
       throw;
     }
   }
+#endif
+
+  template <typename ValueType>
+  void sync_queue<ValueType>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  {
+    try
+    {
+      unique_lock<mutex> lk(mtx_);
+      throw_if_closed(lk);
+      push_back(boost::move(elem), lk);
+    }
+    catch (...)
+    {
+      close();
+      throw;
+    }
+  }
 
   template <typename ValueType>
   sync_queue<ValueType>& operator<<(sync_queue<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    sbq.push(boost::move(elem));
+    sbq.push_back(boost::move(elem));
     return sbq;
   }
 
   template <typename ValueType>
   sync_queue<ValueType>& operator<<(sync_queue<ValueType>& sbq, ValueType const&elem)
   {
-    sbq.push(elem);
+    sbq.push_back(elem);
     return sbq;
   }
 
   template <typename ValueType>
   sync_queue<ValueType>& operator>>(sync_queue<ValueType>& sbq, ValueType &elem)
   {
-    sbq.pull(elem);
+    sbq.pull_front(elem);
     return sbq;
   }
 

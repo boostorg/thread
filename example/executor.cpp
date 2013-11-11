@@ -6,6 +6,7 @@
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
 #define BOOST_THREAD_USES_LOG_THREAD_ID
+#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/thread/thread_pool.hpp>
 #include <boost/thread/user_scheduler.hpp>
