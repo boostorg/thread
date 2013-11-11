@@ -32,6 +32,9 @@
 #include <boost/thread/csbl/tuple.hpp>
 #include <boost/tuple/tuple.hpp>
 
+#include <boost/thread/detail/variadic_header.hpp>
+
+
 namespace boost
 {
   namespace detail
@@ -74,6 +77,68 @@ namespace boost
     };
     //BOOST_THREAD_DCL_MOVABLE_BEG(X) async_func<Fp> BOOST_THREAD_DCL_MOVABLE_END
 #else
+
+#if 1
+
+#define BOOST_THREAD_RV_REF_ARG(z, n, unused) , BOOST_THREAD_RV_REF(Arg##n) arg##n
+#define BOOST_THREAD_FWD_REF_ARG(z, n, unused) , BOOST_THREAD_FWD_REF(Arg##n) arg##n
+#define BOOST_THREAD_FWD_PARAM(z, n, unused) , boost::forward<Arg##n>(arg##n)
+#define BOOST_THREAD_DCL(z, n, unused) Arg##n v##n;
+#define BOOST_THREAD_MOVE_PARAM(z, n, unused) , v##n(boost::move(arg##n))
+#define BOOST_THREAD_MOVE_RHS_PARAM(z, n, unused) , v##n(boost::move(f.v##n))
+#define BOOST_THREAD_MOVE_DCL(z, n, unused) , boost::move(v##n)
+#define BOOST_THREAD_ARG_DEF(z, n, unused) , class Arg##n = tuples::null_type
+
+    template <class Fp
+      BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS_P1, BOOST_THREAD_ARG_DEF, ~)
+    >
+    class async_func;
+
+#define BOOST_THREAD_ASYNC_FUNCT(z, n, unused) \
+    template <class Fp BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class Arg) > \
+    class async_func<Fp BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, Arg)> \
+    { \
+      Fp fp_; \
+      BOOST_PP_REPEAT(n, BOOST_THREAD_DCL, ~) \
+    public: \
+      BOOST_THREAD_MOVABLE_ONLY(async_func) \
+      typedef typename result_of<Fp(BOOST_PP_ENUM_PARAMS(n, Arg))>::type result_type; \
+      \
+      BOOST_SYMBOL_VISIBLE \
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f \
+          BOOST_PP_REPEAT(n, BOOST_THREAD_RV_REF_ARG, ~) \
+      ) \
+      : fp_(boost::move(f)) \
+      BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_PARAM, ~) \
+      {} \
+      \
+      BOOST_SYMBOL_VISIBLE \
+      async_func(BOOST_THREAD_FWD_REF(async_func) f) \
+      : fp_(boost::move(f.fp_)) \
+      BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_RHS_PARAM, ~) \
+      {} \
+      \
+      result_type operator()() { \
+        return invoke(boost::move(fp_) \
+            BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_DCL, ~) \
+        ); \
+      } \
+    };
+
+    BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS, BOOST_THREAD_ASYNC_FUNCT, ~)
+
+    #undef BOOST_THREAD_RV_REF_ARG
+    #undef BOOST_THREAD_FWD_REF_ARG
+    #undef BOOST_THREAD_FWD_PARAM
+    #undef BOOST_THREAD_DCL
+    #undef BOOST_THREAD_MOVE_PARAM
+    #undef BOOST_THREAD_MOVE_RHS_PARAM
+    #undef BOOST_THREAD_MOVE_DCL
+    #undef BOOST_THREAD_ARG_DEF
+    #undef BOOST_THREAD_ASYNC_FUNCT
+
+#else
+
     template <class Fp,
     class T0 = tuples::null_type, class T1 = tuples::null_type, class T2 = tuples::null_type,
     class T3 = tuples::null_type, class T4 = tuples::null_type, class T5 = tuples::null_type,
@@ -131,15 +196,15 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
-      , v4_(boost::move(BOOST_THREAD_RV(f).a4))
-      , v5_(boost::move(BOOST_THREAD_RV(f).a5))
-      , v6_(boost::move(BOOST_THREAD_RV(f).a6))
-      , v7_(boost::move(BOOST_THREAD_RV(f).a7))
-      , v8_(boost::move(BOOST_THREAD_RV(f).a8))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
+      , v4_(boost::move(BOOST_THREAD_RV(f).v4_))
+      , v5_(boost::move(BOOST_THREAD_RV(f).v5_))
+      , v6_(boost::move(BOOST_THREAD_RV(f).v6_))
+      , v7_(boost::move(BOOST_THREAD_RV(f).v7_))
+      , v8_(boost::move(BOOST_THREAD_RV(f).v8_))
       {}
 
       result_type operator()()
@@ -198,14 +263,14 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
-      , v4_(boost::move(BOOST_THREAD_RV(f).a4))
-      , v5_(boost::move(BOOST_THREAD_RV(f).a5))
-      , v6_(boost::move(BOOST_THREAD_RV(f).a6))
-      , v7_(boost::move(BOOST_THREAD_RV(f).a7))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
+      , v4_(boost::move(BOOST_THREAD_RV(f).v4_))
+      , v5_(boost::move(BOOST_THREAD_RV(f).v5_))
+      , v6_(boost::move(BOOST_THREAD_RV(f).v6_))
+      , v7_(boost::move(BOOST_THREAD_RV(f).v7_))
       {}
 
       result_type operator()()
@@ -260,13 +325,13 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
-      , v4_(boost::move(BOOST_THREAD_RV(f).a4))
-      , v5_(boost::move(BOOST_THREAD_RV(f).a5))
-      , v6_(boost::move(BOOST_THREAD_RV(f).a6))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
+      , v4_(boost::move(BOOST_THREAD_RV(f).v4_))
+      , v5_(boost::move(BOOST_THREAD_RV(f).v5_))
+      , v6_(boost::move(BOOST_THREAD_RV(f).v6_))
       {}
 
       result_type operator()()
@@ -317,12 +382,12 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
-      , v4_(boost::move(BOOST_THREAD_RV(f).a4))
-      , v5_(boost::move(BOOST_THREAD_RV(f).a5))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
+      , v4_(boost::move(BOOST_THREAD_RV(f).v4_))
+      , v5_(boost::move(BOOST_THREAD_RV(f).v5_))
       {}
 
       result_type operator()()
@@ -369,11 +434,11 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
-      , v4_(boost::move(BOOST_THREAD_RV(f).a4))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
+      , v4_(boost::move(BOOST_THREAD_RV(f).v4_))
       {}
 
       result_type operator()()
@@ -416,10 +481,10 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
-      , v3_(boost::move(BOOST_THREAD_RV(f).a3))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
+      , v3_(boost::move(BOOST_THREAD_RV(f).v3_))
       {}
 
       result_type operator()()
@@ -458,9 +523,9 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
-      , v2_(boost::move(BOOST_THREAD_RV(f).a2))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
+      , v2_(boost::move(BOOST_THREAD_RV(f).v2_))
       {}
 
       result_type operator()()
@@ -495,8 +560,8 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
-      , v1_(boost::move(BOOST_THREAD_RV(f).a1))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
+      , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
       {}
 
       result_type operator()()
@@ -527,7 +592,7 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_RV_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
-      , v0_(boost::move(BOOST_THREAD_RV(f).a0))
+      , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       {}
 
       result_type operator()()
@@ -551,7 +616,7 @@ namespace boost
 
       BOOST_SYMBOL_VISIBLE
       async_func(BOOST_THREAD_FWD_REF(async_func) f)
-      : fp_(boost::move(BOOST_THREAD_RV(f).fp_))
+      : fp_(boost::move(f.fp_))
       {}
       result_type operator()()
       {
@@ -559,8 +624,11 @@ namespace boost
       }
     };
 #endif
+#endif
 
   }
 }
+
+#include <boost/thread/detail/variadic_footer.hpp>
 
 #endif // header
