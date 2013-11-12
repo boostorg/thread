@@ -47,13 +47,13 @@ namespace boost
      *
      */
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type>
+    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type>
     explicit strict_scoped_thread(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(Args)... args) :
       t_(boost::forward<F>(f), boost::forward<Args>(args)...) {}
 #else
     template <class F>
     explicit strict_scoped_thread(BOOST_THREAD_FWD_REF(F) f,
-        typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0) :
+        typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type=0) :
       t_(boost::forward<F>(f)) {}
     template <class F, class A1>
     strict_scoped_thread(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1) :
@@ -137,13 +137,13 @@ namespace boost
      */
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type>
+    template <class F, class ...Args, typename = typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type>
     explicit scoped_thread(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(Args)... args) :
       t_(boost::forward<F>(f), boost::forward<Args>(args)...) {}
 #else
     template <class F>
     explicit scoped_thread(BOOST_THREAD_FWD_REF(F) f,
-        typename disable_if<is_same<typename decay<F>::type, thread>, dummy* >::type=0) :
+        typename disable_if<is_same<typename decay<F>::type, thread>, void* >::type=0) :
       t_(boost::forward<F>(f)) {}
     template <class F, class A1>
     scoped_thread(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1) :
