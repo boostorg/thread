@@ -89,8 +89,8 @@ namespace boost
 #define BOOST_THREAD_MOVE_DCL(z, n, unused) , boost::move(v##n)
 #define BOOST_THREAD_ARG_DEF(z, n, unused) , class Arg##n = tuples::null_type
 
-    template <class Fp
-      BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS_P1, BOOST_THREAD_ARG_DEF, ~)
+    template <class Fp, class Arg = tuples::null_type
+      BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS, BOOST_THREAD_ARG_DEF, ~)
     >
     class async_func;
 
