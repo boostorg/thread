@@ -136,15 +136,15 @@ namespace boost
     /**
      * executor_adaptor constructor
      */
-    executor_adaptor() : ex() {}
-
-    /**
-     * executor_adaptor constructor
-     */
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template <typename ...Args>
     executor_adaptor(BOOST_THREAD_RV_REF(Args) ... args) : ex(boost::forward<Args>(args)...) {}
 #else
+    /**
+     * executor_adaptor constructor
+     */
+    executor_adaptor() : ex() {}
+
     template <typename A1>
     executor_adaptor(
         BOOST_THREAD_FWD_REF(A1) a1
