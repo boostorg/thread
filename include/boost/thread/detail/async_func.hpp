@@ -78,14 +78,14 @@ namespace boost
     //BOOST_THREAD_DCL_MOVABLE_BEG(X) async_func<Fp> BOOST_THREAD_DCL_MOVABLE_END
 #else
 
-#if 1
+#if ! defined BOOST_MSVC
 
 #define BOOST_THREAD_RV_REF_ARG(z, n, unused) , BOOST_THREAD_RV_REF(Arg##n) arg##n
 #define BOOST_THREAD_FWD_REF_ARG(z, n, unused) , BOOST_THREAD_FWD_REF(Arg##n) arg##n
 #define BOOST_THREAD_FWD_PARAM(z, n, unused) , boost::forward<Arg##n>(arg##n)
 #define BOOST_THREAD_DCL(z, n, unused) Arg##n v##n;
 #define BOOST_THREAD_MOVE_PARAM(z, n, unused) , v##n(boost::move(arg##n))
-#define BOOST_THREAD_MOVE_RHS_PARAM(z, n, unused) , v##n(boost::move(f.v##n))
+#define BOOST_THREAD_MOVE_RHS_PARAM(z, n, unused) , v##n(boost::move(x.v##n))
 #define BOOST_THREAD_MOVE_DCL(z, n, unused) , boost::move(v##n)
 #define BOOST_THREAD_ARG_DEF(z, n, unused) , class Arg##n = tuples::null_type
 
@@ -113,8 +113,8 @@ namespace boost
       {} \
       \
       BOOST_SYMBOL_VISIBLE \
-      async_func(BOOST_THREAD_FWD_REF(async_func) f) \
-      : fp_(boost::move(f.fp_)) \
+      async_func(BOOST_THREAD_FWD_REF(async_func) x) \
+      : fp_(boost::move(x.fp_)) \
       BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_RHS_PARAM, ~) \
       {} \
       \
@@ -170,7 +170,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3, T4, T5, T6, T7, T8)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -194,7 +194,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -239,7 +239,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3, T4, T5, T6, T7)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -261,7 +261,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -303,7 +303,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3, T4, T5, T6)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -323,7 +323,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -362,7 +362,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3, T4, T5)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -380,7 +380,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -416,7 +416,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3, T4)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -432,7 +432,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -465,7 +465,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2, T3)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -479,7 +479,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -509,7 +509,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1, T2)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
           , BOOST_THREAD_RV_REF(T2) a2
@@ -521,7 +521,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -548,7 +548,7 @@ namespace boost
       typedef typename result_of<Fp(T0, T1)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
           , BOOST_THREAD_RV_REF(T1) a1
       )
@@ -558,7 +558,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -582,7 +582,7 @@ namespace boost
       typedef typename result_of<Fp(T0)>::type result_type;
 
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f
+      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f
           , BOOST_THREAD_RV_REF(T0) a0
       )
       : fp_(boost::move(f))
@@ -590,7 +590,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      async_func(BOOST_THREAD_RV_REF(async_func) f)
+      async_func(BOOST_THREAD_FWD_REF(async_func) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       {}
