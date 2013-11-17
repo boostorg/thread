@@ -50,6 +50,10 @@ boost::shared_future<int> shared_compute(int x)
 
 int main()
 {
+  const int number_of_tests = 100;
+  for (int i=0; i< number_of_tests; i++)
+    try
+  {
 #if defined BOOST_THREAD_USES_MOVE
   {
     boost::future<void> f = void_compute();
@@ -67,6 +71,17 @@ int main()
   {
     boost::shared_future<int> f = shared_compute(2);
     std::cout << f.get() << std::endl;
+  }
+  }
+  catch (std::exception& ex)
+  {
+    std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
+    return 1;
+  }
+  catch (...)
+  {
+    std::cout << "ERRORRRRR "<<"ERRORRRRR exception thrown" << std::endl;
+    return 2;
   }
   return 0;
 }
