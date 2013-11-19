@@ -30,6 +30,7 @@
     {
       async = unspecified,
       deferred = unspecified,
+      executor = unspecified,
       any = async | deferred
     };
     
@@ -88,6 +89,9 @@
     template <class F, class... Args>
     future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
     async(launch policy, F&& f, Args&&... args);
+    template <class Executor, class F, class... Args>
+    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(Executor &ex, F&& f, Args&&... args);
     
     template<typename Iterator>
     void wait_for_all(Iterator begin,Iterator end); // EXTENSION
@@ -147,6 +151,7 @@
     {
       async = unspecified,
       deferred = unspecified,
+      executor = unspecified,
       any = async | deferred
     };
 
@@ -1892,7 +1897,9 @@ provides the result of the function in a future object with which it shares a sh
     template <class F>
     __unique_future__<typename result_of<typename decay<F>::type()>::type>
     async(launch policy, F&& f);
-
+    template <class Executor, class F>
+    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(Executor &ex, F&& f, Args&&... args);
 [variablelist
 
 [[Requires:] [
@@ -1957,7 +1964,10 @@ If the implementation chooses the `launch::async` policy,
     template <class F, class... Args>
     __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
     async(launch policy, F&& f, Args&&... args);
-
+    template <class Executor, class F, class... Args>
+    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+    async(Executor &ex, F&& f, Args&&... args);
+    
 [warning the variadic prototype is provided only on C++11 compilers supporting rvalue references, variadic templates, decltype and a standard library providing <tuple> (waiting for a boost::tuple that is move aware), and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined.]
 
 [variablelist

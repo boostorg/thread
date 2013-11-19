@@ -239,9 +239,9 @@
 [include condition_variables.qbk]
 [include once.qbk]
 [include barrier.qbk]
-[/include latch.qbk]
+[include latch.qbk]
+[include async_executors.qbk]
 [include futures.qbk]
-[/include async_executors.qbk]
 [endsect]
 
 

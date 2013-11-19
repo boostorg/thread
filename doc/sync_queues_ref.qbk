@@ -5,6 +5,7 @@
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
  /]
 
+[/////////////////////////////////////]
 [section:synchronized_queues Synchronized Queues -- EXPERIMENTAL]
 
 [warning These features are experimental and subject to change in future versions. There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
@@ -12,6 +13,13 @@
 [note These features are based on the [@http://www.open-std.org/JTC1/SC22/WG21/docs/papers/2013/n3533.html [*N3533 - C++ Concurrent Queues]] C++1y proposal from Lawrence Crowl and Chris Mysen and [@http://www.manning.com/williams/ [*C++ Concurrency in Action]] from Anthony Williams.]
 
 
+[////////////////////]
+[section Introduction]
+
+
+[endsect]
+
+[/////////////////////////////////////]
 [section:tutorial Tutorial]
 
 Concurrent queues are a well know mechanism for communicating data between different threads.
@@ -19,7 +27,13 @@ Concurrent queues are a well know mechanism for communicating data between diffe
 Concurrent queues have inherently copy/move semantics for the data handling operation. Reference-returning interfaces are forbidden as multiple access to these references can not be thread-safe.
 
 [endsect]
+[////////////////]
+[section Examples]
 
+
+[endsect]
+
+[/////////////////////////////////////]
 [section:ref Reference]
 
 [section:sync_queue_req Synchronized Queue Model]
@@ -37,16 +51,15 @@ Locking queues can by nature block waiting for the queue to be non-empty or non-
 Lock-free queues will have some trouble waiting for the queue to be non-empty or non-full queues. These queues can not define operations such as push (and pull for bounded queues). That is, it could have blocking operations (presumably emulated with busy wait) but not waiting operations. 
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:closed Closed Queue]
 
 Threads using a queue for communication need some mechanism to signal when the queue is no longer needed. The usual approach is add an additional out-of-band signal. However, this approach suffers from the flaw that threads waiting on either full or empty queues need to be woken up when the queue is no longer needed. Rather than require an out-of-band signal, we chose to directly support such a signal in the queue itself, which considerably simplifies coding.
 
 To achieve this signal, a thread may close a queue. Once closed, no new elements may be pushed onto the queue. Push operations on a closed queue will either return queue_op_status::closed (when they have a queue_op_status return type), set the closed parameter if it has one or throw sync_queue::closed (when they do not). Elements already on the queue may be pulled off. When a queue is empty and closed, pull operations will either return queue_op_status::closed (when they have a status return), set the closed parameter if it has one or throw sync_queue::closed (when they do not). 
 
-
 [endsect]
-
+[/////////////////////////////////////]
 [section:exception Concurrent Queues Throw specification]
 [section:locking Locking]
 
@@ -57,6 +70,7 @@ All the functions are defined as if we had in addition to its specific Throw spe
 ]
 
 [endsect]
+[/////////////////////////////////////]
 [section:bad_alloc Allocation]
 
 All the functions that allocate a resource are defined as if we had in addition to its specific Throw specification the following:
@@ -67,7 +81,7 @@ All the functions that allocate a resource are defined as if we had in addition 
 
 [endsect]
 [endsect]
-
+[/////////////////////////////////////]
 [section:BasicConcurrentQueue Basic Concurrent Queue Operations]
 
 The essential solution to the problem of concurrent queuing is to shift to value-based operations, rather than reference-based operations. 
@@ -96,6 +110,7 @@ where
 * `spe` denotes a shared_ptr<Q::value_type>
 
 
+[/////////////////////////////////////]
 [section:push `q.push(e);`]
 
 [variablelist
@@ -115,6 +130,7 @@ where
 ]
 
 [endsect]
+[/////////////////////////////////////]
 [section:push_m `q.push(rve);`]
 
 [variablelist
@@ -134,8 +150,7 @@ where
 ]
 
 [endsect]
-
-
+[/////////////////////////////////////]
 [section:pull_lv `q.pull(lve)`]
 
 [variablelist
@@ -155,7 +170,7 @@ where
 ]
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:pull `e = q.pull()`]
 
 [variablelist
@@ -179,7 +194,7 @@ where
 ]
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:ptr_pull `spe = q.ptr_pull()`]
 
 [variablelist
@@ -204,10 +219,9 @@ where
 
 [endsect]
 
-
-
 [endsect]
 
+[/////////////////////////////////////]
 [section:non_waaiting Non-waiting Concurrent Queue Operations]
 
 The ConcurrentQueue concept models a queue with .
@@ -229,6 +243,7 @@ where
 * `spe` denotes a shared_ptr<Q::value_type>
 
 
+[/////////////////////////////////////]
 [section:try_push `q.try_push(e);`]
 
 [variablelist
@@ -250,6 +265,7 @@ where
 ]
 
 [endsect]
+[/////////////////////////////////////]
 [section:try_push_m `q.try_push(rve());`]
 
 [variablelist
@@ -271,6 +287,7 @@ where
 ]
 
 [endsect]
+[/////////////////////////////////////]
 [section:pull_lv `b = q.try_pull(lve)`]
 
 [variablelist
@@ -293,7 +310,7 @@ where
 
 [endsect]
 [endsect]
-
+[/////////////////////////////////////]
 [section:non_blocking Non-blocking Concurrent Queue Operations]
 
 For cases when blocking for mutual exclusion is undesirable, we have non-blocking operations. The interface is the same as the try operations but is allowed to also return queue_op_status::busy in case the operation is unable to complete without blocking. 
@@ -316,7 +333,7 @@ where
 
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:bounded Bounded Concurrent Queue Operations]
 
 Bounded queues add the following valid expressions
@@ -326,7 +343,7 @@ Bounded queues add the following valid expressions
 * `u = q.capacity();`
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:closed_op Closed Concurrent Queue Operations]
 
 
@@ -356,7 +373,7 @@ Non-blocking operations are provided by BlockingQueues
 [endsect]
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:sync_bounded_queue_ref Synchronized Bounded Queue]
 
   #include <boost/thread/sync_bounded_queue.hpp>
@@ -377,6 +394,7 @@ Non-blocking operations are provided by BlockingQueues
     sync_bounded_queue<ValueType>& operator>>(sync_bounded_queue<ValueType>& sbq, ValueType &elem);
   }
 
+[/////////////////////////////////////]
 [section:sync_queue_is_closed Class `sync_queue_is_closed`]
 
   #include <boost/thread/sync_bounded_queue.hpp>
@@ -387,7 +405,7 @@ Non-blocking operations are provided by BlockingQueues
   }
 
 [endsect]
-
+[/////////////////////////////////////]
 [section:sync_bounded_queue Class template `sync_bounded_queue<>`]
 
   #include <boost/thread/sync_bounded_queue.hpp>
@@ -434,8 +452,39 @@ Non-blocking operations are provided by BlockingQueues
     };
   }
 
+[/////////////////////////////////////]
+[section:constructor Constructor `sync_bounded_queue(size_type)`]
+
+      explicit sync_bounded_queue(size_type max_elems);
+
+[variablelist
+
+[[Effects:] [Constructs a sync_bounded_queue with a maximum number of elements given by `max_elems`. ]]
+
+[[Throws:] [any exception that can be throw because of resources unavailable. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:constructort Template Constructor `sync_bounded_queue(size_type, Range)`]
+
+      template <typename Range>
+      sync_bounded_queue(size_type max_elems, Range range);
+
+[variablelist
+
+[[Effects:] [Constructs a sync_bounded_queue with a maximum number of elements given by `max_elems` and push the elements of the range. ]]
+
+[[Throws:] [any exception that can be throw because of resources unavailable. ]]
+
+]
+
 [endsect]
 
+[endsect]
+[/////////////////////////////////////]
 [section:stream_out_operators Non-Member Function `operator<<()`]
 
   #include <boost/thread/sync_bounded_queue.hpp>
@@ -448,6 +497,7 @@ Non-blocking operations are provided by BlockingQueues
   }
 
 [endsect]
+[/////////////////////////////////////]
 [section:stream_in_operators Non-Member Function `operator>>()`]
 
   #include <boost/thread/sync_bounded_queue.hpp>
@@ -460,6 +510,7 @@ Non-blocking operations are provided by BlockingQueues
 [endsect]
 [endsect]
 
+[/////////////////////////////////////]
 [section:sync_queue_ref Synchronized Unbounded Queue]
 
   #include <boost/thread/sync_queue.hpp>
@@ -477,6 +528,7 @@ Non-blocking operations are provided by BlockingQueues
     sync_queue<ValueType>& operator>>(sync_queue<ValueType>& sbq, ValueType &elem);
   }
 
+[/////////////////////////////////////]
 [section:sync_queue Class template `sync_queue<>`]
 
   #include <boost/thread/sync_queue.hpp>
@@ -488,6 +540,7 @@ Non-blocking operations are provided by BlockingQueues
     {
     public:
       typedef ValueType value_type;
+      typedef csbl::deque<ValueType> underlying_queue_type;
       typedef std::size_t size_type;
 
       sync_queue(sync_queue const&) = delete;
@@ -519,12 +572,70 @@ Non-blocking operations are provided by BlockingQueues
       bool try_pull(no_block_tag,value_type&);
       shared_ptr<ValueType> try_pull();
 
+      underlying_queue_type underlying_queue() noexcept;
+
       void close();
     };
   }
 
+[/////////////////////////////////////]
+[section:constructor Constructor `sync_bounded_queue(size_type)`]
+
+      explicit sync_queue();
+
+[variablelist
+
+[[Effects:] [Constructs an empty sync_queue. ]]
+
+[[Throws:] [any exception that can be throw because of resources unavailable. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:constructort Template Constructor `sync_bounded_queue(size_type, Range)`]
+
+      template <typename Range>
+      sync_bounded_queue(size_type max_elems, Range range);
+
+[variablelist
+
+[[Effects:] [Constructs an sync_queue with all the elements of the range. ]]
+
+[[Throws:] [any exception that can be throw because of resources unavailable. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:full Member Function `full()`]
+
+      bool full() const;
+
+[variablelist
+
+[[Returns:] [false. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:constructor Member Function `underlying_queue()`]
+
+      underlying_queue_type underlying_queue() noexcept;
+
+[variablelist
+
+[[Returns:] [Moves internal queue. ]]
+
+]
+
 [endsect]
 
+[endsect]
+
+[/////////////////////////////////////]
 [section:stream_out_operators Non-Member Function `operator<<()`]
 
   #include <boost/thread/sync_queue.hpp>
@@ -537,6 +648,7 @@ Non-blocking operations are provided by BlockingQueues
   }
 
 [endsect]
+[/////////////////////////////////////]
 [section:stream_in_operators Non-Member Function `operator>>()`]
 
   #include <boost/thread/sync_queue.hpp>
