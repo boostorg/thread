@@ -79,6 +79,7 @@ int main()
     }
     catch (std::exception& ex)
     {
+      std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
       BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
       return 1;
     }
@@ -103,6 +104,7 @@ int main()
     }
     catch (std::exception& ex)
     {
+      std::cout << "ERRORRRRR "<<ex.what() << "" << std::endl;
       BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
       return 1;
     }
