@@ -15,8 +15,7 @@
 //#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 // ATTRIBUTE_MAY_ALIAS
 
-#if defined(__GNUC__) && (__GNUC__ * 100 + __GNUC_MINOR__) > 302 \
-    && !defined(__INTEL_COMPILER)
+#if defined(__GNUC__) && !defined(__INTEL_COMPILER)
 
   // GCC since 3.3 has may_alias attribute that helps to alleviate optimizer issues with
   // regard to violation of the strict aliasing rules.

@@ -24,36 +24,36 @@
 
 struct call_push
 {
-  boost::sync_queue<int> &q_;
-  boost::barrier& go_;
+  boost::sync_queue<int> *q_;
+  boost::barrier *go_;
 
-  call_push(boost::sync_queue<int> &q, boost::barrier &go) :
+  call_push(boost::sync_queue<int> *q, boost::barrier *go) :
     q_(q), go_(go)
   {
   }
   typedef void result_type;
   void operator()()
   {
-    go_.count_down_and_wait();
-    q_.push(42);
+    go_->count_down_and_wait();
+    q_->push(42);
 
   }
 };
 
 struct call_pull
 {
-  boost::sync_queue<int> &q_;
-  boost::barrier& go_;
+  boost::sync_queue<int> *q_;
+  boost::barrier *go_;
 
-  call_pull(boost::sync_queue<int> &q, boost::barrier &go) :
+  call_pull(boost::sync_queue<int> *q, boost::barrier *go) :
     q_(q), go_(go)
   {
   }
   typedef int result_type;
   int operator()()
   {
-    go_.count_down_and_wait();
-    return q_.pull();
+    go_->count_down_and_wait();
+    return q_->pull();
   }
 };
 
@@ -76,7 +76,7 @@ void test_concurrent_push_and_pull_on_empty_queue()
           q.push(42);
         }
 #else
-        call_push(q,go)
+        call_push(&q,&go)
 #endif
     );
     pull_done=boost::async(boost::launch::async,
@@ -87,7 +87,7 @@ void test_concurrent_push_and_pull_on_empty_queue()
           return q.pull();
         }
 #else
-        call_pull(q,go)
+        call_pull(&q,&go)
 #endif
     );
 
@@ -119,7 +119,7 @@ void test_concurrent_push_on_empty_queue()
           q.push(42);
         }
 #else
-        call_push(q,go)
+        call_push(&q,&go)
 #endif
     );
 
@@ -160,7 +160,7 @@ void test_concurrent_pull_on_queue()
           return q.pull();
         }
 #else
-        call_pull(q,go)
+        call_pull(&q,&go)
 #endif
     );
 

@@ -177,7 +177,7 @@ namespace boost
      * Move constructor.
      */
     scoped_thread(BOOST_RV_REF(scoped_thread) x) BOOST_NOEXCEPT :
-    t_(boost::move(x.t_))
+    t_(boost::move(BOOST_THREAD_RV(x).t_))
     {}
 
     /**
@@ -197,7 +197,7 @@ namespace boost
      */
     scoped_thread& operator=(BOOST_RV_REF(scoped_thread) x)
     {
-      t_ = boost::move(x.t_);
+      t_ = boost::move(BOOST_THREAD_RV(x).t_);
       return *this;
     }
 
@@ -261,11 +261,17 @@ namespace boost
     }
 #endif
 
-    static unsigned hardware_concurrency()BOOST_NOEXCEPT
+    static unsigned hardware_concurrency() BOOST_NOEXCEPT
     {
       return thread::hardware_concurrency();
     }
 
+#ifdef BOOST_THREAD_PROVIDES_PHYSICAL_CONCURRENCY
+    static unsigned physical_concurrency() BOOST_NOEXCEPT
+    {
+      return thread::physical_concurrency();
+    }
+#endif
   };
 
   /**

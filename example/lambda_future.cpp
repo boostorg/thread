@@ -21,6 +21,7 @@
 #if    defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
   && ! defined BOOST_NO_CXX11_LAMBDAS
 
+
 int main()
 {
   const int number_of_tests = 100;
@@ -49,6 +50,7 @@ int main()
   }
   catch (...)
   {
+    std::cout << " ERRORRRRR exception thrown" << std::endl;
     BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
     return 2;
   }

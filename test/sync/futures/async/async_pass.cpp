@@ -22,16 +22,23 @@
 //     future<typename result_of<F(Args...)>::type>
 //     async(launch policy, F&& f, Args&&... args);
 
+// template <class Executor, class F, class... Args>
+//     future<typename result_of<F(Args...)>::type>
+//     async(Executor& ex, F&& f, Args&&... args);
+
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_PROVIDES_EXECUTORS
 
 #include <iostream>
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/detail/memory.hpp>
-#include <boost/interprocess/smart_ptr/unique_ptr.hpp>
+#include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
+#include <boost/thread/thread_pool.hpp>
+#include <boost/thread/executor.hpp>
 
 typedef boost::chrono::high_resolution_clock Clock;
 typedef boost::chrono::milliseconds ms;
@@ -114,10 +121,10 @@ void f2()
   boost::this_thread::sleep_for(ms(200));
 }
 
-boost::interprocess::unique_ptr<int, boost::default_delete<int> > f3_0()
+boost::csbl::unique_ptr<int> f3_0()
 {
   boost::this_thread::sleep_for(ms(200));
-  boost::interprocess::unique_ptr<int, boost::default_delete<int> > r( (new int(3)));
+  boost::csbl::unique_ptr<int> r( (new int(3)));
   return boost::move(r);
 }
 MoveOnly f3_1()
@@ -127,14 +134,14 @@ MoveOnly f3_1()
   return boost::move(r);
 }
 
-boost::interprocess::unique_ptr<int, boost::default_delete<int> > f3(int i)
+boost::csbl::unique_ptr<int> f3(int i)
 {
   boost::this_thread::sleep_for(ms(200));
-  return boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(i));
+  return boost::csbl::unique_ptr<int>(new int(i));
 }
 
-boost::interprocess::unique_ptr<int, boost::default_delete<int> > f4(
-    BOOST_THREAD_RV_REF_BEG boost::interprocess::unique_ptr<int, boost::default_delete<int> > BOOST_THREAD_RV_REF_END p
+boost::csbl::unique_ptr<int> f4(
+    BOOST_THREAD_RV_REF_BEG boost::csbl::unique_ptr<int> BOOST_THREAD_RV_REF_END p
 )
 {
   boost::this_thread::sleep_for(ms(200));
@@ -210,6 +217,30 @@ int main()
     }
 
   }
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+  {
+    try
+    {
+      boost::executor_adaptor<boost::thread_pool> ex(1);
+      boost::future<int> f = boost::async(ex, &f0);
+      boost::this_thread::sleep_for(ms(300));
+      Clock::time_point t0 = Clock::now();
+      BOOST_TEST(f.get() == 3);
+      Clock::time_point t1 = Clock::now();
+      BOOST_TEST(t1 - t0 < ms(300));
+      std::cout << __FILE__ << "[" << __LINE__ << "] " << (t1 - t0).count() << std::endl;
+    }
+    catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
@@ -233,17 +264,43 @@ int main()
     }
 
   }
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS2
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    try
+    {
+      boost::executor_adaptor<boost::thread_pool> ex(1);
+      boost::future<long> f = boost::async(ex, A(3));
+      boost::this_thread::sleep_for(ms(300));
+      Clock::time_point t0 = Clock::now();
+      BOOST_TEST(f.get() == 3);
+      Clock::time_point t1 = Clock::now();
+      BOOST_TEST(t1 - t0 < ms(300));
+      std::cout << __FILE__ << "[" << __LINE__ << "] " << (t1 - t0).count() << std::endl;
+    }
+    catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+
+  }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
     {
       boost::future<int> f = boost::async(boost::launch::async, BOOST_THREAD_MAKE_RV_REF(MoveOnly()));
-      //    boost::this_thread::sleep_for(ms(300));
-      //    Clock::time_point t0 = Clock::now();
-      //    BOOST_TEST(f.get() == 3);
-      //    Clock::time_point t1 = Clock::now();
-      //    BOOST_TEST(t1 - t0 < ms(300));
-      //    std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+          boost::this_thread::sleep_for(ms(300));
+          Clock::time_point t0 = Clock::now();
+          BOOST_TEST(f.get() == 3);
+          Clock::time_point t1 = Clock::now();
+          BOOST_TEST(t1 - t0 < ms(300));
+          std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
     }
     catch (std::exception& ex)
     {
@@ -255,6 +312,33 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS2
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    try
+    {
+      boost::executor_adaptor<boost::thread_pool> ex(1);
+      MoveOnly mo;
+      boost::future<int> f = boost::async(ex, boost::move(mo));
+      //boost::future<int> f = boost::async(ex, MoveOnly());
+          boost::this_thread::sleep_for(ms(300));
+          Clock::time_point t0 = Clock::now();
+          BOOST_TEST(f.get() == 3);
+          Clock::time_point t1 = Clock::now();
+          BOOST_TEST(t1 - t0 < ms(300));
+          std::cout << __FILE__ <<"["<<__LINE__<<"] "<< (t1 - t0).count() << std::endl;
+    }
+    catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
@@ -526,7 +610,7 @@ int main()
   {
     try
     {
-      boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f3_0);
+      boost::future<boost::csbl::unique_ptr<int> > f = boost::async(&f3_0);
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
       BOOST_TEST(*f.get() == 3);
@@ -550,7 +634,7 @@ int main()
   {
     try
     {
-      boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(boost::launch::async, &f3, 3);
+      boost::future<boost::csbl::unique_ptr<int> > f = boost::async(boost::launch::async, &f3, 3);
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
       BOOST_TEST(*f.get() == 3);
@@ -572,7 +656,7 @@ int main()
   {
     try
     {
-      boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f3, 3);
+      boost::future<boost::csbl::unique_ptr<int> > f = boost::async(&f3, 3);
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
       BOOST_TEST(*f.get() == 3);
@@ -597,7 +681,7 @@ int main()
   {
     try
     {
-      boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(boost::launch::async, &f4, boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(3)));
+      boost::future<boost::csbl::unique_ptr<int> > f = boost::async(boost::launch::async, &f4, boost::csbl::unique_ptr<int>(new int(3)));
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
       BOOST_TEST(*f.get() == 3);
@@ -619,7 +703,7 @@ int main()
   {
     try
     {
-      boost::future<boost::interprocess::unique_ptr<int, boost::default_delete<int> > > f = boost::async(&f4, boost::interprocess::unique_ptr<int, boost::default_delete<int> >(new int(3)));
+      boost::future<boost::csbl::unique_ptr<int> > f = boost::async(&f4, boost::csbl::unique_ptr<int>(new int(3)));
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
       BOOST_TEST(*f.get() == 3);

@@ -249,7 +249,7 @@
 
 [section:sds Synchronized Data Structures]
 [include synchronized_value.qbk]
-[/include sync_queues_ref.qbk]
+[include sync_queues_ref.qbk]
 [/include sync_streams.qbk]
 [endsect]
 

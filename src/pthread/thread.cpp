@@ -27,6 +27,15 @@
 #include <unistd.h>
 #endif
 
+#include <boost/algorithm/string/split.hpp>
+#include <boost/algorithm/string/trim.hpp>
+#include <boost/lexical_cast.hpp>
+
+#include <fstream>
+#include <string>
+#include <set>
+#include <vector>
+
 #include "./timeconv.inl"
 
 namespace boost
@@ -217,7 +226,7 @@ namespace boost
 
         thread_data_base* make_external_thread_data()
         {
-            thread_data_base* const me(new externally_launched_thread());
+            thread_data_base* const me(detail::heap_new<externally_launched_thread>());
             me->self.reset(me);
             set_current_thread_data(me);
             return me;
@@ -543,6 +552,62 @@ namespace boost
 #endif
     }
 
+    unsigned thread::physical_concurrency() BOOST_NOEXCEPT
+    {
+#ifdef __linux__
+        try {
+            using namespace std;
+
+            ifstream proc_cpuinfo ("/proc/cpuinfo");
+
+            const string physical_id("physical id"), core_id("core id");
+
+            typedef std::pair<unsigned, unsigned> core_entry; // [physical ID, core id]
+
+            std::set<core_entry> cores;
+
+            core_entry current_core_entry;
+
+            string line;
+            while ( getline(proc_cpuinfo, line) ) {
+                if (line.empty())
+                    continue;
+
+                vector<string> key_val(2);
+                boost::split(key_val, line, boost::is_any_of(":"));
+
+                if (key_val.size() != 2)
+                    return 0;
+
+                string key   = key_val[0];
+                string value = key_val[1];
+                boost::trim(key);
+                boost::trim(value);
+
+                if (key == physical_id) {
+                    current_core_entry.first = boost::lexical_cast<unsigned>(value);
+                    continue;
+                }
+
+                if (key == core_id) {
+                    current_core_entry.second = boost::lexical_cast<unsigned>(value);
+                    cores.insert(current_core_entry);
+                    continue;
+                }
+            }
+            return cores.size();
+        } catch(...) {
+            return 0;
+        }
+#elif defined(__APPLE__)
+        int count;
+        size_t size=sizeof(count);
+        return sysctlbyname("hw.physicalcpu",&count,&size,NULL,0)?0:count;
+#else
+        return hardware_concurrency();
+#endif
+    }
+
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
     void thread::interrupt()
     {
@@ -670,7 +735,7 @@ namespace boost
         {
             detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
             thread_exit_callback_node* const new_node=
-                new thread_exit_callback_node(func,current_thread_data->thread_exit_callbacks);
+                heap_new<thread_exit_callback_node>(func,current_thread_data->thread_exit_callbacks);
             current_thread_data->thread_exit_callbacks=new_node;
         }
 
