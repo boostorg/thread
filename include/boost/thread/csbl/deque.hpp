@@ -11,7 +11,10 @@
 
 #include <boost/config.hpp>
 
-#if defined BOOST_NO_CXX11_HDR_DEQUE || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_DEQUE || defined BOOST_NO_CXX11_HDR_DEQUE || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_USES_BOOST_DEQUE
+#define BOOST_THREAD_USES_BOOST_DEQUE
+#endif
 #include <boost/container/deque.hpp>
 #else
 #include <deque>
@@ -21,7 +24,7 @@ namespace boost
 {
   namespace csbl
   {
-#if defined BOOST_NO_CXX11_HDR_DEQUE || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_DEQUE
     using ::boost::container::deque;
 
 #else
