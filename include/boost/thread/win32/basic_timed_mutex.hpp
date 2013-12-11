@@ -5,6 +5,7 @@
 //
 //  (C) Copyright 2006-8 Anthony Williams
 //  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2014 Microsoft Corporation
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -81,7 +82,11 @@ namespace boost
 
                     do
                     {
+#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                         unsigned const retval(win32::WaitForSingleObject(sem, ::boost::detail::win32::infinite));
+#else
+                        unsigned const retval(win32::WaitForSingleObjectEx(sem, ::boost::detail::win32::infinite,0));
+#endif
                         BOOST_VERIFY(0 == retval || ::boost::detail::win32::wait_abandoned == retval);
 //                        BOOST_VERIFY(win32::WaitForSingleObject(
 //                                         sem,::boost::detail::win32::infinite)==0);
@@ -142,7 +147,11 @@ namespace boost
 
                     do
                     {
+#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                         if(win32::WaitForSingleObject(sem,::boost::detail::get_milliseconds_until(wait_until))!=0)
+#else
+                        if(win32::WaitForSingleObjectEx(sem,::boost::detail::get_milliseconds_until(wait_until),0)!=0)
+#endif
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
                             return false;
@@ -205,7 +214,11 @@ namespace boost
                   {
                       chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
 
+#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                       if(win32::WaitForSingleObject(sem,static_cast<unsigned long>(rel_time.count()))!=0)
+#else
+                      if(win32::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
+#endif
                       {
                           BOOST_INTERLOCKED_DECREMENT(&active_count);
                           return false;

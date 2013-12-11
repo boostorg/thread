@@ -1,9 +1,10 @@
-// Distributed under the Boost Software License, Version 1.0. (See
-// accompanying file LICENSE_1_0.txt or copy at
-// http://www.boost.org/LICENSE_1_0.txt)
-// (C) Copyright 2007 Anthony Williams
-// (C) Copyright 2007 David Deakins
-// (C) Copyright 2011-2013 Vicente J. Botet Escriba
+//  (C) Copyright 2007 Anthony Williams
+//  (C) Copyright 2007 David Deakins
+//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2014 Microsoft Corporation
+//  Distributed under the Boost Software License, Version 1.0. (See
+//  accompanying file LICENSE_1_0.txt or copy at
+//  http://www.boost.org/LICENSE_1_0.txt)
 
 #ifndef _WIN32_WINNT
 #define _WIN32_WINNT 0x400
@@ -20,7 +21,6 @@
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/detail/tss_hooks.hpp>
 #include <boost/thread/future.hpp>
-
 #include <boost/assert.hpp>
 #include <boost/cstdint.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
@@ -33,6 +33,20 @@
 #endif
 #include <stdio.h>
 #include <windows.h>
+#include <boost/predef/platform.h>
+
+#if BOOST_PLAT_WINDOWS_RUNTIME
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <Activation.h>
+#include <wrl\client.h>
+#include <wrl\event.h>
+#include <wrl\wrappers\corewrappers.h>
+#include <wrl\ftm.h>
+#include <windows.system.threading.h>
+#pragma comment(lib, "runtimeobject.lib")
+#endif 
 
 namespace boost
 {
@@ -65,50 +79,67 @@ namespace boost
         // Windows CE does not define the TLS_OUT_OF_INDEXES constant.
 #define TLS_OUT_OF_INDEXES 0xFFFFFFFF
 #endif
+#if !BOOST_PLAT_WINDOWS_RUNTIME
         DWORD current_thread_tls_key=TLS_OUT_OF_INDEXES;
+#else
+        __declspec(thread) boost::detail::thread_data_base* current_thread_data_base;
+#endif
 
         void create_current_thread_tls_key()
         {
             tss_cleanup_implemented(); // if anyone uses TSS, we need the cleanup linked in
+#if !BOOST_PLAT_WINDOWS_RUNTIME
             current_thread_tls_key=TlsAlloc();
             BOOST_ASSERT(current_thread_tls_key!=TLS_OUT_OF_INDEXES);
+#endif
         }
 
         void cleanup_tls_key()
         {
+#if !BOOST_PLAT_WINDOWS_RUNTIME
             if(current_thread_tls_key!=TLS_OUT_OF_INDEXES)
             {
                 TlsFree(current_thread_tls_key);
                 current_thread_tls_key=TLS_OUT_OF_INDEXES;
             }
+#endif
         }
 
         void set_current_thread_data(detail::thread_data_base* new_data)
         {
             boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
-            if (current_thread_tls_key!=TLS_OUT_OF_INDEXES)
+#if BOOST_PLAT_WINDOWS_RUNTIME
+            current_thread_data_base = new_data;
+#else
+            if (current_thread_tls_key != TLS_OUT_OF_INDEXES)
             {
-                BOOST_VERIFY(TlsSetValue(current_thread_tls_key,new_data));
+                BOOST_VERIFY(TlsSetValue(current_thread_tls_key, new_data));
             }
             else
             {
                 BOOST_VERIFY(false);
                 //boost::throw_exception(thread_resource_error());
             }
+#endif
         }
-
     }
+
     namespace detail
     {
       thread_data_base* get_current_thread_data()
       {
-          if(current_thread_tls_key==TLS_OUT_OF_INDEXES)
+#if BOOST_PLAT_WINDOWS_RUNTIME
+          return current_thread_data_base;
+#else
+          if (current_thread_tls_key == TLS_OUT_OF_INDEXES)
           {
               return 0;
           }
           return (detail::thread_data_base*)TlsGetValue(current_thread_tls_key);
+#endif
       }
     }
+
     namespace
     {
 #ifndef BOOST_HAS_THREADEX
@@ -165,6 +196,84 @@ namespace boost
 
     }
 
+#if BOOST_PLAT_WINDOWS_RUNTIME
+    namespace detail
+    {
+        std::once_flag threadPoolInitFlag;
+        std::atomic_uint threadCount;
+        Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IThreadPoolStatics> threadPoolFactory;
+
+        void init_thread_pool_func(bool *succeeded)
+        {
+            Microsoft::WRL::ComPtr<IActivationFactory> factory;
+            const HRESULT hr = ::Windows::Foundation::GetActivationFactory(
+                Microsoft::WRL::Wrappers::HStringReference(RuntimeClass_Windows_System_Threading_ThreadPool).Get(),
+                &factory);
+            if (hr != S_OK)
+            {
+                *succeeded = false;
+            }
+            else
+            {
+                factory.As(&threadPoolFactory);
+                *succeeded = true;
+            }
+        }
+
+        bool win32::scoped_winrt_thread::start(thread_func address, void *parameter, unsigned int *thrdId)
+        {
+            bool initSucceeded = true;
+            std::call_once(threadPoolInitFlag, init_thread_pool_func, &initSucceeded);
+            init_thread_pool_func(&initSucceeded);
+            if (!initSucceeded)
+            {
+                return false;
+            }
+
+            // Create event for tracking work item completion.
+            *thrdId = ++threadCount;
+            handle completionHandle = CreateEventExW(NULL, NULL, 0, EVENT_ALL_ACCESS);
+            if (!completionHandle)
+            {
+                return false;
+            }
+            m_completionHandle = completionHandle;
+
+            // Create new work item.
+            Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IWorkItemHandler> workItem = 
+                Microsoft::WRL::Callback<Microsoft::WRL::Implements<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, ABI::Windows::System::Threading::IWorkItemHandler, Microsoft::WRL::FtmBase>>
+                ([address, parameter, completionHandle](ABI::Windows::Foundation::IAsyncAction *)
+            {
+                // Add a reference since we need to access the completionHandle after the thread_start_function.
+                // This is to handle cases where detach() was called and run_thread_exit_callbacks() would end
+                // up closing the handle.
+                detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(parameter));
+                intrusive_ptr_add_ref(thread_info);
+
+                __try
+                {
+                    address(parameter);
+                }
+                __finally
+                {
+                    SetEvent(completionHandle);
+                    intrusive_ptr_release(thread_info);
+                }
+                return S_OK;
+            });
+
+            // Schedule work item on the threadpool.
+            Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IAsyncAction> asyncAction;
+            const HRESULT hr = threadPoolFactory->RunWithPriorityAndOptionsAsync(
+                workItem.Get(),
+                ABI::Windows::System::Threading::WorkItemPriority_Normal,
+                ABI::Windows::System::Threading::WorkItemOptions_TimeSliced,
+                &asyncAction);
+            return hr == S_OK;
+        }
+    }
+#endif
+
     namespace
     {
         void run_thread_exit_callbacks()
@@ -199,7 +308,6 @@ namespace boost
                         current_thread_data->tss_data.erase(current);
                     }
                 }
-
                 set_current_thread_data(0);
             }
         }
@@ -236,6 +344,16 @@ namespace boost
 
     bool thread::start_thread_noexcept()
     {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+         intrusive_ptr_add_ref(thread_info.get());
+         if (!thread_info->thread_handle.start(&thread_start_function, thread_info.get(), &thread_info->id))
+         {
+             intrusive_ptr_release(thread_info.get());
+//           boost::throw_exception(thread_resource_error());
+             return false;
+         }
+         return true;
+#else
         uintptr_t const new_thread=_beginthreadex(0,0,&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
         if(!new_thread)
         {
@@ -246,8 +364,10 @@ namespace boost
         thread_info->thread_handle=(detail::win32::handle)(new_thread);
         ResumeThread(thread_info->thread_handle);
         return true;
+#endif
     }
-
+    
+#if !BOOST_PLAT_WINDOWS_RUNTIME
     bool thread::start_thread_noexcept(const attributes& attr)
     {
       //uintptr_t const new_thread=_beginthreadex(attr.get_security(),attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
@@ -262,6 +382,7 @@ namespace boost
       ResumeThread(thread_info->thread_handle);
       return true;
     }
+#endif
 
     thread::thread(detail::thread_data_ptr data):
         thread_info(data)
@@ -321,31 +442,37 @@ namespace boost
             }
             return current_thread_data;
         }
-
     }
 
     thread::id thread::get_id() const BOOST_NOEXCEPT
     {
-    #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-      detail::thread_data_ptr local_thread_info=(get_thread_info)();
-      return local_thread_info?local_thread_info->id:0;
-      //return const_cast<thread*>(this)->native_handle();
-    #else
+#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+        detail::thread_data_ptr local_thread_info=(get_thread_info)();
+        if(!local_thread_info)
+        {
+            return 0;
+        }
+        return local_thread_info->id;
+#else
         return thread::id((get_thread_info)());
-    #endif
+#endif
     }
 
     bool thread::joinable() const BOOST_NOEXCEPT
     {
-        return (get_thread_info)() ? true : false;
+        detail::thread_data_ptr local_thread_info = (get_thread_info)();
+        if(!local_thread_info)
+        {
+            return false;
+        }
+        return true;
     }
     bool thread::join_noexcept()
     {
-
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
-            this_thread::interruptible_wait(local_thread_info->thread_handle,detail::timeout::sentinel());
+            this_thread::interruptible_wait(this->native_handle(),detail::timeout::sentinel());
             release_handle();
             return true;
         }
@@ -366,7 +493,7 @@ namespace boost
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
       {
-          if(!this_thread::interruptible_wait(local_thread_info->thread_handle,milli))
+          if(!this_thread::interruptible_wait(this->native_handle(),milli))
           {
             res=false;
             return true;
@@ -404,7 +531,11 @@ namespace boost
     bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
         return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
+# else
+        return local_thread_info.get() && (detail::win32::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
+# endif
     }
 
 #endif
@@ -413,12 +544,19 @@ namespace boost
     {
         //SYSTEM_INFO info={{0}};
         SYSTEM_INFO info;
+# if BOOST_PLAT_WINDOWS_RUNTIME
+        GetNativeSystemInfo(&info); 
+# else
         GetSystemInfo(&info);
+# endif
         return info.dwNumberOfProcessors;
     }
 
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+        return hardware_concurrency();
+#else
         unsigned cores = 0;
 #if !(defined(__MINGW32__) || defined (__MINGW64__))
         DWORD size = 0;
@@ -439,12 +577,22 @@ namespace boost
         }
 #endif
         return cores;
+#endif
     }
 
     thread::native_handle_type thread::native_handle()
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
-        return local_thread_info?(detail::win32::handle)local_thread_info->thread_handle:detail::win32::invalid_handle_value;
+        if(!local_thread_info)
+        {
+            return detail::win32::invalid_handle_value;
+        }
+#if BOOST_PLAT_WINDOWS_RUNTIME
+        // There is no 'real' Win32 handle so we return a handle that at least can be waited on.
+        return local_thread_info->thread_handle.waitable_handle();
+#else
+        return (detail::win32::handle)local_thread_info->thread_handle;
+#endif
     }
 
     detail::thread_data_ptr thread::get_thread_info BOOST_PREVENT_MACRO_SUBSTITUTION () const
@@ -535,6 +683,7 @@ namespace boost
             detail::win32::handle_manager timer_handle;
 
 #ifndef UNDER_CE
+#if !BOOST_PLAT_WINDOWS_RUNTIME
             unsigned const min_timer_wait_period=20;
 
             if(!target_time.is_sentinel())
@@ -563,6 +712,7 @@ namespace boost
                 }
             }
 #endif
+#endif
 
             bool const using_timer=timeout_index!=~0u;
             detail::timeout::remaining_time time_left(0);
@@ -576,7 +726,11 @@ namespace boost
 
                 if(handle_count)
                 {
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                     unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds);
+# else
+                    unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+# endif
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -598,7 +752,11 @@ namespace boost
                 }
                 else
                 {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), time_left.milliseconds, FALSE); 
+#else
                     detail::win32::Sleep(time_left.milliseconds);
+#endif
                 }
                 if(target_time.relative)
                 {
@@ -625,6 +783,7 @@ namespace boost
             detail::win32::handle_manager timer_handle;
 
 #ifndef UNDER_CE
+#if !BOOST_PLAT_WINDOWS_RUNTIME
             unsigned const min_timer_wait_period=20;
 
             if(!target_time.is_sentinel())
@@ -653,6 +812,7 @@ namespace boost
                 }
             }
 #endif
+#endif
 
             bool const using_timer=timeout_index!=~0u;
             detail::timeout::remaining_time time_left(0);
@@ -666,7 +826,11 @@ namespace boost
 
                 if(handle_count)
                 {
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                     unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds);
+# else
+                    unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+# endif
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -681,7 +845,11 @@ namespace boost
                 }
                 else
                 {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), time_left.milliseconds, FALSE); 
+#else
                     detail::win32::Sleep(time_left.milliseconds);
+#endif
                 }
                 if(target_time.relative)
                 {
@@ -695,11 +863,15 @@ namespace boost
 
         thread::id get_id() BOOST_NOEXCEPT
         {
-        #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
-          return detail::win32::GetCurrentThreadId();
-        #else
+#if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
+#if BOOST_PLAT_WINDOWS_RUNTIME
+            return get_or_make_current_thread_data()->id;
+#else
+            return detail::win32::GetCurrentThreadId();
+#endif
+#else
             return thread::id(get_or_make_current_thread_data());
-        #endif
+#endif
         }
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -719,13 +891,21 @@ namespace boost
 
         bool interruption_requested() BOOST_NOEXCEPT
         {
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
             return detail::get_current_thread_data() && (detail::win32::WaitForSingleObject(detail::get_current_thread_data()->interruption_handle,0)==0);
+# else
+            return detail::get_current_thread_data() && (detail::win32::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
+# endif
         }
 #endif
 
         void yield() BOOST_NOEXCEPT
         {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+            std::this_thread::yield();
+#else
             detail::win32::Sleep(0);
+#endif
         }
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -839,6 +1019,7 @@ namespace boost
             }
         }
     }
+
     BOOST_THREAD_DECL void __cdecl on_process_enter()
     {}
 

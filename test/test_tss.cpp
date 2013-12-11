@@ -1,7 +1,6 @@
-// Copyright (C) 2001-2003
-// William E. Kempf
-// Copyright (C) 2007 Anthony Williams
-//
+//  Copyright (C) 2001-2003 William E. Kempf
+//  Copyright (C) 2007 Anthony Williams
+//  Copyright (C) 2014 Microsoft Corporation
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -9,6 +8,7 @@
 #define BOOST_THREAD_PROVIDES_INTERRUPTIONS
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/predef/platform.h>
 
 #include <boost/thread/tss.hpp>
 #include <boost/thread/mutex.hpp>
@@ -67,6 +67,25 @@ void test_tss_thread()
 }
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
+#if BOOST_PLAT_WINDOWS_RUNTIME
+    typedef std::shared_ptr<std::thread> native_thread_t;
+    
+    void test_tss_thread_native()
+    {
+        test_tss_thread();
+    }
+    
+    native_thread_t create_native_thread()
+    {
+        return std::make_shared<std::thread>(test_tss_thread_native);
+    }
+    
+    void join_native_thread(native_thread_t thread)
+    {
+        thread->join();
+    }
+    
+#else
     typedef HANDLE native_thread_t;
 
     DWORD WINAPI test_tss_thread_native(LPVOID /*lpParameter*/)
@@ -97,6 +116,7 @@ void test_tss_thread()
         res = CloseHandle(thread);
         BOOST_CHECK(SUCCEEDED(res));
     }
+#endif
 #elif defined(BOOST_THREAD_PLATFORM_PTHREAD)
     typedef pthread_t native_thread_t;
 

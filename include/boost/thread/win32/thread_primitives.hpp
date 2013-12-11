@@ -5,12 +5,14 @@
 //
 //  (C) Copyright 2005-7 Anthony Williams
 //  (C) Copyright 2007 David Deakins
+//  (C) Copyright 2014 Microsoft Corporation
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/predef/platform.h>
 #include <boost/throw_exception.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -46,13 +48,22 @@ namespace boost
             unsigned const event_modify_state=EVENT_MODIFY_STATE;
             unsigned const synchronize=SYNCHRONIZE;
             unsigned const wait_abandoned=WAIT_ABANDONED;
-
+            unsigned const create_event_initial_set = CREATE_EVENT_INITIAL_SET;
+            unsigned const create_event_manual_reset = CREATE_EVENT_MANUAL_RESET;
+            unsigned const event_all_access = EVENT_ALL_ACCESS;
+            unsigned const semaphore_all_access = SEMAPHORE_ALL_ACCESS;
 
 # ifdef BOOST_NO_ANSI_APIS
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
             using ::CreateMutexW;
             using ::CreateEventW;
-            using ::OpenEventW;
             using ::CreateSemaphoreW;
+# else
+            using ::CreateMutexExW;
+            using ::CreateEventExW;
+            using ::CreateSemaphoreExW;
+# endif
+            using ::OpenEventW;
 # else
             using ::CreateMutexA;
             using ::CreateEventA;
@@ -64,15 +75,22 @@ namespace boost
             using ::ReleaseSemaphore;
             using ::SetEvent;
             using ::ResetEvent;
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
             using ::WaitForMultipleObjects;
             using ::WaitForSingleObject;
+# else  
+            using ::WaitForMultipleObjectsEx;  
+            using ::WaitForSingleObjectEx;  
+# endif
             using ::GetCurrentProcessId;
             using ::GetCurrentThreadId;
             using ::GetCurrentThread;
             using ::GetCurrentProcess;
             using ::DuplicateHandle;
+#if !BOOST_PLAT_WINDOWS_RUNTIME
             using ::SleepEx;
             using ::Sleep;
+#endif           
             using ::QueueUserAPC;
 //            using ::GetTickCount;
 //#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
@@ -131,14 +149,24 @@ namespace boost
             unsigned const event_modify_state=2;
             unsigned const synchronize=0x100000u;
             unsigned const wait_abandoned=0x00000080u;
+            unsigned const create_event_initial_set = 0x00000002;
+            unsigned const create_event_manual_reset = 0x00000001;
+            unsigned const event_all_access = 0x1F0003;
+            unsigned const semaphore_all_access = 0x1F0003;
 
             extern "C"
             {
                 struct _SECURITY_ATTRIBUTES;
 # ifdef BOOST_NO_ANSI_APIS
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
                 __declspec(dllimport) void* __stdcall CreateMutexW(_SECURITY_ATTRIBUTES*,int,wchar_t const*);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*);
                 __declspec(dllimport) void* __stdcall CreateEventW(_SECURITY_ATTRIBUTES*,int,int,wchar_t const*);
+# else
+                __declspec(dllimport) void* __stdcall CreateMutexExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
+                __declspec(dllimport) void* __stdcall CreateEventExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
+                __declspec(dllimport) void* __stdcall CreateSemaphoreExW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*,unsigned long,unsigned long);
+# endif
                 __declspec(dllimport) void* __stdcall OpenEventW(unsigned long,int,wchar_t const*);
 # else
                 __declspec(dllimport) void* __stdcall CreateMutexA(_SECURITY_ATTRIBUTES*,int,char const*);
@@ -148,12 +176,19 @@ namespace boost
 # endif
                 __declspec(dllimport) int __stdcall CloseHandle(void*);
                 __declspec(dllimport) int __stdcall ReleaseMutex(void*);
+# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
                 __declspec(dllimport) unsigned long __stdcall WaitForSingleObject(void*,unsigned long);
                 __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjects(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds);
+# else
+                __declspec(dllimport) unsigned long __stdcall WaitForSingleObjectEx(void*,unsigned long,int);
+                __declspec(dllimport) unsigned long __stdcall WaitForMultipleObjectsEx(unsigned long nCount,void* const * lpHandles,int bWaitAll,unsigned long dwMilliseconds,int bAlertable);
+# endif
                 __declspec(dllimport) int __stdcall ReleaseSemaphore(void*,long,long*);
                 __declspec(dllimport) int __stdcall DuplicateHandle(void*,void*,void*,void**,unsigned long,int,unsigned long);
+#if !BOOST_PLAT_WINDOWS_RUNTIME
                 __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
                 __declspec(dllimport) void __stdcall Sleep(unsigned long);
+#endif
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
 
@@ -211,8 +246,16 @@ namespace boost
             {
 #if !defined(BOOST_NO_ANSI_APIS)
                 handle const res=win32::CreateEventA(0,type,state,0);
-#else
+#else 
+#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
                 handle const res=win32::CreateEventW(0,type,state,0);
+#else
+                handle const res=win32::CreateEventExW(
+                    0,
+                    0,
+                    type ? create_event_manual_reset : 0 | state ? create_event_initial_set : 0,
+                    event_all_access);   
+#endif
 #endif
                 if(!res)
                 {
@@ -221,26 +264,27 @@ namespace boost
                 return res;
             }
 
-            inline handle create_anonymous_semaphore(long initial_count,long max_count)
-            {
-#if !defined(BOOST_NO_ANSI_APIS)
-                handle const res=CreateSemaphoreA(0,initial_count,max_count,0);
-#else
-                handle const res=CreateSemaphoreW(0,initial_count,max_count,0);
-#endif
-                if(!res)
-                {
-                    boost::throw_exception(thread_resource_error());
-                }
-                return res;
-            }
             inline handle create_anonymous_semaphore_nothrow(long initial_count,long max_count)
             {
 #if !defined(BOOST_NO_ANSI_APIS)
                 handle const res=CreateSemaphoreA(0,initial_count,max_count,0);
 #else
-                handle const res=CreateSemaphoreW(0,initial_count,max_count,0);
+#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
+                handle const res=CreateSemaphoreEx(0,initial_count,max_count,0,0);
+#else
+                handle const res=CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
 #endif
+#endif
+                return res;
+            }
+      
+            inline handle create_anonymous_semaphore(long initial_count,long max_count)
+            {
+                handle const res=create_anonymous_semaphore_nothrow(initial_count,max_count);
+                if(!res)
+                {
+                    boost::throw_exception(thread_resource_error());
+                }
                 return res;
             }
 
@@ -261,7 +305,34 @@ namespace boost
             {
                 BOOST_VERIFY(ReleaseSemaphore(semaphore,count,0)!=0);
             }
+#if BOOST_PLAT_WINDOWS_RUNTIME
+            class BOOST_THREAD_DECL scoped_winrt_thread
+            {
+            public:
+                scoped_winrt_thread() : m_completionHandle(invalid_handle_value)
+                {}
 
+                ~scoped_winrt_thread()
+                {
+                    if (m_completionHandle != detail::win32::invalid_handle_value)
+                    {
+                        CloseHandle(m_completionHandle);
+                    }
+                }
+
+                typedef unsigned(__stdcall * thread_func)(void *);
+                bool start(thread_func address, void *parameter, unsigned int *thrdId);
+
+                handle waitable_handle() const
+                {
+                    BOOST_ASSERT(m_completionHandle != detail::win32::invalid_handle_value);
+                    return m_completionHandle;
+                }
+
+            private:
+                handle m_completionHandle;
+            };
+#endif
             class BOOST_THREAD_DECL handle_manager
             {
             private:
@@ -324,7 +395,6 @@ namespace boost
                     cleanup();
                 }
             };
-
         }
     }
 }

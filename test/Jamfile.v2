@@ -95,9 +95,7 @@ project
         <toolset>intel:<cxxflags>-wd193,304,383,444
         <toolset>intel:<cxxflags>-wd593,981
         <toolset>intel:<cxxflags>-wd1418
-	<toolset>intel:<cxxflags>-wd2415
-
-
+        <toolset>intel:<cxxflags>-wd2415
     ;
 
 rule thread-run ( sources )
@@ -430,10 +428,10 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/duration_pass.cpp : unique_lock__cons__duration_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_assign_pass.cpp : unique_lock__cons__move_assign_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_pass.cpp : unique_lock__cons__move_ctor_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_try_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_try_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_for_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_for_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_until_pass.cpp : unique_lock__cons__move_ctor_upgrade_lock_until_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_pass.cpp : uq_lk_cons_mv_c_upg_lk_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_try_pass.cpp : uq_lk_cons_mv_c_upg_lk_t_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_for_pass.cpp : uq_lk_cons_mv_c_upg_lk_f_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_upgrade_lock_until_pass.cpp : uq_lk_cons_mv_c_upg_lk_u_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/mutex_pass.cpp : unique_lock__cons__mutex_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/time_point_pass.cpp : unique_lock__cons__time_point_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/try_to_lock_pass.cpp : unique_lock__cons__try_to_lock_p ]
@@ -477,8 +475,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/duration_pass.cpp : shared_lock__cons__duration_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_assign_pass.cpp : shared_lock__cons__move_assign_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_pass.cpp : shared_lock__cons__move_ctor_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_unique_lock_pass.cpp : shared_lock__cons__move_ctor_unique_lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_upgrade_lock_pass.cpp : shared_lock__cons__move_ctor_upgrade_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_unique_lock_pass.cpp : sh_lock_cons_move_ctor_unq_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/move_ctor_upgrade_lock_pass.cpp : sh_lock_cons_move_ctor_upg_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/mutex_pass.cpp : shared_lock__cons__mutex_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/time_point_pass.cpp : shared_lock__cons__time_point_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/shared_lock/cons/try_to_lock_pass.cpp : shared_lock__cons__try_to_lock_p ]
@@ -511,7 +509,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/duration_pass.cpp : upgrade_lock__cons__duration_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_assign_pass.cpp : upgrade_lock__cons__move_assign_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_pass.cpp : upgrade_lock__cons__move_ctor_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_unique_lock_pass.cpp : upgrade_lock__cons__move_ctor_unique_lock_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_unique_lock_pass.cpp : upg_lock_cons_mv_ctor_uq_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/mutex_pass.cpp : upgrade_lock__cons__mutex_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/time_point_pass.cpp : upgrade_lock__cons__time_point_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/try_to_lock_pass.cpp : upgrade_lock__cons__try_to_lock_p ]
@@ -543,8 +541,8 @@ rule thread-compile ( sources : reqs * : name )
     #explicit ts_nested_strict_lock ;
     test-suite ts_nested_strict_lock
     :
-          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_assign_fail.cpp : : nested_strict_lock__cons__copy_assign_f ]
-          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_ctor_fail.cpp : : nested_strict_lock__cons__copy_ctor_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_assign_fail.cpp : : nested_strict_lock_cons_copy_assign_f ]
+          [ thread-compile-fail ./sync/mutual_exclusion/locks/nested_strict_lock/copy_ctor_fail.cpp : : nested_strict_lock_cons_copy_ctor_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/default_pass.cpp : nested_strict_lock__cons__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/owns_lock_pass.cpp : nested_strict_lock__owns_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/nested_strict_lock/types_pass.cpp : nested_strict_lock__types_p ]
@@ -590,10 +588,10 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-compile-fail ./sync/mutual_exclusion/recursive_timed_mutex/copy_fail.cpp : : recursive_timed_mutex__copy_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/default_pass.cpp : recursive_timed_mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/lock_pass.cpp : recursive_timed_mutex__lock_p ]
-          [ thread-run2-noit-pthread ./sync/mutual_exclusion/recursive_timed_mutex/native_handle_pass.cpp : recursive_timed_mutex__native_handle_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_for_pass.cpp : recursive_timed_mutex__try_lock_for_p ]
+          [ thread-run2-noit-pthread ./sync/mutual_exclusion/recursive_timed_mutex/native_handle_pass.cpp : rec_timed_mutex_native_handle_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_for_pass.cpp : rec_timed_mutex_try_lock_for_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_pass.cpp : recursive_timed_mutex__try_lock_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_until_pass.cpp : recursive_timed_mutex__try_lock_until_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/recursive_timed_mutex/try_lock_until_pass.cpp : rec_timed_mutex_try_lock_until_p ]
     ;
 
     #explicit ts_timed_mutex ;
@@ -643,8 +641,8 @@ rule thread-compile ( sources : reqs * : name )
 
     test-suite ts_sync_bounded_queue
     :
-          [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/single_thread_pass.cpp : sync_bounded_queue__single_thread_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_queue__multi_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/single_thread_pass.cpp : sync_bounded_q_single_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_q_multi_thread_p ]
     ;
 
     #explicit ts_this_thread ;
@@ -735,13 +733,13 @@ rule thread-compile ( sources : reqs * : name )
     #explicit ts_shared_upwards ;
     test-suite ts_shared_upwards
     :
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_try_pass.cpp : unique_lock__cons__move_ctor_shared_lock_try_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_for_pass.cpp : unique_lock__cons__move_ctor_shared_lock_for_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_until_pass.cpp : unique_lock__cons__move_ctor_shared_lock_until_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_try_pass.cpp : uq_lock_cons_mv_ctor_sh_lock_try_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_for_pass.cpp : uq_lock_cons_mv_ctor_sh_lock_for_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/unique_lock/cons/move_ctor_shared_lock_until_pass.cpp : uq_lock_cons_mv_ctor_sh_lock_until_p ]
 
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_try_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_try_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_for_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_for_p ]
-          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_until_pass.cpp : upgrade_lock__cons__move_ctor_shared_lock_until_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_try_pass.cpp : upg_lock_cons_move_ctor_sh_lock_try_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_for_pass.cpp : upg_lock_cons_move_ctor_sh_lock_for_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/locks/upgrade_lock/cons/move_ctor_shared_lock_until_pass.cpp : upg_lock_cons_move_ctor_sh_lock_untl_p ]
     ;
 
 
