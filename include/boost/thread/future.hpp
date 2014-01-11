@@ -1121,7 +1121,13 @@ namespace boost
             {
                 if(f.future_)
                 {
-                    futures.push_back(registered_waiter(f.future_,f.future_->register_external_waiter(cv),future_count));
+                  registered_waiter waiter(f.future_,f.future_->register_external_waiter(cv),future_count);
+                  try {
+                      futures.push_back(waiter);
+                  } catch(...) {
+                    f.future_->remove_external_waiter(waiter.wait_iterator);
+                    throw;
+                  }
                 }
                 ++future_count;
             }
