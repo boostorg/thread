@@ -62,9 +62,11 @@ namespace boost
     inline void push_back(const value_type& x);
     inline queue_op_status try_push_back(const value_type& x);
     inline queue_op_status nonblocking_push_back(const value_type& x);
+    inline queue_op_status wait_push_back(const value_type& x);
     inline void push_back(BOOST_THREAD_RV_REF(value_type) x);
     inline queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x);
     inline queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x);
+    inline queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x);
 
 
     // Observers/Modifiers
@@ -76,7 +78,6 @@ namespace boost
     inline shared_ptr<ValueType> ptr_pull();
 #endif
     inline void pull_front(value_type&);
-    inline void pull_front(ValueType& elem, bool & closed);
     // enable_if is_nothrow_copy_movable<value_type>
     inline value_type pull_front();
 
@@ -87,6 +88,7 @@ namespace boost
 #endif
     inline queue_op_status try_pull_front(value_type&);
     inline queue_op_status nonblocking_pull_front(value_type&);
+    inline queue_op_status wait_pull_front(ValueType& elem);
 
     inline underlying_queue_type underlying_queue() {
       lock_guard<mutex> lk(mtx_);
@@ -124,8 +126,11 @@ namespace boost
     inline shared_ptr<value_type> try_pull(unique_lock<mutex>& lk);
 #endif
     inline queue_op_status try_pull_front(value_type& x, unique_lock<mutex>& lk);
+    inline queue_op_status wait_pull_front(value_type& x, unique_lock<mutex>& lk);
     inline queue_op_status try_push_back(const value_type& x, unique_lock<mutex>& lk);
+    inline queue_op_status wait_push_back(const value_type& x, unique_lock<mutex>& lk);
     inline queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
+    inline queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
 
     inline void wait_until_not_empty(unique_lock<mutex>& lk);
     inline void wait_until_not_empty(unique_lock<mutex>& lk, bool&);
@@ -307,6 +312,17 @@ namespace boost
     pull_front(elem, lk);
     return queue_op_status::success;
   }
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
+  {
+    if (empty(lk))
+    {
+      if (closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    pull_front(elem, lk);
+    return queue_op_status::success;
+  }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
@@ -329,6 +345,13 @@ namespace boost
   {
     unique_lock<mutex> lk(mtx_);
     return try_pull_front(elem, lk);
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_pull_front(ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return wait_pull_front(elem, lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -548,6 +571,21 @@ namespace boost
     return try_push_back(elem, lk);
   }
 
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
+  {
+    if (closed(lk)) return queue_op_status::closed;
+    push_back(elem, lk);
+    return queue_op_status::success;
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_push_back(const ValueType& elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return wait_push_back(elem, lk);
+  }
+
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <typename ValueType>
   bool sync_queue<ValueType>::try_push(no_block_tag, const ValueType& elem)
@@ -645,6 +683,21 @@ namespace boost
   {
     unique_lock<mutex> lk(mtx_);
     return try_push_back(boost::move(elem), lk);
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
+  {
+    if (closed(lk)) return queue_op_status::closed;
+    push_back(boost::move(elem), lk);
+    return queue_op_status::success;
+  }
+
+  template <typename ValueType>
+  queue_op_status sync_queue<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  {
+    unique_lock<mutex> lk(mtx_);
+    return wait_push_back(boost::move(elem), lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD

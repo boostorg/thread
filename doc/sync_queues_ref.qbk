@@ -16,6 +16,11 @@
 [////////////////////]
 [section Introduction]
 
+Queues provide a mechanism for communicating data between components of a system.
+
+The existing deque in the standard library is an inherently sequential data structure. Its reference-returning element access operations cannot synchronize access to those elements with other queue operations. So, concurrent pushes and pops on queues require a different interface to the queue structure.
+
+Moreover, concurrency adds a new dimension for performance and semantics. Different queue implementation must trade off uncontended operation cost, contended operation cost, and element order guarantees. Some of these trade-offs will necessarily result in semantics weaker than a serial queue. 
 
 [endsect]
 
@@ -92,11 +97,11 @@ A type `Q` meets the BasicConcurrentQueue requirements if the following expressi
 
 * Q::value_type
 * Q::size_type
-* `q.push(e);`
-* `q.push(rve);`
-* `q.pull(lre);`
-* `lre = q.pull();`
-* `spe = q.ptr_pull();`
+* `q.push_back(e);`
+* `q.push_back(rve);`
+* `q.pull_front(lre);`
+* `lre = q.pull_front();`
+* `spe = q.ptr_pull_front();`
 * `b = q.empty();`
 * `u = q.size();`
 
@@ -108,14 +113,15 @@ where
 * `lve` denotes a lvalue referece of type Q::value_type, 
 * `rve` denotes a rvalue referece of type Q::value_type:
 * `spe` denotes a shared_ptr<Q::value_type>
+* `qs` denotes a variable of of type `queus_op_status`, 
 
 
 [/////////////////////////////////////]
-[section:push `q.push(e);`]
+[section:push_back `q.push_back(e);`]
 
 [variablelist
 
-[[Effects:] [Waits until the queue is not full (for bounded queues) and then push `e` to the queue copying it (this could need an allocation for unbounded queues).]]
+[[Effects:] [Waits until the queue is not full (for bounded queues) and then push back `e` to the queue copying it (this could need an allocation for unbounded queues).]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
@@ -131,11 +137,11 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:push_m `q.push(rve);`]
+[section:push_back_m `q.push_back(rve);`]
 
 [variablelist
 
-[[Effects:] [Waits until the queue is not full (for bounded queues) and then push `e` to the queue moving it (this could need an allocation for unbounded queues).]]
+[[Effects:] [Waits until the queue is not full (for bounded queues) and then push `e` to the queue moving it back in the queue (this could need an allocation for unbounded queues).]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
@@ -151,11 +157,11 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:pull_lv `q.pull(lve)`]
+[section:pull_front_lv `q.pull_front(lve)`]
 
 [variablelist
 
-[[Effects:] [Waits until the queue is not empty and then pull the element from the queue `q` and moves the pulled element into `lve` (this could need an allocation for unbounded queues).]]
+[[Effects:] [Waits until the queue is not empty and then pull_front the element from the queue `q` and moves the pulled element into `lve` (this could need an allocation for unbounded queues).]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
@@ -171,7 +177,7 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:pull `e = q.pull()`]
+[section:pull_front `e = q.pull_front()`]
 
 [variablelist
 
@@ -195,7 +201,7 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:ptr_pull `spe = q.ptr_pull()`]
+[section:ptr_pull_front `spe = q.ptr_pull_front()`]
 
 [variablelist
 
@@ -229,9 +235,9 @@ The ConcurrentQueue concept models a queue with .
  
 A type `Q` meets the ConcurrentQueue requirements if the following expressions are well-formed and have the specified semantics 
 
-* `b = q.try_push(e);`
-* `b = q.try_push(rve);`
-* `b = q.try_pull(lre);`
+* `b = q.try_push_back(e);`
+* `b = q.try_push_back(rve);`
+* `b = q.try_pull_front(lre);`
 
 where
 
@@ -244,11 +250,11 @@ where
 
 
 [/////////////////////////////////////]
-[section:try_push `q.try_push(e);`]
+[section:try_push_back `q.try_push_back(e);`]
 
 [variablelist
 
-[[Effects:] [If the queue `q` is not full, push the `e` to the queue copying it.]]
+[[Effects:] [If the queue `q` is not full, push back the `e` to the queue copying it.]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation when the operation succeeds. ]]
 
@@ -266,11 +272,11 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:try_push_m `q.try_push(rve());`]
+[section:try_push_back_m `q.try_push_back(rve());`]
 
 [variablelist
 
-[[Effects:] [If the queue `q` is not full, push the `e` onto the queue moving it.]]
+[[Effects:] [If the queue `q` is not full, push back the `e` onto the queue moving it.]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
@@ -288,7 +294,7 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:pull_lv `b = q.try_pull(lve)`]
+[section:pull_front_lv `b = q.try_pull_front(lve)`]
 
 [variablelist
 
@@ -317,9 +323,9 @@ For cases when blocking for mutual exclusion is undesirable, we have non-blockin
 
 Non-blocking operations are provided only for BlockingQueues
 
-* `b = q.try_push(nb, e);`
-* `b = q.try_push(nb, rve);`
-* `b = q.try_pull(nb, lre);`
+* `b = q.try_push_back(nb, e);`
+* `b = q.try_push_back(nb, rve);`
+* `b = q.try_pull_front(nb, lre);`
 
 
 where
@@ -352,23 +358,79 @@ Bounded queues add the following valid expressions
 
 Basic expressions
 
-* `q.push(e,c);`
-* `q.push(rve,c);`
-* `q.pull(lre,c);`
-* `spe = q.ptr_pull(c);`
+* `qs = q.wait_push_back(e);`
+* `qs = q.wait_push_back(rve);`
+* `qs = q.wait_pull_front(lre);`
 
-Non-waiting operations
 
-* `b = q.try_push(e, c);`
-* `b = q.try_push(rve, c);`
-* `b = q.try_pull(lre, c);`
 
-Non-blocking operations are provided by BlockingQueues
+[/////////////////////////////////////]
+[section:wait_push_back `q.wait_push_back(e);`]
 
-* `b = q.try_push(nb, e, c);`
-* `b = q.try_push(nb, rve, c);`
-* `b = q.try_pull(nb, lre, c);`
+[variablelist
 
+[[Effects:] [Waits until the queue is not full (for bounded queues) and then push back `e` to the queue copying it (this could need an allocation for unbounded queues).]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
+
+[[Postcondition:] [`! q.empty()`.]]
+
+[[Return type:] [`queue_op_status`.]]
+
+[[Return:] [`queue_op_status::closed` is the queue is closed.]]
+
+[[Throws:] [Any exception thrown by the copy of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:wait_push_back_m `q.wait_push_back(rve);`]
+
+[variablelist
+
+[[Effects:] [Waits until the queue is not full (for bounded queues) and then push `e` to the queue moving it back in the queue (this could need an allocation for unbounded queues).]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
+
+[[Postcondition:] [`! q.empty()`.]]
+
+[[Return type:] [`queue_op_status`.]]
+
+[[Return:] [`queue_op_status::closed` is the queue is closed.]]
+
+[[Throws:] [Any exception thrown by the copy of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:wait_pull_front_lv `q.wait_pull_front(lve)`]
+
+[variablelist
+
+[[Effects:] [Waits until the queue is not empty and then pull_front the element from the queue `q` and moves the pulled element into `lve` (this could need an allocation for unbounded queues).]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
+
+[[Postcondition:] [`! q.full()`.]]
+
+[[Return type:] [`queue_op_status`.]]
+
+[[Return:] [If the queue is empty and closed, return `queue_op_status::closed`. Otherwise, if the queue is empty, return `queue_op_status::empty`. 
+Otherwise, return `queue_op_status::success` if no exception is thrown.]]
+
+[[Throws:] [Any exception thrown by the move of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
 
 [endsect]
 
@@ -433,20 +495,22 @@ Non-blocking operations are provided by BlockingQueues
       bool closed() const;
 
       // Modifiers
-      void push(const value_type& x);
-      void push(value_type&& x);
-      bool try_push(const value_type& x);
-      bool try_push(value_type&& x);
-      bool try_push(no_block_tag, const value_type& x);
-      bool try_push(no_block_tag, value_type&& x);
+      void push_back(const value_type& x);
+      void push_back(value_type&& x);
 
-      void pull(value_type&);
-      // enable_if is_nothrow_movable<value_type>
-      value_type pull();
-      shared_ptr<ValueType> ptr_pull();
-      bool try_pull(value_type&);
-      bool try_pull(no_block_tag,value_type&);
-      shared_ptr<ValueType> try_pull();
+      queue_op_status try_push_back(const value_type& x);
+      queue_op_status try_push_back(value_type&&) x);
+
+      queue_op_status nonblocking_push_back(const value_type& x);
+      queue_op_status nonblocking_push_back(value_type&& x);
+
+      void pull_front(value_type&);
+      value_type pull_front();
+      shared_ptr<ValueType> ptr_pull_front();
+
+      queue_op_status try_pull_front(value_type&);
+      queue_op_status nonblocking_pull_front(value_type&);
+
 
       void close();
     };
@@ -475,7 +539,7 @@ Non-blocking operations are provided by BlockingQueues
 
 [variablelist
 
-[[Effects:] [Constructs a sync_bounded_queue with a maximum number of elements given by `max_elems` and push the elements of the range. ]]
+[[Effects:] [Constructs a sync_bounded_queue with a maximum number of elements given by `max_elems` and push back the elements of the range. ]]
 
 [[Throws:] [any exception that can be throw because of resources unavailable. ]]
 
@@ -547,7 +611,7 @@ Non-blocking operations are provided by BlockingQueues
       sync_queue& operator=(sync_queue const&) = delete;
       sync_queue();
       explicit template <typename Range>
-      sync_queue(Range range);
+      sync_queue(Range range); // Not yet implemented
       ~sync_queue();
 
       // Observers
@@ -557,20 +621,21 @@ Non-blocking operations are provided by BlockingQueues
       bool closed() const;
 
       // Modifiers
-      void push(const value_type& x);
-      void push(value_type&& x);
-      bool try_push(const value_type& x);
-      bool try_push(value_type&&) x);
-      bool try_push(no_block_tag, const value_type& x);
-      bool try_push(no_block_tag, value_type&& x);
+      void push_back(const value_type& x);
+      void push_back(value_type&& x);
 
-      void pull(value_type&);
-      // enable_if is_nothrow_movable<value_type>
-      value_type pull();
-      shared_ptr<ValueType> ptr_pull();
-      bool try_pull(value_type&);
-      bool try_pull(no_block_tag,value_type&);
-      shared_ptr<ValueType> try_pull();
+      queue_op_status try_push_back(const value_type& x);
+      queue_op_status try_push_back(value_type&&) x);
+
+      queue_op_status nonblocking_push_back(const value_type& x);
+      queue_op_status nonblocking_push_back(value_type&& x);
+
+      void pull_front(value_type&);
+      value_type pull_front();
+      shared_ptr<ValueType> ptr_pull_front();
+
+      queue_op_status try_pull_front(value_type&);
+      queue_op_status nonblocking_pull_front(value_type&);
 
       underlying_queue_type underlying_queue() noexcept;
 

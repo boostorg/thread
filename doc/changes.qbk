@@ -47,9 +47,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/7448 #7448] Async: Add async taking a scheduler parameter.
 * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Synchro: Add concurrent queue
 * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Synchro: Add a latch class.
-* [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Synchro: Add externally locked streams.
 * [@http://svn.boost.org/trac/boost/ticket/8513 #8513] Async: Add a basic thread_pool executor.
-* [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
 * [@http://svn.boost.org/trac/boost/ticket/8516 #8516] Async: Add future/shared_future::then taking a scheduler as parameter.
 
 [*Fixed Bugs:]
@@ -498,10 +496,7 @@ The following features will be included in next releases.
   * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
 
 # Add some features based on C++ proposals, in particular
-  * [@http://svn.boost.org/trac/boost/ticket/8274 #8274] Synchro: Add concurrent queue
-  * [@http://svn.boost.org/trac/boost/ticket/8518 #8518] Synchro: Add a latch class.
   * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Synchro: Add externally locked streams.
-  * [@http://svn.boost.org/trac/boost/ticket/8513 #8513] Async: Add a basic thread_pool executor.
   * [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
 
 # Add some of the extension proposed in [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3428.pdf A Standardized Representation of Asynchronous Operations] or extension to them, in particular
