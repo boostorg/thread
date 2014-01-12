@@ -22,7 +22,8 @@
 
 namespace boost
 {
-
+namespace executors
+{
   class serial_executor
   {
     /// type-erasure to store the works to do
@@ -201,7 +202,8 @@ namespace boost
     }
 
   };
-
+}
+using executors::serial_executor;
 }
 
 #include <boost/config/abi_suffix.hpp>

@@ -99,26 +99,26 @@ namespace executors
       return ex.submit(boost::move(closure));
     }
 
-//#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-//    template <typename Closure>
-//    void submit(Closure & closure)
-//    {
-//      work w ((closure));
-//      submit(boost::move(w));
-//    }
-//#endif
-//    void submit(void (*closure)())
-//    {
-//      work w ((closure));
-//      submit(boost::move(w));
-//    }
-//
-//    template <typename Closure>
-//    void submit(BOOST_THREAD_RV_REF(Closure) closure)
-//    {
-//      work w =boost::move(closure);
-//      submit(boost::move(w));
-//    }
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template <typename Closure>
+    void submit(Closure & closure)
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+#endif
+    void submit(void (*closure)())
+    {
+      work w ((closure));
+      submit(boost::move(w));
+    }
+
+    template <typename Closure>
+    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    {
+      work w =boost::move(closure);
+      submit(boost::move(w));
+    }
 
     /**
      * Effects: try to execute one task.

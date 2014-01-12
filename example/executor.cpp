@@ -87,12 +87,14 @@ int main()
         submit_some( ea2);
         ea2.underlying_executor().run_queued_closures();
       }
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
         boost::executor_adaptor < boost::serial_executor > ea2(ea1);
         submit_some(ea2);
       }
+#endif
       std::cout << BOOST_CONTEXTOF << std::endl;
     }
     catch (std::exception& ex)
