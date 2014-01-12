@@ -8,7 +8,7 @@
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/detail/log.hpp>
-#include <boost/thread/user_scheduler.hpp>
+#include <boost/thread/executors/loop_executor.hpp>
 #include <boost/assert.hpp>
 #include <string>
 
@@ -24,7 +24,7 @@ void p2()
     << boost::this_thread::get_id()  << " P2" << BOOST_THREAD_END_LOG;
 }
 
-void submit_some(boost::user_scheduler& tp) {
+void submit_some(boost::loop_executor& tp) {
   tp.submit(&p1);
   tp.submit(&p2);
   tp.submit(&p1);
@@ -44,7 +44,7 @@ int main()
   {
     try
     {
-      boost::user_scheduler tp;
+      boost::loop_executor tp;
       submit_some(tp);
       tp.run_queued_closures();
       submit_some(tp);

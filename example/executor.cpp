@@ -8,8 +8,11 @@
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
-#include <boost/thread/thread_pool.hpp>
-#include <boost/thread/user_scheduler.hpp>
+#include <boost/thread/executors/basic_thread_pool.hpp>
+#include <boost/thread/executors/loop_executor.hpp>
+#include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/executor.hpp>
+#include <boost/thread/executors/executor_adaptor.hpp>
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
@@ -19,11 +22,13 @@
 void p1()
 {
   std::cout << BOOST_CONTEXTOF << std::endl;
+  //boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
 }
 
 void p2()
 {
   std::cout << BOOST_CONTEXTOF << std::endl;
+  //boost::this_thread::sleep_for(boost::chrono::seconds(10));
 }
 
 int f1()
@@ -41,17 +46,13 @@ int f2(int i)
 
 void submit_some(boost::executor& tp)
 {
-  tp.submit(&p1);
-  tp.submit(&p2);
-  tp.submit(&p1);
-  tp.submit(&p2);
-  tp.submit(&p1);
-  tp.submit(&p2);
-  tp.submit(&p1);
-  tp.submit(&p2);
-  tp.submit(&p1);
-  tp.submit(&p2);
+  for (int i = 0; i < 3; ++i)
+    tp.submit(&p2);
+  for (int i = 0; i < 3; ++i)
+    tp.submit(&p1);
+
 }
+
 
 int main()
 {
@@ -59,30 +60,40 @@ int main()
   {
     try
     {
-      boost::executor_adaptor<boost::thread_pool> ea;
-      submit_some(ea);
       {
-        boost::future<int> t1 = boost::async(ea, &f1);
-        boost::future<int> t2 = boost::async(ea, &f1);
-        std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
-        std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+        boost::executor_adaptor < boost::basic_thread_pool > ea(4);
+        submit_some( ea);
+        {
+          boost::future<int> t1 = boost::async(ea, &f1);
+          boost::future<int> t2 = boost::async(ea, &f1);
+          std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+          std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+        }
+        submit_some(ea);
+        {
+          boost::basic_thread_pool ea3(1);
+          boost::future<int> t1 = boost::async(ea3, &f1);
+          boost::future<int> t2 = boost::async(ea3, &f1);
+          //boost::future<int> t2 = boost::async(ea3, f2, 1); // todo this doesn't compiles yet on C++11
+          //boost::future<int> t2 = boost::async(ea3, boost::bind(f2, 1)); // todo this doesn't compiles yet on C++98
+          std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+          std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+        }
+        submit_some(ea);
       }
-      submit_some(ea);
+      std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::thread_pool ea3(1);
-        boost::future<int> t1 = boost::async(ea3, &f1);
-        boost::future<int> t2 = boost::async(ea3, &f1);
-        //boost::future<int> t2 = boost::async(ea3, f2, 1); // todo this doesn't compiles yet on C++11
-        //boost::future<int> t2 = boost::async(ea3, boost::bind(f2, 1)); // todo this doesn't compiles yet on C++98
-        std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
-        std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+        boost::executor_adaptor < boost::loop_executor > ea2;
+        submit_some( ea2);
+        ea2.underlying_executor().run_queued_closures();
       }
-      submit_some(ea);
-
-      boost::executor_adaptor<boost::user_scheduler> ea2;
-      submit_some(ea2);
-      ea2.underlying_executor().run_queued_closures();
-
+      std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
+        boost::executor_adaptor < boost::serial_executor > ea2(ea1);
+        submit_some(ea2);
+      }
+      std::cout << BOOST_CONTEXTOF << std::endl;
     }
     catch (std::exception& ex)
     {

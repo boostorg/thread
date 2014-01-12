@@ -37,7 +37,7 @@
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/thread/thread_pool.hpp>
+#include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executor.hpp>
 
 typedef boost::chrono::high_resolution_clock Clock;
@@ -221,7 +221,7 @@ int main()
   {
     try
     {
-      boost::executor_adaptor<boost::thread_pool> ex(1);
+      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
       boost::future<int> f = boost::async(ex, &f0);
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
@@ -269,7 +269,7 @@ int main()
   {
     try
     {
-      boost::executor_adaptor<boost::thread_pool> ex(1);
+      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
       boost::future<long> f = boost::async(ex, A(3));
       boost::this_thread::sleep_for(ms(300));
       Clock::time_point t0 = Clock::now();
@@ -317,7 +317,7 @@ int main()
   {
     try
     {
-      boost::executor_adaptor<boost::thread_pool> ex(1);
+      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
       MoveOnly mo;
       boost::future<int> f = boost::async(ex, boost::move(mo));
       //boost::future<int> f = boost::async(ex, MoveOnly());
