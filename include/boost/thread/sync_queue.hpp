@@ -608,7 +608,7 @@ namespace boost
   {
     unique_lock<mutex> lk(mtx_, try_to_lock);
     if (!lk.owns_lock()) return queue_op_status::busy;
-    return try_push(elem, lk);
+    return try_push_back(elem, lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
