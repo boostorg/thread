@@ -7,8 +7,8 @@
 //    Adapt to boost from CCIA C++11 implementation
 //    first implementation of a simple pool thread using a vector of threads and a sync_queue.
 
-#ifndef BOOST_THREAD_EXECUTORS_THREAD_POOL_HPP
-#define BOOST_THREAD_EXECUTORS_THREAD_POOL_HPP
+#ifndef BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
+#define BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
@@ -26,8 +26,10 @@ namespace executors
 {
   class basic_thread_pool
   {
+  public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
+  private:
     /// the kind of stored threads are scoped threads to ensure that the threads are joined.
     /// A move aware vector type
     typedef scoped_thread<> thread_t;
@@ -91,6 +93,44 @@ namespace executors
       {
       }
     }
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template <class AtThreadEntry>
+    void worker_thread1(AtThreadEntry& at_thread_entry)
+    {
+      at_thread_entry(*this);
+      while (!closed())
+      {
+        schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
+      }
+    }
+#endif
+    void worker_thread2(void(*at_thread_entry)(basic_thread_pool&))
+    {
+      at_thread_entry(*this);
+      while (!closed())
+      {
+        schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
+      }
+    }
+    template <class AtThreadEntry>
+    void worker_thread3(BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
+    {
+      at_thread_entry(*this);
+      while (!closed())
+      {
+        schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
+      }
+    }
+    static void do_nothing_at_thread_entry(basic_thread_pool&) {}
 
   public:
     /// basic_thread_pool is not copyable.
@@ -112,8 +152,72 @@ namespace executors
           thread th (&basic_thread_pool::worker_thread, this);
           threads.push_back(thread_t(boost::move(th)));
 #else
-          threads.push_back(thread_t(&basic_thread_pool::worker_thread, this));
+          threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
 #endif
+        }
+      }
+      catch (...)
+      {
+        close();
+        throw;
+      }
+    }
+    /**
+     * \b Effects: creates a thread pool that runs closures on \c thread_count threads
+     * and executes the at_thread_entry function at the entry of each created thread. .
+     *
+     * \b Throws: Whatever exception is thrown while initializing the needed resources.
+     */
+#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+    template <class AtThreadEntry>
+    basic_thread_pool( unsigned const thread_count, AtThreadEntry& at_thread_entry)
+    {
+      try
+      {
+        threads.reserve(thread_count);
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+          thread th (&basic_thread_pool::worker_thread1<AtThreadEntry>, this, at_thread_entry);
+          threads.push_back(thread_t(boost::move(th)));
+          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
+        }
+      }
+      catch (...)
+      {
+        close();
+        throw;
+      }
+    }
+#endif
+    basic_thread_pool( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool&))
+    {
+      try
+      {
+        threads.reserve(thread_count);
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+          thread th (&basic_thread_pool::worker_thread2, this, at_thread_entry);
+          threads.push_back(thread_t(boost::move(th)));
+          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
+        }
+      }
+      catch (...)
+      {
+        close();
+        throw;
+      }
+    }
+    template <class AtThreadEntry>
+    basic_thread_pool( unsigned const thread_count, BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
+    {
+      try
+      {
+        threads.reserve(thread_count);
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+          thread th (&basic_thread_pool::worker_thread3<AtThreadEntry>, this, boost::forward<AtThreadEntry>(at_thread_entry));
+          threads.push_back(thread_t(boost::move(th)));
+          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
         }
       }
       catch (...)
@@ -167,26 +271,33 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push(work(closure)); // todo check why this doesn't work
+      //work w ((closure));
+      //work_queue.push_back(boost::move(w));
+      work_queue.push_back(work(closure)); // todo check why this doesn't work
     }
 #endif
     void submit(void (*closure)())
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      //work w ((closure));
+      //work_queue.push_back(boost::move(w));
+      work_queue.push_back(work(closure)); // todo check why this doesn't work
     }
 
+#if 0
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work w =boost::move(closure);
+      work w = boost::move(closure);
       work_queue.push_back(boost::move(w));
       //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
     }
-
+#else
+    template <typename Closure>
+    void submit(BOOST_THREAD_FWD_REF(Closure) closure)
+    {
+      work_queue.push_back(work(boost::forward<Closure>(closure)));
+    }
+#endif
     /**
      * \b Requires: This must be called from an scheduled task.
      *

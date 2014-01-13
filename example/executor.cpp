@@ -58,6 +58,10 @@ void submit_some(boost::executor& tp)
 
 }
 
+void at_th_entry(boost::basic_thread_pool& )
+{
+
+}
 
 int main()
 {
@@ -111,6 +115,11 @@ int main()
         submit_some(ea1);
       }
       std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::basic_thread_pool  ea(4, at_th_entry);
+        boost::future<int> t1 = boost::async(ea, &f1);
+        std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+      }
     }
     catch (std::exception& ex)
     {
