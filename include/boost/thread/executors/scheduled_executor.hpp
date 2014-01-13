@@ -28,8 +28,10 @@ namespace executors
 
   class scheduled_executor
   {
+  public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
+  private:
     typedef  executors::work_executor_delegate timed_work;
     typedef  scoped_thread<> thread_t;
 
