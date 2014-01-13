@@ -6,8 +6,8 @@
 // 2013/11 Vicente J. Botet Escriba
 //    first implementation of a simple serial scheduler.
 
-#ifndef BOOST_THREAD_USER_SCHEDULER_HPP
-#define BOOST_THREAD_USER_SCHEDULER_HPP
+#ifndef BOOST_THREAD_SERIAL_EXECUTOR_HPP
+#define BOOST_THREAD_SERIAL_EXECUTOR_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
@@ -26,8 +26,10 @@ namespace executors
 {
   class serial_executor
   {
+  public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
+  private:
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue

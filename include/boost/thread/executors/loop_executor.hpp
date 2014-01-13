@@ -26,9 +26,10 @@ namespace executors
 
   class loop_executor
   {
+  public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
-
+  private:
     /// the thread safe work queue
     sync_queue<work > work_queue;
 
