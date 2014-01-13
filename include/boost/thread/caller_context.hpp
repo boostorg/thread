@@ -12,6 +12,7 @@
 #include <boost/thread/thread.hpp>
 #endif
 #include <boost/current_function.hpp>
+#include <iomanip>
 
 #include <boost/config/abi_prefix.hpp>
 
