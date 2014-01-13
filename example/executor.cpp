@@ -8,16 +8,19 @@
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
+#include <boost/thread/caller_context.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
 #include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/inline_executor.hpp>
+#include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
 #include <string>
-#include <boost/thread/caller_context.hpp>
+#include <iostream>
 
 void p1()
 {
@@ -46,10 +49,12 @@ int f2(int i)
 
 void submit_some(boost::executor& tp)
 {
-  for (int i = 0; i < 3; ++i)
+  for (int i = 0; i < 3; ++i) {
     tp.submit(&p2);
-  for (int i = 0; i < 3; ++i)
+  }
+  for (int i = 0; i < 3; ++i) {
     tp.submit(&p1);
+  }
 
 }
 
@@ -95,6 +100,16 @@ int main()
         submit_some(ea2);
       }
 #endif
+      std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::executor_adaptor < boost::inline_executor > ea1;
+        submit_some(ea1);
+      }
+      std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::executor_adaptor < boost::thread_executor > ea1;
+        submit_some(ea1);
+      }
       std::cout << BOOST_CONTEXTOF << std::endl;
     }
     catch (std::exception& ex)
