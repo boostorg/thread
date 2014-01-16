@@ -3716,11 +3716,9 @@ namespace boost
     {
       typedef shared_state<Rp> base_type;
     protected:
-      //Executor& ex_;
     public:
       template<typename Fp>
       future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
-      //: ex_(ex)
       {
         this->set_executor();
         shared_state_nullary_task<Rp,Fp> t(this, boost::forward<Fp>(f));
