@@ -5,6 +5,11 @@
 
 #define BOOST_THREAD_VERSION 4
 
+#include <boost/config.hpp>
+#ifndef BOOST_NO_CXX11_DECLTYPE_N3276
+#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
+#endif
+
 #include <boost/thread/future.hpp>
 #include <iostream>
 
@@ -55,6 +60,11 @@ int main()
   for (int i=0; i< number_of_tests; i++)
   try
   {
+    {
+    std::cout << __FILE__ << " "<<__LINE__ << std::endl;
+    boost::future<int> f = boost::async(boost::launch::async, p1);
+    std::cout << i << " "<<f.get() << std::endl;
+    }
 #if defined BOOST_THREAD_USES_MOVE
   {
     std::cout << __FILE__ << " "<< __LINE__ << std::endl;

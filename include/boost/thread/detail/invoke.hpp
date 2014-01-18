@@ -44,7 +44,8 @@ namespace boost
     ! defined(BOOST_NO_SFINAE_EXPR) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE_N3276) && \
-    ! defined(BOOST_NO_CXX11_AUTO)
+    ! defined(BOOST_THREAD_NO_CXX11_DECLTYPE_N3276) && \
+    ! defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES)
 
 #define BOOST_THREAD_PROVIDES_INVOKE
 

@@ -239,7 +239,8 @@
     ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE_N3276) && \
-    ! defined(BOOST_NO_CXX11_AUTO) && \
+    ! defined(BOOST_THREAD_NO_CXX11_DECLTYPE_N3276) && \
+    ! defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES) && \
     ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && \
     ! defined(BOOST_NO_CXX11_HDR_TUPLE)
 

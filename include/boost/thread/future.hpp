@@ -278,10 +278,11 @@ namespace boost
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
                 if (continuation_ptr) {
-                  continuation_ptr->launch_continuation(lock);
-                  if (! lock.owns_lock())
-                    lock.lock();
+                  continuation_ptr_type this_continuation_ptr = continuation_ptr;
                   continuation_ptr.reset();
+                  this_continuation_ptr->launch_continuation(lock);
+                  //if (! lock.owns_lock())
+                  //  lock.lock();
                 }
             }
 #else
@@ -679,13 +680,15 @@ namespace boost
 
             virtual move_dest_type get()
             {
-                wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                wait_internal(lock);
                 return boost::move(*result);
             }
 
             virtual shared_future_get_result_type get_sh()
             {
-                wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                wait_internal(lock);
                 return *result;
             }
 
@@ -755,13 +758,15 @@ namespace boost
 
             virtual T& get()
             {
-                wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                wait_internal(lock);
                 return *result;
             }
 
             virtual T& get_sh()
             {
-                wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                wait_internal(lock);
                 return *result;
             }
 
@@ -803,12 +808,14 @@ namespace boost
 
             virtual void get()
             {
-                this->wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                this->wait_internal(lock);
             }
 
             virtual void get_sh()
             {
-                wait();
+                boost::unique_lock<boost::mutex> lock(mutex);
+                this->wait_internal(lock);
             }
 
             void set_value_at_thread_exit()
@@ -4051,9 +4058,9 @@ namespace boost
       {
       }
 
-      void launch_continuation(boost::unique_lock<boost::mutex>& lock)
+      void launch_continuation(boost::unique_lock<boost::mutex>& )
       {
-        lock.unlock();
+        //lock.unlock();
         this->thr_ = thread(&future_async_continuation_shared_state::run, this);
       }
 
@@ -4095,9 +4102,9 @@ namespace boost
       {
       }
 
-      void launch_continuation(boost::unique_lock<boost::mutex>& lk)
+      void launch_continuation(boost::unique_lock<boost::mutex>& )
       {
-        lk.unlock();
+        //lk.unlock();
         this->thr_ = thread(&future_async_continuation_shared_state::run, this);
       }
 
