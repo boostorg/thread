@@ -3486,7 +3486,7 @@ namespace boost
           typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
           typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
           typedef typename BF::result_type Rp;
-#else
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class R>
         BOOST_THREAD_FUTURE<R>
         async(launch policy, R(*f)())
@@ -3496,10 +3496,9 @@ namespace boost
   #else
           typedef packaged_task<R> packaged_task_type;
   #endif
-#endif
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           if (int(policy) & int(launch::async))
             {
-//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
@@ -3507,18 +3506,17 @@ namespace boost
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-#else
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
               packaged_task_type pt( f );
 
               BOOST_THREAD_FUTURE<R> ret = BOOST_THREAD_MAKE_RV_REF(pt.get_future());
               ret.set_async();
               boost::thread( boost::move(pt) ).detach();
               return ::boost::move(ret);
-#endif
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             }
             else if (int(policy) & int(launch::deferred))
             {
-//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
@@ -3526,12 +3524,12 @@ namespace boost
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-#else
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           std::terminate();
           BOOST_THREAD_FUTURE<R> ret;
           return ::boost::move(ret);
 
-#endif
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             } else {
               std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
@@ -3539,7 +3537,7 @@ namespace boost
             }
         }
 
-#endif
+#endif // defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
 
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
@@ -3557,7 +3555,7 @@ namespace boost
           typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
           typedef typename BF::result_type Rp;
 
-#else
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class F>
         BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
         async(launch policy, BOOST_THREAD_FWD_REF(F)  f)
@@ -3566,10 +3564,10 @@ namespace boost
   #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
           typedef packaged_task<R()> packaged_task_type;
 
-  #else
+  #else // defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
           typedef packaged_task<R> packaged_task_type;
-  #endif
-#endif
+  #endif // defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
         if (int(policy) & int(launch::async))
         {
@@ -3580,14 +3578,14 @@ namespace boost
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-#else
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           packaged_task_type pt( boost::forward<F>(f) );
 
           BOOST_THREAD_FUTURE<R> ret = pt.get_future();
           ret.set_async();
           boost::thread( boost::move(pt) ).detach();
           return ::boost::move(ret);
-#endif
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         }
         else if (int(policy) & int(launch::deferred))
         {
@@ -3598,7 +3596,7 @@ namespace boost
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-#else
+#else defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
               std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
@@ -3607,7 +3605,7 @@ namespace boost
 //                  thread_detail::decay_copy(boost::forward<F>(f))
 //              )
 //          );
-#endif
+#endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
         } else {
           std::terminate();
@@ -3641,7 +3639,7 @@ namespace boost
         {
           that->mark_interrupted_finish();
         }
-#endif
+#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         catch(...)
         {
           that->mark_exceptional_finish();
@@ -3671,7 +3669,7 @@ namespace boost
         {
           that->mark_interrupted_finish();
         }
-#endif
+#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         catch(...)
         {
           that->mark_exceptional_finish();
@@ -3699,7 +3697,7 @@ namespace boost
         {
           that->mark_interrupted_finish();
         }
-#endif
+#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         catch(...)
         {
           that->mark_exceptional_finish();
