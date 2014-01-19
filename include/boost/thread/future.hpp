@@ -3478,8 +3478,7 @@ namespace boost
 
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
         template <class R, class... ArgTypes>
         BOOST_THREAD_FUTURE<R>
         async(launch policy, R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
@@ -3487,23 +3486,21 @@ namespace boost
           typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
           typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
           typedef typename BF::result_type Rp;
-  #else
-        template <class R>
-        BOOST_THREAD_FUTURE<R>
-        async(launch policy, R(*f)())
-        {
-          typedef packaged_task<R()> packaged_task_type;
-  #endif
 #else
         template <class R>
         BOOST_THREAD_FUTURE<R>
         async(launch policy, R(*f)())
         {
+  #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
+          typedef packaged_task<R()> packaged_task_type;
+  #else
           typedef packaged_task<R> packaged_task_type;
+  #endif
 #endif
           if (int(policy) & int(launch::async))
             {
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3521,7 +3518,8 @@ namespace boost
             }
             else if (int(policy) & int(launch::deferred))
             {
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+//#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3543,8 +3541,7 @@ namespace boost
 
 #endif
 
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
-  #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
         template <class F, class ...ArgTypes>
         BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
@@ -3560,28 +3557,23 @@ namespace boost
           typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
           typedef typename BF::result_type Rp;
 
-  #else
-        template <class F>
-        BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
-        async(launch policy, BOOST_THREAD_FWD_REF(F)  f)
-        {
-          typedef typename boost::result_of<typename decay<F>::type()>::type R;
-          typedef packaged_task<R()> packaged_task_type;
-
-  #endif
 #else
         template <class F>
         BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
         async(launch policy, BOOST_THREAD_FWD_REF(F)  f)
         {
           typedef typename boost::result_of<typename decay<F>::type()>::type R;
-          typedef packaged_task<R> packaged_task_type;
+  #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
+          typedef packaged_task<R()> packaged_task_type;
 
+  #else
+          typedef packaged_task<R> packaged_task_type;
+  #endif
 #endif
 
         if (int(policy) & int(launch::async))
         {
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3599,7 +3591,7 @@ namespace boost
         }
         else if (int(policy) & int(launch::deferred))
         {
-#if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
           return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3871,7 +3863,7 @@ namespace boost
 
     #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
-    #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+    #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             template <class R, class... ArgTypes>
             BOOST_THREAD_FUTURE<R>
             async(R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args)
@@ -3888,7 +3880,7 @@ namespace boost
     #endif
     #endif
 
-    #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+    #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
             template <class F, class ...ArgTypes>
             BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
                 typename decay<ArgTypes>::type...
@@ -3904,7 +3896,7 @@ namespace boost
     {
         return BOOST_THREAD_MAKE_RV_REF(async(launch(launch::any), boost::forward<F>(f)));
     }
-#endif
+    #endif
 
 
   ////////////////////////////////
