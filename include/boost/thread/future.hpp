@@ -3596,7 +3596,7 @@ namespace boost
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-#else defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+#else // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
               std::terminate();
               BOOST_THREAD_FUTURE<R> ret;
               return ::boost::move(ret);
@@ -3625,9 +3625,39 @@ namespace boost
       shared_state<Rp>* that;
       Fp f_;
     public:
+
       shared_state_nullary_task(shared_state<Rp>* st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::forward<Fp>(f))
       {};
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
+      : that(x.that), f_(x.f_)
+      {}
+      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=x.f_;
+        }
+        return *this;
+      }
+      // move
+      shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      : that(x.that), f_(boost::move(x.f_))
+      {
+        x.that=0;
+      }
+      shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=boost::move(x.f_);
+          x.that=0;
+        }
+        return *this;
+      }
+#endif
       void operator()()
       {
         try
@@ -3657,6 +3687,35 @@ namespace boost
       shared_state_nullary_task(shared_state<void>* st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::forward<Fp>(f))
       {};
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
+      : that(x.that), f_(x.f_)
+      {}
+      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=x.f_;
+        }
+        return *this;
+      }
+      // move
+      shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
+      : that(x.that), f_(boost::move(x.f_))
+      {
+        x.that=0;
+      }
+      shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=boost::move(x.f_);
+          x.that=0;
+        }
+        return *this;
+      }
+#endif
       void operator()()
       {
         try
@@ -3686,6 +3745,35 @@ namespace boost
       shared_state_nullary_task(shared_state<Rp&>* st, BOOST_THREAD_FWD_REF(Fp) f)
         : that(st), f_(boost::forward<Fp>(f))
         {};
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      shared_state_nullary_task(shared_state_nullary_task const& x) BOOST_NOEXCEPT
+      : that(x.that), f_(x.f_)
+      {}
+      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=x.f_;
+        }
+        return *this;
+      }
+      // move
+      shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
+      : that(x.that), f_(boost::move(x.f_))
+      {
+        x.that=0;
+      }
+      shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
+      {
+        if (this != &x){
+          that=x.that;
+          f_=boost::move(x.f_);
+          x.that=0;
+        }
+        return *this;
+      }
+#endif
       void operator()()
       {
         try
