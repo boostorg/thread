@@ -40,8 +40,7 @@ namespace boost
   {
 
 
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    ! defined(BOOST_NO_SFINAE_EXPR) && \
+#if ! defined(BOOST_NO_SFINAE_EXPR) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE) && \
     ! defined(BOOST_NO_CXX11_DECLTYPE_N3276) && \
     ! defined(BOOST_THREAD_NO_CXX11_DECLTYPE_N3276) && \

@@ -40,8 +40,7 @@ namespace boost
   namespace detail
   {
 
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+#if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
     template <class Fp, class ... Args>
     class async_func
