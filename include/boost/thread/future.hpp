@@ -17,6 +17,7 @@
 
 #include <boost/detail/scoped_enum_emulation.hpp>
 #include <stdexcept>
+#include <boost/thread/exceptional_ptr.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/async_func.hpp>
 #include <boost/thread/thread_time.hpp>
@@ -1315,6 +1316,12 @@ namespace boost
       public:
 
         typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
+        static //BOOST_CONSTEXPR
+        future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
+          promise<R> p;
+          p.set_exception(ex.ptr_);
+          return p.get_future().future_;
+        }
 
         future_ptr future_;
 
@@ -1330,6 +1337,14 @@ namespace boost
 
         BOOST_THREAD_MOVABLE(basic_future)
         basic_future(): future_() {}
+
+
+        //BOOST_CONSTEXPR
+        basic_future(exceptional_ptr const& ex)
+          : future_(make_exceptional_future_ptr(ex))
+        {
+        }
+
         ~basic_future() {}
 
         basic_future(BOOST_THREAD_RV_REF(basic_future) other) BOOST_NOEXCEPT:
@@ -1535,6 +1550,9 @@ namespace boost
         typedef R value_type; // EXTENSION
 
         BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
+        //BOOST_CONSTEXPR
+        BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
+            base_type(ex) {}
 
         ~BOOST_THREAD_FUTURE() {}
 
@@ -1549,6 +1567,12 @@ namespace boost
             this->base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
             return *this;
         }
+
+//        BOOST_THREAD_FUTURE& operator=(exceptional_ptr const& ex)
+//        {
+//          this->future_=base_type::make_exceptional_future_ptr(ex);
+//          return *this;
+//        }
 
         shared_future<R> share()
         {
@@ -1730,6 +1754,9 @@ namespace boost
             typedef R value_type; // EXTENSION
 
             BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
+            //BOOST_CONSTEXPR
+            BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
+                base_type(ex) {}
 
             ~BOOST_THREAD_FUTURE() {}
 
@@ -1743,6 +1770,11 @@ namespace boost
                 this->base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
                 return *this;
             }
+//            BOOST_THREAD_FUTURE& operator=(exceptional_ptr const& ex)
+//            {
+//              this->future_=base_type::make_exceptional_future_ptr(ex);
+//              return *this;
+//            }
 
             shared_future<R> share()
             {
@@ -1881,7 +1913,9 @@ namespace boost
 
         BOOST_CONSTEXPR shared_future()
         {}
-
+        //BOOST_CONSTEXPR
+        shared_future(exceptional_ptr const& ex):
+            base_type(ex) {}
         ~shared_future()
         {}
 
@@ -1890,6 +1924,12 @@ namespace boost
             shared_future(other).swap(*this);
             return *this;
         }
+//        shared_future& operator=(exceptional_ptr const& ex)
+//        {
+//          this->future_=base_type::make_exceptional_future_ptr(ex);
+//          return *this;
+//        }
+
         shared_future(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT :
         base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
         {

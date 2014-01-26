@@ -38,22 +38,25 @@ boost::future<void> void_compute()
 boost::future<int> compute(int x)
 {
   if (x == 0) return boost::make_ready_future(0);
-  //if (x < 0) return boost::make_ready_future<int>(boost::make_exception_ptr(std::logic_error("Error")));
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
   if (x < 0) return boost::make_exceptional_future<int>(std::logic_error("Error"));
+#else
+  if (x < 0) return boost::make_exceptional(std::logic_error("Error"));
+#endif
   //boost::future<int> f1 = boost::async([]() { return x+1; });
-  //boost::future<int> f1 = boost::async(boost::launch::async, &p1);
   boost::future<int> f1 = boost::async(p1);
   return boost::move(f1);
 }
 
-boost::future<int&> compute_ref(int& x)
+boost::future<int&> compute_ref(int x)
 {
-  int i = 0;
-  //if (x == 0) return boost::make_ready_future<int&>(i);
-  //if (x < 0) return boost::make_ready_future<int>(boost::make_exception_ptr(std::logic_error("Error")));
+  //int i = 0;
+  //if (x == 0) return boost::make_ready_future<int&>(i); This must not compile as the type is deduced as boost::future<int>
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
   if (x < 0) return boost::make_exceptional_future<int&>(std::logic_error("Error"));
-  //boost::future<int> f1 = boost::async([]() { return x+1; });
-  //boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+#else
+  if (x < 0) return boost::make_exceptional(std::logic_error("Error"));
+#endif
   boost::future<int&> f1 = boost::async(p1r);
   return boost::move(f1);
 }
@@ -61,7 +64,11 @@ boost::future<int&> compute_ref(int& x)
 boost::shared_future<int> shared_compute(int x)
 {
   if (x == 0) return boost::make_ready_future(0).share();
+#ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
   if (x < 0) return boost::make_exceptional_future<int>(std::logic_error("Error")).share();
+#else
+  if (x < 0) return boost::make_exceptional(std::logic_error("Error"));
+#endif
   //boost::future<int> f1 = boost::async([]() { return x+1; });
   boost::shared_future<int> f1 = boost::async(&p1).share();
   return f1;
@@ -93,7 +100,12 @@ int main()
   }
   {
     std::cout << __FILE__ << " "<< __LINE__ << std::endl;
-    boost::future<int> f = compute(0);
+    boost::future<int&> f = compute_ref(0);
+    std::cout << f.get() << std::endl;
+  }
+  {
+    std::cout << __FILE__ << " "<< __LINE__ << std::endl;
+    boost::future<int> f = compute(2);
     std::cout << f.get() << std::endl;
   }
   {
