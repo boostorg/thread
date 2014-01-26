@@ -105,7 +105,8 @@ namespace boost
         }
         ~mutex()
         {
-          BOOST_VERIFY(!posix::pthread_mutex_destroy(&m));
+          int const res = posix::pthread_mutex_destroy(&m);
+          BOOST_ASSERT(!res);
         }
 
         void lock()
