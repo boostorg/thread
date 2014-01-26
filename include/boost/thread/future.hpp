@@ -4034,11 +4034,32 @@ namespace boost
     p.set_exception(ex);
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
+//  template <typename T, typename E>
+//  BOOST_THREAD_FUTURE<T> make_ready_future(E ex)
+//  {
+//    promise<T> p;
+//    p.set_exception(boost::copy_exception(ex));
+//    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+//  }
+  template <typename T>
+  BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr ex)
+  {
+    promise<T> p;
+    p.set_exception(ex);
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
   template <typename T, typename E>
-  BOOST_THREAD_FUTURE<T> make_ready_future(E ex)
+  BOOST_THREAD_FUTURE<T> make_exceptional_future(E ex)
   {
     promise<T> p;
     p.set_exception(boost::copy_exception(ex));
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+  template <typename T>
+  BOOST_THREAD_FUTURE<T> make_exceptional_future()
+  {
+    promise<T> p;
+    p.set_exception(boost::current_exception());
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
