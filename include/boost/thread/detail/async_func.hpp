@@ -40,7 +40,7 @@ namespace boost
   namespace detail
   {
 
-#if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ! defined(BOOST_NO_CXX11_HDR_TUPLE)
 
     template <class Fp, class ... Args>
     class async_func
@@ -71,7 +71,7 @@ namespace boost
       result_type
       execute(tuple_indices<Indices...>)
       {
-        return invoke(boost::move(std::get<0>(f_)), boost::move(std::get<Indices>(f_))...);
+        return invoke(boost::move(csbl::get<0>(f_)), boost::move(csbl::get<Indices>(f_))...);
       }
     };
     //BOOST_THREAD_DCL_MOVABLE_BEG(X) async_func<Fp> BOOST_THREAD_DCL_MOVABLE_END
