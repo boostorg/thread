@@ -3977,6 +3977,24 @@ namespace boost
               ));
             }
 
+            template <class Executor, class F, class A1, class A2>
+            BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
+                typename decay<A1>::type, typename decay<A2>::type
+            )>::type>
+            async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1, BOOST_THREAD_FWD_REF(A2) a2)
+            {
+              typedef detail::async_func<typename decay<F>::type, typename decay<A1>::type, typename decay<A2>::type> BF;
+              typedef typename BF::result_type Rp;
+
+              return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+                  BF(
+                      thread_detail::decay_copy(boost::forward<F>(f))
+              , thread_detail::decay_copy(boost::forward<A1>(a1))
+              , thread_detail::decay_copy(boost::forward<A2>(a2))
+                  )
+              ));
+            }
+
   #endif //! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
 
