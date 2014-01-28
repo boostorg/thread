@@ -55,6 +55,11 @@ public:
   {
   }
 
+  long doit() const
+  {
+    boost::this_thread::sleep_for(ms(200));
+    return data_;
+  }
   long operator()() const
   {
     boost::this_thread::sleep_for(ms(200));
@@ -217,7 +222,7 @@ int main()
     }
 
   }
-#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
   {
     try
     {
@@ -264,7 +269,33 @@ int main()
     }
 
   }
-#ifdef BOOST_THREAD_PROVIDES_EXECUTORS2
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    try
+    {
+      A a(3);
+      boost::future<long> f = boost::async(boost::launch::async, &A::doit, &a);
+      boost::this_thread::sleep_for(ms(300));
+      Clock::time_point t0 = Clock::now();
+      BOOST_TEST(f.get() == 3);
+      Clock::time_point t1 = Clock::now();
+      BOOST_TEST(t1 - t0 < ms(300));
+      std::cout << __FILE__ << "[" << __LINE__ << "] " << (t1 - t0).count() << std::endl;
+    }
+    catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+
+  }
+#endif
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD) && defined BOOST_THREAD_PROVIDES_EXECUTORS
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
@@ -312,7 +343,7 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
-#ifdef BOOST_THREAD_PROVIDES_EXECUTORS2
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD) && defined BOOST_THREAD_PROVIDES_EXECUTORS
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
