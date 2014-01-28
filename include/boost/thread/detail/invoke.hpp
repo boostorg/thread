@@ -109,17 +109,17 @@ namespace boost
     inline
     auto
     invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(A1) a1)
-        -> decltype((boost::forward<A0>(a0).*f)(boost::forward<Args>(a1)))
+        -> decltype((boost::forward<A0>(a0).*f)(boost::forward<A1>(a1)))
     {
-        return (boost::forward<A0>(a0).*f)(boost::forward<Args>(a1));
+        return (boost::forward<A0>(a0).*f)(boost::forward<A1>(a1));
     }
     template <class Fp, class A0, class A1, class A2>
     inline
     auto
     invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2)
-        -> decltype((boost::forward<A0>(a0).*f)(boost::forward<Args>(a1), boost::forward<Args>(a2)))
+        -> decltype((boost::forward<A0>(a0).*f)(boost::forward<A1>(a1), boost::forward<A2>(a2)))
     {
-        return (boost::forward<A0>(a0).*f)(boost::forward<Args>(a1), boost::forward<Args>(a2));
+        return (boost::forward<A0>(a0).*f)(boost::forward<A1>(a1), boost::forward<A2>(a2));
     }
 
     template <class Fp, class A0>
@@ -134,17 +134,17 @@ namespace boost
     inline
     auto
     invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(A1) a1)
-        -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(a1)))
+        -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<A1>(a1)))
     {
-        return ((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(a1));
+        return ((*boost::forward<A0>(a0)).*f)(boost::forward<A1>(a1));
     }
-    template <class Fp, class A0, class A1>
+    template <class Fp, class A0, class A1, class A2>
     inline
     auto
     invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A0) a0, BOOST_THREAD_RV_REF(A1) a1, BOOST_THREAD_RV_REF(A2) a2)
-        -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(a1), boost::forward<Args>(a2)))
+        -> decltype(((*boost::forward<A0>(a0)).*f)(boost::forward<A1>(a1), boost::forward<A2>(a2)))
     {
-        return ((*boost::forward<A0>(a0)).*f)(boost::forward<Args>(a1), boost::forward<Args>(a2));
+        return ((*boost::forward<A0>(a0)).*f)(boost::forward<A1>(a1), boost::forward<A2>(a2));
     }
 
     // bullets 3 and 4
@@ -178,7 +178,7 @@ namespace boost
     }
     template <class Fp, class A1>
     inline
-    auto invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(Args) a1)
+    auto invoke(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(A1) a1)
     -> decltype(boost::forward<Fp>(f)(boost::forward<A1>(a1)))
     {
       return boost::forward<Fp>(f)(boost::forward<A1>(a1));
