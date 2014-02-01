@@ -7,6 +7,7 @@
 #define BOOST_THREAD_PROVIDES_EXECUTORS
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
+//#define BOOST_RESULT_OF_USE_DECLTYPE
 
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/future.hpp>
@@ -22,13 +23,12 @@
 template<typename Iterator,typename T>
 struct accumulate_block
 {
+    //typedef T result_type;
     T operator()(Iterator first,Iterator last)
     {
         return std::accumulate(first,last,T());
     }
 };
-
-
 
 template<typename Iterator,typename T>
 T parallel_accumulate(Iterator first,Iterator last,T init)
@@ -90,7 +90,7 @@ int main()
 }
 
 #else
-#warning "This compiler doesn't supports variadics"
+///#warning "This compiler doesn't supports variadics"
 int main()
 {
   return 0;
