@@ -335,7 +335,7 @@ namespace boost
     ! defined BOOST_NO_CXX11_HDR_FUNCTIONAL && \
     defined  BOOST_MSVC
 
-#error
+//#error
     template <class Ret, class Fp>
     inline
     Ret invoke(BOOST_THREAD_RV_REF(Fp) f)
