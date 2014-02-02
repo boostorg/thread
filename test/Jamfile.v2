@@ -781,6 +781,15 @@ rule thread-compile ( sources : reqs * : name )
 
     ;
 
+
+    explicit ts_invoke ;
+    test-suite ts_invoke
+    :
+          [ thread-run2-noit ./functional/invoke/invoke_int_0_pass.cpp : invoke_int_0_p ]
+          [ thread-run2-noit ./functional/invoke/invoke_lvalue_pass.cpp : invoke_lvalue_p ]
+          [ thread-run2-noit ./functional/invoke/invoke_rvalue_pass.cpp : invoke_rvalue_p ]
+    ;
+
     explicit ts_more ;
     test-suite ts_more
     :
