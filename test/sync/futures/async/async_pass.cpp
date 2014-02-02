@@ -29,7 +29,10 @@
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
-
+#include <boost/config.hpp>
+//#if ! defined  BOOST_NO_CXX11_DECLTYPE
+//#define BOOST_RESULT_OF_USE_DECLTYPE
+//#endif
 #include <iostream>
 #include <boost/thread/future.hpp>
 #include <boost/thread/thread.hpp>
