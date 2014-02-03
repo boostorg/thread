@@ -17,23 +17,6 @@
 #define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 
-#if ! defined BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY \
- && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_WHEN_ALL_WHEN_ANY
-
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-
-#define BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
-#endif
-#endif
-
-//    ! defined(BOOST_NO_SFINAE_EXPR) &&
-//    ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) &&
-//    ! defined(BOOST_NO_CXX11_AUTO) &&
-//    ! defined(BOOST_NO_CXX11_DECLTYPE) &&
-//    ! defined(BOOST_NO_CXX11_DECLTYPE_N3276) &&
-
-
 #include <boost/thread/future.hpp>
 #include <boost/thread/csbl/vector.hpp>
 #include <boost/assert.hpp>
