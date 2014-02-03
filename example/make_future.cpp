@@ -5,7 +5,7 @@
 
 #include <boost/config.hpp>
 #ifndef BOOST_NO_CXX11_DECLTYPE_N3276
-#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
+//#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
 #endif
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 #define BOOST_RESULT_OF_USE_DECLTYPE
@@ -53,8 +53,9 @@ boost::future<int> compute(int x)
 
 boost::future<int&> compute_ref(int x)
 {
-  //int i = 0;
-  //if (x == 0) return boost::make_ready_future<int&>(i); This must not compile as the type is deduced as boost::future<int>
+  static int i = 0;
+  //if (x == 0) return boost::make_ready_future<int&>(i); //This must not compile as the type is deduced as boost::future<int>
+  if (x == 0) return boost::make_ready_no_decay_future<int&>(i);
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
   if (x < 0) return boost::make_exceptional_future<int&>(std::logic_error("Error"));
 #else
@@ -84,11 +85,11 @@ int main()
   for (int i=0; i< number_of_tests; i++)
   try
   {
-    {
-    std::cout << __FILE__ << " "<<__LINE__ << std::endl;
-    boost::future<int> f = boost::async(boost::launch::async, p1);
-    std::cout << i << " "<<f.get() << std::endl;
-    }
+//    {
+//    std::cout << __FILE__ << " "<<__LINE__ << std::endl;
+//    boost::future<int> f = boost::async(boost::launch::async, p1);
+//    std::cout << i << " "<<f.get() << std::endl;
+//    }
 #if defined BOOST_THREAD_USES_MOVE
   {
     std::cout << __FILE__ << " "<< __LINE__ << std::endl;
@@ -106,11 +107,11 @@ int main()
     boost::future<int&> f = compute_ref(0);
     std::cout << f.get() << std::endl;
   }
-  {
-    std::cout << __FILE__ << " "<< __LINE__ << std::endl;
-    boost::future<int> f = compute(2);
-    std::cout << f.get() << std::endl;
-  }
+//  {
+//    std::cout << __FILE__ << " "<< __LINE__ << std::endl;
+//    boost::future<int> f = compute(2);
+//    std::cout << f.get() << std::endl;
+//  }
   {
     std::cout << __FILE__ << " "<< __LINE__ << std::endl;
     boost::shared_future<int> f = shared_compute(0);

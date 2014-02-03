@@ -4076,6 +4076,15 @@ namespace boost
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
+  template <typename T, typename T1>
+  BOOST_THREAD_FUTURE<T> make_ready_no_decay_future(T1 value)
+  {
+    typedef T future_value_type;
+    promise<future_value_type> p;
+    p.set_value(value);
+    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+
 #if defined BOOST_THREAD_USES_MOVE
   inline BOOST_THREAD_FUTURE<void> make_ready_future()
   {
