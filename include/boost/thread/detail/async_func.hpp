@@ -34,7 +34,6 @@
 
 #include <boost/thread/detail/variadic_header.hpp>
 
-
 namespace boost
 {
   namespace detail
@@ -45,6 +44,10 @@ namespace boost
     template <class Fp, class ... Args>
     class async_func
     {
+      //typedef typename decay<Fp>::type Fpd;
+      //typedef tuple<typename decay<Args>::type...> Argsd;
+
+      //csbl::tuple<Fpd, Argsd...> f_;
       csbl::tuple<Fp, Args...> f_;
 
     public:
@@ -52,9 +55,10 @@ namespace boost
       //typedef typename invoke_of<_Fp, _Args...>::type Rp;
       typedef typename result_of<Fp(Args...)>::type result_type;
 
+      template <class F, class ... As>
       BOOST_SYMBOL_VISIBLE
-      explicit async_func(BOOST_THREAD_RV_REF(Fp) f, BOOST_THREAD_RV_REF(Args)... args)
-      : f_(boost::move(f), boost::move(args)...)
+      explicit async_func(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(As)... args)
+      : f_(boost::forward<F>(f), boost::forward<As>(args)...)
       {}
 
       BOOST_SYMBOL_VISIBLE
@@ -74,24 +78,28 @@ namespace boost
         return invoke(boost::move(csbl::get<0>(f_)), boost::move(csbl::get<Indices>(f_))...);
       }
     };
-    //BOOST_THREAD_DCL_MOVABLE_BEG(X) async_func<Fp> BOOST_THREAD_DCL_MOVABLE_END
+  //BOOST_THREAD_DCL_MOVABLE_BEG(X) async_func<Fp> BOOST_THREAD_DCL_MOVABLE_END
 #else
 
 #if ! defined BOOST_MSVC
 
 #define BOOST_THREAD_RV_REF_ARG_T(z, n, unused) BOOST_PP_COMMA_IF(n) BOOST_THREAD_RV_REF(Arg##n)
+#define BOOST_THREAD_RV_REF_A_T(z, n, unused) BOOST_PP_COMMA_IF(n) BOOST_THREAD_RV_REF(A##n)
 #define BOOST_THREAD_RV_REF_ARG(z, n, unused) , BOOST_THREAD_RV_REF(Arg##n) arg##n
+#define BOOST_THREAD_FWD_REF_A(z, n, unused)   , BOOST_THREAD_FWD_REF(A##n) arg##n
 #define BOOST_THREAD_FWD_REF_ARG(z, n, unused) , BOOST_THREAD_FWD_REF(Arg##n) arg##n
 #define BOOST_THREAD_FWD_PARAM(z, n, unused) , boost::forward<Arg##n>(arg##n)
+#define BOOST_THREAD_FWD_PARAM_A(z, n, unused) , boost::forward<A##n>(arg##n)
 #define BOOST_THREAD_DCL(z, n, unused) Arg##n v##n;
 #define BOOST_THREAD_MOVE_PARAM(z, n, unused) , v##n(boost::move(arg##n))
+#define BOOST_THREAD_FORWARD_PARAM_A(z, n, unused) , v##n(boost::forward<A##n>(arg##n))
 #define BOOST_THREAD_MOVE_RHS_PARAM(z, n, unused) , v##n(boost::move(x.v##n))
 #define BOOST_THREAD_MOVE_DCL(z, n, unused) , boost::move(v##n)
 #define BOOST_THREAD_MOVE_DCL_T(z, n, unused) BOOST_PP_COMMA_IF(n) boost::move(v##n)
 #define BOOST_THREAD_ARG_DEF(z, n, unused) , class Arg##n = tuples::null_type
 
-    template <class Fp, class Arg = tuples::null_type
-      BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS, BOOST_THREAD_ARG_DEF, ~)
+  template  <class Fp, class Arg = tuples::null_type
+    BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS, BOOST_THREAD_ARG_DEF, ~)
     >
     class async_func;
 
@@ -105,12 +113,13 @@ namespace boost
       BOOST_THREAD_MOVABLE_ONLY(async_func) \
       typedef typename result_of<Fp(BOOST_PP_ENUM_PARAMS(n, Arg))>::type result_type; \
       \
+      template <class F BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class A) > \
       BOOST_SYMBOL_VISIBLE \
-      explicit async_func(BOOST_THREAD_FWD_REF(Fp) f \
-          BOOST_PP_REPEAT(n, BOOST_THREAD_RV_REF_ARG, ~) \
+      explicit async_func(BOOST_THREAD_FWD_REF(F) f \
+          BOOST_PP_REPEAT(n, BOOST_THREAD_FWD_REF_A, ~) \
       ) \
-      : fp_(boost::move(f)) \
-      BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_PARAM, ~) \
+      : fp_(boost::forward<F>(f)) \
+      BOOST_PP_REPEAT(n, BOOST_THREAD_FORWARD_PARAM_A, ~) \
       {} \
       \
       BOOST_SYMBOL_VISIBLE \
@@ -136,12 +145,13 @@ namespace boost
       BOOST_THREAD_MOVABLE_ONLY(async_func) \
       typedef typename result_of<Fp(BOOST_PP_ENUM_PARAMS(n, Arg))>::type result_type; \
       \
+      template <class R2 BOOST_PP_COMMA_IF(n) BOOST_PP_ENUM_PARAMS(n, class A) > \
       BOOST_SYMBOL_VISIBLE \
-      explicit async_func(Fp f \
-          BOOST_PP_REPEAT(n, BOOST_THREAD_RV_REF_ARG, ~) \
+      explicit async_func(R2(*f)(BOOST_PP_REPEAT(n, BOOST_THREAD_RV_REF_A_T, ~))  \
+          BOOST_PP_REPEAT(n, BOOST_THREAD_FWD_REF_A, ~) \
       ) \
       : fp_(f) \
-      BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_PARAM, ~) \
+      BOOST_PP_REPEAT(n, BOOST_THREAD_FORWARD_PARAM_A, ~) \
       {} \
       \
       BOOST_SYMBOL_VISIBLE \
@@ -157,13 +167,14 @@ namespace boost
       } \
     };
 
-
     BOOST_PP_REPEAT(BOOST_THREAD_MAX_ARGS, BOOST_THREAD_ASYNC_FUNCT, ~)
 
     #undef BOOST_THREAD_RV_REF_ARG_T
     #undef BOOST_THREAD_RV_REF_ARG
     #undef BOOST_THREAD_FWD_REF_ARG
+    #undef BOOST_THREAD_FWD_REF_A
     #undef BOOST_THREAD_FWD_PARAM
+    #undef BOOST_THREAD_FWD_PARAM_A
     #undef BOOST_THREAD_DCL
     #undef BOOST_THREAD_MOVE_PARAM
     #undef BOOST_THREAD_MOVE_RHS_PARAM
