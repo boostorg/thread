@@ -9,7 +9,7 @@
 [///////////////////////////////////]
 [section:reference Futures Reference]
 
-  //#include <boost/thread/futures.hpp>
+  //#include <boost/thread/future.hpp>
 
   namespace boost
   {
@@ -51,6 +51,8 @@
     const system::error_category& future_category();
 
     class future_error;
+
+    class exceptional_ptr;
 
     template <typename R>
     class promise;
@@ -110,10 +112,16 @@
     template <typename T>
     future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
-    template <typename T>
-    future<T> make_ready_future(exception_ptr ex);  // EXTENSION
-    template <typename T, typename E>
-    future<T> make_ready_future(E ex);  // EXTENSION
+    //template <typename T>
+    //future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
+    //template <typename T, typename E>
+    //future<T> make_ready_future(E ex);  // DEPRECATED
+
+    exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
+    template <typename E>
+    exceptional_ptr make_exceptional(E ex);  // EXTENSION
+    exceptional_ptr make_exceptional();  // EXTENSION
+
     
     template <typename T>
     shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
@@ -265,6 +273,42 @@ The object's `name` virtual function returns a pointer to the string "future".]]
   };
 
 [endsect]
+
+[/////////////////////////////////////////]
+[section:future_error Class `exceptional_ptr` EXPERIMENTAL]
+
+  class exceptional_ptr
+  {
+  public:
+    exceptional_ptr();
+    explicit exceptional_ptr(exception_ptr ex);
+    template <class E>
+    explicit exceptional_ptr(E&& ex);
+  };
+
+[///////////////////////////////]
+[section:constructor Constructor]
+
+    exceptional_ptr();
+    explicit exceptional_ptr(exception_ptr ex);
+    template <class E>
+    explicit exceptional_ptr(E&& ex);
+
+[variablelist
+
+[[Effects:] [The exception that is passed in to the constructor or the current exception if no parameter is moved into the constructed `exceptional_ptr` if it is an rvalue. Otherwise the exception is copied into the constructed `exceptional_ptr`.]]
+
+[[Postconditions:] [ 
+ `valid() == true && is_ready() = true && has_value() = false`
+]]
+
+[[Throws:] [Nothing.]]
+]
+
+[endsect]
+[endsect]
+
+
 [////////////////////////////////////////////////////]
 [section:unique_future __unique_future class template]
 
@@ -562,8 +606,6 @@ associated with `*this` is not ready at the point of the call, and the current t
 [warning
 DEPRECATED since 3.00.
  
-Available only up to Boost 1.56. 
-
 Use instead __wait_for.  
 ]
 
@@ -600,8 +642,6 @@ elapsed, `false` otherwise.]]
 [warning
 DEPRECATED since 3.00.
  
-Available only up to Boost 1.56. 
-
 Use instead __wait_until.  
 ]
 
@@ -2125,9 +2165,9 @@ __unique_future__ or __shared_future__.]]
     future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
     template <typename T>
-    future<T> make_ready_future(exception_ptr ex);  // EXTENSION
+    future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
     template <typename T, typename E>
-    future<T> make_ready_future(E ex);  // EXTENSION
+    future<T> make_ready_future(E ex);  // DEPRECATED
 
 [variablelist
 
@@ -2162,6 +2202,28 @@ Otherwise the value is copied to the shared state of the returned function.
 ]
     
 [endsect]
+[/////////////////////////////////////////////////////////////////////////////]
+[section:make_exceptional Non-member function `make_exceptional()` EXTENSION]
+
+    exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
+    template <typename E>
+    exceptional_ptr make_exceptional(E ex);  // EXTENSION
+    exceptional_ptr make_exceptional();  // EXTENSION
+
+[variablelist
+
+[[Effects:] [
+The exception that is passed in to the function or the current exception if no parameter is given is moved into the returned `exceptional_ptr` if it is an rvalue. Otherwise the exception is copied into the returned `exceptional_ptr`.
+]]
+
+[[Returns:] [
+An exceptional_ptr instance implicitly convertible to a future<T>
+]]
+
+]
+    
+[endsect]
+
 [//////////////////////////////////////////////////////////////////]
 [section:make_future Non-member function `make_future()` DEPRECATED]
 
