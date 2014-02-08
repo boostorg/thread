@@ -8,6 +8,7 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
+#define XXXX
 
 #include <iostream>
 #include <boost/thread/scoped_thread.hpp>
@@ -29,17 +30,17 @@ void producer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
     {
       sbq.push_back(i);
       //sbq << i;
-      mos << "push_back(" << i << ") "<< sbq.size()<<"\n";
+      //mos << "push_back(" << i << ") "<< sbq.size()<<"\n";
       this_thread::sleep_for(chrono::milliseconds(200));
     }
   }
   catch(sync_queue_is_closed&)
   {
-    mos << "closed !!!\n";
+    //mos << "closed !!!\n";
   }
   catch(...)
   {
-    mos << "exception !!!\n";
+    //mos << "exception !!!\n";
   }
 }
 
@@ -52,17 +53,17 @@ void consumer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
       int r;
       sbq.pull_front(r);
       //sbq >> r;
-      mos << i << " pull_front(" << r << ") "<< sbq.size()<<"\n";
+      //mos << i << " pull_front(" << r << ") "<< sbq.size()<<"\n";
       this_thread::sleep_for(chrono::milliseconds(250));
     }
   }
   catch(sync_queue_is_closed&)
   {
-    mos << "closed !!!\n";
+    //mos << "closed !!!\n";
   }
   catch(...)
   {
-    mos << "exception !!!\n";
+    //mos << "exception !!!\n";
   }
 }
 void consumer2(the_ostream &mos,  boost::sync_bounded_queue<int> & sbq)
@@ -75,14 +76,14 @@ void consumer2(the_ostream &mos,  boost::sync_bounded_queue<int> & sbq)
       queue_op_status st = sbq.try_pull_front(r);
       if (queue_op_status::closed == st) break;
       if (queue_op_status::success == st) {
-        mos << i << " pull(" << r << ")\n";
+        //mos << i << " pull(" << r << ")\n";
       }
       this_thread::sleep_for(chrono::milliseconds(250));
     }
   }
   catch(...)
   {
-    mos << "exception !!!\n";
+    //mos << "exception !!!\n";
   }
 }
 //void consumer3(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
@@ -95,13 +96,13 @@ void consumer2(the_ostream &mos,  boost::sync_bounded_queue<int> & sbq)
 //      int r;
 //      queue_op_status res = sbq.wait_and_pull(r);
 //      if (res==queue_op_status::closed) break;
-//      mos << i << " wait_and_pull(" << r << ")\n";
+//      //mos << i << " wait_and_pull(" << r << ")\n";
 //      this_thread::sleep_for(chrono::milliseconds(250));
 //    }
 //  }
 //  catch(...)
 //  {
-//    mos << "exception !!!\n";
+//    //mos << "exception !!!\n";
 //  }
 //}
 
