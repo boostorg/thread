@@ -298,8 +298,6 @@ reached. If the specified time has already passed, behaves as __try_lock_ref__.]
 [warning
 DEPRECATED since 4.00. The following expressions were required on version 2, but are now deprecated.
  
-Available only up to Boost 1.58. 
-
 Use instead __try_lock_for, __try_lock_until.  
 ]
 
@@ -460,8 +458,6 @@ ownership of `m`.]]
 [warning
 DEPRECATED since 3.00. The following expressions were required on version 2, but are now deprecated.
  
-Available only up to Boost 1.56. 
-
 Use instead __try_lock_shared_for, __try_lock_shared_until.  
 ]
 
