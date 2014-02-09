@@ -782,6 +782,14 @@ rule thread-compile ( sources : reqs * : name )
     ;
 
 
+    test-suite ts_with_lock_guard
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_simple.cpp : with_lock_guard_simple_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_bind.cpp : with_lock_guard_bind_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_move.cpp : with_lock_guard_move_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_lambda.cpp : with_lock_guard_lambda_p ]
+    ;
+
     explicit ts_invoke ;
     test-suite ts_invoke
     :
