@@ -3493,7 +3493,7 @@ namespace detail
   BOOST_THREAD_FUTURE<R>
   async(launch policy, R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args) {
     typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
-    typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
     if (int(policy) & int(launch::async)) {
@@ -3557,7 +3557,7 @@ namespace detail
     typedef typename boost::result_of<typename decay<F>::type(
         typename decay<ArgTypes>::type...
     )>::type R;
-    typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
     if (int(policy) & int(launch::async)) {
@@ -3820,7 +3820,7 @@ namespace detail {
   BOOST_THREAD_FUTURE<R>
   async(Executor& ex, R(*f)(BOOST_THREAD_FWD_REF(ArgTypes)...), BOOST_THREAD_FWD_REF(ArgTypes)... args) {
     typedef R(*F)(BOOST_THREAD_FWD_REF(ArgTypes)...);
-    typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3837,7 +3837,7 @@ namespace detail {
       typename decay<ArgTypes>::type...
   )>::type>
   async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args) {
-    typedef detail::async_func<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3855,7 +3855,7 @@ namespace detail {
   BOOST_THREAD_FUTURE<R>
   async(Executor& ex, R(*f)()) {
     typedef R(*F)();
-    typedef detail::async_func<F> BF;
+    typedef detail::invoker<F> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3869,7 +3869,7 @@ namespace detail {
   BOOST_THREAD_FUTURE<R>
   async(Executor& ex, R(*f)(BOOST_THREAD_FWD_REF(A1)), BOOST_THREAD_FWD_REF(A1) a1) {
     typedef R(*F)(BOOST_THREAD_FWD_REF(A1));
-    typedef detail::async_func<F, typename decay<A1>::type> BF;
+    typedef detail::invoker<F, typename decay<A1>::type> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3884,7 +3884,7 @@ namespace detail {
   template <class Executor, class F>
   BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
   async(Executor& ex, BOOST_THREAD_FWD_REF(F) f)  {
-    typedef detail::async_func<typename decay<F>::type> BF;
+    typedef detail::invoker<typename decay<F>::type> BF;
     typedef typename BF::result_type Rp;
 
     return boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3899,7 +3899,7 @@ namespace detail {
       typename decay<A1>::type
   )>::type>
   async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1) {
-    typedef detail::async_func<typename decay<F>::type, typename decay<A1>::type> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<A1>::type> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
@@ -3915,7 +3915,7 @@ namespace detail {
       typename decay<A1>::type, typename decay<A2>::type
   )>::type>
   async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(A1) a1, BOOST_THREAD_FWD_REF(A2) a2) {
-    typedef detail::async_func<typename decay<F>::type, typename decay<A1>::type, typename decay<A2>::type> BF;
+    typedef detail::invoker<typename decay<F>::type, typename decay<A1>::type, typename decay<A2>::type> BF;
     typedef typename BF::result_type Rp;
 
     return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,

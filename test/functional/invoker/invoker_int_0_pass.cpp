@@ -44,11 +44,11 @@ int main()
   A_int_0 a;
 
 #if defined BOOST_THREAD_PROVIDES_INVOKE
-  BOOST_TEST_EQ(boost::detail::async_func<int(*)()>(f)(), 1);
-  BOOST_TEST_EQ(boost::detail::async_func<int(*)()>(&f)(), 1);
-  BOOST_TEST_EQ(boost::detail::async_func<A_int_0>(A_int_0())(), 4);
-  BOOST_TEST_EQ(boost::detail::async_func<A_int_0>(a)(), 4);
-  BOOST_TEST_EQ(boost::detail::async_func<const A_int_0>(ca)(), 5);
+  BOOST_TEST_EQ(boost::detail::invoker<int(*)()>(f)(), 1);
+  BOOST_TEST_EQ(boost::detail::invoker<int(*)()>(&f)(), 1);
+  BOOST_TEST_EQ(boost::detail::invoker<A_int_0>(A_int_0())(), 4);
+  BOOST_TEST_EQ(boost::detail::invoker<A_int_0>(a)(), 4);
+  BOOST_TEST_EQ(boost::detail::invoker<const A_int_0>(ca)(), 5);
 #endif
 
   //BOOST_TEST_EQ(boost::detail::invoker<int>(f), 1);

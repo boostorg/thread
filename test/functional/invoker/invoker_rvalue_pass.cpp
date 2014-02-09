@@ -12,7 +12,7 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-// <boost/thread/detail/async_funct.hpp>
+// <boost/thread/detail/async_func.hpp>
 
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 //#define BOOST_RESULT_OF_USE_DECLTYPE
@@ -48,14 +48,14 @@ test_void_1()
     int save_count = count;
     // function
     {
-    boost::detail::async_func<void(*)(int), int>(f_void_1, 2)();
+    boost::detail::invoker<void(*)(int), int>(f_void_1, 2)();
     BOOST_TEST(count == save_count + 2);
     save_count = count;
     }
     // function pointer
     {
     void (*fp)(int) = f_void_1;
-    boost::detail::async_func<void(*)(int), int>(fp, 3)();
+    boost::detail::invoker<void(*)(int), int>(fp, 3)();
     BOOST_TEST(count == save_count+3);
     save_count = count;
     }
@@ -63,7 +63,7 @@ test_void_1()
     {
     A_void_1 a0;
 #if defined BOOST_THREAD_PROVIDES_INVOKE
-    boost::detail::async_func<A_void_1, int>(a0, 4)();
+    boost::detail::invoker<A_void_1, int>(a0, 4)();
     BOOST_TEST(count == save_count+4);
     save_count = count;
 #endif
@@ -75,7 +75,7 @@ test_void_1()
     {
 #if defined BOOST_THREAD_PROVIDES_INVOKE
     void (A_void_1::*fp)() = &A_void_1::mem1;
-    boost::detail::async_func<void (A_void_1::*)(), A_void_1>(fp, A_void_1())();
+    boost::detail::invoker<void (A_void_1::*)(), A_void_1>(fp, A_void_1())();
     BOOST_TEST(count == save_count+1);
     save_count = count;
 
@@ -85,7 +85,7 @@ test_void_1()
     //    save_count = count;
 #if defined BOOST_THREAD_PROVIDES_INVOKE
     A_void_1 a;
-    boost::detail::async_func<void (A_void_1::*)(), A_void_1*>(fp, &a)();
+    boost::detail::invoker<void (A_void_1::*)(), A_void_1*>(fp, &a)();
     BOOST_TEST(count == save_count+1);
     save_count = count;
 
@@ -97,11 +97,11 @@ test_void_1()
     // const member function pointer
     {
     void (A_void_1::*fp)() const = &A_void_1::mem2;
-    boost::detail::async_func<void (A_void_1::*)() const, A_void_1>(fp, A_void_1())();
+    boost::detail::invoker<void (A_void_1::*)() const, A_void_1>(fp, A_void_1())();
     BOOST_TEST(count == save_count+2);
     save_count = count;
     A_void_1 a;
-    boost::detail::async_func<void (A_void_1::*)() const, A_void_1*>(fp, &a)();
+    boost::detail::invoker<void (A_void_1::*)() const, A_void_1*>(fp, &a)();
     BOOST_TEST(count == save_count+2);
     save_count = count;
     }
@@ -132,48 +132,48 @@ test_int_1()
 {
     // function
     {
-    BOOST_TEST((boost::detail::async_func<int (*)(int), int>(f_int_1, 2)() == 3));
+    BOOST_TEST((boost::detail::invoker<int (*)(int), int>(f_int_1, 2)() == 3));
     }
     // function pointer
     {
     int (*fp)(int) = f_int_1;
-    BOOST_TEST((boost::detail::async_func<int (*)(int), int>(fp, 3)() == 4));
+    BOOST_TEST((boost::detail::invoker<int (*)(int), int>(fp, 3)() == 4));
     }
     // functor
     {
 #if defined BOOST_THREAD_PROVIDES_INVOKE
-    BOOST_TEST((boost::detail::async_func<A_int_1, int>(A_int_1(), 4)() == 3));
+    BOOST_TEST((boost::detail::invoker<A_int_1, int>(A_int_1(), 4)() == 3));
 //    BOOST_TEST(boost::detail::invoke<int>(A_int_1(), 4) == 3);
 #endif
     }
     // member function pointer
     {
 #if defined BOOST_THREAD_PROVIDES_INVOKE
-    BOOST_TEST((boost::detail::async_func<int (A_int_1::*)(),A_int_1>(&A_int_1::mem1, A_int_1())() == 3));
+    BOOST_TEST((boost::detail::invoker<int (A_int_1::*)(),A_int_1>(&A_int_1::mem1, A_int_1())() == 3));
 //    BOOST_TEST(boost::detail::invoke<int>(&A_int_1::mem1, A_int_1()) == 3);
 #endif
 
     A_int_1 a;
-    BOOST_TEST((boost::detail::async_func<int (A_int_1::*)(), A_int_1*>(&A_int_1::mem1, &a)() == 3));
+    BOOST_TEST((boost::detail::invoker<int (A_int_1::*)(), A_int_1*>(&A_int_1::mem1, &a)() == 3));
     }
     // const member function pointer
     {
-    BOOST_TEST((boost::detail::async_func<int (A_int_1::*)() const, A_int_1>(&A_int_1::mem2, A_int_1())() == 4));
+    BOOST_TEST((boost::detail::invoker<int (A_int_1::*)() const, A_int_1>(&A_int_1::mem2, A_int_1())() == 4));
     A_int_1 a;
-    BOOST_TEST((boost::detail::async_func<int (A_int_1::*)() const, A_int_1*>(&A_int_1::mem2, &a)() == 4));
+    BOOST_TEST((boost::detail::invoker<int (A_int_1::*)() const, A_int_1*>(&A_int_1::mem2, &a)() == 4));
     }
     // member data pointer
     {
 #if defined BOOST_THREAD_PROVIDES_INVOKE
-//    BOOST_TEST((boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, A_int_1())() == 5));
+//    BOOST_TEST((boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, A_int_1())() == 5));
 ////    BOOST_TEST(boost::detail::invoke<int>(&A_int_1::data_, A_int_1()) == 5);
 //    A_int_1 a;
-//    BOOST_TEST((boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, a)() == 5));
-//    boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, a)() = 6;
-//    BOOST_TEST((boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, a)() == 6));
-//    BOOST_TEST((boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, &a)() == 6));
-//    boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, &a)() = 7;
-//    BOOST_TEST((boost::detail::async_func<int A_int_1::*>(&A_int_1::data_, &a)() == 7));
+//    BOOST_TEST((boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, a)() == 5));
+//    boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, a)() = 6;
+//    BOOST_TEST((boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, a)() == 6));
+//    BOOST_TEST((boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, &a)() == 6));
+//    boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, &a)() = 7;
+//    BOOST_TEST((boost::detail::invoker<int A_int_1::*>(&A_int_1::data_, &a)() == 7));
 #endif
     }
 }
