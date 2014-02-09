@@ -725,6 +725,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/executor.cpp : ex_executor ]
           [ thread-run2 ../example/future_when_all.cpp : future_when_all ]
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
+          [ thread-run2 ../example/with_lock_guard.cpp : ex_with_lock_guard ]
 
     ;
 
