@@ -13,7 +13,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 
-// <boost/thread/detail/async_func.hpp>
+// <boost/thread/detail/invoker.hpp>
 
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 //#define BOOST_RESULT_OF_USE_DECLTYPE

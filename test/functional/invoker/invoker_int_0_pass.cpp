@@ -14,7 +14,7 @@
 
 // <boost/thread/detail/async_func.hpp>
 
-#include <boost/thread/detail/async_func.hpp>
+#include <boost/thread/detail/invoker.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int f()
