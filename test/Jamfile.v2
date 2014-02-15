@@ -724,6 +724,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/user_scheduler.cpp : ex_user_scheduler ]
           [ thread-run2 ../example/executor.cpp : ex_executor ]
           [ thread-run2 ../example/future_when_all.cpp : future_when_all ]
+          [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
+          [ thread-run2 ../example/with_lock_guard.cpp : ex_with_lock_guard ]
 
     ;
 
@@ -780,6 +782,31 @@ rule thread-compile ( sources : reqs * : name )
 
     ;
 
+
+    test-suite ts_with_lock_guard
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_simple.cpp : with_lock_guard_simple_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_bind.cpp : with_lock_guard_bind_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_move.cpp : with_lock_guard_move_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/with_lock_guard/with_lock_guard_lambda.cpp : with_lock_guard_lambda_p ]
+    ;
+
+    explicit ts_invoke ;
+    test-suite ts_invoke
+    :
+          [ thread-run2-noit ./functional/invoke/invoke_int_0_pass.cpp : invoke_int_0_p ]
+          [ thread-run2-noit ./functional/invoke/invoke_lvalue_pass.cpp : invoke_lvalue_p ]
+          [ thread-run2-noit ./functional/invoke/invoke_rvalue_pass.cpp : invoke_rvalue_p ]
+    ;
+
+    explicit ts_invoker ;
+    test-suite ts_invoker
+    :
+          [ thread-run2-noit ./functional/invoker/invoker_int_0_pass.cpp : invoker_int_0_p ]
+          [ thread-run2-noit ./functional/invoker/invoker_lvalue_pass.cpp : invoker_lvalue_p ]
+          [ thread-run2-noit ./functional/invoker/invoker_rvalue_pass.cpp : invoker_rvalue_p ]
+    ;
+
     explicit ts_more ;
     test-suite ts_more
     :
@@ -815,6 +842,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ compile virtual_noexcept.cpp ]
           #[ thread-run clang_main.cpp ]         
           #[ thread-run test_9303.cpp ]
+          #[ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort2 ]
     ;
 
 }

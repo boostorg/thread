@@ -11,7 +11,10 @@
 
 #include <boost/config.hpp>
 
-#if defined BOOST_NO_CXX11_HDR_VECTOR || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_VECTOR || defined BOOST_NO_CXX11_HDR_VECTOR || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_USES_BOOST_VECTOR
+#define BOOST_THREAD_USES_BOOST_VECTOR
+#endif
 #include <boost/container/vector.hpp>
 #else
 #include <vector>
@@ -21,7 +24,7 @@ namespace boost
 {
   namespace csbl
   {
-#if defined BOOST_NO_CXX11_HDR_VECTOR || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_VECTOR
     using ::boost::container::vector;
 #else
     using ::std::vector;

@@ -5,7 +5,7 @@
 
 #include <boost/config.hpp>
 
-#if defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
+//#if defined BOOST_NO_CXX11_VARIADIC_TEMPLATES
 
 #include <boost/preprocessor/facilities/intercept.hpp>
 #include <boost/preprocessor/repetition/enum_params.hpp>
@@ -15,5 +15,5 @@
 #define BOOST_THREAD_MAX_ARGS 9
 #endif
 
-#endif
+//#endif
 

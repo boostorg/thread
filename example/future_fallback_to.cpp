@@ -3,6 +3,14 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/config.hpp>
+#ifndef BOOST_NO_CXX11_DECLTYPE_N3276
+#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
+#endif
+#if ! defined  BOOST_NO_CXX11_DECLTYPE
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#endif
+
 #define BOOST_THREAD_VERSION 4
 //#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID

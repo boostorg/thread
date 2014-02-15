@@ -66,13 +66,13 @@ namespace boost
     public:
       BOOST_THREAD_MOVABLE(nullary_function)
 
-      nullary_function(void (*f)()):
+      explicit nullary_function(void (*f)()):
       impl(new impl_type_ptr(f))
       {}
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
       template<typename F>
-      nullary_function(F& f):
+      explicit nullary_function(F& f):
       impl(new impl_type<F>(f))
       {}
 #endif

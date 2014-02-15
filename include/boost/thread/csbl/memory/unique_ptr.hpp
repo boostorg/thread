@@ -67,23 +67,23 @@ namespace boost
       {}
       unique_ptr& operator=(BOOST_RV_REF(unique_ptr) u)
       {
-        this->base_type.operator=(boost::move(static_cast<base_type&>(u)));
+        this->base_type::operator=(boost::move(static_cast<base_type&>(u)));
         return *this;
       }
       template <class U, class E>
       unique_ptr& operator=(BOOST_RV_REF_BEG unique_ptr<U, E> BOOST_RV_REF_END u)
       {
-        this->base_type.template operator=<U,E>(boost::move(static_cast< ::boost::interprocess::unique_ptr<U,E>&>(u)));
+        this->base_type::template operator=<U,E>(boost::move(static_cast< ::boost::interprocess::unique_ptr<U,E>&>(u)));
         return *this;
       }
       unique_ptr& operator=(nullptr_t t)
       {
-        this->base_type.operator=(t);
+        this->base_type::operator=(t);
         return *this;
       }
       void swap(unique_ptr& u)
       {
-        this->base_type.swap(u);
+        this->base_type::swap(u);
       }
     };
     template <class T, class D>

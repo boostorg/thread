@@ -64,11 +64,9 @@ namespace boost
       {
       public:
           BOOST_THREAD_NO_COPYABLE(thread_data)
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
             thread_data(BOOST_THREAD_RV_REF(F) f_, BOOST_THREAD_RV_REF(ArgTypes)... args_):
               fp(boost::forward<F>(f_), boost::forward<ArgTypes>(args_)...)
             {}
-#endif
           template <std::size_t ...Indices>
           void run2(tuple_indices<Indices...>)
           {
@@ -174,7 +172,7 @@ namespace boost
     private:
         bool start_thread_noexcept();
         bool start_thread_noexcept(const attributes& attr);
-    public:
+    //public:
         void start_thread()
         {
           if (!start_thread_noexcept())

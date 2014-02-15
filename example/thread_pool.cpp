@@ -9,7 +9,7 @@
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/thread/detail/log.hpp>
-#include <boost/thread/thread_pool.hpp>
+#include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/assert.hpp>
 #include <string>
 
@@ -25,7 +25,7 @@ void p2()
     << boost::this_thread::get_id()  << " P2" << BOOST_THREAD_END_LOG;
 }
 
-void submit_some(boost::thread_pool& tp) {
+void submit_some(boost::basic_thread_pool& tp) {
   tp.submit(&p1);
   tp.submit(&p2);
   tp.submit(&p1);
@@ -46,7 +46,7 @@ int main()
   {
     try
     {
-      boost::thread_pool tp;
+      boost::basic_thread_pool tp;
       submit_some(tp);
     }
     catch (std::exception& ex)

@@ -11,7 +11,10 @@
 
 #include <boost/config.hpp>
 
-#if defined BOOST_NO_CXX11_HDR_LIST || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_LIST || defined BOOST_NO_CXX11_HDR_LIST || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_USES_BOOST_LIST
+#define BOOST_THREAD_USES_BOOST_LIST
+#endif
 #include <boost/container/list.hpp>
 #else
 #include <list>
@@ -21,7 +24,7 @@ namespace boost
 {
   namespace csbl
   {
-#if defined BOOST_NO_CXX11_HDR_LIST || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_LIST
     using ::boost::container::list;
 #else
     using ::std::list;
