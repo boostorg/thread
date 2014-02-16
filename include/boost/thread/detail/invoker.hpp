@@ -78,6 +78,43 @@ namespace boost
         return invoke(boost::move(csbl::get<0>(f_)), boost::move(csbl::get<Indices>(f_))...);
       }
     };
+
+    template <class R, class Fp, class ... Args>
+    class invoker_ret
+    {
+      //typedef typename decay<Fp>::type Fpd;
+      //typedef tuple<typename decay<Args>::type...> Argsd;
+
+      //csbl::tuple<Fpd, Argsd...> f_;
+      csbl::tuple<Fp, Args...> f_;
+
+    public:
+      BOOST_THREAD_MOVABLE_ONLY( invoker_ret)
+      typedef R result_type;
+
+      template <class F, class ... As>
+      BOOST_SYMBOL_VISIBLE
+      explicit invoker_ret(BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(As)... args)
+      : f_(boost::forward<F>(f), boost::forward<As>(args)...)
+      {}
+
+      BOOST_SYMBOL_VISIBLE
+      invoker_ret(BOOST_THREAD_RV_REF(invoker_ret) f) : f_(boost::move(BOOST_THREAD_RV(f).f_))
+      {}
+
+      result_type operator()()
+      {
+        typedef typename make_tuple_indices<1+sizeof...(Args), 1>::type Index;
+        return execute(Index());
+      }
+    private:
+      template <size_t ...Indices>
+      result_type
+      execute(tuple_indices<Indices...>)
+      {
+        return invoke<R>(boost::move(csbl::get<0>(f_)), boost::move(csbl::get<Indices>(f_))...);
+      }
+    };
   //BOOST_THREAD_DCL_MOVABLE_BEG(X) invoker<Fp> BOOST_THREAD_DCL_MOVABLE_END
 #else
 
