@@ -3848,6 +3848,22 @@ namespace detail {
     ));
   }
 
+//  template <class R, class Executor, class F, class ...ArgTypes>
+//  BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
+//      typename decay<ArgTypes>::type...
+//  )>::type>
+//  async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args) {
+//    typedef detail::invoker_ret<R, typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
+//    typedef typename BF::result_type Rp;
+//
+//    return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
+//        BF(
+//            thread_detail::decay_copy(boost::forward<F>(f))
+//            , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
+//        )
+//    ));
+//  }
+
 #else // ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
