@@ -67,7 +67,6 @@ namespace executors
         return false;
       }
     }
-  private:
     /**
      * Effects: schedule one task or yields
      * Throws: whatever the current task constructor throws or the task() throws.
@@ -79,6 +78,7 @@ namespace executors
           this_thread::yield();
         }
     }
+  private:
 
     /**
      * The main loop of the worker threads
