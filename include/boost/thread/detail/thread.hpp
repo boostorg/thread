@@ -464,11 +464,20 @@ namespace boost
         inline void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          chrono::milliseconds rel_time2= chrono::ceil<chrono::milliseconds>(rel_time);
+          return do_try_join_until(rel_time2.count());
+        }
+#else
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
           return try_join_until(chrono::steady_clock::now() + rel_time);
         }
+#endif
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
