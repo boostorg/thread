@@ -273,6 +273,33 @@ namespace boost
           interruptible_wait(chrono::duration_cast<chrono::milliseconds>(ns).count());
         }
 #endif
+        namespace no_interruption_point
+        {
+          bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
+          inline void non_interruptible_wait(uintmax_t milliseconds)
+          {
+            non_interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
+          }
+          inline BOOST_SYMBOL_VISIBLE void non_interruptible_wait(system_time const& abs_time)
+          {
+            non_interruptible_wait(detail::win32::invalid_handle_value,abs_time);
+          }
+          template<typename TimeDuration>
+          inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
+          {
+            non_interruptible_wait(detail::pin_to_zero(rel_time.total_milliseconds()));
+          }
+          inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
+          {
+            non_interruptible_wait(abs_time);
+          }
+#ifdef BOOST_THREAD_USES_CHRONO
+          inline void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
+          {
+            non_interruptible_wait(chrono::duration_cast<chrono::milliseconds>(ns).count());
+          }
+#endif
+        }
     }
 
 }
