@@ -16,7 +16,8 @@
 namespace boost {
 
 #if !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && \
-    !defined(BOOST_NO_CXX11_DECLTYPE)
+    !defined(BOOST_NO_CXX11_DECLTYPE) && \
+    !defined(BOOST_NO_CXX11_TRAILING_RESULT_TYPES)
 
 /**
  * Utility to run functions in scope protected by mutex.

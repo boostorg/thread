@@ -15,7 +15,7 @@
 boost::mutex m; // protection for 'x' and 'std::cout'
 int x;
 
-#if defined(BOOST_NO_CXX11_LAMBDAS)
+#if defined(BOOST_NO_CXX11_LAMBDAS)  || (defined BOOST_MSVC && _MSC_VER < 1700)
 void print_x() {
   ++x;
   std::cout << "x = " << x << std::endl;
@@ -43,11 +43,11 @@ void job() {
 #endif
 
 int main() {
-#if defined(BOOST_NO_CXX11_LAMBDAS)
+#if defined(BOOST_NO_CXX11_LAMBDAS)  || (defined BOOST_MSVC && _MSC_VER < 1700)
   std::cout << "(no lambdas)" << std::endl;
 #endif
-  boost::scoped_thread<> thread_1(job);
-  boost::scoped_thread<> thread_2(job);
-  boost::scoped_thread<> thread_3(job);
+  boost::scoped_thread<> thread_1((boost::thread(job)));
+  boost::scoped_thread<> thread_2((boost::thread(job)));
+  boost::scoped_thread<> thread_3((boost::thread(job)));
   return 0;
 }
