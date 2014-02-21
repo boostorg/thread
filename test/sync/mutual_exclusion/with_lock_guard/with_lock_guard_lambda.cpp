@@ -20,7 +20,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/with_lock_guard.hpp>
 
-#if defined(BOOST_NO_CXX11_LAMBDAS)
+#if defined(BOOST_NO_CXX11_LAMBDAS) || (defined BOOST_MSVC && _MSC_VER < 1700)
 void test_lambda() {
   std::cout << "C++11 lambda disabled" << std::endl;
 }
