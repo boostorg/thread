@@ -420,8 +420,9 @@ namespace boost
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
         unsigned cores = 0;
-        DWORD size = 0;
 
+#if !(defined(__MINGW32__) || defined (__MINGW64__))
+        DWORD size = 0;
         GetLogicalProcessorInformation(NULL, &size);
         if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
             return 0;
@@ -436,6 +437,8 @@ namespace boost
             if (buffer[i].Relationship == RelationProcessorCore)
                 ++cores;
         }
+#endif
+
         return cores;
     }
 
