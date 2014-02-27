@@ -10,6 +10,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
+#include <boost/thread/win32/gettickcount64.hpp>
 
 #include <boost/intrusive_ptr.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
