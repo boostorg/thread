@@ -114,11 +114,11 @@ namespace boost
     {
         namespace win32
         {
-#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-            typedef unsigned long long ticks_type;
-#else
-            typedef unsigned long ticks_type;
-#endif
+//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
+//            typedef unsigned long long ticks_type;
+//#else
+//            typedef unsigned long ticks_type;
+//#endif
 # ifdef _WIN64
             typedef unsigned __int64 ulong_ptr;
 # else
