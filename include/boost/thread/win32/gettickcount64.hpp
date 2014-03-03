@@ -18,7 +18,7 @@ namespace boost
       typedef unsigned long long ticks_type;
       typedef ticks_type (__stdcall *gettickcount64fn)();
       typedef unsigned long (__stdcall *gettickcount32fn)();
-      ticks_type GetTickCount64();
+      BOOST_THREAD_DECL ticks_type GetTickCount64();
     }
   }
 }
