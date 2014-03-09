@@ -22,13 +22,8 @@
 //     future<typename result_of<F(Args...)>::type>
 //     async(launch policy, F&& f, Args&&... args);
 
-// template <class Executor, class F, class... Args>
-//     future<typename result_of<F(Args...)>::type>
-//     async(Executor& ex, F&& f, Args&&... args);
-
 //#define BOOST_THREAD_VERSION 3
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/config.hpp>
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 #define BOOST_RESULT_OF_USE_DECLTYPE
@@ -40,8 +35,6 @@
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
-#include <boost/thread/executors/basic_thread_pool.hpp>
-#include <boost/thread/executor.hpp>
 
 typedef boost::chrono::high_resolution_clock Clock;
 typedef boost::chrono::milliseconds ms;
@@ -246,31 +239,6 @@ int main()
     }
 
   }
-#if defined BOOST_THREAD_PROVIDES_EXECUTORS
-  {
-    try
-    {
-      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
-      boost::future<int> f = boost::async(ex, &f0);
-      boost::this_thread::sleep_for(ms(300));
-      int res;
-      {
-        check_timer timer(ms(500));
-        res = f.get();
-      }
-      BOOST_TEST(res == 3);
-    }
-    catch (std::exception& ex)
-    {
-      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
-      BOOST_TEST(false && "exception thrown");
-    }
-    catch (...)
-    {
-      BOOST_TEST(false && "exception thrown");
-    }
-  }
-#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
@@ -322,33 +290,6 @@ int main()
 
   }
 #endif
-#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD) && defined BOOST_THREAD_PROVIDES_EXECUTORS
-  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
-  {
-    try
-    {
-      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
-      boost::future<long> f = boost::async(ex, A(3));
-      boost::this_thread::sleep_for(ms(300));
-      int res;
-      {
-        check_timer timer(ms(500));
-        res = f.get();
-      }
-      BOOST_TEST(res == 3);
-    }
-    catch (std::exception& ex)
-    {
-      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
-      BOOST_TEST(false && "exception thrown");
-    }
-    catch (...)
-    {
-      BOOST_TEST(false && "exception thrown");
-    }
-
-  }
-#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
@@ -372,34 +313,6 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
-#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD) && defined BOOST_THREAD_PROVIDES_EXECUTORS
-  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
-  {
-    try
-    {
-      boost::executor_adaptor<boost::basic_thread_pool> ex(1);
-      MoveOnly mo;
-      boost::future<int> f = boost::async(ex, boost::move(mo));
-      //boost::future<int> f = boost::async(ex, MoveOnly());
-      boost::this_thread::sleep_for(ms(300));
-      int res;
-      {
-        check_timer timer(ms(500));
-        res = f.get();
-      }
-      BOOST_TEST(res == 3);
-    }
-    catch (std::exception& ex)
-    {
-      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
-      BOOST_TEST(false && "exception thrown");
-    }
-    catch (...)
-    {
-      BOOST_TEST(false && "exception thrown");
-    }
-  }
-#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try

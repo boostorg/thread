@@ -4221,8 +4221,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk) {
-      execute(lk);
+    virtual void launch_continuation(boost::unique_lock<boost::mutex>& ) {
+      //execute(lk);
     }
 
     virtual void execute(boost::unique_lock<boost::mutex>& lck) {
@@ -4252,8 +4252,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk) {
-      execute(lk);
+    virtual void launch_continuation(boost::unique_lock<boost::mutex>& ) {
+      //execute(lk);
     }
     virtual void execute(boost::unique_lock<boost::mutex>& lck) {
       try {

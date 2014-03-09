@@ -280,6 +280,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_7328.cpp ]
           [ thread-run test_7571.cpp ]
           [ thread-run test_9319.cpp ]
+          [ thread-run test_9711.cpp ]
           
     ;
 
@@ -323,6 +324,7 @@ rule thread-compile ( sources : reqs * : name )
     test-suite ts_async
     :
           [ thread-run2-noit ./sync/futures/async/async_pass.cpp : async__async_p ]
+          [ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p ]
     ;
 
     #explicit ts_promise ;
@@ -843,6 +845,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ compile virtual_noexcept.cpp ]
           #[ thread-run clang_main.cpp ]         
           #[ thread-run test_9303.cpp ]
+          #[ thread-run test_9720.cpp ]
     ;
 
 }
