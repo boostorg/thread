@@ -342,7 +342,7 @@ namespace boost
               wait(m); // or do_wait(m,detail::timeout::sentinel());
               return true;
           }
-          if (wait_duration.is_special_value())
+          if (wait_duration.is_special())
           {
             return true;
           }
