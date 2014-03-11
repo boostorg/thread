@@ -87,8 +87,6 @@
     [[30.y]        [Class thread_group]  [-]]
 ]
 [endsect]
-
-
 [section:cxx14 C++14 standard Thread library - accepted changes]
 
 [note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3797.html Working Draft, Standard for Programming Language C++]]
@@ -131,16 +129,16 @@
     [[X.1.2.1]      [try_push]  [yes] [ renamed try_push_back ]]
     [[X.1.2.2]      [try_pop]  [yes] [ renamed try_pull_back ]]
     [[X.1.3]      [Non-blocking operations]  [ - ] [ - ]]
-    [[X.1.3.1]      [nonblocking_push]  [Partial] [ renamed nonblocking_push_back  ]]
-    [[X.1.3.2]      [nonblocking_pop]  [Partial] [ renamed nonblocking_pull_front  ]]
+    [[X.1.3.1]      [nonblocking_push]  [Yes] [ renamed nonblocking_push_back  ]]
+    [[X.1.3.2]      [nonblocking_pop]  [Yes] [ renamed nonblocking_pull_front  ]]
     [[X.1.4]      [Push-front operations]  [No] [ - ]]
     [[X.1.5]      [Closed queues]  [Partial] [ - ]]
     [[X.1.5.1]      [close]  [Yes] [ - ]]
     [[X.1.5.2]      [is_closed]  [Yes] [ renamed closed ]]
-    [[X.1.5.3]      [wait_push]  [No] [ - ]]
-    [[X.1.5.4]      [wait_pop]  [No] [ - ]]
+    [[X.1.5.3]      [wait_push]  [Yes] [ renamed wait_push_back ]]
+    [[X.1.5.4]      [wait_pop]  [Yes] [ renamed wait_pull_front ]]
     [[X.1.5.5]      [wait_push_front]  [no] [ - ]]
-    [[X.1.5.6]      [wait_pop]  [Partial] [ - ]]
+    [[X.1.5.6]      [wait_pop_back]  [no] [ - ]]
     [[X.1.5.6]      [open]  [no] [ - ]]
     [[X.1.6]      [Empty and Full Queues]  [Yes] [ - ]]
     [[X.1.6.1]      [is_empty]  [Yes] [ - ]]
@@ -155,65 +153,61 @@
     [[X.2.1]      [Lock-Free Buffer Queue]  [No] [ waiting to stabilize the lock-based interface. Will use Boost.LockFree once it is Boost.Move aware. ]]
     [[X.3]      [Additional Conceptual Tools]  [No] [ - ]]
     [[X.3.1]      [Fronts and Backs]  [No] [ - ]]
-    [[X.3.2]      [Streaming Iterators]  [No] [ - ]]
+    [[X.3.2]      [Streaming Iterators] [No] [ - ]]
     [[X.3.3]      [Storage Iterators]  [No] [ - ]]
     [[X.3.4]      [Binary Interfaces]  [No] [ - ]]
     [[X.3.4]      [Managed Indirection]  [No] [ - ]]
 ]
 [endsect]
-
-
 [section:executors Asynchronous Executors]
 
 While Boost.Thread implementation of executors would not use dynamic polymorphism, it is worth comparing with the current trend on the standard.
 
-[note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2012/n3785.pdf N3785 Executors and Schedulers]]
-
+[note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3785.pdf N3785 Executors and Schedulers]]
 
 [table Asynchronous Executors
     [[Section]  [Description]  [Status] [Comments]]
-    [[30.X.1]      [Class executor]  [Yes] [ - ]]
-    [[30.X.1.1]      [add]  [Yes] [ renamed with a function template submit   ]]
-    [[30.X.1.1]      [num_of_pendin_closures]  [No] [    ]]
-    [[30.X.2]      [Class sceduled_executor]  [No] [ - ]]
-    [[30.X.2.1]      [add_at]  [No] [ renamed with a function template submit_at   ]]
-    [[30.X.2.2]      [add_after]  [No] [ renamed with a function template submit_after   ]]
-    [[30.X.3]      [Executor utilities functions]  [No] [ - ]]
-    [[30.X.3.1]      [default_executor]  [No] [ - ]]
-    [[30.X.3.2]      [set_default_executor]  [No] [ - ]]
-    [[30.X.4]      [Concrete executor classes]  [No] [ - ]]
-    [[30.X.4.1]      [loop_executor]  [Yes] [ static version user_scheduler, dynamic one execduler_adaptor<user_scheduler> ]]
-    [[30.X.4.1]      [serial_executor]  [No] [ - ]]
-    [[30.X.4.1]      [thread_pool]  [Yes] [ static version thread_pool, dynamic one execduler_adaptor<thread_pool> ]]
+    [[V.1.1]      [Class executor]  [Yes] [ - ]]
+    [[V.1.1]      [add]  [Yes] [ renamed with a function template submit   ]]
+    [[V.1.1]      [num_of_pendin_closures]  [No] [    ]]
+    [[V.1.2]      [Class sceduled_executor]  [No] [ - ]]
+    [[V.1.2]      [add_at]  [No] [ renamed with a function template submit_at   ]]
+    [[V.1.2]      [add_after]  [No] [ renamed with a function template submit_after   ]]
+    [[V.2]      [Concrete executor classes]  [No] [ - ]]
+    [[V.2.1]      [thread_pool]  [Yes] [ static version Basic_thread_pool, dynamic one execduler_adaptor<basic_thread_pool> ]]
+    [[V.2.2]      [serial_executor]  [yes] [ - ]]
+    [[V.2.3]      [loop_executor]  [Yes] [ static version loop_scheduler, dynamic one execduler_adaptor<loop_scheduler> ]]
+    [[V.2.4]      [inline_executor]  [Yes] [ static version inline_executor, dynamic one execduler_adaptor<inline_executor> ]]
+    [[V.2.5]      [thread_executor]  [Yes] [ static version thread_executor, dynamic one execduler_adaptor<thread_executor> ]]
 ]
 
 [endsect]
+[section:async Improvements to std::future<T> and Related APIs]
 
-
-[section:async A Standardized Representation of Asynchronous Operations]
-
-[note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3558.pdf N3558 A Standardized Representation of Asynchronous Operations]]
+[note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2014/n3857.pdf N3857-Improvements to std::future<T> and Related APIs]]
 
 [note These functions are based on [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3634.pdf [*N3634 - Improvements to std::future<T> and related APIs]] C++1y proposal by N. Gustafsson, A. Laksberg, H. Sutter, S. Mithani.]
 
 [table Improvements to std::future<T> and related APIs]
     [[Section]  [Description]  [Status] [Comments]]
     [[30.6.6]      [Class template future]  [Partial] [ - ]]
-    [[30.6.6.1]      [then]  [No] [ executor interface missing #8516  ]]
-    [[30.6.6.2]      [unwrap]  [Yes] [ - ]]
-    [[30.6.6.3]      [ready]  [Partial] [ is_ready  ]]
+    [[30.6.6]      [unwrap constructor]  [Yes] [ - ]]
+    [[30.6.6]      [then]  [Yes] [ - ]]
+    [[30.6.6]      [unwrap]  [Yes] [ - ]]
+    [[30.6.6]      [ready]  [Partial] [ is_ready  ]]
     [[30.6.7]      [Class template shared_future]  [Partial] [ - ]]
-    [[30.6.7.1]      [then]  [No] [ executor interface missing #8516 ]]
-    [[30.6.7.2]      [unwrap]  [Yes] [ #XXXX ]]
-    [[30.6.7.3]      [ready]  [Partial] [ is_ready  ]]
-    [[30.6.X]      [Function template when_any]  [Partial] [ interface not complete #7446  ]]
+    [[30.6.6]      [unwrap constructor]  [Yes] [ - ]]
+    [[30.6.7]      [then]  [Yes] [ - ]]
+    [[30.6.7]      [unwrap]  [No] [ #XXXX ]]
+    [[30.6.7]      [ready]  [Partial] [ is_ready  ]]
     [[30.6.X]      [Function template when_all]  [Partial] [ interface not complete #7447  ]]
+    [[30.6.X]      [Function template when_any]  [Partial] [ interface not complete #7446  ]]
+    [[30.6.X]      [Function template when_any_swaped]  [No] [ #XXXX  ]]
     [[30.6.X]      [Function template make_ready_future]  [Yes] [ - ]]
-    [[30.6.8]      [Function template async ]  [Partial] [ executor interface not complete #7448    ]]
+    [[30.6.8]      [Function template async ]  [Yes] [ - ]]
 ]
 
 [endsect]
-
 [section:stream_mutex	C++ Stream Mutexes - C++ Stream Guards]
 
 While Boost.Thread implementation of stream mutexes differ in the approach, it is worth comparing with the current trend on the standard.
@@ -222,7 +216,7 @@ While Boost.Thread implementation of stream mutexes differ in the approach, it i
 
 [note This proposal has been replaced already by [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3678.html N3678 - C++ Stream Guards], which has been replaced by [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3678.html N3665 - Uninterleaved String Output Streaming] and [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3678.html N3750 - C++ Ostream Buffers]]
 
-[table C++ C++ Stream Mutexes Conformance
+[table C++ Stream Mutexes Conformance
     [[Section]  [Description]  [Status] [Comments]]
     [[X.1]      [Class template stream_mutex]  [Partial] [ Renamed externally_locked_stream<> ]]
     [[X.2.1]      [constructor]  [Partial] [ externally_locked_stream needs a mutex in addition as argument. ]]
