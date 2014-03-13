@@ -308,7 +308,7 @@ The second `get()` call in the following example is undefined.
       use3( ftr.get() ); // second use is undefined
   }
     
-Using a `shared_mutex` solves the issue
+Using a `shared_future` solves the issue
 
   void good_second_use( type arg ) {
       
