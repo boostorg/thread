@@ -101,7 +101,7 @@ A type `Q` meets the BasicConcurrentQueue requirements if the following expressi
 * `q.push_back(rve);`
 * `q.pull_front(lre);`
 * `lre = q.pull_front();`
-* `spe = q.ptr_pull_front();`
+[/* `spe = q.ptr_pull_front();`]
 * `b = q.empty();`
 * `u = q.size();`
 
@@ -112,7 +112,7 @@ where
 * `u` denotes a value of type Q::size_type, 
 * `lve` denotes a lvalue referece of type Q::value_type, 
 * `rve` denotes a rvalue referece of type Q::value_type:
-* `spe` denotes a shared_ptr<Q::value_type>
+[/* `spe` denotes a shared_ptr<Q::value_type>]
 * `qs` denotes a variable of of type `queus_op_status`, 
 
 
@@ -200,6 +200,7 @@ where
 ]
 
 [endsect]
+[/
 [/////////////////////////////////////]
 [section:ptr_pull_front `spe = q.ptr_pull_front()`]
 
@@ -224,7 +225,7 @@ where
 ]
 
 [endsect]
-
+]
 [endsect]
 
 [/////////////////////////////////////]
@@ -235,34 +236,42 @@ The ConcurrentQueue concept models a queue with .
  
 A type `Q` meets the ConcurrentQueue requirements if the following expressions are well-formed and have the specified semantics 
 
-* `b = q.try_push_back(e);`
-* `b = q.try_push_back(rve);`
-* `b = q.try_pull_front(lre);`
+* `s = q.try_push_back(e);`
+* `s = q.try_push_back(rve);`
+* `s = q.try_pull_front(lre);`
 
 where
 
 * `q` denotes a value of type `Q`, 
-* `e` denotes a value of type Q::value_type, 
-* `u` denotes a value of type Q::size_type, 
+* `e` denotes a value of type `Q::value_type`, 
+* `s` denotes a value of type `queue_status`, 
+* `u` denotes a value of type `Q::size_type`, 
 * `lve` denotes a lvalue referece of type Q::value_type, 
 * `rve` denotes a rvalue referece of type Q::value_type:
-* `spe` denotes a shared_ptr<Q::value_type>
+[/* `spe` denotes a shared_ptr<Q::value_type>]
 
 
 [/////////////////////////////////////]
-[section:try_push_back `q.try_push_back(e);`]
+[section:try_push_back `s = q.try_push_back(e);`]
 
 [variablelist
 
-[[Effects:] [If the queue `q` is not full, push back the `e` to the queue copying it.]]
+[[Effects:] [If the queue `q` is not full and not closed, push back the `e` to the queue copying it.]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation when the operation succeeds. ]]
 
-[[Return type:] [`bool`.]]
+[[Return type:] [`queue_op_status`.]]
 
-[[Return:] [If the queue `q` is full return `false`, otherwise return `true`;]]
+[[Return:] [
 
-[[Postcondition:] [If the call returns `true`, `! q.empty()`.]]
+- If the queue is closed, returns `queue_op_status::closed`,
+
+- otherwise if the queue `q` is full return `queue_op_status::full`, 
+
+- otherwise return `queue_op_status::success`;
+]]
+
+[[Postcondition:] [If the call returns `queue_op_status::success`, `! q.empty()`.]]
 
 [[Throws:] [If the queue is closed, throws sync_queue_is_closed. Any exception thrown by the copy of `e`.]]
 
@@ -272,21 +281,28 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:try_push_back_m `q.try_push_back(rve());`]
+[section:try_push_back_m `s = q.try_push_back(rve());`]
 
 [variablelist
 
-[[Effects:] [If the queue `q` is not full, push back the `e` onto the queue moving it.]]
+[[Effects:] [If the queue `q` is not full and not closed, push back the `e` onto the queue moving it.]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
-[[Return type:] [`bool`.]]
+[[Return type:] [`queue_op_status`.]]
 
-[[Return:] [If the queue `q` is full return `false`, otherwise return `true`;]]
+[[Return:] [
 
-[[Postcondition:] [If the call returns `true`, `! q.empty()`.]]
+- If the queue is closed, returns `queue_op_status::closed`,
+ 
+- otherwise if the queue `q` is full return `queue_op_status::full`, 
 
-[[Throws:] [If the queue is closed, throws sync_queue_is_closed. Any exception thrown by the copy of `e`.]]
+- otherwise return `queue_op_status::success`;
+]]
+
+[[Postcondition:] [If the call returns `queue_op_status::success`, `! q.empty()`.]]
+
+[[Throws:] [ Any exception thrown by the copy of `e`.]]
 
 [[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
 
@@ -294,7 +310,7 @@ where
 
 [endsect]
 [/////////////////////////////////////]
-[section:pull_front_lv `b = q.try_pull_front(lve)`]
+[section:try_pull_front_lv `s = q.try_pull_front(lve)`]
 
 [variablelist
 
@@ -306,7 +322,13 @@ where
 
 [[Return type:] [`bool`.]]
 
-[[Return:] [If the queue `q` is full return `false`, otherwise return `true`;]]
+[[Return:] [
+
+- If the queue `q` is empty return `queue_op_status::empty`, 
+
+- otherwise return `queue_op_status::success`;
+
+]]
 
 [[Throws:] [Any exception thrown by the move of `e`.]]
 
@@ -319,25 +341,115 @@ where
 [/////////////////////////////////////]
 [section:non_blocking Non-blocking Concurrent Queue Operations]
 
-For cases when blocking for mutual exclusion is undesirable, we have non-blocking operations. The interface is the same as the try operations but is allowed to also return queue_op_status::busy in case the operation is unable to complete without blocking. 
+For cases when blocking for mutual exclusion is undesirable, we have non-blocking operations. 
+The interface is the same as the try operations but is allowed to also return queue_op_status::busy 
+in case the operation is unable to complete without blocking. 
 
 Non-blocking operations are provided only for BlockingQueues
 
-* `b = q.try_push_back(nb, e);`
-* `b = q.try_push_back(nb, rve);`
-* `b = q.try_pull_front(nb, lre);`
+* `s = q.nonblocking_push_back(nb, e);`
+* `s = q.nonblocking_push_back(nb, rve);`
+* `s = q.nonblocking_pull_front(nb, lre);`
 
 
 where
 
 * `q` denotes a value of type `Q`, 
 * `e` denotes a value of type Q::value_type, 
-* `u` denotes a value of type Q::size_type, 
+* `s` denotes a value of type `queue_status`, 
 * `lve` denotes a lvalue referece of type Q::value_type, 
 * `rve` denotes a rvalue referece of type Q::value_type:
-* `spe` denotes a shared_ptr<Q::value_type>
+[/* `spe` denotes a shared_ptr<Q::value_type>]
 
 
+[/////////////////////////////////////]
+[section:nonblocking_push_back `s = q.nonblocking_push_back(e);`]
+
+[variablelist
+
+[[Effects:] [If the queue `q` is not full and not closed, push back the `e` to the queue copying it.]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation when the operation succeeds. ]]
+
+[[Return type:] [`queue_op_status`.]]
+
+[[Return:] [
+
+- If the operation would block, return queue_op_status::busy,
+ 
+- otherwise, if the queue is closed, return `queue_op_status::closed`,
+ 
+- otherwise, if the queue `q` is full return `queue_op_status::full`, 
+
+- otherwise return `queue_op_status::success`;]]
+
+[[Postcondition:] [If the call returns `queue_op_status::success`, `! q.empty()`.]]
+
+[[Throws:] [If the queue is closed, throws sync_queue_is_closed. Any exception thrown by the copy of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:nonblocking_push_back_m `s = q.nonblocking_push_back(rve());`]
+
+[variablelist
+
+[[Effects:] [If the queue `q` is not full and not closed, push back the `e` onto the queue moving it.]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
+
+[[Return type:] [`queue_op_status`.]]
+
+[[Return:] [
+
+- If the operation would block, return queue_op_status::busy,
+   
+- otherwise if the queue is closed, returns `queue_op_status::closed`,
+   
+- otherwise if the queue `q` is full return `queue_op_status::full`,
+ 
+- otherwise return `queue_op_status::success`;]]
+
+[[Postcondition:] [If the call returns `queue_op_status::success`, `! q.empty()`.]]
+
+[[Throws:] [ Any exception thrown by the copy of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:nonblocking_pull_front_lv `s = q.nonblocking_pull_front(lve)`]
+
+[variablelist
+
+[[Effects:] [Waits until the queue is not empty and then pull the element from the queue `q` and moves the pulled element into `lve` (this could need an allocation for unbounded queues).]]
+
+[[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
+
+[[Postcondition:] [`! q.full()`.]]
+
+[[Return type:] [`bool`.]]
+
+[[Return:] [
+
+- If the operation would block, return queue_op_status::busy,
+   
+- otherwise if the queue `q` is empty return `queue_op_status::empty`, 
+
+- otherwise return `queue_op_status::success`;]]
+
+[[Throws:] [Any exception thrown by the move of `e`.]]
+
+[[Exception safety:] [If an exception is thrown then the queue state is unmodified.]]
+
+]
+
+[endsect]
 [endsect]
 [/////////////////////////////////////]
 [section:bounded Bounded Concurrent Queue Operations]
@@ -348,24 +460,78 @@ Bounded queues add the following valid expressions
 * `b = q.full();`
 * `u = q.capacity();`
 
+
+where
+
+* `q` denotes a value of type `Q`, 
+* `b` denotes a value of type `bool`, 
+* `u` denotes a value of type `Q::size_type`, 
+
+[/////////////////////////////////////]
+[section:full `b = q.full();`]
+
+[variablelist
+
+[[Return type:] [`bool`.]]
+
+[[Return:] [Return `true` iff the queue is full.]]
+
+[[Remark:] [Not all queues will have a full state, and these would always return false if the function is provided.]]
+  
+]
+
+[endsect]
+
+[/////////////////////////////////////]
+[section:capacity `b = q.capacity();`]
+
+[variablelist
+
+[[Return type:] [`Q::size_type`.]]
+
+[[Return:] [Return the capacity of queue.]]
+]
+
+[endsect]
+
+
 [endsect]
 [/////////////////////////////////////]
 [section:closed_op Closed Concurrent Queue Operations]
 
+Closed queues add the following valid expressions
 
 * `q.close();`
 * `b = q.closed();`
 
-Basic expressions
-
-* `qs = q.wait_push_back(e);`
-* `qs = q.wait_push_back(rve);`
-* `qs = q.wait_pull_front(lre);`
-
-
+* `s = q.wait_push_back(e);`
+* `s = q.wait_push_back(rve);`
+* `s = q.wait_pull_front(lre);`
 
 [/////////////////////////////////////]
-[section:wait_push_back `q.wait_push_back(e);`]
+[section:wait_push_back `q.close();`]
+
+[variablelist
+
+[[Effects:] [Close the queue.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:wait_push_back `b = q.closed();`]
+
+[variablelist
+
+[[Return type:] [`bool`.]]
+
+[[Return:] [Return `true` iff the queue is closed.]]
+]
+
+[endsect]
+
+[/////////////////////////////////////]
+[section:wait_push_back `s = q.wait_push_back(e);`]
 
 [variablelist
 
@@ -377,7 +543,13 @@ Basic expressions
 
 [[Return type:] [`queue_op_status`.]]
 
-[[Return:] [`queue_op_status::closed` is the queue is closed.]]
+[[Return:] [
+
+- If the queue is closed retun `queue_op_status::closed`,
+
+- otherwise, return `queue_op_status::success` if no exception is thrown.
+
+]]
 
 [[Throws:] [Any exception thrown by the copy of `e`.]]
 
@@ -387,7 +559,7 @@ Basic expressions
 
 [endsect]
 [/////////////////////////////////////]
-[section:wait_push_back_m `q.wait_push_back(rve);`]
+[section:wait_push_back_m `s = q.wait_push_back(rve);`]
 
 [variablelist
 
@@ -399,7 +571,13 @@ Basic expressions
 
 [[Return type:] [`queue_op_status`.]]
 
-[[Return:] [`queue_op_status::closed` is the queue is closed.]]
+[[Return:] [
+
+- If the queue is closed retun `queue_op_status::closed`,
+
+- otherwise, return `queue_op_status::success` if no exception is thrown.
+
+.]]
 
 [[Throws:] [Any exception thrown by the copy of `e`.]]
 
@@ -409,7 +587,7 @@ Basic expressions
 
 [endsect]
 [/////////////////////////////////////]
-[section:wait_pull_front_lv `q.wait_pull_front(lve)`]
+[section:wait_pull_front_lv `s = q.wait_pull_front(lve)`]
 
 [variablelist
 
@@ -421,8 +599,14 @@ Basic expressions
 
 [[Return type:] [`queue_op_status`.]]
 
-[[Return:] [If the queue is empty and closed, return `queue_op_status::closed`. Otherwise, if the queue is empty, return `queue_op_status::empty`. 
-Otherwise, return `queue_op_status::success` if no exception is thrown.]]
+[[Return:] [
+
+- If the queue is empty and closed, return `queue_op_status::closed`, 
+
+- otherwise, if the queue is empty, return `queue_op_status::empty`,
+ 
+- otherwise, return `queue_op_status::success` if no exception is thrown.
+]]
 
 [[Throws:] [Any exception thrown by the move of `e`.]]
 
@@ -506,7 +690,6 @@ Otherwise, return `queue_op_status::success` if no exception is thrown.]]
 
       void pull_front(value_type&);
       value_type pull_front();
-      shared_ptr<ValueType> ptr_pull_front();
 
       queue_op_status try_pull_front(value_type&);
       queue_op_status nonblocking_pull_front(value_type&);
@@ -515,6 +698,8 @@ Otherwise, return `queue_op_status::success` if no exception is thrown.]]
       void close();
     };
   }
+
+[/      shared_ptr<ValueType> ptr_pull_front();]
 
 [/////////////////////////////////////]
 [section:constructor Constructor `sync_bounded_queue(size_type)`]
@@ -632,7 +817,6 @@ Otherwise, return `queue_op_status::success` if no exception is thrown.]]
 
       void pull_front(value_type&);
       value_type pull_front();
-      shared_ptr<ValueType> ptr_pull_front();
 
       queue_op_status try_pull_front(value_type&);
       queue_op_status nonblocking_pull_front(value_type&);
@@ -642,6 +826,10 @@ Otherwise, return `queue_op_status::success` if no exception is thrown.]]
       void close();
     };
   }
+  
+  
+[/        shared_ptr<ValueType> ptr_pull_front();]
+  
 
 [/////////////////////////////////////]
 [section:constructor Constructor `sync_bounded_queue(size_type)`]

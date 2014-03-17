@@ -23,8 +23,6 @@
 * [@http://svn.boost.org/trac/boost/ticket/9310 #9310] test_4648_lib fails on clang-darwin-asan11
 * [@http://svn.boost.org/trac/boost/ticket/9311 #9311] ex_lambda_future fails on msvc-11.0
 
-* [@http://svn.boost.org/trac/boost/ticket/9333 #9333] ex_scoped_thread compile fails on msvc-12.0
-* [@http://svn.boost.org/trac/boost/ticket/9404 #9404] ex_make_future regression error
 * [@http://svn.boost.org/trac/boost/ticket/9425 #9425] Boost promise & future does not use supplied allocator for value storage
 * [@http://svn.boost.org/trac/boost/ticket/9558 #9558] future continuations unit test hangs in get()/pthread_cond_wait() on Mac 10.7/32-bit/x86/darwin-4.2.1
 
@@ -52,8 +50,17 @@ There are some severe bugs that prevent the use of the library on concrete conte
 
 [*Fixed Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/8070 #8070] prefer GetTickCount64 over GetTickCount
+* [@http://svn.boost.org/trac/boost/ticket/9333 #9333] ex_scoped_thread compile fails on msvc-12.0
+* [@http://svn.boost.org/trac/boost/ticket/9366 #9366] async(Executor, ...) fails to compile with msvc-10,11,12 	
+* [@http://svn.boost.org/trac/boost/ticket/9402 #9402] test_excutor regression on msvc-10,11,12
+* [@http://svn.boost.org/trac/boost/ticket/9404 #9404] ex_make_future regression error
 * [@http://svn.boost.org/trac/boost/ticket/9471 #9471] Synchronization documentation nits
 * [@http://svn.boost.org/trac/boost/ticket/9535 #9535] Missing exception safety might result in crash
+* [@http://svn.boost.org/trac/boost/ticket/9618 #9618] try_join_for problem: program is not terminate.
+* [@http://svn.boost.org/trac/boost/ticket/9673 #9673] thread compilation with MingW/gcc on Windows gives errors
+* [@http://svn.boost.org/trac/boost/ticket/9708 #9708] boost::condition_variable::timed_wait unexpectedly wakes up while should wait infinite
+* [@http://svn.boost.org/trac/boost/ticket/9711 #9711] future continuation called twice
 
 [heading Version 4.2.0 - boost 1.55]
 
