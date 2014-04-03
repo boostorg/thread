@@ -80,7 +80,7 @@ typedef mtx_t pthread_mutex_t;
 
 /*! \mainpage The POSIX threads permit objects
 
-(C) 2011-2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
 
 Herein lies a suite of safe, composable, user mode permit objects for POSIX threads. They are used
 to asynchronously give a thread of code the \em permission to proceed and as such are
