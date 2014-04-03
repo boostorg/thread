@@ -36,6 +36,7 @@ DEALINGS IN THE SOFTWARE.
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 #include <bitset>
+#include <thread>
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -168,6 +169,30 @@ TEST_CASE("pthread_permit1/grantrevokewait", "Tests that grants cause exactly on
   REQUIRE(EINVAL==pthread_permit1_grant(&permit));
 }
 
+TEST_CASE("pthread_permit1/destroywait", "Tests that destroys cause waits in other threads to exit correctly")
+{
+  pthread_mutex_t mutex;
+  pthread_permit1_t permit;
+  std::atomic<bool> waiter(false);
+  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
+  REQUIRE(0==pthread_permit1_init(&permit, 0));
+  REQUIRE(0==pthread_mutex_lock(&mutex));
+  std::thread thread([&]{
+    waiter=true;
+    if(0!=pthread_permit1_wait(&permit, &mutex))
+      REQUIRE(0);
+    while(waiter);
+    if(EINVAL!=pthread_permit1_wait(&permit, &mutex))
+      REQUIRE(0);
+  });
+  while(!waiter);
+  REQUIRE(0==pthread_permit1_grant(&permit));
+  pthread_permit1_destroy(&permit);
+  waiter=false;
+  REQUIRE(0==pthread_mutex_unlock(&mutex));
+  thread.join();
+  pthread_mutex_destroy(&mutex);
+}
 
 
 /**************************************** pthread_permit ****************************************/

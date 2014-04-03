@@ -472,7 +472,11 @@ void pthread_permit1_destroy(pthread_permit1_t *permit)
   if(*(const unsigned *)"1PER"!=permit->magic) return;
   /* Mark this object as invalid for further use */
   atomic_store_explicit(&permit->magic, 0U, memory_order_seq_cst);
-  permit->permit=1;
+  while(permit->waiters!=permit->waited)
+  {
+    atomic_store_explicit(&permit->permit, 1U, memory_order_seq_cst);
+    cnd_signal(&permit->cond);
+  }
   cnd_destroy(&permit->cond);
 }
 
