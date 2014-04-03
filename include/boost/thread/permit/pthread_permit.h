@@ -36,7 +36,7 @@ DEALINGS IN THE SOFTWARE.
 */
 
 #ifndef DOXYGEN_PREPROCESSOR
-#include "../c11_compat.h"
+#include "c11_compat.h"
 typedef mtx_t pthread_mutex_t;
 #include <assert.h>
 #endif // DOXYGEN_PREPROCESSOR

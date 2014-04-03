@@ -39,7 +39,7 @@ Uncontended wait time: 137 cycles
 */
 
 #include "pthread_permit.h"
-#include "../timing.h"
+#include "timing.h"
 #include <stdio.h>
 
 #define THREADS 2

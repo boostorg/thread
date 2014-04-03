@@ -1,6 +1,6 @@
 /* unittests.cpp
 Unit testing for pthread_permit1 and pthread_permit
-(C) 2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2012-2014 Niall Douglas http://www.nedproductions.biz/
 
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -587,6 +587,6 @@ int main(int argc, char *argv[])
 #else
   printf("These unit tests have not been compiled with parallel support and will execute only those which are sequential.\n");
 #endif
-  int result=Catch::Main(argc, argv);
+  int result=Catch::Session().run(argc, argv);
   return result;
 }
