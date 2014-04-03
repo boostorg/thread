@@ -57,11 +57,7 @@ DEALINGS IN THE SOFTWARE.
 #include <sys/time.h>
 #include <time.h>
 #include <pthread.h>
-#ifdef __clang__
-#include "c11_atomics_clang/atomic"
-#else
 #include <atomic>
-#endif
 // Evilly patch in the C++11 atomics as if they were C11
 #define memory_order_relaxed std::memory_order::memory_order_relaxed
 #define memory_order_consume std::memory_order::memory_order_consume

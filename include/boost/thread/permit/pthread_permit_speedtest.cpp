@@ -43,14 +43,14 @@ Uncontended wait time: 137 cycles
 #include <stdio.h>
 
 #define THREADS 2
-#define CYCLESPERMICROSECOND (2.67*1000000000/1000000000000)
+#define CYCLESPERMICROSECOND (3.9*1000000000/1000000000000)
 #define DONTCONSUME 0
 // Define to test uncontended, set to what to exclude (0=test permit_wait, 1=test permit_revoke/permit_grant)
-#define UNCONTENDED 0
+#define UNCONTENDED 1
 
 static usCount timingoverhead;
 static thrd_t threads[THREADS];
-static volatile int done;
+static std::atomic<bool> done;
 static void *permitaddr;
 
 void mssleep(long ms)
@@ -92,7 +92,7 @@ template<typename permit_t, int (*permit_grant)(pthread_permitX_t), void (*permi
       //mssleep(1);
       count++;
     }
-    printf("Thread %u, average revoke/grant time was %u/%u cycles\n", mythread, (size_t)((double)revoketotal/count*CYCLESPERMICROSECOND), (size_t)((double)granttotal/count*CYCLESPERMICROSECOND));
+    printf("Thread %u, average revoke/grant time was %u/%u cycles\n", (unsigned) mythread, (unsigned)((double)revoketotal/count*CYCLESPERMICROSECOND), (unsigned)((double)granttotal/count*CYCLESPERMICROSECOND));
     permit_grant(permit);
   }
   else
@@ -117,7 +117,7 @@ template<typename permit_t, int (*permit_grant)(pthread_permitX_t), void (*permi
       }
 #endif
     }
-    printf("Thread %u, average wait time was %u cycles\n", mythread, (size_t)((double)waittotal/count*CYCLESPERMICROSECOND));
+    printf("Thread %u, average wait time was %u cycles\n", (unsigned) mythread, (unsigned)((double)waittotal/count*CYCLESPERMICROSECOND));
   }
   return 0;
 }
@@ -140,7 +140,7 @@ int main(void)
     timingoverhead+=GetUsCount()-start;
   }
   timingoverhead/=5000000;
-  printf("Timing overhead on this machine is %u us. Go!\n", (size_t) timingoverhead);
+  printf("Timing overhead on this machine is %u us. Go!\n", (unsigned) timingoverhead);
 
   pthread_permit1_init(&permit1, 1);
   permitaddr=&permit1;

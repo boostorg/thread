@@ -510,7 +510,7 @@ static int pthread_permitnc_associate_fd_hook_grant(pthread_permit_hook_type_t t
   pfd.events=POLLOUT;
   poll(&pfd, 1, 0);
   if(pfd.revents&POLLOUT)
-    write(fd, &buffer, 1);
+    while(-1==write(fd, &buffer, 1) && EINTR==errno);
   return hookdata->next ? hookdata->next->func(type, permit, hookdata->next) : 0;
 }
 static int pthread_permitnc_associate_fd_hook_revoke(pthread_permit_hook_type_t type, pthread_permitnc_t *permit, pthread_permitnc_hook_t *hookdata)
@@ -525,7 +525,7 @@ static int pthread_permitnc_associate_fd_hook_revoke(pthread_permit_hook_type_t 
     pfd.revents=0;
     poll(&pfd, 1, 0);
     if(pfd.revents&POLLIN)
-      read(fd, buffer, 256);
+      while(-1==read(fd, buffer, 256) && EINTR==errno);
   } while(pfd.revents&POLLIN);
   return hookdata->next ? hookdata->next->func(type, permit, hookdata->next) : 0;
 }
@@ -553,7 +553,7 @@ static pthread_permitnc_association_t pthread_permit_associate_fd(pthread_permit
   if(permit->permit)
   {
     char buffer=0;
-    write(fds[1], &buffer, 1);
+    for(;;) if(-1!=write(fds[1], &buffer, 1)) break; else if(EINTR!=errno) return 0;
   }
   return ret;
 }

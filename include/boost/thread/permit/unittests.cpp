@@ -36,20 +36,6 @@ DEALINGS IN THE SOFTWARE.
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 #include <bitset>
-#ifdef USE_PARALLEL
-#ifdef _MSC_VER
-// Use Microsoft's Parallel Patterns Library
-#include <ppl.h>
-#else
-// Use Intel's Threading Building Blocks compatibility layer for the PPL
-#ifdef __MINGW32__
-#define TBB_USE_CAPTURED_EXCEPTION 1 // Without this tries to use std::exception_ptr which Mingw can't handle
-#endif
-#include "tbb/parallel_for.h"
-#include "tbb/task_scheduler_init.h"
-#include "tbb/compat/ppl.h"
-#endif
-#endif
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -348,7 +334,7 @@ TEST_CASE("pthread_permit/non-parallel/selectfirst", "Tests that select does cho
     permitc_destroy(&permits[n]);
 }
 
-#ifdef USE_PARALLEL
+#ifdef _OPENMP
 TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose the first available permit exactly once")
 {
   pthread_permitc_t permits[SELECT_PERMITS];
@@ -362,7 +348,8 @@ TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose 
   {
     REQUIRE(0==permitc_init(&permits[n], 1));
   }
-  Concurrency::parallel_for(0, SELECT_PERMITS, [&permits, ts, &permitted](size_t n)
+#pragma omp parallel for schedule(dynamic)
+  for(n=0; n<SELECT_PERMITS; n++)
   {
     size_t m, selectedpermit=(size_t)-1;
     pthread_permitX_t parray[SELECT_PERMITS];
@@ -394,7 +381,6 @@ TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose 
     atomic_fetch_add_explicit(&permitted, 1U, memory_order_relaxed);
 #endif
   }
-  );
   // Make sure nothing permits now
   REQUIRE((atomic_load_explicit(&permitted, memory_order_relaxed))==SELECT_PERMITS);
   {
@@ -462,7 +448,7 @@ TEST_CASE("pthread_permit/non-parallel/ncselect", "Tests that select does not co
   permitnc_destroy(&permitnc);
 }
 
-#ifdef USE_PARALLEL
+#ifdef _OPENMP
 TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consume non-consuming permits")
 {
   pthread_permitc_t permitcs[SELECT_PERMITS-1];
@@ -478,7 +464,8 @@ TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consum
     REQUIRE(0==permitc_init(&permitcs[n], 1));
   }
   REQUIRE(0==permitnc_init(&permitnc, 1));
-  Concurrency::parallel_for(0, SELECT_PERMITS, [&permitcs, &permitnc, ts, &permitted](size_t n)
+#pragma omp parallel for schedule(dynamic)
+  for(n=0; n<SELECT_PERMITS; n++)
   {
     size_t m, selectedpermit=(size_t)-1;
     pthread_permitX_t parray[SELECT_PERMITS];
@@ -513,7 +500,6 @@ TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consum
         REQUIRE(ETIMEDOUT==ret);
     }
   }
-  );
   // Make sure nothing permits now, except for the NC permit
   REQUIRE((atomic_load_explicit(&permitted, memory_order_relaxed))==SELECT_PERMITS);
   {
@@ -565,25 +551,8 @@ TEST_CASE("pthread_permit/fdmirroring", "Tests that file descriptor mirroring wo
 
 int main(int argc, char *argv[])
 {
-#ifdef USE_PARALLEL
-  size_t threads=(size_t)-1;
-#ifdef _MSC_VER
-  {
-    size_t n;
-    SYSTEM_LOGICAL_PROCESSOR_INFORMATION slpi[256];
-    DWORD len=sizeof(slpi);
-    GetLogicalProcessorInformation(slpi, &len);
-    assert(ERROR_INSUFFICIENT_BUFFER!=GetLastError());
-    threads=0;
-    for(n=0; n<len/sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION); n++)
-    {
-      if(RelationProcessorCore==slpi[n].Relationship) threads+=std::bitset<64>((unsigned long long) slpi[n].ProcessorMask).count();
-    }
-  }
-#else
-  threads=tbb::task_scheduler_init::default_num_threads();
-#endif
-  printf("These unit tests have been compiled with parallel support. I will use %d threads.\n", threads);
+#ifdef _OPENMP
+  printf("These unit tests have been compiled with parallel support. I will use as many threads as CPU cores.\n");
 #else
   printf("These unit tests have not been compiled with parallel support and will execute only those which are sequential.\n");
 #endif
