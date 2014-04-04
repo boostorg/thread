@@ -84,18 +84,19 @@ typedef mtx_t pthread_mutex_t;
 
 Herein lies a suite of safe, composable, user mode permit objects for POSIX threads. They are used
 to asynchronously give a thread of code the \em permission to proceed and as such are
-very useful in any situation where one bit of code must asychronously notify another
+very useful in any situation where one bit of code must asynchronously notify another
 bit of code of something.
 
 Unlike other forms of synchronisation, permit objects do not suffer from race conditions.
 Unlike naive use of condition variables, permit objects do not suffer from lost or spurious
 wakeups - there is \b always a one-to-one relationship between the granting of a permit and
 the receiving of that permit. Unlike naive use of semaphores, permit objects do not suffer
-from producer-consumer problems. While having similarities to event objects, unlike event
+from producer-consumer problems. Whilst having similarities to event objects, unlike event
 objects permit objects always maintain the concept of \em atomic \em ownership of the permit -
 exactly \em one actor may own a permit at any one time. This strong guarantee allows
 permits to be much safer and more predictable in many-granter many-waiter scenarios than event
-objects.
+objects. Finally, unlike most, permit objects provide strong guarantees during destruction:
+you can destroy a permit object being waited upon in another thread safely.
 
 There are three permit objects:
 1. A simple implementation, pthread_permit1_t. This is the simplest and fastest implementation of
@@ -284,7 +285,10 @@ PTHREAD_PERMIT_API(pthread_permitnc_hook_t *, permitnc_pophook, (pthread_permitn
 
 /*! \defgroup pthread_permitX_init Permit initialisation
 \brief Initialises a permit
-\returns 0: success; EINVAL: bad/incorrect permit.
+\returns 0: success;
+EBUSY: The implementation has detected an attempt to re-initialise the object referenced by permit, a previously initialised, but not yet destroyed, permit;
+EAGAIN: The system lacked the necessary resources (other than memory) to initialise another condition variable;
+ENOMEM: Insufficient memory exists to initialise the condition variable.
 @{
 */
 //! Initialises a pthread_permit1_t
@@ -297,6 +301,16 @@ PTHREAD_PERMIT_API(int , permitnc_init, (pthread_permitnc_t *permit, _Bool initi
 
 /*! \defgroup pthread_permitX_destroy Permit destruction
 \brief Destroys a permit
+
+It is safe to combine pthread_permitX_destroy in one thread with the following operations on the same
+object in other threads:
+
+* pthread_permitX_wait. Waits will immediately exit, possibly returning EINVAL.
+* For consuming permits:
+  * The single pthread_permitX_grant which woke the thread now performing the destroy. NO OTHER GRANTS ARE SAFE,
+if you have multiple threads granting permits then you must synchronise them with permit destruction.
+* For non-consuming permits:
+  * pthread_permitnc_grant, all of which will immediately exit with EINVAL.
 @{
 */
 //! Destroys a pthread_permit1_t
@@ -311,7 +325,7 @@ PTHREAD_PERMIT_API(void , permitnc_destroy, (pthread_permitnc_t *permit));
 \brief Grants a permit.
 \returns 0: success; EINVAL: bad/incorrect permit.
 
-Grants permit to one waiting thread. If there is no waiting thread, permits the next thread to wait.
+Grants permit to one waiting thread. If there is no waiting thread, gives permit to the next thread to wait.
 
 If the permit is consuming (pthread_permit1_t and pthread_permitc_t), the permit is atomically
 transferred to the winning thread.
@@ -372,6 +386,10 @@ PTHREAD_PERMIT_API(void , permitnc_revoke, (pthread_permitnc_t *permit));
 Waits for permit to become available, atomically unlocking the specified mutex when waiting.
 If mtx is NULL, never sleeps instead looping forever waiting for permit. If ts is NULL,
 returns immediately instead of waiting.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant.
 @{
 */
 //! Waits on a pthread_permit1_t
@@ -460,9 +478,11 @@ typedef struct pthread_permit1_s
 
 int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial)
 {
+  int ret;
+  if(*(const unsigned *)"1PER"==permit->magic) return thrd_busy;
   permit->permit=initial;
   permit->waiters=permit->waited=0;
-  if(thrd_success!=cnd_init(&permit->cond)) return thrd_error;
+  if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
   atomic_store_explicit(&permit->magic, *(const unsigned *)"1PER", memory_order_seq_cst);
   return thrd_success;
 }
@@ -472,6 +492,7 @@ void pthread_permit1_destroy(pthread_permit1_t *permit)
   if(*(const unsigned *)"1PER"!=permit->magic) return;
   /* Mark this object as invalid for further use */
   atomic_store_explicit(&permit->magic, 0U, memory_order_seq_cst);
+  // Is anything waiting? If so repeatedly grant permit and wake until none
   while(permit->waiters!=permit->waited)
   {
     atomic_store_explicit(&permit->permit, 1U, memory_order_seq_cst);
@@ -490,7 +511,7 @@ int pthread_permit1_grant(pthread_permitX_t _permit)
   // Are there waiters on the permit?
   if(atomic_load_explicit(&permit->waiters, memory_order_relaxed)!=atomic_load_explicit(&permit->waited, memory_order_relaxed))
   { // There are indeed waiters. Loop waking until at least one thread takes the permit
-    while(atomic_load_explicit(&permit->permit, memory_order_relaxed))
+    while(*(const unsigned *)"1PER"==permit->magic && atomic_load_explicit(&permit->permit, memory_order_relaxed))
     {
       if(thrd_success!=cnd_signal(&permit->cond))
       {
@@ -516,6 +537,12 @@ int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
   if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
   // Increment the monotonic count to indicate we have entered a wait
   atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(*(const unsigned *)"1PER"!=permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;
+  }
   // Fetch me a permit
   while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, 0U, memory_order_relaxed, memory_order_relaxed)))
   { // Permit is not granted, so wait if we have a mutex
@@ -538,6 +565,12 @@ int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, c
   if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
   // Increment the monotonic count to indicate we have entered a wait
   atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(*(const unsigned *)"1PER"!=permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;
+  }
   // Fetch me a permit
   while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, 0U, memory_order_relaxed, memory_order_relaxed)))
   { // Permit is not granted, so wait if we have a mutex and a timeout

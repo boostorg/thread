@@ -169,7 +169,7 @@ TEST_CASE("pthread_permit1/grantrevokewait", "Tests that grants cause exactly on
   REQUIRE(EINVAL==pthread_permit1_grant(&permit));
 }
 
-TEST_CASE("pthread_permit1/destroywait", "Tests that destroys cause waits in other threads to exit correctly")
+TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
 {
   pthread_mutex_t mutex;
   pthread_permit1_t permit;
@@ -192,6 +192,19 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroys cause waits in oth
   REQUIRE(0==pthread_mutex_unlock(&mutex));
   thread.join();
   pthread_mutex_destroy(&mutex);
+}
+
+TEST_CASE("pthread_permit1/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
+{
+  pthread_permit1_t permit;
+  REQUIRE(0==pthread_permit1_init(&permit, 0));
+  std::thread thread([&]{
+    if(0!=pthread_permit1_grant(&permit))
+      REQUIRE(0);
+  });
+  REQUIRE(0==pthread_permit1_wait(&permit, NULL));
+  pthread_permit1_destroy(&permit);
+  thread.join();
 }
 
 
@@ -293,6 +306,50 @@ TEST_CASE("pthread_permitc/grantrevokewait", "Tests that grants cause exactly on
   REQUIRE(EINVAL==permitc_grant(&permit));
 }
 
+TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
+{
+  pthread_mutex_t mutex;
+  pthread_permitc_t permit;
+  std::atomic<bool> waiter(false);
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  ts.tv_sec+=60;
+  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
+  REQUIRE(0==permitc_init(&permit, 0));
+  REQUIRE(0==pthread_mutex_lock(&mutex));
+  std::thread thread([&]{
+    waiter=true;
+    if(0!=permitc_timedwait(&permit, &mutex, &ts))
+      REQUIRE(0);
+    while(waiter);
+    if(EINVAL!=permitc_timedwait(&permit, &mutex, &ts))
+      REQUIRE(0);
+  });
+  while(!waiter);
+  REQUIRE(0==permitc_grant(&permit));
+  permitc_destroy(&permit);
+  waiter=false;
+  REQUIRE(0==pthread_mutex_unlock(&mutex));
+  thread.join();
+  pthread_mutex_destroy(&mutex);
+}
+
+TEST_CASE("pthread_permitc/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
+{
+  pthread_permitc_t permit;
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  ts.tv_sec+=60;
+  REQUIRE(0==permitc_init(&permit, 0));
+  std::thread thread([&]{
+    if(0!=permitc_grant(&permit))
+      REQUIRE(0);
+  });
+  REQUIRE(0==permitc_timedwait(&permit, NULL, &ts));
+  permitc_destroy(&permit);
+  thread.join();
+}
+
 TEST_CASE("pthread_permitnc/grantrevokewait", "Tests that non-consuming grants disable all waits")
 {
   pthread_permitnc_t permit;
@@ -309,6 +366,50 @@ TEST_CASE("pthread_permitnc/grantrevokewait", "Tests that non-consuming grants d
   REQUIRE(0==permitnc_timedwait(&permit, NULL, NULL));
   permitnc_destroy(&permit);
   REQUIRE(EINVAL==permitnc_grant(&permit));
+}
+
+TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
+{
+  pthread_mutex_t mutex;
+  pthread_permitnc_t permit;
+  std::atomic<bool> waiter(false);
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  ts.tv_sec+=60;
+  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
+  REQUIRE(0==permitnc_init(&permit, 0));
+  REQUIRE(0==pthread_mutex_lock(&mutex));
+  std::thread thread([&]{
+    waiter=true;
+    if(0!=permitnc_timedwait(&permit, &mutex, &ts))
+      REQUIRE(0);
+    while(waiter);
+    if(EINVAL!=permitnc_timedwait(&permit, &mutex, &ts))
+      REQUIRE(0);
+  });
+  while(!waiter);
+  REQUIRE(0==permitnc_grant(&permit));
+  permitnc_destroy(&permit);
+  waiter=false;
+  REQUIRE(0==pthread_mutex_unlock(&mutex));
+  thread.join();
+  pthread_mutex_destroy(&mutex);
+}
+
+TEST_CASE("pthread_permitnc/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
+{
+  pthread_permitnc_t permit;
+  struct timespec ts;
+  timespec_get(&ts, TIME_UTC);
+  ts.tv_sec+=60;
+  REQUIRE(0==permitnc_init(&permit, 0));
+  std::thread thread([&]{
+    if(0!=permitnc_grant(&permit))
+      REQUIRE(0);
+  });
+  REQUIRE(0==permitnc_timedwait(&permit, NULL, &ts));
+  permitnc_destroy(&permit);
+  thread.join();
 }
 
 
