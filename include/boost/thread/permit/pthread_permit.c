@@ -39,7 +39,7 @@ DEALINGS IN THE SOFTWARE.
 #include <string.h>
 
 #ifdef __cplusplus
-PTHREAD_PERMIT_CXX_NAMESPACE {
+PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
 #endif
 
 #ifdef _WIN32
@@ -724,6 +724,6 @@ PTHREAD_PERMIT_API_DEFINENP(pthread_permitnc_association_t , permitnc_associate_
 #endif
 
 #ifdef __cplusplus
-}
+PTHREAD_PERMIT_CXX_NAMESPACE_END
 #endif
 

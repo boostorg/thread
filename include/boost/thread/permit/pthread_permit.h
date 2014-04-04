@@ -35,9 +35,13 @@ DEALINGS IN THE SOFTWARE.
 \brief Defines and declares the API for POSIX threads permit objects
 */
 
-//! Adjust this to set what C++ namespace this implementation is defined into if being compiled as C++. Defaults to extern "C"
-#ifndef PTHREAD_PERMIT_CXX_NAMESPACE
-#define PTHREAD_PERMIT_CXX_NAMESPACE extern "C"
+//! Adjust this to set what C++ namespace this implementation is defined into if being compiled as C++. Defaults to extern "C" {
+#ifndef PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
+#define PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN extern "C" {
+#endif
+//! Adjust this to set what C++ namespace this implementation is defined into if being compiled as C++. Defaults to }
+#ifndef PTHREAD_PERMIT_CXX_NAMESPACE_END
+#define PTHREAD_PERMIT_CXX_NAMESPACE_END }
 #endif
 
 #ifndef DOXYGEN_PREPROCESSOR
@@ -162,7 +166,7 @@ tiring efforts on the behalf of C-ish programmers everywhere.
 */
 
 #ifdef __cplusplus
-PTHREAD_PERMIT_CXX_NAMESPACE {
+PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
 #endif
 
 /*! \defgroup pthread_permitX_t Permit types
@@ -469,6 +473,7 @@ PTHREAD_PERMIT_APINP(pthread_permitnc_association_t , permitnc_associate_wineven
 
 
 
+
 #ifndef DOXYGEN_PREPROCESSOR
 
 typedef struct pthread_permit1_s
@@ -479,6 +484,13 @@ typedef struct pthread_permit1_s
   cnd_t cond;                         /* Wakes anything waiting for a permit */
 } pthread_permit1_t;
 
+
+inline cnd_t *pthread_permit_get_internal_cond(pthread_permitX_t *_permit)
+{
+  // We know all permits have the same top of structure, so this is safe:
+  pthread_permit1_t *permit=(pthread_permit1_t *) _permit;
+  return &permit->cond;
+}
 
 int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial)
 {
@@ -630,7 +642,7 @@ struct pthread_permitnc_s
 #endif // DOXYGEN_PREPROCESSOR
 
 #ifdef __cplusplus
-}
+PTHREAD_PERMIT_CXX_NAMESPACE_END
 #endif
 
 #endif

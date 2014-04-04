@@ -60,7 +60,7 @@ DEALINGS IN THE SOFTWARE.
 #include "boost/atomic.hpp"
 
 #ifdef __cplusplus
-PTHREAD_PERMIT_CXX_NAMESPACE {
+PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
 #endif
 
 /* We need inline */
@@ -274,7 +274,7 @@ inline void thrd_yield(void)
 #endif
 
 #ifdef __cplusplus
-}
+PTHREAD_PERMIT_CXX_NAMESPACE_END
 #endif
 
 #endif
