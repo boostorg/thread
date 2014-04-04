@@ -1,6 +1,6 @@
 /* pthread_permit.h
 Declares and defines the proposed C1X semaphore object
-(C) 2011-2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
 
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -35,9 +35,13 @@ DEALINGS IN THE SOFTWARE.
 \brief Defines and declares the API for POSIX threads permit objects
 */
 
+//! Adjust this to set what C++ namespace this implementation is defined into if being compiled as C++. Defaults to extern "C"
+#ifndef PTHREAD_PERMIT_CXX_NAMESPACE
+#define PTHREAD_PERMIT_CXX_NAMESPACE extern "C"
+#endif
+
 #ifndef DOXYGEN_PREPROCESSOR
 #include "c11_compat.h"
-typedef mtx_t pthread_mutex_t;
 #include <assert.h>
 #endif // DOXYGEN_PREPROCESSOR
 
@@ -158,7 +162,7 @@ tiring efforts on the behalf of C-ish programmers everywhere.
 */
 
 #ifdef __cplusplus
-extern "C" {
+PTHREAD_PERMIT_CXX_NAMESPACE {
 #endif
 
 /*! \defgroup pthread_permitX_t Permit types
@@ -481,7 +485,8 @@ int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial)
   int ret;
   if(*(const unsigned *)"1PER"==permit->magic) return thrd_busy;
   permit->permit=initial;
-  permit->waiters=permit->waited=0;
+  permit->waiters=0;
+  permit->waited=0;
   if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
   atomic_store_explicit(&permit->magic, *(const unsigned *)"1PER", memory_order_seq_cst);
   return thrd_success;
@@ -605,8 +610,8 @@ struct pthread_permitc_s
   /* Extensions from pthread_permit1_t type */
   unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
-  pthread_permitc_hook_t *RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
-  pthread_permit_select_t *volatile RESTRICT selects[64]; /* select permit parent */
+  pthread_permitc_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
+  pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[64]; /* select permit parent */
 };
 struct pthread_permitnc_s
 { /* NOTE: KEEP THIS HEADER THE SAME AS pthread_permit1_t to allow its grant() to optionally work here */
@@ -618,8 +623,8 @@ struct pthread_permitnc_s
   /* Extensions from pthread_permit1_t type */
   unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
-  pthread_permitnc_hook_t *RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
-  pthread_permit_select_t *volatile RESTRICT selects[64]; /* select permit parent */
+  pthread_permitnc_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
+  pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[64]; /* select permit parent */
 };
 
 #endif // DOXYGEN_PREPROCESSOR

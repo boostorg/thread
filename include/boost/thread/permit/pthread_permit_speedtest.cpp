@@ -50,7 +50,7 @@ Uncontended wait time: 137 cycles
 
 static usCount timingoverhead;
 static thrd_t threads[THREADS];
-static std::atomic<bool> done;
+static boost::atomic<bool> done;
 static void *permitaddr;
 
 void mssleep(long ms)

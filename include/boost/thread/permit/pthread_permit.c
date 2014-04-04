@@ -1,6 +1,6 @@
 /* pthread_permit.c
 Declares and defines the proposed C1X semaphore object
-(C) 2011-2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
 
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -37,6 +37,10 @@ DEALINGS IN THE SOFTWARE.
 
 #include "pthread_permit.h"
 #include <string.h>
+
+#ifdef __cplusplus
+PTHREAD_PERMIT_CXX_NAMESPACE {
+#endif
 
 #ifdef _WIN32
 #include <fcntl.h>
@@ -76,10 +80,6 @@ DEALINGS IN THE SOFTWARE.
 #include <poll.h>
 #endif
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 typedef struct pthread_permit_select_s
 {
   atomic_uint magic;                  /* Used to ensure this structure is valid */
@@ -106,8 +106,8 @@ typedef struct pthread_permit_s
   /* Extensions from pthread_permit1_t type */
   unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
-  pthread_permit_hook_t *RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
-  pthread_permit_select_t *volatile RESTRICT selects[MAX_PTHREAD_PERMIT_SELECTS]; /* select permit parent */
+  pthread_permit_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
+  pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[MAX_PTHREAD_PERMIT_SELECTS]; /* select permit parent */
 } pthread_permit_t;
 static char pthread_permitc_t_size_check[sizeof(pthread_permitc_t)==sizeof(pthread_permit_t)];
 static char pthread_permitnc_t_size_check[sizeof(pthread_permitnc_t)==sizeof(pthread_permit_t)];
@@ -288,6 +288,12 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
   }
   // Increment the monotonic count to indicate we have entered a wait
   atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(!permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;    
+  }
   // Fetch me a permit, excluding all other threads if replacePermit is zero
   while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, permit->replacePermit, memory_order_relaxed, memory_order_relaxed)))
   { // Permit is not granted, so wait if we have a mutex
@@ -317,6 +323,12 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
   }
   // Increment the monotonic count to indicate we have entered a wait
   atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(!permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;    
+  }
   // Fetch me a permit, excluding all other threads if replacePermit is zero
   while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, permit->replacePermit, memory_order_relaxed, memory_order_relaxed)))
   { // Permit is not granted, so wait if we have a mutex
@@ -406,7 +418,7 @@ PERMIT_IMPL(permitnc)
 #undef PERMIT_IMPL
 
 
-static int pthread_permit_select_int(size_t no, pthread_permit_t **RESTRICT permits, pthread_mutex_t *mtx, const struct timespec *ts)
+static int pthread_permit_select_int(size_t no, pthread_permit_t **PTHREAD_PERMIT_RESTRICT permits, pthread_mutex_t *mtx, const struct timespec *ts)
 {
   int ret=thrd_success;
   unsigned expected;
@@ -518,7 +530,7 @@ static int pthread_permit_select_int(size_t no, pthread_permit_t **RESTRICT perm
 }
 PTHREAD_PERMIT_API_DEFINE(int , permit_select, (size_t no, pthread_permitX_t *permits, pthread_mutex_t *mtx, const struct timespec *ts))
 {
-  return pthread_permit_select_int(no, (pthread_permit_t **RESTRICT) permits, mtx, ts);
+  return pthread_permit_select_int(no, (pthread_permit_t **PTHREAD_PERMIT_RESTRICT) permits, mtx, ts);
 }
 
 typedef struct pthread_permitnc_association_s
@@ -588,9 +600,9 @@ PTHREAD_PERMIT_API_DEFINE(pthread_permitnc_association_t , permitnc_associate_fd
 
 static void pthread_permit_deassociate(pthread_permit_t *permit, pthread_permitnc_association_t assoc)
 {
-  pthread_permitnc_hook_t *RESTRICT *hookptr;
+  pthread_permitnc_hook_t *PTHREAD_PERMIT_RESTRICT *hookptr;
   if(PERMIT_NONCONSUMING_PERMIT_MAGIC!=permit->magic || !permit->replacePermit) return;
-  for(hookptr=(pthread_permitnc_hook_t *RESTRICT *) &permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_GRANT]; *hookptr; hookptr=&(*hookptr)->next)
+  for(hookptr=(pthread_permitnc_hook_t *PTHREAD_PERMIT_RESTRICT *) &permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_GRANT]; *hookptr; hookptr=&(*hookptr)->next)
   {
     if(*hookptr==&assoc->grant)
     {
@@ -598,7 +610,7 @@ static void pthread_permit_deassociate(pthread_permit_t *permit, pthread_permitn
       break;
     }
   }
-  for(hookptr=(pthread_permitnc_hook_t *RESTRICT *) &permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_REVOKE]; *hookptr; hookptr=&(*hookptr)->next)
+  for(hookptr=(pthread_permitnc_hook_t *PTHREAD_PERMIT_RESTRICT *) &permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_REVOKE]; *hookptr; hookptr=&(*hookptr)->next)
   {
     if(*hookptr==&assoc->revoke)
     {

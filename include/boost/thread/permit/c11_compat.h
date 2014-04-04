@@ -1,6 +1,6 @@
 /* c1x_compat.h
 Declares and defines stuff from C11
-(C) 2011-2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
 
 
 Boost Software License - Version 1.0 - August 17th, 2003
@@ -36,12 +36,62 @@ DEALINGS IN THE SOFTWARE.
 #ifndef ETIMEDOUT
 #define ETIMEDOUT       138
 #endif
+
+#if __STDC_VERSION__ < 199901L          /* not C99 or better */
+#if !defined(PTHREAD_PERMIT_RESTRICT) && (defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__))
+#define PTHREAD_PERMIT_RESTRICT __restrict
+#endif
+#else
+#define PTHREAD_PERMIT_RESTRICT restrict
+#endif
+
+#ifndef PTHREAD_PERMIT_RESTRICT
+#define PTHREAD_PERMIT_RESTRICT
+#endif
+
+// If we have C11, just use that direct
 #if __STDC_VERSION__ > 200000L
+
 #include <stdatomic.h>
 #include <threads.h>
 
-#else // Need to fake C11 support
+#else // Need to fake C11 support using a mixture of C++ and OS calls
 
+#include "boost/atomic.hpp"
+
+#ifdef __cplusplus
+PTHREAD_PERMIT_CXX_NAMESPACE {
+#endif
+
+/* We need inline */
+#if !defined(__cplusplus) && !defined(inline) && (defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__))
+#define inline __inline
+#endif
+
+/* We need bool */
+#ifdef __cplusplus
+typedef bool _Bool;
+#else
+typedef unsigned char _Bool;
+#endif
+
+// Patch in the Boost C++11 atomics as if they were C11
+using boost::memory_order;
+using boost::memory_order_relaxed;
+using boost::memory_order_release;
+using boost::memory_order_acquire;
+using boost::memory_order_seq_cst;
+typedef boost::atomic<unsigned int> atomic_uint;
+inline void atomic_init(volatile atomic_uint *o, unsigned int v) { o->store(v, memory_order_seq_cst); }
+inline void atomic_thread_fence(memory_order order) { boost::atomic_thread_fence(order); }
+inline void atomic_store_explicit(volatile atomic_uint *o, unsigned int v, memory_order order) { o->store(v, order); }
+inline unsigned int atomic_load_explicit(volatile atomic_uint *o, memory_order order) { return o->load(order); }
+inline unsigned int atomic_exchange_explicit(volatile atomic_uint *o, unsigned int v, memory_order order) { return o->exchange(v, order); }
+inline unsigned int atomic_compare_exchange_weak_explicit(volatile atomic_uint *o, unsigned int *expected, unsigned int v, memory_order success, memory_order failure) { return o->compare_exchange_weak(*expected, v, success, failure); }
+inline unsigned int atomic_compare_exchange_strong_explicit(volatile atomic_uint *o, unsigned int *expected, unsigned int v, memory_order success, memory_order failure) { return o->compare_exchange_strong(*expected, v, success, failure); }
+inline unsigned int atomic_fetch_add_explicit(volatile atomic_uint *o, unsigned int v, memory_order order) { return o->fetch_add(v, order); }
+
+/****************** Declare and define just those bits of threads.h we need ***********************/
 #ifdef _MSC_VER
 #ifndef WIN32_LEAN_AND_MEAN
 #define WIN32_LEAN_AND_MEAN
@@ -50,6 +100,7 @@ DEALINGS IN THE SOFTWARE.
 #include <intrin.h>
 #include <process.h>
 #endif
+
 #if defined(__GNUC__) || defined(__clang__)
 #ifdef _WIN32
 #include <windows.h>
@@ -57,200 +108,8 @@ DEALINGS IN THE SOFTWARE.
 #include <sys/time.h>
 #include <time.h>
 #include <pthread.h>
-#include <atomic>
-// Evilly patch in the C++11 atomics as if they were C11
-#define memory_order_relaxed std::memory_order::memory_order_relaxed
-#define memory_order_consume std::memory_order::memory_order_consume
-#define memory_order_acquire std::memory_order::memory_order_acquire
-#define memory_order_release std::memory_order::memory_order_release
-#define memory_order_acq_rel std::memory_order::memory_order_acq_rel
-#define memory_order_seq_cst std::memory_order::memory_order_seq_cst
-
-#define atomic_uint std::atomic<unsigned int>
-#define atomic_init std::atomic_init
-#define atomic_thread_fence std::atomic_thread_fence
-#define atomic_store_explicit std::atomic_store_explicit
-#define atomic_load_explicit std::atomic_load_explicit
-#define atomic_exchange_explicit std::atomic_exchange_explicit
-#define atomic_compare_exchange_weak_explicit std::atomic_compare_exchange_weak_explicit
-#define atomic_compare_exchange_strong_explicit std::atomic_compare_exchange_strong_explicit
-#define atomic_fetch_add_explicit std::atomic_fetch_add_explicit
 #endif
 
-/* We need inline */
-#if !defined(__cplusplus) && !defined(inline) && (defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__))
-#define inline __inline
-#endif
-
-#if __STDC_VERSION__ < 199901L		/* not C99 or better */
-#if !defined(RESTRICT) && (defined(_MSC_VER) || defined(__GNUC__) || defined(__clang__))
-#define RESTRICT __restrict
-#endif
-#endif
-
-#ifndef RESTRICT
-#define RESTRICT
-#endif
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/* We need bool */
-#if defined(_MSC_VER) || defined(__clang__)
-#ifdef __cplusplus
-typedef bool _Bool;
-#else
-typedef unsigned char _Bool;
-#endif
-#endif
-
-
-#ifndef _GLIBCXX_ATOMIC
-/****************** Declare and define just those bits of stdatomic.h we need ***********************/
-typedef unsigned int atomic_uint;
-
-typedef enum memory_order
-{
-  memory_order_relaxed,
-  memory_order_consume,
-  memory_order_acquire,
-  memory_order_release,
-  memory_order_acq_rel,
-  memory_order_seq_cst
-} memory_order;
-
-inline void atomic_init(volatile atomic_uint *o, unsigned int v)
-{
-  /* Both MSVC and GCC do the right thing when it's marked volatile */
-  *o=v;
-}
-
-#ifdef _MSC_VER
-inline void atomic_thread_fence(memory_order order)
-{ /*
-acquire = prevents memory operations after the acquire moving before but
-permits previous operations to move downwards
-
-release = prevents memory operations before the release moving after but
-permits subsequent operations to move upwards
-*/
-  switch(order)
-  {
-  case memory_order_acquire:
-  case memory_order_release:
-  case memory_order_acq_rel:
-  case memory_order_seq_cst:
-    MemoryBarrier();
-    return;
-  default:
-    return;
-  }
-}
-inline void atomic_store_explicit(volatile atomic_uint *o, unsigned int v, memory_order order)
-{
-  switch(order)
-  {
-  case memory_order_relaxed:
-    *(atomic_uint *) o=v;
-    return;
-  case memory_order_acquire:
-  case memory_order_release:
-  case memory_order_acq_rel:
-  /* Both MSVC and GCC do the right thing when it's marked volatile and use acquire/release automatically */
-    *o=v;
-    return;
-  case memory_order_seq_cst:
-  default:
-    InterlockedExchange((volatile long *) o, (long) v);
-    return;
-  }
-}
-inline unsigned int atomic_load_explicit(volatile atomic_uint *o, memory_order order)
-{
-  switch(order)
-  {
-  case memory_order_relaxed:
-    return *(atomic_uint *) o;
-  case memory_order_acquire:
-  case memory_order_release:
-  case memory_order_acq_rel:
-  /* Both MSVC and GCC do the right thing when it's marked volatile and use acquire/release automatically */
-    return *o;
-  case memory_order_seq_cst:
-  default:
-    {
-    atomic_uint ret;
-    MemoryBarrier();
-    ret=*o;
-    MemoryBarrier();
-    return ret;
-    }
-  }
-}
-inline unsigned int atomic_exchange_explicit(volatile atomic_uint *o, unsigned int v, memory_order order)
-{
-  switch(order)
-  {
-#ifdef InterlockedExchangeAcquire
-  case memory_order_acquire:
-    return (unsigned int) InterlockedExchangeAcquire((volatile long *) o, v);
-  case memory_order_release:
-    return (unsigned int) InterlockedExchangeRelease((volatile long *) o, v);
-#endif
-  default:
-    return (unsigned int) InterlockedExchange((volatile long *) o, (long) v);
-  }
-}
-inline unsigned int atomic_compare_exchange_weak_explicit(volatile atomic_uint *o, unsigned int *expected, unsigned int v, memory_order success, memory_order failure)
-{
-  unsigned int former, e=*expected;
-  switch(success)
-  {
-#ifdef InterlockedExchangeAcquire
-  case memory_order_acquire:
-    former=(unsigned int) InterlockedCompareExchangeAcquire((volatile long *) o, (long) v, (long) e);
-    break;
-  case memory_order_release:
-    former=(unsigned int) InterlockedCompareExchangeRelease((volatile long *) o, (long) v, (long) e);
-    break;
-#endif
-  default:
-    former=(unsigned int) InterlockedCompareExchange((volatile long *) o, (long) v, (long) e);
-    break;
-  }
-  if(former==e) return 1;
-  atomic_store_explicit(expected, former, failure);
-  return 0;
-}
-inline unsigned int atomic_compare_exchange_strong_explicit(volatile atomic_uint *o, unsigned int *expected, unsigned int v, memory_order success, memory_order failure)
-{
-  /* No difference to weak when using Interlocked* functions */
-  return atomic_compare_exchange_weak_explicit(o, expected, v, success, failure);
-}
-inline unsigned int atomic_fetch_add_explicit(volatile atomic_uint *o, unsigned int v, memory_order order)
-{
-  switch(order)
-  {
-#ifdef InterlockedExchangeAddAcquire
-  case memory_order_acquire:
-    return (unsigned int) InterlockedExchangeAddAcquire((volatile long *) o, v);
-  case memory_order_release:
-    return (unsigned int) InterlockedExchangeAddRelease((volatile long *) o, v);
-#endif
-  default:
-    return (unsigned int) InterlockedExchangeAdd((volatile long *) o, (long) v);
-  }
-}
-#endif
-#ifdef __GNUC__
-#error Awaiting implementation
-#endif
-#endif // _GLIBCXX_ATOMIC
-
-
-
-/****************** Declare and define just those bits of threads.h we need ***********************/
 enum mtx_types
 {
   mtx_plain=0,
@@ -275,6 +134,7 @@ struct timespec
 
 typedef CONDITION_VARIABLE cnd_t;
 typedef SRWLOCK mtx_t;
+typedef SRWLOCK pthread_mutex_t;
 #else
 typedef pthread_cond_t cnd_t;
 typedef pthread_mutex_t mtx_t;
@@ -332,7 +192,7 @@ inline int cnd_broadcast(cnd_t *cond) { WakeAllConditionVariable(cond); return t
 inline void cnd_destroy(cnd_t *cond) { }
 inline int cnd_init(cnd_t *cond) { InitializeConditionVariable(cond); return thrd_success; }
 inline int cnd_signal(cnd_t *cond) { WakeConditionVariable(cond); return thrd_success; }
-inline int cnd_timedwait(cnd_t *RESTRICT cond, mtx_t *RESTRICT mtx, const struct timespec *RESTRICT ts)
+inline int cnd_timedwait(cnd_t *PTHREAD_PERMIT_RESTRICT cond, mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts)
 {
   struct timespec now;
   DWORD interval;
@@ -345,24 +205,24 @@ inline int cnd_wait(cnd_t *cond, mtx_t *mtx) { return SleepConditionVariableSRW(
 inline void mtx_destroy(mtx_t *mtx) { }
 inline int mtx_init(mtx_t *mtx, int type) { InitializeSRWLock(mtx); return thrd_success; }
 inline int mtx_lock(mtx_t *mtx) { AcquireSRWLockExclusive(mtx); return thrd_success; }
-inline int mtx_timedlock(mtx_t *RESTRICT mtx, const struct timespec *RESTRICT ts);
+//inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts);
 inline int mtx_trylock(mtx_t *mtx) { return TryAcquireSRWLockExclusive(mtx) ? thrd_success : thrd_busy; }
 inline int mtx_unlock(mtx_t *mtx) { ReleaseSRWLockExclusive(mtx); return thrd_success; }
 #else
-#define cnd_broadcast pthread_cond_broadcast
-#define cnd_destroy pthread_cond_destroy
-#define cnd_init(a) pthread_cond_init((a), NULL)
-#define cnd_signal pthread_cond_signal
-#define cnd_timedwait pthread_cond_timedwait
-#define cnd_wait pthread_cond_wait
+inline int cnd_broadcast(cnd_t *cond) { return pthread_cond_broadcast(cond); }
+inline void cnd_destroy(cnd_t *cond) { pthread_cond_destroy(cond); }
+inline int cnd_init(cnd_t *cond) { return pthread_cond_init((cond), NULL); }
+inline int cnd_signal(cnd_t *cond) { return pthread_cond_signal(cond); }
+inline int cnd_timedwait(cnd_t *PTHREAD_PERMIT_RESTRICT cond, mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts) { return pthread_cond_timedwait(cond, mtx, ts); }
+inline int cnd_wait(cnd_t *cond, mtx_t *mtx) { return pthread_cond_wait(cond, mtx); }
 
-#define mtx_destroy pthread_mutex_destroy
-#define mtx_init(m, a) pthread_mutex_init((m), NULL)
-#define mtx_lock pthread_mutex_lock
-#define mtx_timedlock fail
-#define mtx_trylock fail
-#define mtx_unlock pthread_mutex_unlock
-#endif
+inline void mtx_destroy(mtx_t *mtx) { pthread_mutex_destroy(mtx); }
+inline int mtx_init(mtx_t *mtx, int type) { return pthread_mutex_init((mtx), NULL); }
+inline int mtx_lock(mtx_t *mtx) { return pthread_mutex_lock(mtx); }
+//inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts);
+//inline int mtx_trylock(mtx_t *mtx);
+inline int mtx_unlock(mtx_t *mtx) { return pthread_mutex_unlock(mtx); }
+#endif // _MSC_VER
 
 #endif
 
@@ -407,7 +267,10 @@ inline int thrd_sleep(const struct timespec *duration, struct timespec *remainin
   return nanosleep(duration, remaining);
 #endif
 }
-#define thrd_yield sched_yield
+inline void thrd_yield(void)
+{
+  sched_yield();
+}
 #endif
 
 #ifdef __cplusplus

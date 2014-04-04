@@ -173,7 +173,7 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in oth
 {
   pthread_mutex_t mutex;
   pthread_permit1_t permit;
-  std::atomic<bool> waiter(false);
+  boost::atomic<bool> waiter(false);
   REQUIRE(0==pthread_mutex_init(&mutex, NULL));
   REQUIRE(0==pthread_permit1_init(&permit, 0));
   REQUIRE(0==pthread_mutex_lock(&mutex));
@@ -310,7 +310,7 @@ TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in oth
 {
   pthread_mutex_t mutex;
   pthread_permitc_t permit;
-  std::atomic<bool> waiter(false);
+  boost::atomic<bool> waiter(false);
   struct timespec ts;
   timespec_get(&ts, TIME_UTC);
   ts.tv_sec+=60;
@@ -372,7 +372,7 @@ TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in ot
 {
   pthread_mutex_t mutex;
   pthread_permitnc_t permit;
-  std::atomic<bool> waiter(false);
+  boost::atomic<bool> waiter(false);
   struct timespec ts;
   timespec_get(&ts, TIME_UTC);
   ts.tv_sec+=60;
