@@ -481,6 +481,7 @@ typedef struct pthread_permit1_s
   atomic_uint magic;                  /* Used to ensure this structure is valid */
   atomic_uint permit;                 /* =0 no permit, =1 yes permit */
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
+  atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
 } pthread_permit1_t;
 
@@ -495,10 +496,15 @@ inline cnd_t *pthread_permit_get_internal_cond(pthread_permitX_t *_permit)
 int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial)
 {
   int ret;
+#ifdef VALGRIND_MAKE_MEM_DEFINED
+  VALGRIND_MAKE_MEM_DEFINED(&permit->magic, sizeof(permit->magic));
+#endif
   if(*(const unsigned *)"1PER"==permit->magic) return thrd_busy;
   permit->permit=initial;
   permit->waiters=0;
   permit->waited=0;
+  permit->granters=0;
+  permit->granted=0;
   if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
   atomic_store_explicit(&permit->magic, *(const unsigned *)"1PER", memory_order_seq_cst);
   return thrd_success;
@@ -509,6 +515,9 @@ void pthread_permit1_destroy(pthread_permit1_t *permit)
   if(*(const unsigned *)"1PER"!=permit->magic) return;
   /* Mark this object as invalid for further use */
   atomic_store_explicit(&permit->magic, 0U, memory_order_seq_cst);
+  // Is anything granting? Need to wait until those exit
+  while(permit->granters!=permit->granted)
+    thrd_yield();
   // Is anything waiting? If so repeatedly grant permit and wake until none
   while(permit->waiters!=permit->waited)
   {
@@ -523,21 +532,28 @@ int pthread_permit1_grant(pthread_permitX_t _permit)
   pthread_permit1_t *permit=(pthread_permit1_t *) _permit;
   int ret=thrd_success;
   if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
+  // Increment the monotonic count to indicate we have entered a grant
+  atomic_fetch_add_explicit(&permit->granters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(*(const unsigned *)"1PER"!=permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->granted, 1U, memory_order_relaxed);
+    return thrd_error;
+  }
   // Grant permit
   atomic_store_explicit(&permit->permit, 1U, memory_order_seq_cst);
-  // Are there waiters on the permit?
-  if(atomic_load_explicit(&permit->waiters, memory_order_relaxed)!=atomic_load_explicit(&permit->waited, memory_order_relaxed))
-  { // There are indeed waiters. Loop waking until at least one thread takes the permit
-    while(*(const unsigned *)"1PER"==permit->magic && atomic_load_explicit(&permit->permit, memory_order_relaxed))
+  // Are there waiters on the permit? Loop waking until at least one thread takes the permit
+  while(atomic_load_explicit(&permit->waiters, memory_order_relaxed)!=atomic_load_explicit(&permit->waited, memory_order_relaxed)
+     && atomic_load_explicit(&permit->magic,   memory_order_relaxed)==*(const unsigned *)"1PER"
+     && atomic_load_explicit(&permit->permit,  memory_order_relaxed))
+  {
+    if(thrd_success!=(ret=cnd_signal(&permit->cond)))
     {
-      if(thrd_success!=cnd_signal(&permit->cond))
-      {
-        ret=thrd_error;
-        break;
-      }
-      //if(1==cpus) thrd_yield();
+      break;
     }
+    //if(1==cpus) thrd_yield();
   }
+  atomic_fetch_add_explicit(&permit->granted, 1U, memory_order_relaxed);
   return ret;
 }
 
@@ -565,7 +581,8 @@ int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
   { // Permit is not granted, so wait if we have a mutex
     if(mtx)
     {
-      if(thrd_success!=cnd_wait(&permit->cond, mtx)) { ret=thrd_error; break; }
+      int _ret;
+      if(thrd_success!=(_ret=cnd_wait(&permit->cond, mtx))) ret=_ret;
     }
     else thrd_yield();
   }
@@ -617,6 +634,7 @@ struct pthread_permitc_s
   atomic_uint magic;                  /* Used to ensure this structure is valid */
   atomic_uint permit;                 /* =0 no permit, =1 yes permit */
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
+  atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
 
   /* Extensions from pthread_permit1_t type */
@@ -630,6 +648,7 @@ struct pthread_permitnc_s
   atomic_uint magic;                  /* Used to ensure this structure is valid */
   atomic_uint permit;                 /* =0 no permit, =1 yes permit */
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
+  atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
 
   /* Extensions from pthread_permit1_t type */

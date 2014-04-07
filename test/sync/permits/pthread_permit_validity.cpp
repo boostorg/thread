@@ -30,37 +30,43 @@ DEALINGS IN THE SOFTWARE.
 
 // Disable the CATCH unit test framework, and redirect to use Boost.Test
 #define PTHREAD_PERMIT_DISABLE_CATCH
+#define PTHREAD_PERMIT_USE_BOOST
 #include <vector>
 #include <boost/detail/lightweight_test.hpp>
-static std::vector<std::pair<void (*)(), const char *>> &mytests()
+static std::vector<std::pair<void (*)(), const char *> > &mytests()
 {
-  static std::vector<std::pair<void (*)(), const char *>> v;
+  static std::vector<std::pair<void (*)(), const char *> > v;
   return v;
 }
 struct static_initialiser
 {
   static_initialiser(void (*f)(), const char *desc) { mytests().push_back(std::make_pair(f, desc)); }
 };
+#define TEST_CASE_FUSER2(a, b) a##b
+#define TEST_CASE_FUSER(a, b) TEST_CASE_FUSER2(a, b)
 #define TEST_CASE(name, desc) \
-  static void TEST_CASE_##__LINE__(); \
-  static static_initialiser TEST_CASE_INIT_##__LINE__(&TEST_CASE_##__LINE__, (desc)); \
-  static void TEST_CASE_##__LINE__()
+  static void TEST_CASE_FUSER(TEST_CASE_, __LINE__)(); \
+  static static_initialiser TEST_CASE_FUSER(TEST_CASE_INIT_, __LINE__)(&TEST_CASE_FUSER(TEST_CASE_, __LINE__), (name ": " desc)); \
+  static void TEST_CASE_FUSER(TEST_CASE_, __LINE__)()
 #define REQUIRE(stmt) BOOST_TEST(stmt)
 
 
 #include "boost/thread/permit/unittests.cpp"
 
+// 
+#include "boost/thread/permit/pthread_permit.c"
+
 int main()
 {
-  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
+  //BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
-    for(std::vector<std::pair<void (*)(), const char *>>::const_iterator it=mytests().begin(); it!=mytests().end(); ++it)
+    for(std::vector<std::pair<void (*)(), const char *> >::const_iterator it=mytests().begin(); it!=mytests().end(); ++it)
     {
       BOOST_LIGHTWEIGHT_TEST_OSTREAM << std::endl << "==== " << it->second << " ====" << std::endl;
       it->first();
     }
   }
-  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
+  //BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
 
   return boost::report_errors();
 }

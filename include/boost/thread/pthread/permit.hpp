@@ -30,13 +30,15 @@
 #endif
 
 // Set up the C11 pthreads permit implementation to use an internal C++ namespace
-// to prevent it colliding with anything else. Also, disable all symbol exporting.
+// to prevent it colliding with anything else.
 #ifdef PTHREAD_PERMIT_H
 #error The C11 pthreads permit implementation is already known to this compilation unit. I cannot proceed.
 #endif
+#define PTHREAD_PERMIT_USE_BOOST
 #define PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN namespace boost { namespace c_permit {
 #define PTHREAD_PERMIT_CXX_NAMESPACE_END } }
-#define PTHREAD_PERMIT_APIEXPORT
+#define PTHREAD_PERMIT_APIEXPORT BOOST_THREAD_DECL
+#define PTHREAD_PERMIT_MANGLEAPI(api) pthread_##api
 #include "../permit/pthread_permit.h"
 
 #include <boost/config/abi_prefix.hpp>

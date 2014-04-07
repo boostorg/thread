@@ -320,6 +320,33 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
     ;
 
+    #explicit ts_permits ;
+    test-suite ts_permits
+    :
+          [ thread-run2-noit ./sync/permits/pthread_permit_validity.cpp : pthread_permit_validity_p ]
+#          [ thread-compile-fail ./sync/conditions/condition_variable/assign_fail.cpp : : condition_variable__assign_f ]
+#          [ thread-compile-fail ./sync/conditions/condition_variable/copy_fail.cpp : : condition_variable__copy_f ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/default_pass.cpp : condition_variable__default_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/dtor_pass.cpp : condition_variable__dtor_p ]
+#          [ thread-run2-noit-pthread ./sync/conditions/condition_variable/native_handle_pass.cpp : condition_variable__native_handle_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/wait_pass.cpp : condition_variable__wait_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/wait_for_pass.cpp : condition_variable__wait_for_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/wait_for_pred_pass.cpp : condition_variable__wait_for_pred_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/wait_until_pass.cpp : condition_variable__wait_until_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable/wait_until_pred_pass.cpp : condition_variable__wait_until_pred_p ]
+
+#          [ thread-compile-fail ./sync/conditions/condition_variable_any/assign_fail.cpp : : condition_variable_any__assign_f ]
+#          [ thread-compile-fail ./sync/conditions/condition_variable_any/copy_fail.cpp : : condition_variable_any__copy_f ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/default_pass.cpp : condition_variable_any__default_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/dtor_pass.cpp : condition_variable_any__dtor_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_for_pass.cpp : condition_variable_any__wait_for_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_for_pred_pass.cpp : condition_variable_any__wait_for_pred_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_until_pass.cpp : condition_variable_any__wait_until_p ]
+#          [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_until_pred_pass.cpp : condition_variable_any__wait_until_pred_p ]
+#          [ thread-run2-noit ./sync/conditions/cv_status/cv_status_pass.cpp : cv_status__cv_status_p ]
+#          [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
+    ;
+
     #explicit ts_async ;
     test-suite ts_async
     :
