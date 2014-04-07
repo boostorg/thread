@@ -39,6 +39,13 @@ Uncontended wait time: 137 cycles
 */
 
 #include "pthread_permit.h"
+#ifndef PTHREAD_PERMIT_USE_BOOST
+#include <thread>
+using namespace std;
+#else
+#include "boost/thread.hpp"
+using namespace boost;
+#endif
 #include "timing.h"
 #include <stdio.h>
 
@@ -50,7 +57,7 @@ Uncontended wait time: 137 cycles
 
 static usCount timingoverhead;
 static thrd_t threads[THREADS];
-static boost::atomic<bool> done;
+static atomic<bool> done;
 static void *permitaddr;
 
 void mssleep(long ms)

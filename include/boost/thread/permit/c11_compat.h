@@ -57,7 +57,11 @@ DEALINGS IN THE SOFTWARE.
 
 #else // Need to fake C11 support using a mixture of C++ and OS calls
 
+#ifndef PTHREAD_PERMIT_USE_BOOST
+#include <atomic>
+#else
 #include "boost/atomic.hpp"
+#endif
 
 #ifdef __cplusplus
 PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
@@ -76,14 +80,24 @@ typedef unsigned char _Bool;
 #endif
 
 // Patch in the Boost C++11 atomics as if they were C11
+#ifndef PTHREAD_PERMIT_USE_BOOST
+using std::memory_order;
+using std::memory_order_relaxed;
+using std::memory_order_release;
+using std::memory_order_acquire;
+using std::memory_order_seq_cst;
+typedef std::atomic<unsigned int> atomic_uint;
+inline void atomic_thread_fence(memory_order order) { std::atomic_thread_fence(order); }
+#else
 using boost::memory_order;
 using boost::memory_order_relaxed;
 using boost::memory_order_release;
 using boost::memory_order_acquire;
 using boost::memory_order_seq_cst;
 typedef boost::atomic<unsigned int> atomic_uint;
-inline void atomic_init(volatile atomic_uint *o, unsigned int v) { o->store(v, memory_order_seq_cst); }
 inline void atomic_thread_fence(memory_order order) { boost::atomic_thread_fence(order); }
+#endif
+inline void atomic_init(volatile atomic_uint *o, unsigned int v) { o->store(v, memory_order_seq_cst); }
 inline void atomic_store_explicit(volatile atomic_uint *o, unsigned int v, memory_order order) { o->store(v, order); }
 inline unsigned int atomic_load_explicit(volatile atomic_uint *o, memory_order order) { return o->load(order); }
 inline unsigned int atomic_exchange_explicit(volatile atomic_uint *o, unsigned int v, memory_order order) { return o->exchange(v, order); }

@@ -85,7 +85,6 @@ DEALINGS IN THE SOFTWARE.
 #ifndef PTHREAD_PERMIT_USE_BOOST
 #include <thread>
 using namespace std;
-using boost::atomic;
 #else
 #include "boost/thread.hpp"
 using namespace boost;
