@@ -113,10 +113,18 @@ typedef struct pthread_permit_s
 static char pthread_permitc_t_size_check[sizeof(pthread_permitc_t)==sizeof(pthread_permit_t)];
 static char pthread_permitnc_t_size_check[sizeof(pthread_permitnc_t)==sizeof(pthread_permit_t)];
 #define PTHREAD_PERMIT_WAITERS_DONT_CONSUME 1
+static void pthread_permit_hide_check_warnings()
+{
+  (void) pthread_permitc_hook_t_size_check[0];
+  (void) pthread_permitnc_hook_t_size_check[0];
+  (void) pthread_permitc_t_size_check[0];
+  (void) pthread_permitnc_t_size_check[0];
+}
 
 static int pthread_permit_init(pthread_permit_t *permit, unsigned magic, unsigned flags, _Bool initial)
 {
   int ret;
+  if(0) pthread_permit_hide_check_warnings(); // Purely to shut up GCC warnings
   memset(permit, 0, sizeof(pthread_permit_t));
   permit->permit=initial;
   if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
@@ -561,9 +569,10 @@ static int pthread_permitnc_associate_fd_hook_grant(pthread_permit_hook_type_t t
 {
   int fd=(int)(size_t)(hookdata->data);
   char buffer=0;
-  struct pollfd pfd={0};
+  struct pollfd pfd;
   pfd.fd=fd;
   pfd.events=POLLOUT;
+  pfd.revents=0;
   poll(&pfd, 1, 0);
   if(pfd.revents&POLLOUT)
     while(-1==write(fd, &buffer, 1) && EINTR==errno);
@@ -573,9 +582,10 @@ static int pthread_permitnc_associate_fd_hook_revoke(pthread_permit_hook_type_t 
 {
   int fd=(int)(size_t)(hookdata->data);
   char buffer[256];
-  struct pollfd pfd={0};
+  struct pollfd pfd;
   pfd.fd=fd;
   pfd.events=POLLIN;
+  pfd.revents=0;
   do
   {
     pfd.revents=0;
