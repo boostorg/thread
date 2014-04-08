@@ -492,7 +492,7 @@ typedef struct pthread_permit1_s
 } pthread_permit1_t;
 
 
-inline cnd_t *pthread_permit_get_internal_cond(pthread_permitX_t *_permit)
+inline cnd_t *pthread_permit_get_internal_cond(pthread_permitX_t _permit)
 {
   // We know all permits have the same top of structure, so this is safe:
   pthread_permit1_t *permit=(pthread_permit1_t *) _permit;

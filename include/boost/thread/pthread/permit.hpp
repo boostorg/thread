@@ -57,7 +57,7 @@ namespace boost
             static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permit1_wait     (permit, mtx); }
             static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permit1_timedwait(permit, mtx, ts); }
         };
-        template<> struct permit_impl_selector<true>
+        template<> struct permit_impl_selector<false>
         {          
             typedef boost::c_permit::pthread_permitnc_t pthread_permit_t;
             static  int pthread_permit_init     (pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permitnc_init     (permit, initial); }
@@ -270,7 +270,7 @@ namespace boost
         }
 #endif
 
-#define BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
+#define BOOST_THREAD_DEFINES_PERMIT_NATIVE_HANDLE
         typedef pthread_permit_t* native_handle_type;
         native_handle_type native_handle()
         {
@@ -280,8 +280,8 @@ namespace boost
         void grant() BOOST_NOEXCEPT;
         void revoke() BOOST_NOEXCEPT;
 
-        void notify_one() BOOST_NOEXCEPT { grant(); }
-        void notify_all() BOOST_NOEXCEPT { grant(); }
+        void notify_one() BOOST_NOEXCEPT { grant(); if(!consuming) revoke(); }
+        void notify_all() BOOST_NOEXCEPT { grant(); if(!consuming) revoke(); }
         
 #ifdef BOOST_THREAD_USES_CHRONO
         inline cv_status wait_until(
@@ -306,7 +306,7 @@ namespace boost
     }
 #endif
 
-    namespace thread_cv_detail
+    namespace thread_permit_detail
     {
         template<typename MutexType>
         struct lock_on_exit
@@ -343,18 +343,18 @@ namespace boost
         int res=0;
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+            thread_permit_detail::lock_on_exit<unique_lock<mutex> > guard;
             detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
             guard.activate(m);
-            do {
+            //do {
               res = pthread_permit_wait(&perm,&internal_mutex);
-            } while (res == EINTR);
+            //} while (res == EINTR);
 #else
             //boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
             pthread_mutex_t* the_mutex = m.mutex()->native_handle();
-            do {
+            //do {
               res = pthread_permit_wait(&perm,the_mutex);
-            } while (res == EINTR);
+            //} while (res == EINTR);
 #endif
         }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -376,7 +376,7 @@ namespace boost
             boost::throw_exception(condition_error(EPERM, "boost::permit::do_wait_until() failed precondition mutex not owned"));
         }
 #endif
-        thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
+        thread_permit_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -452,7 +452,7 @@ namespace boost
         {
             int res=0;
             {
-                thread_cv_detail::lock_on_exit<lock_type> guard;
+                thread_permit_detail::lock_on_exit<lock_type> guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
 #else
@@ -628,7 +628,7 @@ namespace boost
         {
           int res=0;
           {
-              thread_cv_detail::lock_on_exit<lock_type> guard;
+              thread_permit_detail::lock_on_exit<lock_type> guard;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
               detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
 #else
