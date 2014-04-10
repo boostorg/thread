@@ -708,7 +708,7 @@ TEST_CASE("pthread_permit/fdmirroring", "Tests that file descriptor mirroring wo
   pthread_permitnc_t permit;
   int fds[2];
   pthread_permitnc_association_t assoc;
-  struct pollfd pfd={0};
+  struct pollfd pfd={0, 0, 0};
   pfd.events=POLLIN;
   REQUIRE(0==permitnc_init(&permit, 0));
   REQUIRE(0==pipe(fds));

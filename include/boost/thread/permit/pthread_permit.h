@@ -339,7 +339,8 @@ PTHREAD_PERMIT_API(void , permitnc_destroy, (pthread_permitnc_t *permit));
 \brief Grants a permit.
 \returns 0: success; EINVAL: bad/incorrect permit.
 
-Grants permit to one waiting thread. If there is no waiting thread, gives permit to the next thread to wait.
+Grants permit to one waiting thread, blocking until that one waiting thread is released. If there is no
+waiting thread, gives permit to the next thread to wait and returns immediately.
 
 If the permit is consuming (pthread_permit1_t and pthread_permitc_t), the permit is atomically
 transferred to the winning thread.
@@ -401,6 +402,9 @@ Waits for permit to become available, atomically unlocking the specified mutex w
 If mtx is NULL, never sleeps instead looping forever waiting for permit. If ts is NULL,
 returns immediately instead of waiting.
 
+If you issue grants whilst holding the mutex supplied here, you will need to use the wait_locked_grant variants
+which are considerably slower.
+
 If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
 while a grant is occurring. This guarantees that non-consuming grants always release all waiters
 waiting at the point of grant.
@@ -408,16 +412,28 @@ waiting at the point of grant.
 */
 //! Waits on a pthread_permit1_t
 inline int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx);
+//! Waits on a pthread_permit1_t where grants may be issued with the mutex held
+inline int pthread_permit1_wait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t *mtx);
 //! Waits on a pthread_permitc_t
 PTHREAD_PERMIT_API(int , permitc_wait, (pthread_permitc_t *permit, pthread_mutex_t *mtx));
+//! Waits on a pthread_permitc_t where grants may be issued with the mutex held
+PTHREAD_PERMIT_API(int , permitc_wait_locked_grant, (pthread_permitc_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permitnc_t
 PTHREAD_PERMIT_API(int , permitnc_wait, (pthread_permitnc_t *permit, pthread_mutex_t *mtx));
+//! Waits on a pthread_permitnc_t where grants may be issued with the mutex held
+PTHREAD_PERMIT_API(int , permitnc_wait_locked_grant, (pthread_permitnc_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permit1_t for a time
 inline int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts);
+//! Waits on a pthread_permit1_t for a time where grants may be issued with the mutex held
+inline int pthread_permit1_timedwait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts);
 //! Waits on a pthread_permitc_t for a time
 PTHREAD_PERMIT_API(int , permitc_timedwait, (pthread_permitc_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
+//! Waits on a pthread_permitc_t for a time where grants may be issued with the mutex held
+PTHREAD_PERMIT_API(int , permitc_timedwait_locked_grant, (pthread_permitc_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
 //! Waits on a pthread_permitnc_t for a time
 PTHREAD_PERMIT_API(int , permitnc_timedwait, (pthread_permitnc_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
+//! Waits on a pthread_permitnc_t for a time where grants may be issued with the mutex held
+PTHREAD_PERMIT_API(int , permitnc_timedwait_locked_grant, (pthread_permitnc_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
 
 /*! \brief Waits on many permits.
 \returns 0: success; EINVAL: bad permit, mutex or timespec; ETIMEDOUT: the time period specified by ts expired.
@@ -489,6 +505,7 @@ typedef struct pthread_permit1_s
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
+  mtx_t internal_mtx;                 /* Used for waits */
 } pthread_permit1_t;
 
 
@@ -512,6 +529,11 @@ int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial)
   permit->granters=0;
   permit->granted=0;
   if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
+  if(thrd_success!=(ret=mtx_init(&permit->internal_mtx, mtx_plain)))
+  {
+    cnd_destroy(&permit->cond);
+    return ret;
+  }
   atomic_store_explicit(&permit->magic, *(const unsigned *)"1PER", memory_order_seq_cst);
   return thrd_success;
 }
@@ -531,8 +553,10 @@ void pthread_permit1_destroy(pthread_permit1_t *permit)
     cnd_signal(&permit->cond);
   }
   cnd_destroy(&permit->cond);
+  mtx_destroy(&permit->internal_mtx);
 }
 
+extern "C" int printf(const char *, ...);
 int pthread_permit1_grant(pthread_permitX_t _permit)
 {
   pthread_permit1_t *permit=(pthread_permit1_t *) _permit;
@@ -553,6 +577,7 @@ int pthread_permit1_grant(pthread_permitX_t _permit)
      && atomic_load_explicit(&permit->magic,   memory_order_relaxed)==*(const unsigned *)"1PER"
      && atomic_load_explicit(&permit->permit,  memory_order_relaxed))
   {
+    //printf("grant p=%p c=%p\n", permit, &permit->cond);
     if(thrd_success!=(ret=cnd_signal(&permit->cond)))
     {
       break;
@@ -567,6 +592,47 @@ void pthread_permit1_revoke(pthread_permit1_t *permit)
 {
   if(*(const unsigned *)"1PER"!=permit->magic) return;
   atomic_store_explicit(&permit->permit, 0U, memory_order_relaxed);
+}
+
+int pthread_permit1_wait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t *mtx)
+{
+  int ret=thrd_success, unlocked=0;
+  unsigned expected;
+  if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
+  // Increment the monotonic count to indicate we have entered a wait
+  atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(*(const unsigned *)"1PER"!=permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;
+  }
+  // Fetch me a permit
+  while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, 0U, memory_order_relaxed, memory_order_relaxed)))
+  { // Permit is not granted, so wait if we have a mutex
+    if(mtx)
+    {
+      int _ret;
+      //printf("wait p=%p c=%p m=%p\n", permit, &permit->cond, mtx);
+      // If supplied with a mutex, we need to ensure it is unlocked during grants
+      if(!unlocked)
+      {
+        if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
+        if(thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
+        unlocked=1;
+      }
+      if(thrd_success!=(_ret=cnd_wait(&permit->cond, &permit->internal_mtx))) ret=_ret;
+    }
+    else thrd_yield();
+  }
+  if(unlocked)
+  {
+    mtx_lock(mtx);
+    mtx_unlock(&permit->internal_mtx);
+  }
+  // Increment the monotonic count to indicate we have exited a wait
+  atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+  return ret;
 }
 
 int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
@@ -588,9 +654,61 @@ int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
     if(mtx)
     {
       int _ret;
-      if(thrd_success!=(_ret=cnd_wait(&permit->cond, mtx))) ret=_ret;
+      //printf("wait p=%p c=%p m=%p\n", permit, &permit->cond, mtx);
+      if(thrd_success!=(_ret=cnd_wait(&permit->cond, &permit->internal_mtx))) ret=_ret;
     }
     else thrd_yield();
+  }
+  // Increment the monotonic count to indicate we have exited a wait
+  atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+  return ret;
+}
+
+int pthread_permit1_timedwait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts)
+{
+  int ret=thrd_success, unlocked=0;
+  unsigned expected;
+  struct timespec now;
+  if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
+  // Increment the monotonic count to indicate we have entered a wait
+  atomic_fetch_add_explicit(&permit->waiters, 1U, memory_order_acquire);
+  // Check again if we have been deleted
+  if(*(const unsigned *)"1PER"!=permit->magic)
+  {
+    atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
+    return thrd_error;
+  }
+  // Fetch me a permit
+  while((expected=1, !atomic_compare_exchange_weak_explicit(&permit->permit, &expected, 0U, memory_order_relaxed, memory_order_relaxed)))
+  { // Permit is not granted, so wait if we have a mutex and a timeout
+    if(!ts) { ret=thrd_timeout; break; }
+    else
+    {
+      long long diff;
+      timespec_get(&now, TIME_UTC);
+      diff=timespec_diff(ts, &now);
+      printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
+      if(diff<=0) { ret=thrd_timeout; break; }
+    }
+    if(mtx)
+    {
+      int _ret;
+      // If supplied with a mutex, we need to ensure it is unlocked during grants
+      if(!unlocked)
+      {
+        if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
+        _ret=mtx_unlock(mtx);
+        unlocked=1;
+      }
+      _ret=cnd_timedwait(&permit->cond, &permit->internal_mtx, ts);
+      if(thrd_success!=_ret && thrd_timeout!=_ret) { ret=_ret; break; }
+    }
+    else thrd_yield();
+  }
+  if(unlocked)
+  {
+    mtx_lock(mtx);
+    mtx_unlock(&permit->internal_mtx);
   }
   // Increment the monotonic count to indicate we have exited a wait
   atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
@@ -620,12 +738,14 @@ int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, c
       long long diff;
       timespec_get(&now, TIME_UTC);
       diff=timespec_diff(ts, &now);
+      printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
       if(diff<=0) { ret=thrd_timeout; break; }
     }
     if(mtx)
     {
-      int cndret=cnd_timedwait(&permit->cond, mtx, ts);
-      if(thrd_success!=cndret && thrd_timeout!=cndret) { ret=cndret; break; }
+      int _ret;
+      _ret=cnd_timedwait(&permit->cond, &permit->internal_mtx, ts);
+      if(thrd_success!=_ret && thrd_timeout!=_ret) { ret=_ret; break; }
     }
     else thrd_yield();
   }
@@ -642,6 +762,7 @@ struct pthread_permitc_s
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
+  mtx_t internal_mtx;                 /* Used for waits */
 
   /* Extensions from pthread_permit1_t type */
   unsigned replacePermit;             /* What to replace the permit with when consumed */
@@ -656,6 +777,7 @@ struct pthread_permitnc_s
   atomic_uint waiters, waited;        /* Keeps track of when a thread waits and wakes */
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
+  mtx_t internal_mtx;                 /* Used for waits */
 
   /* Extensions from pthread_permit1_t type */
   unsigned replacePermit;             /* What to replace the permit with when consumed */

@@ -54,8 +54,8 @@ namespace boost
             static void pthread_permit_destroy  (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permit1_destroy  (permit); }
             static  int pthread_permit_grant    (pthread_permit_t *permit)                                                  { return boost::c_permit::pthread_permit1_grant    (permit); }
             static void pthread_permit_revoke   (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permit1_revoke   (permit); }
-            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permit1_wait     (permit, mtx); }
-            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permit1_timedwait(permit, mtx, ts); }
+            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permit1_wait_locked_grant(permit, mtx); }
+            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permit1_timedwait_locked_grant(permit, mtx, ts); }
         };
         template<> struct permit_impl_selector<false>
         {          
@@ -64,8 +64,8 @@ namespace boost
             static void pthread_permit_destroy  (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_destroy  (permit); }
             static  int pthread_permit_grant    (pthread_permit_t *permit)                                                  { return boost::c_permit::pthread_permitnc_grant    (permit); }
             static void pthread_permit_revoke   (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_revoke   (permit); }
-            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permitnc_wait     (permit, mtx); }
-            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permitnc_timedwait(permit, mtx, ts); }
+            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permitnc_wait_locked_grant(permit, mtx); }
+            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permitnc_timedwait_locked_grant(permit, mtx, ts); }
         };
     }
 
@@ -405,18 +405,12 @@ namespace boost
 
     template<bool consuming> inline void permit<consuming>::grant() BOOST_NOEXCEPT
     {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-#endif
         BOOST_VERIFY(!pthread_permit_grant(&perm));
     }
 
     template<bool consuming> inline void permit<consuming>::revoke() BOOST_NOEXCEPT
     {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
-#endif
-        BOOST_VERIFY(!pthread_permit_revoke(&perm));
+        pthread_permit_revoke(&perm);
     }
 
     template<bool consuming=true> class permit_any : private detail::permit_impl_selector<consuming>
@@ -610,13 +604,11 @@ namespace boost
 
         void grant() BOOST_NOEXCEPT
         {
-            boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
             BOOST_VERIFY(!pthread_permit_grant(&perm));
         }
 
         void revoke() BOOST_NOEXCEPT
         {
-            boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);
             BOOST_VERIFY(!pthread_permit_revoke(&perm));
         }
     private: // used by boost::thread::try_join_until
