@@ -280,8 +280,8 @@ namespace boost
         void grant() BOOST_NOEXCEPT;
         void revoke() BOOST_NOEXCEPT;
 
-        void notify_one() BOOST_NOEXCEPT { grant(); if(!consuming) revoke(); }
-        void notify_all() BOOST_NOEXCEPT { grant(); if(!consuming) revoke(); }
+        void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
+        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<true> if you wish to notify_all()"); grant(); revoke(); }
         
 #ifdef BOOST_THREAD_USES_CHRONO
         inline cv_status wait_until(
@@ -438,7 +438,7 @@ namespace boost
         ~permit_any()
         {
             BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
-            BOOST_VERIFY(!pthread_permit_destroy(&perm));
+            pthread_permit_destroy(&perm);
         }
 
         template<typename lock_type>
@@ -611,6 +611,8 @@ namespace boost
         {
             BOOST_VERIFY(!pthread_permit_revoke(&perm));
         }
+        void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
+        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<true> if you wish to notify_all()"); grant(); revoke(); }
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>
@@ -647,9 +649,9 @@ namespace boost
     };
     
     typedef permit<true> permit_c;
-    typedef permit_any<true> permit_any_c;
+    typedef permit_any<true> permit_c_any;
     typedef permit<false> permit_nc;
-    typedef permit_any<false> permit_any_nc;
+    typedef permit_any<false> permit_nc_any;
 
 }
 

@@ -336,16 +336,14 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/permits/permit/wait_until_pass.cpp : permit__wait_until_p ]
           [ thread-run2-noit ./sync/permits/permit/wait_until_pred_pass.cpp : permit__wait_until_pred_p ]
 
-#          [ thread-compile-fail ./sync/permits/permit_any/assign_fail.cpp : : permit_any__assign_f ]
-#          [ thread-compile-fail ./sync/permits/permit_any/copy_fail.cpp : : permit_any__copy_f ]
-#          [ thread-run2-noit ./sync/permits/permit_any/default_pass.cpp : permit_any__default_p ]
-#          [ thread-run2-noit ./sync/permits/permit_any/dtor_pass.cpp : permit_any__dtor_p ]
-#          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pass.cpp : permit_any__wait_for_p ]
-#          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pred_pass.cpp : permit_any__wait_for_pred_p ]
-#          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pass.cpp : permit_any__wait_until_p ]
-#          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pred_pass.cpp : permit_any__wait_until_pred_p ]
-#          [ thread-run2-noit ./sync/permits/cv_status/cv_status_pass.cpp : cv_status__cv_status_p ]
-#          [ thread-run2-noit ./sync/permits/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
+          [ thread-compile-fail ./sync/permits/permit_any/assign_fail.cpp : : permit_any__assign_f ]
+          [ thread-compile-fail ./sync/permits/permit_any/copy_fail.cpp : : permit_any__copy_f ]
+          [ thread-run2-noit ./sync/permits/permit_any/default_pass.cpp : permit_any__default_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/dtor_pass.cpp : permit_any__dtor_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pass.cpp : permit_any__wait_for_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pred_pass.cpp : permit_any__wait_for_pred_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pass.cpp : permit_any__wait_until_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pred_pass.cpp : permit_any__wait_until_pred_p ]
     ;
 
     #explicit ts_async ;
