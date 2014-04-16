@@ -461,7 +461,7 @@ namespace boost
                 LARGE_INTEGER due_time={{0,0}};
                 if(target_time.relative)
                 {
-                    unsigned long const elapsed_milliseconds=detail::win32::GetTickCount64()-target_time.start;
+                    detail::win32::ticks_type const elapsed_milliseconds=detail::win32::GetTickCount64()()-target_time.start;
                     LONGLONG const remaining_milliseconds=(target_time.milliseconds-elapsed_milliseconds);
                     LONGLONG const hundred_nanoseconds_in_one_millisecond=10000;
 

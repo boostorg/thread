@@ -10,7 +10,6 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
-#include <boost/thread/win32/gettickcount64.hpp>
 
 #include <boost/intrusive_ptr.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -174,14 +173,14 @@ namespace boost
             static unsigned long const max_non_infinite_wait=0xfffffffe;
 
             timeout(uintmax_t milliseconds_):
-                start(win32::GetTickCount64()),
+                start(win32::GetTickCount64()()),
                 milliseconds(milliseconds_),
                 relative(true),
                 abs_time(boost::get_system_time())
             {}
 
             timeout(boost::system_time const& abs_time_):
-                start(win32::GetTickCount64()),
+                start(win32::GetTickCount64()()),
                 milliseconds(0),
                 relative(false),
                 abs_time(abs_time_)
@@ -206,7 +205,7 @@ namespace boost
                 }
                 else if(relative)
                 {
-                    win32::ticks_type const now=win32::GetTickCount64();
+                    win32::ticks_type const now=win32::GetTickCount64()();
                     win32::ticks_type const elapsed=now-start;
                     return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
                 }
