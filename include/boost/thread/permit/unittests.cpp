@@ -28,7 +28,7 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
-#if 1
+#if 0
 #include "valgrind/memcheck.h"
 #endif
 
@@ -185,13 +185,13 @@ TEST_CASE("pthread_permit1/grantrevokewait", "Tests that grants cause exactly on
 TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
 {
   size_t n;
-  pthread_mutex_t mutex;
+  mtx_t mutex;
   pthread_permit1_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
-  struct lambda_t { static void call(pthread_mutex_t *mutex, pthread_permit1_t *permit, atomic<bool> &waiter) { 
+  REQUIRE(0==mtx_init(&mutex, NULL));
+  struct lambda_t { static void call(mtx_t *mutex, pthread_permit1_t *permit, atomic<bool> &waiter) { 
     int ret;
-    REQUIRE(0==pthread_mutex_lock(mutex));
+    REQUIRE(0==mtx_lock(mutex));
     waiter=true;
     if(0!=(ret=pthread_permit1_wait(permit, mutex)))
     {
@@ -201,7 +201,7 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in oth
     while(waiter);
     if(EINVAL!=(ret=pthread_permit1_wait(permit, mutex)))
       REQUIRE(ret==EINVAL);
-    REQUIRE(0==pthread_mutex_unlock(mutex));
+    REQUIRE(0==mtx_unlock(mutex));
   } };
   for(n=0; n<1000; n++)
   {
@@ -216,7 +216,7 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in oth
     waiter=false;
     thread.join();
   }
-  pthread_mutex_destroy(&mutex);
+  mtx_destroy(&mutex);
 }
 
 TEST_CASE("pthread_permit1/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
@@ -339,22 +339,22 @@ TEST_CASE("pthread_permitc/grantrevokewait", "Tests that grants cause exactly on
 TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
 {
   size_t n;
-  pthread_mutex_t mutex;
+  mtx_t mutex;
   pthread_permitc_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
-  struct lambda_t { static void call(pthread_mutex_t *mutex, pthread_permitc_t *permit, atomic<bool> &waiter) {
+  REQUIRE(0==mtx_init(&mutex, NULL));
+  struct lambda_t { static void call(mtx_t *mutex, pthread_permitc_t *permit, atomic<bool> &waiter) {
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     ts.tv_sec+=60;
-    REQUIRE(0==pthread_mutex_lock(mutex));
+    REQUIRE(0==mtx_lock(mutex));
     waiter=true;
     if(0!=permitc_timedwait(permit, mutex, &ts))
       REQUIRE(0);
     while(waiter);
     if(EINVAL!=permitc_timedwait(permit, mutex, &ts))
       REQUIRE(0);
-    REQUIRE(0==pthread_mutex_unlock(mutex));
+    REQUIRE(0==mtx_unlock(mutex));
   } };
   for(n=0; n<1000; n++)
   {
@@ -363,13 +363,13 @@ TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in oth
     while(!waiter);
     // Note that if other thread hasn't entered wait by this time the sleep returns,
     // the test fails
-    this_thread::sleep_for(chrono::nanoseconds(1));
+    for(size_t a=0; a<10; a++) this_thread::yield();
     REQUIRE(0==permitc_grant(&permit));
     permitc_destroy(&permit);
     waiter=false;
     thread.join();
   }
-  pthread_mutex_destroy(&mutex);
+  mtx_destroy(&mutex);
 }
 
 TEST_CASE("pthread_permitc/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
@@ -414,22 +414,22 @@ TEST_CASE("pthread_permitnc/grantrevokewait", "Tests that non-consuming grants d
 TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in other threads to exit correctly")
 {
   size_t n;
-  pthread_mutex_t mutex;
+  mtx_t mutex;
   pthread_permitnc_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==pthread_mutex_init(&mutex, NULL));
-  struct lambda_t { static void call(pthread_mutex_t *mutex, pthread_permitnc_t *permit, atomic<bool> &waiter) { 
+  REQUIRE(0==mtx_init(&mutex, NULL));
+  struct lambda_t { static void call(mtx_t *mutex, pthread_permitnc_t *permit, atomic<bool> &waiter) { 
     struct timespec ts;
     timespec_get(&ts, TIME_UTC);
     ts.tv_sec+=60;
-    REQUIRE(0==pthread_mutex_lock(mutex));
+    REQUIRE(0==mtx_lock(mutex));
     waiter=true;
     if(0!=permitnc_timedwait(permit, mutex, &ts))
       REQUIRE(0);
     while(waiter);
     if(EINVAL!=permitnc_timedwait(permit, mutex, &ts))
       REQUIRE(0);
-    REQUIRE(0==pthread_mutex_unlock(mutex));
+    REQUIRE(0==mtx_unlock(mutex));
   } };
   for(n=0; n<1000; n++)
   {
@@ -438,13 +438,13 @@ TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in ot
     while(!waiter);
     // Note that if other thread hasn't entered wait by this time the sleep returns,
     // the test fails
-    this_thread::sleep_for(chrono::nanoseconds(1));
+    this_thread::sleep_for(chrono::milliseconds(1));
     REQUIRE(0==permitnc_grant(&permit));
     permitnc_destroy(&permit);
     waiter=false;
     thread.join();
   }
-  pthread_mutex_destroy(&mutex);
+  mtx_destroy(&mutex);
 }
 
 TEST_CASE("pthread_permitnc/destroygrant", "Tests that destroy induced by a grant in another thread works correctly")
@@ -520,9 +520,9 @@ TEST_CASE("pthread_permit/non-parallel/selectfirst", "Tests that select does cho
 TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose the first available permit exactly once")
 {
   pthread_permitc_t permits[SELECT_PERMITS];
-  size_t n;
+  int n;
   struct timespec ts;
-  atomic_uint permitted;
+  atomic_uint_c11_compat permitted;
   permitted=0;
 
   timespec_get(&ts, TIME_UTC);
@@ -635,9 +635,9 @@ TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consum
 {
   pthread_permitc_t permitcs[SELECT_PERMITS-1];
   pthread_permitnc_t permitnc;
-  size_t n;
+  int n;
   struct timespec ts;
-  atomic_uint permitted;
+  atomic_uint_c11_compat permitted;
   permitted=0;
 
   timespec_get(&ts, TIME_UTC);

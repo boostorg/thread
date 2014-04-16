@@ -54,13 +54,45 @@ DEALINGS IN THE SOFTWARE.
 
 #include <stdatomic.h>
 #include <threads.h>
+typedef atomic_uint atomic_uint_c11_compat;
 
 #else // Need to fake C11 support using a mixture of C++ and OS calls
 
 #ifndef PTHREAD_PERMIT_USE_BOOST
 #include <atomic>
+#ifdef _MSC_VER
+#include <condition_variable>
+#include <mutex>
+namespace {
+    struct timespec
+    {
+        time_t tv_sec;
+        long tv_nsec;
+    };
+    inline std::chrono::time_point<std::chrono::system_clock> timespec_to_timepoint(const struct timespec *ts)
+    {
+        using namespace std::chrono;
+        return time_point<system_clock>(duration_cast<system_clock::duration>(nanoseconds(ts->tv_sec * 1000000000ULL + ts->tv_nsec)));
+    }
+}
+#endif
 #else
 #include "boost/atomic.hpp"
+#ifdef _MSC_VER
+#include "boost/thread.hpp"
+namespace {
+    struct timespec
+    {
+        time_t tv_sec;
+        long tv_nsec;
+    };
+    inline boost::chrono::time_point<boost::chrono::system_clock> timespec_to_timepoint(const struct timespec *ts)
+    {
+        using namespace boost::chrono;
+        return time_point<system_clock>(duration_cast<system_clock::duration>(nanoseconds(ts->tv_sec * 1000000000ULL + ts->tv_nsec)));
+    }
+}
+#endif
 #endif
 
 #ifdef __cplusplus
@@ -87,6 +119,7 @@ using std::memory_order_release;
 using std::memory_order_acquire;
 using std::memory_order_seq_cst;
 typedef std::atomic<unsigned int> atomic_uint;
+typedef std::atomic<unsigned int> atomic_uint_c11_compat;
 inline void atomic_thread_fence(memory_order order) { std::atomic_thread_fence(order); }
 #else
 using boost::memory_order;
@@ -95,6 +128,7 @@ using boost::memory_order_release;
 using boost::memory_order_acquire;
 using boost::memory_order_seq_cst;
 typedef boost::atomic<unsigned int> atomic_uint;
+typedef boost::atomic<unsigned int> atomic_uint_c11_compat;
 inline void atomic_thread_fence(memory_order order) { boost::atomic_thread_fence(order); }
 #endif
 inline void atomic_init(volatile atomic_uint *o, unsigned int v) { o->store(v, memory_order_seq_cst); }
@@ -139,47 +173,16 @@ enum thrd_results
   thrd_nomem=ENOMEM
 };
 
-#ifdef _MSC_VER
-struct timespec
-{
-  time_t tv_sec;
-  long tv_nsec;
-};
-
-typedef CONDITION_VARIABLE cnd_t;
-typedef SRWLOCK mtx_t;
-typedef SRWLOCK pthread_mutex_t;
-#else
-typedef pthread_cond_t cnd_t;
-typedef pthread_mutex_t mtx_t;
-#endif
-
-#define TIME_UTC 1
 inline int timespec_get(struct timespec *ts, int base)
 {
 #ifdef _MSC_VER
-  static LARGE_INTEGER ticksPerSec;
-  static double scalefactor;
-  LARGE_INTEGER val;
-  if(!scalefactor)
-  {
-	if(QueryPerformanceFrequency(&ticksPerSec))
-		scalefactor=ticksPerSec.QuadPart/1000000000.0;
-	else
-		scalefactor=1;
-  }
-  if(!QueryPerformanceCounter(&val))
-  {
-    DWORD now=GetTickCount();
-    ts->tv_sec=now/1000;
-    ts->tv_nsec=(now%1000)*1000000;
-    return base;
-  }
-  {
-    unsigned long long now=(unsigned long long)(val.QuadPart/scalefactor);
-    ts->tv_sec=now/1000000000;
-    ts->tv_nsec=now%1000000000;
-  }
+  FILETIME n;
+  unsigned long long m;
+  GetSystemTimeAsFileTime(&n); // GetSystemTimePreciseAsFileTime() is Win8 or later only :(
+  m=((unsigned long long) n.dwHighDateTime<<32)|n.dwLowDateTime;
+  m-=116444736000000000ULL; // 1601 to 1970
+  ts->tv_sec=m/10000000;
+  ts->tv_nsec=(m % 10000000) * 100;
   return base;
 #else
 #ifdef CLOCK_REALTIME
@@ -202,6 +205,16 @@ inline long long timespec_diff(const struct timespec *end, const struct timespec
 }
 
 #ifdef _MSC_VER
+/* The >= WinVista slim reader/writer locks are absolutely ideal for C11 threads emulation
+as they are semantically identical, EXCEPT for the lack of a mtx_timedlock() equivalent
+which I assume will need to turn up in some future Windows. For now, emulate C11 threading
+primitives using C++ 11/Boost.
+*/
+#if 0
+typedef CONDITION_VARIABLE cnd_t;
+typedef SRWLOCK mtx_t;
+typedef SRWLOCK pthread_mutex_t;
+
 inline int cnd_broadcast(cnd_t *cond) { WakeAllConditionVariable(cond); return thrd_success; }
 inline void cnd_destroy(cnd_t *cond) { }
 inline int cnd_init(cnd_t *cond) { InitializeConditionVariable(cond); return thrd_success; }
@@ -210,7 +223,7 @@ inline int cnd_timedwait(cnd_t *PTHREAD_PERMIT_RESTRICT cond, mtx_t *PTHREAD_PER
 {
   struct timespec now;
   DWORD interval;
-  timespec_get(&now, TIME_UTC);
+  timespec_get(&now, 1);
   interval=(DWORD)(timespec_diff(ts, &now)/1000000);
   return SleepConditionVariableSRW(cond, mtx, interval, 0) ? thrd_success : thrd_timeout;
 }
@@ -222,7 +235,86 @@ inline int mtx_lock(mtx_t *mtx) { AcquireSRWLockExclusive(mtx); return thrd_succ
 //inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts);
 inline int mtx_trylock(mtx_t *mtx) { return TryAcquireSRWLockExclusive(mtx) ? thrd_success : thrd_busy; }
 inline int mtx_unlock(mtx_t *mtx) { ReleaseSRWLockExclusive(mtx); return thrd_success; }
+
 #else
+
+#ifndef PTHREAD_PERMIT_USE_BOOST
+typedef std::condition_variable_any cnd_t;
+typedef std::timed_mutex mtx_t;
+typedef std::timed_mutex pthread_mutex_t;
+typedef std::unique_lock<std::timed_mutex> unique_lock;
+using std::defer_lock;
+using std::cv_status;
+#else
+typedef boost::condition_variable_any cnd_t;
+typedef boost::timed_mutex mtx_t;
+typedef boost::timed_mutex pthread_mutex_t;
+typedef boost::unique_lock<boost::timed_mutex> unique_lock;
+using boost::defer_lock;
+using boost::cv_status;
+#endif
+
+inline int cnd_broadcast(cnd_t *cond) { try { cond->notify_all(); return thrd_success; } catch(...) { return thrd_error; } }
+inline void cnd_destroy(cnd_t *cond) { }
+inline int cnd_init(cnd_t *cond) { return thrd_success; }
+inline int cnd_signal(cnd_t *cond) { try { cond->notify_one(); return thrd_success; } catch(...) { return thrd_error; } }
+inline int cnd_timedwait(cnd_t *PTHREAD_PERMIT_RESTRICT cond, mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts)
+{
+    try
+    {
+        unique_lock lock(*mtx, defer_lock);
+        try
+        {
+            int ret=cv_status::no_timeout==cond->wait_until(lock, timespec_to_timepoint(ts)) ? thrd_success : thrd_timeout;
+            lock.release();
+            return ret;
+        }
+        catch(...)
+        {
+            lock.release();
+            throw;
+        }
+    }
+    catch(...)
+    {
+        return thrd_error;
+    }
+}
+inline int cnd_wait(cnd_t *cond, mtx_t *mtx)
+{
+    try
+    {
+        unique_lock lock(*mtx, defer_lock);
+        try
+        {
+            cond->wait(lock);
+            lock.release();
+            return thrd_success;
+        }
+        catch(...)
+        {
+            lock.release();
+            throw;
+        }
+    }
+    catch(...)
+    {
+        return thrd_error;
+    }
+}
+
+inline void mtx_destroy(mtx_t *mtx) { }
+inline int mtx_init(mtx_t *mtx, int type) { return thrd_success; }
+inline int mtx_lock(mtx_t *mtx) { try { mtx->lock(); return thrd_success; } catch(...) { return thrd_error; } }
+inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts) { try { return mtx->try_lock_until(timespec_to_timepoint(ts)) ? thrd_success : thrd_timeout; } catch(...) { return thrd_error; } }
+inline int mtx_trylock(mtx_t *mtx) { try { return mtx->try_lock() ? thrd_success : thrd_busy; } catch(...) { return thrd_error; } }
+inline int mtx_unlock(mtx_t *mtx) { try { mtx->unlock(); return thrd_success; } catch(...) { return thrd_error; } }
+#endif
+
+#else
+typedef pthread_cond_t cnd_t;
+typedef pthread_mutex_t mtx_t;
+
 inline int cnd_broadcast(cnd_t *cond) { return pthread_cond_broadcast(cond); }
 inline void cnd_destroy(cnd_t *cond) { pthread_cond_destroy(cond); }
 inline int cnd_init(cnd_t *cond) { return pthread_cond_init((cond), NULL); }

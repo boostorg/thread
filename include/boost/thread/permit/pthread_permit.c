@@ -126,8 +126,11 @@ static int pthread_permit_init(pthread_permit_t *permit, unsigned magic, unsigne
 {
   int ret;
   if(0) pthread_permit_hide_check_warnings(); // Purely to shut up GCC warnings
-  memset(permit, 0, sizeof(pthread_permit_t));
   permit->permit=initial;
+  permit->waiters=0;
+  permit->waited=0;
+  permit->granters=0;
+  permit->granted=0;
   if(thrd_success!=(ret=cnd_init(&permit->cond))) return ret;
   if(thrd_success!=(ret=mtx_init(&permit->internal_mtx, mtx_plain)))
   {
@@ -135,6 +138,9 @@ static int pthread_permit_init(pthread_permit_t *permit, unsigned magic, unsigne
     return ret;
   }
   permit->replacePermit=(flags&PTHREAD_PERMIT_WAITERS_DONT_CONSUME)!=0;
+  permit->lockWake=0;
+  memset(permit->hooks, 0, sizeof(permit->hooks));
+  memset((void *) permit->selects, 0, sizeof(permit->selects));
   atomic_store_explicit(&permit->magic, magic, memory_order_seq_cst);
   return thrd_success;
 }
