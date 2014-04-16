@@ -18,12 +18,6 @@
 //#include <boost/detail/winapi/synchronization.hpp>
 #include <algorithm>
 
-//#ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//#if _WIN32_WINNT >= 0x0600 && ! defined _WIN32_WINNT_WS08
-//#define BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//#endif
-//#endif
-
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
 
@@ -33,12 +27,6 @@ namespace boost
     {
         namespace win32
         {
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            typedef unsigned long long ticks_type;
-//#else
-//            typedef unsigned long ticks_type;
-//#endif
-            typedef ULONG_PTR ulong_ptr;
             typedef HANDLE handle;
             unsigned const infinite=INFINITE;
             unsigned const timeout=WAIT_TIMEOUT;
@@ -74,12 +62,6 @@ namespace boost
             using ::SleepEx;
             using ::Sleep;
             using ::QueueUserAPC;
-//            using ::GetTickCount;
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            using ::GetTickCount64;
-//#else
-//            inline ticks_type GetTickCount64() { return GetTickCount(); }
-//#endif
         }
     }
 }
@@ -114,11 +96,6 @@ namespace boost
     {
         namespace win32
         {
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            typedef unsigned long long ticks_type;
-//#else
-//            typedef unsigned long ticks_type;
-//#endif
 # ifdef _WIN64
             typedef unsigned __int64 ulong_ptr;
 # else
@@ -157,10 +134,6 @@ namespace boost
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
 
-//                __declspec(dllimport) unsigned long __stdcall GetTickCount();
-//# ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//                __declspec(dllimport) ticks_type __stdcall GetTickCount64();
-//# endif
 # ifndef UNDER_CE
                 __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
                 __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
@@ -177,9 +150,6 @@ namespace boost
                 using ::ResetEvent;
 # endif
             }
-//# ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            inline ticks_type GetTickCount64() { return GetTickCount(); }
-//# endif
         }
     }
 }
@@ -195,7 +165,42 @@ namespace boost
     {
         namespace win32
         {
-            enum event_type
+			typedef unsigned __int64 ticks_type;
+			namespace detail { typedef int (__stdcall *farproc_t)(); typedef ticks_type (__stdcall *gettickcount64_t)(); }
+			extern "C"
+			{
+				__declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
+#if !defined(BOOST_NO_ANSI_APIS)
+				__declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
+#else
+				__declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
+#endif
+				__declspec(dllimport) int __stdcall GetTickCount();
+			}
+			inline ticks_type __stdcall GetTickCount64emulation()
+			{
+				return 0xffffffff00000000ULL|GetTickCount(); // correct wrap semantics
+			}
+			inline detail::gettickcount64_t GetTickCount64()
+			{
+				static detail::gettickcount64_t gettickcount64impl;
+				if(gettickcount64impl)
+					return gettickcount64impl;
+				detail::farproc_t addr=GetProcAddress(
+#if !defined(BOOST_NO_ANSI_APIS)
+					GetModuleHandleA("KERNEL32.DLL"),
+#else
+					GetModuleHandleW(L"KERNEL32.DLL"),
+#endif
+					"GetTickCount64");
+				if(addr)
+					gettickcount64impl=(detail::gettickcount64_t) addr;
+				else
+					gettickcount64impl=&GetTickCount64emulation;
+				return gettickcount64impl;
+			}
+
+			enum event_type
             {
                 auto_reset_event=false,
                 manual_reset_event=true
