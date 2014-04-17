@@ -112,6 +112,7 @@ namespace boost
             extern "C"
             {
                 struct _SECURITY_ATTRIBUTES;
+                struct _FILETIME;
 # ifdef BOOST_NO_ANSI_APIS
                 __declspec(dllimport) void* __stdcall CreateMutexW(_SECURITY_ATTRIBUTES*,int,wchar_t const*);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*);
@@ -166,7 +167,11 @@ namespace boost
         namespace win32
         {
 			typedef unsigned __int64 ticks_type;
-			namespace detail { typedef int (__stdcall *farproc_t)(); typedef ticks_type (__stdcall *gettickcount64_t)(); }
+			namespace detail {
+                typedef int (__stdcall *farproc_t)();
+                typedef ticks_type (__stdcall *gettickcount64_t)();
+                typedef void (__stdcall *getsystemtimepreciseasfiletime_t)(_FILETIME *);
+            }
 			extern "C"
 			{
 				__declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
@@ -176,12 +181,13 @@ namespace boost
 				__declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
 #endif
 				__declspec(dllimport) int __stdcall GetTickCount();
-			}
-			inline ticks_type __stdcall GetTickCount64emulation()
+                __declspec(dllimport) void __stdcall GetSystemTimeAsFileTime(_FILETIME *t);
+            }
+			inline ticks_type __stdcall GetTickCount64_emulation()
 			{
 				return 0xffffffff00000000ULL|GetTickCount(); // correct wrap semantics
 			}
-			inline detail::gettickcount64_t GetTickCount64()
+            inline detail::gettickcount64_t GetTickCount64()
 			{
 				static detail::gettickcount64_t gettickcount64impl;
 				if(gettickcount64impl)
@@ -196,9 +202,27 @@ namespace boost
 				if(addr)
 					gettickcount64impl=(detail::gettickcount64_t) addr;
 				else
-					gettickcount64impl=&GetTickCount64emulation;
+					gettickcount64impl=&GetTickCount64_emulation;
 				return gettickcount64impl;
 			}
+            inline detail::getsystemtimepreciseasfiletime_t GetSystemTimePreciseAsFileTime()
+            {
+                static detail::getsystemtimepreciseasfiletime_t impl;
+                if(impl)
+                    return impl;
+                detail::farproc_t addr=GetProcAddress(
+#if !defined(BOOST_NO_ANSI_APIS)
+                    GetModuleHandleA("KERNEL32.DLL"),
+#else
+                    GetModuleHandleW(L"KERNEL32.DLL"),
+#endif
+                    "GetSystemTimePreciseAsFileTime");
+                if(addr)
+                    impl=(detail::getsystemtimepreciseasfiletime_t) addr;
+                else
+                    impl=&GetSystemTimeAsFileTime;
+                return impl;
+            }
 
 			enum event_type
             {

@@ -9,7 +9,6 @@
 
 #include <boost/assert.hpp>
 #include <boost/throw_exception.hpp>
-#include <pthread.h>
 #include <boost/thread/cv_status.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_types.hpp>
@@ -17,7 +16,6 @@
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
-#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
 #endif
@@ -25,7 +23,8 @@
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD) && defined(BOOST_THREAD_PROVIDES_INTERRUPTIONS)
+#define BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
 #include <boost/thread/pthread/thread_data.hpp>
 #endif
 
@@ -47,7 +46,16 @@ namespace boost
 {
     namespace detail
     {
-        template<bool consuming> struct permit_impl_selector
+        // Used to map in the C11 threads emulation as if it were pthreads on Windows
+        struct pthread_impl_selector
+        {
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+            typedef boost::c_permit::pthread_mutex_t pthread_mutex_t;
+            static  int pthread_mutex_init      (pthread_mutex_t *mtx, void *)                                              { return boost::c_permit::mtx_init(mtx, 0); }
+            static  int pthread_mutex_destroy   (pthread_mutex_t *mtx)                                                      { boost::c_permit::mtx_destroy(mtx); return 0; }
+#endif
+        };
+        template<bool consuming> struct permit_impl_selector : pthread_impl_selector
         {          
             typedef boost::c_permit::pthread_permit1_t pthread_permit_t;
             static  int pthread_permit_init     (pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permit1_init     (permit, initial); }
@@ -57,10 +65,10 @@ namespace boost
             static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permit1_wait_locked_grant(permit, mtx); }
             static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permit1_timedwait_locked_grant(permit, mtx, ts); }
         };
-        template<> struct permit_impl_selector<false>
+        template<> struct permit_impl_selector<false> : pthread_impl_selector
         {          
             typedef boost::c_permit::pthread_permitnc_t pthread_permit_t;
-            static  int pthread_permit_init     (pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permitnc_init     (permit, initial); }
+            static  int pthread_permit_init(pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permitnc_init(permit, initial); }
             static void pthread_permit_destroy  (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_destroy  (permit); }
             static  int pthread_permit_grant    (pthread_permit_t *permit)                                                  { return boost::c_permit::pthread_permitnc_grant    (permit); }
             static void pthread_permit_revoke   (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_revoke   (permit); }
@@ -73,7 +81,7 @@ namespace boost
     {
       typedef typename detail::permit_impl_selector<consuming>::pthread_permit_t pthread_permit_t;
     private:
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         pthread_mutex_t internal_mutex;
 #endif
         pthread_permit_t perm;
@@ -96,7 +104,7 @@ namespace boost
       BOOST_THREAD_NO_COPYABLE(permit)
         permit(bool initial_state=false)
         {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             int const res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
@@ -106,7 +114,7 @@ namespace boost
             int const res2=pthread_permit_init(&perm,initial_state);
             if(res2)
             {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 #endif
                 boost::throw_exception(thread_resource_error(res2, "boost::permit::permit() constructor failed in pthread_permit_init"));
@@ -114,8 +122,8 @@ namespace boost
         }
         ~permit()
         {
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             int ret;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             do {
               ret = pthread_mutex_destroy(&internal_mutex);
             } while (ret == EINTR);
@@ -299,7 +307,7 @@ namespace boost
 
 
 
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
     namespace this_thread
     {
         void BOOST_THREAD_DECL interruption_point();
@@ -342,22 +350,21 @@ namespace boost
 #endif
         int res=0;
         {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             thread_permit_detail::lock_on_exit<unique_lock<mutex> > guard;
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
             guard.activate(m);
             //do {
               res = pthread_permit_wait(&perm,&internal_mutex);
             //} while (res == EINTR);
 #else
-            //boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
+            guard.activate(m);
             //do {
-              res = pthread_permit_wait(&perm,the_mutex);
+              res = pthread_permit_wait(&perm, PTHREAD_PERMIT_NOMTX_SLEEP);
             //} while (res == EINTR);
 #endif
         }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
 #endif
         if(res)
@@ -379,17 +386,16 @@ namespace boost
         thread_permit_detail::lock_on_exit<unique_lock<mutex> > guard;
         int cond_res;
         {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
             guard.activate(m);
             cond_res=pthread_permit_timedwait(&perm,&internal_mutex,&timeout);
 #else
-            //boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-            pthread_mutex_t* the_mutex = m.mutex()->native_handle();
-            cond_res=pthread_permit_timedwait(&perm,the_mutex,&timeout);
+            guard.activate(m);
+            cond_res=pthread_permit_timedwait(&perm, PTHREAD_PERMIT_NOMTX_SLEEP, &timeout);
 #endif
         }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         this_thread::interruption_point();
 #endif
         if(cond_res==ETIMEDOUT)
@@ -416,28 +422,36 @@ namespace boost
     template<bool consuming=true> class permit_any : private detail::permit_impl_selector<consuming>
     {
         typedef typename detail::permit_impl_selector<consuming>::pthread_permit_t pthread_permit_t;
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         pthread_mutex_t internal_mutex;
+#endif
         pthread_permit_t perm;
 
     public:
         BOOST_THREAD_NO_COPYABLE(permit_any)
         permit_any(bool initial_state=false)
         {
-            int const res=pthread_mutex_init(&internal_mutex,NULL);
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+            int const res=pthread_mutex_init(&internal_mutex, NULL);
             if(res)
             {
                 boost::throw_exception(thread_resource_error(res, "boost::permit_any::permit_any() failed in pthread_mutex_init"));
             }
+#endif
             int const res2=pthread_permit_init(&perm, initial_state);
             if(res2)
             {
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
-                boost::throw_exception(thread_resource_error(res, "boost::permit_any::permit_any() failed in pthread_permit_init"));
+#endif
+                boost::throw_exception(thread_resource_error(res2, "boost::permit_any::permit_any() failed in pthread_permit_init"));
             }
         }
         ~permit_any()
         {
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
+#endif
             pthread_permit_destroy(&perm);
         }
 
@@ -447,15 +461,16 @@ namespace boost
             int res=0;
             {
                 thread_permit_detail::lock_on_exit<lock_type> guard;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
                 detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
-#else
-            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-#endif
                 guard.activate(m);
-                res=pthread_permit_wait(&perm,&internal_mutex);
+                res=pthread_permit_wait(&perm, &internal_mutex);
+#else
+                guard.activate(m);
+                res=pthread_permit_wait(&perm, PTHREAD_PERMIT_NOMTX_SLEEP);
+#endif
             }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             this_thread::interruption_point();
 #endif
             if(res)
@@ -623,15 +638,16 @@ namespace boost
           int res=0;
           {
               thread_permit_detail::lock_on_exit<lock_type> guard;
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
               detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
-#else
-            boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
-#endif
               guard.activate(m);
-              res=pthread_permit_timedwait(&perm,&internal_mutex,&timeout);
+              res=pthread_permit_timedwait(&perm, &internal_mutex, &timeout);
+#else
+              guard.activate(m);
+              res=pthread_permit_timedwait(&perm, PTHREAD_PERMIT_NOMTX_SLEEP, &timeout);
+#endif
           }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
           this_thread::interruption_point();
 #endif
           if(res==ETIMEDOUT)

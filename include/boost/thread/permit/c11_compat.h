@@ -58,6 +58,11 @@ typedef atomic_uint atomic_uint_c11_compat;
 
 #else // Need to fake C11 support using a mixture of C++ and OS calls
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4100) // unreferenced formal parameter
+#endif
+
 #ifndef PTHREAD_PERMIT_USE_BOOST
 #include <atomic>
 #ifdef _MSC_VER
@@ -81,11 +86,13 @@ namespace {
 #ifdef _MSC_VER
 #include "boost/thread.hpp"
 namespace {
+#ifndef BOOST_THREAD_PTHREAD_TIMESPEC_MSVC_DEFINED
     struct timespec
     {
         time_t tv_sec;
         long tv_nsec;
     };
+#endif
     inline boost::chrono::time_point<boost::chrono::system_clock> timespec_to_timepoint(const struct timespec *ts)
     {
         using namespace boost::chrono;
@@ -377,6 +384,11 @@ inline void thrd_yield(void)
 {
   sched_yield();
 }
+
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
+
 #endif
 
 #ifdef __cplusplus

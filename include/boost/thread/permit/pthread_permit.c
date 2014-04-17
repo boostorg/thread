@@ -38,6 +38,12 @@ DEALINGS IN THE SOFTWARE.
 #include "pthread_permit.h"
 #include <string.h>
 
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 4100) // unreferenced formal parameter
+#pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 #ifdef __cplusplus
 PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
 #endif
@@ -341,7 +347,7 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
       if(!unlocked)
       {
         if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
-        if(thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
+        if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx && thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
         unlocked=1;
       }
       if(thrd_success!=(_ret=cnd_wait(&permit->cond, &permit->internal_mtx))) ret=_ret;
@@ -350,7 +356,7 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
   }
   if(unlocked)
   {
-    mtx_lock(mtx);
+    if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
   }
   // Increment the monotonic count to indicate we have exited a wait
@@ -397,7 +403,7 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
       if(!unlocked)
       {
         if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
-        _ret=mtx_unlock(mtx);
+        if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) _ret=mtx_unlock(mtx);
         unlocked=1;
       }
       _ret=cnd_timedwait(&permit->cond, &permit->internal_mtx, ts);
@@ -407,7 +413,7 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
   }
   if(unlocked)
   {
-    mtx_lock(mtx);
+    if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
   }
   // Increment the monotonic count to indicate we have exited a wait
@@ -750,7 +756,6 @@ PTHREAD_PERMIT_API_DEFINENP(pthread_permitnc_association_t , permitnc_associate_
 static int pthread_permit_associate_winevent_hook_grant(pthread_permit_hook_type_t type, pthread_permitnc_t *permit, pthread_permitnc_hook_t *hookdata)
 {
   HANDLE h=hookdata->data;
-  char buffer=0;
   SetEvent(h);
   return hookdata->next ? hookdata->next->func(type, permit, hookdata->next) : 0;
 }
@@ -788,8 +793,12 @@ static pthread_permitnc_association_t pthread_permit_associate_winevent_np(pthre
 }
 PTHREAD_PERMIT_API_DEFINENP(pthread_permitnc_association_t , permitnc_associate_winevent, (pthread_permitnc_t *permit, HANDLE h))
 {
-  return pthread_permit_associate_winhandle_np((pthread_permit_t *) permit, h);
+  return pthread_permit_associate_winevent_np((pthread_permit_t *) permit, h);
 }
+#endif
+
+#ifdef _MSC_VER
+#pragma warning(pop)
 #endif
 
 #ifdef __cplusplus
