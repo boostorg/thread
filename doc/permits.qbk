@@ -7,7 +7,7 @@
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
-[section:condvar_ref Condition Variables]
+[section:permit_ref Permits -- EXTENSION]
 
 [heading Synopsis]
 
@@ -18,126 +18,77 @@
       no_timeout,
       timeout
     };
-    class condition_variable;
-    class condition_variable_any;
-    void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
+    template<bool consuming=true> class permit;
+    template<bool consuming=true> class permit_any;
+    typedef permit<true> permit_c;
+    typedef permit_any<true> permit_c_any;
+    typedef permit<false> permit_nc;
+    typedef permit_any<false> permit_nc_any;
   }
 
-The classes `condition_variable` and `condition_variable_any` provide an unsafe (see below)
-but closest-to-the-metal mechanism for one thread to wait for notification from
-another thread that a particular condition has become true. The general usage
-pattern is that one thread locks a mutex and then calls `wait` on an instance of
-`condition_variable` or `condition_variable_any`. When the thread is woken from
-the wait, then it checks to see if the appropriate condition is now true, and
-continues if so. If the condition is not true, then the thread then calls `wait`
-again to resume waiting. In the simplest case, this condition is just a boolean
-variable:
+The classes `permit<>` and `permit_any<>` provide a [*safe] mechanism for one
+thread to wait for notification from another thread that something has
+happened -- one thread gives ['permission] to another thread to continue
+execution. Unlike condition variables where it is very
+easy to unintentionally introduce lost and spurious wakeup race conditions,
+the permit object provides a number of strong guarantees which make it very
+hard to use in a racy way. The permit implementations follow an identical
+API to `condition_variable` and `condition_variable_any`, thus making a
+find and replace solution to fixing up legacy C++ codebases straightforward.
 
-    boost::condition_variable cond;
-    boost::mutex mut;
-    bool data_ready;
+Permits come in two variants, consuming and non-consuming. There is [*always]
+a one-to-one relationship between the granting of a permit and the receiving
+of that permit, the only difference with the non-consuming variant is that
+the permit is automatically regranted as soon as it is consumed. This leads
+to the only API difference to condition variables: `permit<consuming=true>`
+provides `notify_one()` but not `notify_all()`, whilst `permit<consuming=false>`
+provides `notify_all()` but not `notify_one()`. When deciding to substitute
+permits for condition variables, you will need to decide carefully which
+kind of permit is the correct substitute.
 
-    void process_data();
+The strong guarantees given by permit objects are as follows:
 
-    void wait_for_data_to_process()
+# You will never see spurious wakeups from a permit object -- waits never,
+ever return successfully unless a permit has been granted or the permit
+object was destroyed.
+
+# You will never see lost wakeups from a permit object -- if there are
+no waiting threads at the point of permit grant, the permit remains
+granted until some waiting thread consumes the permit.
+
+# For the non-consuming permit, exactly those threads currently waiting
+at the point of grant will be released, no more, no less. This solves the
+producer-consumer problem often seen in naive use of semaphores.
+
+# You are allowed to destroy a permit being waited upon in other threads
+which when tried with condition variables produces undefined behaviour
+(and sometimes memory corruption).
+
+# Additionally, the following very common pattern is safe, which it would not be
+with condition variables:
+
     {
-        boost::unique_lock<boost::mutex> lock(mut);
-        while(!data_ready)
-        {
-            cond.wait(lock);
-        }
-        process_data();
-    }
-
-Notice that the `lock` is passed to `wait`: `wait` will atomically add the
-thread to the set of threads waiting on the condition variable, and unlock the
-mutex. When the thread is woken, the mutex will be locked again before the call
-to `wait` returns. This allows other threads to acquire the mutex in order to
-update the shared data, and ensures that the data associated with the condition
-is correctly synchronized.
-
-In the mean time, another thread sets the condition to `true`, and then calls
-either `notify_one` or `notify_all` on the condition variable to wake one
-waiting thread or all the waiting threads respectively.
-
-    void retrieve_data();
-    void prepare_data();
-
-    void prepare_data_for_processing()
-    {
-        retrieve_data();
-        prepare_data();
-        {
-            boost::lock_guard<boost::mutex> lock(mut);
-            data_ready=true;
-        }
-        cond.notify_one();
-    }
-
-Note that the same mutex is locked before the shared data is updated, but that
-the mutex does not have to be locked across the call to `notify_one`.
-
-This example uses an object of type `condition_variable`, but would work just as
-well with an object of type `condition_variable_any`: `condition_variable_any`
-is more general, and will work with any kind of lock or mutex, whereas
-`condition_variable` requires that the lock passed to `wait` is an instance of
-`boost::unique_lock<boost::mutex>`. This enables `condition_variable` to make
-optimizations in some cases, based on the knowledge of the mutex type;
-`condition_variable_any` typically has a more complex implementation than
-`condition_variable`.
-
-WARNING: You should be cautious of the following pattern when using condition
-variables:
-
-    boost::condition_variable done;
-    boost::mutex lock;
-    int result=0;
-    boost::thread([&]{
+        boost::permit_c done;
+        boost::mutex lock;
+        int result=0;
         boost::lock_guard<decltype(lock)> guard(lock);
-        result=78;
-        done.notify_one();
-    });
-    boost::lock_guard<decltype(lock)> guard(lock);
-    while(!result)
-        done.wait(guard);
-        
-The above code is obviously racy and will be prone to a problem known as ["lost
-wakeups]. This is because the closure could be executed by the spawned thread
-and do the condition variable notify before the main thread gets to the point
-of waiting, thus the wakeup is ["lost]. You might now think that a race free
-implementation would look like this instead:
-
-    boost::condition_variable done;
-    boost::mutex lock;
-    int result=0;
-    boost::lock_guard<decltype(lock)> guard(lock);
-    boost::thread([&]{
-        boost::lock_guard<decltype(lock)> guard2(lock);
-        result=78;
-        done.notify_one();
-    });
-    while(!result)
-        done.wait(guard);
-
-However, there is still a race here: you cannot ['portably] assume that locks
-passed to condition variable waits will be atomically unlocked with respect to
-the wait i.e. if in the tiny slice of time inside `done.wait()` between the
-mutex unlock and the wait actually beginning that the closure running in
-the other thread executed the `notify_one()`, you would once again find the
-the wait lasting forever. This is because Boost.Thread's internal implementation
-must sometimes pass a ['different] mutex to condition variable waits e.g.
-if thread interruption is available, or you are using `condition_variable_any`,
-and therefore must manually unlock the mutex you supply, thus opening a short
-window for a wakeup to become lost. This varies by implementation, so you may get one
-behaviour on POSIX and another on Windows for example. The only portable solution
-which is completely race free is to loop the `notify_one()` with a check to see if
-the wait has exited.
-
-Due to a lot of preexisting C++ code using condition variables in variously unsafe
-ways, in Boost v1.56 [link thread.synchronization.permit_ref a new safe notification
-object called a permit was added]. `boost::permit<>` and `boost::permit_any<>` are
-generally API compatible with condition variables, thus allowing easy retrofitting
-of legacy C++ code.
+        boost::thread([&]{
+            {
+                boost::lock_guard<decltype(lock)> guard2(lock);
+                result=78;
+            }
+            done.notify_one();
+        });
+        while(!result)
+            done.wait(guard);
+        // missing thread join!
+    }
+    
+ The problem here is that the notify can cause the permit object to be
+ destroyed before the notify has exited -- which if tried with condition
+ variables will almost certainly produce memory corruption. With permits
+ this pattern is allowed: all grants being executed at the time of destruction
+ are safe.
 
 [section:condition_variable Class `condition_variable`]
 
