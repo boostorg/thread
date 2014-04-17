@@ -556,7 +556,7 @@ void pthread_permit1_destroy(pthread_permit1_t *permit)
   mtx_destroy(&permit->internal_mtx);
 }
 
-extern "C" int printf(const char *, ...);
+//extern "C" int printf(const char *, ...);
 int pthread_permit1_grant(pthread_permitX_t _permit)
 {
   pthread_permit1_t *permit=(pthread_permit1_t *) _permit;
@@ -697,9 +697,9 @@ int pthread_permit1_timedwait_locked_grant(pthread_permit1_t *permit, pthread_mu
     else
     {
       long long diff;
-      timespec_get(&now, TIME_UTC);
+      timespec_get(&now, 1/*TIME_UTC*/);
       diff=timespec_diff(ts, &now);
-      printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
+      //printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
       if(diff<=0) { ret=thrd_timeout; break; }
     }
     if(mtx)
@@ -748,9 +748,9 @@ int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, c
     else
     {
       long long diff;
-      timespec_get(&now, TIME_UTC);
+      timespec_get(&now, 1/*TIME_UTC*/);
       diff=timespec_diff(ts, &now);
-      printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
+      //printf("now=%ld, till=%ld, diff=%ld\n", now.tv_sec, ts->tv_sec, (long) diff);
       if(diff<=0) { ret=thrd_timeout; break; }
     }
     if(mtx)

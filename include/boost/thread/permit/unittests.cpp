@@ -43,44 +43,6 @@ DEALINGS IN THE SOFTWARE.
 #endif
 #include <bitset>
 
-#ifdef _WIN32
-#include <fcntl.h>
-#include <io.h>
-#define read _read
-#define write _write
-#define close _close
-#define pipe(fds) _pipe((fds), 4096, _O_BINARY)
-  struct pollfd { int fd; short events, revents; };
-#define POLLIN 1
-#define POLLOUT 2
-  // Nasty poll() emulation for Windows
-  inline int poll(struct pollfd *fds, size_t nfds, int timeout)
-  {
-    size_t n, successes=0;
-    for(n=0; n<nfds; n++)
-    {
-      fds[n].revents=0;
-      if(fds[n].events&POLLIN)
-      {
-        // MSVCRT doesn't ask for SYNCHRONIZE permissions in pipe() irritatingly
-        //if(WAIT_OBJECT_0==WaitForSingleObject((HANDLE) _get_osfhandle(fds[n].fd), 0)) fds[n].revents|=POLLIN;
-        DWORD bytestogo=0;
-        PeekNamedPipe((HANDLE) _get_osfhandle(fds[n].fd), NULL, 0, NULL, &bytestogo, NULL);
-        if(bytestogo) { fds[n].revents|=POLLIN; successes++; }
-      }
-      if(fds[n].events&POLLOUT)
-      {
-        fds[n].revents|=POLLOUT;
-        successes++;
-      }
-    }
-    return successes;
-  }
-#else
-#include <unistd.h>
-#include <poll.h>
-#endif
-
 #include "pthread_permit.h"
 #ifndef PTHREAD_PERMIT_USE_BOOST
 #include <thread>
@@ -103,6 +65,47 @@ using namespace boost;
 #define permit_select PTHREAD_PERMIT_MANGLEAPI(permit_select)
 #define permitnc_associate_fd PTHREAD_PERMIT_MANGLEAPI(permitnc_associate_fd)
 #define permitnc_deassociate PTHREAD_PERMIT_MANGLEAPI(permitnc_deassociate)
+
+#ifdef _WIN32
+#ifndef PTHREAD_PERMIT_HAVE_NASTY_WINDOWS_POLL_EMULATION
+#include <windows.h>
+#include <fcntl.h>
+#include <io.h>
+#define read _read
+#define write _write
+#define close _close
+#define pipe(fds) _pipe((fds), 4096, _O_BINARY)
+struct pollfd { int fd; short events, revents; };
+#define POLLIN 1
+#define POLLOUT 2
+// Nasty poll() emulation for Windows
+inline int poll(struct pollfd *fds, size_t nfds, int timeout)
+{
+    size_t n, successes=0;
+    for(n=0; n<nfds; n++)
+    {
+        fds[n].revents=0;
+        if(fds[n].events&POLLIN)
+        {
+            // MSVCRT doesn't ask for SYNCHRONIZE permissions in pipe() irritatingly
+            //if(WAIT_OBJECT_0==WaitForSingleObject((HANDLE) _get_osfhandle(fds[n].fd), 0)) fds[n].revents|=POLLIN;
+            DWORD bytestogo=0;
+            PeekNamedPipe((HANDLE) _get_osfhandle(fds[n].fd), NULL, 0, NULL, &bytestogo, NULL);
+            if(bytestogo) { fds[n].revents|=POLLIN; successes++; }
+        }
+        if(fds[n].events&POLLOUT)
+        {
+            fds[n].revents|=POLLOUT;
+            successes++;
+        }
+    }
+    return successes;
+}
+#endif
+#else
+#include <unistd.h>
+#include <poll.h>
+#endif
 
 TEST_CASE("timespec/diff", "Tests that timespec_diff works as intended")
 {
@@ -345,7 +348,7 @@ TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in oth
   REQUIRE(0==mtx_init(&mutex, NULL));
   struct lambda_t { static void call(mtx_t *mutex, pthread_permitc_t *permit, atomic<bool> &waiter) {
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    timespec_get(&ts, 1 /*TIME_UTC*/);
     ts.tv_sec+=60;
     REQUIRE(0==mtx_lock(mutex));
     waiter=true;
@@ -377,7 +380,7 @@ TEST_CASE("pthread_permitc/destroygrant", "Tests that destroy induced by a grant
   size_t n;
   pthread_permitc_t permit;
   struct timespec ts;
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   ts.tv_sec+=60;
   struct lambda_t { static void call(pthread_permitc_t *permit) {
     if(0!=permitc_grant(permit))
@@ -420,7 +423,7 @@ TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in ot
   REQUIRE(0==mtx_init(&mutex, NULL));
   struct lambda_t { static void call(mtx_t *mutex, pthread_permitnc_t *permit, atomic<bool> &waiter) { 
     struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
+    timespec_get(&ts, 1 /*TIME_UTC*/);
     ts.tv_sec+=60;
     REQUIRE(0==mtx_lock(mutex));
     waiter=true;
@@ -452,7 +455,7 @@ TEST_CASE("pthread_permitnc/destroygrant", "Tests that destroy induced by a gran
   size_t n;
   pthread_permitnc_t permit;
   struct timespec ts;
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   ts.tv_sec+=60;
   struct lambda_t { static void call(pthread_permitnc_t *permit) { 
     if(0!=permitnc_grant(permit))
@@ -476,7 +479,7 @@ TEST_CASE("pthread_permit/non-parallel/selectfirst", "Tests that select does cho
   pthread_permitc_t permits[SELECT_PERMITS];
   size_t n;
   struct timespec ts;
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS; n++)
   {
     REQUIRE(0==permitc_init(&permits[n], 1));
@@ -525,7 +528,7 @@ TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose 
   atomic_uint_c11_compat permitted;
   permitted=0;
 
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS; n++)
   {
     REQUIRE(0==permitc_init(&permits[n], 1));
@@ -583,7 +586,7 @@ TEST_CASE("pthread_permit/non-parallel/ncselect", "Tests that select does not co
   pthread_permitnc_t permitnc;
   size_t n;
   struct timespec ts;
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS-1; n++)
   {
     REQUIRE(0==permitc_init(&permitcs[n], 1));
@@ -640,7 +643,7 @@ TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consum
   atomic_uint_c11_compat permitted;
   permitted=0;
 
-  timespec_get(&ts, TIME_UTC);
+  timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS-1; n++)
   {
     REQUIRE(0==permitc_init(&permitcs[n], 1));

@@ -43,6 +43,7 @@ PTHREAD_PERMIT_CXX_NAMESPACE_BEGIN
 #endif
 
 #ifdef _WIN32
+#define PTHREAD_PERMIT_HAVE_NASTY_WINDOWS_POLL_EMULATION
 #include <fcntl.h>
 #include <io.h>
 #define read _read
@@ -385,7 +386,7 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
     else
     {
       long long diff;
-      timespec_get(&now, TIME_UTC);
+      timespec_get(&now, 1 /*TIME_UTC*/);
       diff=timespec_diff(ts, &now);
       if(diff<=0) { ret=thrd_timeout; break; }
     }
@@ -563,7 +564,7 @@ static int pthread_permit_select_int(size_t no, pthread_permit_t **PTHREAD_PERMI
     if(ts)
     {
       long long diff;
-      timespec_get(&now, TIME_UTC);
+      timespec_get(&now, 1 /*TIME_UTC*/);
       diff=timespec_diff(ts, &now);
       if(diff<=0) { ret=thrd_timeout; break; }
     }

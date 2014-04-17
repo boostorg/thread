@@ -50,11 +50,8 @@ struct static_initialiser
   static void TEST_CASE_FUSER(TEST_CASE_, __LINE__)()
 #define REQUIRE(stmt) BOOST_TEST(stmt)
 
-
+#define PTHREAD_PERMIT_HEADER_ONLY 1
 #include "boost/thread/permit/unittests.cpp"
-
-// 
-#include "boost/thread/permit/pthread_permit.c"
 
 int main()
 {

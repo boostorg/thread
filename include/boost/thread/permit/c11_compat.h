@@ -243,14 +243,14 @@ typedef std::condition_variable_any cnd_t;
 typedef std::timed_mutex mtx_t;
 typedef std::timed_mutex pthread_mutex_t;
 typedef std::unique_lock<std::timed_mutex> unique_lock;
-using std::defer_lock;
+using std::adopt_lock;
 using std::cv_status;
 #else
 typedef boost::condition_variable_any cnd_t;
 typedef boost::timed_mutex mtx_t;
 typedef boost::timed_mutex pthread_mutex_t;
 typedef boost::unique_lock<boost::timed_mutex> unique_lock;
-using boost::defer_lock;
+using boost::adopt_lock;
 using boost::cv_status;
 #endif
 
@@ -262,7 +262,7 @@ inline int cnd_timedwait(cnd_t *PTHREAD_PERMIT_RESTRICT cond, mtx_t *PTHREAD_PER
 {
     try
     {
-        unique_lock lock(*mtx, defer_lock);
+        unique_lock lock(*mtx, adopt_lock);
         try
         {
             int ret=cv_status::no_timeout==cond->wait_until(lock, timespec_to_timepoint(ts)) ? thrd_success : thrd_timeout;
@@ -284,7 +284,7 @@ inline int cnd_wait(cnd_t *cond, mtx_t *mtx)
 {
     try
     {
-        unique_lock lock(*mtx, defer_lock);
+        unique_lock lock(*mtx, adopt_lock);
         try
         {
             cond->wait(lock);
