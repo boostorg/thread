@@ -640,7 +640,7 @@ int pthread_permit1_wait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t
 
 int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
 {
-  int ret=thrd_success, unlocked=0;
+  int ret=thrd_success;
   unsigned expected;
   if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
   // Increment the monotonic count to indicate we have entered a wait
@@ -658,21 +658,9 @@ int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx)
     {
       int _ret;
       //printf("wait p=%p c=%p m=%p\n", permit, &permit->cond, mtx);
-      // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked)
-      {
-          if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
-          if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx && thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
-          unlocked=1;
-      }
-      if(thrd_success!=(_ret=cnd_wait(&permit->cond, &permit->internal_mtx))) ret=_ret;
+      if(thrd_success!=(_ret=cnd_wait(&permit->cond, mtx))) ret=_ret;
     }
     else thrd_yield();
-  }
-  if(unlocked)
-  {
-    if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
-    mtx_unlock(&permit->internal_mtx);
   }
   // Increment the monotonic count to indicate we have exited a wait
   atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);
@@ -732,7 +720,7 @@ int pthread_permit1_timedwait_locked_grant(pthread_permit1_t *permit, pthread_mu
 
 int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts)
 {
-  int ret=thrd_success, unlocked=0;
+  int ret=thrd_success;
   unsigned expected;
   struct timespec now;
   if(*(const unsigned *)"1PER"!=permit->magic) return thrd_error;
@@ -759,22 +747,10 @@ int pthread_permit1_timedwait(pthread_permit1_t *permit, pthread_mutex_t *mtx, c
     if(mtx)
     {
       int _ret;
-      // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked)
-      {
-          if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
-          if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) _ret=mtx_unlock(mtx);
-          unlocked=1;
-      }
-      _ret=cnd_timedwait(&permit->cond, &permit->internal_mtx, ts);
+      _ret=cnd_timedwait(&permit->cond, mtx, ts);
       if(thrd_success!=_ret && thrd_timeout!=_ret) { ret=_ret; break; }
     }
     else thrd_yield();
-  }
-  if(unlocked)
-  {
-    if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
-    mtx_unlock(&permit->internal_mtx);
   }
   // Increment the monotonic count to indicate we have exited a wait
   atomic_fetch_add_explicit(&permit->waited, 1U, memory_order_relaxed);

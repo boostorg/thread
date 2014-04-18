@@ -132,6 +132,7 @@ static void pthread_permit_hide_check_warnings()
 static int pthread_permit_init(pthread_permit_t *permit, unsigned magic, unsigned flags, _Bool initial)
 {
   int ret;
+  size_t n;
   if(0) pthread_permit_hide_check_warnings(); // Purely to shut up GCC warnings
   permit->permit=initial;
   permit->waiters=0;
@@ -146,8 +147,10 @@ static int pthread_permit_init(pthread_permit_t *permit, unsigned magic, unsigne
   }
   permit->replacePermit=(flags&PTHREAD_PERMIT_WAITERS_DONT_CONSUME)!=0;
   permit->lockWake=0;
-  memset(permit->hooks, 0, sizeof(permit->hooks));
-  memset((void *) permit->selects, 0, sizeof(permit->selects));
+  for(n=0; n<sizeof(permit->hooks)/sizeof(permit->hooks[0]); n++)
+    permit->hooks[n]=0;
+  for(n=0; n<sizeof(permit->selects)/sizeof(permit->selects[0]); n++)
+    permit->selects[n]=0;
   atomic_store_explicit(&permit->magic, magic, memory_order_seq_cst);
   return thrd_success;
 }
@@ -316,7 +319,7 @@ static void pthread_permit_revoke(pthread_permit_t *permit)
     permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_REVOKE]->func(PTHREAD_PERMIT_HOOK_TYPE_REVOKE, permit, permit->hooks[PTHREAD_PERMIT_HOOK_TYPE_REVOKE]);
 }
 
-static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
+static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx, const int locked_grant)
 {
   int ret=thrd_success, unlocked=0;
   unsigned expected;
@@ -343,18 +346,20 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
     if(mtx)
     {
       int _ret;
+      pthread_mutex_t *mtx_to_use=mtx;
       // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked)
+      if(locked_grant && !unlocked)
       {
         if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
         if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx && thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
+        mtx_to_use=&permit->internal_mtx;
         unlocked=1;
       }
-      if(thrd_success!=(_ret=cnd_wait(&permit->cond, &permit->internal_mtx))) ret=_ret;
+      if(thrd_success!=(_ret=cnd_wait(&permit->cond, mtx_to_use))) ret=_ret;
     }
     else thrd_yield();
   }
-  if(unlocked)
+  if(locked_grant && unlocked)
   {
     if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
@@ -364,7 +369,7 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx)
   return ret;
 }
 
-static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts)
+static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts, const int locked_grant)
 {
   int ret=thrd_success, unlocked=0;
   unsigned expected;
@@ -399,19 +404,21 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
     if(mtx)
     {
       int _ret;
+      pthread_mutex_t *mtx_to_use=mtx;
       // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked)
+      if(locked_grant && !unlocked)
       {
         if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
         if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) _ret=mtx_unlock(mtx);
+        mtx_to_use=&permit->internal_mtx;
         unlocked=1;
       }
-      _ret=cnd_timedwait(&permit->cond, &permit->internal_mtx, ts);
+      _ret=cnd_timedwait(&permit->cond, mtx_to_use, ts);
       if(thrd_success!=_ret && thrd_timeout!=_ret) { ret=_ret; break; }
     }
     else thrd_yield();
   }
-  if(unlocked)
+  if(locked_grant && unlocked)
   {
     if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
@@ -467,13 +474,25 @@ PTHREAD_PERMIT_API_DEFINE(void , permittype##_revoke, (pthread_##permittype##_t 
 PTHREAD_PERMIT_API_DEFINE(int , permittype##_wait, (pthread_##permittype##_t *permit, pthread_mutex_t *mtx)) \
 { \
   if(PERMIT_MAGIC!=((pthread_permit_t *) permit)->magic) return thrd_error; \
-  return pthread_permit_wait((pthread_permit_t *) permit, mtx); \
+  return pthread_permit_wait((pthread_permit_t *) permit, mtx, 0); \
+} \
+\
+PTHREAD_PERMIT_API_DEFINE(int , permittype##_wait_locked_grant, (pthread_##permittype##_t *permit, pthread_mutex_t *mtx)) \
+{ \
+  if(PERMIT_MAGIC!=((pthread_permit_t *) permit)->magic) return thrd_error; \
+  return pthread_permit_wait((pthread_permit_t *) permit, mtx, 1); \
 } \
 \
 PTHREAD_PERMIT_API_DEFINE(int , permittype##_timedwait, (pthread_##permittype##_t *permit, pthread_mutex_t *mtx, const struct timespec *ts)) \
 { \
   if(PERMIT_MAGIC!=((pthread_permit_t *) permit)->magic) return thrd_error; \
-  return pthread_permit_timedwait((pthread_permit_t *) permit, mtx, ts); \
+  return pthread_permit_timedwait((pthread_permit_t *) permit, mtx, ts, 0); \
+} \
+\
+PTHREAD_PERMIT_API_DEFINE(int , permittype##_timedwait_locked_grant, (pthread_##permittype##_t *permit, pthread_mutex_t *mtx, const struct timespec *ts)) \
+{ \
+  if(PERMIT_MAGIC!=((pthread_permit_t *) permit)->magic) return thrd_error; \
+  return pthread_permit_timedwait((pthread_permit_t *) permit, mtx, ts, 1); \
 }
 
 #define PERMIT permitc

@@ -191,7 +191,7 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in oth
   mtx_t mutex;
   pthread_permit1_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==mtx_init(&mutex, NULL));
+  REQUIRE(0==mtx_init(&mutex, mtx_plain));
   struct lambda_t { static void call(mtx_t *mutex, pthread_permit1_t *permit, atomic<bool> &waiter) { 
     int ret;
     REQUIRE(0==mtx_lock(mutex));
@@ -345,7 +345,7 @@ TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in oth
   mtx_t mutex;
   pthread_permitc_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==mtx_init(&mutex, NULL));
+  REQUIRE(0==mtx_init(&mutex, mtx_plain));
   struct lambda_t { static void call(mtx_t *mutex, pthread_permitc_t *permit, atomic<bool> &waiter) {
     struct timespec ts;
     timespec_get(&ts, 1 /*TIME_UTC*/);
@@ -420,7 +420,7 @@ TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in ot
   mtx_t mutex;
   pthread_permitnc_t permit;
   atomic<bool> waiter(false);
-  REQUIRE(0==mtx_init(&mutex, NULL));
+  REQUIRE(0==mtx_init(&mutex, mtx_plain));
   struct lambda_t { static void call(mtx_t *mutex, pthread_permitnc_t *permit, atomic<bool> &waiter) { 
     struct timespec ts;
     timespec_get(&ts, 1 /*TIME_UTC*/);
