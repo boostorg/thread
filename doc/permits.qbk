@@ -50,21 +50,28 @@ The strong guarantees given by permit objects are as follows:
 
 # You will never see spurious wakeups from a permit object -- waits never,
 ever return successfully unless a permit has been granted or the permit
-object was destroyed.
+object was destroyed. This means you don't need to do any wait predicate checking
+with permits (though they are supported anyway for API compatibility with
+condition variables).
 
 # You will never see lost wakeups from a permit object -- if there are
 no waiting threads at the point of permit grant, the permit remains
-granted until some waiting thread consumes the permit.
+granted until some waiting thread consumes the permit. This means you don't
+need to do any notify predicate checking with permits either.
 
-# For the non-consuming permit, exactly those threads currently waiting
+# For the non-consuming permit, [*exactly] those threads currently waiting
 at the point of grant will be released, no more, no less. This solves the
 producer-consumer problem often seen in naive use of semaphores.
+
+# Multiple threads both granting and waiting simultaneously works as expected,
+which allows replacement of many semaphore based solutions (semaphores can
+have unhelpful differences of implementation across operating systems).
 
 # You are allowed to destroy a permit being waited upon in other threads
 which when tried with condition variables produces undefined behaviour
 (and sometimes memory corruption).
 
-# Additionally, the following very common pattern is safe, which it would not be
+# Additionally, the following common pattern is safe, which it would not be
 with condition variables:
 
     {
@@ -73,14 +80,11 @@ with condition variables:
         int result=0;
         boost::lock_guard<decltype(lock)> guard(lock);
         boost::thread([&]{
-            {
-                boost::lock_guard<decltype(lock)> guard2(lock);
-                result=78;
-            }
+            boost::lock_guard<decltype(lock)> guard2(lock);
+            result=78;
             done.notify_one();
         });
-        while(!result)
-            done.wait(guard);
+        done.wait(guard); // don't need predicate checks with permits
         // missing thread join!
     }
     
@@ -88,7 +92,52 @@ with condition variables:
  destroyed before the notify has exited -- which if tried with condition
  variables will almost certainly produce memory corruption. With permits
  this pattern is allowed: all grants being executed at the time of destruction
- are safe.
+ are safe, though for obvious reasons only the grant which woke the thread
+ which destroyed the permit is guaranteed to not return an error.
+ 
+[section:history The history of the permit object]
+
+(The following section is written from his recollections by Niall Douglas)
+
+The permit object originally started life as a proposed nearest equivalent of C++
+promise/futures for inclusion into the C11 standard by members of ISO WG14.
+Ultimately, it is not the purpose of a standards committee to standardise
+features not yet in common usage, so the permit object reference implementation
+was reworked into a POSIX threads extension and was submitted to the
+Austin Working Group who develop POSIX, where I think it safe to say that the
+reaction was of complete indifference -- the POSIX thread permit object, and its reference
+implementation library written in C11, therefore fell by the wayside.
+
+During some consulting work on a C++ codebase which contained many unsafe uses
+of `boost::condition_variable`, the idea was had to wrap up the C11 reference
+permit implementation as `boost::permit` and substitute all condition variables
+with permits, thus avoiding a great deal of tedious manual repair work. The
+client agreed to the proposal, and thus the Boost permit object herein came into
+being.
+
+You should note that the original C POSIX threads permit implementation remains
+a fully functional, standalone implementation and its source code is included with
+Boost. It has some very useful features: a very low latency, spin-only wait
+mode; it doesn't use malloc, not once, which makes it very useful for bootstrap
+or low latency usage; it can compose waits on multiple permits
+at once; it can synchronise a kernel waitable object such as a file descriptor
+or windows `HANDLE` with a permit's granted/ungranted state; and you can variously
+hook the implementation with state change callbacks. In short, it's a very useful
+reference implementation, and only a fraction of its functionality is sadly exposed
+in this Boost permit object.
+
+The POSIX threads permit objects were the product of effort by some of the world's
+leading experts in concurrency - I am highly indebted to those on the WG14 committee who gave
+so freely of their time and thoughts. My thanks in particular are due to Hans Boehm without whose
+detailed feedback this proposal would look completely different. I would also like to thank Anthony
+Williams for his commentary and feedback, and Nick Stoughton for his advice to me regarding becoming the
+ISO JTC1 SC22 convenor for the Republic of Ireland and on how best to submit a proposal for incorporation
+into the POSIX standard. My thanks are also due to John Benito, WG14 convenor, for his seemingly never
+tiring efforts on the behalf of C-ish programmers everywhere.
+
+Finally, I would like to thank the present Boost.Threads maintainer Vicente J. Botet Escriba
+for being open to the idea of a new thread synchronisation object. One is usually best
+advised to treat any such proposal with the deepest suspicion.
 
 [section:condition_variable Class `condition_variable`]
 

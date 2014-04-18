@@ -1,5 +1,5 @@
 /* pthread_permit.h
-Declares and defines the proposed C1X semaphore object
+Declares and defines the proposed C1X permit object
 (C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
 
 
@@ -323,11 +323,7 @@ It is safe to combine pthread_permitX_destroy in one thread with the following o
 object in other threads:
 
 * pthread_permitX_wait. Waits will immediately exit, possibly returning EINVAL.
-* For consuming permits:
-  * The single pthread_permitX_grant which woke the thread now performing the destroy. NO OTHER GRANTS ARE SAFE,
-if you have multiple threads granting permits then you must synchronise them with permit destruction.
-* For non-consuming permits:
-  * pthread_permitnc_grant, all of which will immediately exit with EINVAL.
+* pthread_permitX_grant, though some may return EINVAL.
 @{
 */
 //! Destroys a pthread_permit1_t

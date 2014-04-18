@@ -1,6 +1,6 @@
 pthreads Permit Object
 -=-=-=-=-=-=-=-=-=-=-=
-(C) 2010-2012 Niall Douglas http://www.nedproductions.biz/
+(C) 2010-2014 Niall Douglas http://www.nedproductions.biz/
 
 Herein is a reference implementation for a proposed safe permit object for POSIX
 threads. Its development came out of work done internally to ISO WG14 when making
@@ -16,13 +16,12 @@ This reference implementation has been tested on:
 Build notes:
 -=-=-=-=-=-=
 There is an almighty hack of C11 atomics and threading support for Windows in
-../c11_compat.h. It is semantically correct however, but implements just enough
+c11_compat.h. It is semantically correct however, but implements just enough
 to get the reference object working.
 
 On POSIX, C11's stdatomic.h and threads.h are not typically available as yet. As a
 result, macro hackery is done to map C11's atomic and thread support to C++11's
 atomics and POSIX threads.
 
-The unit tests will make use of parallel multithreaded unit testing if you define
-USE_PARALLEL. For this to work, you need Microsoft's Parallel Patterns Library
-(included in VS2010 and later) or Intel's Threading Building Blocks.
+The unit tests will make use of parallel multithreaded unit testing if you compile
+it with OpenMP support enabled.

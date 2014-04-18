@@ -49,6 +49,13 @@
   <ItemGroup>
     <Text Include="readme.txt" />
   </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="pthread_permit.cpp" />
+    <ClCompile Include="unittests.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="pthread_permit.h" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>
