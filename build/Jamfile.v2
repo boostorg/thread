@@ -284,7 +284,6 @@ alias thread_sources
       win32/thread.cpp
       win32/tss_dll.cpp
       win32/tss_pe.cpp
-      win32/gettickcount64.cpp
       future.cpp
     : ## requirements ##
       <threadapi>win32
