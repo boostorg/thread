@@ -332,7 +332,35 @@ inline int cnd_wait(cnd_t *cond, mtx_t *mtx) { return pthread_cond_wait(cond, mt
 inline void mtx_destroy(mtx_t *mtx) { pthread_mutex_destroy(mtx); }
 inline int mtx_init(mtx_t *mtx, int) { return pthread_mutex_init((mtx), NULL); }
 inline int mtx_lock(mtx_t *mtx) { return pthread_mutex_lock(mtx); }
-inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts) { return pthread_mutex_timedlock((mtx), (ts)); }
+inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts)
+{
+#ifndef __APPLE__
+    return pthread_mutex_timedlock((mtx), (ts));
+#else
+    int pthread_rc;
+    struct timespec remaining, slept, ts;
+
+    remaining = *abs_timeout;
+    while((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
+        ts.tv_sec = 0;
+        ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000
+            : (remaining.tv_nsec > 10000000 ? 10000000 : remaining.tv_nsec));
+        nanosleep(&ts, &slept);
+        ts.tv_nsec -= slept.tv_nsec;
+        if(ts.tv_nsec <= remaining.tv_nsec) {
+            remaining.tv_nsec -= ts.tv_nsec;
+        }
+        else {
+            remaining.tv_sec--;
+            remaining.tv_nsec = (1000000 - (ts.tv_nsec - remaining.tv_nsec));
+        }
+        if(remaining.tv_sec < 0 || (!remaining.tv_sec && remaining.tv_nsec <= 0)) {
+            return ETIMEDOUT;
+        }
+    }
+    return pthread_rc;
+#endif
+}
 //inline int mtx_trylock(mtx_t *mtx);
 inline int mtx_unlock(mtx_t *mtx) { return pthread_mutex_unlock(mtx); }
 #endif // _MSC_VER
