@@ -332,16 +332,16 @@ inline int cnd_wait(cnd_t *cond, mtx_t *mtx) { return pthread_cond_wait(cond, mt
 inline void mtx_destroy(mtx_t *mtx) { pthread_mutex_destroy(mtx); }
 inline int mtx_init(mtx_t *mtx, int) { return pthread_mutex_init((mtx), NULL); }
 inline int mtx_lock(mtx_t *mtx) { return pthread_mutex_lock(mtx); }
-inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT ts)
+inline int mtx_timedlock(mtx_t *PTHREAD_PERMIT_RESTRICT mtx, const struct timespec *PTHREAD_PERMIT_RESTRICT abs_timeout)
 {
 #ifndef __APPLE__
-    return pthread_mutex_timedlock((mtx), (ts));
+    return pthread_mutex_timedlock((mtx), (abs_timeout));
 #else
     int pthread_rc;
     struct timespec remaining, slept, ts;
 
     remaining = *abs_timeout;
-    while((pthread_rc = pthread_mutex_trylock(mutex)) == EBUSY) {
+    while((pthread_rc = pthread_mutex_trylock(mtx)) == EBUSY) {
         ts.tv_sec = 0;
         ts.tv_nsec = (remaining.tv_sec > 0 ? 10000000
             : (remaining.tv_nsec > 10000000 ? 10000000 : remaining.tv_nsec));
