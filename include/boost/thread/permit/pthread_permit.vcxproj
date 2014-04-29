@@ -54,6 +54,7 @@
     <ClCompile Include="unittests.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="c11_compat.h" />
     <ClInclude Include="pthread_permit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
