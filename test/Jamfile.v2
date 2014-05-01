@@ -113,7 +113,8 @@ rule thread-run ( sources )
 rule thread-test ( sources )
 {
     return
-    [ run $(sources) ../build//boost_thread : : :
+    [ run $(sources) ../build//boost_thread
+        : --log_format=XML --log_sink=results_$(file).xml --log_level=all --report_level=no : :
       <library>/boost/test//boost_unit_test_framework/<link>static
     ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static

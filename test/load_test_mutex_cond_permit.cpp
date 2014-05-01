@@ -30,8 +30,10 @@ DEALINGS IN THE SOFTWARE.
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition_variable.hpp"
 #include "boost/thread/permit.hpp"
+#include "boost/thread/thread.hpp"
 #include "boost/detail/lightweight_test.hpp"
 #include "boost/make_shared.hpp"
+#include "boost/bind/bind.hpp"
 
 #include <iostream>
 
@@ -53,7 +55,7 @@ template<class impl> struct test_wait_atomicity
         ready=0;
         size_t concurrency=boost::thread::hardware_concurrency();
         if(concurrency<1) concurrency=1;
-        std::vector<boost::shared_ptr<state>> states;
+        std::vector<boost::shared_ptr<state> > states;
         std::vector<boost::thread> threads;
         for(size_t n=0; n<concurrency; n++)
         {
