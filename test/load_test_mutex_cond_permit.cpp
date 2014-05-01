@@ -149,9 +149,9 @@ template<class impl> struct test_wait_atomicity
 
 struct boost_condvar
 {
-    static const char *desc() { return "boost::condition_variable"; }
+    static const char *desc() { return "boost::condition_variable_any"; }
     typedef boost::mutex mutex_t;
-    typedef boost::condition_variable waitable_t;
+    typedef boost::condition_variable_any waitable_t;
     mutex_t mutex;
     waitable_t waitable;
     // No constructor necessary
@@ -176,7 +176,7 @@ struct boost_condvar
     }
     void signal()
     {
-        waitable.notify_one();
+        waitable.notify_all();
     }
 };
 
@@ -193,7 +193,7 @@ struct win32_condvar
     bool try_lock() { return !!TryAcquireSRWLockExclusive(&mutex); }
     void unlock() { ReleaseSRWLockExclusive(&mutex); }
     bool wait(size_t ms) { return !!SleepConditionVariableSRW(&waitable, &mutex, ms, 0); }
-    void signal() { WakeConditionVariable(&waitable); }
+    void signal() { WakeAllConditionVariable(&waitable); }
 };
 #else
 struct posix_condvar
@@ -215,7 +215,7 @@ struct posix_condvar
         if(ts.tv_nsec>=1000000000L) { ts.tv_sec+=1; ts.tv_nsec-=1000000000L; }
         return ETIMEDOUT!=pthread_cond_timedwait(&waitable, &mutex, &ts);
     }
-    void signal() { pthread_cond_signal(&waitable); }
+    void signal() { pthread_cond_broadcast(&waitable); }
 };
 #endif
 
