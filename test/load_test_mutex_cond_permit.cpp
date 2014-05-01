@@ -203,7 +203,7 @@ struct posix_condvar
     typedef pthread_cond_t waitable_t;
     mutex_t mutex;
     waitable_t waitable;
-    posix_condvar() : mutex(PTHREAD_MUTEX_INITIALIZER), waitable(PTHREAD_COND_INITIALIZER) { }
+    posix_condvar() { mutex=PTHREAD_MUTEX_INITIALIZER; waitable=PTHREAD_COND_INITIALIZER; }
     void lock() { pthread_mutex_lock(&mutex); }
     bool try_lock() { return pthread_mutex_trylock(&mutex); }
     void unlock() { pthread_mutex_unlock(&mutex); }
