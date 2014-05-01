@@ -201,7 +201,7 @@ template<class impl, template<class> class e_impl> struct test_wait_atomicity
 
 struct boost_condvar
 {
-    static const char *desc() { return "boost::condition_variable_any"; }
+    static const char *desc() { return "boost::condition_variable"; }
     typedef boost::mutex mutex_t;
     typedef boost::condition_variable waitable_t;
     mutex_t mutex;

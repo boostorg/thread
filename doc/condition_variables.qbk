@@ -105,6 +105,21 @@ us look at some common code patterns directly using condition variables:
     boost::mutex lock;
     int result=0;
     boost::thread([&]{
+	    {
+            boost::lock_guard<decltype(lock)> guard(lock);
+            result=78;
+		}
+        done.notify_one();
+    });
+    boost::unique_lock<decltype(lock)> guard(lock);
+    done.wait(guard, [&result] { return result!=0; });
+
+
+
+    boost::condition_variable done;
+    boost::mutex lock;
+    int result=0;
+    boost::thread([&]{
         boost::lock_guard<decltype(lock)> guard(lock);
         result=78;
         done.notify_one();
