@@ -35,6 +35,8 @@ DEALINGS IN THE SOFTWARE.
 #include <pthread.h>
 #endif
 
+#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition_variable.hpp"
 #include "boost/thread/permit.hpp"
@@ -57,7 +59,7 @@ template<class state> struct notify_locked
             // Wait until waiter thread has locked mutex
             while(!s->gate)
                 boost::this_thread::yield();
-            while(!boost::this_thread::interruption_requested())
+            while(gate)
             {
                 s->i.lock();  // Shouldn't return until wait has begun
                 s->i.signal();  // Release the wait
@@ -65,7 +67,7 @@ template<class state> struct notify_locked
                 size_t waitenter=s->waitenter;
                 s->i.unlock();  // Wait shouldn't exit until this line
                 // Wait for wait to complete or time out
-                while(waitenter!=s->waitexit && !boost::this_thread::interruption_requested())
+                while(waitenter!=s->waitexit && gate)
                     boost::this_thread::yield();
             }
         }
@@ -75,18 +77,15 @@ template<class state> struct notify_locked
             s->gate=true;  // Release notifier thread now mutex is locked
             try
             {
-                while(!boost::this_thread::interruption_requested())
+                while(gate)
                 {
                     ++s->waitenter;
                     // If the waitable really does atomically unlock the mutex
                     // during around the wait, this should never time out.
-                    if(!s->i.wait(1000) && !boost::this_thread::interruption_requested())
+                    if(!s->i.wait(1000) && gate)
                         ++s->timedout;
                     ++s->waitexit;
                 }
-            }
-            catch(const boost::thread_interrupted &)
-            {
             }
             catch(...)
             {
@@ -110,7 +109,7 @@ template<class state> struct notify_unlocked
             // Wait until waiter thread has locked mutex
             while(!s->gate)
                 boost::this_thread::yield();
-            while(!boost::this_thread::interruption_requested())
+            while(gate)
             {
                 s->i.lock();  // Shouldn't return until wait has begun
                 size_t waitenter=s->waitenter;
@@ -118,7 +117,7 @@ template<class state> struct notify_unlocked
                 s->i.signal();  // Release the wait
                 ++s->signalled;
                 // Wait for wait to complete or time out
-                while(waitenter!=s->waitexit && !boost::this_thread::interruption_requested())
+                while(waitenter!=s->waitexit && gate)
                     boost::this_thread::yield();
             }
         }
@@ -128,18 +127,15 @@ template<class state> struct notify_unlocked
             s->gate=true;  // Release notifier thread now mutex is locked
             try
             {
-                while(!boost::this_thread::interruption_requested())
+                while(gate)
                 {
                     ++s->waitenter;
                     // If the waitable really does atomically unlock the mutex
                     // during around the wait, this should never time out.
-                    if(!s->i.wait(1000) && !boost::this_thread::interruption_requested())
+                    if(!s->i.wait(1000) && gate)
                         ++s->timedout;
                     ++s->waitexit;
                 }
-            }
-            catch(const boost::thread_interrupted &)
-            {
             }
             catch(...)
             {
@@ -181,8 +177,7 @@ template<class impl, template<class> class e_impl> struct test_wait_atomicity
             boost::this_thread::yield();
         gate=true;
         boost::this_thread::sleep_for(boost::chrono::seconds(seconds));
-        for(size_t n=0; n<threads.size(); n++)
-            threads[n]->interrupt();
+        gate=false;
         for(size_t n=0; n<threads.size(); n++)
             threads[n]->join();
         size_t signalled=0, waitenter=0, waitexit=0, timedout=0;
@@ -208,7 +203,7 @@ struct boost_condvar
 {
     static const char *desc() { return "boost::condition_variable_any"; }
     typedef boost::mutex mutex_t;
-    typedef boost::condition_variable_any waitable_t;
+    typedef boost::condition_variable waitable_t;
     mutex_t mutex;
     waitable_t waitable;
     // No constructor necessary
