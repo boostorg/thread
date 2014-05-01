@@ -179,7 +179,7 @@ int main(int argc, const char *argv[])
     }
     int seconds=0;
     if(argc>1) seconds=atoi(argv[1]);
-    if(!seconds) seconds=15;
+    if(!seconds) seconds=30;
 
     // steady_clock::now() isn't threadsafe on first use on Windows
     boost::chrono::steady_clock::now();
