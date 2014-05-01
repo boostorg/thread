@@ -874,4 +874,10 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9720.cpp ]
     ;
 
+	explicit ts_loadtest1 ;
+	test-suite ts_loadtest1
+	:
+          [ thread-run load_test_mutex_cond_permit.cpp ]
+	;
+
 }

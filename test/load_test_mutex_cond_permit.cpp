@@ -84,7 +84,7 @@ template<class impl> struct test_wait_atomicity
             for(size_t n=0; n<states.size(); n++)
                 std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitenter << " timedout=" << states[n]->timedout << std::endl;
         }
-        return timedout!=0;
+        return timedout==0;
     }
     void e(boost::shared_ptr<state> s, bool notifier)
     {
@@ -101,10 +101,11 @@ template<class impl> struct test_wait_atomicity
                 s->i.lock();  // Shouldn't return until wait has begun
                 s->i.signal();  // Release the wait
                 ++s->signalled;
+                size_t waitenter=s->waitenter;
                 s->i.unlock();  // Wait shouldn't exit until this line
                 // Wait for wait to complete or time out
-                while(s->waitenter!=s->waitexit && !boost::this_thread::interruption_requested())
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+                while(waitenter!=s->waitexit && !boost::this_thread::interruption_requested())
+                    boost::this_thread::yield();
             }
         }
         else
@@ -181,11 +182,11 @@ int main(int argc, const char *argv[])
     // steady_clock::now() isn't threadsafe on first use on Windows
     boost::chrono::steady_clock::now();
 
-    test_wait_atomicity<boost_condvar>()(seconds);
+    BOOST_TEST(test_wait_atomicity<boost_condvar>()(seconds) == true);
 
 #ifdef _MSC_VER
-    std::cout << "Press return to exit" << std::endl;
-    getchar();
+//    std::cout << "Press return to exit" << std::endl;
+//    getchar();
 #endif
     return 0;
 }
