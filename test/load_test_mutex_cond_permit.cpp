@@ -45,59 +45,9 @@ DEALINGS IN THE SOFTWARE.
 
 #include <iostream>
 
-
-template<class impl> struct test_wait_atomicity
+template<class state> struct notify_locked
 {
-    boost::atomic<bool> gate;
-    boost::atomic<size_t> ready;
-    struct state
-    {
-        impl i;
-        boost::atomic<bool> gate;
-        boost::atomic<size_t> signalled, waitenter, waitexit, timedout;
-        state() : gate(false), signalled(0), waitenter(0), waitexit(0), timedout(0) { }
-    };
-    bool operator()(int seconds)
-    {
-        std::cout << std::endl << std::endl << "Testing " << impl::desc() << " for wait mutex unlock/lock atomicity ..." << std::endl << std::endl;
-        gate=false;
-        ready=0;
-        size_t concurrency=boost::thread::hardware_concurrency();
-        if(concurrency<1) concurrency=1;
-        std::vector<boost::shared_ptr<state> > states;
-        std::vector<boost::shared_ptr<boost::thread> > threads;
-        for(size_t n=0; n<concurrency; n++)
-        {
-            states.push_back(boost::make_shared<state>());
-            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&test_wait_atomicity::e, this, states.back(), false)));
-            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&test_wait_atomicity::e, this, states.back(), true)));
-        }
-        while(ready<concurrency)
-            boost::this_thread::yield();
-        gate=true;
-        boost::this_thread::sleep_for(boost::chrono::seconds(seconds));
-        for(size_t n=0; n<threads.size(); n++)
-            threads[n]->interrupt();
-        for(size_t n=0; n<threads.size(); n++)
-            threads[n]->join();
-        size_t signalled=0, waitenter=0, waitexit=0, timedout=0;
-        for(size_t n=0; n<states.size(); n++)
-        {
-            signalled+=states[n]->signalled;
-            waitenter+=states[n]->waitenter;
-            waitexit+=states[n]->waitexit;
-            timedout+=states[n]->timedout;
-        }
-        std::cout << "   Of " << signalled << " signals and " << waitexit << " waits, " << timedout << " signals were lost." << std::endl;
-        if(timedout!=0)
-        {
-            std::cout << "   Specifically for these thread pairs:" << std::endl;
-            for(size_t n=0; n<states.size(); n++)
-                std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
-        }
-        return timedout==0;
-    }
-    void e(boost::shared_ptr<state> s, bool notifier)
+    static void Do(boost::atomic<bool> &gate, boost::atomic<size_t> &ready, boost::shared_ptr<state> s, bool notifier)
     {
         ++ready;
         while(!gate)
@@ -136,7 +86,8 @@ template<class impl> struct test_wait_atomicity
                 }
             }
             catch(const boost::thread_interrupted &)
-            { }
+            {
+            }
             catch(...)
             {
                 ++s->timedout;
@@ -144,6 +95,112 @@ template<class impl> struct test_wait_atomicity
             }
             s->i.unlock();
         }
+    }
+};
+
+template<class state> struct notify_unlocked
+{
+    static void Do(boost::atomic<bool> &gate, boost::atomic<size_t> &ready, boost::shared_ptr<state> s, bool notifier)
+    {
+        ++ready;
+        while(!gate)
+            boost::this_thread::yield();
+        if(notifier)
+        {
+            // Wait until waiter thread has locked mutex
+            while(!s->gate)
+                boost::this_thread::yield();
+            while(!boost::this_thread::interruption_requested())
+            {
+                s->i.lock();  // Shouldn't return until wait has begun
+                size_t waitenter=s->waitenter;
+                s->i.unlock();
+                s->i.signal();  // Release the wait
+                ++s->signalled;
+                // Wait for wait to complete or time out
+                while(waitenter!=s->waitexit && !boost::this_thread::interruption_requested())
+                    boost::this_thread::yield();
+            }
+        }
+        else
+        {
+            s->i.lock();
+            s->gate=true;  // Release notifier thread now mutex is locked
+            try
+            {
+                while(!boost::this_thread::interruption_requested())
+                {
+                    ++s->waitenter;
+                    // If the waitable really does atomically unlock the mutex
+                    // during around the wait, this should never time out.
+                    if(!s->i.wait(1000) && !boost::this_thread::interruption_requested())
+                        ++s->timedout;
+                    ++s->waitexit;
+                }
+            }
+            catch(const boost::thread_interrupted &)
+            {
+            }
+            catch(...)
+            {
+                ++s->timedout;
+                throw;
+            }
+            s->i.unlock();
+        }
+    }
+};
+
+template<class impl, template<class> class e_impl> struct test_wait_atomicity
+{
+    boost::atomic<bool> gate;
+    boost::atomic<size_t> ready;
+    struct state
+    {
+        impl i;
+        boost::atomic<bool> gate;
+        boost::atomic<size_t> signalled, waitenter, waitexit, timedout;
+        state() : gate(false), signalled(0), waitenter(0), waitexit(0), timedout(0) { }
+    };
+    bool operator()(int seconds)
+    {
+        std::cout << std::endl << std::endl << "Testing " << impl::desc() << " for wait mutex unlock/lock atomicity ..." << std::endl << std::endl;
+        gate=false;
+        ready=0;
+        size_t concurrency=boost::thread::hardware_concurrency();
+        if(concurrency<1) concurrency=1;
+        std::vector<boost::shared_ptr<state> > states;
+        std::vector<boost::shared_ptr<boost::thread> > threads;
+        for(size_t n=0; n<concurrency; n++)
+        {
+            states.push_back(boost::make_shared<state>());
+            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&e_impl<state>::Do, boost::ref(gate), boost::ref(ready), states.back(), false)));
+            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&e_impl<state>::Do, boost::ref(gate), boost::ref(ready), states.back(), true)));
+        }
+        while(ready<concurrency)
+            boost::this_thread::yield();
+        gate=true;
+        boost::this_thread::sleep_for(boost::chrono::seconds(seconds));
+        for(size_t n=0; n<threads.size(); n++)
+            threads[n]->interrupt();
+        for(size_t n=0; n<threads.size(); n++)
+            threads[n]->join();
+        size_t signalled=0, waitenter=0, waitexit=0, timedout=0;
+        for(size_t n=0; n<states.size(); n++)
+        {
+            signalled+=states[n]->signalled;
+            waitenter+=states[n]->waitenter;
+            waitexit+=states[n]->waitexit;
+            timedout+=states[n]->timedout;
+        }
+        std::cout << "   Of " << signalled << " signals and " << waitexit << " waits, " << timedout << " signals were lost." << std::endl;
+        if(timedout!=0)
+        {
+            std::cout << "   Specifically for these thread pairs:" << std::endl;
+            for(size_t n=0; n<states.size(); n++)
+                std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
+        }
+        return timedout==0;
     }
 };
 
@@ -235,22 +292,22 @@ int main(int argc, const char *argv[])
     boost::chrono::steady_clock::now();
 
     int failed=0;
-    if(!test_wait_atomicity<boost_condvar>()(seconds))
+    if(!test_wait_atomicity<boost_condvar, notify_unlocked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<boost_condvar> != true" && 0);
+        BOOST_TEST("test_wait_atomicity<boost_condvar, notify_unlocked> != true" && 0);
     }
 #ifdef _WIN32
-    if(!test_wait_atomicity<win32_condvar>()(seconds))
+    if(!test_wait_atomicity<win32_condvar, notify_unlocked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<win32_condvar> != true" && 0);
+        BOOST_TEST("test_wait_atomicity<win32_condvar, notify_unlocked> != true" && 0);
     }
 #else
-    if(!test_wait_atomicity<posix_condvar>()(seconds))
+    if(!test_wait_atomicity<posix_condvar, notify_unlocked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<posix_condvar> != true" && 0);
+        BOOST_TEST("test_wait_atomicity<posix_condvar, notify_unlocked> != true" && 0);
     }
 #endif
 
