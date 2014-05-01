@@ -117,7 +117,7 @@ rule thread-test ( sources )
       <library>/boost/test//boost_unit_test_framework/<link>static
     ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
-        : : :
+        : --log_format=XML --log_sink=results_$(file).xml --log_level=all --report_level=no : :
       <library>/boost/test//boost_unit_test_framework/<link>static
     : $(sources[1]:B)_lib
     ]
@@ -877,7 +877,7 @@ rule thread-compile ( sources : reqs * : name )
 	explicit ts_loadtest1 ;
 	test-suite ts_loadtest1
 	:
-          [ thread-run load_test_mutex_cond_permit.cpp ]
+          [ thread-test load_test_mutex_cond_permit.cpp ]
 	;
 
 }
