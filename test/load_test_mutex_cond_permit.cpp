@@ -210,9 +210,9 @@ struct posix_condvar
     bool wait(size_t ms)
     {
         struct timespec ts;
-        gettimeofday(&ts, NULL);
-        ts.tv_nsec+=ms*1000000UL;
-        if(ts.tv_nsec>=1000000000UL) { ts.tv_sec+=1; ts.tv_nsec-=1000000000UL; }
+        clock_gettime(CLOCK_REALTIME, &ts);
+        ts.tv_nsec+=ms*1000000L;
+        if(ts.tv_nsec>=1000000000L) { ts.tv_sec+=1; ts.tv_nsec-=1000000000L; }
         return ETIMEDOUT!=pthread_cond_timedwait(&waitable, &mutex, &ts);
     }
     void signal() { pthread_cond_signal(&waitable); }
