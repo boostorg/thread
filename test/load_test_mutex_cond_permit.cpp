@@ -56,21 +56,21 @@ template<class impl> struct test_wait_atomicity
         size_t concurrency=boost::thread::hardware_concurrency();
         if(concurrency<1) concurrency=1;
         std::vector<boost::shared_ptr<state> > states;
-        std::vector<boost::thread> threads;
+        std::vector<boost::shared_ptr<boost::thread> > threads;
         for(size_t n=0; n<concurrency; n++)
         {
             states.push_back(boost::make_shared<state>());
-            threads.push_back(boost::thread(boost::bind(&test_wait_atomicity::e, this, states.back(), false)));
-            threads.push_back(boost::thread(boost::bind(&test_wait_atomicity::e, this, states.back(), true)));
+            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&test_wait_atomicity::e, this, states.back(), false)));
+            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&test_wait_atomicity::e, this, states.back(), true)));
         }
         while(ready<concurrency)
             boost::this_thread::yield();
         gate=true;
         boost::this_thread::sleep_for(boost::chrono::seconds(seconds));
         for(size_t n=0; n<threads.size(); n++)
-            threads[n].interrupt();
+            threads[n]->interrupt();
         for(size_t n=0; n<threads.size(); n++)
-            threads[n].join();
+            threads[n]->join();
         size_t signalled=0, waitenter=0, waitexit=0, timedout=0;
         for(size_t n=0; n<states.size(); n++)
         {
