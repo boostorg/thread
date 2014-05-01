@@ -27,6 +27,14 @@ ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 DEALINGS IN THE SOFTWARE.
 */
 
+#ifdef _WIN32
+#define _WIN32_WINNT 0x602
+#include <Windows.h>
+#include <synchapi.h>
+#else
+#include <pthread.h>
+#endif
+
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition_variable.hpp"
 #include "boost/thread/permit.hpp"
@@ -36,6 +44,7 @@ DEALINGS IN THE SOFTWARE.
 #include "boost/bind/bind.hpp"
 
 #include <iostream>
+
 
 template<class impl> struct test_wait_atomicity
 {
@@ -79,12 +88,12 @@ template<class impl> struct test_wait_atomicity
             waitexit+=states[n]->waitexit;
             timedout+=states[n]->timedout;
         }
-        std::cout << "   Of " << signalled << " signals and " << waitenter << " waits, " << timedout << " signals were lost." << std::endl;
+        std::cout << "   Of " << signalled << " signals and " << waitexit << " waits, " << timedout << " signals were lost." << std::endl;
         if(timedout!=0)
         {
             std::cout << "   Specifically for these thread pairs:" << std::endl;
             for(size_t n=0; n<states.size(); n++)
-                std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitenter << " timedout=" << states[n]->timedout << std::endl;
+                std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
         }
         return timedout==0;
     }
@@ -121,7 +130,7 @@ template<class impl> struct test_wait_atomicity
                     ++s->waitenter;
                     // If the waitable really does atomically unlock the mutex
                     // during around the wait, this should never time out.
-                    if(!s->i.wait(1000))
+                    if(!s->i.wait(1000) && !boost::this_thread::interruption_requested())
                         ++s->timedout;
                     ++s->waitexit;
                 }
@@ -130,6 +139,7 @@ template<class impl> struct test_wait_atomicity
             { }
             catch(...)
             {
+                ++s->timedout;
                 throw;
             }
             s->i.unlock();
@@ -170,6 +180,46 @@ struct boost_condvar
     }
 };
 
+#ifdef _WIN32
+struct win32_condvar
+{
+    static const char *desc() { return "Win32 condition variable"; }
+    typedef SRWLOCK mutex_t;
+    typedef CONDITION_VARIABLE waitable_t;
+    mutex_t mutex;
+    waitable_t waitable;
+    win32_condvar() : mutex(SRWLOCK_INIT) { InitializeConditionVariable(&waitable); }
+    void lock() { AcquireSRWLockExclusive(&mutex); }
+    bool try_lock() { return !!TryAcquireSRWLockExclusive(&mutex); }
+    void unlock() { ReleaseSRWLockExclusive(&mutex); }
+    bool wait(size_t ms) { return !!SleepConditionVariableSRW(&waitable, &mutex, ms, 0); }
+    void signal() { WakeConditionVariable(&waitable); }
+};
+#else
+struct posix_condvar
+{
+    static const char *desc() { return "POSIX condition variable"; }
+    typedef pthread_mutex_t mutex_t;
+    typedef pthread_cond_t waitable_t;
+    mutex_t mutex;
+    waitable_t waitable;
+    posix_condvar() : mutex(PTHREAD_MUTEX_INITIALIZER), waitable(PTHREAD_COND_INITIALIZER) { }
+    void lock() { pthread_mutex_lock(&mutex); }
+    bool try_lock() { return pthread_mutex_trylock(&mutex); }
+    void unlock() { pthread_mutex_unlock(&mutex); }
+    bool wait(size_t ms)
+    {
+        struct timespec ts;
+        gettimeofday(&ts, NULL);
+        ts.tv_nsec+=ms*1000000UL;
+        if(ts.tv_nsec>=1000000000UL) { ts.tv_sec+=1; ts.tv_nsec-=1000000000UL; }
+        return ETIMEDOUT!=pthread_cond_timedwait(&waitable, &mutex, &ts);
+    }
+    void signal() { pthread_cond_signal(&waitable); }
+};
+#endif
+
+
 int main(int argc, const char *argv[])
 {
     if(argc>1 && !strncmp(argv[1], "-h", 2))
@@ -179,16 +229,34 @@ int main(int argc, const char *argv[])
     }
     int seconds=0;
     if(argc>1) seconds=atoi(argv[1]);
-    if(!seconds) seconds=30;
+    if(!seconds) seconds=15;
 
     // steady_clock::now() isn't threadsafe on first use on Windows
     boost::chrono::steady_clock::now();
 
-    BOOST_TEST(test_wait_atomicity<boost_condvar>()(seconds) == true);
+    int failed=0;
+    if(!test_wait_atomicity<boost_condvar>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_wait_atomicity<boost_condvar> != true" && 0);
+    }
+#ifdef _WIN32
+    if(!test_wait_atomicity<win32_condvar>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_wait_atomicity<win32_condvar> != true" && 0);
+    }
+#else
+    if(!test_wait_atomicity<posix_condvar>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_wait_atomicity<posix_condvar> != true" && 0);
+    }
+#endif
 
 #ifdef _MSC_VER
 //    std::cout << "Press return to exit" << std::endl;
 //    getchar();
 #endif
-    return 0;
+    return failed;
 }
