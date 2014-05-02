@@ -197,6 +197,91 @@ template<class impl, template<class> class e_impl> struct test_notify
     }
 };
 
+template<class impl> struct test_producerconsumer
+{
+    boost::atomic<bool> gate;
+    boost::atomic<size_t> ready;
+    impl i;
+    struct state
+    {
+        boost::atomic<size_t> signalled, waitenter, waitexit, timedout;
+        state() : signalled(0), waitenter(0), waitexit(0), timedout(0) { }
+    };
+    bool operator()(int seconds)
+    {
+        std::cout << std::endl << std::endl << "Testing " << impl::desc() << " for producer-consumer problems ..." << std::endl << std::endl;
+        gate=false;
+        ready=0;
+        size_t concurrency=boost::thread::hardware_concurrency()*2+1;
+        if(concurrency<1) concurrency=1;
+        std::vector<boost::shared_ptr<state> > states;
+        std::vector<boost::shared_ptr<boost::thread> > threads;
+        for(size_t n=0; n<concurrency; n++)
+        {
+            states.push_back(boost::make_shared<state>());
+            threads.push_back(boost::make_shared<boost::thread>(boost::bind(&test_producerconsumer::Do, this, states.back(), impl::consumes ? n<boost::thread::hardware_concurrency() : !n, concurrency-boost::thread::hardware_concurrency())));
+        }
+        while(ready<concurrency)
+            boost::this_thread::yield();
+        gate=true;
+        boost::this_thread::sleep_for(boost::chrono::seconds(seconds));
+        gate=false;
+        for(size_t n=0; n<threads.size(); n++)
+            threads[n]->join();
+        size_t signalled=0, waitenter=0, waitexit=0, timedout=0;
+        for(size_t n=0; n<states.size(); n++)
+        {
+            signalled+=states[n]->signalled;
+            waitenter+=states[n]->waitenter;
+            waitexit+=states[n]->waitexit;
+            timedout+=states[n]->timedout;
+        }
+        std::cout << "   Of " << signalled << " signals and " << waitexit << " waits, " << timedout << " signals were lost." << std::endl;
+        std::cout << "   Specifically for these thread pairs:" << std::endl;
+        for(size_t n=0; n<states.size(); n++)
+            std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
+        return timedout==0;
+    }
+    void Do(boost::shared_ptr<state> s, bool notifier, size_t concurrency)
+    {
+        ++ready;
+        while(!gate)
+            boost::this_thread::yield();
+        if(notifier)
+        {
+            while(gate)
+            {
+                // Wait for wait to begin
+                if(s->waitenter-s->waitexit>=concurrency && gate)
+                    boost::this_thread::yield();
+                i.signal();  // Release the wait
+                ++s->signalled;
+                i.unsignal();  // Unrelease the wait
+            }
+        }
+        else
+        {
+            i.lock();
+            try
+            {
+                while(gate)
+                {
+                    ++s->waitenter;
+                    if(!i.wait(1000) && gate)
+                        ++s->timedout;
+                    ++s->waitexit;
+                }
+            }
+            catch(...)
+            {
+                ++s->timedout;
+                throw;
+            }
+            i.unlock();
+        }
+    }
+};
+
 struct boost_condvar
 {
     static const char *desc() { return "boost::condition_variable"; }
@@ -231,6 +316,7 @@ struct boost_condvar
 struct boost_permitc
 {
     static const char *desc() { return "boost::permit<true>"; }
+    static const bool consumes=true;
     typedef boost::mutex mutex_t;
     typedef boost::permit<true> waitable_t;
     mutex_t mutex;
@@ -262,6 +348,7 @@ struct boost_permitc
 struct boost_permitnc
 {
     static const char *desc() { return "boost::permit<false>"; }
+    static const bool consumes=false;
     typedef boost::mutex mutex_t;
     typedef boost::permit<false> waitable_t;
     mutex_t mutex;
@@ -363,17 +450,18 @@ int main(int argc, const char *argv[])
         ++failed;
         BOOST_TEST("test_notify<boost_permitc, notify_locked> != true" && 0);
     }
+#endif
     if(!test_notify<boost_permitc, notify_unlocked>()(seconds))
     {
         ++failed;
         BOOST_TEST("test_notify<boost_permitc, notify_unlocked> != true" && 0);
     }
-#endif
     if(!test_notify<boost_permitnc, notify_unlocked>()(seconds))
     {
         ++failed;
         BOOST_TEST("test_notify<boost_permitnc, notify_unlocked> != true" && 0);
     }
+#if 0
 #if 0
 #ifdef _WIN32
     if(!test_notify<win32_condvar, notify_locked>()(seconds))
@@ -388,6 +476,17 @@ int main(int argc, const char *argv[])
         BOOST_TEST("test_notify<posix_condvar, notify_locked> != true" && 0);
     }
 #endif
+#endif
+    if(!test_producerconsumer<boost_permitc>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_producerconsumer<boost_permitc> != true" && 0);
+    }
+    if(!test_producerconsumer<boost_permitnc>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_producerconsumer<boost_permitnc> != true" && 0);
+    }
 #endif
 
 #ifdef _MSC_VER

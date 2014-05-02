@@ -87,6 +87,7 @@ namespace boost
         pthread_permit_t perm;
 
     public:
+        static BOOST_CONSTEXPR_OR_CONST bool consumes=consuming;
     //private: // used by boost::thread::try_join_until
 
         inline bool do_wait_until(
@@ -427,6 +428,7 @@ namespace boost
         pthread_permit_t perm;
 
     public:
+        static BOOST_CONSTEXPR_OR_CONST bool consumes=consuming;
         BOOST_THREAD_NO_COPYABLE(permit_any)
         permit_any(bool initial_state=false)
         {

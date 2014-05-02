@@ -342,6 +342,8 @@ advised to treat any proposal of an ["improved] threading object with the deepes
         template<bool consuming=true> class permit
         {
         public:
+            static constexpr bool consumes=consuming;
+
             permit(bool initial_state=false);
             ~permit();
 
@@ -752,6 +754,8 @@ return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         template<bool consuming=true> class permit_any
         {
         public:
+            static constexpr bool consumes=consuming;
+
             permit_any(bool initial_state=false);
             ~permit_any();
 
