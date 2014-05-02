@@ -507,6 +507,7 @@ typedef struct pthread_permit1_s
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
   mtx_t internal_mtx;                 /* Used for waits */
+  unsigned replacePermit;             /* What to replace the permit with when consumed */
 } pthread_permit1_t;
 
 
@@ -535,6 +536,7 @@ int pthread_permit1_init(pthread_permit1_t *permit, _Bool initial, void *)
     cnd_destroy(&permit->cond);
     return ret;
   }
+  permit->replacePermit=0;
   atomic_store_explicit(&permit->magic, *(const unsigned *)"1PER", memory_order_seq_cst);
   return thrd_success;
 }
@@ -605,9 +607,9 @@ struct pthread_permitc_s
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
   mtx_t internal_mtx;                 /* Used for waits */
+  unsigned replacePermit;             /* What to replace the permit with when consumed */
 
   /* Extensions from pthread_permit1_t type */
-  unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
   pthread_permitc_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
   pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[64]; /* select permit parent */
@@ -620,9 +622,9 @@ struct pthread_permitnc_s
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
   mtx_t internal_mtx;                 /* Used for waits */
+  unsigned replacePermit;             /* What to replace the permit with when consumed */
 
   /* Extensions from pthread_permit1_t type */
-  unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
   pthread_permitnc_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
   pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[64]; /* select permit parent */

@@ -35,7 +35,7 @@ DEALINGS IN THE SOFTWARE.
 #include <pthread.h>
 #endif
 
-#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+//#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 
 #include "boost/thread/mutex.hpp"
 #include "boost/thread/condition_variable.hpp"
@@ -49,6 +49,7 @@ DEALINGS IN THE SOFTWARE.
 
 template<class state> struct notify_locked
 {
+    static const char *desc() { return "wait mutex unlock/lock atomicity"; }
     static void Do(boost::atomic<bool> &gate, boost::atomic<size_t> &ready, boost::shared_ptr<state> s, bool notifier)
     {
         ++ready;
@@ -99,6 +100,7 @@ template<class state> struct notify_locked
 
 template<class state> struct notify_unlocked
 {
+    static const char *desc() { return "whether unsynchronised notifies are lost"; }
     static void Do(boost::atomic<bool> &gate, boost::atomic<size_t> &ready, boost::shared_ptr<state> s, bool notifier)
     {
         ++ready;
@@ -111,14 +113,17 @@ template<class state> struct notify_unlocked
                 boost::this_thread::yield();
             while(gate)
             {
-                s->i.lock();  // Shouldn't return until wait has begun
+                // Wait for wait to begin
+                while(s->waitenter==s->waitexit && gate)
+                    boost::this_thread::yield();
                 size_t waitenter=s->waitenter;
-                s->i.unlock();
+                boost::this_thread::yield();
                 s->i.signal();  // Release the wait
                 ++s->signalled;
                 // Wait for wait to complete or time out
                 while(waitenter!=s->waitexit && gate)
                     boost::this_thread::yield();
+                s->i.unsignal();  // Unrelease the wait
             }
         }
         else
@@ -147,7 +152,7 @@ template<class state> struct notify_unlocked
     }
 };
 
-template<class impl, template<class> class e_impl> struct test_wait_atomicity
+template<class impl, template<class> class e_impl> struct test_notify
 {
     boost::atomic<bool> gate;
     boost::atomic<size_t> ready;
@@ -160,10 +165,10 @@ template<class impl, template<class> class e_impl> struct test_wait_atomicity
     };
     bool operator()(int seconds)
     {
-        std::cout << std::endl << std::endl << "Testing " << impl::desc() << " for wait mutex unlock/lock atomicity ..." << std::endl << std::endl;
+        std::cout << std::endl << std::endl << "Testing " << impl::desc() << " for " << e_impl<state>::desc() << " ..." << std::endl << std::endl;
         gate=false;
         ready=0;
-        size_t concurrency=boost::thread::hardware_concurrency();
+        size_t concurrency=boost::thread::hardware_concurrency()+1;
         if(concurrency<1) concurrency=1;
         std::vector<boost::shared_ptr<state> > states;
         std::vector<boost::shared_ptr<boost::thread> > threads;
@@ -189,12 +194,9 @@ template<class impl, template<class> class e_impl> struct test_wait_atomicity
             timedout+=states[n]->timedout;
         }
         std::cout << "   Of " << signalled << " signals and " << waitexit << " waits, " << timedout << " signals were lost." << std::endl;
-        if(timedout!=0)
-        {
-            std::cout << "   Specifically for these thread pairs:" << std::endl;
-            for(size_t n=0; n<states.size(); n++)
-                std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
-        }
+        std::cout << "   Specifically for these thread pairs:" << std::endl;
+        for(size_t n=0; n<states.size(); n++)
+            std::cout << "      " << n << ": signalled=" << states[n]->signalled << " waits=" << states[n]->waitexit << " timedout=" << states[n]->timedout << std::endl;
         return timedout==0;
     }
 };
@@ -226,10 +228,70 @@ struct boost_condvar
         }
         return boost::cv_status::no_timeout==ret;
     }
-    void signal()
+    void signal() { waitable.notify_one(); }
+    void unsignal() { }
+};
+
+struct boost_permitc
+{
+    static const char *desc() { return "boost::permit<true>"; }
+    typedef boost::mutex mutex_t;
+    typedef boost::permit<true> waitable_t;
+    mutex_t mutex;
+    waitable_t waitable;
+    // No constructor necessary
+    void lock() { mutex.lock(); }
+    bool try_lock() { return mutex.try_lock(); }
+    void unlock() { mutex.unlock(); }
+    bool wait(size_t ms)
     {
-        waitable.notify_all();
+        boost::cv_status ret=boost::cv_status::timeout;
+        boost::unique_lock<mutex_t> lock(mutex, boost::adopt_lock);
+        try
+        {
+            ret=waitable.wait_for(lock, boost::chrono::milliseconds(ms));
+            lock.release();
+        }
+        catch(...)
+        {
+            lock.release();
+            throw;
+        }
+        return boost::cv_status::no_timeout==ret;
     }
+    void signal() { waitable.grant(); }
+    void unsignal() { }
+};
+
+struct boost_permitnc
+{
+    static const char *desc() { return "boost::permit<false>"; }
+    typedef boost::mutex mutex_t;
+    typedef boost::permit<false> waitable_t;
+    mutex_t mutex;
+    waitable_t waitable;
+    // No constructor necessary
+    void lock() { mutex.lock(); }
+    bool try_lock() { return mutex.try_lock(); }
+    void unlock() { mutex.unlock(); }
+    bool wait(size_t ms)
+    {
+        boost::cv_status ret=boost::cv_status::timeout;
+        boost::unique_lock<mutex_t> lock(mutex, boost::adopt_lock);
+        try
+        {
+            ret=waitable.wait_for(lock, boost::chrono::milliseconds(ms));
+            lock.release();
+        }
+        catch(...)
+        {
+            lock.release();
+            throw;
+        }
+        return boost::cv_status::no_timeout==ret;
+    }
+    void signal() { waitable.grant(); }
+    void unsignal() { waitable.revoke(); }
 };
 
 #ifdef _WIN32
@@ -246,6 +308,7 @@ struct win32_condvar
     void unlock() { ReleaseSRWLockExclusive(&mutex); }
     bool wait(size_t ms) { return !!SleepConditionVariableSRW(&waitable, &mutex, ms, 0); }
     void signal() { WakeAllConditionVariable(&waitable); }
+    void unsignal() { }
 };
 #else
 struct posix_condvar
@@ -268,6 +331,7 @@ struct posix_condvar
         return ETIMEDOUT!=pthread_cond_timedwait(&waitable, &mutex, &ts);
     }
     void signal() { pthread_cond_broadcast(&waitable); }
+    void unsignal() { }
 };
 #endif
 
@@ -287,22 +351,42 @@ int main(int argc, const char *argv[])
     boost::chrono::steady_clock::now();
 
     int failed=0;
-    if(!test_wait_atomicity<boost_condvar, notify_unlocked>()(seconds))
+    if(!test_notify<boost_condvar, notify_locked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<boost_condvar, notify_unlocked> != true" && 0);
+        BOOST_TEST("test_notify<boost_condvar, notify_locked> != true" && 0);
+    }
+    if(!test_notify<boost_condvar, notify_unlocked>()(seconds))
+    {
+        //++failed;
+        //BOOST_TEST("test_notify<boost_condvar, notify_unlocked> != true" && 0);
+    }
+    if(!test_notify<boost_permitc, notify_locked>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_notify<boost_permitc, notify_locked> != true" && 0);
+    }
+    if(!test_notify<boost_permitc, notify_unlocked>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_notify<boost_permitc, notify_unlocked> != true" && 0);
+    }
+    if(!test_notify<boost_permitnc, notify_unlocked>()(seconds))
+    {
+        ++failed;
+        BOOST_TEST("test_notify<boost_permitnc, notify_unlocked> != true" && 0);
     }
 #ifdef _WIN32
-    if(!test_wait_atomicity<win32_condvar, notify_unlocked>()(seconds))
+    if(!test_notify<win32_condvar, notify_locked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<win32_condvar, notify_unlocked> != true" && 0);
+        BOOST_TEST("test_notify<win32_condvar, notify_locked> != true" && 0);
     }
 #else
-    if(!test_wait_atomicity<posix_condvar, notify_unlocked>()(seconds))
+    if(!test_notify<posix_condvar, notify_locked>()(seconds))
     {
         ++failed;
-        BOOST_TEST("test_wait_atomicity<posix_condvar, notify_unlocked> != true" && 0);
+        BOOST_TEST("test_notify<posix_condvar, notify_locked> != true" && 0);
     }
 #endif
 

@@ -111,9 +111,9 @@ typedef struct pthread_permit_s
   atomic_uint granters, granted;      /* Keeps track of when granters are running */
   cnd_t cond;                         /* Wakes anything waiting for a permit */
   mtx_t internal_mtx;                 /* Used for waits */
+  unsigned replacePermit;             /* What to replace the permit with when consumed */
 
   /* Extensions from pthread_permit1_t type */
-  unsigned replacePermit;             /* What to replace the permit with when consumed */
   atomic_uint lockWake;               /* Used to exclude new wakers if and only if waiters don't consume */
   pthread_permit_hook_t *PTHREAD_PERMIT_RESTRICT hooks[PTHREAD_PERMIT_HOOK_TYPE_LAST];
   pthread_permit_select_t *volatile PTHREAD_PERMIT_RESTRICT selects[MAX_PTHREAD_PERMIT_SELECTS]; /* select permit parent */
@@ -348,18 +348,21 @@ static int pthread_permit_wait(pthread_permit_t *permit, pthread_mutex_t *mtx, c
       int _ret;
       pthread_mutex_t *mtx_to_use=mtx;
       // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked && (locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx))
+      if(locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx)
       {
-        if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
-        if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx && thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
+        if(!unlocked)
+        {
+          if(thrd_success!=(_ret=mtx_lock(&permit->internal_mtx))) ret=_ret;
+          if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx && thrd_success!=(_ret=mtx_unlock(mtx))) ret=_ret;
+          unlocked=1;
+        }
         mtx_to_use=&permit->internal_mtx;
-        unlocked=1;
       }
       if(thrd_success!=(_ret=cnd_wait(&permit->cond, mtx_to_use))) ret=_ret;
     }
     else thrd_yield();
   }
-  if(unlocked && (locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx))
+  if(unlocked)
   {
     if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
@@ -406,19 +409,22 @@ static int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *m
       int _ret;
       pthread_mutex_t *mtx_to_use=mtx;
       // If supplied with a mutex, we need to ensure it is unlocked during grants
-      if(!unlocked && (locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx))
+      if(locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx)
       {
-        if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
-        if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) _ret=mtx_unlock(mtx);
+        if(!unlocked)
+        {
+          if(thrd_success!=(_ret=mtx_timedlock(&permit->internal_mtx, ts))) { ret=_ret; break; }
+          if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) _ret=mtx_unlock(mtx);
+          unlocked=1;
+        }
         mtx_to_use=&permit->internal_mtx;
-        unlocked=1;
       }
       _ret=cnd_timedwait(&permit->cond, mtx_to_use, ts);
       if(thrd_success!=_ret && thrd_timeout!=_ret) { ret=_ret; break; }
     }
     else thrd_yield();
   }
-  if(unlocked && (locked_grant || PTHREAD_PERMIT_NOMTX_SLEEP==mtx))
+  if(unlocked)
   {
     if(PTHREAD_PERMIT_NOMTX_SLEEP!=mtx) mtx_lock(mtx);
     mtx_unlock(&permit->internal_mtx);
