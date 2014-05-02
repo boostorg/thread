@@ -58,7 +58,7 @@ namespace boost
         template<bool consuming> struct permit_impl_selector : pthread_impl_selector
         {          
             typedef boost::c_permit::pthread_permit1_t pthread_permit_t;
-            static  int pthread_permit_init     (pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permit1_init     (permit, initial); }
+            static  int pthread_permit_init     (pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permit1_init     (permit, initial, NULL); }
             static void pthread_permit_destroy  (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permit1_destroy  (permit); }
             static  int pthread_permit_grant    (pthread_permit_t *permit)                                                  { return boost::c_permit::pthread_permit1_grant    (permit); }
             static void pthread_permit_revoke   (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permit1_revoke   (permit); }
@@ -68,12 +68,12 @@ namespace boost
         template<> struct permit_impl_selector<false> : pthread_impl_selector
         {          
             typedef boost::c_permit::pthread_permitnc_t pthread_permit_t;
-            static  int pthread_permit_init(pthread_permit_t *permit, bool initial)                                    { return boost::c_permit::pthread_permitnc_init(permit, initial); }
+            static  int pthread_permit_init(pthread_permit_t *permit, bool initial)                                         { return boost::c_permit::pthread_permitnc_init     (permit, initial, NULL); }
             static void pthread_permit_destroy  (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_destroy  (permit); }
             static  int pthread_permit_grant    (pthread_permit_t *permit)                                                  { return boost::c_permit::pthread_permitnc_grant    (permit); }
             static void pthread_permit_revoke   (pthread_permit_t *permit)                                                  {        boost::c_permit::pthread_permitnc_revoke   (permit); }
-            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permitnc_wait_locked_grant(permit, mtx); }
-            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permitnc_timedwait_locked_grant(permit, mtx, ts); }
+            static  int pthread_permit_wait     (pthread_permit_t *permit, pthread_mutex_t *mtx)                            { return boost::c_permit::pthread_permitnc_wait     (permit, mtx); }
+            static  int pthread_permit_timedwait(pthread_permit_t *permit, pthread_mutex_t *mtx, const struct timespec *ts) { return boost::c_permit::pthread_permitnc_timedwait(permit, mtx, ts); }
         };
     }
 
@@ -289,7 +289,7 @@ namespace boost
         void revoke() BOOST_NOEXCEPT;
 
         void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
-        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<true> if you wish to notify_all()"); grant(); revoke(); }
+        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<false> if you wish to notify_all()"); grant(); revoke(); }
         
 #ifdef BOOST_THREAD_USES_CHRONO
         inline cv_status wait_until(
@@ -627,7 +627,7 @@ namespace boost
             BOOST_VERIFY(!pthread_permit_revoke(&perm));
         }
         void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
-        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<true> if you wish to notify_all()"); grant(); revoke(); }
+        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<false> if you wish to notify_all()"); grant(); revoke(); }
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>
