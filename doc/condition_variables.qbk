@@ -1,7 +1,6 @@
 [/
   (C) Copyright 2007-11 Anthony Williams.
   (C) Copyright 2011-12 Vicente J. Botet Escriba.
-  (C) Copyright 2014 Niall Douglas
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -24,9 +23,9 @@
   }
 
 The classes `condition_variable` and `condition_variable_any` provide a
-closest-to-the-metal mechanism for one thread to wait for notification from
-another thread that a particular condition has become true. The general usage
-pattern is that one thread locks a mutex and then calls `wait` on an instance of
+mechanism for one thread to wait for notification from another thread that a
+particular condition has become true. The general usage pattern is that one
+thread locks a mutex and then calls `wait` on an instance of
 `condition_variable` or `condition_variable_any`. When the thread is woken from
 the wait, then it checks to see if the appropriate condition is now true, and
 continues if so. If the condition is not true, then the thread then calls `wait`
@@ -85,201 +84,6 @@ is more general, and will work with any kind of lock or mutex, whereas
 optimizations in some cases, based on the knowledge of the mutex type;
 `condition_variable_any` typically has a more complex implementation than
 `condition_variable`.
-
-[warning Be careful of directly using condition variables in your code!]
-
-(The following section is written by Niall Douglas to explain why you should
-choose `boost::permit<>` instead of condition variables unless you have a good
-reason not to. Any errors are his alone)
-
-Surprisingly little code which directly uses condition variables is completely problem
-free -- condition variables are a threading ['primitive] for a reason, but
-unlike the other threading primitives they are particularly easy to write
-faulty code against. A very good sign of incorrect usage is when a wait
-is not surrounded with a loop testing a predicate as condition variables
-are prone to spurious wakeups, but even with judicious use of predicates
-there are also problems with ["lost wakeups] in most code directly using
-condition variables.
-
-As a quick survey of the very subtle dragons which live here, let
-us look at a common code pattern directly using condition variables:
-
-    boost::condition_variable done;
-    int result=0;
-    boost::thread([&]{
-        result=78;
-        done.notify_one();
-    });
-    boost::mutex lock;
-    boost::unique_lock<decltype(lock)> guard(lock);
-    done.wait(guard, [&result] { return result!=0; });
-
-This code is unsafe because result may not get set by the time the wait
-predicate is checked, but may have become set and the notify issued before
-the wait begins. This is an example of a lost wakeup.
-
-
-You might think the following also unsafe, but in fact it is safe with
-Boost.Thread but (probably) won't be with `std::condition_variable`:
-
-    boost::condition_variable done1, done2;
-    boost::mutex lock1, lock2;
-    boost::unique_lock<decltype(lock1)> guard1(lock1);
-    boost::thread([&]{
-        boost::unique_lock<decltype(lock2)> guard2(lock2);
-        boost::thread([&]{
-            boost::unique_lock<decltype(lock1)> guard1(lock1);
-            done2.notify_one();
-        });
-        done2.wait(guard2);
-        done1.notify_one();
-    });
-    done1.wait(guard1);
-
-Only the mutex passed to a condition variable wait is guaranteed to be atomically
-unlocked by the standard, so in the 
-
-This pattern is lost wakeup safe if and only if thread interruption support
-is enabled (which it is by default). The fact it is lost wakeup safe is due to an
-implementation detail: if thread interruptions are
-enabled, Boost.Thread doesn't actually atomically unlock your mutex during the wait
-as it is supposed to. It actually passes an internal mutex to the wait, and locks
-that same internal mutex during notifies, thus effectively ['emulating] the atomicity
-of the mutex unlock by forcing notifies to only occur when the underlying OS has
-atomically unlocked the internal mutex. As a side effect, 
-
-
-In the example above, if the notify is
-called during the short window between Boost.Thread manually unlocking `guard` and
-starting the wait, the notify will block on the internal mutex, thus not losing the wake.
-[Incidentally, `condition_variable_any` always does this emulation of atomic unlock
-via an internal mutex, it's why it's slower than standard condition variables].
-
-If you disable thread interruptions, you may well now lose wakeups because in the tiny
-window -- or more likely
-as C++ 11/14 becomes popular, if someone naively converted over the Boost code to
-use `std::condition_variable` they may get a nasty surprise depending on the STL
-implementation. 
-
-
-
-
-
-An improved example might look like this:
-
-    boost::condition_variable done;
-    boost::mutex lock;
-    int result=0;
-    boost::thread([&]{
-        {
-            boost::lock_guard<decltype(lock)> guard(lock);
-            result=78;
-        }
-        done.notify_one();
-    });
-    boost::unique_lock<decltype(lock)> guard(lock);
-    done.wait(guard, [&result] { return result!=0; });
-
-The above code may look safe: the predicate check for result being non-zero should
-correctly detect if the thread executes and notifies before the lock in the main
-thread is taken right? Potentially not: this is because `done.wait(guard, pred)`
-is implemented as:
-
-    while(!pred())
-        wait(guard);
-
-And the compiler's optimiser is permitted by the standard to believe that `result`
-has not changed between its initialisation and the first test of its value, so in
-fact the optimiser could compile this instead by eliding the first test of result
-under the assumption that the predicate will always be false for its first execution:
-
-    do {
-        wait(guard);
-    } while(!pred());
-
-Now the race is obvious: if the closure could be executed by the spawned thread
-and do the condition variable notify before the main thread gets to the point
-of waiting, and the compiler's optimiser moves the test of the predicate to after the
-condition variables sleep, the wakeup is ["lost]. I am not claiming any current
-compiler actually does this, but I am claiming that one is depending on ["just happens]
-behaviour, which is bad.
-
-There are two solutions: first is to make `result` an atomic, thus forcing it always
-to be checked. The second is to move the lock in the main thread to before the thread
-creation, thus forcing the thread to only be executed once the wait has begun.
-
-
-Here is another problematic pattern which ["just happens] to work with Boost.Thread
-but (probably) won't with `std::condition_variable`:
-
-    boost::condition_variable done;
-    boost::mutex lock1, lock2;
-    boost::unique_lock<decltype(lock1)> guard1(lock1);
-    int result=0;
-    boost::thread([&]{
-        {
-            boost::lock_guard<decltype(lock1)> guard(lock1);
-            result=78;
-        }
-        done.notify_one();
-    });
-    boost::unique_lock<decltype(lock2)> guard2(lock2);
-    guard1.unlock();
-    done.wait(guard2);
-
-This pattern is only lost wakeup safe if and only if thread interruption support
-is enabled (which it is by default). The fact it is lost wakeup safe is due to an
-implementation detail: if thread interruptions are
-enabled, Boost.Thread doesn't actually atomically unlock your mutex during the wait
-as it is supposed to. It actually passes an internal mutex to the wait, and locks
-that same internal mutex during notifies, thus effectively ['emulating] the atomicity
-of the mutex unlock by forcing notifies to only occur when the underlying OS has
-atomically unlocked the internal mutex. In the example above, if the notify is
-called during the short window between Boost.Thread manually unlocking `guard` and
-starting the wait, the notify will block on the internal mutex, thus not losing the wake.
-[Incidentally, `condition_variable_any` always does this emulation of atomic unlock
-via an internal mutex, it's why it's slower than standard condition variables].
-
-If you disable thread interruptions, you may well now lose wakeups because in the tiny
-window -- or more likely
-as C++ 11/14 becomes popular, if someone naively converted over the Boost code to
-use `std::condition_variable` they may get a nasty surprise depending on the STL
-implementation. The only completely race free solution is to always notify while
-holding the mutex, or if that isn't possible to loop the `notify_one()` with a check to see if
-the wait has exited, so the following code is in fact race free and a correct use
-of condition variables:
-
-    boost::condition_variable done;
-    boost::mutex lock;
-    int result=0;
-        boost::atomic<bool> woken(false);
-    boost::unique_lock<decltype(lock)> guard(lock);
-    boost::thread([&]{
-        {
-            boost::lock_guard<decltype(lock)> guard2(lock);
-            result=78;
-        }
-        while(!woken) {
-            done.notify_one();
-            boost::this_thread::yield();
-        }
-    });
-    done.wait(guard, [&result] { return result!=0; });
-    woken=true;
-
-As Hans Boehm once told me, a good sign of correct condition variable usage is when
-there are predicate testing loops on [*both] the wait and the notify (he was referring
-to raw POSIX condition variables). If your current
-usage of condition variables is not predicate looping both waits and notifies, you may
-have a lost wakeup problem which likely would only present itself when the CPU is
-under very heavy load.
-
-Due to a lot of preexisting C++ code using condition variables in variously unsafe
-ways, in Boost v1.56 [link thread.synchronization.permit_ref a new safe notification
-object called a permit was added] which acts very similarly to condition variables,
-but is very hard to accidentally misuse. `boost::permit<>` and `boost::permit_any<>` are
-generally API compatible with condition variables, thus allowing easy retrofitting
-of legacy C++ code.
 
 [section:condition_variable Class `condition_variable`]
 
@@ -973,11 +777,11 @@ The typedef `condition` is provided for backwards compatibility with previous bo
 ]
 
 [/
-[[Synchronization:] [The call to notify_all_at_thread_exit and the completion of the destructors for all the current threadï¿½s variables of thread storage duration synchronize with (1.10) calls to functions waiting on cond.
+[[Synchronization:] [The call to notify_all_at_thread_exit and the completion of the destructors for all the current threadÕs variables of thread storage duration synchronize with (1.10) calls to functions waiting on cond.
 ]]
 [[Note:] [The supplied lock will be held until the thread exits, and care must be taken to ensure that this does not cause deadlock due to lock ordering issues. After calling notify_all_at_thread_exit it is recommended that the thread should be exited as soon as possible, and that no blocking or time-consuming tasks are run on that thread.
 ]]
-[[Note:] [It is the userï¿½s responsibility to ensure that waiting threads do not erroneously assume that the thread has finished if they experience spurious wakeups. This typically requires that the condition being waited for is satisfied while holding the lock on lk, and that this lock is not released and reacquired prior to calling notify_all_at_thread_exit.
+[[Note:] [It is the userÕs responsibility to ensure that waiting threads do not erroneously assume that the thread has finished if they experience spurious wakeups. This typically requires that the condition being waited for is satisfied while holding the lock on lk, and that this lock is not released and reacquired prior to calling notify_all_at_thread_exit.
 ]]
 ]
 
