@@ -289,7 +289,6 @@ namespace boost
         void revoke() BOOST_NOEXCEPT;
 
         void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
-        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<false> if you wish to notify_all()"); grant(); revoke(); }
         
 #ifdef BOOST_THREAD_USES_CHRONO
         inline cv_status wait_until(
@@ -627,7 +626,6 @@ namespace boost
             BOOST_VERIFY(!pthread_permit_revoke(&perm));
         }
         void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
-        void notify_all() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(!consuming, "Use permit<false> if you wish to notify_all()"); grant(); revoke(); }
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>

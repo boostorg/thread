@@ -40,9 +40,9 @@ of that permit, the only difference with the non-consuming variant is that
 the permit is automatically regranted as soon as it is consumed. This leads
 to the only API difference to condition variables: `permit<consuming=true>`
 provides `notify_one()` but not `notify_all()`, whilst `permit<consuming=false>`
-provides `notify_all()` but not `notify_one()`. When deciding to substitute
-permits for condition variables, you will need to decide carefully which
-kind of permit is the correct substitute.
+provides neither and you will have to use `grant()` and `revoke()` instead.
+When deciding to substitute permits for condition variables, you will need
+to decide carefully which kind of permit is the correct substitute.
 
 The strong guarantees given by permit objects are as follows:
 
@@ -349,7 +349,6 @@ advised to treat any proposal of an ["improved] threading object with the deepes
             void revoke() noexcept;
 
             void notify_one() noexcept;  // if consuming=true
-            void notify_all() noexcept;  // if consuming=false
 
             void wait(boost::unique_lock<boost::mutex>& lock);
 
@@ -430,7 +429,7 @@ exit (potentially with exception).]]
 
 [variablelist
 
-[[Effects:] [Grants permit to one waiting thread, blocking until that one waiting thread is
+[[Effects:] [Grants permit to one waiting thread, [*blocking] until that one waiting thread is
 released. If there is no waiting thread, gives permit to the next thread to wait and returns
 immediately.
 
@@ -438,10 +437,16 @@ If the permit is consuming, the permit is atomically transferred to the winning 
 
 If the permit is non-consuming, the permit is still atomically transferred to
 the winning thread, but the permit is atomically regranted. You are furthermore guaranteed that exactly
-every waiter at the time of grant will be released before the grant operation returns. Note that
-because of this guarantee, only one grant may occur at any one time per permit instance i.e. grant is a
-critical section. This implies that if a grant is operating, any new waits hold until the grant
-completes.
+every waiter at the time of grant will be released before the grant operation returns. Note that this
+guarantee has the following consequences:
+
+# You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
+mutex and therefore the grant will never exit. This doesn't apply to consuming permits, as the one to
+one grant to wake relationship means that a non-blocking implementation can be used.
+
+# Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
+implies that if a grant is operating, any new waits hold until the grant completes. Again, this only
+applies to non-consuming permits.
 ]]
 
 [[Throws:] [Nothing.]]
@@ -469,20 +474,6 @@ completes.
 [[Precondition:] [Only available if consuming is true, otherwise static asserts.]]
 
 [[Effects:] [Same as `grant()`.]]
-
-[[Throws:] [Nothing.]]
-
-]
-
-[endsect]
-
-[section:notify_all `void notify_all()`]
-
-[variablelist
-
-[[Precondition:] [Only available if consuming is false, otherwise static asserts.]]
-
-[[Effects:] [Same as `grant()` followed by a `revoke()`.]]
 
 [[Throws:] [Nothing.]]
 
