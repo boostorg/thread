@@ -412,9 +412,9 @@ waiting at the point of grant.
 @{
 */
 //! Waits on a pthread_permit1_t
-inline int pthread_permit1_wait(pthread_permit1_t *permit, pthread_mutex_t *mtx);
+PTHREAD_PERMIT_API(int , permit1_wait, (pthread_permit1_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permit1_t where grants may be issued with the mutex held
-inline int pthread_permit1_wait_locked_grant(pthread_permit1_t *permit, pthread_mutex_t *mtx);
+PTHREAD_PERMIT_API(int , permit1_wait_locked_grant, (pthread_permit1_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permitc_t
 PTHREAD_PERMIT_API(int , permitc_wait, (pthread_permitc_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permitc_t where grants may be issued with the mutex held

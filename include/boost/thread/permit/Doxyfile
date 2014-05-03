@@ -1,0 +1,12 @@
+PROJECT_NAME           = "The POSIX threads permit objects"
+PROJECT_NUMBER         = v0.92
+PROJECT_BRIEF          = "(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/"
+OPTIMIZE_OUTPUT_FOR_C  = YES
+INPUT                  = pthread_permit.h
+SOURCE_BROWSER         = YES
+TYPEDEF_HIDES_STRUCT   = YES
+MACRO_EXPANSION        = YES
+PREDEFINED             = DOXYGEN_PREPROCESSOR
+HIDE_UNDOC_MEMBERS     = YES
+GENERATE_MAN           = YES
+MAN_LINKS              = YES
