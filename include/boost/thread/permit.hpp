@@ -77,6 +77,13 @@ namespace boost
         };
     }
 
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+    namespace this_thread
+    {
+        void BOOST_THREAD_DECL interruption_point();
+    }
+#endif
+
     template<bool consuming=true> class permit : private detail::permit_impl_selector<consuming>
     {
       typedef detail::permit_impl_selector<consuming> permit_impl;
@@ -311,7 +318,7 @@ namespace boost
         }
         bool do_wait_until(struct timespec const &timeout)
         {
-            int res = pthread_permit_timedwait(&perm, NULL, &timeout);
+            int cond_res = pthread_permit_timedwait(&perm, NULL, &timeout);
 #if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
             this_thread::interruption_point();
 #endif
@@ -418,13 +425,6 @@ namespace boost
     };
 
 
-
-#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
-    namespace this_thread
-    {
-        void BOOST_THREAD_DECL interruption_point();
-    }
-#endif
 
     namespace thread_permit_detail
     {
