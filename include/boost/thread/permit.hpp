@@ -296,8 +296,104 @@ namespace boost
         void grant() BOOST_NOEXCEPT;
         void revoke() BOOST_NOEXCEPT;
 
-        void notify_one() BOOST_NOEXCEPT { BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
-        
+        void notify_one() BOOST_NOEXCEPT{ BOOST_STATIC_ASSERT_MSG(consuming, "Use permit<true> if you wish to notify_one()"); grant(); }
+
+        void wait()
+        {
+            int res = pthread_permit_wait(&perm, NULL);
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+            this_thread::interruption_point();
+#endif
+            if(res)
+            {
+                boost::throw_exception(condition_error(res, "boost::permit::wait failed in pthread_permit_wait"));
+            }
+        }
+        bool do_wait_until(struct timespec const &timeout)
+        {
+            int res = pthread_permit_timedwait(&perm, NULL, &timeout);
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+            this_thread::interruption_point();
+#endif
+            if(cond_res==ETIMEDOUT)
+            {
+                return false;
+            }
+            if(cond_res)
+            {
+                boost::throw_exception(condition_error(cond_res, "boost::permit::do_wait_until failed in pthread_permit_timedwait"));
+            }
+            return true;
+        }
+
+#if defined BOOST_THREAD_USES_DATETIME
+        inline bool timed_wait(
+            boost::system_time const& abs_time)
+        {
+#if defined BOOST_THREAD_WAIT_BUG
+            struct timespec const timeout=detail::to_timespec(abs_time + BOOST_THREAD_WAIT_BUG);
+            return do_wait_until(timeout);
+#else
+            struct timespec const timeout=detail::to_timespec(abs_time);
+            return do_wait_until(timeout);
+#endif
+        }
+        bool timed_wait(
+            xtime const& abs_time)
+        {
+            return timed_wait(system_time(abs_time));
+        }
+
+        template<typename duration_type>
+        bool timed_wait(
+            duration_type const& wait_duration)
+        {
+            return timed_wait(get_system_time()+wait_duration);
+        }
+#endif
+
+#ifdef BOOST_THREAD_USES_CHRONO
+
+        template <class Duration>
+        cv_status
+            wait_until(
+            const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+                using namespace chrono;
+                typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+                wait_until(
+                    nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+                return system_clock::now() < t ? cv_status::no_timeout :
+                    cv_status::timeout;
+        }
+
+        template <class Clock, class Duration>
+        cv_status
+            wait_until(
+            const chrono::time_point<Clock, Duration>& t)
+        {
+                using namespace chrono;
+                system_clock::time_point     s_now = system_clock::now();
+                typename Clock::time_point  c_now = Clock::now();
+                wait_until(s_now + ceil<nanoseconds>(t - c_now));
+                return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
+        }
+
+        template <class Rep, class Period>
+        cv_status
+            wait_for(
+            const chrono::duration<Rep, Period>& d)
+        {
+                using namespace chrono;
+                system_clock::time_point s_now = system_clock::now();
+                steady_clock::time_point c_now = steady_clock::now();
+                wait_until(s_now + ceil<nanoseconds>(d));
+                return steady_clock::now() - c_now < d ? cv_status::no_timeout :
+                    cv_status::timeout;
+
+        }
+#endif
+
 #ifdef BOOST_THREAD_USES_CHRONO
         inline cv_status wait_until(
             unique_lock<mutex>& lk,
@@ -307,6 +403,15 @@ namespace boost
             nanoseconds d = tp.time_since_epoch();
             timespec ts = boost::detail::to_timespec(d);
             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
+        }
+        inline cv_status wait_until(
+            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+        {
+            using namespace chrono;
+            nanoseconds d = tp.time_since_epoch();
+            timespec ts = boost::detail::to_timespec(d);
+            if(do_wait_until(ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
 #endif
@@ -471,6 +576,17 @@ namespace boost
             pthread_permit_destroy(&perm);
         }
 
+        void wait()
+        {
+            int res=pthread_permit_wait(&perm, &internal_mutex);
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+            this_thread::interruption_point();
+#endif
+            if(res)
+            {
+                boost::throw_exception(condition_error(res, "boost::permit_any::wait() failed in pthread_permit_wait"));
+            }
+        }
         template<typename lock_type>
         void wait(lock_type& m)
         {
@@ -478,7 +594,7 @@ namespace boost
             {
                 thread_permit_detail::lock_on_exit<lock_type> guard;
 #if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
-                detail::interruption_checker check_for_interruption(&internal_mutex,pthread_permit_get_internal_cond(&perm));
+                detail::interruption_checker check_for_interruption(&internal_mutex, pthread_permit_get_internal_cond(&perm));
                 guard.activate(m);
                 res=pthread_permit_wait(&perm, &internal_mutex);
 #else
@@ -494,6 +610,7 @@ namespace boost
                 boost::throw_exception(condition_error(res, "boost::permit_any::wait() failed in pthread_permit_wait"));
             }
         }
+
 
         template<typename lock_type,typename predicate_type>
         void wait(lock_type& m,predicate_type pred)
@@ -633,6 +750,74 @@ namespace boost
         }
 #endif
 
+#if defined BOOST_THREAD_USES_DATETIME
+        bool timed_wait(boost::system_time const& abs_time)
+        {
+            struct timespec const timeout=detail::to_timespec(abs_time);
+            return do_wait_until(timeout);
+        }
+        bool timed_wait(xtime const& abs_time)
+        {
+            return timed_wait(system_time(abs_time));
+        }
+
+        template<typename duration_type>
+        bool timed_wait(duration_type const& wait_duration)
+        {
+            return timed_wait(get_system_time()+wait_duration);
+        }
+#endif
+#ifdef BOOST_THREAD_USES_CHRONO
+        template <class Duration>
+        cv_status
+            wait_until(
+            const chrono::time_point<chrono::system_clock, Duration>& t)
+        {
+                using namespace chrono;
+                typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+                wait_until(
+                    nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+                return system_clock::now() < t ? cv_status::no_timeout :
+                    cv_status::timeout;
+        }
+
+        template <class Clock, class Duration>
+        cv_status
+            wait_until(
+            const chrono::time_point<Clock, Duration>& t)
+        {
+                using namespace chrono;
+                system_clock::time_point     s_now = system_clock::now();
+                typename Clock::time_point  c_now = Clock::now();
+                wait_until(s_now + ceil<nanoseconds>(t - c_now));
+                return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
+        }
+
+        template <class Rep, class Period>
+        cv_status
+            wait_for(
+            const chrono::duration<Rep, Period>& d)
+        {
+                using namespace chrono;
+                system_clock::time_point s_now = system_clock::now();
+                steady_clock::time_point c_now = steady_clock::now();
+                wait_until(s_now + ceil<nanoseconds>(d));
+                return steady_clock::now() - c_now < d ? cv_status::no_timeout :
+                    cv_status::timeout;
+
+        }
+
+        cv_status wait_until(
+            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+        {
+            using namespace chrono;
+            nanoseconds d = tp.time_since_epoch();
+            timespec ts = boost::detail::to_timespec(d);
+            if(do_wait_until(ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
+        }
+#endif
+
         void grant() BOOST_NOEXCEPT
         {
             BOOST_VERIFY(!pthread_permit_grant(&perm));
@@ -676,6 +861,23 @@ namespace boost
           return true;
         }
 
+        inline bool do_wait_until(
+          struct timespec const &timeout)
+        {
+          int res=pthread_permit_timedwait(&perm, NULL, &timeout);
+#if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
+          this_thread::interruption_point();
+#endif
+          if(res==ETIMEDOUT)
+          {
+              return false;
+          }
+          if(res)
+          {
+              boost::throw_exception(condition_error(res, "boost::permit_any::do_wait_until() failed in pthread_permit_timedwait"));
+          }
+          return true;
+        }
 
     };
     
