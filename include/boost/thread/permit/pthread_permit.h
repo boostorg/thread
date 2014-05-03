@@ -424,9 +424,9 @@ PTHREAD_PERMIT_API(int , permitnc_wait, (pthread_permitnc_t *permit, pthread_mut
 //! Waits on a pthread_permitnc_t where grants may be issued with the mutex held
 PTHREAD_PERMIT_API(int , permitnc_wait_locked_grant, (pthread_permitnc_t *permit, pthread_mutex_t *mtx));
 //! Waits on a pthread_permit1_t for a time
-PTHREAD_PERMIT_API(int , pthread_permit1_timedwait, (pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
+PTHREAD_PERMIT_API(int , permit1_timedwait, (pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
 //! Waits on a pthread_permit1_t for a time where grants may be issued with the mutex held
-PTHREAD_PERMIT_API(int , pthread_permit1_timedwait_locked_grant, (pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
+PTHREAD_PERMIT_API(int , permit1_timedwait_locked_grant, (pthread_permit1_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
 //! Waits on a pthread_permitc_t for a time
 PTHREAD_PERMIT_API(int , permitc_timedwait, (pthread_permitc_t *permit, pthread_mutex_t *mtx, const struct timespec *ts));
 //! Waits on a pthread_permitc_t for a time where grants may be issued with the mutex held
