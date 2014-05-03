@@ -112,9 +112,8 @@ template<class state> struct notify_unlocked
             {
                 // Wait for wait to begin
                 s->gate=true;
-                while(s->waitexit==s->waitenter && gate)
+                while(s->gate && gate)
                     boost::this_thread::yield();
-                s->gate=false;
                 s->i.signal();  // Release the wait
                 ++s->signalled;
                 // Wait for wait to complete or time out
@@ -130,7 +129,7 @@ template<class state> struct notify_unlocked
             {
                 while(gate)
                 {
-                    while(!s->gate)
+                    while(!s->gate.exchange(false) && gate)
                         boost::this_thread::yield();
                     ++s->waitenter;
                     if(!s->i.wait(1000) && gate)

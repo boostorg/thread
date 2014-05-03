@@ -76,8 +76,7 @@ destruction is safe.
 # Additionally, the following common pattern is safe, which it would not be
 with condition variables:
 
- ```
-{
+ ```{
     boost::permit_c done;
     boost::mutex lock;
     int result=0;
@@ -89,8 +88,7 @@ with condition variables:
     });
     done.wait(guard); // don't need predicate checks with permits
     // missing thread join!
-}
- ```
+}```
 
  The problem here is that the notify can cause the permit object to be
  destroyed before the notify has exited -- which if tried with condition
