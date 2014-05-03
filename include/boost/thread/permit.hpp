@@ -79,7 +79,14 @@ namespace boost
 
     template<bool consuming=true> class permit : private detail::permit_impl_selector<consuming>
     {
-      typedef typename detail::permit_impl_selector<consuming>::pthread_permit_t pthread_permit_t;
+      typedef detail::permit_impl_selector<consuming> permit_impl;
+      typedef typename permit_impl::pthread_permit_t pthread_permit_t;
+      using permit_impl::pthread_permit_init;
+      using permit_impl::pthread_permit_destroy;
+      using permit_impl::pthread_permit_grant;
+      using permit_impl::pthread_permit_revoke;
+      using permit_impl::pthread_permit_wait;
+      using permit_impl::pthread_permit_timedwait;
     private:
 #if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         pthread_mutex_t internal_mutex;
@@ -421,7 +428,15 @@ namespace boost
 
     template<bool consuming=true> class permit_any : private detail::permit_impl_selector<consuming>
     {
-        typedef typename detail::permit_impl_selector<consuming>::pthread_permit_t pthread_permit_t;
+        typedef detail::permit_impl_selector<consuming> permit_impl;
+        typedef typename permit_impl::pthread_permit_t pthread_permit_t;
+        using permit_impl::pthread_permit_init;
+        using permit_impl::pthread_permit_destroy;
+        using permit_impl::pthread_permit_grant;
+        using permit_impl::pthread_permit_revoke;
+        using permit_impl::pthread_permit_wait;
+        using permit_impl::pthread_permit_timedwait;
+
 #if defined BOOST_THREAD_PERMIT_PROVIDES_INTERRUPTIONS
         pthread_mutex_t internal_mutex;
 #endif

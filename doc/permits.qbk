@@ -7,6 +7,8 @@
 
 [section:permit_ref Permits -- EXTENSION]
 
+(C) 2011-2014 Niall Douglas
+
 [heading Synopsis]
 
   namespace boost 
@@ -97,10 +99,6 @@ with condition variables:
 
 [warning Be careful of directly using condition variables in your code!]
 
-(The following section is written by Niall Douglas to explain why you should
-choose `boost::permit<>` instead of condition variables unless you have a good
-reason not to. Any errors are his alone)
-
 Surprisingly little code which directly uses condition variables is completely problem
 free -- condition variables are a threading ['primitive] for a reason, but
 unlike the other threading primitives they are particularly easy to write
@@ -126,7 +124,6 @@ us look at a common code pattern directly using condition variables:
 This code is unsafe because result may not get set by the time the wait
 predicate is checked, but may have become set and the notify issued before
 the wait begins. This is an example of a lost wakeup.
-
 
 An improved example might look like this:
 
