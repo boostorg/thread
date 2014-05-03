@@ -127,11 +127,11 @@ TEST_CASE("timespec/diff", "Tests that timespec_diff works as intended")
 TEST_CASE("pthread_permit1/initdestroy", "Tests repeated init and destroy on same object")
 {
   pthread_permit1_t permit;
-  REQUIRE(0==pthread_permit1_init(&permit, 1));
+  REQUIRE(0==pthread_permit1_init(&permit, 1, NULL));
   REQUIRE(0==pthread_permit1_grant(&permit));
   pthread_permit1_destroy(&permit);
   REQUIRE(EINVAL==pthread_permit1_grant(&permit));
-  REQUIRE(0==pthread_permit1_init(&permit, 1));
+  REQUIRE(0==pthread_permit1_init(&permit, 1, NULL));
   REQUIRE(0==pthread_permit1_grant(&permit));
   pthread_permit1_destroy(&permit);
   REQUIRE(EINVAL==pthread_permit1_grant(&permit));
@@ -140,7 +140,7 @@ TEST_CASE("pthread_permit1/initdestroy", "Tests repeated init and destroy on sam
 TEST_CASE("pthread_permit1/initwait1", "Tests initially granted doesn't wait, and that grants cause exactly one wait")
 {
   pthread_permit1_t permit;
-  REQUIRE(0==pthread_permit1_init(&permit, 1));
+  REQUIRE(0==pthread_permit1_init(&permit, 1, NULL));
   REQUIRE(0==pthread_permit1_timedwait(&permit, NULL, NULL));
   REQUIRE(ETIMEDOUT==pthread_permit1_timedwait(&permit, NULL, NULL));
   pthread_permit1_destroy(&permit);
@@ -150,7 +150,7 @@ TEST_CASE("pthread_permit1/initwait1", "Tests initially granted doesn't wait, an
 TEST_CASE("pthread_permit1/initwait2", "Tests not initially granted does wait")
 {
   pthread_permit1_t permit;
-  REQUIRE(0==pthread_permit1_init(&permit, 0));
+  REQUIRE(0==pthread_permit1_init(&permit, 0, NULL));
   REQUIRE(ETIMEDOUT==pthread_permit1_timedwait(&permit, NULL, NULL));
   pthread_permit1_destroy(&permit);
   REQUIRE(EINVAL==pthread_permit1_grant(&permit));
@@ -159,7 +159,7 @@ TEST_CASE("pthread_permit1/initwait2", "Tests not initially granted does wait")
 TEST_CASE("pthread_permit1/grantwait", "Tests that grants cause exactly one wait")
 {
   pthread_permit1_t permit;
-  REQUIRE(0==pthread_permit1_init(&permit, 0));
+  REQUIRE(0==pthread_permit1_init(&permit, 0, NULL));
   REQUIRE(0==pthread_permit1_grant(&permit));
   REQUIRE(0==pthread_permit1_grant(&permit));
   REQUIRE(0==pthread_permit1_timedwait(&permit, NULL, NULL));
@@ -171,7 +171,7 @@ TEST_CASE("pthread_permit1/grantwait", "Tests that grants cause exactly one wait
 TEST_CASE("pthread_permit1/grantrevokewait", "Tests that grants cause exactly one wait and revoke revokes exactly once")
 {
   pthread_permit1_t permit;
-  REQUIRE(0==pthread_permit1_init(&permit, 0));
+  REQUIRE(0==pthread_permit1_init(&permit, 0, NULL));
   REQUIRE(ETIMEDOUT==pthread_permit1_timedwait(&permit, NULL, NULL));
   REQUIRE(0==pthread_permit1_grant(&permit));
   pthread_permit1_revoke(&permit);
@@ -208,7 +208,7 @@ TEST_CASE("pthread_permit1/destroywait", "Tests that destroy causes waits in oth
   } };
   for(n=0; n<1000; n++)
   {
-    REQUIRE(0==pthread_permit1_init(&permit, 0));
+    REQUIRE(0==pthread_permit1_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &mutex, &permit, ref(waiter));
     while(!waiter);
     // Note that if other thread hasn't entered wait by this time the sleep returns,
@@ -232,7 +232,7 @@ TEST_CASE("pthread_permit1/destroygrant", "Tests that destroy induced by a grant
   } };
   for(n=0; n<10000; n++)
   {
-    REQUIRE(0==pthread_permit1_init(&permit, 0));
+    REQUIRE(0==pthread_permit1_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &permit);
     REQUIRE(0==pthread_permit1_wait(&permit, NULL));
     pthread_permit1_destroy(&permit);
@@ -248,9 +248,9 @@ TEST_CASE("pthread_permitX/interchangeable", "Tests that permit1, permitc and pe
   pthread_permit1_t permit1;
   pthread_permitc_t permitc;
   pthread_permitnc_t permitnc;
-  REQUIRE(0==pthread_permit1_init(&permit1, 0));
-  REQUIRE(0==permitc_init(&permitc, 0));
-  REQUIRE(0==permitnc_init(&permitnc, 0));
+  REQUIRE(0==pthread_permit1_init(&permit1, 0, NULL));
+  REQUIRE(0==permitc_init(&permitc, 0, NULL));
+  REQUIRE(0==permitnc_init(&permitnc, 0, NULL));
 
   pthread_permitX_t somepermit;
   somepermit=&permit1;
@@ -281,11 +281,11 @@ TEST_CASE("pthread_permitX/interchangeable", "Tests that permit1, permitc and pe
 TEST_CASE("pthread_permitc/initdestroy", "Tests repeated init and destroy on same object")
 {
   pthread_permitc_t permit;
-  REQUIRE(0==permitc_init(&permit, 1));
+  REQUIRE(0==permitc_init(&permit, 1, NULL));
   REQUIRE(0==permitc_grant(&permit));
   permitc_destroy(&permit);
   REQUIRE(EINVAL==permitc_grant(&permit));
-  REQUIRE(0==permitc_init(&permit, 1));
+  REQUIRE(0==permitc_init(&permit, 1, NULL));
   REQUIRE(0==permitc_grant(&permit));
   permitc_destroy(&permit);
   REQUIRE(EINVAL==permitc_grant(&permit));
@@ -294,7 +294,7 @@ TEST_CASE("pthread_permitc/initdestroy", "Tests repeated init and destroy on sam
 TEST_CASE("pthread_permitc/initwait1", "Tests initially granted doesn't wait, and that grants cause exactly one wait")
 {
   pthread_permitc_t permit;
-  REQUIRE(0==permitc_init(&permit, 1));
+  REQUIRE(0==permitc_init(&permit, 1, NULL));
   REQUIRE(0==permitc_timedwait(&permit, NULL, NULL));
   REQUIRE(ETIMEDOUT==permitc_timedwait(&permit, NULL, NULL));
   permitc_destroy(&permit);
@@ -304,7 +304,7 @@ TEST_CASE("pthread_permitc/initwait1", "Tests initially granted doesn't wait, an
 TEST_CASE("pthread_permitc/initwait2", "Tests not initially granted does wait")
 {
   pthread_permitc_t permit;
-  REQUIRE(0==permitc_init(&permit, 0));
+  REQUIRE(0==permitc_init(&permit, 0, NULL));
   REQUIRE(ETIMEDOUT==permitc_timedwait(&permit, NULL, NULL));
   permitc_destroy(&permit);
   REQUIRE(EINVAL==permitc_grant(&permit));
@@ -313,7 +313,7 @@ TEST_CASE("pthread_permitc/initwait2", "Tests not initially granted does wait")
 TEST_CASE("pthread_permitc/grantwait", "Tests that grants cause exactly one wait")
 {
   pthread_permitc_t permit;
-  REQUIRE(0==permitc_init(&permit, 0));
+  REQUIRE(0==permitc_init(&permit, 0, NULL));
   REQUIRE(0==permitc_grant(&permit));
   REQUIRE(0==permitc_grant(&permit));
   REQUIRE(0==permitc_timedwait(&permit, NULL, NULL));
@@ -325,7 +325,7 @@ TEST_CASE("pthread_permitc/grantwait", "Tests that grants cause exactly one wait
 TEST_CASE("pthread_permitc/grantrevokewait", "Tests that grants cause exactly one wait and revoke revokes exactly once")
 {
   pthread_permitc_t permit;
-  REQUIRE(0==permitc_init(&permit, 0));
+  REQUIRE(0==permitc_init(&permit, 0, NULL));
   REQUIRE(ETIMEDOUT==permitc_timedwait(&permit, NULL, NULL));
   REQUIRE(0==permitc_grant(&permit));
   permitc_revoke(&permit);
@@ -361,7 +361,7 @@ TEST_CASE("pthread_permitc/destroywait", "Tests that destroy causes waits in oth
   } };
   for(n=0; n<1000; n++)
   {
-    REQUIRE(0==permitc_init(&permit, 0));
+    REQUIRE(0==permitc_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &mutex, &permit, ref(waiter));
     while(!waiter);
     // Note that if other thread hasn't entered wait by this time the sleep returns,
@@ -388,7 +388,7 @@ TEST_CASE("pthread_permitc/destroygrant", "Tests that destroy induced by a grant
   } };
   for(n=0; n<10000; n++)
   {
-    REQUIRE(0==permitc_init(&permit, 0));
+    REQUIRE(0==permitc_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &permit);
     REQUIRE(0==permitc_timedwait(&permit, NULL, &ts));
     permitc_destroy(&permit);
@@ -399,7 +399,7 @@ TEST_CASE("pthread_permitc/destroygrant", "Tests that destroy induced by a grant
 TEST_CASE("pthread_permitnc/grantrevokewait", "Tests that non-consuming grants disable all waits")
 {
   pthread_permitnc_t permit;
-  REQUIRE(0==permitnc_init(&permit, 0));
+  REQUIRE(0==permitnc_init(&permit, 0, NULL));
   REQUIRE(ETIMEDOUT==permitnc_timedwait(&permit, NULL, NULL));
   REQUIRE(0==permitnc_grant(&permit));
   permitnc_revoke(&permit);
@@ -436,7 +436,7 @@ TEST_CASE("pthread_permitnc/destroywait", "Tests that destroy causes waits in ot
   } };
   for(n=0; n<1000; n++)
   {
-    REQUIRE(0==permitnc_init(&permit, 0));
+    REQUIRE(0==permitnc_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &mutex, &permit, ref(waiter));
     while(!waiter);
     // Note that if other thread hasn't entered wait by this time the sleep returns,
@@ -463,7 +463,7 @@ TEST_CASE("pthread_permitnc/destroygrant", "Tests that destroy induced by a gran
   } };
   for(n=0; n<10000; n++)
   {
-    REQUIRE(0==permitnc_init(&permit, 0));
+    REQUIRE(0==permitnc_init(&permit, 0, NULL));
     thread thread(lambda_t::call, &permit);
     REQUIRE(0==permitnc_timedwait(&permit, NULL, &ts));
     permitnc_destroy(&permit);
@@ -482,7 +482,7 @@ TEST_CASE("pthread_permit/non-parallel/selectfirst", "Tests that select does cho
   timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS; n++)
   {
-    REQUIRE(0==permitc_init(&permits[n], 1));
+    REQUIRE(0==permitc_init(&permits[n], 1, NULL));
   }
   for(n=0; n<SELECT_PERMITS; n++)
   {
@@ -531,7 +531,7 @@ TEST_CASE("pthread_permit/parallel/selectfirst", "Tests that select does choose 
   timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS; n++)
   {
-    REQUIRE(0==permitc_init(&permits[n], 1));
+    REQUIRE(0==permitc_init(&permits[n], 1, NULL));
   }
 #pragma omp parallel for schedule(dynamic)
   for(n=0; n<SELECT_PERMITS; n++)
@@ -589,9 +589,9 @@ TEST_CASE("pthread_permit/non-parallel/ncselect", "Tests that select does not co
   timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS-1; n++)
   {
-    REQUIRE(0==permitc_init(&permitcs[n], 1));
+    REQUIRE(0==permitc_init(&permitcs[n], 1, NULL));
   }
-  REQUIRE(0==permitnc_init(&permitnc, 1));
+  REQUIRE(0==permitnc_init(&permitnc, 1, NULL));
   for(n=0; n<SELECT_PERMITS; n++)
   {
     size_t m, selectedpermit=(size_t)-1;
@@ -646,9 +646,9 @@ TEST_CASE("pthread_permit/parallel/ncselect", "Tests that select does not consum
   timespec_get(&ts, 1 /*TIME_UTC*/);
   for(n=0; n<SELECT_PERMITS-1; n++)
   {
-    REQUIRE(0==permitc_init(&permitcs[n], 1));
+    REQUIRE(0==permitc_init(&permitcs[n], 1, NULL));
   }
-  REQUIRE(0==permitnc_init(&permitnc, 1));
+  REQUIRE(0==permitnc_init(&permitnc, 1, NULL));
 #pragma omp parallel for schedule(dynamic)
   for(n=0; n<SELECT_PERMITS; n++)
   {
@@ -713,7 +713,7 @@ TEST_CASE("pthread_permit/fdmirroring", "Tests that file descriptor mirroring wo
   pthread_permitnc_association_t assoc;
   struct pollfd pfd={0, 0, 0};
   pfd.events=POLLIN;
-  REQUIRE(0==permitnc_init(&permit, 0));
+  REQUIRE(0==permitnc_init(&permit, 0, NULL));
   REQUIRE(0==pipe(fds));
   pfd.fd=fds[0];
   REQUIRE(0!=(assoc=permitnc_associate_fd(&permit, fds)));
