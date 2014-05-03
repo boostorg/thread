@@ -111,13 +111,14 @@ template<class state> struct notify_unlocked
             while(gate)
             {
                 // Wait for wait to begin
-                while(!s->gate && gate)
+                s->gate=true;
+                while(s->waitexit==s->waitenter && gate)
                     boost::this_thread::yield();
-                boost::this_thread::yield();
+                s->gate=false;
                 s->i.signal();  // Release the wait
                 ++s->signalled;
                 // Wait for wait to complete or time out
-                while(s->gate && gate)
+                while(s->waitexit!=s->waitenter && gate)
                     boost::this_thread::yield();
                 s->i.unsignal();  // Unrelease the wait
             }
@@ -129,13 +130,12 @@ template<class state> struct notify_unlocked
             {
                 while(gate)
                 {
+                    while(!s->gate)
+                        boost::this_thread::yield();
                     ++s->waitenter;
-                    s->gate=true;
                     if(!s->i.wait(1000) && gate)
                         ++s->timedout;
                     ++s->waitexit;
-                    s->gate=false;
-                    boost::this_thread::yield();
                 }
             }
             catch(...)
@@ -434,23 +434,23 @@ int main(int argc, const char *argv[])
     boost::chrono::steady_clock::now();
 
     int failed=0;
-#if 0
     if(!test_notify<boost_condvar, notify_locked>()(seconds))
     {
         ++failed;
         BOOST_TEST("test_notify<boost_condvar, notify_locked> != true" && 0);
     }
+#if 0
     if(!test_notify<boost_condvar, notify_unlocked>()(seconds))
     {
         //++failed;
         //BOOST_TEST("test_notify<boost_condvar, notify_unlocked> != true" && 0);
     }
+#endif
     if(!test_notify<boost_permitc, notify_locked>()(seconds))
     {
         ++failed;
         BOOST_TEST("test_notify<boost_permitc, notify_locked> != true" && 0);
     }
-#endif
     if(!test_notify<boost_permitc, notify_unlocked>()(seconds))
     {
         ++failed;
@@ -461,8 +461,6 @@ int main(int argc, const char *argv[])
         ++failed;
         BOOST_TEST("test_notify<boost_permitnc, notify_unlocked> != true" && 0);
     }
-#if 0
-#if 0
 #ifdef _WIN32
     if(!test_notify<win32_condvar, notify_locked>()(seconds))
     {
@@ -476,7 +474,6 @@ int main(int argc, const char *argv[])
         BOOST_TEST("test_notify<posix_condvar, notify_locked> != true" && 0);
     }
 #endif
-#endif
     if(!test_producerconsumer<boost_permitc>()(seconds))
     {
         ++failed;
@@ -487,7 +484,6 @@ int main(int argc, const char *argv[])
         ++failed;
         BOOST_TEST("test_producerconsumer<boost_permitnc> != true" && 0);
     }
-#endif
 
 #ifdef _MSC_VER
 //    std::cout << "Press return to exit" << std::endl;
