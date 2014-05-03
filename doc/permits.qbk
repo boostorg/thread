@@ -7,7 +7,7 @@
 
 [section:permit_ref Permits -- EXTENSION]
 
-(C) 2011-2014 Niall Douglas http://www.nedproductions.biz/
+(C) 2011-2014 Niall Douglas [@http://www.nedproductions.biz/]
 
 [heading Synopsis]
 
@@ -76,19 +76,21 @@ destruction is safe.
 # Additionally, the following common pattern is safe, which it would not be
 with condition variables:
 
-    {
-        boost::permit_c done;
-        boost::mutex lock;
-        int result=0;
-        boost::lock_guard<decltype(lock)> guard(lock);
-        boost::thread([&]{
-            boost::lock_guard<decltype(lock)> guard2(lock);
-            result=78;
-            done.notify_one();
-        });
-        done.wait(guard); // don't need predicate checks with permits
-        // missing thread join!
-    }
+ ```
+{
+    boost::permit_c done;
+    boost::mutex lock;
+    int result=0;
+    boost::lock_guard<decltype(lock)> guard(lock);
+    boost::thread([&]{
+        boost::lock_guard<decltype(lock)> guard2(lock);
+        result=78;
+        done.notify_one();
+    });
+    done.wait(guard); // don't need predicate checks with permits
+    // missing thread join!
+}
+ ```
 
  The problem here is that the notify can cause the permit object to be
  destroyed before the notify has exited -- which if tried with condition
@@ -104,7 +106,8 @@ as a reusable promise/future pair but without transporting any value or
 exception state, just the permission to proceed. This is due to their
 original design intention, which was as a promise/future equivalent for C11
 (see below for their history, and note that the original C API is available
-in the `boost::c_permit` namespace). As such, they can be very useful for
+in the `boost::c_permit` namespace and documentation can be found at
+[@https://ci.nedprod.com/job/Boost.Thread%20Build%20Documentation/lastSuccessfulBuild/artifact/boost-trunk/boost/thread/permit/latex/pthread_permit_reference.pdf]). As such, they can be very useful for
 situations where a promise/future is too heavy (permits can spin instead of
 sleep, plus they need not be repeatedly constructed and destructed).
 
@@ -391,11 +394,11 @@ the winning thread, but the permit is atomically regranted. You are furthermore 
 every waiter at the time of grant will be released before the grant operation returns. Note that this
 guarantee has the following consequences:
 
-# You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
+1. You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
 mutex and therefore the grant will never exit. This doesn't apply to consuming permits, as the one to
 one grant to wake relationship means that a non-blocking implementation can be used.
 
-# Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
+2. Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
 implies that if a grant is operating, any new waits hold until the grant completes. Again, this only
 applies to non-consuming permits.
 ]]
@@ -938,10 +941,16 @@ If the permit is consuming, the permit is atomically transferred to the winning 
 
 If the permit is non-consuming, the permit is still atomically transferred to
 the winning thread, but the permit is atomically regranted. You are furthermore guaranteed that exactly
-every waiter at the time of grant will be released before the grant operation returns. Note that
-because of this guarantee, only one grant may occur at any one time per permit instance i.e. grant is a
-critical section. This implies that if a grant is operating, any new waits hold until the grant
-completes.
+every waiter at the time of grant will be released before the grant operation returns. Note that this
+guarantee has the following consequences:
+
+1. You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
+mutex and therefore the grant will never exit. This doesn't apply to consuming permits, as the one to
+one grant to wake relationship means that a non-blocking implementation can be used.
+
+2. Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
+implies that if a grant is operating, any new waits hold until the grant completes. Again, this only
+applies to non-consuming permits.
 ]]
 
 [[Throws:] [Nothing.]]
