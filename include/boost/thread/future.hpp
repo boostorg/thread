@@ -1140,7 +1140,7 @@ namespace boost
                 ++future_count;
             }
 
-#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
             template<typename F1, typename... Fs>
             void add(F1& f1, Fs&... fs)
             {
