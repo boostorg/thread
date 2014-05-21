@@ -1140,6 +1140,14 @@ namespace boost
                 ++future_count;
             }
 
+#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+            template<typename F1, typename... Fs>
+            void add(F1& f1, Fs&... fs)
+            {
+              add(f1); add(fs...);
+            }
+#endif
+
             count_type wait()
             {
                 all_futures_lock lk(futures);
@@ -1204,6 +1212,7 @@ namespace boost
         }
     }
 
+#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
     typename boost::enable_if<is_future_type<F1>,void>::type wait_for_all(F1& f1,F2& f2)
     {
@@ -1237,6 +1246,16 @@ namespace boost
         f4.wait();
         f5.wait();
     }
+#else
+    template<typename F1, typename... Fs>
+    void wait_for_all(F1& f1, Fs&... fs)
+    {
+        bool dummy[] = { (f1.wait(), true), (fs.wait(), true)... };
+
+        // prevent unused parameter warning
+        (void) dummy;
+    }
+#endif // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
     template<typename Iterator>
     typename boost::disable_if<is_future_type<Iterator>,Iterator>::type wait_for_any(Iterator begin,Iterator end)
@@ -1252,6 +1271,7 @@ namespace boost
         return boost::next(begin,waiter.wait());
     }
 
+#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
     typename boost::enable_if<is_future_type<F1>,unsigned>::type wait_for_any(F1& f1,F2& f2)
     {
@@ -1293,6 +1313,15 @@ namespace boost
         waiter.add(f5);
         return waiter.wait();
     }
+#else
+    template<typename F1, typename... Fs>
+    typename boost::enable_if<is_future_type<F1>, unsigned>::type wait_for_any(F1& f1, Fs&... fs)
+    {
+      detail::future_waiter waiter;
+      waiter.add(f1, fs...);
+      return waiter.wait();
+    }
+#endif // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
     template <typename R>
     class promise;
