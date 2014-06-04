@@ -32,7 +32,7 @@
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
@@ -42,6 +42,7 @@
 #include <boost/scoped_array.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/utility/enable_if.hpp>
+
 #include <list>
 #include <boost/next_prior.hpp>
 #include <vector>
@@ -547,20 +548,20 @@ namespace boost
           struct dummy;
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
           typedef T const& source_reference_type;
-          //typedef typename boost::mpl::if_<boost::is_fundamental<T>,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
           typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          //typedef typename boost::mpl::if_<boost::is_fundamental<T>,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
           typedef T move_dest_type;
 #elif defined BOOST_THREAD_USES_MOVE
-          typedef typename boost::mpl::if_c<boost::is_fundamental<T>::value,T,T&>::type source_reference_type;
-          //typedef typename boost::mpl::if_c<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          //typedef typename boost::mpl::if_c<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+          typedef typename conditional<boost::is_fundamental<T>::value,T,T&>::type source_reference_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+          //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
           typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
           typedef T move_dest_type;
 #else
           typedef T& source_reference_type;
-          typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
-          typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
 #endif
 
 
