@@ -22,7 +22,7 @@
 
 #include <boost/thread/sync_bounded_queue.hpp>
 
-void producer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
+void producer(the_ostream &/*mos*/, boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
@@ -44,7 +44,7 @@ void producer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
   }
 }
 
-void consumer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
+void consumer(the_ostream &/*mos*/, boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
@@ -66,7 +66,7 @@ void consumer(the_ostream &mos, boost::sync_bounded_queue<int> & sbq)
     //mos << "exception !!!\n";
   }
 }
-void consumer2(the_ostream &mos,  boost::sync_bounded_queue<int> & sbq)
+void consumer2(the_ostream &/*mos*/,  boost::sync_bounded_queue<int> & sbq)
 {
   using namespace boost;
   try {
