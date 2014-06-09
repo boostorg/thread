@@ -24,12 +24,12 @@
 #include <boost/assert.hpp>
 #include <list>
 #include <algorithm>
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind.hpp>
 #include <stdlib.h>
 #include <memory>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/io/ios_state.hpp>
 #include <boost/type_traits/is_same.hpp>

@@ -9,7 +9,7 @@
 #define BOOST_THREAD_FUTURE_ERROR_CODE_HPP
 
 #include <boost/thread/detail/config.hpp>
-#include <boost/detail/scoped_enum_emulation.hpp>
+#include <boost/core/scoped_enum.hpp>
 #include <boost/system/error_code.hpp>
 #include <boost/type_traits/integral_constant.hpp>
 

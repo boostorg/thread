@@ -15,7 +15,7 @@
 
 #ifndef BOOST_NO_EXCEPTIONS
 
-#include <boost/detail/scoped_enum_emulation.hpp>
+#include <boost/core/scoped_enum.hpp>
 #include <stdexcept>
 #include <boost/thread/exceptional_ptr.hpp>
 #include <boost/thread/detail/move.hpp>
@@ -38,10 +38,10 @@
 #include <algorithm>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 
 #include <list>
 #include <boost/next_prior.hpp>
