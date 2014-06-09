@@ -16,22 +16,5 @@
     "category": [
       "Concurrent", "System"
     ]
-  },
-  {
-    "key": "thread/executor",
-    "name": "Thread.Excutor",
-    "authors": [
-      "Vicente J. Botet Escriba"
-    ],
-    "maintainers": [
-      "Vicente J. Botet Escriba <vicente.botet -at- wanadoo.fr>"
-    ],
-    "description":
-      "Thread pools and other executors.",
-    "documentation": "executors/",
-    "std": [ "proposal" ],    
-    "category": [
-      "Concurrent"
-    ]
-  },
+  }
 ]
