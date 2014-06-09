@@ -9,7 +9,7 @@
 
 #include <boost/thread/detail/config.hpp>
 #ifndef BOOST_NO_SFINAE
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/type_traits/is_convertible.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/type_traits/remove_cv.hpp>
