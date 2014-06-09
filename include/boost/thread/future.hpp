@@ -3558,13 +3558,13 @@ namespace detail
     typedef packaged_task<R> packaged_task_type;
   #endif
 
-    if (int(policy) & int(launch::async)) {
+    if (boost::underlying_cast< int >(policy) & static_cast< int >(launch::async)) {
       packaged_task_type pt( f );
       BOOST_THREAD_FUTURE<R> ret = BOOST_THREAD_MAKE_RV_REF(pt.get_future());
       ret.set_async();
       boost::thread( boost::move(pt) ).detach();
       return ::boost::move(ret);
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (boost::underlying_cast< int >(policy) & static_cast< int >(launch::deferred)) {
       std::terminate();
       BOOST_THREAD_FUTURE<R> ret;
       return ::boost::move(ret);
@@ -3623,13 +3623,13 @@ namespace detail
     typedef packaged_task<R> packaged_task_type;
 #endif // defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 
-    if (int(policy) & int(launch::async)) {
+    if (boost::underlying_cast< int >(policy) & static_cast< int >(launch::async)) {
       packaged_task_type pt( boost::forward<F>(f) );
       BOOST_THREAD_FUTURE<R> ret = pt.get_future();
       ret.set_async();
       boost::thread( boost::move(pt) ).detach();
       return ::boost::move(ret);
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (boost::underlying_cast< int >(policy) & static_cast< int >(launch::deferred)) {
       std::terminate();
       BOOST_THREAD_FUTURE<R> ret;
       return ::boost::move(ret);
