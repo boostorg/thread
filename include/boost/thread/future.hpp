@@ -1094,11 +1094,7 @@ namespace boost
                 {
                     for(count_type_portable i=0;i<count;++i)
                     {
-#if defined __DECCXX || defined __SUNPRO_CC || defined __hpux
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
-#else
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex);
-#endif
+                        locks[i]=BOOST_THREAD_MAKE_RV_REF(boost::unique_lock<boost::mutex>(futures[i].future_->mutex));
                     }
                 }
 
@@ -2479,7 +2475,7 @@ namespace boost
                 boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
-            return BOOST_THREAD_FUTURE<void>(future_);
+            return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<void>(future_));
         }
 
         void set_value()
