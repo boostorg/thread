@@ -2475,7 +2475,8 @@ namespace boost
                 boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
-            return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<void>(future_));
+            //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<void>(future_));
+            return BOOST_THREAD_FUTURE<void>(future_);
         }
 
         void set_value()
