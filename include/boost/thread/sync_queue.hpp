@@ -315,11 +315,10 @@ namespace boost
   template <typename ValueType>
   queue_op_status sync_queue<ValueType>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
   {
-    if (empty(lk))
-    {
-      if (closed(lk)) return queue_op_status::closed;
-      return queue_op_status::empty;
-    }
+    bool closed = false;
+    wait_until_not_empty(lk, closed);
+    if (closed) return queue_op_status::closed;
+
     pull_front(elem, lk);
     return queue_op_status::success;
   }
