@@ -567,8 +567,10 @@ namespace boost
   {
     try
     {
-      if (closed(lk)) {return queue_op_status::closed;}
-      if (empty(lk)) {return queue_op_status::empty;}
+      bool closed = false;
+      wait_until_not_empty(lk, closed);
+      if (closed) return queue_op_status::closed;
+
       pull_front(elem, lk);
       return queue_op_status::success;
     }
@@ -638,14 +640,16 @@ namespace boost
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
   {
-    if (closed(lk)) return queue_op_status::closed;
-    push_back(elem, lk);
+    bool closed = false;
+    size_type in_p_1 = wait_until_not_full(lk, closed);
+    if (closed) return queue_op_status::closed;
+    push_at(elem, in_p_1, lk);
     return queue_op_status::success;
   }
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(const ValueType& elem)
   {
-    unique_lock<mutex>& lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return wait_push_back(elem, lk);
   }
 
@@ -677,11 +681,33 @@ namespace boost
   }
 
   template <typename ValueType>
-  typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::wait_until_not_full(unique_lock<mutex>& lk)
+  typename sync_bounded_queue<ValueType>::size_type
+  sync_bounded_queue<ValueType>::wait_until_not_full(unique_lock<mutex>& lk)
   {
     for (;;)
     {
       throw_if_closed(lk);
+      size_type in_p_1 = inc(in_);
+      if (in_p_1 != out_) // ! full()
+      {
+        return in_p_1;
+      }
+      ++waiting_full_;
+      not_full_.wait(lk);
+    }
+  }
+
+  template <typename ValueType>
+  typename sync_bounded_queue<ValueType>::size_type
+  sync_bounded_queue<ValueType>::wait_until_not_full(unique_lock<mutex>& lk, bool& closed)
+  {
+    for (;;)
+    {
+      if (this->closed_)
+      {
+        closed = true;
+        return out_;
+      }
       size_type in_p_1 = inc(in_);
       if (in_p_1 != out_) // ! full()
       {
@@ -775,12 +801,9 @@ namespace boost
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
-    if (closed(lk)) return queue_op_status::closed;
-    size_type in_p_1 = inc(in_);
-    if (in_p_1 == out_) // full()
-    {
-      return queue_op_status::full;
-    }
+    bool closed = false;
+    size_type in_p_1 = wait_until_not_full(lk, closed);
+    if (closed) return queue_op_status::closed;
     push_at(boost::move(elem), in_p_1, lk);
     return queue_op_status::success;
   }
