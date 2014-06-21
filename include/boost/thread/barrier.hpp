@@ -21,7 +21,7 @@
 #include <boost/thread/detail/nullary_function.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
 #include <boost/utility/result_of.hpp>
 
 #include <boost/config/abi_prefix.hpp>

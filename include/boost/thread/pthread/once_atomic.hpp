@@ -15,7 +15,7 @@
 #include <boost/cstdint.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/invoke.hpp>
-#include <boost/detail/no_exceptions_support.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 #include <boost/bind.hpp>
 #include <boost/atomic.hpp>
 

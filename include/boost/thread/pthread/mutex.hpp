@@ -9,6 +9,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <pthread.h>
 #include <boost/throw_exception.hpp>
+#include <boost/core/ignore_unused.hpp>
 #include <boost/thread/exceptions.hpp>
 #if defined BOOST_THREAD_PROVIDES_NESTED_LOCKS
 #include <boost/thread/lock_types.hpp>
@@ -106,6 +107,7 @@ namespace boost
         ~mutex()
         {
           int const res = posix::pthread_mutex_destroy(&m);
+          boost::ignore_unused(res);
           BOOST_ASSERT(!res);
         }
 
