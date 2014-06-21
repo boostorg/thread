@@ -15,7 +15,7 @@
 
 #ifndef BOOST_NO_EXCEPTIONS
 
-#include <boost/detail/scoped_enum_emulation.hpp>
+#include <boost/core/scoped_enum.hpp>
 #include <stdexcept>
 #include <boost/thread/exceptional_ptr.hpp>
 #include <boost/thread/detail/move.hpp>
@@ -32,16 +32,17 @@
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/is_void.hpp>
-#include <boost/mpl/if.hpp>
+#include <boost/type_traits/conditional.hpp>
 #include <boost/config.hpp>
 #include <boost/throw_exception.hpp>
 #include <algorithm>
 #include <boost/function.hpp>
 #include <boost/bind.hpp>
-#include <boost/ref.hpp>
+#include <boost/core/ref.hpp>
 #include <boost/scoped_array.hpp>
 #include <boost/enable_shared_from_this.hpp>
-#include <boost/utility/enable_if.hpp>
+#include <boost/core/enable_if.hpp>
+
 #include <list>
 #include <boost/next_prior.hpp>
 #include <vector>
@@ -547,20 +548,20 @@ namespace boost
           struct dummy;
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
           typedef T const& source_reference_type;
-          //typedef typename boost::mpl::if_<boost::is_fundamental<T>,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
           typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          //typedef typename boost::mpl::if_<boost::is_fundamental<T>,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
           typedef T move_dest_type;
 #elif defined BOOST_THREAD_USES_MOVE
-          typedef typename boost::mpl::if_c<boost::is_fundamental<T>::value,T,T&>::type source_reference_type;
-          //typedef typename boost::mpl::if_c<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          //typedef typename boost::mpl::if_c<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+          typedef typename conditional<boost::is_fundamental<T>::value,T,T&>::type source_reference_type;
+          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+          //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
           typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
           typedef T move_dest_type;
 #else
           typedef T& source_reference_type;
-          typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
-          typedef typename boost::mpl::if_<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
 #endif
 
 
@@ -1093,11 +1094,7 @@ namespace boost
                 {
                     for(count_type_portable i=0;i<count;++i)
                     {
-#if defined __DECCXX || defined __SUNPRO_CC || defined __hpux
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex).move();
-#else
-                        locks[i]=boost::unique_lock<boost::mutex>(futures[i].future_->mutex);
-#endif
+                        locks[i]=BOOST_THREAD_MAKE_RV_REF(boost::unique_lock<boost::mutex>(futures[i].future_->mutex));
                     }
                 }
 
@@ -1139,6 +1136,14 @@ namespace boost
                 }
                 ++future_count;
             }
+
+#ifndef BOOST_NO_CXX11_VARIADIC_TEMPLATES
+            template<typename F1, typename... Fs>
+            void add(F1& f1, Fs&... fs)
+            {
+              add(f1); add(fs...);
+            }
+#endif
 
             count_type wait()
             {
@@ -1204,6 +1209,7 @@ namespace boost
         }
     }
 
+#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
     typename boost::enable_if<is_future_type<F1>,void>::type wait_for_all(F1& f1,F2& f2)
     {
@@ -1237,6 +1243,16 @@ namespace boost
         f4.wait();
         f5.wait();
     }
+#else
+    template<typename F1, typename... Fs>
+    void wait_for_all(F1& f1, Fs&... fs)
+    {
+        bool dummy[] = { (f1.wait(), true), (fs.wait(), true)... };
+
+        // prevent unused parameter warning
+        (void) dummy;
+    }
+#endif // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
     template<typename Iterator>
     typename boost::disable_if<is_future_type<Iterator>,Iterator>::type wait_for_any(Iterator begin,Iterator end)
@@ -1252,6 +1268,7 @@ namespace boost
         return boost::next(begin,waiter.wait());
     }
 
+#ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
     typename boost::enable_if<is_future_type<F1>,unsigned>::type wait_for_any(F1& f1,F2& f2)
     {
@@ -1293,6 +1310,15 @@ namespace boost
         waiter.add(f5);
         return waiter.wait();
     }
+#else
+    template<typename F1, typename... Fs>
+    typename boost::enable_if<is_future_type<F1>, unsigned>::type wait_for_any(F1& f1, Fs&... fs)
+    {
+      detail::future_waiter waiter;
+      waiter.add(f1, fs...);
+      return waiter.wait();
+    }
+#endif // !defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 
     template <typename R>
     class promise;
@@ -2449,6 +2475,7 @@ namespace boost
                 boost::throw_exception(future_already_retrieved());
             }
             future_obtained=true;
+            //return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<void>(future_));
             return BOOST_THREAD_FUTURE<void>(future_);
         }
 
@@ -3496,14 +3523,14 @@ namespace detail
     typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                   , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3528,13 +3555,13 @@ namespace detail
     typedef packaged_task<R> packaged_task_type;
   #endif
 
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       packaged_task_type pt( f );
       BOOST_THREAD_FUTURE<R> ret = BOOST_THREAD_MAKE_RV_REF(pt.get_future());
       ret.set_async();
       boost::thread( boost::move(pt) ).detach();
       return ::boost::move(ret);
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
       BOOST_THREAD_FUTURE<R> ret;
       return ::boost::move(ret);
@@ -3560,14 +3587,14 @@ namespace detail
     typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_async_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
                 , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
               )
           ));
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_deferred_shared_state<Rp>(
               BF(
                   thread_detail::decay_copy(boost::forward<F>(f))
@@ -3593,13 +3620,13 @@ namespace detail
     typedef packaged_task<R> packaged_task_type;
 #endif // defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       packaged_task_type pt( boost::forward<F>(f) );
       BOOST_THREAD_FUTURE<R> ret = pt.get_future();
       ret.set_async();
       boost::thread( boost::move(pt) ).detach();
       return ::boost::move(ret);
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
       BOOST_THREAD_FUTURE<R> ret;
       return ::boost::move(ret);
@@ -4312,11 +4339,11 @@ namespace detail
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4335,11 +4362,11 @@ namespace detail
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(this->launch_policy(lock)) & int(launch::async)) {
+    if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::async)) {
       return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
-    } else if (int(this->launch_policy(lock)) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::deferred)) {
       this->future_->wait_internal(lock);
       return boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
@@ -4414,11 +4441,11 @@ namespace detail
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(policy) & int(launch::async)) {
+    if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
-    } else if (int(policy) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<shared_future<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4438,10 +4465,10 @@ namespace detail
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-    if (int(this->launch_policy(lock)) & int(launch::async)) {
+    if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::async)) {
       return boost::detail::make_future_async_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func));
-    } else if (int(this->launch_policy(lock)) & int(launch::deferred)) {
+    } else if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::deferred)) {
       this->future_->wait_internal(lock);
       return boost::detail::make_future_deferred_continuation_shared_state<shared_future<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func));
