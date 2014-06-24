@@ -571,10 +571,10 @@ namespace boost
 
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
+#ifdef __linux__
 #ifdef __powerpc__
         return hardware_concurrency();
 #endif
-#ifdef __linux__
         try {
             using namespace std;
 
