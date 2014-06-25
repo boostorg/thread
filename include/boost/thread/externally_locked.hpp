@@ -18,7 +18,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits/is_same.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/utility/swap.hpp>
+#include <boost/core/swap.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
