@@ -532,53 +532,29 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::pull_front(ValueType& elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      wait_until_not_empty(lk);
-      pull_front(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    wait_until_not_empty(lk);
+    pull_front(elem, lk);
   }
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
   ValueType sync_bounded_queue<ValueType>::pull_front()
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      wait_until_not_empty(lk);
-      return pull_front(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    wait_until_not_empty(lk);
+    return pull_front(lk);
   }
 
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
   {
-    try
-    {
-      bool closed = false;
-      wait_until_not_empty(lk, closed);
-      if (closed) return queue_op_status::closed;
+    bool closed = false;
+    wait_until_not_empty(lk, closed);
+    if (closed) return queue_op_status::closed;
 
-      pull_front(elem, lk);
-      return queue_op_status::success;
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    pull_front(elem, lk);
+    return queue_op_status::success;
   }
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_pull_front(ValueType& elem)
@@ -737,16 +713,8 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push_back(const ValueType& elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      push_at(elem, wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    push_at(elem, wait_until_not_full(lk), lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -865,16 +833,8 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      push_at(boost::move(elem), wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    push_at(boost::move(elem), wait_until_not_full(lk), lk);
   }
 
   template <typename ValueType>
