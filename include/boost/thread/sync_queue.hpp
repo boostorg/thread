@@ -166,12 +166,12 @@ namespace boost
 #endif
     inline void pull_front(value_type& elem, unique_lock<mutex>& )
     {
-      elem = boost::move(data_.front());
+      elem = boost::move/*_if_noexcept*/(data_.front());
       data_.pop_front();
     }
     inline value_type pull_front(unique_lock<mutex>& )
     {
-      value_type e = boost::move(data_.front());
+      value_type e = boost::move/*_if_noexcept*/(data_.front());
       data_.pop_front();
       return boost::move(e);
     }
@@ -500,34 +500,18 @@ namespace boost
   template <typename ValueType>
   void sync_queue<ValueType>::pull_front(ValueType& elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      wait_until_not_empty(lk);
-      pull_front(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    wait_until_not_empty(lk);
+    pull_front(elem, lk);
   }
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
   ValueType sync_queue<ValueType>::pull_front()
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      wait_until_not_empty(lk);
-      return pull_front(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    wait_until_not_empty(lk);
+    return pull_front(lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -631,17 +615,9 @@ namespace boost
   template <typename ValueType>
   void sync_queue<ValueType>::push_back(const ValueType& elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      throw_if_closed(lk);
-      push_back(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    throw_if_closed(lk);
+    push_back(elem, lk);
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -752,17 +728,9 @@ namespace boost
   template <typename ValueType>
   void sync_queue<ValueType>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
-      unique_lock<mutex> lk(mtx_);
-      throw_if_closed(lk);
-      push_back(boost::move(elem), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
+    unique_lock<mutex> lk(mtx_);
+    throw_if_closed(lk);
+    push_back(boost::move(elem), lk);
   }
 
   template <typename ValueType>
