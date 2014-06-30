@@ -206,13 +206,13 @@ namespace boost
 #endif
     inline void pull_front(value_type& elem, unique_lock<mutex>& lk)
     {
-      elem = boost::move(data_[out_]);
+      elem = boost::move/*_if_noexcept*/(data_[out_]);
       out_ = inc(out_);
       notify_not_full_if_needed(lk);
     }
     inline value_type pull_front(unique_lock<mutex>& lk)
     {
-      value_type elem = boost::move(data_[out_]);
+      value_type elem = boost::move/*_if_noexcept*/(data_[out_]);
       out_ = inc(out_);
       notify_not_full_if_needed(lk);
       return boost::move(elem);
@@ -232,7 +232,7 @@ namespace boost
 
     inline void push_at(BOOST_THREAD_RV_REF(value_type) elem, size_type in_p_1, unique_lock<mutex>& lk)
     {
-      data_[in_] = boost::move(elem);
+      data_[in_] = boost::move/*_if_noexcept*/(elem);
       set_in(in_p_1, lk);
     }
   };
