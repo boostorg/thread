@@ -594,7 +594,7 @@ namespace boost
                 boost::split(key_val, line, boost::is_any_of(":"));
 
                 if (key_val.size() != 2)
-                    return 0;
+                    return hardware_concurrency();
 
                 string key   = key_val[0];
                 string value = key_val[1];
@@ -612,9 +612,12 @@ namespace boost
                     continue;
                 }
             }
-            return cores.size();
+            // Fall back to hardware_concurrency() in case
+            // /proc/cpuinfo is formatted differently than
+            // we expect.
+            return cores.size() != 0 ? cores.size() : hardware_concurrency();
         } catch(...) {
-            return 0;
+            return hardware_concurrency();
         }
 #elif defined(__APPLE__)
         int count;
