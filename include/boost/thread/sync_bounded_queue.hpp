@@ -639,7 +639,7 @@ namespace boost
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
   {
     if (closed(lk)) return queue_op_status::closed;
-    push_back(elem, lk);
+    push_at(elem, wait_until_not_full(lk), lk);
     return queue_op_status::success;
   }
   template <typename ValueType>
@@ -776,12 +776,7 @@ namespace boost
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     if (closed(lk)) return queue_op_status::closed;
-    size_type in_p_1 = inc(in_);
-    if (in_p_1 == out_) // full()
-    {
-      return queue_op_status::full;
-    }
-    push_at(boost::move(elem), in_p_1, lk);
+    push_at(boost::move(elem), wait_until_not_full(lk), lk);
     return queue_op_status::success;
   }
   template <typename ValueType>
