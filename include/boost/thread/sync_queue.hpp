@@ -34,6 +34,7 @@ namespace boost
     typedef ValueType value_type;
     typedef csbl::deque<ValueType> underlying_queue_type;
     typedef std::size_t size_type;
+    typedef queue_op_status op_status;
 
     // Constructors/Assignment/Destructors
     BOOST_THREAD_NO_COPYABLE(sync_queue)
