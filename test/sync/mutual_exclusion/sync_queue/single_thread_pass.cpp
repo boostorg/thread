@@ -10,7 +10,7 @@
 //    sync_queue();
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
+//#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/thread/sync_queue.hpp>
 
