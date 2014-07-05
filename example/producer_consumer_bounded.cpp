@@ -8,7 +8,7 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
-#define XXXX
+//#define XXXX
 
 #include <iostream>
 #include <boost/thread/scoped_thread.hpp>
