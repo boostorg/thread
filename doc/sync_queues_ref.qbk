@@ -545,7 +545,7 @@ Closed queues add the following valid expressions
 
 [[Return:] [
 
-- If the queue is closed retun `queue_op_status::closed`,
+- If the queue is closed return `queue_op_status::closed`,
 
 - otherwise, return `queue_op_status::success` if no exception is thrown.
 
@@ -603,8 +603,6 @@ Closed queues add the following valid expressions
 
 - If the queue is empty and closed, return `queue_op_status::closed`, 
 
-- otherwise, if the queue is empty, return `queue_op_status::empty`,
- 
 - otherwise, return `queue_op_status::success` if no exception is thrown.
 ]]
 

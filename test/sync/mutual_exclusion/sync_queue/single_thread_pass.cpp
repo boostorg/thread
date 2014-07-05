@@ -613,6 +613,56 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
+  {
+    // 1-element queue try_pull succeed
+      boost::sync_queue<int> q;
+      q.push_back(1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.try_pull_front(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull_front succeed
+      boost::sync_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push_back(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull_front(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull_front succeed
+      boost::sync_queue<int> q;
+      q.push_back(1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull_front(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull_front succeed
+      boost::sync_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push_back(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull_front(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 
   {
     // closed invariants
@@ -648,6 +698,30 @@ int main()
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // 1-element closed queue wait_pull_front succeed
+      boost::sync_queue<int> q;
+      q.push_back(1);
+      q.close();
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull_front(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // 1-element closed empty queue wait_pull_front fails
+      boost::sync_queue<int> q;
+      q.close();
+      BOOST_TEST(q.empty());
+      BOOST_TEST(q.closed());
+      int i;
+      BOOST_TEST(boost::queue_op_status::closed == q.wait_pull_front(i));
+      BOOST_TEST(q.empty());
       BOOST_TEST(q.closed());
   }
 

@@ -15,6 +15,7 @@
 #endif
 
 #define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/thread/sync_bounded_queue.hpp>
 #include <boost/thread/future.hpp>
@@ -22,58 +23,75 @@
 
 #include <boost/detail/lightweight_test.hpp>
 
-struct call_push
+template <typename ValueType, void(boost::sync_bounded_queue<ValueType>::*push_back)(const ValueType&)>
+struct call_push_back
 {
-  boost::sync_bounded_queue<int> &q_;
-  boost::barrier& go_;
+  boost::sync_bounded_queue<ValueType> *q_;
+  boost::barrier *go_;
 
-  call_push(boost::sync_bounded_queue<int> &q, boost::barrier &go) :
+  call_push_back(boost::sync_bounded_queue<ValueType> *q, boost::barrier *go) :
     q_(q), go_(go)
   {
   }
   typedef void result_type;
   void operator()()
   {
-    go_.count_down_and_wait();
-    q_.push(42);
-
+    go_->wait();
+    (q_->*push_back)(42);
   }
 };
 
-struct call_push_2
+template <typename ValueType, boost::queue_op_status(boost::sync_bounded_queue<ValueType>::*push_back)(const ValueType&)>
+struct call_op_push_back
 {
-  boost::sync_bounded_queue<int> &q_;
-  boost::barrier& go_;
-  boost::barrier& end_;
+  boost::sync_bounded_queue<ValueType> *q_;
+  boost::barrier *go_;
 
-  call_push_2(boost::sync_bounded_queue<int> &q, boost::barrier &go, boost::barrier &end) :
-    q_(q), go_(go), end_(end)
-  {
-  }
-  typedef void result_type;
-  void operator()()
-  {
-    go_.count_down_and_wait();
-    q_.push(42);
-    end_.count_down_and_wait();
-
-  }
-};
-
-struct call_pull
-{
-  boost::sync_bounded_queue<int> &q_;
-  boost::barrier& go_;
-
-  call_pull(boost::sync_bounded_queue<int> &q, boost::barrier &go) :
+  call_op_push_back(boost::sync_bounded_queue<ValueType> *q, boost::barrier *go) :
     q_(q), go_(go)
   {
   }
-  typedef int result_type;
-  int operator()()
+  typedef boost::queue_op_status result_type;
+  boost::queue_op_status operator()()
   {
-    go_.count_down_and_wait();
-    return q_.pull();
+    go_->wait();
+    return (q_->*push_back)(42);
+  }
+};
+
+template <typename ValueType, ValueType(boost::sync_bounded_queue<ValueType>::*pull_front)()>
+struct call_pull_front
+{
+  boost::sync_bounded_queue<ValueType> *q_;
+  boost::barrier *go_;
+
+  call_pull_front(boost::sync_bounded_queue<ValueType> *q, boost::barrier *go) :
+    q_(q), go_(go)
+  {
+  }
+  typedef ValueType result_type;
+  ValueType operator()()
+  {
+    go_->wait();
+    return (q_->*pull_front)();
+  }
+};
+
+template <typename ValueType, boost::queue_op_status(boost::sync_bounded_queue<ValueType>::*pull_front)(ValueType&)>
+struct call_op_pull_front
+{
+  boost::sync_bounded_queue<ValueType> *q_;
+  boost::barrier *go_;
+
+  call_op_pull_front(boost::sync_bounded_queue<ValueType> *q, boost::barrier *go) :
+    q_(q), go_(go)
+  {
+  }
+  typedef boost::queue_op_status result_type;
+  boost::queue_op_status operator()(ValueType& v)
+  {
+    go_->wait();
+    return (q_->*pull_front)(v);
   }
 };
 
@@ -88,31 +106,42 @@ void test_concurrent_push_and_pull_on_empty_queue()
 
   try
   {
-    push_done=boost::async(boost::launch::async,
-#if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,&go]()
-        {
-          go.wait();
-          q.push(42);
-        }
-#else
-        call_push(q,go)
-#endif
-    );
     pull_done=boost::async(boost::launch::async,
-#if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,&go]() -> int
-        {
-          go.wait();
-          return q.pull();
-        }
-#else
-        call_pull(q,go)
-#endif
-    );
+                           call_pull_front<int, &boost::sync_bounded_queue<int>::pull_front>(&q,&go));
+    push_done=boost::async(boost::launch::async,
+                           call_push_back<int, &boost::sync_bounded_queue<int>::push_back>(&q,&go));
 
     push_done.get();
     BOOST_TEST_EQ(pull_done.get(), 42);
+    BOOST_TEST(q.empty());
+  }
+  catch (...)
+  {
+    BOOST_TEST(false);
+  }
+}
+
+void test_concurrent_push_and_wait_pull_on_empty_queue()
+{
+  boost::sync_bounded_queue<int> q(4);
+
+  boost::barrier go(2);
+
+  boost::future<void> push_done;
+  boost::future<boost::queue_op_status> pull_done;
+  int res;
+
+  try
+  {
+    pull_done=boost::async(boost::launch::async,
+                           call_op_pull_front<int, &boost::sync_bounded_queue<int>::wait_pull_front>(&q,&go),
+                           boost::ref(res));
+    push_done=boost::async(boost::launch::async,
+                           call_push_back<int, &boost::sync_bounded_queue<int>::push_back>(&q,&go));
+
+    push_done.get();
+    BOOST_TEST(boost::queue_op_status::success == pull_done.get());
+    BOOST_TEST_EQ(res, 42);
     BOOST_TEST(q.empty());
   }
   catch (...)
@@ -132,23 +161,14 @@ void test_concurrent_push_on_empty_queue()
   {
     for (unsigned int i =0; i< n; ++i)
       push_done[i]=boost::async(boost::launch::async,
-#if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,&go]()
-        {
-          go.wait();
-          q.push(42);
-        }
-#else
-        call_push(q,go)
-#endif
-    );
+                                call_push_back<int, &boost::sync_bounded_queue<int>::push_back>(&q,&go));
 
     for (unsigned int i = 0; i < n; ++i)
       push_done[i].get();
 
     BOOST_TEST(!q.empty());
     for (unsigned int i =0; i< n; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
+      BOOST_TEST_EQ(q.pull_front(), 42);
     BOOST_TEST(q.empty());
 
   }
@@ -162,40 +182,39 @@ void test_concurrent_push_on_full_queue()
 {
   const unsigned int size = 2;
   boost::sync_bounded_queue<int> q(size);
-  const unsigned int n = 2*size;
+  const unsigned int n = size;
   boost::barrier go(n);
-  boost::barrier end(size+1);
   boost::future<void> push_done[n];
 
   try
   {
     for (unsigned int i =0; i< n; ++i)
       push_done[i]=boost::async(boost::launch::async,
-#if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,&go,&end]()
-        {
-          go.wait();
-          q.push(42);
-          end.wait();
-        }
-#else
-        call_push_2(q,go,end)
-#endif
-      );
-
-    end.wait();
-    BOOST_TEST(!q.empty());
-    BOOST_TEST(q.full());
-    for (unsigned int i =0; i< size; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
-    end.wait();
+                                call_push_back<int, &boost::sync_bounded_queue<int>::push_back>(&q,&go));
 
     for (unsigned int i = 0; i < n; ++i)
       push_done[i].get();
 
     BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+
+    for (unsigned int i =0; i< n; ++i)
+      push_done[i]=boost::async(boost::launch::async,
+                                call_push_back<int, &boost::sync_bounded_queue<int>::push_back>(&q,&go));
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+
     for (unsigned int i =0; i< size; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
+      BOOST_TEST_EQ(q.pull_front(), 42);
+
+    for (unsigned int i = 0; i < n; ++i)
+      push_done[i].get();
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+    for (unsigned int i =0; i< size; ++i)
+      BOOST_TEST_EQ(q.pull_front(), 42);
     BOOST_TEST(q.empty());
 
   }
@@ -204,6 +223,93 @@ void test_concurrent_push_on_full_queue()
     BOOST_TEST(false);
   }
 }
+
+void test_concurrent_try_push_on_full_queue()
+{
+  const unsigned int size = 2;
+  boost::sync_bounded_queue<int> q(size);
+  const unsigned int n = size;
+  boost::barrier go(n);
+  boost::future<boost::queue_op_status> push_done[n];
+
+  try
+  {
+    for (unsigned int i =0; i< n; ++i)
+      push_done[i]=boost::async(boost::launch::async,
+                                call_op_push_back<int, &boost::sync_bounded_queue<int>::try_push_back>(&q,&go));
+
+    for (unsigned int i = 0; i < n; ++i)
+      BOOST_TEST(boost::queue_op_status::success == push_done[i].get());
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+
+    for (unsigned int i =0; i< n; ++i)
+      push_done[i]=boost::async(boost::launch::async,
+                                call_op_push_back<int, &boost::sync_bounded_queue<int>::try_push_back>(&q,&go));
+
+    for (unsigned int i = 0; i < n; ++i)
+      BOOST_TEST(boost::queue_op_status::full == push_done[i].get());
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+    for (unsigned int i =0; i< size; ++i)
+      BOOST_TEST_EQ(q.pull_front(), 42);
+    BOOST_TEST(q.empty());
+
+  }
+  catch (...)
+  {
+    BOOST_TEST(false);
+  }
+}
+
+void test_concurrent_wait_push_on_full_queue()
+{
+  const unsigned int size = 2;
+  boost::sync_bounded_queue<int> q(size);
+  const unsigned int n = size;
+  boost::barrier go(n);
+  boost::future<boost::queue_op_status> push_done[n];
+
+  try
+  {
+    for (unsigned int i =0; i< n; ++i)
+      push_done[i]=boost::async(boost::launch::async,
+                                call_op_push_back<int, &boost::sync_bounded_queue<int>::wait_push_back>(&q,&go));
+
+    for (unsigned int i = 0; i < n; ++i)
+      BOOST_TEST(boost::queue_op_status::success == push_done[i].get());
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+
+    for (unsigned int i =0; i< n; ++i)
+      push_done[i]=boost::async(boost::launch::async,
+                                call_op_push_back<int, &boost::sync_bounded_queue<int>::wait_push_back>(&q,&go));
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+
+    for (unsigned int i =0; i< size; ++i)
+      BOOST_TEST_EQ(q.pull_front(), 42);
+
+    for (unsigned int i = 0; i < n; ++i)
+      BOOST_TEST(boost::queue_op_status::success == push_done[i].get());
+
+    BOOST_TEST(!q.empty());
+    BOOST_TEST(q.full());
+    for (unsigned int i =0; i< size; ++i)
+      BOOST_TEST_EQ(q.pull_front(), 42);
+    BOOST_TEST(q.empty());
+
+  }
+  catch (...)
+  {
+    BOOST_TEST(false);
+  }
+}
+
 void test_concurrent_pull_on_queue()
 {
   boost::sync_bounded_queue<int> q(4);
@@ -215,20 +321,11 @@ void test_concurrent_pull_on_queue()
   try
   {
     for (unsigned int i =0; i< n; ++i)
-      q.push(42);
+      q.push_back(42);
 
     for (unsigned int i =0; i< n; ++i)
       pull_done[i]=boost::async(boost::launch::async,
-#if ! defined BOOST_NO_CXX11_LAMBDAS
-        [&q,&go]() -> int
-        {
-          go.wait();
-          return q.pull();
-        }
-#else
-        call_pull(q,go)
-#endif
-    );
+                                call_pull_front<int, &boost::sync_bounded_queue<int>::pull_front>(&q,&go));
 
     for (unsigned int i = 0; i < n; ++i)
       BOOST_TEST_EQ(pull_done[i].get(), 42);
@@ -243,8 +340,11 @@ void test_concurrent_pull_on_queue()
 int main()
 {
   test_concurrent_push_and_pull_on_empty_queue();
+  test_concurrent_push_and_wait_pull_on_empty_queue();
   test_concurrent_push_on_empty_queue();
   test_concurrent_push_on_full_queue();
+  test_concurrent_try_push_on_full_queue();
+  test_concurrent_wait_push_on_full_queue();
   test_concurrent_pull_on_queue();
 
   return boost::report_errors();
