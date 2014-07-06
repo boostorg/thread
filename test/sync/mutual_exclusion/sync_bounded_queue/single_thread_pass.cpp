@@ -520,7 +520,29 @@ int main()
       }
   }
   {
-    // 1-element closed queue pull succeed
+    // closed empty queue try_pull_front closed
+      boost::sync_bounded_queue<int> q(2);
+      q.close();
+      int i;
+      BOOST_TEST(boost::queue_op_status::closed == q.try_pull_front(i));
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // closed empty queue nonblocking_pull_front closed
+      boost::sync_bounded_queue<int> q(2);
+      q.close();
+      int i;
+      BOOST_TEST(boost::queue_op_status::closed == q.nonblocking_pull_front(i));
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // 1-element closed queue pull_front succeed
       boost::sync_bounded_queue<int> q(2);
       q.push_back(1);
       q.close();
@@ -546,7 +568,7 @@ int main()
       BOOST_TEST(q.closed());
   }
   {
-    // 1-element closed empty queue wait_pull_front fails
+    // closed empty queue wait_pull_front closed
       boost::sync_bounded_queue<int> q(2);
       q.close();
       BOOST_TEST(q.empty());
@@ -557,7 +579,7 @@ int main()
       BOOST_TEST(q.closed());
   }
   {
-    // closed queue wait_push fails
+    // closed queue wait_push_back fails
       boost::sync_bounded_queue<int> q(2);
       q.close();
       BOOST_TEST(q.empty());
