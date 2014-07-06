@@ -846,6 +846,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run clang_main.cpp ]         
           #[ thread-run test_9303.cpp ]
           #[ thread-run test_9720.cpp ]
+          #[ thread-run test_10125.cpp ]
+          #[ thread-run test_10128.cpp ]
     ;
 
 }

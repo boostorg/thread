@@ -352,16 +352,8 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_pull(ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       return try_pull(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
 
@@ -388,34 +380,18 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_pull(no_block_tag,ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_, try_to_lock);
       if (!lk.owns_lock())
       {
         return false;
       }
       return try_pull(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
   template <typename ValueType>
   boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::try_pull()
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       return try_pull(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
 
@@ -466,65 +442,33 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::pull(ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
       pull(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 //  template <typename ValueType>
 //  void sync_bounded_queue<ValueType>::pull(ValueType& elem, bool & closed)
 //  {
-//    try
-//    {
 //      unique_lock<mutex> lk(mtx_);
 //      wait_until_not_empty(lk, closed);
 //      if (closed) {return;}
 //      pull(elem, lk);
-//    }
-//    catch (...)
-//    {
-//      close();
-//      throw;
-//    }
 //  }
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
   ValueType sync_bounded_queue<ValueType>::pull()
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
       return pull(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
   template <typename ValueType>
   boost::shared_ptr<ValueType> sync_bounded_queue<ValueType>::ptr_pull()
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
       return ptr_pull(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
 #endif
@@ -532,51 +476,27 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::pull_front(ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
       pull_front(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
   // enable if ValueType is nothrow movable
   template <typename ValueType>
   ValueType sync_bounded_queue<ValueType>::pull_front()
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       wait_until_not_empty(lk);
       return pull_front(lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
   {
-    try
-    {
-      if (closed(lk)) {return queue_op_status::closed;}
-      if (empty(lk)) {return queue_op_status::empty;}
+      if (empty(lk) && closed(lk)) {return queue_op_status::closed;}
+      wait_until_not_empty(lk);
       pull_front(elem, lk);
       return queue_op_status::success;
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_pull_front(ValueType& elem)
@@ -601,16 +521,8 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_push(const ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       return try_push(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
 #endif
@@ -639,13 +551,13 @@ namespace boost
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
   {
     if (closed(lk)) return queue_op_status::closed;
-    push_back(elem, lk);
+    push_at(elem, wait_until_not_full(lk), lk);
     return queue_op_status::success;
   }
   template <typename ValueType>
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(const ValueType& elem)
   {
-    unique_lock<mutex>& lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return wait_push_back(elem, lk);
   }
 
@@ -654,17 +566,9 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_push(no_block_tag, const ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_, try_to_lock);
       if (!lk.owns_lock()) return false;
       return try_push(elem, lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
 
@@ -696,31 +600,15 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push(const ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       push_at(elem, wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push_back(const ValueType& elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       push_at(elem, wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -740,16 +628,8 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       return try_push(boost::move(elem), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
 
@@ -776,12 +656,7 @@ namespace boost
   queue_op_status sync_bounded_queue<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     if (closed(lk)) return queue_op_status::closed;
-    size_type in_p_1 = inc(in_);
-    if (in_p_1 == out_) // full()
-    {
-      return queue_op_status::full;
-    }
-    push_at(boost::move(elem), in_p_1, lk);
+    push_at(boost::move(elem), wait_until_not_full(lk), lk);
     return queue_op_status::success;
   }
   template <typename ValueType>
@@ -796,20 +671,12 @@ namespace boost
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::try_push(no_block_tag, BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_, try_to_lock);
       if (!lk.owns_lock())
       {
         return false;
       }
       return try_push(boost::move(elem), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
   template <typename ValueType>
@@ -827,31 +694,15 @@ namespace boost
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push(BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       push_at(boost::move(elem), wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 #endif
   template <typename ValueType>
   void sync_bounded_queue<ValueType>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
-    try
-    {
       unique_lock<mutex> lk(mtx_);
       push_at(boost::move(elem), wait_until_not_full(lk), lk);
-    }
-    catch (...)
-    {
-      close();
-      throw;
-    }
   }
 
   template <typename ValueType>
