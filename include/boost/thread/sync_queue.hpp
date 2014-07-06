@@ -320,7 +320,9 @@ namespace boost
     {
       if (closed(lk)) return queue_op_status::closed;
     }
-    wait_until_not_empty(lk);
+    bool has_been_closed = false;
+    wait_until_not_empty(lk, has_been_closed);
+    if (has_been_closed) return queue_op_status::closed;
     pull_front(elem, lk);
     return queue_op_status::success;
   }
