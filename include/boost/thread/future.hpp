@@ -4779,7 +4779,7 @@ namespace detail
   }
 
 //#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-  BOOST_THREAD_FUTURE<csbl::tuple<> > when_all() {
+  inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_all() {
     return make_ready_future(csbl::tuple<>());
   }
 //#endif
@@ -4813,7 +4813,7 @@ namespace detail
   }
 
 //#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
-  BOOST_THREAD_FUTURE<csbl::tuple<> > when_any() {
+  inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_any() {
     return make_ready_future(csbl::tuple<>());
   }
 //#endif
