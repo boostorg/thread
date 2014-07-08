@@ -35,7 +35,6 @@
 #include <boost/predef/platform.h>
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
-#include <thread>
 #include <mutex>
 #include <atomic>
 #include <Activation.h>
@@ -198,33 +197,15 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
     namespace detail
     {
-        std::once_flag threadPoolInitFlag;
         std::atomic_uint threadCount;
-        Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IThreadPoolStatics> threadPoolFactory;
-
-        void init_thread_pool_func(bool *succeeded)
-        {
-            Microsoft::WRL::ComPtr<IActivationFactory> factory;
-            const HRESULT hr = ::Windows::Foundation::GetActivationFactory(
-                Microsoft::WRL::Wrappers::HStringReference(RuntimeClass_Windows_System_Threading_ThreadPool).Get(),
-                &factory);
-            if (hr != S_OK)
-            {
-                *succeeded = false;
-            }
-            else
-            {
-                factory.As(&threadPoolFactory);
-                *succeeded = true;
-            }
-        }
-
+        
         bool win32::scoped_winrt_thread::start(thread_func address, void *parameter, unsigned int *thrdId)
         {
-            bool initSucceeded = true;
-            std::call_once(threadPoolInitFlag, init_thread_pool_func, &initSucceeded);
-            init_thread_pool_func(&initSucceeded);
-            if (!initSucceeded)
+            Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IThreadPoolStatics> threadPoolFactory;
+            HRESULT hr = ::Windows::Foundation::GetActivationFactory(
+                Microsoft::WRL::Wrappers::HStringReference(RuntimeClass_Windows_System_Threading_ThreadPool).Get(),
+                &threadPoolFactory);
+            if (hr != S_OK)
             {
                 return false;
             }
@@ -263,7 +244,7 @@ namespace boost
 
             // Schedule work item on the threadpool.
             Microsoft::WRL::ComPtr<ABI::Windows::Foundation::IAsyncAction> asyncAction;
-            const HRESULT hr = threadPoolFactory->RunWithPriorityAndOptionsAsync(
+            hr = threadPoolFactory->RunWithPriorityAndOptionsAsync(
                 workItem.Get(),
                 ABI::Windows::System::Threading::WorkItemPriority_Normal,
                 ABI::Windows::System::Threading::WorkItemOptions_TimeSliced,
@@ -366,9 +347,13 @@ namespace boost
 #endif
     }
     
-#if !BOOST_PLAT_WINDOWS_RUNTIME
     bool thread::start_thread_noexcept(const attributes& attr)
     {
+#if BOOST_PLAT_WINDOWS_RUNTIME
+        // Stack size isn't supported with Windows Runtime.
+        attr;
+        return start_thread_noexcept();
+#else
       //uintptr_t const new_thread=_beginthreadex(attr.get_security(),attr.get_stack_size(),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
       uintptr_t const new_thread=_beginthreadex(0,static_cast<unsigned int>(attr.get_stack_size()),&thread_start_function,thread_info.get(),CREATE_SUSPENDED,&thread_info->id);
       if(!new_thread)
@@ -380,9 +365,9 @@ namespace boost
       thread_info->thread_handle=(detail::win32::handle)(new_thread);
       ResumeThread(thread_info->thread_handle);
       return true;
-    }
 #endif
-
+    }
+    
     thread::thread(detail::thread_data_ptr data):
         thread_info(data)
     {}
@@ -537,8 +522,8 @@ namespace boost
 
     unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
     {
-        SYSTEM_INFO info;
-        detail::win32::get_system_info(info);
+        detail::win32::system_info info;
+        detail::win32::get_system_info(&info);
         return info.dwNumberOfProcessors;
     }
 
@@ -738,7 +723,7 @@ namespace boost
                 }
                 else
                 {
-                    detail::win32::sleep(milliseconds);
+                    detail::win32::sleep(time_left.milliseconds);
                 }
                 if(target_time.relative)
                 {
@@ -823,7 +808,7 @@ namespace boost
                 }
                 else
                 {
-                    detail::win32::sleep(milliseconds);
+                    detail::win32::sleep(time_left.milliseconds);
                 }
                 if(target_time.relative)
                 {
@@ -839,10 +824,13 @@ namespace boost
         {
 #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
 #if BOOST_PLAT_WINDOWS_RUNTIME
-            return get_or_make_current_thread_data()->id;
-#else
-            return detail::win32::GetCurrentThreadId();
+            detail::thread_data_base* current_thread_data(detail::get_current_thread_data());
+            if (current_thread_data)
+            {
+                return current_thread_data->id;
+            }
 #endif
+            return detail::win32::GetCurrentThreadId();
 #else
             return thread::id(get_or_make_current_thread_data());
 #endif

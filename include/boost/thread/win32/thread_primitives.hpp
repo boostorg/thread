@@ -19,6 +19,10 @@
 //#include <boost/detail/win/synchronization.hpp>
 #include <algorithm>
 
+#if BOOST_PLAT_WINDOWS_RUNTIME
+#include <thread>
+#endif
+
 //#ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
 //#if _WIN32_WINNT >= 0x0600 && ! defined _WIN32_WINNT_WS08
 //#define BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
@@ -41,6 +45,7 @@ namespace boost
 //#endif
             typedef ULONG_PTR ulong_ptr;
             typedef HANDLE handle;
+            typedef SYSTEM_INFO system_info;
             unsigned const infinite=INFINITE;
             unsigned const timeout=WAIT_TIMEOUT;
             handle const invalid_handle_value=INVALID_HANDLE_VALUE;
@@ -51,6 +56,7 @@ namespace boost
             unsigned const create_event_manual_reset = CREATE_EVENT_MANUAL_RESET;
             unsigned const event_all_access = EVENT_ALL_ACCESS;
             unsigned const semaphore_all_access = SEMAPHORE_ALL_ACCESS;
+            
 
 # ifdef BOOST_NO_ANSI_APIS
 # if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
@@ -117,13 +123,19 @@ extern "C" {
 typedef int BOOL;
 typedef unsigned long DWORD;
 typedef void* HANDLE;
-
 #  include <kfuncs.h>
 #  ifdef __cplusplus
 }
 #  endif
 # endif
 
+# ifdef __cplusplus
+extern "C" {
+# endif
+struct _SYSTEM_INFO;
+# ifdef __cplusplus
+}
+#endif
 
 namespace boost
 {
@@ -142,6 +154,7 @@ namespace boost
             typedef unsigned long ulong_ptr;
 # endif
             typedef void* handle;
+            typedef _SYSTEM_INFO system_info;
             unsigned const infinite=~0U;
             unsigned const timeout=258U;
             handle const invalid_handle_value=(handle)(-1);
@@ -156,7 +169,6 @@ namespace boost
             extern "C"
             {
                 struct _SECURITY_ATTRIBUTES;
-                struct SYSTEM_INFO;
 # ifdef BOOST_NO_ANSI_APIS
 # if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
                 __declspec(dllimport) void* __stdcall CreateMutexW(_SECURITY_ATTRIBUTES*,int,wchar_t const*);
@@ -175,9 +187,9 @@ namespace boost
                 __declspec(dllimport) void* __stdcall OpenEventA(unsigned long,int,char const*);
 # endif
 #if BOOST_PLAT_WINDOWS_RUNTIME
-                __declspec(dllimport) void __stdcall GetNativeSystemInfo(SYSTEM_INFO*);
+                __declspec(dllimport) void __stdcall GetNativeSystemInfo(_SYSTEM_INFO*);
 #else
-                __declspec(dllimport) void __stdcall GetSystemInfo(SYSTEM_INFO*);
+                __declspec(dllimport) void __stdcall GetSystemInfo(_SYSTEM_INFO*);
 #endif
                 __declspec(dllimport) int __stdcall CloseHandle(void*);
                 __declspec(dllimport) int __stdcall ReleaseMutex(void*);
@@ -317,7 +329,7 @@ namespace boost
                 BOOST_VERIFY(ReleaseSemaphore(semaphore,count,0)!=0);
             }
             
-            inline void get_system_info(SYSTEM_INFO *info)
+            inline void get_system_info(system_info *info)
             {
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 GetNativeSystemInfo(info); 
@@ -339,7 +351,7 @@ namespace boost
                 else
                 {
 #if BOOST_PLAT_WINDOWS_RUNTIME
-                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), milliseconds, FALSE); 
+                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), milliseconds, 0); 
 #else
                     detail::win32::Sleep(milliseconds);
 #endif

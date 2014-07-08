@@ -660,13 +660,8 @@ namespace boost
                     continue;
                 }
             }
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-            BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObject(
-                             ctx.event_handle,::boost::detail::win32::infinite));
-# else
             BOOST_VERIFY(!::boost::detail::win32::WaitForSingleObjectEx(
                              ctx.event_handle,::boost::detail::win32::infinite,0));
-# endif 
         }
     }
     template<typename Function, typename T1, typename T2, typename T3>

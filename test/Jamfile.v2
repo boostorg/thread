@@ -100,6 +100,7 @@ project
 
 rule thread-run ( sources )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
@@ -110,6 +111,7 @@ rule thread-run ( sources )
 
 rule thread-test ( sources )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread : : :
       <library>/boost/test//boost_unit_test_framework/<link>static
@@ -124,6 +126,7 @@ rule thread-test ( sources )
 
 rule thread-run2 ( sources : name )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread : : :
       : $(name) ]
@@ -135,6 +138,7 @@ rule thread-run2 ( sources : name )
 
 rule thread-run2-noit ( sources : name )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread : : :
       : $(name) ]
@@ -149,6 +153,7 @@ rule thread-run2-noit ( sources : name )
 
 rule thread-run2-noit-pthread ( sources : name )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread : : : <threadapi>win32:<build>no
       : $(name) ]
@@ -163,6 +168,7 @@ rule thread-run2-noit-pthread ( sources : name )
 
 rule thread-run2-h ( sources : name )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) : : :
       <library>/boost/system//boost_system
@@ -175,6 +181,7 @@ rule thread-run2-h ( sources : name )
 
 rule thread-run-lib2 ( sources : name )
 {
+    sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
         : : :

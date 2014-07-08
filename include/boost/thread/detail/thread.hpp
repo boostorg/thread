@@ -172,9 +172,7 @@ namespace boost
 
     private:
         bool start_thread_noexcept();
-#if !BOOST_PLAT_WINDOWS_RUNTIME
         bool start_thread_noexcept(const attributes& attr);
-#endif
     //public:
         void start_thread()
         {
@@ -183,7 +181,6 @@ namespace boost
             boost::throw_exception(thread_resource_error());
           }
         }
-#if !BOOST_PLAT_WINDOWS_RUNTIME
         void start_thread(const attributes& attr)
         {
           if (!start_thread_noexcept(attr))
@@ -191,7 +188,6 @@ namespace boost
             boost::throw_exception(thread_resource_error());
           }
         }
-#endif
 
         explicit thread(detail::thread_data_ptr data);
 
