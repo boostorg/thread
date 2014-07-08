@@ -573,7 +573,7 @@ Closed queues add the following valid expressions
 
 [[Return:] [
 
-- If the queue is closed retun `queue_op_status::closed`,
+- If the queue is closed return `queue_op_status::closed`,
 
 - otherwise, return `queue_op_status::success` if no exception is thrown.
 
@@ -591,7 +591,7 @@ Closed queues add the following valid expressions
 
 [variablelist
 
-[[Effects:] [Waits until the queue is not empty and then pull_front the element from the queue `q` and moves the pulled element into `lve` (this could need an allocation for unbounded queues).]]
+[[Effects:] [if the queue is not empty and not closed, waits until the queue is not empty and then pull_front the element from the queue `q` and moves the pulled element into `lve`.]]
 
 [[Synchronization:] [Prior pull-like operations on the same object synchronizes with this operation.]]
 
@@ -603,8 +603,6 @@ Closed queues add the following valid expressions
 
 - If the queue is empty and closed, return `queue_op_status::closed`, 
 
-- otherwise, if the queue is empty, return `queue_op_status::empty`,
- 
 - otherwise, return `queue_op_status::success` if no exception is thrown.
 ]]
 
