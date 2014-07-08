@@ -1,7 +1,6 @@
 //  (C) Copyright 2007 Anthony Williams
 //  (C) Copyright 2007 David Deakins
 //  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  (C) Copyright 2014 Microsoft Corporation
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
@@ -531,24 +530,15 @@ namespace boost
     bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-        return local_thread_info.get() && (detail::win32::WaitForSingleObject(local_thread_info->interruption_handle,0)==0);
-# else
         return local_thread_info.get() && (detail::win32::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
-# endif
     }
 
 #endif
 
     unsigned thread::hardware_concurrency() BOOST_NOEXCEPT
     {
-        //SYSTEM_INFO info={{0}};
         SYSTEM_INFO info;
-# if BOOST_PLAT_WINDOWS_RUNTIME
-        GetNativeSystemInfo(&info); 
-# else
-        GetSystemInfo(&info);
-# endif
+        detail::win32::get_system_info(info);
         return info.dwNumberOfProcessors;
     }
 
@@ -726,11 +716,7 @@ namespace boost
 
                 if(handle_count)
                 {
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                    unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds);
-# else
                     unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
-# endif
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -752,11 +738,7 @@ namespace boost
                 }
                 else
                 {
-#if BOOST_PLAT_WINDOWS_RUNTIME
-                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), time_left.milliseconds, FALSE); 
-#else
-                    detail::win32::Sleep(time_left.milliseconds);
-#endif
+                    detail::win32::sleep(milliseconds);
                 }
                 if(target_time.relative)
                 {
@@ -826,11 +808,7 @@ namespace boost
 
                 if(handle_count)
                 {
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                    unsigned long const notified_index=detail::win32::WaitForMultipleObjects(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds);
-# else
                     unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
-# endif
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -845,11 +823,7 @@ namespace boost
                 }
                 else
                 {
-#if BOOST_PLAT_WINDOWS_RUNTIME
-                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), time_left.milliseconds, FALSE); 
-#else
-                    detail::win32::Sleep(time_left.milliseconds);
-#endif
+                    detail::win32::sleep(milliseconds);
                 }
                 if(target_time.relative)
                 {
@@ -891,21 +865,13 @@ namespace boost
 
         bool interruption_requested() BOOST_NOEXCEPT
         {
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-            return detail::get_current_thread_data() && (detail::win32::WaitForSingleObject(detail::get_current_thread_data()->interruption_handle,0)==0);
-# else
             return detail::get_current_thread_data() && (detail::win32::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
-# endif
         }
 #endif
 
         void yield() BOOST_NOEXCEPT
         {
-#if BOOST_PLAT_WINDOWS_RUNTIME
-            std::this_thread::yield();
-#else
-            detail::win32::Sleep(0);
-#endif
+            detail::win32::sleep(0);
         }
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS

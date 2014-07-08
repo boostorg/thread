@@ -3,7 +3,6 @@
 
 //  (C) Copyright 2007-8 Anthony Williams
 //  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  (C) Copyright 2014 Microsoft Corporation
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
@@ -98,11 +97,7 @@ namespace boost
 
             bool woken()
             {
-#if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                unsigned long const woken_result=detail::win32::WaitForSingleObject(wake_sem,0);
-#else
                 unsigned long const woken_result=detail::win32::WaitForSingleObjectEx(wake_sem,0,0);
-#endif
                 BOOST_ASSERT((woken_result==detail::win32::timeout) || (woken_result==0));
                 return woken_result==0;
             }

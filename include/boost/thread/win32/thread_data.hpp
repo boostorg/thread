@@ -1,6 +1,5 @@
 //  (C) Copyright 2008 Anthony Williams
 //  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  (C) Copyright 2014 Microsoft Corporation
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
@@ -127,11 +126,7 @@ namespace boost
 
             thread_data_base():
                 count(0),
-#if BOOST_PLAT_WINDOWS_RUNTIME
                 thread_handle(),
-#else
-                thread_handle(detail::win32::invalid_handle_value),
-#endif
                 id(0),
                 thread_exit_callbacks(0),
                 tss_data(),

@@ -3,7 +3,6 @@
 
 //  (C) Copyright 2006-8 Anthony Williams
 //  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  (C) Copyright 2014 Microsoft Corporation
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -185,11 +184,7 @@ namespace boost
                     return true;
                 }
 
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                unsigned long const res=detail::win32::WaitForSingleObject(semaphores[unlock_sem],::boost::detail::get_milliseconds_until(wait_until));
-# else
                 unsigned long const res=detail::win32::WaitForSingleObjectEx(semaphores[unlock_sem],::boost::detail::get_milliseconds_until(wait_until), 0);
-# endif
                 if(res==detail::win32::timeout)
                 {
                     for(;;)
@@ -294,13 +289,8 @@ namespace boost
             unsigned long res;
             if (tp>n) {
               chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-n);
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-              res=detail::win32::WaitForSingleObject(semaphores[unlock_sem],
-                static_cast<unsigned long>(rel_time.count()));
-# else
               res=detail::win32::WaitForSingleObjectEx(semaphores[unlock_sem],
                 static_cast<unsigned long>(rel_time.count()), 0);
-# endif
             } else {
               res=detail::win32::timeout;
             }
@@ -476,11 +466,7 @@ namespace boost
                 #else
                 const bool wait_all = false;
                 #endif
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WS03
-                unsigned long const wait_res=detail::win32::WaitForMultipleObjects(2,semaphores,wait_all,::boost::detail::get_milliseconds_until(wait_until));
-# else
                 unsigned long const wait_res=detail::win32::WaitForMultipleObjectsEx(2,semaphores,wait_all,::boost::detail::get_milliseconds_until(wait_until), 0);
-# endif
                 if(wait_res==detail::win32::timeout)
                 {
                     for(;;)
@@ -592,13 +578,8 @@ namespace boost
             unsigned long wait_res;
             if (tp>n) {
               chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WS03
-              wait_res=detail::win32::WaitForMultipleObjects(2,semaphores,wait_all,
-                  static_cast<unsigned long>(rel_time.count()));
-# else
               wait_res=detail::win32::WaitForMultipleObjectsEx(2,semaphores,wait_all,
                   static_cast<unsigned long>(rel_time.count()), 0);
-# endif
             } else {
               wait_res=detail::win32::timeout;
             }
@@ -709,11 +690,7 @@ namespace boost
                     return;
                 }
 
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                BOOST_VERIFY(!detail::win32::WaitForSingleObject(semaphores[unlock_sem],detail::win32::infinite));
-# else
                 BOOST_VERIFY(!detail::win32::WaitForSingleObjectEx(semaphores[unlock_sem],detail::win32::infinite, 0));
-# endif
             }
         }
 
@@ -802,11 +779,7 @@ namespace boost
                 {
                     if(!last_reader)
                     {
-# if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_WINXP
-                        BOOST_VERIFY(!detail::win32::WaitForSingleObject(upgrade_sem,detail::win32::infinite));
-# else
                         BOOST_VERIFY(!detail::win32::WaitForSingleObjectEx(upgrade_sem,detail::win32::infinite, 0));
-# endif
                     }
                     break;
                 }
