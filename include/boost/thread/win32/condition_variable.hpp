@@ -1,11 +1,10 @@
 #ifndef BOOST_THREAD_CONDITION_VARIABLE_WIN32_HPP
 #define BOOST_THREAD_CONDITION_VARIABLE_WIN32_HPP
-
-//  (C) Copyright 2007-8 Anthony Williams
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  Distributed under the Boost Software License, Version 1.0. (See
-//  accompanying file LICENSE_1_0.txt or copy at
-//  http://www.boost.org/LICENSE_1_0.txt)
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+// (C) Copyright 2007-8 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_data.hpp>

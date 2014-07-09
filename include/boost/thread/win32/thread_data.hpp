@@ -1,11 +1,10 @@
-//  (C) Copyright 2008 Anthony Williams
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
-//  Distributed under the Boost Software License, Version 1.0. (See
-//  accompanying file LICENSE_1_0.txt or copy at
-//  http://www.boost.org/LICENSE_1_0.txt)
-
 #ifndef BOOST_THREAD_PTHREAD_THREAD_DATA_HPP
 #define BOOST_THREAD_PTHREAD_THREAD_DATA_HPP
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+// (C) Copyright 2008 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/thread_time.hpp>

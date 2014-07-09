@@ -1,10 +1,10 @@
-//  (C) Copyright 2007-2010 Anthony Williams
-//  (C) Copyright 20011-2012 Vicente J. Botet Escriba
-//  Distributed under the Boost Software License, Version 1.0. (See
-//  accompanying file LICENSE_1_0.txt or copy at
-//  http://www.boost.org/LICENSE_1_0.txt)
 #ifndef BOOST_THREAD_THREAD_COMMON_HPP
 #define BOOST_THREAD_THREAD_COMMON_HPP
+// Distributed under the Boost Software License, Version 1.0. (See
+// accompanying file LICENSE_1_0.txt or copy at
+// http://www.boost.org/LICENSE_1_0.txt)
+// (C) Copyright 2007-2010 Anthony Williams
+// (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/predef/platform.h>
