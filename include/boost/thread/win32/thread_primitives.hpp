@@ -290,12 +290,12 @@ namespace boost
             inline handle create_anonymous_semaphore_nothrow(long initial_count,long max_count)
             {
 #if !defined(BOOST_NO_ANSI_APIS)
-                handle const res=CreateSemaphoreA(0,initial_count,max_count,0);
+                handle const res=win32::CreateSemaphoreA(0,initial_count,max_count,0);
 #else
 #if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
-                handle const res=CreateSemaphoreEx(0,initial_count,max_count,0,0);
+                handle const res=win32::CreateSemaphoreEx(0,initial_count,max_count,0,0);
 #else
-                handle const res=CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
+                handle const res=win32::CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
 #endif
 #endif
                 return res;
@@ -332,9 +332,9 @@ namespace boost
             inline void get_system_info(system_info *info)
             {
 #if BOOST_PLAT_WINDOWS_RUNTIME
-                GetNativeSystemInfo(info); 
+                win32::GetNativeSystemInfo(info); 
 #else
-                GetSystemInfo(info);
+                win32::GetSystemInfo(info);
 #endif
             }
             
