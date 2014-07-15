@@ -224,6 +224,9 @@
 [def __cvany_wait_for [link thread.synchronization.condvar_ref.condition_variable_any.wait_for `wait_for`]]
 [def __cvany_wait_until [link thread.synchronization.condvar_ref.condition_variable_any.wait_until `wait_until`]]
 
+[def __permit [link thread.synchronization.permit_ref.permit `permit<>`]]
+[def __permit_any [link thread.synchronization.permit_ref.permit `permit_any<>`]]
+
 [def __blocked__ ['blocked]]
 
 [include overview.qbk]
@@ -237,6 +240,7 @@
 [include mutex_concepts.qbk]
 [include mutexes.qbk]
 [include condition_variables.qbk]
+[include permits.qbk]
 [include once.qbk]
 [include barrier.qbk]
 [include latch.qbk]

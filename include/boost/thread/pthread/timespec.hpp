@@ -2,6 +2,7 @@
 #define BOOST_THREAD_PTHREAD_TIMESPEC_HPP
 //  (C) Copyright 2007-8 Anthony Williams
 //  (C) Copyright 2012 Vicente J. Botet Escriba
+//  (C) Copyright 2014 Niall Douglas
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -12,7 +13,18 @@
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
 #endif
+#ifndef _MSC_VER
 #include <pthread.h>
+#elif !defined(BOOST_THREAD_PTHREAD_TIMESPEC_MSVC_DEFINED)
+#define BOOST_THREAD_PTHREAD_TIMESPEC_MSVC_DEFINED
+namespace {
+struct timespec
+  {
+    time_t tv_sec;
+    long tv_nsec;
+  };
+}
+#endif
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -80,6 +92,12 @@ namespace boost
       ::gettimeofday(&tv, 0);
       ts.tv_sec = tv.tv_sec;
       ts.tv_nsec = tv.tv_usec * 1000;
+#elif defined(_WIN32)
+      unsigned long long m;
+      detail::win32::GetSystemTimePreciseAsFileTime()((detail::win32::_FILETIME *)&m);
+      m-=116444736000000000ULL; // 1601 to 1970
+      ts.tv_sec=m/10000000;
+      ts.tv_nsec=(m % 10000000) * 100;
 #else
       if ( ::clock_gettime( CLOCK_REALTIME, &ts ) )
       {

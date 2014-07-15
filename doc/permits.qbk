@@ -1,0 +1,1326 @@
+[/
+  (C) Copyright 2014 Niall Douglas
+  Distributed under the Boost Software License, Version 1.0.
+  (See accompanying file LICENSE_1_0.txt or copy at
+  http://www.boost.org/LICENSE_1_0.txt).
+]
+
+[section:permit_ref Permits -- EXTENSION]
+
+(C) 2011-2014 Niall Douglas [@http://www.nedproductions.biz/]
+
+[heading Synopsis]
+
+  namespace boost 
+  {
+    enum class cv_status;
+    {
+      no_timeout,
+      timeout
+    };
+    template<bool consuming=true> class permit;
+    template<bool consuming=true> class permit_any;
+    typedef permit<true> permit_c;
+    typedef permit_any<true> permit_c_any;
+    typedef permit<false> permit_nc;
+    typedef permit_any<false> permit_nc_any;
+  }
+
+The classes `permit<>` and `permit_any<>` provide a [*safe] mechanism for one
+thread to wait for notification from another thread that something has
+happened -- one thread gives a ['one time permission] (a permit) to another
+thread to continue execution. Unlike condition variables where it is rather
+easy to unintentionally introduce lost and spurious wakeup race conditions,
+the permit object provides a number of strong guarantees which make it
+hard to use in a racy way. The permit implementations follow an identical
+API to `condition_variable` and `condition_variable_any` apart from
+`notify_all()`, thus making a find and replace solution to fixing up racy
+C++ codebases straightforward.
+
+Permits come in two variants, consuming and non-consuming. There is [*always]
+a one-to-one relationship between the granting of a permit and the receiving
+of that permit, the only difference with the non-consuming variant is that
+the permit is automatically regranted as soon as it is consumed. This leads
+to the only API difference to condition variables: `permit<consuming=true>`
+provides `notify_one()` but not `notify_all()`, whilst `permit<consuming=false>`
+provides neither and you will have to use `grant()` and `revoke()` instead.
+When deciding to substitute permits for condition variables, you will need
+to decide carefully which kind of permit is the correct substitute.
+
+The strong guarantees given by permit objects are as follows:
+
+# You will never see spurious wakeups from a permit object -- waits never,
+ever return successfully unless a permit has been granted or the permit
+object was destroyed. This means you don't need to do any wait predicate checking
+with permits (though they are supported anyway for API compatibility with
+condition variables).
+
+# You will never see lost wakeups from a permit object -- if there are
+no waiting threads at the point of permit grant, the permit remains
+granted until ['some] waiting thread consumes the permit. This means you don't
+need to do any notify predicate checking nor mutex locking with permits either.
+
+# For the non-consuming permit, [*exactly] those threads currently waiting
+at the point of grant will be released, no more, no less. This solves the
+producer-consumer problem often seen in naive use of semaphores.
+
+# Multiple threads both granting and waiting simultaneously works as expected,
+which allows replacement of many semaphore based solutions (semaphores can
+have unhelpful differences of implementation across operating systems).
+
+# You are allowed to destroy a permit being actively waited upon in other threads
+without having to notify the respective waiters (all waits complete or exit with
+an error). Boost's condition variable needs you to notify all waiters before
+destruction is safe.
+
+# Additionally, the following common pattern is safe, which it would not be
+with condition variables:
+
+```
+{
+    boost::permit_c done;
+    boost::mutex lock;
+    int result=0;
+    boost::lock_guard<decltype(lock)> guard(lock);
+    boost::thread([&]{
+        boost::lock_guard<decltype(lock)> guard2(lock);
+        result=78;
+        done.notify_one();
+    });
+    done.wait(guard); // don't need predicate checks with permits
+    // missing thread join!
+}
+```
+
+ The problem here is that the notify can cause the permit object to be
+ destroyed before the notify has exited -- which if tried with condition
+ variables may produce memory corruption. With permits
+ this pattern is allowed: all grants being executed at the time of destruction
+ are safe, though for obvious reasons only the grant which woke the thread
+ which destroyed the permit is guaranteed to not return an error.
+
+[heading Where to use permits instead of other synchronisation objects]
+
+Permit objects are actually very similar to a void promise/future i.e. they act
+as a reusable promise/future pair but without transporting any value or
+exception state, just the permission to proceed. This is due to their
+original design intention, which was as a promise/future equivalent for C11
+(see below for their history, and note that the original C API is available
+in the `boost::c_permit` namespace and documentation can be found at
+[@https://ci.nedprod.com/job/Boost.Thread%20Build%20Documentation/lastSuccessfulBuild/artifact/boost-trunk/boost/thread/permit/latex/pthread_permit_reference.pdf]). As such, they can be very useful for
+situations where a promise/future is too heavy (permits can spin instead of
+sleep, plus they need not be repeatedly constructed and destructed).
+
+Permit objects can also replace some uses of semaphores as the non-consuming variant
+implements an exact release of waiting threads at the point of grant.
+
+Permit objects aren't a direct replacement for condition variables: rather, they are
+complementary. They are particularly useful where the programmer used Windows Event object
+semantics on a condition variable, not realising that the two are quite incommensurate,
+or where someone moved condition variable notifies out of the wait mutex for performance
+but made the code racy in doing so. Here permits can usually be dropped in for instant
+race-free behaviour at much less cost than manually deracing the code.
+
+As being dropped in as a condition variable replacement is likely to be a common
+use case, a quick discussion of how direct use of condition variables can
+be subtlely broken may be useful. Most know that it is bad when a wait
+is not surrounded with a loop testing a predicate as condition variables
+are prone to spurious wakeups, but even with judicious use of wait predicates
+there are also problems with ["lost wakeups] in some code directly using
+condition variables. A very good sign of potentially lost wakeups is when
+a condition variable notifying thread does not lock the same mutex being
+passed to the wait, but this relationship is not at all straightforward,
+and it takes considerable time and effort to audit condition variable
+using code for correctness.
+
+As a quick survey of the very subtle dragons which live here, let
+us look at a common code pattern directly using condition variables:
+
+    boost::condition_variable done;
+    int result=0;
+    boost::thread([&]{
+        result=78;
+        done.notify_one();
+    });
+    boost::mutex lock;
+    boost::unique_lock<decltype(lock)> guard(lock);
+    done.wait(guard, [&result] { return result!=0; });
+
+This code is unsafe because result may not get set by the time the wait
+predicate is checked, but may have become set and the notify issued before
+the wait begins. This is a classic example of a lost wakeup, despite the
+use of a wait predicate.
+
+An improved example might look like this:
+
+    boost::condition_variable done;
+    boost::mutex lock;
+    int result=0;
+    boost::thread([&]{
+        {
+            boost::lock_guard<decltype(lock)> guard(lock);
+            result=78;
+        }
+        done.notify_one();
+    });
+    boost::unique_lock<decltype(lock)> guard(lock);
+    done.wait(guard, [&result] { return result!=0; });
+
+The above code may look safe: the predicate check for result being non-zero should
+correctly detect if the thread executes and notifies before the lock in the main
+thread is taken right? Potentially not: this is because `done.wait(guard, pred)`
+is implemented as:
+
+    while(!pred())
+        wait(guard);
+
+And the compiler's optimiser is permitted by the standard to believe that `result`
+has not changed between its initialisation and the first test of its value, so in
+fact the optimiser could compile this instead by eliding the first test of result
+under the assumption that the predicate will always be false for its first execution:
+
+    do {
+        wait(guard);
+    } while(!pred());
+
+Now the race is obvious: if the closure could be executed by the spawned thread
+and do the condition variable notify before the main thread gets to the point
+of waiting, and the compiler's optimiser moves the test of the predicate to after the
+condition variables sleep, the wakeup is ["lost]. I am not claiming any current
+compiler actually does this, but I am claiming that one is depending on ["just happens]
+behaviour which could change depending on some factor in the future, which is bad.
+
+The only truly safe solution is to make any values written back by notifying threads
+atomics to prevent the compiler reordering them, and preferably move the lock hold to before
+the thread creation to ensure that the thread will only execute during the wait:
+
+    boost::condition_variable done;
+    boost::atomic<int> result(0);
+    boost::mutex lock;
+    boost::unique_lock<decltype(lock)> guard(lock);
+    boost::thread([&]{
+        boost::lock_guard<decltype(lock)> guard(lock);
+        result=78;
+        done.notify_one();
+    });
+    done.wait(guard, [&result] { return result!=0; });
+
+The use of the atomic is superfluous in the above simplified example, but it does ensure that when you write the
+output you barrier all reads and writes on either side which can be useful in more complex
+use cases than the simplified examples above. This is more of a problem on non-Intel
+than Intel CPUs as Intel CPUs have more flexibility to reorder reads and writes, but
+it is good discipline to always use atomics for predicates for architecture independent code.
+
+A second large category of misusing condition variables is failing to realise that only
+the mutex passed to a wait is atomically unlocked with respect to notifying threads.
+Holding any other mutex is not guaranteed to be atomic with the wait, thus potentially
+introducing lost wakeups. With Boost's condition variable however, you probably will
+get away with these: if thread interruption is enabled which it is by default, notifies
+lock an internal mutex atomically unlocked by the wait rather than the mutex passed
+into the wait, thus you always get the expected atomicity even if you are misusing the object.
+Therefore if you have recently converted a code base from using Boost's condition variable
+to a C++ 11 condition variable, and stuff suddenly started breaking, it is worth looking
+into this as a potential cause.
+ 
+
+[heading The history of the permit object]
+
+(The following section is written from memory. Any errors or omissions are entirely my own fault)
+
+The permit object originally started life in 2010 as a proposed nearest equivalent of C++
+promise/futures for inclusion into the C11 standard by members of ISO WG14, whose
+design was then implemented by myself into a reference C11 implementation.
+Ultimately, it is not the purpose of a standards committee to standardise
+features not yet in common usage, so the permit object reference implementation
+was reworked into a POSIX threads extension and was submitted to the
+Austin Working Group who develop POSIX, where I think it safe to say that the
+reaction was of complete indifference -- the POSIX thread permit object, and its reference
+implementation library written in C11, therefore fell by the wayside.
+
+In 2014 during some consulting work on a C++ codebase which contained unsafe uses
+of `condition_variable`, the idea was had to wrap up the C11 reference
+permit implementation as `boost::permit<>` and substitute all condition variables
+with permits, thus avoiding a great deal of tedious manual repair work. The
+client agreed to the proposal, and thus the Boost permit object herein came into
+being.
+
+You should note that the original C POSIX threads permit implementation remains
+a fully functional, standalone implementation and its source code is included inside
+Boost.Thread. It has some very useful features: a very low latency, spin-only wait
+mode which works in shared memory; it doesn't use malloc, not once, which makes it
+very useful for bootstrap or low latency usage; it can compose waits on multiple permits
+at once; it can synchronise a kernel waitable object such as a file descriptor
+or windows `HANDLE` with a permit's granted/ungranted state; and you can variously
+hook the implementation with state change callbacks. In short, it's a very useful
+reference implementation, and only a fraction of its functionality is sadly exposed
+in this Boost permit object, though the C implementation is made available in the
+namespace `boost::c_permit`.
+
+The POSIX threads permit objects were the product of effort by some of the world's
+leading experts in concurrency - I am highly indebted to those on the WG14 committee who gave
+so freely of their time and thoughts. My thanks in particular are due to Hans Boehm without whose
+detailed feedback this proposal would look completely different. I would also like to thank Anthony
+Williams for his commentary and feedback, and Nick Stoughton for his advice to me regarding becoming the
+ISO JTC1 SC22 convenor for the Republic of Ireland and on how best to submit a proposal for incorporation
+into the POSIX standard. My thanks are also due to John Benito, WG14 convenor, for his seemingly never
+tiring efforts on the behalf of C-ish programmers everywhere.
+
+Finally, I would like to thank the present Boost.Threads maintainer Vicente J. Botet Escriba
+for being open to the idea of a new thread synchronisation object. One is usually best
+advised to treat any proposal of an ["improved] threading object with the deepest suspicion.
+
+[section:permit Class `permit<>`]
+
+    //#include <boost/thread/permit.hpp>
+
+    namespace boost
+    {
+        template<bool consuming=true> class permit
+        {
+        public:
+            static constexpr bool consumes=consuming;
+
+            permit(bool initial_state=false);
+            ~permit();
+
+            void grant() noexcept;
+            void revoke() noexcept;
+
+            void notify_one() noexcept;  // if consuming=true
+
+            void wait();
+
+            void wait(boost::unique_lock<boost::mutex>& lock);
+
+            template<typename predicate_type>
+            void wait(boost::unique_lock<boost::mutex>& lock,predicate_type predicate);
+
+            template <class Clock, class Duration>
+            typename cv_status::type
+            wait_until(
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class Clock, class Duration>
+            typename cv_status::type
+            wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class Clock, class Duration, class Predicate>
+            bool
+            wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<Clock, Duration>& t,
+                Predicate pred);
+
+            template <class Rep, class Period>
+            typename cv_status::type
+            wait_for(
+                const chrono::duration<Rep, Period>& d);
+
+            template <class Rep, class Period>
+            typename cv_status::type
+            wait_for(
+                unique_lock<mutex>& lock,
+                const chrono::duration<Rep, Period>& d);
+
+            template <class Rep, class Period, class Predicate>
+            bool
+            wait_for(
+                unique_lock<mutex>& lock,
+                const chrono::duration<Rep, Period>& d,
+                Predicate pred);
+
+        #if defined BOOST_THREAD_USES_DATETIME
+            bool timed_wait(boost::system_time const& abs_time);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time);
+            template<typename duration_type>
+            bool timed_wait(duration_type const& rel_time);
+            template<typename duration_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time);
+            template<typename predicate_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time,predicate_type predicate);
+            template<typename duration_type,typename predicate_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time,predicate_type predicate);
+            bool timed_wait(boost::xtime const& abs_time);
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time);
+
+            template<typename predicate_type>
+            bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::xtime const& abs_time,predicate_type predicate);
+        #endif
+
+        };
+    }
+
+[section:constructor `permit(bool initial_state=false)`]
+
+[variablelist
+
+[[Effects:] [Constructs an object of class `permit` with initial state set to `initial_state`.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs.]]
+
+]
+
+[endsect]
+
+[section:destructor `~permit()`]
+
+[variablelist
+
+[[Effects:] [Destroys the object. It is safe to destroy the object while other threads are
+also waiting upon or granting upon or revoking upon the same object. In that situation,
+waits will complete immediately (potentially with exception) and grants and revokes will
+exit (potentially with exception).]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:grant `void grant()`]
+
+[variablelist
+
+[[Effects:] [Grants permit to one waiting thread, [*blocking] until that one waiting thread is
+released. If there is no waiting thread, gives permit to the next thread to wait and returns
+immediately.
+
+If the permit is consuming, the permit is atomically transferred to the winning thread.
+
+If the permit is non-consuming, the permit is still atomically transferred to
+the winning thread, but the permit is atomically regranted. You are furthermore guaranteed that exactly
+every waiter at the time of grant will be released before the grant operation returns. Note that this
+guarantee has the following consequences:
+
+1. You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
+mutex and therefore the grant will never exit. This doesn't apply to consuming permits, as the one to
+one grant to wake relationship means that a non-blocking implementation can be used.
+
+2. Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
+implies that if a grant is operating, any new waits hold until the grant completes. Again, this only
+applies to non-consuming permits.
+]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:revoke `void revoke()`]
+
+[variablelist
+
+[[Effects:] [Revoke any outstanding permit, causing any subsequent waiters to wait.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:notify_one `void notify_one()`]
+
+[variablelist
+
+[[Precondition:] [Only available if consuming is true, otherwise static asserts.]]
+
+[[Effects:] [Same as `grant()`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:wait `void wait()`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until the permit is consumed. Note that thread
+interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant.
+]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait `void wait(boost::unique_lock<boost::mutex>& lock)`]
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `timed_wait`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread,
+whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant.
+]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_predicate `template<typename predicate_type> void wait(boost::unique_lock<boost::mutex>& lock, predicate_type pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    wait(lock);
+}
+``]]
+
+]
+
+[endsect]
+
+[section:timed_wait `bool timed_wait(boost::system_time const& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `boost::get_system_time()` would be equal to or later than
+the specified `abs_time`. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time specified by
+`abs_time` was reached, `true` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:timed_wait `bool timed_wait(boost::unique_lock<boost::mutex>& lock,boost::system_time const& abs_time)`]
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `timed_wait`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `boost::get_system_time()` would be equal to or later than
+the specified `abs_time`, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time specified by
+`abs_time` was reached, `true` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:timed_wait_rel `template<typename duration_type> bool timed_wait(duration_type const& rel_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time period specified
+by `rel_time` has elapsed, `true` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:timed_wait_rel `template<typename duration_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock,duration_type const& rel_time)`]
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `timed_wait`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time period specified
+by `rel_time` has elapsed, `true` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:timed_wait_predicate `template<typename predicate_type> bool timed_wait(boost::unique_lock<boost::mutex>& lock, boost::system_time const& abs_time, predicate_type pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!timed_wait(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+
+[section:wait_until `template <class Clock, class Duration> cv_status wait_until(const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `Clock::now()`would be equal to or later than the specified `abs_time`.
+Note that thread interruption does not work with this kind of wait.
+ 
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait_until `template <class Clock, class Duration> cv_status wait_until(boost::unique_lock<boost::mutex>& lock, const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `wait_for` or `wait_until`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `Clock::now()`would be equal to or later than the specified `abs_time`, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class Rep, class Period> cv_status wait_for(const chrono::duration<Rep, Period>& rel_time)`]
+
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout ` if the call is returning because the time period specified
+by `rel_time` has elapsed, `cv_status::no_timeout ` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class Rep, class Period> cv_status wait_for(boost::unique_lock<boost::mutex>& lock, const chrono::duration<Rep, Period>& rel_time)`]
+
+
+[variablelist
+
+[[Precondition:] [`lock` is locked by the current thread, and either no other
+thread is currently waiting on `*this`, or the execution of the `mutex()` member
+function on the `lock` objects supplied in the calls to `wait` or `wait_until` or `wait_for`
+in all the threads currently waiting on `*this` would return the same value as
+`lock->mutex()` for this call to `wait`.]]
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout ` if the call is returning because the time period specified
+by `rel_time` has elapsed, `cv_status::no_timeout ` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:wait_until_predicate `template <class Clock, class Duration, class Predicate> bool wait_until(boost::unique_lock<boost::mutex>& lock, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred)`]
+
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!wait_until(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[section:wait_for_predicate `template <class Rep, class Period, class Predicate> bool wait_for(boost::unique_lock<boost::mutex>& lock, const chrono::duration<Rep, Period>& rel_time, Predicate pred)`]
+
+
+[variablelist
+
+[[Effects:] [As-if ``
+return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+``]]
+
+]
+
+[endsect]
+
+
+
+
+[endsect]
+
+[section:permit_any Class `permit_any`]
+
+    //#include <boost/thread/permit.hpp>
+
+    namespace boost
+    {
+        template<bool consuming=true> class permit_any
+        {
+        public:
+            static constexpr bool consumes=consuming;
+
+            permit_any(bool initial_state=false);
+            ~permit_any();
+
+            void grant() noexcept;
+            void revoke() noexcept;
+
+            void notify_one() noexcept;  // if consuming=true
+
+            void wait();
+
+            template<typename lock_type>
+            void wait(lock_type& lock);
+
+            template<typename lock_type,typename predicate_type>
+            void wait(lock_type& lock,predicate_type predicate);
+
+            template <class Clock, class Duration>
+            cv_status wait_until(
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class lock_type, class Clock, class Duration>
+            cv_status wait_until(
+                lock_type& lock,
+                const chrono::time_point<Clock, Duration>& t);
+
+            template <class lock_type, class Clock, class Duration, class Predicate>
+            bool wait_until(
+                lock_type& lock,
+                const chrono::time_point<Clock, Duration>& t,
+                Predicate pred);
+
+
+            template <class Rep, class Period>
+            cv_status wait_for(
+                const chrono::duration<Rep, Period>& d);
+
+            template <class lock_type, class Rep, class Period>
+            cv_status wait_for(
+                lock_type& lock,
+                const chrono::duration<Rep, Period>& d);
+
+            template <class lock_type, class Rep, class Period, class Predicate>
+            bool wait_for(
+                lock_type& lock,
+                const chrono::duration<Rep, Period>& d,
+                Predicate pred);
+
+        #if defined BOOST_THREAD_USES_DATETIME
+            bool timed_wait(boost::system_time const& abs_time);
+            template<typename lock_type>
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time);
+            template<typename duration_type>
+            bool timed_wait(duration_type const& rel_time);
+            template<typename lock_type,typename duration_type>
+            bool timed_wait(lock_type& lock,duration_type const& rel_time);
+            template<typename lock_type,typename predicate_type>
+            bool timed_wait(lock_type& lock,boost::system_time const& abs_time,predicate_type predicate);
+            template<typename lock_type,typename duration_type,typename predicate_type>
+            bool timed_wait(lock_type& lock,duration_type const& rel_time,predicate_type predicate);
+            bool timed_wait(boost::xtime const& abs_time);
+            template<typename lock_type>
+            bool timed_wait(lock_type>& lock,boost::xtime const& abs_time);
+            template<typename lock_type,typename predicate_type>
+            bool timed_wait(lock_type& lock,boost::xtime const& abs_time,predicate_type predicate);
+        #endif
+        };
+    }
+
+[section:constructor `permit_any(bool initial_state=false)`]
+
+[variablelist
+
+[[Effects:] [Constructs an object of class `permit_any` with initial state set to `initial_state`.]]
+
+[[Throws:] [__thread_resource_error__ if an error occurs.]]
+
+]
+
+[endsect]
+
+[section:destructor `~permit_any()`]
+
+[variablelist
+
+[[Effects:] [Destroys the object. It is safe to destroy the object while other threads are
+also waiting upon or granting upon or revoking upon the same object. In that situation,
+waits will complete immediately (potentially with exception) and grants and revokes will
+exit (potentially with exception).]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:grant `void grant()`]
+
+[variablelist
+
+[[Effects:] [Grants permit to one waiting thread, blocking until that one waiting thread is
+released. If there is no waiting thread, gives permit to the next thread to wait and returns
+immediately.
+
+If the permit is consuming, the permit is atomically transferred to the winning thread.
+
+If the permit is non-consuming, the permit is still atomically transferred to
+the winning thread, but the permit is atomically regranted. You are furthermore guaranteed that exactly
+every waiter at the time of grant will be released before the grant operation returns. Note that this
+guarantee has the following consequences:
+
+1. You must not hold the mutex passed to the wait during granting, otherwise the wait will lock on that
+mutex and therefore the grant will never exit. This doesn't apply to consuming permits, as the one to
+one grant to wake relationship means that a non-blocking implementation can be used.
+
+2. Only one grant may occur at any one time per permit instance i.e. grant is a critical section. This
+implies that if a grant is operating, any new waits hold until the grant completes. Again, this only
+applies to non-consuming permits.
+]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:revoke `void revoke()`]
+
+[variablelist
+
+[[Effects:] [Revoke any outstanding permit, causing any subsequent waiters to wait.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:notify_one `void notify_one()`]
+
+[variablelist
+
+[[Precondition:] [Only available if consuming is true, otherwise static asserts.]]
+
+[[Effects:] [Same as `grant()`.]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[section:wait `void wait()`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread.
+Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant.
+]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait `template<typename lock_type> void wait(lock_type& lock)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread,
+whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant.
+]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_predicate `template<typename lock_type,typename predicate_type> void wait(lock_type& lock, predicate_type pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    wait(lock);
+}
+``]]
+
+]
+
+[endsect]
+
+[section:timed_wait `bool timed_wait(boost::system_time const& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `boost::get_system_time()` would be equal to or later than
+the specified `abs_time`. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time specified by
+`abs_time` was reached, `true` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:timed_wait `template<typename lock_type> bool timed_wait(lock_type& lock,boost::system_time const& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `boost::get_system_time()` would be equal to or later than
+the specified `abs_time`, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time specified by
+`abs_time` was reached, `true` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:timed_wait_rel `template<typename duration_type> bool timed_wait(duration_type const& rel_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time period specified
+by `rel_time` has elapsed, `true` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:timed_wait_rel `template<typename lock_type,typename duration_type> bool timed_wait(lock_type& lock,duration_type const& rel_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`false` if the call is returning because the time period specified
+by `rel_time` has elapsed, `true` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:timed_wait_predicate `template<typename lock_type,typename predicate_type> bool timed_wait(lock_type& lock, boost::system_time const& abs_time, predicate_type pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!timed_wait(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[section:wait_until `template <class Clock, class Duration> cv_status wait_until(const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `Clock::now()`would be equal to or later than the specified `abs_time`.
+Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait_until `template <class lock_type, class Clock, class Duration> cv_status wait_until(lock_type& lock, const chrono::time_point<Clock, Duration>& abs_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or when the time as reported by `Clock::now()`would be equal to or later than the specified `abs_time`, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class Rep, class Period> cv_status wait_for(const chrono::duration<Rep, Period>& rel_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, spins until when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed. Note that thread interruption does not work with this kind of wait.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs.]]
+
+]
+
+[endsect]
+
+[section:wait_for `template <class lock_type, class Rep, class Period> cv_status wait_for(lock_type& lock, const chrono::duration<Rep, Period>& rel_time)`]
+
+[variablelist
+
+[[Effects:] [If the permit is available, atomically consumes the permit and if the
+permit is non-consuming, atomically regrants the permit for future waiters. If the
+permit is not available, atomically calls `lock.unlock()` and blocks the current thread. The
+thread will unblock when and only when a permit is atomically gained by the waiting thread
+or after the period of time indicated by the `rel_time`
+argument has elapsed, whereupon the lock is reacquired by invoking `lock.lock()` before the call to
+`wait` returns. The lock is also reacquired by invoking `lock.lock()` if the
+function exits with an exception.
+
+If the permit is non-consuming, note that grants are serialised with one another and no new waits may begin
+while a grant is occurring. This guarantees that non-consuming grants always release all waiters
+waiting at the point of grant, but it may also mean that a poll-only timed wait may block
+for a short while.
+]]
+
+[[Returns:] [`cv_status::timeout` if the call is returning because the time specified by
+`abs_time` was reached, `cv_status::no_timeout` otherwise.]]
+
+[[Postcondition:] [`lock` is locked by the current thread.]]
+
+[[Throws:] [__thread_resource_error__ if an error
+occurs. __thread_interrupted__ if the wait was interrupted by a call to
+__interrupt__ on the __thread__ object associated with the current thread of execution.]]
+
+]
+
+[note The duration overload of timed_wait is difficult to use correctly. The overload taking a predicate should be preferred in most cases.]
+
+[endsect]
+
+[section:wait_until_predicate `template <class lock_type, class Clock, class Duration, class Predicate> bool wait_until(lock_type& lock, const chrono::time_point<Clock, Duration>& abs_time, Predicate pred)`]
+
+[variablelist
+
+[[Effects:] [As-if ``
+while(!pred())
+{
+    if(!__cvany_wait_until(lock,abs_time))
+    {
+        return pred();
+    }
+}
+return true;
+``]]
+
+]
+
+[endsect]
+
+[endsect]
+
+[endsect]

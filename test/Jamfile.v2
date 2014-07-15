@@ -320,6 +320,32 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
     ;
 
+    #explicit ts_permits ;
+    test-suite ts_permits
+    :
+          [ thread-run2-noit ./sync/permits/pthread_permit_validity.cpp : pthread_permit_validity_p ]
+          
+          [ thread-compile-fail ./sync/permits/permit/assign_fail.cpp : : permit__assign_f ]
+          [ thread-compile-fail ./sync/permits/permit/copy_fail.cpp : : permit__copy_f ]
+          [ thread-run2-noit ./sync/permits/permit/default_pass.cpp : permit__default_p ]
+          [ thread-run2-noit ./sync/permits/permit/dtor_pass.cpp : permit__dtor_p ]
+          [ thread-run2-noit-pthread ./sync/permits/permit/native_handle_pass.cpp : permit__native_handle_p ]
+          [ thread-run2-noit ./sync/permits/permit/wait_pass.cpp : permit__wait_p ]
+          [ thread-run2-noit ./sync/permits/permit/wait_for_pass.cpp : permit__wait_for_p ]
+          [ thread-run2-noit ./sync/permits/permit/wait_for_pred_pass.cpp : permit__wait_for_pred_p ]
+          [ thread-run2-noit ./sync/permits/permit/wait_until_pass.cpp : permit__wait_until_p ]
+          [ thread-run2-noit ./sync/permits/permit/wait_until_pred_pass.cpp : permit__wait_until_pred_p ]
+
+          [ thread-compile-fail ./sync/permits/permit_any/assign_fail.cpp : : permit_any__assign_f ]
+          [ thread-compile-fail ./sync/permits/permit_any/copy_fail.cpp : : permit_any__copy_f ]
+          [ thread-run2-noit ./sync/permits/permit_any/default_pass.cpp : permit_any__default_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/dtor_pass.cpp : permit_any__dtor_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pass.cpp : permit_any__wait_for_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_for_pred_pass.cpp : permit_any__wait_for_pred_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pass.cpp : permit_any__wait_until_p ]
+          [ thread-run2-noit ./sync/permits/permit_any/wait_until_pred_pass.cpp : permit_any__wait_until_pred_p ]
+    ;
+
     #explicit ts_async ;
     test-suite ts_async
     :
@@ -849,5 +875,11 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
     ;
+
+	explicit ts_loadtest1 ;
+	test-suite ts_loadtest1
+	:
+          [ thread-test load_test_mutex_cond_permit.cpp ]
+	;
 
 }
