@@ -95,8 +95,8 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             using ::SleepEx;
             using ::Sleep;
-#endif           
             using ::QueueUserAPC;
+#endif           
 //            using ::GetTickCount;
 //#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
 //            using ::GetTickCount64;
@@ -200,9 +200,9 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
                 __declspec(dllimport) unsigned long __stdcall SleepEx(unsigned long,int);
                 __declspec(dllimport) void __stdcall Sleep(unsigned long);
-#endif
                 typedef void (__stdcall *queue_user_apc_callback_function)(ulong_ptr);
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
+#endif
 
 //                __declspec(dllimport) unsigned long __stdcall GetTickCount();
 //# ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
