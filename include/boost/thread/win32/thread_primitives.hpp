@@ -23,12 +23,6 @@
 #include <thread>
 #endif
 
-//#ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//#if _WIN32_WINNT >= 0x0600 && ! defined _WIN32_WINNT_WS08
-//#define BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//#endif
-//#endif
-
 #if defined( BOOST_USE_WINDOWS_H )
 # include <windows.h>
 
@@ -38,14 +32,9 @@ namespace boost
     {
         namespace win32
         {
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            typedef unsigned long long ticks_type;
-//#else
-//            typedef unsigned long ticks_type;
-//#endif
-            typedef ULONG_PTR ulong_ptr;
             typedef HANDLE handle;
             typedef SYSTEM_INFO system_info;
+            typedef unsigned __int64 ticks_type;
             unsigned const infinite=INFINITE;
             unsigned const timeout=WAIT_TIMEOUT;
             handle const invalid_handle_value=INVALID_HANDLE_VALUE;
@@ -67,6 +56,7 @@ namespace boost
             using ::CreateMutexExW;
             using ::CreateEventExW;
             using ::CreateSemaphoreExW;
+            namespace detail { using ::GetTickCount64; }
 # endif
             using ::OpenEventW;
 # else
@@ -97,12 +87,6 @@ namespace boost
             using ::Sleep;
             using ::QueueUserAPC;
 #endif           
-//            using ::GetTickCount;
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            using ::GetTickCount64;
-//#else
-//            inline ticks_type GetTickCount64() { return GetTickCount(); }
-//#endif
         }
     }
 }
@@ -143,11 +127,6 @@ namespace boost
     {
         namespace win32
         {
-//#ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            typedef unsigned long long ticks_type;
-//#else
-//            typedef unsigned long ticks_type;
-//#endif
 # ifdef _WIN64
             typedef unsigned __int64 ulong_ptr;
 # else
@@ -155,6 +134,7 @@ namespace boost
 # endif
             typedef void* handle;
             typedef _SYSTEM_INFO system_info;
+            typedef unsigned __int64 ticks_type;
             unsigned const infinite=~0U;
             unsigned const timeout=258U;
             handle const invalid_handle_value=(handle)(-1);
@@ -178,6 +158,7 @@ namespace boost
                 __declspec(dllimport) void* __stdcall CreateMutexExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
                 __declspec(dllimport) void* __stdcall CreateEventExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreExW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*,unsigned long,unsigned long);
+                namespace detail { __declspec(dllimport) ticks_type __stdcall GetTickCount64(); }
 # endif
                 __declspec(dllimport) void* __stdcall OpenEventW(unsigned long,int,wchar_t const*);
 # else
@@ -204,10 +185,6 @@ namespace boost
                 __declspec(dllimport) unsigned long __stdcall QueueUserAPC(queue_user_apc_callback_function,void*,ulong_ptr);
 #endif
 
-//                __declspec(dllimport) unsigned long __stdcall GetTickCount();
-//# ifdef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//                __declspec(dllimport) ticks_type __stdcall GetTickCount64();
-//# endif
 # ifndef UNDER_CE
                 __declspec(dllimport) unsigned long __stdcall GetCurrentProcessId();
                 __declspec(dllimport) unsigned long __stdcall GetCurrentThreadId();
@@ -224,9 +201,6 @@ namespace boost
                 using ::ResetEvent;
 # endif
             }
-//# ifndef BOOST_THREAD_WIN32_HAS_GET_TICK_COUNT_64
-//            inline ticks_type GetTickCount64() { return GetTickCount(); }
-//# endif
         }
     }
 }
@@ -242,7 +216,96 @@ namespace boost
     {
         namespace win32
         {
-            enum event_type
+            namespace detail { typedef int (__stdcall *farproc_t)(); typedef ticks_type (__stdcall *gettickcount64_t)(); }
+#if !BOOST_PLAT_WINDOWS_RUNTIME
+            extern "C"
+            {
+                   __declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
+#if !defined(BOOST_NO_ANSI_APIS)
+                   __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
+#else
+                   __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
+#endif
+                int __stdcall GetTickCount();
+                long _InterlockedCompareExchange(long volatile *, long, long);
+#pragma intrinsic(_InterlockedCompareExchange)
+            }
+            // Borrowed from https://stackoverflow.com/questions/8211820/userland-interrupt-timer-access-such-as-via-kequeryinterrupttime-or-similar
+            inline ticks_type __stdcall GetTickCount64emulation()
+            {
+                static volatile long count = 0xFFFFFFFF;
+                unsigned long previous_count, current_tick32, previous_count_zone, current_tick32_zone;
+                ticks_type current_tick64;
+
+                previous_count = (unsigned long) _InterlockedCompareExchange(&count, 0, 0);
+                current_tick32 = GetTickCount();
+
+                if(previous_count == 0xFFFFFFFF)
+                {
+                    // count has never been written
+                    unsigned long initial_count;
+                    initial_count = current_tick32 >> 28;
+                    previous_count = (unsigned long) _InterlockedCompareExchange(&count, initial_count, 0xFFFFFFFF);
+
+                    current_tick64 = initial_count;
+                    current_tick64 <<= 28;
+                    current_tick64 += current_tick32 & 0x0FFFFFFF;
+                    return current_tick64;
+                }
+
+                previous_count_zone = previous_count & 15;
+                current_tick32_zone = current_tick32 >> 28;
+
+                if(current_tick32_zone == previous_count_zone)
+                {
+                    // The top four bits of the 32-bit tick count haven't changed since count was last written.
+                    current_tick64 = previous_count;
+                    current_tick64 <<= 28;
+                    current_tick64 += current_tick32 & 0x0FFFFFFF;
+                    return current_tick64;
+                }
+
+                if(current_tick32_zone == previous_count_zone + 1 || (current_tick32_zone == 0 && previous_count_zone == 15))
+                {
+                    // The top four bits of the 32-bit tick count have been incremented since count was last written.
+                    _InterlockedCompareExchange(&count, previous_count + 1, previous_count);
+                    current_tick64 = previous_count + 1;
+                    current_tick64 <<= 28;
+                    current_tick64 += current_tick32 & 0x0FFFFFFF;
+                    return current_tick64;
+                }
+
+                // Oops, we weren't called often enough, we're stuck
+                return 0xFFFFFFFF;     
+            }
+#endif
+            inline detail::gettickcount64_t GetTickCount64()
+            {
+                static detail::gettickcount64_t gettickcount64impl;
+                if(gettickcount64impl)
+                    return gettickcount64impl;
+                    
+                // GetTickCount and GetModuleHandle are not allowed in the Windows Runtime,
+                // and kernel32 isn't used in Windows Phone.
+#if BOOST_PLAT_WINDOWS_RUNTIME
+                gettickcount64impl = &::boost::detail::win32::detail::GetTickCount64;
+#else               
+                detail::farproc_t addr=GetProcAddress(
+#if !defined(BOOST_NO_ANSI_APIS)
+                    GetModuleHandleA("KERNEL32.DLL"),
+#else
+                    GetModuleHandleW(L"KERNEL32.DLL"),
+#endif
+                    "GetTickCount64");
+                if(addr)
+                    gettickcount64impl=(detail::gettickcount64_t) addr;
+                else
+                    gettickcount64impl=&GetTickCount64emulation;
+#endif                    
+                return gettickcount64impl;
+            }
+
+                       enum event_type
             {
                 auto_reset_event=false,
                 manual_reset_event=true
@@ -351,9 +414,9 @@ namespace boost
                 else
                 {
 #if BOOST_PLAT_WINDOWS_RUNTIME
-                    detail::win32::WaitForSingleObjectEx(detail::win32::GetCurrentThread(), milliseconds, 0); 
+                    ::boost::detail::win32::WaitForSingleObjectEx(::boost::detail::win32::GetCurrentThread(), milliseconds, 0); 
 #else
-                    detail::win32::Sleep(milliseconds);
+                    ::boost::detail::win32::Sleep(milliseconds);
 #endif
                 }
             }
@@ -367,7 +430,7 @@ namespace boost
 
                 ~scoped_winrt_thread()
                 {
-                    if (m_completionHandle != detail::win32::invalid_handle_value)
+                    if (m_completionHandle != ::boost::detail::win32::invalid_handle_value)
                     {
                         CloseHandle(m_completionHandle);
                     }
@@ -378,7 +441,7 @@ namespace boost
 
                 handle waitable_handle() const
                 {
-                    BOOST_ASSERT(m_completionHandle != detail::win32::invalid_handle_value);
+                    BOOST_ASSERT(m_completionHandle != ::boost::detail::win32::invalid_handle_value);
                     return m_completionHandle;
                 }
 

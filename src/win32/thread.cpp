@@ -227,7 +227,7 @@ namespace boost
                 // Add a reference since we need to access the completionHandle after the thread_start_function.
                 // This is to handle cases where detach() was called and run_thread_exit_callbacks() would end
                 // up closing the handle.
-                detail::thread_data_base* const thread_info(reinterpret_cast<detail::thread_data_base*>(parameter));
+                ::boost::detail::thread_data_base* const thread_info(reinterpret_cast<::boost::detail::thread_data_base*>(parameter));
                 intrusive_ptr_add_ref(thread_info);
 
                 __try
@@ -584,7 +584,7 @@ namespace boost
                 LARGE_INTEGER due_time={{0,0}};
                 if(target_time.relative)
                 {
-                    unsigned long const elapsed_milliseconds=detail::win32::GetTickCount64()-target_time.start;
+                    detail::win32::ticks_type const elapsed_milliseconds=detail::win32::GetTickCount64()()-target_time.start;
                     LONGLONG const remaining_milliseconds=(target_time.milliseconds-elapsed_milliseconds);
                     LONGLONG const hundred_nanoseconds_in_one_millisecond=10000;
 
