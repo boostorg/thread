@@ -39,7 +39,7 @@ dequeue and execute work as available.
 A question arises of which of these executors (or others) be included in this library. There are use cases for these and many other executors. Often it is useful to have more than one implemented executor (e.g. the thread pool) to have more precise control of where the work is executed due to the existence of a GUI thread, or for testing purposes. A few core executors are frequently useful and these have been outlined here as the core of what should be in this library, if common use cases arise for alternative executor implementations, they can be added in the future. The current set provided here are: a basic thread pool `basic_thread_pool`, a serial executor `serial_executor`, a loop executor `loop_executor`, an inline executor `inline_executor` and a thread-spawning executor `thread_executor`.
 [endsect]
 
-[
+[/
 [/////////////////////////]
 [section:tutorial Tutorial]
 
@@ -612,7 +612,7 @@ Polymorphic adaptor of a model of Executor to an executor.
 [endsect]
 
 [endsect]
-[
+[/
 [//////////////////////////////////////////////////////////]
 [section:scheduled_executor Template Class `scheduled_executor`]
 
