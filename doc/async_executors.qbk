@@ -145,7 +145,7 @@ In addition `std::function<void()>` can not be constructed by moving the closure
 [/
 [heading Scheduled work]
 
-The approach of this library respect to scheduled work of the N3785 proposal is quite different. Instead of adding the scheduled operations to a specific scheduled_executor polymorphic interface, we opt by adding two member template functions to a class scheduled_executor that wraps an existing executor. This has several the advantages:
+The approach of this library respect to scheduled work of the N3785 proposal is quite different. Instead of adding the scheduled operations to a specific scheduled_executor polymorphic interface, we opt by adding two member template functions to a class scheduled_executor that wraps an existing executor. This has several advantages:
 
 * The scheduled operations are available for all the executors.
 * The template functions could accept any chrono `time_point` and `duration` respectively as we are not working with virtual functions.
