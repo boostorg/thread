@@ -287,10 +287,10 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
             }
 
 #if (_MSC_VER >= 1500)
-			if( _pRawDllMainOrig )
-			{
-				return _pRawDllMainOrig(hInstance, dwReason, lpReserved);
-			}
+            if( _pRawDllMainOrig )
+            {
+                return _pRawDllMainOrig(hInstance, dwReason, lpReserved);
+            }
 #endif
             return true;
         }
