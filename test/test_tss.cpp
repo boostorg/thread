@@ -66,6 +66,8 @@ void test_tss_thread()
     }
 }
 
+
+
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
     typedef HANDLE native_thread_t;
 
@@ -189,6 +191,92 @@ void test_tss()
 {
     timed_test(&do_test_tss, 2);
 }
+
+//////
+#ifdef BOOST_THREAD_TSS_VOID
+boost::thread_specific_ptr<void> tss_void;
+void test_tss_void_thread()
+{
+    tss_void.reset(new tss_value_t());
+    for (int i=0; i<1000; ++i)
+    {
+        int& n = static_cast<tss_value_t*>(tss_value.get())->value;
+        *tss_value;
+        // Don't call BOOST_CHECK_EQUAL directly, as it doesn't appear to
+        // be thread safe. Must evaluate further.
+        if (n != i)
+        {
+            boost::unique_lock<boost::mutex> lock(check_mutex);
+            BOOST_CHECK_EQUAL(n, i);
+        }
+        ++n;
+    }
+}
+void do_test_tss_void()
+{
+    tss_instances = 0;
+    tss_total = 0;
+
+    const int NUMTHREADS=5;
+    boost::thread_group threads;
+    try
+    {
+        for (int i=0; i<NUMTHREADS; ++i)
+            threads.create_thread(&test_tss_void_thread);
+        threads.join_all();
+    }
+    catch(...)
+    {
+        threads.interrupt_all();
+        threads.join_all();
+        throw;
+    }
+
+
+    std::cout
+        << "tss_instances = " << tss_instances
+        << "; tss_total = " << tss_total
+        << "\n";
+    std::cout.flush();
+
+    BOOST_CHECK_EQUAL(tss_instances, 0);
+    BOOST_CHECK_EQUAL(tss_total, 5);
+
+    tss_instances = 0;
+    tss_total = 0;
+
+    native_thread_t thread1 = create_native_thread();
+    native_thread_t thread2 = create_native_thread();
+    native_thread_t thread3 = create_native_thread();
+    native_thread_t thread4 = create_native_thread();
+    native_thread_t thread5 = create_native_thread();
+
+    join_native_thread(thread5);
+    join_native_thread(thread4);
+    join_native_thread(thread3);
+    join_native_thread(thread2);
+    join_native_thread(thread1);
+
+    std::cout
+        << "tss_instances = " << tss_instances
+        << "; tss_total = " << tss_total
+        << "\n";
+    std::cout.flush();
+
+    // The following is not really an error. TSS cleanup support still is available for boost threads.
+    // Also this usually will be triggered only when bound to the static version of thread lib.
+    // 2006-10-02 Roland Schwarz
+    //BOOST_CHECK_EQUAL(tss_instances, 0);
+    BOOST_CHECK_MESSAGE(tss_instances == 0, "Support of automatic tss cleanup for native threading API not available");
+    BOOST_CHECK_EQUAL(tss_total, 5);
+}
+
+void test_tss_void()
+{
+    timed_test(&do_test_tss_void, 2);
+}
+
+#endif
 
 bool tss_cleanup_called=false;
 
