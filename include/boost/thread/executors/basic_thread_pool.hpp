@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Vicente J. Botet Escriba
+// Copyright (C) 2013-2014 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -85,12 +85,23 @@ namespace executors
      */
     void worker_thread()
     {
-      while (!closed())
+      try
       {
-        schedule_one_or_yield();
+        for(;;)
+        {
+          work task;
+          queue_op_status st = work_queue.wait_pull_front(task);
+          if (st == queue_op_status::closed) return;
+          task();
+        }
       }
-      while (try_executing_one())
+      catch (std::exception& )
       {
+        return;
+      }
+      catch (...)
+      {
+        return;
       }
     }
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
@@ -98,37 +109,19 @@ namespace executors
     void worker_thread1(AtThreadEntry& at_thread_entry)
     {
       at_thread_entry(*this);
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
+      worker_thread();
     }
 #endif
     void worker_thread2(void(*at_thread_entry)(basic_thread_pool&))
     {
       at_thread_entry(*this);
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
+      worker_thread();
     }
     template <class AtThreadEntry>
     void worker_thread3(BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
     {
       at_thread_entry(*this);
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
+      worker_thread();
     }
     static void do_nothing_at_thread_entry(basic_thread_pool&) {}
 
