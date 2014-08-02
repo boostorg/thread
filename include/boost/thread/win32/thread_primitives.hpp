@@ -179,6 +179,8 @@ namespace boost
 #ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
+#elif defined(__MINGW64_VERSION_MAJOR)
+                long _InterlockedCompareExchange(long volatile *, long, long);
 #else
                 // Mingw doesn't provide intrinsics
 #define _InterlockedCompareExchange InterlockedCompareExchange
