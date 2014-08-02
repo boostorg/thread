@@ -176,8 +176,13 @@ namespace boost
                    __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
 #endif
                 int __stdcall GetTickCount();
+#ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
+#else
+                // Mingw doesn't provide intrinsics
+#define _InterlockedCompareExchange InterlockedCompareExchange
+#endif
             }
             // Borrowed from https://stackoverflow.com/questions/8211820/userland-interrupt-timer-access-such-as-via-kequeryinterrupttime-or-similar
             inline ticks_type __stdcall GetTickCount64emulation()
