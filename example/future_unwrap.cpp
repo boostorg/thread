@@ -19,6 +19,8 @@
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
 #include <string>
+#include <iostream>
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
 
 int p1()

@@ -15,7 +15,7 @@
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/detail/interlocked.hpp>
-//#include <boost/detail/win/synchronization.hpp>
+//#include <boost/detail/winapi/synchronization.hpp>
 #include <algorithm>
 
 #if defined( BOOST_USE_WINDOWS_H )
