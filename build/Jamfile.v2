@@ -78,12 +78,12 @@ project boost/thread
         <toolset>pathscale:<cxxflags>-pedantic
 
         <toolset>clang:<cxxflags>-Wextra
-        <toolset>clang:<cxxflags>-pedantic
         #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long
         <toolset>clang:<cxxflags>-Wunused-function
         <toolset>clang:<cxxflags>-Wno-variadic-macros
+        <toolset>clang:<warnings>on
 
         #<toolset>gcc-mingw-4.4.0:<cxxflags>-fdiagnostics-show-option
         #<toolset>gcc-mingw-4.5.0:<cxxflags>-fdiagnostics-show-option
