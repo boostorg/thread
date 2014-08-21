@@ -78,7 +78,8 @@ project boost/thread
         <toolset>pathscale:<cxxflags>-pedantic
 
         <toolset>clang:<cxxflags>-Wextra
-        <toolset>clang:<cxxflags>-pedantic
+        #<toolset>clang:<cxxflags>-pedantic
+        <toolset>clang:<warnings>on
         #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive
         <toolset>clang:<cxxflags>-Wno-long-long

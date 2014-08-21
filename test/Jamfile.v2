@@ -49,7 +49,8 @@ project
         <toolset>pathscale:<cxxflags>-pedantic
 
         <toolset>clang:<cxxflags>-Wextra
-        <toolset>clang:<cxxflags>-pedantic
+        #<toolset>clang:<cxxflags>-pedantic
+        <toolset>clang:<warnings>on
         <toolset>clang:<cxxflags>-Wno-long-long
         #<toolset>clang:<cxxflags>-ansi
         #<toolset>clang:<cxxflags>-fpermissive # doesn't work
