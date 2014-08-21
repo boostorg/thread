@@ -15,7 +15,7 @@
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
 #include <boost/detail/interlocked.hpp>
-//#include <boost/detail/win/synchronization.hpp>
+//#include <boost/detail/winapi/synchronization.hpp>
 #include <algorithm>
 
 #if defined( BOOST_USE_WINDOWS_H )
@@ -176,8 +176,15 @@ namespace boost
                    __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
 #endif
                 int __stdcall GetTickCount();
+#ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
+#elif defined(__MINGW64_VERSION_MAJOR)
+                long _InterlockedCompareExchange(long volatile *, long, long);
+#else
+                // Mingw doesn't provide intrinsics
+#define _InterlockedCompareExchange InterlockedCompareExchange
+#endif
             }
             // Borrowed from https://stackoverflow.com/questions/8211820/userland-interrupt-timer-access-such-as-via-kequeryinterrupttime-or-similar
             inline ticks_type __stdcall GetTickCount64emulation()

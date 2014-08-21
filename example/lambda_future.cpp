@@ -20,6 +20,7 @@
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
 #include <string>
+#include <iostream>
 
 #if    defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
   && ! defined BOOST_NO_CXX11_LAMBDAS && ! (defined BOOST_MSVC && _MSC_VER < 1700)
