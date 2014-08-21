@@ -752,7 +752,7 @@ corresponding successful `join()` return. ]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or `this->get_id() == boost::this_thread::get_id()`.
 
-[*invalid_argument]: if the thread is not joinable and `BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED` is defined.
+[*invalid_argument]: if the thread is not joinable and `BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED` is defined.
 
 
 [/
@@ -801,7 +801,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -841,7 +841,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -881,7 +881,7 @@ unchanged.]]
 
 [*resource_deadlock_would_occur]: if deadlock is detected or this->get_id() == boost::this_thread::get_id().
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 
 [/
@@ -917,7 +917,7 @@ unchanged.]]
 
 [*no_such_process]: if the thread is not valid.
 
-[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_TRHOW_IF_PRECONDITION_NOT_SATISFIED is defined.
+[*invalid_argument]: if the thread is not joinable and BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED is defined.
 
 ]]
 
