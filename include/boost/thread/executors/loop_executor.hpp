@@ -148,24 +148,18 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push(work(closure)); // todo check why this doesn't work
+      work_queue.push_back(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      work_queue.push_back(work(closure));
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work w =boost::move(closure);
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
+      work_queue.push_back(work(boost::forward<Closure>(closure)));
     }
 
     /**

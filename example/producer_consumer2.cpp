@@ -1,5 +1,4 @@
-// (C) Copyright 2012 Howard Hinnant
-// (C) Copyright 2012 Vicente Botet
+// (C) Copyright 2014 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -7,7 +6,7 @@
 // adapted from the example given by Howard Hinnant in
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
+//#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <iostream>
 #include <boost/thread/scoped_thread.hpp>
@@ -19,16 +18,18 @@
     typedef std::istream the_istream;
 #endif
 #include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/queue_adaptor.hpp>
+#include <boost/thread/concurrent_queues/queue_views.hpp>
 
-void producer(the_ostream &mos, boost::sync_queue<int> & sbq)
+void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
 {
   using namespace boost;
   try {
     for(int i=0; ;++i)
     {
-      sbq.push_back(i);
+      sbq.push(i);
       //sbq << i;
-      mos << "push_back(" << i << ") "<< sbq.size()<<"\n";
+      mos << "push(" << i << ") "<< sbq.size()<<"\n";
       this_thread::sleep_for(chrono::milliseconds(200));
     }
   }
@@ -44,14 +45,14 @@ void producer(the_ostream &mos, boost::sync_queue<int> & sbq)
 
 void consumer(
     the_ostream &mos,
-    boost::sync_queue<int> & sbq)
+    boost::queue_front<int>::type sbq)
 {
   using namespace boost;
   try {
     for(int i=0; ;++i)
     {
       int r;
-      sbq.pull_front(r);
+      sbq.pull(r);
       //sbq >> r;
       mos << i << " pull(" << r << ") "<< sbq.size()<<"\n";
 
@@ -67,17 +68,17 @@ void consumer(
     mos << "exception !!!\n";
   }
 }
-void consumer2(the_ostream &mos, boost::sync_queue<int> & sbq)
+void consumer2(the_ostream &mos, boost::queue_front<int>::type sbq)
 {
   using namespace boost;
   try {
     for(int i=0; ;++i)
     {
       int r;
-      queue_op_status st = sbq.try_pull_front(r);
+      queue_op_status st = sbq.try_pull(r);
       if (queue_op_status::closed == st) break;
       if (queue_op_status::success == st) {
-        mos << i << " pull(" << r << ")\n";
+        mos << i << " try_pull(" << r << ")\n";
       }
       this_thread::sleep_for(chrono::milliseconds(250));
     }
@@ -87,16 +88,16 @@ void consumer2(the_ostream &mos, boost::sync_queue<int> & sbq)
     mos << "exception !!!\n";
   }
 }
-void consumer3(the_ostream &mos, boost::sync_queue<int> & sbq)
+void consumer3(the_ostream &mos, boost::queue_front<int>::type sbq)
 {
   using namespace boost;
   try {
     for(int i=0; ;++i)
     {
       int r;
-      queue_op_status res = sbq.wait_pull_front(r);
+      queue_op_status res = sbq.wait_pull(r);
       if (res==queue_op_status::closed) break;
-      mos << i << " wait_pull_front(" << r << ")\n";
+      mos << i << " wait_pull(" << r << ")\n";
       this_thread::sleep_for(chrono::milliseconds(250));
     }
   }
@@ -122,13 +123,14 @@ int main()
   //the_istream &mcin = std::cin;
 #endif
 
-  sync_queue<int> sbq;
+  queue_adaptor<sync_queue<int> > sbq;
+  //sync_queue<int>  sbq;
 
   {
     mcout << "begin of main" << std::endl;
-    scoped_thread<> t11(boost::thread(producer, boost::ref(mcerr), boost::ref(sbq)));
-    scoped_thread<> t12(boost::thread(producer, boost::ref(mcerr), boost::ref(sbq)));
-    scoped_thread<> t2(boost::thread(consumer, boost::ref(mcout), boost::ref(sbq)));
+    scoped_thread<> t11(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>::type(sbq)));
+    scoped_thread<> t12(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>::type(sbq)));
+    scoped_thread<> t2(boost::thread(consumer, boost::ref(mcout), concurrent::queue_front<int>::type(sbq)));
 
     this_thread::sleep_for(chrono::seconds(1));
 
