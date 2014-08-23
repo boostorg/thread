@@ -178,17 +178,18 @@ namespace executors
       } while (! pred());
       return true;
     }
+
     /**
      * run queued closures
      */
     void run_queued_closures()
     {
       sync_queue<work>::underlying_queue_type q = work_queue.underlying_queue();
-      while (q.empty())
+      while (! q.empty())
       {
-        work task = q.front();
-        q.pop_front();
+        work& task = q.front();
         task();
+        q.pop_front();
       }
     }
 

@@ -112,7 +112,7 @@ namespace boost
 
 
       void operator()()
-      { impl->call();}
+      { if (impl) impl->call();}
 
     };
 
@@ -204,7 +204,7 @@ namespace boost
       }
 
       R operator()()
-      { return impl->call();}
+      { if (impl) return impl->call(); else return R();}
 
     };
   }
