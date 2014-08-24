@@ -72,6 +72,9 @@ namespace boost
       //ex.submit(boost::forward<work>(closure)); // todo check why this doesn't work
       ex.submit(boost::move(closure));
     }
+//    void submit(work& closure) {
+//      ex.submit(closure);
+//    }
 
 
     /**

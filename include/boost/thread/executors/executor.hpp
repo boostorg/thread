@@ -66,6 +66,7 @@ namespace boost
      * Whatever exception that can be throw while storing the closure.
      */
     virtual void submit(BOOST_THREAD_RV_REF(work) closure) = 0;
+//    virtual void submit(work& closure) = 0;
 
     /**
      * \par Requires

@@ -99,6 +99,9 @@ namespace executors
       return ex.submit(boost::move(closure));
       //return ex.submit(boost::forward<work>(closure)); // todo check why this doesn't work
     }
+//    void submit(work & closure)  {
+//      return ex.submit(closure);
+//    }
 
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <typename Closure>

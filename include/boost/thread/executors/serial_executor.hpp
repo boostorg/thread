@@ -52,7 +52,7 @@ namespace executors
      * \par Returns
      * The underlying executor wrapped on a generic executor reference.
      */
-    generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex; }
+    generic_executor_ref underlying_executor() BOOST_NOEXCEPT { return ex; }
 
     /**
      * Effects: try to execute one task.
