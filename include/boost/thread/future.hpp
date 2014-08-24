@@ -1331,8 +1331,6 @@ namespace boost
       /// Common implementation for all the futures independently of the return type
       class base_future
       {
-        //BOOST_THREAD_MOVABLE(base_future)
-
       };
       /// Common implementation for future and shared_future.
       template <typename R>
@@ -1361,7 +1359,7 @@ namespace boost
       public:
         typedef future_state::state state;
 
-        BOOST_THREAD_MOVABLE(basic_future)
+        BOOST_THREAD_MOVABLE_ONLY(basic_future)
         basic_future(): future_() {}
 
 
@@ -1928,7 +1926,7 @@ namespace boost
         {}
 
     public:
-        BOOST_THREAD_MOVABLE(shared_future)
+        BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_future)
         typedef R value_type; // EXTENSION
 
         shared_future(shared_future const& other):
@@ -1945,7 +1943,7 @@ namespace boost
         ~shared_future()
         {}
 
-        shared_future& operator=(shared_future const& other)
+        shared_future& operator=(BOOST_THREAD_COPY_ASSIGN_REF(shared_future) other)
         {
             shared_future(other).swap(*this);
             return *this;
@@ -3659,11 +3657,11 @@ namespace detail {
       : that(st), f_(boost::forward<Fp>(f))
       {};
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
       {}
-      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      shared_state_nullary_task& operator=(BOOST_THREAD_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
       {
         if (this != &x) {
           that=x.that;
@@ -3711,11 +3709,11 @@ namespace detail {
       : that(st), f_(boost::forward<Fp>(f))
       {};
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
       {}
-      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
+      shared_state_nullary_task& operator=(BOOST_THREAD_COPY_ASSIGN_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
       {
         if (this != &x) {
           that=x.that;
@@ -3762,11 +3760,11 @@ namespace detail {
         : that(st), f_(boost::forward<Fp>(f))
       {}
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      BOOST_THREAD_MOVABLE(shared_state_nullary_task)
+      BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) BOOST_NOEXCEPT
       : that(x.that), f_(x.f_) {}
 
-      shared_state_nullary_task& operator=(BOOST_COPY_ASSIGN_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT {
+      shared_state_nullary_task& operator=(BOOST_THREAD_COPY_ASSIGN_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT {
         if (this != &x){
           that=x.that;
           f_=x.f_;

@@ -158,7 +158,7 @@ namespace boost
         }
       };
     public:
-      BOOST_THREAD_MOVABLE(nullary_function)
+      BOOST_THREAD_COPYABLE_AND_MOVABLE(nullary_function)
 
       nullary_function(R (*f)()):
       impl(new impl_type_ptr(f))
@@ -191,7 +191,7 @@ namespace boost
       {
       }
 
-      nullary_function& operator=(nullary_function const& other) BOOST_NOEXCEPT
+      nullary_function& operator=(BOOST_THREAD_COPY_ASSIGN_REF(nullary_function) other) BOOST_NOEXCEPT
       {
         impl=other.impl;
         return *this;

@@ -849,7 +849,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9720.cpp ]
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
-          #[ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer2 ]
+          [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer2 ]
           [ thread-run2 ../example/generic_executor_ref.cpp : generic_executor_ref ]
     ;
 
