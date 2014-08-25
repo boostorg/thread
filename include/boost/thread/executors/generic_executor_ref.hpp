@@ -69,7 +69,6 @@ namespace boost
      * Whatever exception that can be throw while storing the closure.
      */
     void submit(BOOST_THREAD_RV_REF(work) closure) {
-      //ex.submit(boost::forward<work>(closure)); // todo check why this doesn't work
       ex.submit(boost::move(closure));
     }
 //    void submit(work& closure) {
