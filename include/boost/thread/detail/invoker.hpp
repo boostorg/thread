@@ -62,7 +62,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f) : f_(boost::move(BOOST_THREAD_RV(f).f_))
+      invoker(BOOST_THREAD_FWD_REF(invoker) f) : f_(boost::move(BOOST_THREAD_RV(f).f_))
       {}
 
       result_type operator()()
@@ -160,7 +160,7 @@ namespace boost
       {} \
       \
       BOOST_SYMBOL_VISIBLE \
-      invoker(BOOST_THREAD_RV_REF(invoker) x) \
+      invoker(BOOST_THREAD_FWD_REF(invoker) x) \
       : fp_(boost::move(x.fp_)) \
       BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_RHS_PARAM, ~) \
       {} \
@@ -192,7 +192,7 @@ namespace boost
       {} \
       \
       BOOST_SYMBOL_VISIBLE \
-      invoker(BOOST_THREAD_RV_REF(invoker) x) \
+      invoker(BOOST_THREAD_FWD_REF(invoker) x) \
       : fp_(x.fp_) \
       BOOST_PP_REPEAT(n, BOOST_THREAD_MOVE_RHS_PARAM, ~) \
       {} \
@@ -276,7 +276,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -343,7 +343,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -405,7 +405,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -462,7 +462,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -514,7 +514,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -561,7 +561,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -603,7 +603,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -640,7 +640,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       , v1_(boost::move(BOOST_THREAD_RV(f).v1_))
@@ -672,7 +672,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(BOOST_THREAD_RV(f).fp))
       , v0_(boost::move(BOOST_THREAD_RV(f).v0_))
       {}
@@ -697,7 +697,7 @@ namespace boost
       {}
 
       BOOST_SYMBOL_VISIBLE
-      invoker(BOOST_THREAD_RV_REF(invoker) f)
+      invoker(BOOST_THREAD_FWD_REF(invoker) f)
       : fp_(boost::move(f.fp_))
       {}
       result_type operator()()
