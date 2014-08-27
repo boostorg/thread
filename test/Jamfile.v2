@@ -726,6 +726,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/thread_pool.cpp : ex_thread_pool ]
           [ thread-run2 ../example/user_scheduler.cpp : ex_user_scheduler ]
           [ thread-run2 ../example/executor.cpp : ex_executor ]
+          [ thread-run2 ../example/generic_executor_ref.cpp : generic_executor_ref ]
           [ thread-run2 ../example/future_when_all.cpp : future_when_all ]
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
           [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
@@ -850,7 +851,6 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
           [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer2 ]
-          [ thread-run2 ../example/generic_executor_ref.cpp : generic_executor_ref ]
     ;
 
 }
