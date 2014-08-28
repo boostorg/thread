@@ -44,26 +44,28 @@ namespace concurrent
     void close() { queue.close(); }
 
     void push(const value_type& x) { queue.push_back(x); }
-    void push(BOOST_THREAD_RV_REF(value_type) x) { queue.push_back(forward<value_type>(x)); }
 
     void pull(value_type& x) { queue.pull_back(x); }
     // enable_if is_nothrow_copy_movable<value_type>
     value_type pull()  { return queue.pull_back(); }
 
     queue_op_status try_push(const value_type& x) { return queue.try_push_back(x); }
-    queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_back(forward<value_type>(x)); }
 
     queue_op_status try_pull(value_type& x) { return queue.try_pull_back(x); }
 
     queue_op_status nonblocking_push(const value_type& x) { return queue.nonblocking_push_back(x); }
-    queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_back(forward<value_type>(x)); }
 
     queue_op_status nonblocking_pull(value_type& x) { return queue.nonblocking_pull_back(x); }
 
     queue_op_status wait_push(const value_type& x) { return queue.wait_push_back(x); }
-    queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_back(forward<value_type>(x)); }
     queue_op_status wait_pull_front(value_type& x) { return queue.wait_pull_back(x); }
 
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    void push(BOOST_THREAD_RV_REF(value_type) x) { queue.push_back(boost::move(x)); }
+    queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_back(boost::move(x)); }
+    queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_back(boost::move(x)); }
+    queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_back(boost::move(x)); }
+#endif
   };
 
   template <typename Queue>
@@ -87,25 +89,27 @@ namespace concurrent
     void close() { queue.close(); }
 
     void push(const value_type& x) { queue.push_front(x); }
-    void push(BOOST_THREAD_RV_REF(value_type) x) { queue.push_front(forward<value_type>(x)); }
 
     void pull(value_type& x) { queue.pull_front(x); };
     // enable_if is_nothrow_copy_movable<value_type>
     value_type pull()  { return queue.pull_front(); }
 
     queue_op_status try_push(const value_type& x) { return queue.try_push_front(x); }
-    queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_front(forward<value_type>(x)); }
 
     queue_op_status try_pull(value_type& x) { return queue.try_pull_front(x); }
 
     queue_op_status nonblocking_push(const value_type& x) { return queue.nonblocking_push_front(x); }
-    queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_front(forward<value_type>(x)); }
 
     queue_op_status nonblocking_pull(value_type& x) { return queue.nonblocking_pull_front(x); }
 
     queue_op_status wait_push(const value_type& x) { return queue.wait_push_front(x); }
-    queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_front(forward<value_type>(x)); }
     queue_op_status wait_pull(value_type& x) { return queue.wait_pull_front(x); }
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    void push(BOOST_THREAD_RV_REF(value_type) x) { queue.push_front(forward<value_type>(x)); }
+    queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.try_push_front(forward<value_type>(x)); }
+    queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.nonblocking_push_front(forward<value_type>(x)); }
+    queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue.wait_push_front(forward<value_type>(x)); }
+#endif
 
   };
 

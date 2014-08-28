@@ -720,6 +720,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ../example/ba_externallly_locked.cpp : ex_ba_externallly_locked ]
           [ thread-run2 ../example/producer_consumer_bounded.cpp : ex_producer_consumer_bounded ]
           [ thread-run2 ../example/producer_consumer.cpp : ex_producer_consumer ]
+          [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer2 ]
           [ thread-run2 ../example/not_interleaved.cpp : ex_not_interleaved ]
           [ thread-run2 ../example/lambda_future.cpp : ex_lambda_future ]
           [ thread-run2 ../example/not_interleaved2.cpp : ex_not_interleaved2 ]
@@ -850,7 +851,6 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9720.cpp ]
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
-          [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer2 ]
     ;
 
 }

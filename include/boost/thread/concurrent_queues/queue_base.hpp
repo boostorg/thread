@@ -42,24 +42,26 @@ namespace concurrent
     virtual void close() = 0;
 
     virtual void push_back(const value_type& x) = 0;
-    virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
 
     virtual void pull_front(value_type&) = 0;
     // enable_if is_nothrow_copy_movable<value_type>
     virtual value_type pull_front() = 0;
 
     virtual queue_op_status try_push_back(const value_type& x) = 0;
-    virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status try_pull_front(value_type&) = 0;
 
     virtual queue_op_status nonblocking_push_back(const value_type& x) = 0;
-    virtual queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
 
     virtual queue_op_status wait_push_back(const value_type& x) = 0;
-    virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
 
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+#endif
   };
 
 
