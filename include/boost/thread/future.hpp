@@ -4771,7 +4771,7 @@ namespace detail
 
     if (first==last) return make_ready_future(container_type());
     shared_ptr<factory_type >
-        h(new factory_type>(detail::input_iterator_tag_value, first,last));
+        h(new factory_type(detail::input_iterator_tag_value, first,last));
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
@@ -4805,7 +4805,7 @@ namespace detail
 
     if (first==last) return make_ready_future(container_type());
     shared_ptr<factory_type >
-        h(new factory_type>(detail::input_iterator_tag_value, first,last));
+        h(new factory_type(detail::input_iterator_tag_value, first,last));
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
