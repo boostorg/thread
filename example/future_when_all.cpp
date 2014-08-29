@@ -93,16 +93,31 @@ int main()
   {
     try
     {
-      boost::future<int> f1 = boost::async(boost::launch::async, &p1);
-      boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
-      boost::future<std::tuple<> > all0 = boost::when_all();
-      boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1), boost::move(f2));
-      //(void) all.wait();
-      boost::csbl::vector<boost::future<int> > res = all.get();
-      BOOST_THREAD_LOG
-        << res[0].get() <<" " << BOOST_THREAD_END_LOG;
-      BOOST_THREAD_LOG
-        << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      {
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
+        boost::future<std::tuple<> > all0 = boost::when_all();
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1), boost::move(f2));
+        //(void) all.wait();
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+      {
+        boost::csbl::vector<boost::future<int> > v;
+        v.push_back(boost::async(boost::launch::async, &p1));
+        v.push_back(boost::async(boost::launch::async, &p1b));
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(v.begin(), v.begin());
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#endif
     }
     catch (std::exception& ex)
     {
