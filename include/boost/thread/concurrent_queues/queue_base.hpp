@@ -14,6 +14,9 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
+#include <boost/type_traits/conditional.hpp>
+#include <boost/type_traits/is_copy_constructible.hpp>
+
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -21,16 +24,80 @@ namespace boost
 {
 namespace concurrent
 {
+namespace detail
+{
 
   template <typename ValueType>
-  class queue_base
+  class queue_base_copyable_only
   {
   public:
     typedef ValueType value_type;
     typedef std::size_t size_type;
 
     // Constructors/Assignment/Destructors
-    virtual ~queue_base() {};
+    virtual ~queue_base_copyable_only() {};
+
+    // Modifiers
+    virtual void push_back(const value_type& x) = 0;
+
+    virtual void pull_front(value_type&) = 0;
+    virtual value_type pull_front() = 0;
+
+    virtual queue_op_status try_push_back(const value_type& x) = 0;
+    virtual queue_op_status try_pull_front(value_type&) = 0;
+
+    virtual queue_op_status nonblocking_push_back(const value_type& x) = 0;
+    virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
+
+    virtual queue_op_status wait_push_back(const value_type& x) = 0;
+    virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+
+  };
+
+  template <typename ValueType>
+  class queue_base_movable_only
+  {
+  public:
+    typedef ValueType value_type;
+    typedef std::size_t size_type;
+    // Constructors/Assignment/Destructors
+    virtual ~queue_base_movable_only() {};
+
+    // Observers
+    virtual bool empty() const = 0;
+    virtual bool full() const = 0;
+    virtual size_type size() const = 0;
+    virtual bool closed() const = 0;
+
+    // Modifiers
+    virtual void close() = 0;
+
+    virtual void pull_front(value_type&) = 0;
+    // enable_if is_nothrow_movable<value_type>
+    virtual value_type pull_front() = 0;
+
+    virtual queue_op_status try_pull_front(value_type&) = 0;
+
+    virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
+
+    virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+
+    virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+    virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
+  };
+
+
+  template <typename ValueType>
+  class queue_base_copyable_and_movable
+  {
+  public:
+    typedef ValueType value_type;
+    typedef std::size_t size_type;
+    // Constructors/Assignment/Destructors
+    virtual ~queue_base_copyable_and_movable() {};
+
 
     // Observers
     virtual bool empty() const = 0;
@@ -56,14 +123,48 @@ namespace concurrent
     virtual queue_op_status wait_push_back(const value_type& x) = 0;
     virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
 
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status nonblocking_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
-#endif
   };
 
+  template <class T,
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+          bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+          bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
+#else
+          bool Copyable = is_copy_constructible<T>::value,
+          bool Movable = has_move_emulation_enabled<T>::value
+#endif
+      >
+  struct queue_base;
+
+  template <class T>
+  struct queue_base<T, true, true> {
+    typedef queue_base_copyable_and_movable<T> type;
+  };
+  template <class T>
+  struct queue_base<T, true, false> {
+    typedef queue_base_copyable_only<T> type;
+  };
+  template <class T>
+  struct queue_base<T, false, true> {
+    typedef queue_base_movable_only<T> type;
+  };
+
+}
+
+  template <typename ValueType>
+  class queue_base :
+    public detail::queue_base<ValueType>::type
+  {
+  public:
+      typedef ValueType value_type;
+      typedef std::size_t size_type;
+    // Constructors/Assignment/Destructors
+    virtual ~queue_base() {};
+  };
 
 }
 using concurrent::queue_base;

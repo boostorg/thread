@@ -20,6 +20,8 @@
 #include <boost/thread/sync_queue.hpp>
 #include <boost/thread/concurrent_queues/queue_adaptor.hpp>
 #include <boost/thread/concurrent_queues/queue_views.hpp>
+#include <boost/static_assert.hpp>
+#include <boost/type_traits.hpp>
 
 void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
 {
@@ -29,7 +31,7 @@ void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
     {
       sbq.push(i);
       //sbq << i;
-      mos << "push(" << i << ") "<< sbq.size()<<"\n";
+      mos << "push(" << i << ") " /*<< sbq.size() */<<"\n";
       this_thread::sleep_for(chrono::milliseconds(200));
     }
   }
@@ -54,7 +56,7 @@ void consumer(
       int r;
       sbq.pull(r);
       //sbq >> r;
-      mos << i << " pull(" << r << ") "<< sbq.size()<<"\n";
+      mos << i << " pull(" << r << ") " /*<< sbq.size() */ <<"\n";
 
       this_thread::sleep_for(chrono::milliseconds(250));
     }
@@ -124,7 +126,6 @@ int main()
 #endif
 
   queue_adaptor<sync_queue<int> > sbq;
-  //sync_queue<int>  sbq;
 
   {
     mcout << "begin of main" << std::endl;
