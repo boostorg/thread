@@ -56,7 +56,6 @@ namespace boost
             using ::CreateMutexExW;
             using ::CreateEventExW;
             using ::CreateSemaphoreExW;
-            namespace detail { using ::GetTickCount64; }
 # endif
             using ::OpenEventW;
 # else
@@ -67,6 +66,7 @@ namespace boost
 # endif
 #if BOOST_PLAT_WINDOWS_RUNTIME
             using ::GetNativeSystemInfo;
+            using ::GetTickCount64;
 #else
             using ::GetSystemInfo;
 #endif
@@ -158,7 +158,6 @@ namespace boost
                 __declspec(dllimport) void* __stdcall CreateMutexExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
                 __declspec(dllimport) void* __stdcall CreateEventExW(_SECURITY_ATTRIBUTES*,wchar_t const*,unsigned long,unsigned long);
                 __declspec(dllimport) void* __stdcall CreateSemaphoreExW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*,unsigned long,unsigned long);
-                namespace detail { __declspec(dllimport) ticks_type __stdcall GetTickCount64(); }
 # endif
                 __declspec(dllimport) void* __stdcall OpenEventW(unsigned long,int,wchar_t const*);
 # else
@@ -169,6 +168,7 @@ namespace boost
 # endif
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 __declspec(dllimport) void __stdcall GetNativeSystemInfo(_SYSTEM_INFO*);
+                __declspec(dllimport) ticks_type __stdcall GetTickCount64();
 #else
                 __declspec(dllimport) void __stdcall GetSystemInfo(_SYSTEM_INFO*);
 #endif
@@ -220,11 +220,11 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             extern "C"
             {
-                   __declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
+                __declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
 #if !defined(BOOST_NO_ANSI_APIS)
-                   __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
+                __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
 #else
-                   __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
+                __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
 #endif
                 int __stdcall GetTickCount();
 #ifdef _MSC_VER
@@ -285,8 +285,9 @@ namespace boost
                 // Oops, we weren't called often enough, we're stuck
                 return 0xFFFFFFFF;     
             }
+#else
 #endif
-            inline detail::gettickcount64_t GetTickCount64()
+            inline detail::gettickcount64_t GetTickCount64_()
             {
                 static detail::gettickcount64_t gettickcount64impl;
                 if(gettickcount64impl)
@@ -295,7 +296,7 @@ namespace boost
                 // GetTickCount and GetModuleHandle are not allowed in the Windows Runtime,
                 // and kernel32 isn't used in Windows Phone.
 #if BOOST_PLAT_WINDOWS_RUNTIME
-                gettickcount64impl = &::boost::detail::win32::detail::GetTickCount64;
+                gettickcount64impl = &GetTickCount64;
 #else               
                 detail::farproc_t addr=GetProcAddress(
 #if !defined(BOOST_NO_ANSI_APIS)
@@ -312,7 +313,7 @@ namespace boost
                 return gettickcount64impl;
             }
 
-                       enum event_type
+            enum event_type
             {
                 auto_reset_event=false,
                 manual_reset_event=true

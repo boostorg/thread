@@ -185,14 +185,14 @@ namespace boost
             static unsigned long const max_non_infinite_wait=0xfffffffe;
 
             timeout(uintmax_t milliseconds_):
-                start(win32::GetTickCount64()()),
+                start(win32::GetTickCount64_()()),
                 milliseconds(milliseconds_),
                 relative(true),
                 abs_time(boost::get_system_time())
             {}
 
             timeout(boost::system_time const& abs_time_):
-                start(win32::GetTickCount64()()),
+                start(win32::GetTickCount64_()()),
                 milliseconds(0),
                 relative(false),
                 abs_time(abs_time_)
@@ -217,7 +217,7 @@ namespace boost
                 }
                 else if(relative)
                 {
-                    win32::ticks_type const now=win32::GetTickCount64()();
+                    win32::ticks_type const now=win32::GetTickCount64_()();
                     win32::ticks_type const elapsed=now-start;
                     return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
                 }
