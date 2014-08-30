@@ -7,6 +7,7 @@
 // (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
 #include <boost/thread/detail/config.hpp>
+#include <boost/predef/platform.h>
 
 #include <boost/thread/exceptions.hpp>
 #ifndef BOOST_NO_IOSTREAM

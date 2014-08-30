@@ -1,5 +1,4 @@
-// Copyright (C) 2008 Vicente J. Botet Escriba
-//
+//  Copyright (C) 2008 Vicente J. Botet Escriba
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
@@ -60,6 +59,7 @@ void test_stack_size()
   BOOST_CHECK(attrs.get_stack_size() >= 0x4000);
 
 }
+
 void do_test_creation_with_attrs()
 {
   test_value = 0;
@@ -85,5 +85,3 @@ boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
 
   return test;
 }
-
-
