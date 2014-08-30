@@ -553,7 +553,7 @@ namespace boost
           //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
           typedef T move_dest_type;
 #elif defined BOOST_THREAD_USES_MOVE
-          typedef typename conditional<boost::is_fundamental<T>::value,T,T&>::type source_reference_type;
+          typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
           //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
           //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
           typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
