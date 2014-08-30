@@ -416,7 +416,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
                     std::this_thread::yield();
 #else
-                    detail::win32::Sleep(0);
+                    ::boost::detail::win32::Sleep(0);
 #endif
                 }
                 else
