@@ -232,6 +232,17 @@ namespace executors
     }
 
     /**
+     * \b Effects: join all the threads.
+     */
+    void join()
+    {
+      for (unsigned i = 0; i < threads.size(); ++i)
+      {
+        threads[i].join();
+      }
+    }
+
+    /**
      * \b Effects: close the \c basic_thread_pool for submissions.
      * The worker threads will work until there is no more closures to run.
      */
