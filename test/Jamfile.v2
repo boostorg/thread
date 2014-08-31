@@ -851,6 +851,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9720.cpp ]
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
+          [ thread-run test_10340.cpp ]
     ;
 
 }
