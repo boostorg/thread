@@ -6,7 +6,7 @@
 #include <boost/config.hpp>
 
 #ifndef BOOST_NO_CXX11_DECLTYPE_N3276
-#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
+//#define BOOST_THREAD_NO_CXX11_DECLTYPE_N3276
 #endif
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 #define BOOST_RESULT_OF_USE_DECLTYPE
@@ -14,7 +14,7 @@
 
 
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
+//#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 
 #include <boost/thread/future.hpp>
@@ -107,7 +107,7 @@ int main()
         BOOST_THREAD_LOG
           << res[0].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#if 0
+#if  defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
@@ -143,9 +143,13 @@ int main()
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > v;
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1));
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1b));
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(v.begin(), v.begin());
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > res = all.get();
         BOOST_THREAD_LOG
           << res[0].get() <<" " << BOOST_THREAD_END_LOG;
@@ -183,7 +187,7 @@ int main()
         BOOST_THREAD_LOG
           << res[0].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#if 0
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
@@ -226,7 +230,7 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#if 0
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
@@ -249,12 +253,18 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
+#endif
+#if 0
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > v;
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1));
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1b));
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(v.begin(), v.begin());
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > res = all.get();
         BOOST_THREAD_LOG
           << res[0].get() <<" " << BOOST_THREAD_END_LOG;
