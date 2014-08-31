@@ -81,7 +81,7 @@ namespace boost
 
                     do
                     {
-                        unsigned const retval(win32::WaitForSingleObject(sem, ::boost::detail::win32::infinite));
+                        unsigned const retval(win32::WaitForSingleObjectEx(sem, ::boost::detail::win32::infinite,0));
                         BOOST_VERIFY(0 == retval || ::boost::detail::win32::wait_abandoned == retval);
 //                        BOOST_VERIFY(win32::WaitForSingleObject(
 //                                         sem,::boost::detail::win32::infinite)==0);
@@ -142,7 +142,7 @@ namespace boost
 
                     do
                     {
-                        if(win32::WaitForSingleObject(sem,::boost::detail::get_milliseconds_until(wait_until))!=0)
+                        if(win32::WaitForSingleObjectEx(sem,::boost::detail::get_milliseconds_until(wait_until),0)!=0)
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
                             return false;
@@ -205,7 +205,7 @@ namespace boost
                   {
                       chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
 
-                      if(win32::WaitForSingleObject(sem,static_cast<unsigned long>(rel_time.count()))!=0)
+                      if(win32::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
                       {
                           BOOST_INTERLOCKED_DECREMENT(&active_count);
                           return false;
