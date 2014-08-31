@@ -328,6 +328,30 @@ namespace boost
                 }
             }
 
+            virtual bool run_if_is_deferred()
+            {
+              boost::unique_lock<boost::mutex> lk(mutex);
+              if (is_deferred_)
+              {
+                is_deferred_=false;
+                execute(lk);
+                return true;
+              }
+              else
+                return false;
+            }
+            virtual bool run_if_is_deferred_or_ready()
+            {
+              boost::unique_lock<boost::mutex> lk(mutex);
+              if (is_deferred_)
+              {
+                is_deferred_=false;
+                execute(lk);
+                return true;
+              }
+              else
+                return done;
+            }
             void wait_internal(boost::unique_lock<boost::mutex> &lk, bool rethrow=true)
             {
               do_callback(lk);
@@ -1618,7 +1642,12 @@ namespace boost
         {
           this->future_->set_deferred();
         }
-
+        bool run_if_is_deferred() {
+          return this->future_->run_if_is_deferred();
+        }
+        bool run_if_is_deferred_or_ready() {
+          return this->future_->run_if_is_deferred_or_ready();
+        }
         // retrieving the value
         move_dest_type get()
         {
@@ -4607,7 +4636,24 @@ namespace detail
         that->mark_exceptional_finish();
       }
     }
+    bool run_deferred() {
+
+      bool res = false;
+      for (typename csbl::vector<F>::iterator it = vec_.begin(); it != vec_.end(); ++it) {
+        if (! it->run_if_is_deferred())
+        {
+          res = true;
+        }
+      }
+      return res;
+    }
     void init() {
+      if (! run_deferred())
+      {
+        future_when_all_vector_shared_state::run(this);
+        return;
+      }
+
       this->thr_ = thread(&future_when_all_vector_shared_state::run, this);
     }
 
@@ -4667,7 +4713,23 @@ namespace detail
         that->mark_exceptional_finish();
       }
     }
+    bool run_deferred() {
+
+      for (typename csbl::vector<F>::iterator it = vec_.begin(); it != vec_.end(); ++it) {
+        if (it->run_if_is_deferred_or_ready())
+        {
+          return true;
+        }
+      }
+      return false;
+    }
     void init() {
+      if (run_deferred())
+      {
+        future_when_any_vector_shared_state::run(this);
+        return;
+      }
+
       this->thr_ = thread(&future_when_any_vector_shared_state::run, this);
     }
 
@@ -4709,21 +4771,20 @@ namespace detail
   };
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   template< typename T0, typename ...T>
   struct future_when_all_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
-
+    // TODO implement it
   };
   template< typename T0, typename ...T>
   struct future_when_any_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
+    // TODO implement it
   };
-//#endif
 #endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)

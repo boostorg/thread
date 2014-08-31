@@ -94,9 +94,43 @@ int main()
     try
     {
       {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<boost::csbl::tuple<> > all0 = boost::when_all();
+        BOOST_THREAD_LOG
+          <<  BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#if 0
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#endif
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::make_ready_future(1);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::future<int> f1 = boost::async(boost::launch::async, &p1);
         boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
-        boost::future<std::tuple<> > all0 = boost::when_all();
         boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1), boost::move(f2));
         //(void) all.wait();
         boost::csbl::vector<boost::future<int> > res = all.get();
@@ -105,8 +139,9 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+#if 0
       {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > v;
         v.push_back(boost::async(boost::launch::async, &p1));
         v.push_back(boost::async(boost::launch::async, &p1b));
@@ -135,16 +170,98 @@ int main()
   {
     try
     {
-      boost::future<int> f1 = boost::async(boost::launch::async, &p1);
-      boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
-      boost::future<std::tuple<> > all0 = boost::when_any();
-      boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
-      //(void) all.wait();
-      boost::csbl::vector<boost::future<int> > res = all.get();
-      BOOST_THREAD_LOG
-        << res[0].get() <<" " << BOOST_THREAD_END_LOG;
-      BOOST_THREAD_LOG
-        << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<boost::csbl::tuple<> > all0 = boost::when_any();
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#if 0
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#endif
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::make_ready_future(1);
+        boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f2 = boost::make_ready_future(1);
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1b);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#if 0
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
+        boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<int> f2 = boost::async(boost::launch::deferred, &p1b);
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::csbl::vector<boost::future<int> > v;
+        v.push_back(boost::async(boost::launch::async, &p1));
+        v.push_back(boost::async(boost::launch::async, &p1b));
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(v.begin(), v.begin());
+        boost::csbl::vector<boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << res[0].get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+#endif
     }
     catch (std::exception& ex)
     {
@@ -170,7 +287,6 @@ using namespace boost;
 void f(  boost::csbl::vector<future<int> > &//vec
     , BOOST_THREAD_RV_REF(future<int>) //f
     ) {
-  //vec.push_back(boost::forward<future<int> >(f));
 }
 int main()
 {
