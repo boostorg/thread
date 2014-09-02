@@ -41,6 +41,7 @@ namespace boost
       {
       }
       BOOST_THREAD_MOVABLE(default_barrier_reseter)
+      //BOOST_THREAD_COPYABLE_AND_MOVABLE(default_barrier_reseter)
 
       default_barrier_reseter(default_barrier_reseter const& other) BOOST_NOEXCEPT :
       size_(other.size_)
@@ -71,6 +72,7 @@ namespace boost
       {}
 
       BOOST_THREAD_MOVABLE(void_functor_barrier_reseter)
+      //BOOST_THREAD_COPYABLE_AND_MOVABLE(void_functor_barrier_reseter)
 
       void_functor_barrier_reseter(void_functor_barrier_reseter const& other) BOOST_NOEXCEPT :
       size_(other.size_), fct_(other.fct_)
@@ -96,6 +98,7 @@ namespace boost
       {
       }
       BOOST_THREAD_MOVABLE(void_fct_ptr_barrier_reseter)
+      //BOOST_THREAD_COPYABLE_AND_MOVABLE(void_fct_ptr_barrier_reseter)
 
       void_fct_ptr_barrier_reseter(void_fct_ptr_barrier_reseter const& other) BOOST_NOEXCEPT :
       size_(other.size_), fct_(other.fct_)

@@ -8,7 +8,9 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
-
+#if ! defined  BOOST_NO_CXX11_DECLTYPE
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#endif
 #include <iostream>
 #include <boost/thread/scoped_thread.hpp>
 #ifdef XXXX
@@ -87,25 +89,24 @@ void consumer2(the_ostream &mos, boost::sync_queue<int> & sbq)
     mos << "exception !!!\n";
   }
 }
-//void consumer3(the_ostream &mos, boost::sync_queue<int> & sbq)
-//{
-//  using namespace boost;
-//  bool closed=false;
-//  try {
-//    for(int i=0; ;++i)
-//    {
-//      int r;
-//      queue_op_status res = sbq.wait_and_pull(r);
-//      if (res==queue_op_status::closed) break;
-//      mos << i << " wait_and_pull(" << r << ")\n";
-//      this_thread::sleep_for(chrono::milliseconds(250));
-//    }
-//  }
-//  catch(...)
-//  {
-//    mos << "exception !!!\n";
-//  }
-//}
+void consumer3(the_ostream &mos, boost::sync_queue<int> & sbq)
+{
+  using namespace boost;
+  try {
+    for(int i=0; ;++i)
+    {
+      int r;
+      queue_op_status res = sbq.wait_pull_front(r);
+      if (res==queue_op_status::closed) break;
+      mos << i << " wait_pull_front(" << r << ")\n";
+      this_thread::sleep_for(chrono::milliseconds(250));
+    }
+  }
+  catch(...)
+  {
+    mos << "exception !!!\n";
+  }
+}
 
 int main()
 {

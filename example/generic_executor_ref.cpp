@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2013 Vicente Botet
+// Copyright (C) 2014 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -56,7 +56,7 @@ int f2(int i)
   return i + 1;
 }
 
-void submit_some(boost::executor& tp)
+void submit_some(boost::generic_executor_ref tp)
 {
   for (int i = 0; i < 3; ++i) {
     tp.submit(&p2);
@@ -67,20 +67,21 @@ void submit_some(boost::executor& tp)
 
 }
 
-
 void at_th_entry(boost::basic_thread_pool& )
 {
 
 }
 
-int test_executor_adaptor()
+
+
+int test_generic_executor_ref()
 {
   // std::cout << BOOST_CONTEXTOF << std::endl;
   {
     try
     {
       {
-        boost::executor_adaptor < boost::basic_thread_pool > ea(4);
+        boost::basic_thread_pool ea(4);
         submit_some( ea);
         {
           boost::future<int> t1 = boost::async(ea, &f1);
@@ -102,27 +103,27 @@ int test_executor_adaptor()
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::executor_adaptor < boost::loop_executor > ea2;
+        boost::loop_executor ea2;
         submit_some( ea2);
-        ea2.underlying_executor().run_queued_closures();
+        ea2.run_queued_closures();
       }
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
-        boost::executor_adaptor < boost::serial_executor > ea2(ea1);
+        boost::basic_thread_pool ea1(4);
+        boost::serial_executor ea2(ea1);
         submit_some(ea2);
       }
 #endif
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::executor_adaptor < boost::inline_executor > ea1;
+        boost::inline_executor ea1;
         submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::executor_adaptor < boost::thread_executor > ea1;
-        submit_some(ea1);
+        //boost::thread_executor ea1;
+        //submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
@@ -149,5 +150,7 @@ int test_executor_adaptor()
 
 int main()
 {
-  return test_executor_adaptor();
+  return test_generic_executor_ref();
+
+
 }

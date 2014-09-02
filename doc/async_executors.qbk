@@ -122,21 +122,21 @@ An Executor is an object that schedules the closures that have been submitted to
 
 * The choice of which executor to use is explicit. This is important for reasons described in the Motivation section. In particular, consider the common case of an asynchronous operation that itself spawns asynchronous operations. If both operations ran on the same executor, and if that executor had a bounded number of worker threads, then we could get deadlock. Programs often deal with such issues by splitting different kinds of work between different executors.
 
-* Even if there could be a strong value in having a default executor, that can be used when detailed control is unnecessary, the authors don't know how to implement it in a portable a robust way.
+* Even if there could be a strong value in having a default executor, that can be used when detailed control is unnecessary, the authors don't know how to implement it in a portable and robust way.
 
-* The library provides Executors based on static and dynamic polymorphism. The static polymorphism interface is intended to be used on contexts that need to have the best performances. The dynamic polymorphism interface has the advantage to been able to change the executor a function is suing without making it a template and it possible to pass executors across a binary interface. For some applications, the cost of an additional virtual dispatch could be almost certainly negligible compared to the other operations involved.
+* The library provides Executors based on static and dynamic polymorphism. The static polymorphism interface is intended to be used on contexts that need to have the best performances. The dynamic polymorphism interface has the advantage to been able to change the executor a function is using without making it a template and is possible to pass executors across a binary interface. For some applications, the cost of an additional virtual dispatch could be almost certainly negligible compared to the other operations involved.
 
 * Conceptually, an executor puts closures on a queue and at some point executes them. The queue is always unbounded, so adding a closure to an executor never blocks. (Defining “never blocks” formally is challenging, but informally we just mean that submit() is an ordinary function that executes something and returns, rather than waiting for the completion of some potentially long running operation in another thread.)
 
 [heading Closure]
 
-One important question is just what a closure is. This library has a very simple answer: a closure is a `Callable` with no parameters and returning `voidv. 
+One important question is just what a closure is. This library has a very simple answer: a closure is a `Callable` with no parameters and returning `void`. 
 
 N3785 choose the more specific `std::function<void()>` as it provides only dynamic polymorphism and states that in practice the implementation of a template based approach or another approach is impractical. The authors of this library think that the template based approach is compatible with a dynamic based approach. They give some arguments:
 
 The first one is that a virtual function can not be a template. This is true but it is also true that the executor interface can provide the template functions that call to the virtual public functions. Another reason they give is that "a template parameter would complicate the interface without adding any real generality. In the end an executor class is going to need some kind of type erasure to handle all the different kinds of function objects with `void()` signature, and that’s exactly what std::function already does". We think that it is up to the executor to manage with this implementation details, not to the user.
 
-We share all the argument they give related to the `void()` interface of the work unit. A work unit is a closure that takes no arguments and returns no value. This is indeed a limitation on user code, but combined with `boost::async` taking executors as parameters the user has all what is needs.
+We share all the argument they give related to the `void()` interface of the work unit. A work unit is a closure that takes no arguments and returns no value. This is indeed a limitation on user code, but combined with `boost::async` taking executors as parameters the user has all what she needs.
 
 The third one is related to performance. They assert that "any mechanism for storing closures on an executor’s queue will have to use some form of type erasure. There’s no reason to believe that a custom closure mechanism, written just for std::executor and used nowhere else within the standard library, would be better in that respect than `std::function<void()>`". We believe that the implementation can do better that storing the closure on a `std::function<void()>`. e.g. the implementation can use intrusive data to store the closure and the pointers to other nodes needed to store the closures in a given order. 
 
@@ -166,7 +166,7 @@ Note that when we combine `boost::async` and `Executors`, the exception will be 
 
 It is common idiom to set some thread local variable at the beginning of a thread. As Executors could instantiate threads internally these Executors shall have the ability to call a user specific function at thread entry on the executor constructor.
 
-For executors that don't instantiate any thread an that would use the current thread this function shall be called only for the thread calling the `at_thread_entry` member function. 
+For executors that don't instantiate any thread and that would use the current thread this function shall be called only for the thread calling the `at_thread_entry` member function. 
 
 [heading Cancelation]
 
@@ -287,9 +287,6 @@ The `Executor` concept models the common operations of all the executors.
  
 A type `E` meets the `Executor` requirements if the following expressions are well-formed and have the specified semantics 
 
-* `E::work`
-* `e.submit(lw);`
-* `e.submit(rw);`
 * `e.submit(lc);`
 * `e.submit(rc);`
 * `e.close();`
@@ -300,50 +297,10 @@ A type `E` meets the `Executor` requirements if the following expressions are we
 where 
 
 * `e` denotes a value of type `E`, 
-* `lw` denotes a lvalue referece of type `E::work`, 
-* `rc` denotes a rvalue referece of type `E::work`
 * `lc` denotes a lvalue referece of type `Closure`, 
 * `rc` denotes a rvalue referece of type `Closure`
 * `p` denotes a value of type `Predicate`
 
-[/////////////////////////////////////]
-[section:submitlw `e.submit(lw);`]
-
-[variablelist
-
-[[Effects:] [The specified closure will be scheduled for execution at some point in the future.
-If invoked closure throws an exception the executor will call std::terminate, as is the case with threads.]]
-
-[[Synchronization:] [completion of closure on a particular thread happens before destruction of thread's thread local variables.]]
-
-[[Return type:] [`void`.]]
-
-[[Throws:] [sync_queue_is_closed if the thread pool is closed. Whatever exception that can be throw while storing the closure.]]
-
-[[Exception safety:] [If an exception is thrown then the executor state is unmodified.]]
-
-]
-
-[endsect]
-[/////////////////////////////////////]
-[section:submitrw `e.submit(rw);`]
-
-[variablelist
-
-[[Effects:] [The specified closure will be scheduled for execution at some point in the future.
-If invoked closure throws an exception the executor will call std::terminate, as is the case with threads.]]
-
-[[Synchronization:] [completion of closure on a particular thread happens before destruction of thread's thread local variables.]]
-
-[[Return type:] [`void`.]]
-
-[[Throws:] [sync_queue_is_closed if the thread pool is closed. Whatever exception that can be throw while storing the closure.]]
-
-[[Exception safety:] [If an exception is thrown then the executor state is unmodified.]]
-
-]
-
-[endsect]
 [/////////////////////////////////////]
 [section:submitlc `e.submit(lc);`]
 
@@ -401,15 +358,16 @@ If invoked closure throws an exception the executor will call std::terminate, as
 
 [endsect]
 [/////////////////////////////////////]
-[section:close `b = e.close();`]
+[section:closed `b = e.closed();`]
 
 [variablelist
 
 [[Return type:] [`bool`.]]
 
-[[Return:] [`void`.]]
+[[Return:] [whether the pool is closed for submissions.]]
 
-[[Throws:] [whether the pool is closed for submissions.]]
+[[Throws:] [Whatever exception that can be throw while ensuring the thread safety.]]
+
 
 ]
 
@@ -433,7 +391,7 @@ If invoked closure throws an exception the executor will call std::terminate, as
 
 [endsect]
 [/////////////////////////////////////]
-[section:try_executing_one `e.reschedule_until(p);`]
+[section:reschedule_until `e.reschedule_until(p);`]
 
 [variablelist
 
@@ -491,6 +449,7 @@ Executor abstract base class.
       virtual bool closed() = 0;
   
       virtual void submit(work&& closure) = 0;
+      virtual void submit(work& closure) = 0;
       template <typename Closure>
       void submit(Closure&& closure);
   
@@ -559,6 +518,7 @@ Polymorphic adaptor of a model of Executor to an executor.
       bool closed();
   
       void submit(work&& closure);
+      void submit(work& closure);
   
       bool try_executing_one();
   
@@ -584,7 +544,7 @@ Polymorphic adaptor of a model of Executor to an executor.
 [/////////////////////////////////////]
 [section:destructor Destructor `~executor_adaptor()`]
 
-      virtual ~ executor_adaptor();
+      virtual ~executor_adaptor();
 
 [variablelist
 
@@ -612,6 +572,39 @@ Polymorphic adaptor of a model of Executor to an executor.
 [endsect]
 
 [endsect]
+
+[/////////////////////////////////]
+[section:generic_executor_ref Class `generic_executor_ref`]
+
+Executor abstract base class.
+
+  #include <boost/thread/generic_executor_ref.hpp>
+  namespace boost {
+    class generic_executor_ref
+    {
+    public:
+      generic_executor_ref(generic_executor_ref const&);
+      generic_executor_ref& operator=(generic_executor_ref const&);
+
+      template <class Executor>
+      executor(Executor& ex); 
+      generic_executor_ref() {};
+  
+      void close() = 0;
+      bool closed() = 0;
+  
+      template <typename Closure>
+      void submit(Closure&& closure);
+  
+      virtual bool try_executing_one() = 0;
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred);
+    };
+  }
+
+[endsect]
+
+
 [/
 [//////////////////////////////////////////////////////////]
 [section:scheduled_executor Template Class `scheduled_executor`]
@@ -639,6 +632,7 @@ Executor providing time related functions.
       bool closed();
   
       void submit(work&& closure);
+      void submit(work& closure);
       template <typename Closure>
       void submit(Closure&& closure);
   
@@ -707,30 +701,26 @@ Executor providing time related functions.
 ]
 
 [//////////////////////////////////////////////////////////]
-[section:scheduled_executor Template Class `serial_executor`]
+[section:serial_executor Class `serial_executor`]
 
 A serial executor ensuring that there are no two work units that executes concurrently.
 
   #include <boost/thread/serial_executor.hpp>
   namespace boost {
-    template <class Executor>
     class serial_executor
     {
-	Executor& ex;
     public:
-      typedef  executors::work work;
-  
       serial_executor(serial_executor const&) = delete;
       serial_executor& operator=(serial_executor const&) = delete;
   
+      template <class Executor>
       serial_executor(Executor& ex);
  
-      Executor& underlying_executor();
+      generic_executor_ref underlying_executor();
 
       void close();
       bool closed();
   
-      void submit(work&& closure);
       template <typename Closure>
       void submit(Closure&& closure);
   
@@ -742,8 +732,9 @@ A serial executor ensuring that there are no two work units that executes concur
   }
 
 [/////////////////////////////////////]
-[section:constructor Constructor `serial_executor(Executor&, chrono::duration<Rep, Period>)`]
+[section:constructor Constructor `serial_executor(Executor&)`]
 
+      template <class Executor>
       serial_executor(Executor& ex);
 
 [variablelist
@@ -773,7 +764,7 @@ A serial executor ensuring that there are no two work units that executes concur
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      Executor& underlying_executor();
+      generic_executor_ref underlying_executor();
 
 [variablelist
 
@@ -785,6 +776,67 @@ A serial executor ensuring that there are no two work units that executes concur
 
 
 [endsect]
+
+[endsect]
+
+[//////////////////////////////////////////////////////////]
+[section:inline_executor Class `inline_executor`]
+
+A serial executor ensuring that there are no two work units that executes concurrently.
+
+  #include <boost/thread/inline_executor.hpp>
+  namespace boost {
+    class inline_executor
+    {
+    public:
+      inline_executor(inline_executor const&) = delete;
+      inline_executor& operator=(inline_executor const&) = delete;
+  
+      inline_executor();
+ 
+      void close();
+      bool closed();
+  
+      template <typename Closure>
+      void submit(Closure&& closure);
+  
+      bool try_executing_one();
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `inline_executor()`]
+
+      inline_executor();
+
+[variablelist
+
+[[Effects:] [Constructs a inline_executor. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~inline_executor()`]
+
+      ~inline_executor();
+
+[variablelist
+
+[[Effects:] [Destroys the inline_executor.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+
 
 [endsect]
 
@@ -801,8 +853,7 @@ A thread pool with up to a fixed number of threads.
     class basic_thread_pool
     { 
     public:
-      typedef  boost::work work;
-  
+ 
       basic_thread_pool(basic_thread_pool const&) = delete;
       basic_thread_pool& operator=(basic_thread_pool const&) = delete;
   
@@ -864,8 +915,7 @@ A user scheduled executor.
     class loop_executor
     { 
     public:
-      typedef  thread_detail::work work;
-  
+ 
       loop_executor(loop_executor const&) = delete;
       loop_executor& operator=(loop_executor const&) = delete;
   
@@ -909,7 +959,7 @@ A user scheduled executor.
 
 [variablelist
 
-[[Effects:] [Destroys the thread pool.]]
+[[Effects:] [Destroys the executor.]]
 
 [[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
 

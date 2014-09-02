@@ -1,19 +1,19 @@
-// Copyright (C) 2013,2014 Vicente J. Botet Escriba
+// Copyright (C) 2014 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-// 2013/09 Vicente J. Botet Escriba
-//    Adapt to boost from CCIA C++11 implementation
 
-#ifndef BOOST_THREAD_EXECUTORS_EXECUTOR_HPP
-#define BOOST_THREAD_EXECUTORS_EXECUTOR_HPP
+#ifndef BOOST_THREAD_EXECUTORS_GENERIC_EXECUTOR_REF_HPP
+#define BOOST_THREAD_EXECUTORS_GENERIC_EXECUTOR_REF_HPP
 
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/executors/work.hpp>
+#include <boost/thread/executors/executor.hpp>
+
+#include <boost/shared_ptr.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -21,15 +21,18 @@ namespace boost
 {
   namespace executors
   {
-  class executor
+
+  template <class Executor>
+  class executor_ref : public executor
   {
+    Executor& ex;
   public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
 
     /// executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(executor)
-    executor() {}
+    BOOST_THREAD_NO_COPYABLE(executor_ref)
+    executor_ref(Executor& ex) : ex(ex) {}
 
     /**
      * \par Effects
@@ -38,20 +41,20 @@ namespace boost
      * \par Synchronization
      * The completion of all the closures happen before the completion of the executor destructor.
      */
-    virtual ~executor() {};
+    ~executor_ref() {};
 
     /**
      * \par Effects
      * Close the \c executor for submissions.
      * The worker threads will work until there is no more closures to run.
      */
-    virtual void close() = 0;
+    void close() { ex.close(); }
 
     /**
      * \par Returns
      * Whether the pool is closed for submissions.
      */
-    virtual bool closed() = 0;
+    bool closed() { return ex.closed(); }
 
     /**
      * \par Effects
@@ -65,8 +68,63 @@ namespace boost
      * \c sync_queue_is_closed if the thread pool is closed.
      * Whatever exception that can be throw while storing the closure.
      */
-    virtual void submit(BOOST_THREAD_RV_REF(work) closure) = 0;
-//    virtual void submit(work& closure) = 0;
+    void submit(BOOST_THREAD_RV_REF(work) closure) {
+      ex.submit(boost::move(closure));
+    }
+//    void submit(work& closure) {
+//      ex.submit(closure);
+//    }
+
+
+    /**
+     * \par Effects
+     * Try to execute one task.
+     *
+     * \par Returns
+     * Whether a task has been executed.
+     *
+     * \par Throws
+     * Whatever the current task constructor throws or the task() throws.
+     */
+    bool try_executing_one() { return ex.try_executing_one(); }
+
+  };
+
+  class generic_executor_ref
+  {
+    shared_ptr<executor> ex;
+  public:
+    /// type-erasure to store the works to do
+    typedef executors::work work;
+
+    template<typename Executor>
+    generic_executor_ref(Executor& ex)
+    //: ex(make_shared<executor_ref<Executor> >(ex)) // todo check why this doesn't works with C++03
+    : ex( new executor_ref<Executor>(ex) )
+    {
+    }
+
+    //generic_executor_ref(generic_executor_ref const& other) noexcept    {}
+    //generic_executor_ref& operator=(generic_executor_ref const& other) noexcept    {}
+
+
+    /**
+     * \par Effects
+     * Close the \c executor for submissions.
+     * The worker threads will work until there is no more closures to run.
+     */
+    void close() { ex->close(); }
+
+    /**
+     * \par Returns
+     * Whether the pool is closed for submissions.
+     */
+    bool closed() { return ex->closed(); }
+
+    void submit(BOOST_THREAD_RV_REF(work) closure)
+    {
+      ex->submit(boost::forward<work>(closure));
+    }
 
     /**
      * \par Requires
@@ -105,6 +163,11 @@ namespace boost
       submit(boost::move(w));
     }
 
+//    size_t num_pending_closures() const
+//    {
+//      return ex->num_pending_closures();
+//    }
+
     /**
      * \par Effects
      * Try to execute one task.
@@ -115,14 +178,14 @@ namespace boost
      * \par Throws
      * Whatever the current task constructor throws or the task() throws.
      */
-    virtual bool try_executing_one() = 0;
+    bool try_executing_one() { return ex->try_executing_one(); }
 
     /**
      * \par Requires
      * This must be called from an scheduled task.
      *
      * \par Effects
-     * Reschedule functions until pred()
+     * reschedule functions until pred()
      */
     template <typename Pred>
     bool reschedule_until(Pred const& pred)
@@ -136,10 +199,11 @@ namespace boost
       } while (! pred());
       return true;
     }
-  };
 
+  };
   }
-  using executors::executor;
+  using executors::executor_ref;
+  using executors::generic_executor_ref;
 }
 
 #include <boost/config/abi_suffix.hpp>

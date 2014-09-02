@@ -3,7 +3,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Vicente J. Botet Escriba 2013. Distributed under the Boost
+// (C) Copyright Vicente J. Botet Escriba 2013-2014. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -16,6 +16,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/throw_exception.hpp>
+#include <boost/thread/concurrent_queues/queue_op_status.hpp>
+
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
@@ -25,14 +27,6 @@
 namespace boost
 {
 
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(queue_op_status)
-  { success = 0, empty, full, closed, busy }
-  BOOST_SCOPED_ENUM_DECLARE_END(queue_op_status)
-
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-  struct no_block_tag{};
-  BOOST_CONSTEXPR_OR_CONST no_block_tag no_block = {};
-#endif
 
   struct sync_queue_is_closed : std::exception
   {
