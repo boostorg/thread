@@ -139,6 +139,18 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+        boost::future<std::string> f2 = boost::make_ready_future(std::string("nnnnnnn"));;
+        boost::future<boost::csbl::tuple<boost::future<int>, boost::future<std::string> > > all = boost::when_all(boost::move(f1), boost::move(f2));
+        //(void) all.wait();
+        boost::csbl::tuple<boost::future<int>, boost::future<std::string> > res = all.get();
+        BOOST_THREAD_LOG
+          << boost::csbl::get<0>(res).get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << boost::csbl::get<1>(res).get() <<" " << BOOST_THREAD_END_LOG;
+      }
 #if 0
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
@@ -218,6 +230,17 @@ int main()
           << res[0].get() <<" " << BOOST_THREAD_END_LOG;
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
+      }
+      {
+        BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
+        boost::future<std::string> f1 = boost::make_ready_future(std::string("aaaa"));
+        boost::future<int> f2 = boost::async(boost::launch::async, &p1b);
+        boost::future<boost::csbl::tuple<boost::future<std::string>,boost::future<int> > > all = boost::when_any(boost::move(f1), boost::move(f2));
+        boost::csbl::tuple<boost::future<std::string>,boost::future<int> > res = all.get();
+        BOOST_THREAD_LOG
+          << boost::csbl::get<0>(res).get() <<" " << BOOST_THREAD_END_LOG;
+        BOOST_THREAD_LOG
+          << boost::csbl::get<1>(res).get() <<" " << BOOST_THREAD_END_LOG;
       }
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;

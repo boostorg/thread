@@ -4622,7 +4622,7 @@ namespace detail
   {
     typedef csbl::vector<F> vector_type;
     typedef typename F::value_type value_type;
-    csbl::vector<F> vec_;
+    vector_type vec_;
 
     static void run(future_when_all_vector_shared_state* that) {
       try {
@@ -4682,7 +4682,6 @@ namespace detail
       }; //second part of magic unpacker
       init();
     }
-#else
 #endif
     ~future_when_all_vector_shared_state() {
       this->join();
@@ -4698,7 +4697,7 @@ namespace detail
   {
     typedef csbl::vector<F> vector_type;
     typedef typename F::value_type value_type;
-    csbl::vector<F> vec_;
+    vector_type vec_;
 
     static void run(future_when_any_vector_shared_state* that)
     {
@@ -4771,19 +4770,131 @@ namespace detail
   };
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  struct wait_for_all_fctr {
+    template <class ...T>
+    void operator()(T&&... v) {
+      boost::wait_for_all(boost::forward<T>(v)...);
+    }
+  };
+
+  struct wait_for_any_fctr {
+    template <class ...T>
+    void operator()(T&&... v) {
+      boost::wait_for_any(boost::forward<T>(v)...);
+    }
+  };
+
   template< typename T0, typename ...T>
   struct future_when_all_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
-    // TODO implement it
+    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    tuple_type tup_;
+    typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
+
+    static void run(future_when_all_tuple_shared_state* that) {
+      try {
+        // TODO make use of apply(that->tup_, boost::detail::wait_for_all_fctor());
+        that->wait_for_all(Index());
+
+        that->mark_finished_with_result(boost::move(that->tup_));
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+      } catch(thread_interrupted& ) {
+        that->mark_interrupted_finish();
+#endif
+      } catch(...) {
+        that->mark_exceptional_finish();
+      }
+    }
+
+    template <size_t ...Indices>
+    void wait_for_all(tuple_indices<Indices...>) {
+      return invoke<void>(wait_for_all_fctr(), csbl::get<Indices>(tup_)...);
+    }
+
+    bool run_deferred() {
+
+      bool res = false;
+      // bool res = accumulate(tup_, false, run_if_is_deferred());
+      return res;
+    }
+    void init() {
+      if (! run_deferred())
+      {
+        future_when_all_tuple_shared_state::run(this);
+        return;
+      }
+
+      this->thr_ = thread(&future_when_all_tuple_shared_state::run, this);
+    }
+  public:
+
+    future_when_all_tuple_shared_state(values_tag, BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) :
+      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+    {
+      init();
+    }
+    ~future_when_all_tuple_shared_state() {
+      this->join();
+    }
+
   };
   template< typename T0, typename ...T>
   struct future_when_any_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
-    // TODO implement it
+    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    tuple_type tup_;
+    typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
+
+    static void run(future_when_any_tuple_shared_state* that)
+    {
+      try {
+        // TODO make use of apply(that->tup_, wait_for_any_fctr);
+        that->wait_for_any(Index());
+
+        that->mark_finished_with_result(boost::move(that->tup_));
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+      } catch(thread_interrupted& ) {
+        that->mark_interrupted_finish();
+#endif
+      } catch(...) {
+        that->mark_exceptional_finish();
+      }
+    }
+    template <size_t ...Indices>
+    void wait_for_any(tuple_indices<Indices...>) {
+      return invoke<void>(wait_for_any_fctr(), csbl::get<Indices>(tup_)...);
+    }
+    bool run_deferred() {
+      bool res = false;
+      // bool res = apply_any(tup_, run_if_is_deferred_or_ready());
+      return res;
+    }
+    void init() {
+      if (run_deferred())
+      {
+        future_when_any_tuple_shared_state::run(this);
+        return;
+      }
+
+      this->thr_ = thread(&future_when_any_tuple_shared_state::run, this);
+    }
+
+  public:
+    future_when_any_tuple_shared_state(values_tag,
+        BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures
+    ) :
+      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+    {
+      init();
+    }
+
+    ~future_when_any_tuple_shared_state()    {
+      this->join();
+    }
   };
 #endif
 
@@ -4806,7 +4917,6 @@ namespace detail
     typedef detail::future_when_all_vector_shared_state<value_type> factory_all_type;
     typedef detail::future_when_any_vector_shared_state<value_type> factory_any_type;
   };
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   template< typename T0, typename ...T>
   struct when_type_impl<false, T0, T...>
   {
@@ -4814,7 +4924,6 @@ namespace detail
     typedef detail::future_when_all_tuple_shared_state<T0, T...> factory_all_type;
     typedef detail::future_when_any_tuple_shared_state<T0, T...> factory_any_type;
   };
-//#endif
 
   template< typename T0, typename ...T>
   struct when_type : when_type_impl<are_same<T0, T...>::value, T0, T...> {};
@@ -4836,11 +4945,9 @@ namespace detail
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_all() {
     return make_ready_future(csbl::tuple<>());
   }
-//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
@@ -4870,11 +4977,9 @@ namespace detail
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_any() {
     return make_ready_future(csbl::tuple<>());
   }
-//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
