@@ -413,6 +413,26 @@ rule thread-compile ( sources : reqs * : name )
     ;
 
 
+    explicit ts_when_all ;
+    test-suite ts_when_all
+    :
+          [ thread-run2-noit ./sync/futures/when_all/none_pass.cpp : when_all__none_p ]
+          [ thread-run2-noit ./sync/futures/when_all/one_pass.cpp : when_all__one_p ]
+          #[ thread-run2-noit ./sync/futures/when_all/container_pass.cpp : when_all__container_p ]
+          [ thread-run2-noit ./sync/futures/when_all/variadic_homo_pass.cpp : when_all__variadic_homo_p ]
+          #[ thread-run2-noit ./sync/futures/when_all/variadic_hetero_pass.cpp : when_all__variadic_hetero_p ]
+    ;
+
+    explicit ts_when_any ;
+    test-suite ts_when_any
+    :
+          [ thread-run2-noit ./sync/futures/when_any/none_pass.cpp : when_any__none_p ]
+          [ thread-run2-noit ./sync/futures/when_any/one_pass.cpp : when_any__one_p ]
+          #[ thread-run2-noit ./sync/futures/when_any/container_pass.cpp : when_any__container_p ]
+          #[ thread-run2-noit ./sync/futures/when_any/variadic_home_pass.cpp : when_any__variadic_homo_p ]
+          #[ thread-run2-noit ./sync/futures/when_any/variadic_hetero_pass.cpp : when_any__variadic_hetero_p ]
+    ;
+
     #explicit ts_lock_guard ;
     test-suite ts_lock_guard
     :
@@ -653,6 +673,12 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_q_multi_thread_p ]
     ;
 
+    test-suite ts_queue_views
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/queue_views/single_thread_pass.cpp : queue_views__single_thread_p ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/queue_views/multi_thread_pass.cpp : queue_views__multi_thread_p ]
+    ;
+
     #explicit ts_this_thread ;
     test-suite ts_this_thread
     :
@@ -732,8 +758,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/thread_pool.cpp : ex_thread_pool ]
           [ thread-run2 ../example/user_scheduler.cpp : ex_user_scheduler ]
           [ thread-run2 ../example/executor.cpp : ex_executor ]
-          [ thread-run2 ../example/generic_executor_ref.cpp : generic_executor_ref ]
-          [ thread-run2 ../example/future_when_all.cpp : future_when_all ]
+          [ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref ]
+          [ thread-run2 ../example/future_when_all.cpp : ex_future_when_all ]
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
           [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
           [ thread-run2 ../example/with_lock_guard.cpp : ex_with_lock_guard ]
@@ -818,6 +844,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./functional/invoker/invoker_rvalue_pass.cpp : invoker_rvalue_p ]
     ;
 
+
+
     explicit ts_more ;
     test-suite ts_more
     :
@@ -856,7 +884,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9720.cpp ]
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
-          [ thread-run test_10340.cpp ]
+          #[ thread-run test_10340.cpp ]
+          [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer3 ]
     ;
 
 }
