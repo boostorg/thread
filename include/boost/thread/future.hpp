@@ -1849,7 +1849,12 @@ namespace boost
             {
               this->future_->set_deferred();
             }
-
+            bool run_if_is_deferred() {
+              return this->future_->run_if_is_deferred();
+            }
+            bool run_if_is_deferred_or_ready() {
+              return this->future_->run_if_is_deferred_or_ready();
+            }
             // retrieving the value
             move_dest_type get()
             {
@@ -2008,7 +2013,12 @@ namespace boost
         {
             static_cast<base_type*>(this)->swap(other);
         }
-
+        bool run_if_is_deferred() {
+          return this->future_->run_if_is_deferred();
+        }
+        bool run_if_is_deferred_or_ready() {
+          return this->future_->run_if_is_deferred_or_ready();
+        }
         // retrieving the value
         typename detail::shared_state<R>::shared_future_get_result_type get()
         {
@@ -3866,7 +3876,9 @@ namespace detail {
     // future<R> async(Executor& ex, F&&, ArgTypes&&...);
     ////////////////////////////////
 
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+//#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
   template <class Executor, class R, class... ArgTypes>
@@ -4811,6 +4823,7 @@ namespace detail
     template <size_t ...Indices>
     void wait_for_all(tuple_indices<Indices...>) {
       return invoke<void>(wait_for_all_fctr(), csbl::get<Indices>(tup_)...);
+      //return wait_for_all_fctr()(csbl::get<Indices>(tup_)...);
     }
 
     bool run_deferred() {
@@ -4867,6 +4880,7 @@ namespace detail
     template <size_t ...Indices>
     void wait_for_any(tuple_indices<Indices...>) {
       return invoke<void>(wait_for_any_fctr(), csbl::get<Indices>(tup_)...);
+      //return wait_for_any_fctr()(csbl::get<Indices>(tup_)...);
     }
     bool run_deferred() {
       bool res = false;
