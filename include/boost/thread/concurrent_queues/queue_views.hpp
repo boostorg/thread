@@ -58,7 +58,7 @@ namespace concurrent
     queue_op_status nonblocking_pull(value_type& x) { return queue.nonblocking_pull_back(x); }
 
     queue_op_status wait_push(const value_type& x) { return queue.wait_push_back(x); }
-    queue_op_status wait_pull_front(value_type& x) { return queue.wait_pull_back(x); }
+    queue_op_status wait_pull(value_type& x) { return queue.wait_pull_back(x); }
 
 //#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     void push(BOOST_THREAD_RV_REF(value_type) x) { queue.push_back(boost::move(x)); }
