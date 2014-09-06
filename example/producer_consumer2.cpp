@@ -33,7 +33,7 @@ void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
     {
       sbq.push(i);
       //sbq << i;
-      mos << "push(" << i << ") " /*<< sbq.size() */<<"\n";
+      mos << "push(" << i << ") " << sbq.size() <<"\n";
       this_thread::sleep_for(chrono::milliseconds(200));
     }
   }
@@ -58,7 +58,7 @@ void consumer(
       int r;
       sbq.pull(r);
       //sbq >> r;
-      mos << i << " pull(" << r << ") " /*<< sbq.size() */ <<"\n";
+      mos << i << " pull(" << r << ") " << sbq.size()  <<"\n";
 
       this_thread::sleep_for(chrono::milliseconds(250));
     }
