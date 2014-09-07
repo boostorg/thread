@@ -28,6 +28,7 @@
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
+#include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/decay.hpp>
@@ -565,107 +566,113 @@ namespace boost
             shared_state_base& operator=(shared_state_base const&);
         };
 
-        template<typename T>
-        struct future_traits
-        {
-          typedef boost::scoped_ptr<T> storage_type;
-          struct dummy;
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-          typedef T const& source_reference_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
-          typedef T move_dest_type;
-#elif defined BOOST_THREAD_USES_MOVE
-          typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
-          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          typedef T move_dest_type;
-#else
-          typedef T& source_reference_type;
-          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
-          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
-#endif
+//        template<typename T>
+//        struct future_traits
+//        {
+//          typedef boost::csbl::unique_ptr<T> storage_type;
+//          struct dummy;
+//#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+//          typedef T const& source_reference_type;
+//          //typedef typename conditional<boost::is_fundamental<T>::value,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+//          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+//          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
+//          typedef T move_dest_type;
+//#elif defined BOOST_THREAD_USES_MOVE
+//          typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
+//          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
+//          //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+//          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+//          typedef T move_dest_type;
+//#else
+//          typedef T& source_reference_type;
+//          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+//          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+//#endif
+//
+//
+//            typedef const T& shared_future_get_result_type;
+//
+//            static void init(storage_type& storage,source_reference_type t)
+//            {
+//                storage.reset(new T(t));
+//            }
+//
+//            static void init(storage_type& storage,rvalue_source_type t)
+//            {
+//#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+//              storage.reset(new T(boost::move(t)));
+//#else
+//              storage.reset(new T(static_cast<rvalue_source_type>(t)));
+//#endif
+//            }
+//
+//        };
 
+//        template<typename T>
+//        struct future_traits<T&>
+//        {
+//            typedef T* storage_type;
+//            typedef T& source_reference_type;
+//            //struct rvalue_source_type
+//            //{};
+//            typedef T& move_dest_type;
+//            typedef T& shared_future_get_result_type;
+//
+////            static void init(storage_type& storage,T& t)
+////            {
+////                storage=&t;
+////            }
+//
+//        };
 
-            typedef const T& shared_future_get_result_type;
-
-            static void init(storage_type& storage,source_reference_type t)
-            {
-                storage.reset(new T(t));
-            }
-
-            static void init(storage_type& storage,rvalue_source_type t)
-            {
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-              storage.reset(new T(boost::move(t)));
-#else
-              storage.reset(new T(static_cast<rvalue_source_type>(t)));
-#endif
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage.reset();
-            }
-        };
-
-        template<typename T>
-        struct future_traits<T&>
-        {
-            typedef T* storage_type;
-            typedef T& source_reference_type;
-            //struct rvalue_source_type
-            //{};
-            typedef T& move_dest_type;
-            typedef T& shared_future_get_result_type;
-
-            static void init(storage_type& storage,T& t)
-            {
-                storage=&t;
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage=0;
-            }
-        };
-
-        template<>
-        struct future_traits<void>
-        {
-            typedef bool storage_type;
-            typedef void move_dest_type;
-            typedef void shared_future_get_result_type;
-
-            static void init(storage_type& storage)
-            {
-                storage=true;
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage=false;
-            }
-
-        };
+//        template<>
+//        struct future_traits<void>
+//        {
+//            typedef bool storage_type;
+//            typedef void move_dest_type;
+//            typedef void shared_future_get_result_type;
+//
+////            static void init(storage_type& storage)
+////            {
+////                storage=true;
+////            }
+//
+//        };
 
         // Used to create stand-alone futures
         template<typename T>
         struct shared_state:
             detail::shared_state_base
         {
-            typedef typename future_traits<T>::storage_type storage_type;
-            typedef typename future_traits<T>::source_reference_type source_reference_type;
-            typedef typename future_traits<T>::rvalue_source_type rvalue_source_type;
-            typedef typename future_traits<T>::move_dest_type move_dest_type;
-            typedef typename future_traits<T>::shared_future_get_result_type shared_future_get_result_type;
+            typedef boost::csbl::unique_ptr<T> storage_type;
+          //struct dummy;
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+            typedef T const& source_reference_type;
+            typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+            typedef T move_dest_type;
+#elif defined BOOST_THREAD_USES_MOVE
+            typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
+            typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+            typedef T move_dest_type;
+#else
+            typedef T& source_reference_type;
+            typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+            typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+#endif
+
+
+            typedef const T& shared_future_get_result_type;
+
+//            typedef typename future_traits<T>::storage_type storage_type;
+//            typedef typename future_traits<T>::source_reference_type source_reference_type;
+//            typedef typename future_traits<T>::rvalue_source_type rvalue_source_type;
+//            typedef typename future_traits<T>::move_dest_type move_dest_type;
+//            typedef typename future_traits<T>::shared_future_get_result_type shared_future_get_result_type;
 
             storage_type result;
 
             shared_state():
-                result(0)
+                result()
             {}
 
             ~shared_state()
@@ -673,16 +680,20 @@ namespace boost
 
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
-                future_traits<T>::init(result,result_);
+                //future_traits<T>::init(result,result_);
+                result.reset(new T(result_));
+
                 this->mark_finished_internal(lock);
             }
 
             void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-                future_traits<T>::init(result,boost::move(result_));
+                result.reset(new T(boost::move(result_)));
+                //future_traits<T>::init(result,boost::move(result_));
 #else
-                future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+                result.reset(new T(static_cast<rvalue_source_type>(result_)));
+                //future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
 #endif
                 this->mark_finished_internal(lock);
             }
@@ -726,7 +737,6 @@ namespace boost
               {
                   throw_exception(promise_already_satisfied());
               }
-              //future_traits<T>::init(result,result_);
               result.reset(new T(result_));
 
               this->is_constructed = true;
@@ -739,7 +749,6 @@ namespace boost
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
               result.reset(new T(boost::move(result_)));
-              //future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
@@ -754,10 +763,15 @@ namespace boost
         struct shared_state<T&>:
             detail::shared_state_base
         {
-            typedef typename future_traits<T&>::storage_type storage_type;
-            typedef typename future_traits<T&>::source_reference_type source_reference_type;
-            typedef typename future_traits<T&>::move_dest_type move_dest_type;
-            typedef typename future_traits<T&>::shared_future_get_result_type shared_future_get_result_type;
+            typedef T* storage_type;
+            typedef T& source_reference_type;
+            typedef T& move_dest_type;
+            typedef T& shared_future_get_result_type;
+
+//            typedef typename future_traits<T&>::storage_type storage_type;
+//            typedef typename future_traits<T&>::source_reference_type source_reference_type;
+//            typedef typename future_traits<T&>::move_dest_type move_dest_type;
+//            typedef typename future_traits<T&>::shared_future_get_result_type shared_future_get_result_type;
 
             T* result;
 
@@ -771,7 +785,6 @@ namespace boost
 
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
-                //future_traits<T>::init(result,result_);
                 result= &result_;
                 mark_finished_internal(lock);
             }
@@ -801,7 +814,6 @@ namespace boost
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
-              //future_traits<T>::init(result,result_);
               result= &result_;
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
@@ -816,7 +828,9 @@ namespace boost
         struct shared_state<void>:
             detail::shared_state_base
         {
-          typedef void shared_future_get_result_type;
+            typedef void shared_future_get_result_type;
+            typedef void move_dest_type;
+
 
             shared_state()
             {}
@@ -1364,6 +1378,8 @@ namespace boost
       public:
 
         typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
+        typedef typename detail::shared_state<R>::move_dest_type move_dest_type;
+
         static //BOOST_CONSTEXPR
         future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
           promise<R> p;
@@ -1584,7 +1600,8 @@ namespace boost
         detail::make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
 
-        typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+        typedef typename base_type::move_dest_type move_dest_type;
+        //typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
     public: // when_all
 
         BOOST_THREAD_FUTURE(future_ptr a_future):
@@ -1794,7 +1811,8 @@ namespace boost
             detail::make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
 
-            typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+            //typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+            typedef typename base_type::move_dest_type move_dest_type;
 
             BOOST_THREAD_FUTURE(future_ptr a_future):
               base_type(a_future)
@@ -2092,6 +2110,11 @@ namespace boost
     {
         typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
 
+        typedef typename detail::shared_state<R>::source_reference_type source_reference_type;
+        typedef typename detail::shared_state<R>::rvalue_source_type rvalue_source_type;
+        typedef typename detail::shared_state<R>::move_dest_type move_dest_type;
+        typedef typename detail::shared_state<R>::shared_future_get_result_type shared_future_get_result_type;
+
         future_ptr future_;
         bool future_obtained;
 
@@ -2182,7 +2205,8 @@ namespace boost
             return BOOST_THREAD_FUTURE<R>(future_);
         }
 
-        void set_value(typename detail::future_traits<R>::source_reference_type r)
+        //void set_value(typename detail::future_traits<R>::source_reference_type r)
+        void set_value(source_reference_type r)
         {
             lazy_init();
             boost::unique_lock<boost::mutex> lock(future_->mutex);
@@ -2194,7 +2218,8 @@ namespace boost
         }
 
 //         void set_value(R && r);
-        void set_value(typename detail::future_traits<R>::rvalue_source_type r)
+        //void set_value(typename detail::future_traits<R>::rvalue_source_type r)
+        void set_value(rvalue_source_type r)
         {
             lazy_init();
             boost::unique_lock<boost::mutex> lock(future_->mutex);
@@ -2205,7 +2230,7 @@ namespace boost
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
             future_->mark_finished_with_result_internal(boost::move(r), lock);
 #else
-            future_->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r), lock);
+            future_->mark_finished_with_result_internal(static_cast<rvalue_source_type>(r), lock);
 #endif
         }
 
