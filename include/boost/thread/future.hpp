@@ -28,6 +28,7 @@
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
+//#include <boost/move/make_unique.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/decay.hpp>
@@ -592,21 +593,35 @@ namespace boost
             ~shared_state()
             {}
 
+            void mark_finished_with_result_internal(BOOST_THREAD_RV_REF(storage_type) result_, boost::unique_lock<boost::mutex>& lock)
+            {
+                result = boost::move(result_);
+                this->mark_finished_internal(lock);
+            }
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
                 result.reset(new T(result_));
-
                 this->mark_finished_internal(lock);
+                //mark_finished_with_result_internal(csbl::make_unique<T>(result_), lock);
             }
 
             void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
                 result.reset(new T(boost::move(result_)));
+                //mark_finished_with_result_internal(csbl::make_unique<T>(boost::move(result_)), lock);
 #else
                 result.reset(new T(static_cast<rvalue_source_type>(result_)));
+                //mark_finished_with_result_internal(csbl::make_unique<T>(static_cast<rvalue_source_type>(result_)), lock);
 #endif
                 this->mark_finished_internal(lock);
+            }
+
+            void mark_finished_with_result(BOOST_THREAD_RV_REF(storage_type) result_)
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                this->mark_finished_with_result_internal(boost::move(result_), lock);
             }
 
             void mark_finished_with_result(source_reference_type result_)
@@ -626,23 +641,39 @@ namespace boost
 #endif
             }
 
+            storage_type& get_storage(boost::unique_lock<boost::mutex>& lock)
+            {
+                wait_internal(lock);
+                return result;
+            }
             virtual move_dest_type get()
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                wait_internal(lock);
-                return boost::move(*result);
+                //wait_internal(lock);
+                //return boost::move(*result);
+                return boost::move(*get_storage(lock));
             }
 
             virtual shared_future_get_result_type get_sh()
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                wait_internal(lock);
-                return *result;
+                //wait_internal(lock);
+                //return *result;
+                return *get_storage(lock);
             }
 
-            //void set_value_at_thread_exit(const T & result_)
+            void set_value_at_thread_exit(BOOST_THREAD_RV_REF(storage_type) result_)
+            {
+              unique_lock<boost::mutex> lk(this->mutex);
+              if (this->has_value(lk))
+                  throw_exception(promise_already_satisfied());
+              result = boost::move(result_);
+              this->is_constructed = true;
+              detail::make_ready_at_thread_exit(shared_from_this());
+            }
             void set_value_at_thread_exit(source_reference_type result_)
             {
+              //set_value_at_thread_exit(csbl::make_unique<T>(result_));
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
               {
@@ -656,6 +687,7 @@ namespace boost
             //void set_value_at_thread_exit(BOOST_THREAD_RV_REF(T) result_)
             void set_value_at_thread_exit(rvalue_source_type result_)
             {
+              //set_value_at_thread_exit(csbl::make_unique<T>(boost::move(result_)));
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
@@ -663,7 +695,6 @@ namespace boost
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
-
 
         private:
             shared_state(shared_state const&);
@@ -2025,6 +2056,19 @@ namespace boost
             return BOOST_THREAD_FUTURE<R>(future_);
         }
 
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class TR>
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type set_value(TR const &  r)
+        {
+            lazy_init();
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
+            if(future_->done)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->mark_finished_with_result_internal(r, lock);
+        }
+#else
         void set_value(source_reference_type r)
         {
             lazy_init();
@@ -2035,6 +2079,7 @@ namespace boost
             }
             future_->mark_finished_with_result_internal(r, lock);
         }
+#endif
 
         void set_value(rvalue_source_type r)
         {
@@ -2050,7 +2095,6 @@ namespace boost
             future_->mark_finished_with_result_internal(static_cast<rvalue_source_type>(r), lock);
 #endif
         }
-
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
@@ -2067,7 +2111,9 @@ namespace boost
           set_exception(copy_exception(ex));
         }
         // setting the result with deferred notification
-        void set_value_at_thread_exit(const R& r)
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class TR>
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type set_value_at_thread_exit(TR const& r)
         {
           if (future_.get()==0)
           {
@@ -2075,7 +2121,16 @@ namespace boost
           }
           future_->set_value_at_thread_exit(r);
         }
-
+#else
+        void set_value_at_thread_exit(source_reference_type r)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_value_at_thread_exit(r);
+        }
+#endif
         void set_value_at_thread_exit(BOOST_THREAD_RV_REF(R) r)
         {
           if (future_.get()==0)
