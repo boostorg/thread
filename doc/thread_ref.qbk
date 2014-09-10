@@ -26,7 +26,13 @@
       void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
       template <class Rep, class Period>
       void sleep_for(const chrono::duration<Rep, Period>& rel_time);
-
+      namespace no_interruption_point  // EXTENSION
+      {
+      	template <class Clock, class Duration>
+      	void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+      	template <class Rep, class Period>
+      	void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+      }
       template<typename Callable>
       void at_thread_exit(Callable func); // EXTENSION
 
@@ -1489,6 +1495,11 @@ specified by `rel_time` has elapsed or the time point specified by
     {
       template <class Clock, class Duration>
       void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+      namespace no_interruption_point
+      {
+        template <class Clock, class Duration>
+        void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
+      }
     }
 
 [variablelist
@@ -1500,6 +1511,7 @@ specified by `rel_time` has elapsed or the time point specified by
 do not throw exceptions. __thread_interrupted__ if the current thread of execution is interrupted. ]]
 
 [[Notes:] [`sleep_until()` is one of the predefined __interruption_points__.]]
+[[Notes:] [`no_interruption_point::sleep_until()` is NOT one of the __interruption_points__.]]
 
 ]
 
@@ -1513,6 +1525,11 @@ do not throw exceptions. __thread_interrupted__ if the current thread of executi
     {
       template <class Rep, class Period>
       void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+      namespace no_interruption_point
+      {
+        template <class Rep, class Period>
+        void sleep_for(const chrono::duration<Rep, Period>& rel_time);
+      }
     }
 
 [variablelist
@@ -1523,6 +1540,7 @@ by `rel_time` has elapsed.]]
 [[Throws:] [Nothing if operations of chrono::duration<Rep, Period> do not throw exceptions. __thread_interrupted__ if the current thread of execution is interrupted.]]
 
 [[Notes:] [`sleep_for()` is one of the predefined __interruption_points__.]]
+[[Notes:] [`no_interruption_point:: sleep_for()` is NOT one of the __interruption_points__.]]
 
 ]
 
