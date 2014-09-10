@@ -827,11 +827,6 @@ namespace boost
           {
             this->set_async();
           }
-          explicit future_async_shared_state_base(BOOST_THREAD_RV_REF(boost::thread) th) :
-            thr_(boost::move(th))
-          {
-            this->set_async();
-          }
 
           ~future_async_shared_state_base()
           {
@@ -851,12 +846,9 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_async_shared_state: future_async_shared_state_base<Rp>
         {
-          typedef future_async_shared_state_base<Rp> base_type;
-
-        public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::forward<Fp>(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
@@ -881,12 +873,9 @@ namespace boost
         template<typename Fp>
         struct future_async_shared_state<void, Fp>: public future_async_shared_state_base<void>
         {
-          typedef future_async_shared_state_base<void> base_type;
-
-        public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::move(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
@@ -912,12 +901,12 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_async_shared_state<Rp&, Fp>: future_async_shared_state_base<Rp&>
         {
-          typedef future_async_shared_state_base<Rp&> base_type;
+          //typedef future_async_shared_state_base<Rp&> base_type;
 
         public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::move(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
