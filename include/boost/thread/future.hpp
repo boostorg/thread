@@ -901,9 +901,6 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_async_shared_state<Rp&, Fp>: future_async_shared_state_base<Rp&>
         {
-          //typedef future_async_shared_state_base<Rp&> base_type;
-
-        public:
           explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
             this->thr_ = thread(&future_async_shared_state::run, this, boost::move(f));
