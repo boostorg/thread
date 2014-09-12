@@ -334,9 +334,23 @@ void test_concurrent_push_back_on_empty_queue()
       push_done[i]=boost::async(boost::launch::async,
                                 call_push_back<int>(&q,&go));
 
+  }
+  catch (...)
+  {
+    BOOST_TEST(false);
+  }
+  try
+  {
     for (unsigned int i = 0; i < n; ++i)
       push_done[i].get();
 
+  }
+  catch (...)
+  {
+    BOOST_TEST(false);
+  }
+  try
+  {
     BOOST_TEST(!q.empty());
     for (unsigned int i =0; i< n; ++i)
       BOOST_TEST_EQ(q.pull_front(), 42);
