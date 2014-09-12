@@ -252,6 +252,8 @@ namespace detail
 #define BOOST_THREAD_MOVABLE_ONLY(TYPE) \
   BOOST_THREAD_NO_COPYABLE(TYPE) \
   BOOST_THREAD_MOVABLE(TYPE) \
+  typedef int boost_move_no_copy_constructor_or_assign; \
+
 
 #define BOOST_THREAD_COPYABLE_AND_MOVABLE(TYPE) \
     BOOST_THREAD_COPYABLE(TYPE) \

@@ -27,7 +27,8 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/shared_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <boost/thread/csbl/memory/unique_ptr.hpp>
+//#include <boost/move/make_unique.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/type_traits/decay.hpp>
@@ -283,8 +284,6 @@ namespace boost
                   continuation_ptr_type this_continuation_ptr = continuation_ptr;
                   continuation_ptr.reset();
                   this_continuation_ptr->launch_continuation(lock);
-                  //if (! lock.owns_lock())
-                  //  lock.lock();
                 }
             }
 #else
@@ -361,7 +360,6 @@ namespace boost
                 {
                   is_deferred_=false;
                   execute(lk);
-                  //lk.unlock();
                 }
                 else
                 {
@@ -471,7 +469,6 @@ namespace boost
               exception=e;
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
-
             }
 
             bool has_value() const
@@ -565,126 +562,66 @@ namespace boost
             shared_state_base& operator=(shared_state_base const&);
         };
 
-        template<typename T>
-        struct future_traits
-        {
-          typedef boost::scoped_ptr<T> storage_type;
-          struct dummy;
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-          typedef T const& source_reference_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,dummy&,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type move_dest_type;
-          typedef T move_dest_type;
-#elif defined BOOST_THREAD_USES_MOVE
-          typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
-          //typedef typename conditional<boost::is_fundamental<T>::value,T,BOOST_THREAD_RV_REF(T)>::type rvalue_source_type;
-          //typedef typename conditional<boost::enable_move_utility_emulation<T>::value,BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
-          typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
-          typedef T move_dest_type;
-#else
-          typedef T& source_reference_type;
-          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
-          typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
-#endif
-
-
-            typedef const T& shared_future_get_result_type;
-
-            static void init(storage_type& storage,source_reference_type t)
-            {
-                storage.reset(new T(t));
-            }
-
-            static void init(storage_type& storage,rvalue_source_type t)
-            {
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-              storage.reset(new T(boost::move(t)));
-#else
-              storage.reset(new T(static_cast<rvalue_source_type>(t)));
-#endif
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage.reset();
-            }
-        };
-
-        template<typename T>
-        struct future_traits<T&>
-        {
-            typedef T* storage_type;
-            typedef T& source_reference_type;
-            //struct rvalue_source_type
-            //{};
-            typedef T& move_dest_type;
-            typedef T& shared_future_get_result_type;
-
-            static void init(storage_type& storage,T& t)
-            {
-                storage=&t;
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage=0;
-            }
-        };
-
-        template<>
-        struct future_traits<void>
-        {
-            typedef bool storage_type;
-            typedef void move_dest_type;
-            typedef void shared_future_get_result_type;
-
-            static void init(storage_type& storage)
-            {
-                storage=true;
-            }
-
-            static void cleanup(storage_type& storage)
-            {
-                storage=false;
-            }
-
-        };
-
         // Used to create stand-alone futures
         template<typename T>
         struct shared_state:
             detail::shared_state_base
         {
-            typedef typename future_traits<T>::storage_type storage_type;
-            typedef typename future_traits<T>::source_reference_type source_reference_type;
-            typedef typename future_traits<T>::rvalue_source_type rvalue_source_type;
-            typedef typename future_traits<T>::move_dest_type move_dest_type;
-            typedef typename future_traits<T>::shared_future_get_result_type shared_future_get_result_type;
+            typedef boost::csbl::unique_ptr<T> storage_type;
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+            typedef T const& source_reference_type;
+            typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+            typedef T move_dest_type;
+#elif defined BOOST_THREAD_USES_MOVE
+            typedef typename conditional<boost::is_fundamental<T>::value,T,T const&>::type source_reference_type;
+            typedef BOOST_THREAD_RV_REF(T) rvalue_source_type;
+            typedef T move_dest_type;
+#else
+            typedef T& source_reference_type;
+            typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T const&>::type rvalue_source_type;
+            typedef typename conditional<boost::thread_detail::is_convertible<T&,BOOST_THREAD_RV_REF(T) >::value, BOOST_THREAD_RV_REF(T),T>::type move_dest_type;
+#endif
+
+            typedef const T& shared_future_get_result_type;
 
             storage_type result;
 
             shared_state():
-                result(0)
+                result()
             {}
 
             ~shared_state()
             {}
 
+            void mark_finished_with_result_internal(BOOST_THREAD_RV_REF(storage_type) result_, boost::unique_lock<boost::mutex>& lock)
+            {
+                result = boost::move(result_);
+                this->mark_finished_internal(lock);
+            }
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
-                future_traits<T>::init(result,result_);
+                result.reset(new T(result_));
                 this->mark_finished_internal(lock);
+                //mark_finished_with_result_internal(csbl::make_unique<T>(result_), lock);
             }
 
             void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-                future_traits<T>::init(result,boost::move(result_));
+                result.reset(new T(boost::move(result_)));
+                //mark_finished_with_result_internal(csbl::make_unique<T>(boost::move(result_)), lock);
 #else
-                future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
+                result.reset(new T(static_cast<rvalue_source_type>(result_)));
+                //mark_finished_with_result_internal(csbl::make_unique<T>(static_cast<rvalue_source_type>(result_)), lock);
 #endif
                 this->mark_finished_internal(lock);
+            }
+
+            void mark_finished_with_result(BOOST_THREAD_RV_REF(storage_type) result_)
+            {
+                boost::unique_lock<boost::mutex> lock(mutex);
+                this->mark_finished_with_result_internal(boost::move(result_), lock);
             }
 
             void mark_finished_with_result(source_reference_type result_)
@@ -704,29 +641,44 @@ namespace boost
 #endif
             }
 
+            storage_type& get_storage(boost::unique_lock<boost::mutex>& lock)
+            {
+                wait_internal(lock);
+                return result;
+            }
             virtual move_dest_type get()
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                wait_internal(lock);
-                return boost::move(*result);
+                //wait_internal(lock);
+                //return boost::move(*result);
+                return boost::move(*get_storage(lock));
             }
 
             virtual shared_future_get_result_type get_sh()
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                wait_internal(lock);
-                return *result;
+                //wait_internal(lock);
+                //return *result;
+                return *get_storage(lock);
             }
 
-            //void set_value_at_thread_exit(const T & result_)
+            void set_value_at_thread_exit(BOOST_THREAD_RV_REF(storage_type) result_)
+            {
+              unique_lock<boost::mutex> lk(this->mutex);
+              if (this->has_value(lk))
+                  throw_exception(promise_already_satisfied());
+              result = boost::move(result_);
+              this->is_constructed = true;
+              detail::make_ready_at_thread_exit(shared_from_this());
+            }
             void set_value_at_thread_exit(source_reference_type result_)
             {
+              //set_value_at_thread_exit(csbl::make_unique<T>(result_));
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
               {
                   throw_exception(promise_already_satisfied());
               }
-              //future_traits<T>::init(result,result_);
               result.reset(new T(result_));
 
               this->is_constructed = true;
@@ -735,15 +687,14 @@ namespace boost
             //void set_value_at_thread_exit(BOOST_THREAD_RV_REF(T) result_)
             void set_value_at_thread_exit(rvalue_source_type result_)
             {
+              //set_value_at_thread_exit(csbl::make_unique<T>(boost::move(result_)));
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
               result.reset(new T(boost::move(result_)));
-              //future_traits<T>::init(result,static_cast<rvalue_source_type>(result_));
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
-
 
         private:
             shared_state(shared_state const&);
@@ -754,10 +705,10 @@ namespace boost
         struct shared_state<T&>:
             detail::shared_state_base
         {
-            typedef typename future_traits<T&>::storage_type storage_type;
-            typedef typename future_traits<T&>::source_reference_type source_reference_type;
-            typedef typename future_traits<T&>::move_dest_type move_dest_type;
-            typedef typename future_traits<T&>::shared_future_get_result_type shared_future_get_result_type;
+            typedef T* storage_type;
+            typedef T& source_reference_type;
+            typedef T& move_dest_type;
+            typedef T& shared_future_get_result_type;
 
             T* result;
 
@@ -771,7 +722,6 @@ namespace boost
 
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
-                //future_traits<T>::init(result,result_);
                 result= &result_;
                 mark_finished_internal(lock);
             }
@@ -801,7 +751,6 @@ namespace boost
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
                   throw_exception(promise_already_satisfied());
-              //future_traits<T>::init(result,result_);
               result= &result_;
               this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
@@ -816,7 +765,8 @@ namespace boost
         struct shared_state<void>:
             detail::shared_state_base
         {
-          typedef void shared_future_get_result_type;
+            typedef void shared_future_get_result_type;
+            typedef void move_dest_type;
 
             shared_state()
             {}
@@ -877,11 +827,6 @@ namespace boost
           {
             this->set_async();
           }
-          explicit future_async_shared_state_base(BOOST_THREAD_RV_REF(boost::thread) th) :
-            thr_(boost::move(th))
-          {
-            this->set_async();
-          }
 
           ~future_async_shared_state_base()
           {
@@ -901,12 +846,9 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_async_shared_state: future_async_shared_state_base<Rp>
         {
-          typedef future_async_shared_state_base<Rp> base_type;
-
-        public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::forward<Fp>(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
@@ -931,12 +873,9 @@ namespace boost
         template<typename Fp>
         struct future_async_shared_state<void, Fp>: public future_async_shared_state_base<void>
         {
-          typedef future_async_shared_state_base<void> base_type;
-
-        public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::move(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
@@ -962,12 +901,9 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_async_shared_state<Rp&, Fp>: future_async_shared_state_base<Rp&>
         {
-          typedef future_async_shared_state_base<Rp&> base_type;
-
-        public:
-          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f) :
-          base_type(thread(&future_async_shared_state::run, this, boost::move(f)))
+          explicit future_async_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           {
+            this->thr_ = thread(&future_async_shared_state::run, this, boost::move(f));
           }
 
           static void run(future_async_shared_state* that, BOOST_THREAD_FWD_REF(Fp) f)
@@ -1074,17 +1010,6 @@ namespace boost
           }
         };
 
-//        template<typename T, typename Allocator>
-//        struct shared_state_alloc: public shared_state<T>
-//        {
-//          typedef shared_state<T> base;
-//          Allocator alloc_;
-//
-//        public:
-//          explicit shared_state_alloc(const Allocator& a)
-//              : alloc_(a) {}
-//
-//        };
         class future_waiter
         {
             struct registered_waiter;
@@ -1192,7 +1117,6 @@ namespace boost
                     futures[i].future_->remove_external_waiter(futures[i].wait_iterator);
                 }
             }
-
         };
 
     }
@@ -1364,6 +1288,8 @@ namespace boost
       public:
 
         typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
+        typedef typename detail::shared_state<R>::move_dest_type move_dest_type;
+
         static //BOOST_CONSTEXPR
         future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
           promise<R> p;
@@ -1452,7 +1378,6 @@ namespace boost
         {
             return future_ != 0;
         }
-
 
         void wait() const
         {
@@ -1584,7 +1509,7 @@ namespace boost
         detail::make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
 
-        typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+        typedef typename base_type::move_dest_type move_dest_type;
     public: // when_all
 
         BOOST_THREAD_FUTURE(future_ptr a_future):
@@ -1615,12 +1540,6 @@ namespace boost
             this->base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
             return *this;
         }
-
-//        BOOST_THREAD_FUTURE& operator=(exceptional_ptr const& ex)
-//        {
-//          this->future_=base_type::make_exceptional_future_ptr(ex);
-//          return *this;
-//        }
 
         shared_future<R> share()
         {
@@ -1704,18 +1623,7 @@ namespace boost
             }
         }
 
-
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-
-//        template<typename F>
-//        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
-
-//#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
-//        template<typename RF>
-//        inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(BOOST_THREAD_FUTURE&));
-//        template<typename RF>
-//        inline BOOST_THREAD_FUTURE<RF> then(launch policy, RF(*func)(BOOST_THREAD_FUTURE&));
-//#endif
         template<typename F>
         inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE)>::type>
         then(BOOST_THREAD_FWD_REF(F) func);  // EXTENSION
@@ -1731,16 +1639,6 @@ namespace boost
         fallback_to(R2 const& v);  // EXTENSION
 
 #endif
-
-//#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
-//        inline
-//        typename boost::enable_if<
-//          is_future_type<value_type>,
-//          value_type
-//        //BOOST_THREAD_FUTURE<typename is_future_type<value_type>::type>
-//        >::type
-//        unwrap();
-//#endif
 
     };
 
@@ -1793,8 +1691,7 @@ namespace boost
             friend BOOST_THREAD_FUTURE<Rp>
             detail::make_future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f);
 
-
-            typedef typename detail::future_traits<R>::move_dest_type move_dest_type;
+            typedef typename base_type::move_dest_type move_dest_type;
 
             BOOST_THREAD_FUTURE(future_ptr a_future):
               base_type(a_future)
@@ -1823,11 +1720,6 @@ namespace boost
                 this->base_type::operator=(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))));
                 return *this;
             }
-//            BOOST_THREAD_FUTURE& operator=(exceptional_ptr const& ex)
-//            {
-//              this->future_=base_type::make_exceptional_future_ptr(ex);
-//              return *this;
-//            }
 
             shared_future<R> share()
             {
@@ -1849,7 +1741,12 @@ namespace boost
             {
               this->future_->set_deferred();
             }
-
+            bool run_if_is_deferred() {
+              return this->future_->run_if_is_deferred();
+            }
+            bool run_if_is_deferred_or_ready() {
+              return this->future_->run_if_is_deferred_or_ready();
+            }
             // retrieving the value
             move_dest_type get()
             {
@@ -1895,16 +1792,6 @@ namespace boost
 
 
     #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-
-    //        template<typename F>
-    //        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
-
-    //#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
-    //        template<typename RF>
-    //        inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(BOOST_THREAD_FUTURE&));
-    //        template<typename RF>
-    //        inline BOOST_THREAD_FUTURE<RF> then(launch policy, RF(*func)(BOOST_THREAD_FUTURE&));
-    //#endif
             template<typename F>
             inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE)>::type>
             then(BOOST_THREAD_FWD_REF(F) func); // EXTENSION
@@ -1924,7 +1811,6 @@ namespace boost
     template <typename R>
     class shared_future : public detail::basic_future<R>
     {
-
         typedef detail::basic_future<R> base_type;
         typedef typename base_type::future_ptr future_ptr;
 
@@ -1977,11 +1863,6 @@ namespace boost
             shared_future(other).swap(*this);
             return *this;
         }
-//        shared_future& operator=(exceptional_ptr const& ex)
-//        {
-//          this->future_=base_type::make_exceptional_future_ptr(ex);
-//          return *this;
-//        }
 
         shared_future(BOOST_THREAD_RV_REF(shared_future) other) BOOST_NOEXCEPT :
         base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
@@ -2008,7 +1889,12 @@ namespace boost
         {
             static_cast<base_type*>(this)->swap(other);
         }
-
+        bool run_if_is_deferred() {
+          return this->future_->run_if_is_deferred();
+        }
+        bool run_if_is_deferred_or_ready() {
+          return this->future_->run_if_is_deferred_or_ready();
+        }
         // retrieving the value
         typename detail::shared_state<R>::shared_future_get_result_type get()
         {
@@ -2016,7 +1902,6 @@ namespace boost
             {
                 boost::throw_exception(future_uninitialized());
             }
-
             return this->future_->get_sh();
         }
 
@@ -2035,18 +1920,6 @@ namespace boost
         }
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-
-//        template<typename F>
-//        auto then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
-//        template<typename F>
-//        auto then(launch, F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
-
-//#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
-//        template<typename RF>
-//        inline BOOST_THREAD_FUTURE<RF> then(RF(*func)(shared_future&));
-//        template<typename RF>
-//        inline BOOST_THREAD_FUTURE<RF> then(launch policy, RF(*func)(shared_future&));
-//#endif
         template<typename F>
         inline BOOST_THREAD_FUTURE<typename boost::result_of<F(shared_future)>::type>
         then(BOOST_THREAD_FWD_REF(F) func); // EXTENSION
@@ -2054,14 +1927,6 @@ namespace boost
         inline BOOST_THREAD_FUTURE<typename boost::result_of<F(shared_future)>::type>
         then(launch policy, BOOST_THREAD_FWD_REF(F) func); // EXTENSION
 #endif
-//#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
-//        inline
-//        typename boost::enable_if_c<
-//          is_future_type<value_type>::value,
-//          BOOST_THREAD_FUTURE<typename is_future_type<value_type>::type>
-//        >::type
-//        unwrap();
-//#endif
 
     };
 
@@ -2081,6 +1946,11 @@ namespace boost
     class promise
     {
         typedef boost::shared_ptr<detail::shared_state<R> > future_ptr;
+
+        typedef typename detail::shared_state<R>::source_reference_type source_reference_type;
+        typedef typename detail::shared_state<R>::rvalue_source_type rvalue_source_type;
+        typedef typename detail::shared_state<R>::move_dest_type move_dest_type;
+        typedef typename detail::shared_state<R>::shared_future_get_result_type shared_future_get_result_type;
 
         future_ptr future_;
         bool future_obtained;
@@ -2172,7 +2042,9 @@ namespace boost
             return BOOST_THREAD_FUTURE<R>(future_);
         }
 
-        void set_value(typename detail::future_traits<R>::source_reference_type r)
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class TR>
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type set_value(TR const &  r)
         {
             lazy_init();
             boost::unique_lock<boost::mutex> lock(future_->mutex);
@@ -2182,9 +2054,20 @@ namespace boost
             }
             future_->mark_finished_with_result_internal(r, lock);
         }
+#else
+        void set_value(source_reference_type r)
+        {
+            lazy_init();
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
+            if(future_->done)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->mark_finished_with_result_internal(r, lock);
+        }
+#endif
 
-//         void set_value(R && r);
-        void set_value(typename detail::future_traits<R>::rvalue_source_type r)
+        void set_value(rvalue_source_type r)
         {
             lazy_init();
             boost::unique_lock<boost::mutex> lock(future_->mutex);
@@ -2195,10 +2078,9 @@ namespace boost
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
             future_->mark_finished_with_result_internal(boost::move(r), lock);
 #else
-            future_->mark_finished_with_result_internal(static_cast<typename detail::future_traits<R>::rvalue_source_type>(r), lock);
+            future_->mark_finished_with_result_internal(static_cast<rvalue_source_type>(r), lock);
 #endif
         }
-
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
@@ -2215,7 +2097,9 @@ namespace boost
           set_exception(copy_exception(ex));
         }
         // setting the result with deferred notification
-        void set_value_at_thread_exit(const R& r)
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class TR>
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type set_value_at_thread_exit(TR const& r)
         {
           if (future_.get()==0)
           {
@@ -2223,7 +2107,16 @@ namespace boost
           }
           future_->set_value_at_thread_exit(r);
         }
-
+#else
+        void set_value_at_thread_exit(source_reference_type r)
+        {
+          if (future_.get()==0)
+          {
+              boost::throw_exception(promise_moved());
+          }
+          future_->set_value_at_thread_exit(r);
+        }
+#endif
         void set_value_at_thread_exit(BOOST_THREAD_RV_REF(R) r)
         {
           if (future_.get()==0)
@@ -2407,8 +2300,8 @@ namespace boost
             lazy_init();
             future_->set_wait_callback(f,this);
         }
-
     };
+
     template <>
     class promise<void>
     {
@@ -2671,7 +2564,6 @@ namespace boost
                     this->mark_exceptional_finish_internal(boost::copy_exception(boost::broken_promise()), lk);
                 }
             }
-
         };
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -3254,7 +3146,6 @@ namespace boost
             , typename boost::disable_if<is_same<typename decay<F>::type, packaged_task>, dummy* >::type=0
             )
         {
-          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
           typedef typename decay<F>::type FR;
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -3336,7 +3227,6 @@ namespace boost
         template <class F, class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, BOOST_THREAD_FWD_REF(F) f)
         {
-          //typedef typename remove_cv<typename remove_reference<F>::type>::type FR;
           typedef typename decay<F>::type FR;
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
@@ -3723,7 +3613,6 @@ namespace detail {
         } catch(...) {
           that->mark_exceptional_finish();
         }
-
       }
     };
 
@@ -3866,7 +3755,9 @@ namespace detail {
     // future<R> async(Executor& ex, F&&, ArgTypes&&...);
     ////////////////////////////////
 
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+//#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+#if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ! defined(BOOST_NO_CXX11_HDR_TUPLE)
+
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
 
   template <class Executor, class R, class... ArgTypes>
@@ -3900,22 +3791,6 @@ namespace detail {
         )
     ));
   }
-
-//  template <class R, class Executor, class F, class ...ArgTypes>
-//  BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
-//      typename decay<ArgTypes>::type...
-//  )>::type>
-//  async(Executor& ex, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args) {
-//    typedef detail::invoker_ret<R, typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
-//    typedef typename BF::result_type Rp;
-//
-//    return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
-//        BF(
-//            thread_detail::decay_copy(boost::forward<F>(f))
-//            , thread_detail::decay_copy(boost::forward<ArgTypes>(args))...
-//        )
-//    ));
-//  }
 
 #else // ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
@@ -4088,13 +3963,6 @@ namespace detail {
     p.set_exception(ex);
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
-//  template <typename T, typename E>
-//  BOOST_THREAD_FUTURE<T> make_ready_future(E ex)
-//  {
-//    promise<T> p;
-//    p.set_exception(boost::copy_exception(ex));
-//    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
-//  }
 
   template <typename T>
   BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr ex) {
@@ -4147,37 +4015,6 @@ namespace detail {
     return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
   }
 
-//  ////////////////////////////////
-//  // make_ready_shared_future
-//  ////////////////////////////////
-//  template <typename T>
-//  shared_future<typename decay<T>::type> make_ready_shared_future(BOOST_THREAD_FWD_REF(T) value)
-//  {
-//    typedef typename decay<T>::type future_type;
-//    promise<future_type> p;
-//    p.set_value(boost::forward<T>(value));
-//    return p.get_future().share();
-//  }
-//
-//
-//  inline shared_future<void> make_ready_shared_future()
-//  {
-//    promise<void> p;
-//    return BOOST_THREAD_MAKE_RV_REF(p.get_future().share());
-//
-//  }
-//
-//  ////////////////////////////////
-//  // make_exceptional_shared_future
-//  ////////////////////////////////
-//  template <typename T>
-//  shared_future<T> make_exceptional_shared_future(exception_ptr ex)
-//  {
-//    promise<T> p;
-//    p.set_exception(ex);
-//    return p.get_future().share();
-//  }
-
   ////////////////////////////////
   // detail::future_async_continuation_shared_state
   ////////////////////////////////
@@ -4202,7 +4039,6 @@ namespace detail
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>& ) {
-      //lock.unlock();
       this->thr_ = thread(&future_async_continuation_shared_state::run, this);
     }
 
@@ -4236,7 +4072,6 @@ namespace detail
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>& ) {
-      //lk.unlock();
       this->thr_ = thread(&future_async_continuation_shared_state::run, this);
     }
 
@@ -4275,7 +4110,6 @@ namespace detail
     }
 
     virtual void launch_continuation(boost::unique_lock<boost::mutex>& ) {
-      //execute(lk);
     }
 
     virtual void execute(boost::unique_lock<boost::mutex>& lck) {
@@ -4306,8 +4140,8 @@ namespace detail
     }
 
     virtual void launch_continuation(boost::unique_lock<boost::mutex>& ) {
-      //execute(lk);
     }
+
     virtual void execute(boost::unique_lock<boost::mutex>& lck) {
       try {
         Fp local_fuct=boost::move(continuation);
@@ -4403,60 +4237,6 @@ namespace detail
       );
     }
   }
-
-
-//#if 0 && defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
-//  template <typename R>
-//  template<typename RF>
-//  BOOST_THREAD_FUTURE<RF>
-//  BOOST_THREAD_FUTURE<R>::then(RF(*func)(BOOST_THREAD_FUTURE<R>&))
-//  {
-//
-//    typedef RF future_type;
-//
-//    if (this->future_)
-//    {
-//      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-//      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
-//          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func);
-//      if (ptr==0)
-//      {
-//        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
-//      }
-//      this->future_->set_continuation_ptr(ptr, lock);
-//      return ptr->get_future();
-//    } else {
-//      // fixme what to do when the future has no associated state?
-//      return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
-//    }
-//
-//  }
-//  template <typename R>
-//  template<typename RF>
-//  BOOST_THREAD_FUTURE<RF>
-//  BOOST_THREAD_FUTURE<R>::then(launch policy, RF(*func)(BOOST_THREAD_FUTURE<R>&))
-//  {
-//
-//    typedef RF future_type;
-//
-//    if (this->future_)
-//    {
-//      boost::unique_lock<boost::mutex> lock(this->future_->mutex);
-//      detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&) > *ptr =
-//          new detail::future_continuation<BOOST_THREAD_FUTURE<R>, future_type, RF(*)(BOOST_THREAD_FUTURE&)>(*this, func, policy);
-//      if (ptr==0)
-//      {
-//        return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
-//      }
-//      this->future_->set_continuation_ptr(ptr, lock);
-//      return ptr->get_future();
-//    } else {
-//      // fixme what to do when the future has no associated state?
-//      return BOOST_THREAD_MAKE_RV_REF(BOOST_THREAD_FUTURE<future_type>());
-//    }
-//
-//  }
-//#endif
 
   template <typename R>
   template <typename F>
@@ -4622,7 +4402,7 @@ namespace detail
   {
     typedef csbl::vector<F> vector_type;
     typedef typename F::value_type value_type;
-    csbl::vector<F> vec_;
+    vector_type vec_;
 
     static void run(future_when_all_vector_shared_state* that) {
       try {
@@ -4653,7 +4433,6 @@ namespace detail
         future_when_all_vector_shared_state::run(this);
         return;
       }
-
       this->thr_ = thread(&future_when_all_vector_shared_state::run, this);
     }
 
@@ -4682,12 +4461,10 @@ namespace detail
       }; //second part of magic unpacker
       init();
     }
-#else
 #endif
     ~future_when_all_vector_shared_state() {
       this->join();
     }
-
   };
 
   ////////////////////////////////
@@ -4698,7 +4475,7 @@ namespace detail
   {
     typedef csbl::vector<F> vector_type;
     typedef typename F::value_type value_type;
-    csbl::vector<F> vec_;
+    vector_type vec_;
 
     static void run(future_when_any_vector_shared_state* that)
     {
@@ -4767,23 +4544,136 @@ namespace detail
     ~future_when_any_vector_shared_state()    {
       this->join();
     }
-
   };
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  struct wait_for_all_fctr {
+    template <class ...T>
+    void operator()(T&&... v) {
+      boost::wait_for_all(boost::forward<T>(v)...);
+    }
+  };
+
+  struct wait_for_any_fctr {
+    template <class ...T>
+    void operator()(T&&... v) {
+      boost::wait_for_any(boost::forward<T>(v)...);
+    }
+  };
+
   template< typename T0, typename ...T>
   struct future_when_all_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
-    // TODO implement it
+    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    tuple_type tup_;
+    typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
+
+    static void run(future_when_all_tuple_shared_state* that) {
+      try {
+        // TODO make use of apply(that->tup_, boost::detail::wait_for_all_fctor());
+        that->wait_for_all(Index());
+
+        that->mark_finished_with_result(boost::move(that->tup_));
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+      } catch(thread_interrupted& ) {
+        that->mark_interrupted_finish();
+#endif
+      } catch(...) {
+        that->mark_exceptional_finish();
+      }
+    }
+
+    template <size_t ...Indices>
+    void wait_for_all(tuple_indices<Indices...>) {
+      return invoke<void>(wait_for_all_fctr(), csbl::get<Indices>(tup_)...);
+      //return wait_for_all_fctr()(csbl::get<Indices>(tup_)...);
+    }
+
+    bool run_deferred() {
+
+      bool res = false;
+      // bool res = accumulate(tup_, false, run_if_is_deferred());
+      return res;
+    }
+    void init() {
+      if (! run_deferred())
+      {
+        future_when_all_tuple_shared_state::run(this);
+        return;
+      }
+
+      this->thr_ = thread(&future_when_all_tuple_shared_state::run, this);
+    }
+  public:
+
+    future_when_all_tuple_shared_state(values_tag, BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) :
+      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+    {
+      init();
+    }
+    ~future_when_all_tuple_shared_state() {
+      this->join();
+    }
+
   };
   template< typename T0, typename ...T>
   struct future_when_any_tuple_shared_state: future_async_shared_state_base<
     csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
   >
   {
-    // TODO implement it
+    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    tuple_type tup_;
+    typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
+
+    static void run(future_when_any_tuple_shared_state* that)
+    {
+      try {
+        // TODO make use of apply(that->tup_, wait_for_any_fctr);
+        that->wait_for_any(Index());
+
+        that->mark_finished_with_result(boost::move(that->tup_));
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+      } catch(thread_interrupted& ) {
+        that->mark_interrupted_finish();
+#endif
+      } catch(...) {
+        that->mark_exceptional_finish();
+      }
+    }
+    template <size_t ...Indices>
+    void wait_for_any(tuple_indices<Indices...>) {
+      return invoke<void>(wait_for_any_fctr(), csbl::get<Indices>(tup_)...);
+      //return wait_for_any_fctr()(csbl::get<Indices>(tup_)...);
+    }
+    bool run_deferred() {
+      bool res = false;
+      // bool res = apply_any(tup_, run_if_is_deferred_or_ready());
+      return res;
+    }
+    void init() {
+      if (run_deferred())
+      {
+        future_when_any_tuple_shared_state::run(this);
+        return;
+      }
+
+      this->thr_ = thread(&future_when_any_tuple_shared_state::run, this);
+    }
+
+  public:
+    future_when_any_tuple_shared_state(values_tag,
+        BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures
+    ) :
+      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+    {
+      init();
+    }
+
+    ~future_when_any_tuple_shared_state()    {
+      this->join();
+    }
   };
 #endif
 
@@ -4806,7 +4696,6 @@ namespace detail
     typedef detail::future_when_all_vector_shared_state<value_type> factory_all_type;
     typedef detail::future_when_any_vector_shared_state<value_type> factory_any_type;
   };
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   template< typename T0, typename ...T>
   struct when_type_impl<false, T0, T...>
   {
@@ -4814,7 +4703,6 @@ namespace detail
     typedef detail::future_when_all_tuple_shared_state<T0, T...> factory_all_type;
     typedef detail::future_when_any_tuple_shared_state<T0, T...> factory_any_type;
   };
-//#endif
 
   template< typename T0, typename ...T>
   struct when_type : when_type_impl<are_same<T0, T...>::value, T0, T...> {};
@@ -4836,11 +4724,9 @@ namespace detail
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_all() {
     return make_ready_future(csbl::tuple<>());
   }
-//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
@@ -4870,11 +4756,9 @@ namespace detail
     return BOOST_THREAD_FUTURE<container_type>(h);
   }
 
-//#if ! defined(BOOST_NO_CXX11_HDR_TUPLE)
   inline BOOST_THREAD_FUTURE<csbl::tuple<> > when_any() {
     return make_ready_future(csbl::tuple<>());
   }
-//#endif
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>

@@ -37,7 +37,15 @@ namespace detail
     // Constructors/Assignment/Destructors
     virtual ~queue_base_copyable_only() {};
 
+    // Observers
+    virtual bool empty() const = 0;
+    virtual bool full() const = 0;
+    virtual size_type size() const = 0;
+    virtual bool closed() const = 0;
+
     // Modifiers
+    virtual void close() = 0;
+
     virtual void push_back(const value_type& x) = 0;
 
     virtual void pull_front(value_type&) = 0;
