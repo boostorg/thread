@@ -27,11 +27,6 @@
 namespace boost
 {
 
-
-  struct sync_queue_is_closed : std::exception
-  {
-  };
-
   template <typename ValueType>
   class sync_bounded_queue
   {

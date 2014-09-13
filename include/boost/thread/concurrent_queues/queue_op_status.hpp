@@ -24,6 +24,11 @@ namespace concurrent
   BOOST_SCOPED_ENUM_DECLARE_BEGIN(queue_op_status)
   { success = 0, empty, full, closed, busy }
   BOOST_SCOPED_ENUM_DECLARE_END(queue_op_status)
+
+  struct sync_queue_is_closed : std::exception
+  {
+  };
+
 }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -31,7 +36,8 @@ namespace concurrent
   BOOST_CONSTEXPR_OR_CONST no_block_tag no_block = {};
 #endif
 
-using concurrent::queue_op_status;
+  using concurrent::queue_op_status;
+  using concurrent::sync_queue_is_closed;
 
 }
 

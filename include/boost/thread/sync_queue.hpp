@@ -21,7 +21,6 @@
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
 
-#include <boost/thread/sync_bounded_queue.hpp>
 #include <boost/thread/csbl/deque.hpp>
 
 #include <boost/config/abi_prefix.hpp>
@@ -95,6 +94,7 @@ namespace boost
 
     inline underlying_queue_type underlying_queue() {
       lock_guard<mutex> lk(mtx_);
+      waiting_empty_ = 0;
       return boost::move(data_);
     }
 
