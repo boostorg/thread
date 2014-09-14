@@ -56,6 +56,12 @@ public:
     {
       BOOST_THREAD_RV(other).i=0;
     }
+    X& operator=(BOOST_THREAD_RV_REF(X) other)
+    {
+      i=BOOST_THREAD_RV(other).i;
+      BOOST_THREAD_RV(other).i=0;
+      return *this;
+    }
     ~X()
     {}
 };

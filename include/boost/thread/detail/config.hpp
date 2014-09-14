@@ -354,6 +354,12 @@
 
 #endif
 
+
+//#if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES || defined BOOST_THREAD_USES_MOVE
+#if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#define BOOST_THREAD_FUTURE_USES_OPTIONAL
+#endif
+
 #if BOOST_WORKAROUND(__BORLANDC__, < 0x600)
 #  pragma warn -8008 // Condition always true/false
 #  pragma warn -8080 // Identifier declared but never used

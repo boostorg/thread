@@ -46,6 +46,17 @@ struct A
       rhs.value=0;
     }
   }
+  A& operator=(BOOST_THREAD_RV_REF(A) rhs)
+  {
+    if(rhs.value==0)
+    throw 9;
+    else
+    {
+      value=rhs.value;
+      rhs.value=0;
+    }
+    return *this;
+  }
   int value;
 };
 
