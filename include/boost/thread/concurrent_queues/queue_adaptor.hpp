@@ -146,9 +146,19 @@ namespace detail
 
 
   template <class Q, class T,
- #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined __GNUC__
+#if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
+          bool Copyable = is_copy_constructible<T>::value,
+          bool Movable = true
+#else
           bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
           bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
+#endif
+#else
+          bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+          bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
+#endif
 #else
           bool Copyable = is_copy_constructible<T>::value,
           bool Movable = has_move_emulation_enabled<T>::value
