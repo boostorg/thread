@@ -60,12 +60,10 @@ namespace concurrent
     queue_op_status wait_push(const value_type& x) { return queue->wait_push_back(x); }
     queue_op_status wait_pull(value_type& x) { return queue->wait_pull_back(x); }
 
-//#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     void push(BOOST_THREAD_RV_REF(value_type) x) { queue->push_back(boost::move(x)); }
     queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->try_push_back(boost::move(x)); }
     queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->nonblocking_push_back(boost::move(x)); }
     queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->wait_push_back(boost::move(x)); }
-//#endif
   };
 
   template <typename Queue>
@@ -104,28 +102,34 @@ namespace concurrent
 
     queue_op_status wait_push(const value_type& x) { return queue->wait_push_front(x); }
     queue_op_status wait_pull(value_type& x) { return queue->wait_pull_front(x); }
-//#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     void push(BOOST_THREAD_RV_REF(value_type) x) { queue->push_front(forward<value_type>(x)); }
     queue_op_status try_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->try_push_front(forward<value_type>(x)); }
     queue_op_status nonblocking_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->nonblocking_push_front(forward<value_type>(x)); }
     queue_op_status wait_push(BOOST_THREAD_RV_REF(value_type) x) { return queue->wait_push_front(forward<value_type>(x)); }
-//#endif
 
   };
 
-#if 0
+#if ! defined BOOST_NO_CXX11_TEMPLATE_ALIASES
+
   template <class T>
   using queue_back = queue_back_view<queue_base<T> > ;
   template <class T>
   using queue_front = queue_front_view<queue_base<T> > ;
+
 #else
+
   template <class T>
-  struct queue_back {
-    typedef queue_back_view<queue_base<T> > type;
+  struct queue_back : queue_back_view<queue_base<T> >
+  {
+    typedef queue_back_view<queue_base<T> > base_type;
+    queue_back(queue_base<T>& q) BOOST_NOEXCEPT : base_type(q) {}
   };
   template <class T>
-  struct queue_front {
-    typedef queue_front_view<queue_base<T> > type;
+  struct queue_front : queue_front_view<queue_base<T> >
+  {
+    typedef queue_front_view<queue_base<T> > base_type;
+    queue_front(queue_base<T>& q) BOOST_NOEXCEPT : base_type(q) {}
+
   };
 
 #endif

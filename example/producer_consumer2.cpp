@@ -25,7 +25,7 @@
 #include <boost/static_assert.hpp>
 #include <boost/type_traits.hpp>
 
-void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
+void producer(the_ostream &mos, boost::queue_back<int> sbq)
 {
   using namespace boost;
   try {
@@ -49,7 +49,7 @@ void producer(the_ostream &mos, boost::queue_back<int>::type sbq)
 
 void consumer(
     the_ostream &mos,
-    boost::queue_front<int>::type sbq)
+    boost::queue_front<int> sbq)
 {
   using namespace boost;
   try {
@@ -72,7 +72,7 @@ void consumer(
     mos << "exception !!!\n";
   }
 }
-void consumer2(the_ostream &mos, boost::queue_front<int>::type sbq)
+void consumer2(the_ostream &mos, boost::queue_front<int> sbq)
 {
   using namespace boost;
   try {
@@ -92,7 +92,7 @@ void consumer2(the_ostream &mos, boost::queue_front<int>::type sbq)
     mos << "exception !!!\n";
   }
 }
-void consumer3(the_ostream &mos, boost::queue_front<int>::type sbq)
+void consumer3(the_ostream &mos, boost::queue_front<int> sbq)
 {
   using namespace boost;
   try {
@@ -131,9 +131,9 @@ int main()
 
   {
     mcout << "begin of main" << std::endl;
-    scoped_thread<> t11(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>::type(sbq)));
-    scoped_thread<> t12(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>::type(sbq)));
-    scoped_thread<> t2(boost::thread(consumer, boost::ref(mcout), concurrent::queue_front<int>::type(sbq)));
+    scoped_thread<> t11(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>(sbq)));
+    scoped_thread<> t12(boost::thread(producer, boost::ref(mcerr), concurrent::queue_back<int>(sbq)));
+    scoped_thread<> t2(boost::thread(consumer, boost::ref(mcout), concurrent::queue_front<int>(sbq)));
 
     this_thread::sleep_for(chrono::seconds(1));
 
