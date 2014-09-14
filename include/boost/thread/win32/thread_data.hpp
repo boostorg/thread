@@ -95,7 +95,7 @@ namespace boost
         struct BOOST_THREAD_DECL thread_data_base
         {
             long count;
-            
+
             // Win32 threading APIs are not available in store apps so
             // use abstraction on top of Windows::System::Threading.
 #if BOOST_PLAT_WINDOWS_RUNTIME
@@ -187,8 +187,9 @@ namespace boost
             timeout(uintmax_t milliseconds_):
                 start(win32::GetTickCount64_()()),
                 milliseconds(milliseconds_),
-                relative(true),
-                abs_time(boost::get_system_time())
+                relative(true)
+            //,
+            //    abs_time(boost::get_system_time())
             {}
 
             timeout(boost::system_time const& abs_time_):
