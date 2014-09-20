@@ -15,7 +15,7 @@
 // <boost/thread/future.hpp>
 
 // template <class T, class Ts>
-// future<vector<T>> when_all(T&&);
+// future<tuple<T>> when_all(T&&);
 
 #include <boost/config.hpp>
 
@@ -50,88 +50,82 @@ int main()
   { // invalid future copy-constructible
     boost::future<int> f1;
     BOOST_TEST(! f1.valid());
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     // has exception
-    //BOOST_TEST(res[0].get() == 123);
+    //BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // is_ready future copy-constructible
     boost::future<int> f1 = boost::make_ready_future(123);
     BOOST_TEST(f1.valid());
     BOOST_TEST(f1.is_ready());
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
     if (0) // todo FAILS not yet implemented
     BOOST_TEST(all.is_ready());
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // is_ready shared_future copy-constructible
     boost::shared_future<int> f1 = boost::make_ready_future(123).share();
     BOOST_TEST(f1.valid());
     BOOST_TEST(f1.is_ready());
-    boost::future<boost::csbl::vector<boost::shared_future<int> > > all = boost::when_all(f1);
+    boost::future<boost::csbl::tuple<boost::shared_future<int> > > all = boost::when_all(f1);
     BOOST_TEST(f1.valid());
     BOOST_TEST(all.valid());
     if (0) // todo FAILS not yet implemented
     BOOST_TEST(all.is_ready());
-    boost::csbl::vector<boost::shared_future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::shared_future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // packaged_task future copy-constructible
     boost::packaged_task<int()> pt1(&p1);
     boost::future<int> f1 = pt1.get_future();
     BOOST_TEST(f1.valid());
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
     pt1();
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // packaged_task shared_future copy-constructible
     boost::packaged_task<int()> pt1(&p1);
     boost::shared_future<int> f1 = pt1.get_future().share();
     BOOST_TEST(f1.valid());
-    boost::future<boost::csbl::vector<boost::shared_future<int> > > all = boost::when_all(f1);
+    boost::future<boost::csbl::tuple<boost::shared_future<int> > > all = boost::when_all(f1);
     BOOST_TEST(f1.valid());
     BOOST_TEST(all.valid());
     pt1();
-    boost::csbl::vector<boost::shared_future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::shared_future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // packaged_task future copy-constructible
     boost::packaged_task<int()> pt1(&thr);
     boost::future<int> f1 = pt1.get_future();
     BOOST_TEST(f1.valid());
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
     pt1();
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     try {
-      res[0].get();
+      boost::csbl::get<0>(res).get();
       BOOST_TEST(false);
     } catch (std::logic_error& ex) {
       BOOST_TEST(ex.what() == std::string("123"));
@@ -142,51 +136,47 @@ int main()
   { // async future copy-constructible
     boost::future<int> f1 = boost::async(boost::launch::async, &p1);
     BOOST_TEST(f1.valid());
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   { // async shared_future copy-constructible
     boost::shared_future<int> f1 = boost::async(boost::launch::async, &p1).share();
     BOOST_TEST(f1.valid());
-    boost::future<boost::csbl::vector<boost::shared_future<int> > > all = boost::when_all(f1);
+    boost::future<boost::csbl::tuple<boost::shared_future<int> > > all = boost::when_all(f1);
     BOOST_TEST(f1.valid());
     BOOST_TEST(all.valid());
-    boost::csbl::vector<boost::shared_future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::shared_future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
 #if ! defined BOOST_NO_CXX11_DECLTYPE_N3276
   // fixme darwin-4.8.0_11 terminate called without an active exception
   { // deferred future copy-constructible
     boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
-    boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(boost::move(f1));
+    boost::future<boost::csbl::tuple<boost::future<int> > > all = boost::when_all(boost::move(f1));
     BOOST_TEST(! f1.valid());
     BOOST_TEST(all.valid());
-    boost::csbl::vector<boost::future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
   // fixme darwin-4.8.0_11 terminate called without an active exception
   { // deferred shared_future copy-constructible
     boost::shared_future<int> f1 = boost::async(boost::launch::deferred, &p1).share();
-    boost::future<boost::csbl::vector<boost::shared_future<int> > > all = boost::when_all(f1);
+    boost::future<boost::csbl::tuple<boost::shared_future<int> > > all = boost::when_all(f1);
     BOOST_TEST(f1.valid());
     BOOST_TEST(all.valid());
-    boost::csbl::vector<boost::shared_future<int> > res = all.get();
-    BOOST_TEST(res.size() == 1);
-    BOOST_TEST(res[0].valid());
-    BOOST_TEST(res[0].is_ready());
-    BOOST_TEST(res[0].get() == 123);
+    boost::csbl::tuple<boost::shared_future<int> > res = all.get();
+    BOOST_TEST(boost::csbl::get<0>(res).valid());
+    BOOST_TEST(boost::csbl::get<0>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
   }
 #endif
 #endif

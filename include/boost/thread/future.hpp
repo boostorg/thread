@@ -4569,10 +4569,10 @@ namespace detail
 
   template< typename T0, typename ...T>
   struct future_when_all_tuple_shared_state: future_async_shared_state_base<
-    csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+    csbl::tuple<T0, T... >
   >
   {
-    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    typedef csbl::tuple<T0, T... > tuple_type;
     tuple_type tup_;
     typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
 
@@ -4599,8 +4599,8 @@ namespace detail
 
     bool run_deferred() {
 
-      bool res = false;
-      // bool res = accumulate(tup_, false, run_if_is_deferred());
+      bool res = true;
+      // todo bool res = accumulate(tup_, false, run_if_is_deferred());
       return res;
     }
     void init() {
@@ -4613,9 +4613,9 @@ namespace detail
       this->thr_ = thread(&future_when_all_tuple_shared_state::run, this);
     }
   public:
-
-    future_when_all_tuple_shared_state(values_tag, BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) :
-      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+    template< typename F, typename ...Fs>
+    future_when_all_tuple_shared_state(values_tag, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(Fs) ... futures) :
+      tup_(boost::csbl::make_tuple(boost::forward<F>(f), boost::forward<Fs>(futures)...))
     {
       init();
     }
@@ -4626,10 +4626,10 @@ namespace detail
   };
   template< typename T0, typename ...T>
   struct future_when_any_tuple_shared_state: future_async_shared_state_base<
-    csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... >
+    csbl::tuple<T0, T... >
   >
   {
-    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > tuple_type;
+    typedef csbl::tuple<T0, T... > tuple_type;
     tuple_type tup_;
     typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
 
@@ -4654,8 +4654,9 @@ namespace detail
       //return wait_for_any_fctr()(csbl::get<Indices>(tup_)...);
     }
     bool run_deferred() {
-      bool res = false;
-      // bool res = apply_any(tup_, run_if_is_deferred_or_ready());
+      //bool res = false;
+      bool res = csbl::get<0>(tup_).run_if_is_deferred_or_ready();
+      // todo bool res = apply_any(tup_, run_if_is_deferred_or_ready());
       return res;
     }
     void init() {
@@ -4669,10 +4670,11 @@ namespace detail
     }
 
   public:
+    template< typename F, typename ...Fs>
     future_when_any_tuple_shared_state(values_tag,
-        BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures
+        BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(Fs) ... futures
     ) :
-      tup_(make_tuple(boost::forward<T0>(f), boost::forward<T>(futures)...))
+      tup_(boost::csbl::make_tuple(boost::forward<F>(f), boost::forward<Fs>(futures)...))
     {
       init();
     }
@@ -4683,36 +4685,6 @@ namespace detail
   };
 #endif
 
-#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-  template< typename ...T>
-  struct are_same : true_type {};
-  template< typename T0 >
-  struct are_same<T0> : true_type {};
-  template< typename T0, typename T1, typename ...T>
-  struct are_same<T0, T1, T...> : integral_constant<bool, is_same<T0,T1>::value && are_same<T1, T...>::value> {};
-
-  template< bool AreSame, typename T0, typename ...T>
-  struct when_type_impl;
-
-  template< typename T0, typename ...T>
-  struct when_type_impl<true, T0, T...>
-  {
-    typedef csbl::vector<typename decay<T0>::type> container_type;
-    typedef typename container_type::value_type value_type;
-    typedef detail::future_when_all_vector_shared_state<value_type> factory_all_type;
-    typedef detail::future_when_any_vector_shared_state<value_type> factory_any_type;
-  };
-  template< typename T0, typename ...T>
-  struct when_type_impl<false, T0, T...>
-  {
-    typedef csbl::tuple<BOOST_THREAD_FUTURE<typename T0::value_type>, BOOST_THREAD_FUTURE<typename T::value_type>... > container_type;
-    typedef detail::future_when_all_tuple_shared_state<T0, T...> factory_all_type;
-    typedef detail::future_when_any_tuple_shared_state<T0, T...> factory_any_type;
-  };
-
-  template< typename T0, typename ...T>
-  struct when_type : when_type_impl<are_same<T0, T...>::value, T0, T...> {};
-#endif
 }
 
   template< typename InputIterator>
@@ -4736,10 +4708,10 @@ namespace detail
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
-  BOOST_THREAD_FUTURE<typename detail::when_type<T0, T...>::container_type>
+  BOOST_THREAD_FUTURE<csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> >
   when_all(BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) {
-    typedef  typename detail::when_type<T0, T...>::container_type container_type;
-    typedef  typename detail::when_type<T0, T...>::factory_all_type factory_type;
+    typedef csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> container_type;
+    typedef detail::future_when_all_tuple_shared_state<typename decay<T0>::type, typename decay<T>::type...> factory_type;
 
     shared_ptr<factory_type>
         h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
@@ -4768,10 +4740,10 @@ namespace detail
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template< typename T0, typename ...T>
-  BOOST_THREAD_FUTURE<typename detail::when_type<T0, T...>::container_type>
+  BOOST_THREAD_FUTURE<csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> >
   when_any(BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) {
-    typedef  typename detail::when_type<T0, T...>::container_type container_type;
-    typedef  typename detail::when_type<T0, T...>::factory_any_type factory_type;
+    typedef csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> container_type;
+    typedef detail::future_when_any_tuple_shared_state<typename decay<T0>::type, typename decay<T>::type...> factory_type;
 
     shared_ptr<factory_type>
         h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
