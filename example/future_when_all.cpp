@@ -151,7 +151,6 @@ int main()
         BOOST_THREAD_LOG
           << boost::csbl::get<1>(res).get() <<" " << BOOST_THREAD_END_LOG;
       }
-#if 0
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > v;
@@ -168,7 +167,6 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#endif
     }
     catch (std::exception& ex)
     {
@@ -277,7 +275,6 @@ int main()
           << boost::csbl::get<1>(res).get() <<" " << BOOST_THREAD_END_LOG;
       }
 #endif
-#if 0
       {
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > v;
@@ -294,7 +291,6 @@ int main()
         BOOST_THREAD_LOG
           << res[1].get() <<" " << BOOST_THREAD_END_LOG;
       }
-#endif
     }
     catch (std::exception& ex)
     {
