@@ -40,7 +40,7 @@ int thr()
 }
 int p2()
 {
-  boost::this_thread::sleep_for(boost::chrono::seconds(1));
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
   return 321;
 }
 
@@ -196,7 +196,7 @@ int main()
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
-    //BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(! boost::csbl::get<1>(res).is_ready());
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
   { // async shared_future copy-constructible
@@ -213,7 +213,7 @@ int main()
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
-    //BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(! boost::csbl::get<1>(res).is_ready());
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
   { // async future copy-constructible
@@ -248,7 +248,7 @@ int main()
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
-    //BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(! boost::csbl::get<1>(res).is_ready());
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
   // fixme darwin-4.8.0_11 terminate called without an active exception
@@ -264,7 +264,7 @@ int main()
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
     BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
-    //BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(! boost::csbl::get<1>(res).is_ready());
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
 #endif

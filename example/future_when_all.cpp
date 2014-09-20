@@ -159,7 +159,7 @@ int main()
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1b));
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
-        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(v.begin(), v.begin());
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_all(v.begin(), v.end());
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > res = all.get();
         BOOST_THREAD_LOG
@@ -283,7 +283,7 @@ int main()
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         v.push_back(boost::async(boost::launch::async, &p1b));
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
-        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(v.begin(), v.begin());
+        boost::future<boost::csbl::vector<boost::future<int> > > all = boost::when_any(v.begin(), v.end());
         BOOST_THREAD_LOG <<  BOOST_THREAD_END_LOG;
         boost::csbl::vector<boost::future<int> > res = all.get();
         BOOST_THREAD_LOG

@@ -418,7 +418,7 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-run2-noit ./sync/futures/when_all/none_pass.cpp : when_all__none_p ]
           [ thread-run2-noit ./sync/futures/when_all/one_pass.cpp : when_all__one_p ]
-          #[ thread-run2-noit ./sync/futures/when_all/container_pass.cpp : when_all__container_p ]
+          [ thread-run2-noit ./sync/futures/when_all/iterators_pass.cpp : when_all__iterators_p ]
           [ thread-run2-noit ./sync/futures/when_all/variadic_pass.cpp : when_all__variadic_p ]
     ;
 
@@ -427,7 +427,7 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-run2-noit ./sync/futures/when_any/none_pass.cpp : when_any__none_p ]
           [ thread-run2-noit ./sync/futures/when_any/one_pass.cpp : when_any__one_p ]
-          #[ thread-run2-noit ./sync/futures/when_any/container_pass.cpp : when_any__container_p ]
+          [ thread-run2-noit ./sync/futures/when_any/iterators_pass.cpp : when_any__iterators_p ]
           [ thread-run2-noit ./sync/futures/when_any/variadic_pass.cpp : when_any__variadic_p ]
     ;
 
