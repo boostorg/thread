@@ -413,24 +413,22 @@ rule thread-compile ( sources : reqs * : name )
     ;
 
 
-    explicit ts_when_all ;
+    #explicit ts_when_all ;
     test-suite ts_when_all
     :
           [ thread-run2-noit ./sync/futures/when_all/none_pass.cpp : when_all__none_p ]
           [ thread-run2-noit ./sync/futures/when_all/one_pass.cpp : when_all__one_p ]
           #[ thread-run2-noit ./sync/futures/when_all/container_pass.cpp : when_all__container_p ]
-          [ thread-run2-noit ./sync/futures/when_all/variadic_homo_pass.cpp : when_all__variadic_homo_p ]
-          #[ thread-run2-noit ./sync/futures/when_all/variadic_hetero_pass.cpp : when_all__variadic_hetero_p ]
+          [ thread-run2-noit ./sync/futures/when_all/variadic_pass.cpp : when_all__variadic_p ]
     ;
 
-    explicit ts_when_any ;
+    #explicit ts_when_any ;
     test-suite ts_when_any
     :
           [ thread-run2-noit ./sync/futures/when_any/none_pass.cpp : when_any__none_p ]
           [ thread-run2-noit ./sync/futures/when_any/one_pass.cpp : when_any__one_p ]
           #[ thread-run2-noit ./sync/futures/when_any/container_pass.cpp : when_any__container_p ]
-          #[ thread-run2-noit ./sync/futures/when_any/variadic_home_pass.cpp : when_any__variadic_homo_p ]
-          #[ thread-run2-noit ./sync/futures/when_any/variadic_hetero_pass.cpp : when_any__variadic_hetero_p ]
+          [ thread-run2-noit ./sync/futures/when_any/variadic_pass.cpp : when_any__variadic_p ]
     ;
 
     #explicit ts_lock_guard ;
@@ -885,7 +883,6 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
           #[ thread-run test_10340.cpp ]
-          [ thread-run2 ../example/producer_consumer2.cpp : ex_producer_consumer3 ]
     ;
 
 }
