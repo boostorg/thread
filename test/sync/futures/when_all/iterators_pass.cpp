@@ -330,6 +330,7 @@ int main()
     BOOST_TEST(res[1].get() == 321);
   }
 #endif
+#if ! defined BOOST_NO_CXX11_LAMBDAS
     { // async futures copy-constructible then()
       boost::future<int> f1 = boost::async(boost::launch::async, &p1);
       BOOST_TEST(f1.valid());
@@ -352,6 +353,7 @@ int main()
       BOOST_TEST(sum.valid());
       BOOST_TEST(sum.get() == 444);
     }
+#endif
 #endif
 
   return boost::report_errors();
