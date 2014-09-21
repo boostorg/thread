@@ -154,7 +154,15 @@ namespace detail
 #else
           bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
           bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
-#endif
+#endif // __GNUC__
+#elif defined _MSC_VER
+#if _MSC_VER < 1700
+          bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+          bool Movable = true
+#else
+          bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+          bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
+#endif // _MSC_VER
 #else
           bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
           bool Movable = std::is_move_constructible<T>::value && std::is_move_assignable<T>::value
