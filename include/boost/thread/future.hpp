@@ -4567,13 +4567,10 @@ namespace detail
     }
   };
 
-  template< typename T0, typename ...T>
-  struct future_when_all_tuple_shared_state: future_async_shared_state_base<
-    csbl::tuple<T0, T... >
-  >
+  template< typename Tuple, typename T0, typename ...T>
+  struct future_when_all_tuple_shared_state: future_async_shared_state_base<Tuple>
   {
-    typedef csbl::tuple<T0, T... > tuple_type;
-    tuple_type tup_;
+    Tuple tup_;
     typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
 
     static void run(future_when_all_tuple_shared_state* that) {
@@ -4624,13 +4621,10 @@ namespace detail
     }
 
   };
-  template< typename T0, typename ...T>
-  struct future_when_any_tuple_shared_state: future_async_shared_state_base<
-    csbl::tuple<T0, T... >
-  >
+  template< typename Tuple, typename T0, typename ...T >
+  struct future_when_any_tuple_shared_state: future_async_shared_state_base<Tuple>
   {
-    typedef csbl::tuple<T0, T... > tuple_type;
-    tuple_type tup_;
+    Tuple tup_;
     typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
 
     static void run(future_when_any_tuple_shared_state* that)
@@ -4711,7 +4705,7 @@ namespace detail
   BOOST_THREAD_FUTURE<csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> >
   when_all(BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) {
     typedef csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> container_type;
-    typedef detail::future_when_all_tuple_shared_state<typename decay<T0>::type, typename decay<T>::type...> factory_type;
+    typedef detail::future_when_all_tuple_shared_state<container_type, typename decay<T0>::type, typename decay<T>::type...> factory_type;
 
     shared_ptr<factory_type>
         h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
@@ -4743,7 +4737,7 @@ namespace detail
   BOOST_THREAD_FUTURE<csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> >
   when_any(BOOST_THREAD_FWD_REF(T0) f, BOOST_THREAD_FWD_REF(T) ... futures) {
     typedef csbl::tuple<typename decay<T0>::type, typename decay<T>::type...> container_type;
-    typedef detail::future_when_any_tuple_shared_state<typename decay<T0>::type, typename decay<T>::type...> factory_type;
+    typedef detail::future_when_any_tuple_shared_state<container_type, typename decay<T0>::type, typename decay<T>::type...> factory_type;
 
     shared_ptr<factory_type>
         h(new factory_type(detail::values_tag_value, boost::forward<T0>(f), boost::forward<T>(futures)...));
