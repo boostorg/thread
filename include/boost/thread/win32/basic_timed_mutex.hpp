@@ -203,7 +203,12 @@ namespace boost
 
                   do
                   {
-                      chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
+                      chrono::time_point<chrono::system_clock, chrono::system_clock::duration> now = chrono::system_clock::now();
+                      if (tp<=now) {
+                        BOOST_INTERLOCKED_DECREMENT(&active_count);
+                        return false;
+                      }
+                      chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-now);
 
                       if(win32::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
                       {
