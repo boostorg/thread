@@ -34,7 +34,7 @@ namespace boost
       if (--count_ == 0)
       {
         ++generation_;
-        lk.unlock();
+        //lk.unlock();
         cond_.notify_all();
         return true;
       }
