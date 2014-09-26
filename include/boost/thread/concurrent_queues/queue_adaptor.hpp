@@ -157,7 +157,7 @@ namespace detail
 #endif // __GNUC__
 #elif defined _MSC_VER
 #if _MSC_VER < 1700
-          bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
+          bool Copyable = is_copy_constructible<T>::value,
           bool Movable = true
 #else
           bool Copyable = std::is_copy_constructible<T>::value && std::is_copy_assignable<T>::value,
