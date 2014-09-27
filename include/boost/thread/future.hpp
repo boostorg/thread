@@ -4590,8 +4590,11 @@ namespace detail
 
     template <size_t ...Indices>
     void wait_for_all(tuple_indices<Indices...>) {
+#if defined BOOST_THREAD_PROVIDES_INVOKE
       return invoke<void>(wait_for_all_fctr(), csbl::get<Indices>(tup_)...);
-      //return wait_for_all_fctr()(csbl::get<Indices>(tup_)...);
+#else
+      return wait_for_all_fctr()(csbl::get<Indices>(tup_)...);
+#endif
     }
 
     bool run_deferred() {
@@ -4644,8 +4647,11 @@ namespace detail
     }
     template <size_t ...Indices>
     void wait_for_any(tuple_indices<Indices...>) {
+#if defined BOOST_THREAD_PROVIDES_INVOKE
       return invoke<void>(wait_for_any_fctr(), csbl::get<Indices>(tup_)...);
-      //return wait_for_any_fctr()(csbl::get<Indices>(tup_)...);
+#else
+      return wait_for_any_fctr()(csbl::get<Indices>(tup_)...);
+#endif
     }
     bool run_deferred() {
       //bool res = false;
