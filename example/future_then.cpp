@@ -47,6 +47,7 @@ int p2(boost::future<int> f)
     BOOST_ASSERT(false);
   }
   BOOST_THREAD_LOG << "P2>" << BOOST_THREAD_END_LOG;
+  return 0;
 }
 int p2s(boost::shared_future<int> f)
 {
@@ -67,6 +68,7 @@ int p2s(boost::shared_future<int> f)
     BOOST_ASSERT(false);
   }
   BOOST_THREAD_LOG << "P2S>" << BOOST_THREAD_END_LOG;
+  return 0;
 }
 
 int main()
