@@ -79,56 +79,54 @@
     struct uses_allocator<packaged_task <S>, Alloc>;
 
     template <class F>
-    future<typename result_of<typename decay<F>::type()>::type>
-    async(F f);
+      future<typename result_of<typename decay<F>::type()>::type>
+      async(F f);
     template <class F>
-    future<typename result_of<typename decay<F>::type()>::type>
-    async(launch policy, F f);
+      future<typename result_of<typename decay<F>::type()>::type>
+      async(launch policy, F f);
 
     template <class F, class... Args>
-    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(F&& f, Args&&... args);
+      future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(F&& f, Args&&... args);
     template <class F, class... Args>
-    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(launch policy, F&& f, Args&&... args);
+      future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(launch policy, F&& f, Args&&... args);
     template <class Executor, class F, class... Args>
-    future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(Executor &ex, F&& f, Args&&... args);
+      future<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(Executor &ex, F&& f, Args&&... args);
     
     template<typename Iterator>
-    void wait_for_all(Iterator begin,Iterator end); // EXTENSION
+      void wait_for_all(Iterator begin,Iterator end); // EXTENSION
     template<typename F1,typename... FS>
-    void wait_for_all(F1& f1,Fs&... fs); // EXTENSION
+      void wait_for_all(F1& f1,Fs&... fs); // EXTENSION
 
     template<typename Iterator>
-    Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
+      Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
     template<typename F1,typename... Fs>
-    unsigned wait_for_any(F1& f1,Fs&... fs); // EXTENSION
+      unsigned wait_for_any(F1& f1,Fs&... fs); // EXTENSION
     
     template <class InputIterator>
-    see below when_all(InputIterator first, InputIterator last);
+      future<vector<typename InputIterator::value_type::value_type>> 
+      when_all(InputIterator first, InputIterator last);
     template <typename... T>
-    see below when_all(T&&... futures);
+      future<tuple<decay_t<T>...> when_all(T&&... futures);
     template <class InputIterator>
-    see below when_any(InputIterator first, InputIterator last); // EXTENSION
+      future<vector<typename InputIterator::value_type::value_type>> 
+      when_any(InputIterator first, InputIterator last); // EXTENSION
     template <typename... T>
-    see below when_any(T&&... futures);
+      future<tuple<decay_t<T>...> when_any(T&&... futures);
 
     template <typename T>
-    future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
+      future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
     future<void> make_future();  // DEPRECATED
     
     template <typename T>
-    future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
+      future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
-    //template <typename T>
-    //future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
-    //template <typename T, typename E>
-    //future<T> make_ready_future(E ex);  // DEPRECATED
 
     exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
     template <typename E>
-    exceptional_ptr make_exceptional(E ex);  // EXTENSION
+      exceptional_ptr make_exceptional(E ex);  // EXTENSION
     exceptional_ptr make_exceptional();  // EXTENSION
 
     
@@ -892,6 +890,8 @@ second parameter.]]
 
 [[Effects:] [
 
+All the functions create a shared state that is associated with the returned future object. The further behavior of the functions is as follows. 
+
 - The continuation is called when the object's shared state is ready (has a value or exception stored).
 
 - The continuation launches according to the specified policy or scheduler.
@@ -899,9 +899,11 @@ second parameter.]]
 - When the scheduler or launch policy is not provided the continuation inherits the
 parent's launch policy or scheduler.
 
+- Any value returned from the continuation is stored as the result in the shared state of the resulting `future`. Any exception propagated from the execution of the continuation is stored as the exceptional result in the shared state of the resulting `future`. 
+
 - If the parent was created with `promise<<` or with a `packaged_task<>` (has no associated launch policy), the 
 continuation behaves the same as the third overload with a policy argument of `launch::async | launch::deferred` and 
-the same argument for func.
+the same argument for `func`.
 
 - If the parent has a policy of `launch::deferred` and the continuation does not have a specified launch policy or 
 scheduler, then the parent is filled by immediately calling `.wait()`, and the policy of the antecedent is 
@@ -911,13 +913,20 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 [[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(__unique_future__)>` that refers to the shared state created by the continuation.]]
 
+[[Notes:] [ 
+
+- Note that nested futures are not implicitly unwrapped yet. This could be subject to change in future versions.
+
+- The returned futures behave as the ones returned from boost::async, the destructor of the future object returned from then will block. This could be subject to change in future versions.
+]]
+
 [[Postconditions:] [
 
 - The `__unique_future__` object passed to the parameter of the continuation function is a copy of the original `__unique_future__`.
 
 - `valid() == false` on original future; `valid() == true` on the `future` returned from then.
 
-- In case of implicit unwrapping, the validity of the `future` returned from `then` cannot be established until after the completion of the functor passed into `then`. In such case, the resulting `future` becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`. 
+[/ In case of implicit unwrapping, the validity of the `future` returned from `then` cannot be established until after the completion of the functor passed into `then`. In such case, the resulting `future` becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`. ]
 
 ]]
 
@@ -1378,13 +1387,22 @@ scheduler, then the parent is filled by immediately calling `.wait()`, and the p
 
 [[Returns:] [An object of type `__unique_future__<typename boost::result_of<F(shared_future)>` that refers to the shared state created by the continuation.]]
 
+
+[[Notes:] [ 
+
+- Note that nested futures are not implicitly unwrapped yet. This could be subject to change in future versions.
+
+- The returned futures behave as the ones returned from boost::async, the destructor of the future object returned from then will block. This could be subject to change in future versions.
+]]
+
+
 [[Postconditions:] [
 
 - The future object is moved to the parameter of the continuation function .
 
 - `valid() == true` on original `shared_future`; `valid() == true` on the `future` returned from then.
 
-- In case of implicit unwrapping, the validity of the `future` returned from `then` cannot be established until after the completion of the functor passed into `then`. In such case, the resulting `future` becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`. 
+[/- In case of implicit unwrapping, the validity of the `future` returned from `then` cannot be established until after the completion of the functor passed into `then`. In such case, the resulting `future` becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`. ]
 
 ]]
 
@@ -1945,14 +1963,14 @@ provides the result of the function in a future object with which it shares a sh
 [heading Non-Variadic variant]
 
     template <class F>
-    __unique_future__<typename result_of<typename decay<F>::type()>::type>
-    async(F&& f);
+      __unique_future__<typename result_of<typename decay<F>::type()>::type>
+      async(F&& f);
     template <class F>
-    __unique_future__<typename result_of<typename decay<F>::type()>::type>
-    async(launch policy, F&& f);
+      __unique_future__<typename result_of<typename decay<F>::type()>::type>
+      async(launch policy, F&& f);
     template <class Executor, class F>
-    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(Executor &ex, F&& f, Args&&... args);
+      __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(Executor &ex, F&& f, Args&&... args);
 [variablelist
 
 [[Requires:] [
@@ -2012,14 +2030,14 @@ If the implementation chooses the `launch::async` policy,
 [heading Variadic variant]
 
     template <class F, class... Args>
-    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(F&& f, Args&&... args);
+      __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(F&& f, Args&&... args);
     template <class F, class... Args>
-    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(launch policy, F&& f, Args&&... args);
+      __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(launch policy, F&& f, Args&&... args);
     template <class Executor, class F, class... Args>
-    __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
-    async(Executor &ex, F&& f, Args&&... args);
+      __unique_future__<typename result_of<typename decay<F>::type(typename decay<Args>::type...)>::type>
+      async(Executor &ex, F&& f, Args&&... args);
     
 [warning the variadic prototype is provided only on C++11 compilers supporting rvalue references, variadic templates, decltype and a standard library providing <tuple> (waiting for a boost::tuple that is move aware), and BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK is defined.]
 
@@ -2100,19 +2118,19 @@ with the return from the last function that releases the shared state, whichever
 [section:wait_for_any Non-member function `wait_for_any()` - EXTENSION]
 
     template<typename Iterator>
-    Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
+      Iterator wait_for_any(Iterator begin,Iterator end); // EXTENSION
 
     template<typename F1,typename F2>
-    unsigned wait_for_any(F1& f1,F2& f2); // EXTENSION
+      unsigned wait_for_any(F1& f1,F2& f2); // EXTENSION
 
     template<typename F1,typename F2,typename F3>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3); // EXTENSION
+      unsigned wait_for_any(F1& f1,F2& f2,F3& f3); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
+      unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
+      unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
 
 [variablelist
 
@@ -2140,19 +2158,19 @@ with any of the futures being waited for.  `std::bad_alloc` if memory could not 
 [section:wait_for_all Non-member function `wait_for_all()` - EXTENSION]
 
     template<typename Iterator>
-    void wait_for_all(Iterator begin,Iterator end); // EXTENSION
+      void wait_for_all(Iterator begin,Iterator end); // EXTENSION
 
     template<typename F1,typename F2>
-    void wait_for_all(F1& f1,F2& f2); // EXTENSION
+      void wait_for_all(F1& f1,F2& f2); // EXTENSION
 
     template<typename F1,typename F2,typename F3>
-    void wait_for_all(F1& f1,F2& f2,F3& f3); // EXTENSION
+      void wait_for_all(F1& f1,F2& f2,F3& f3); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4>
-    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
+      void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4); // EXTENSION
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
+      void wait_for_all(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5); // EXTENSION
 
 [variablelist
 
@@ -2177,14 +2195,21 @@ __unique_future__ or __shared_future__.]]
 
 
   template <class InputIterator>
-  see below when_all(InputIterator first, InputIterator last);
+    future<vector<typename InputIterator::value_type::value_type>> 
+    when_all(InputIterator first, InputIterator last);
 
   template <typename... T>
-  see below when_all(T&&... futures);
+    future<tuple<decay_t<T>...> when_all(T&&... futures);
 
 [variablelist
 
-[[Requires:] [T is of type `future<R>` or `shared_future<R>`.]]
+[[Requires:] [
+
+ - For the first overload, `InputIterator`'s value type shall be convertible to `future<R>` or `shared_future<R>`. 
+All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` objects are in invalid state (i.e. `valid() == false`), the behavior is undefined.
+ - For the second overload, `T` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_all` on a `future` or a `shared_future` object for which `valid() == false` is undefined.
+
+]]
 
 [[Notes:] [
 
@@ -2202,7 +2227,11 @@ __unique_future__ or __shared_future__.]]
 
 - The call to `when_all` does not wait for non-deferred tasks, or deferred tasks that have already started executing elsewhere, to complete before returning.
 
-- Once all the futures supplied to the call to `when_all` are ready, the futures are moved into the associated state of the future returned from the call to `when_all`, preserving the order of the futures supplied to `when_all`. That `future` is then ready.
+- Once all the `future`s/`shared_future`s supplied to the call to `when_all` are ready, the `future`s/`shared_future`s are moved/copied into the associated state of the future returned from the call to `when_all`, preserving the order of the futures supplied to `when_all`. 
+
+- The collection is then stored as the result in a newly created shared state.
+
+- A new future object that refers to the shared state is created. The exact type of the future is further described below. 
 
 - The `future` returned by `when_all` will not throw an exception, but the futures held in the output collection may.
 ]]
@@ -2215,7 +2244,7 @@ __unique_future__ or __shared_future__.]]
 
 - `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<tuple<future<R0>, future<R1>, future<R2>...>>` if inputs are fixed in number. The inputs can be any arbitrary number of `future` and `shared_future objects`. The type of the element at each position of the tuple corresponds to the type of the argument at the same position. Any of `R0`, `R1`, `R2`, etc. may be `void`.
+- `future<tuple<decay_t<T>...>>` if inputs are fixed in number. Any of `typename T::value_type` may be `void`.
 
 ]]
 
@@ -2224,6 +2253,8 @@ __unique_future__ or __shared_future__.]]
 - All input future<T>s valid() == false.
 
 - All input shared_future<T> valid() == true.
+
+- valid() == true.
 
 ]]
 
@@ -2236,14 +2267,23 @@ __unique_future__ or __shared_future__.]]
 
 
   template <class InputIterator>
-  see below when_any(InputIterator first, InputIterator last);
+    future<vector<typename InputIterator::value_type::value_type>> 
+    when_any(InputIterator first, InputIterator last);
 
   template <typename... T>
-  see below when_any(T&&... futures);
+    future<tuple<decay_t<T>...> 
+    when_any(T&&... futures);
 
 [variablelist
 
-[[Requires:] [T is of type `future<R>` or `shared_future<R>`.]]
+[[Requires:] [
+
+
+
+ - For the first overload, `InputIterator`'s value type shall be convertible to `future<R>` or `shared_future<R>`. All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` objects are in invalid state (i.e. `valid() == false`), the behavior is undefined.
+ - For the second overload, `T` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_any` on a `future` or a `shared_future` object for which `valid() == false is undefined`.
+
+]]
 
 [[Notes:] [
 
@@ -2263,7 +2303,11 @@ __unique_future__ or __shared_future__.]]
 
 - Once at least one of the futures supplied to the call to `when_any` are ready, the futures are moved into the associated state of the future returned from the call to `when_any`, preserving the order of the futures supplied to `when_any`. That future is then ready.
 
-The future returned by `when_any` will not throw an exception, but the futures held in the output collection may.
+- The collection is then stored as the result in a newly created shared state.
+
+- A new future object that refers to the shared state is created. The exact type of the future is further described below. 
+
+- The future returned by `when_any` will not throw an exception, but the futures held in the output collection may.
 
 ]]
 
@@ -2275,7 +2319,7 @@ The future returned by `when_any` will not throw an exception, but the futures h
 
 - `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<tuple<future<R0>, future<R1>, future<R2>...>>` if inputs are fixed in number. The inputs can be any arbitrary number of `future` and `shared_future objects`. The type of the element at each position of the tuple corresponds to the type of the argument at the same position. Any of `R0`, `R1`, `R2`, etc. may be `void`.
+- `future<tuple<decat_t<T>...>>` if inputs are fixed in number. Any of `typenam T::value_type` may be `void`.
 
 ]]
 
@@ -2284,6 +2328,9 @@ The future returned by `when_any` will not throw an exception, but the futures h
 - All input future<T>s valid() == false.
 
 - All input shared_future<T> valid() == true.
+
+- valid() == true.
+
 
 ]]
 
@@ -2297,12 +2344,12 @@ The future returned by `when_any` will not throw an exception, but the futures h
 [section:make_ready_future Non-member function `make_ready_future()` EXTENSION]
 
     template <typename T>
-    future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
+      future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
     template <typename T>
-    future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
+      future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
     template <typename T, typename E>
-    future<T> make_ready_future(E ex);  // DEPRECATED
+      future<T> make_ready_future(E ex);  // DEPRECATED
 
 [variablelist
 
@@ -2342,7 +2389,7 @@ Otherwise the value is copied to the shared state of the returned function.
 
     exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
     template <typename E>
-    exceptional_ptr make_exceptional(E ex);  // EXTENSION
+      exceptional_ptr make_exceptional(E ex);  // EXTENSION
     exceptional_ptr make_exceptional();  // EXTENSION
 
 [variablelist
@@ -2363,7 +2410,7 @@ An exceptional_ptr instance implicitly convertible to a future<T>
 [section:make_future Non-member function `make_future()` DEPRECATED]
 
     template <typename T>
-    future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
+      future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
     future<void> make_future();  // DEPRECATED
     
 
@@ -2399,7 +2446,7 @@ Otherwise the value is copied to the shared state of the returned function.
 [section:make_shared_future Non-member function `make_shared_future()` DEPRECATED]
 
     template <typename T>
-    shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
+      shared_future<typename decay<T>::type> make_shared_future(T&& value);  // DEPRECATED
     shared_future<void> make_shared_future();  // DEPRECATED
  
 [variablelist
