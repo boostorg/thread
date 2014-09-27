@@ -763,6 +763,8 @@ prior to waiting.]]
 [[Returns:] [`true` if `*this` is associated with a shared state, `false`
 otherwise.]]
 
+[[Remarks:] [The result of this function is not stable and that the future could become invalid even if the function returned true or vice-versa.]]
+
 [[Throws:] [Nothing.]]
 
 ]
@@ -777,6 +779,8 @@ otherwise.]]
 
 [[Returns:] [`true` if `*this` is associated with a shared state and that result is ready for retrieval, `false`
 otherwise.]]
+
+[[Remarks:] [The result of this function is not stable and that the future could become not ready even if the function returned true or vice-versa.]]
 
 [[Throws:] [Nothing.]]
 
@@ -793,6 +797,8 @@ otherwise.]]
 [[Returns:] [`true` if `*this` is associated with a shared state, that result is ready for retrieval, and the result is a
 stored value, `false` otherwise.]]
 
+[[Remarks:] [The result of this function is not stable and the future could lost its value even if the function returned true or vice-versa.]]
+
 [[Throws:] [Nothing.]]
 
 ]
@@ -807,6 +813,8 @@ stored value, `false` otherwise.]]
 
 [[Returns:] [`true` if `*this` is associated with a shared state, that result is ready for retrieval, and the result is a
 stored exception, `false` otherwise.]]
+
+[[Remarks:] [The result of this function is not stable and the future could lost its exception even if the function returned true or vice-versa.]]
 
 [[Throws:] [Nothing.]]
 
@@ -825,6 +833,8 @@ entry, and the result has a ['wait callback] set, that callback is invoked prior
 
 [[Returns:] [a exception_ptr, storring or not an exception.]]
 
+[[Remarks:] [The result of this function is not stable and the future could lost its exception even if the function returned a valid `exception_ptr` or vice-versa.]]
+
 [[Throws:] [Whatever `mutex::lock()/mutex::unlock()` can throw.]]
 
 ]
@@ -841,6 +851,8 @@ entry, and the result has a ['wait callback] set, that callback is invoked prior
 
 [[Returns:] [__uninitialized__ if `*this` is not associated with a shared state. __ready__ if the shared state
 associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
+
+[[Remarks:] [The result of this function is not stable.]]
 
 [[Throws:] [Nothing.]]
 
@@ -2233,7 +2245,7 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 - A new future object that refers to the shared state is created. The exact type of the future is further described below. 
 
-- The `future` returned by `when_all` will not throw an exception, but the futures held in the output collection may.
+- The `future` returned by `when_all` will not throw an exception when calling `wait()` or `get()`, but the futures held in the output collection may.
 ]]
 
 [[Returns:] [
@@ -2307,7 +2319,7 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 - A new future object that refers to the shared state is created. The exact type of the future is further described below. 
 
-- The future returned by `when_any` will not throw an exception, but the futures held in the output collection may.
+- The future returned by `when_any` will not throw an exception when calling `wait()` or `get()`, but the futures held in the output collection may.
 
 ]]
 
