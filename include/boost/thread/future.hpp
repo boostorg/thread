@@ -20,6 +20,7 @@
 #include <boost/thread/exceptional_ptr.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/invoker.hpp>
+#include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
