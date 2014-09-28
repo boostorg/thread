@@ -2210,8 +2210,8 @@ __unique_future__ or __shared_future__.]]
     future<vector<typename InputIterator::value_type::value_type>> 
     when_all(InputIterator first, InputIterator last);
 
-  template <typename... T>
-    future<tuple<decay_t<T>...> when_all(T&&... futures);
+  template <typename... FutTypes>
+    future<tuple<decay_t<FutTypes>...> when_all(FutTypes&&... futures);
 
 [variablelist
 
@@ -2219,7 +2219,7 @@ __unique_future__ or __shared_future__.]]
 
  - For the first overload, `InputIterator`'s value type shall be convertible to `future<R>` or `shared_future<R>`. 
 All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` objects are in invalid state (i.e. `valid() == false`), the behavior is undefined.
- - For the second overload, `T` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_all` on a `future` or a `shared_future` object for which `valid() == false` is undefined.
+ - For the second overload, `FutTypes` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_all` on a `future` or a `shared_future` object for which `valid() == false` is undefined.
 
 ]]
 
@@ -2252,19 +2252,19 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 - `future<tuple<>>` if `when_all` is called with zero arguments.
 
-- `future<vector<future<R>>>` if the input cardinality is unknown at compile and the iterator pair yields `future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
+- `future<vector<future<R>>>` if the input cardinality is unknown at compile and the iterator pair yields `future<R>`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
+- `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<tuple<decay_t<T>...>>` if inputs are fixed in number. Any of `typename T::value_type` may be `void`.
+- `future<tuple<decay_t<FutTypes>...>>` if inputs are fixed in number.
 
 ]]
 
 [[Postconditions:] [
 
-- All input future<T>s valid() == false.
+- All input futures valid() == false.
 
-- All input shared_future<T> valid() == true.
+- All input shared future valid() == true.
 
 - valid() == true.
 
@@ -2282,9 +2282,9 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
     future<vector<typename InputIterator::value_type::value_type>> 
     when_any(InputIterator first, InputIterator last);
 
-  template <typename... T>
-    future<tuple<decay_t<T>...> 
-    when_any(T&&... futures);
+  template <typename... FutTypes>
+    future<tuple<decay_t<FutTypes>...> 
+    when_any(FutTypes&&... futures);
 
 [variablelist
 
@@ -2293,7 +2293,7 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 
  - For the first overload, `InputIterator`'s value type shall be convertible to `future<R>` or `shared_future<R>`. All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` objects are in invalid state (i.e. `valid() == false`), the behavior is undefined.
- - For the second overload, `T` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_any` on a `future` or a `shared_future` object for which `valid() == false is undefined`.
+ - For the second overload, `FutTypes` is of type `future<R>` or `shared_future<R>`. The effect of calling `when_any` on a `future` or a `shared_future` object for which `valid() == false is undefined`.
 
 ]]
 
@@ -2327,19 +2327,19 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 - `future<tuple<>>` if `when_any ` is called with zero arguments.
 
-- `future<vector<future<R>>>` if the input cardinality is unknown at compile and the iterator pair yields `future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
+- `future<vector<future<R>>>` if the input cardinality is unknown at compile and the iterator pair yields `future<R>`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. `R` may be `void`. The order of the futures in the output vector will be the same as given by the input iterator.
+- `future<vector<shared_future<R>>>` if the input cardinality is unknown at compile time and the iterator pair yields `shared_future<R>`. The order of the futures in the output vector will be the same as given by the input iterator.
 
-- `future<tuple<decat_t<T>...>>` if inputs are fixed in number. Any of `typenam T::value_type` may be `void`.
+- `future<tuple<decat_t<FutTypes>...>>` if inputs are fixed in number.
 
 ]]
 
 [[Postconditions:] [
 
-- All input future<T>s valid() == false.
+- All input futures valid() == false.
 
-- All input shared_future<T> valid() == true.
+- All input shared_futures valid() == true.
 
 - valid() == true.
 
