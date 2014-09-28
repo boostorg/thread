@@ -271,14 +271,14 @@ namespace boost
 #endif
             waiter_list::iterator register_external_waiter(boost::condition_variable_any& cv)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 do_callback(lock);
                 return external_waiters.insert(external_waiters.end(),&cv);
             }
 
             void remove_external_waiter(waiter_list::iterator it)
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
+                boost::lock_guard<boost::mutex> lock(this->mutex);
                 external_waiters.erase(it);
             }
 
@@ -318,7 +318,7 @@ namespace boost
             }
             void make_ready()
             {
-              boost::unique_lock<boost::mutex> lock(mutex);
+              boost::unique_lock<boost::mutex> lock(this->mutex);
               mark_finished_internal(lock);
             }
 
@@ -334,7 +334,7 @@ namespace boost
 
             virtual bool run_if_is_deferred()
             {
-              boost::unique_lock<boost::mutex> lk(mutex);
+              boost::unique_lock<boost::mutex> lk(this->mutex);
               if (is_deferred_)
               {
                 is_deferred_=false;
@@ -346,7 +346,7 @@ namespace boost
             }
             virtual bool run_if_is_deferred_or_ready()
             {
-              boost::unique_lock<boost::mutex> lk(mutex);
+              boost::unique_lock<boost::mutex> lk(this->mutex);
               if (is_deferred_)
               {
                 is_deferred_=false;
@@ -388,14 +388,14 @@ namespace boost
 
             virtual void wait(bool rethrow=true)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait_internal(lock, rethrow);
             }
 
 #if defined BOOST_THREAD_USES_DATETIME
             bool timed_wait_until(boost::system_time const& target_time)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 if (is_deferred_)
                     return false;
 
@@ -417,7 +417,7 @@ namespace boost
             future_status
             wait_until(const chrono::time_point<Clock, Duration>& abs_time)
             {
-              boost::unique_lock<boost::mutex> lock(mutex);
+              boost::unique_lock<boost::mutex> lock(this->mutex);
               if (is_deferred_)
                   return future_status::deferred;
               do_callback(lock);
@@ -440,21 +440,21 @@ namespace boost
 
             void mark_exceptional_finish()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
             }
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             void mark_interrupted_finish()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 thread_was_interrupted=true;
                 mark_finished_internal(lock);
             }
 
             void set_interrupted_at_thread_exit()
             {
-              unique_lock<boost::mutex> lk(mutex);
+              unique_lock<boost::mutex> lk(this->mutex);
               thread_was_interrupted=true;
               if (has_value(lk))
               {
@@ -466,7 +466,7 @@ namespace boost
 
             void set_exception_at_thread_exit(exception_ptr e)
             {
-              unique_lock<boost::mutex> lk(mutex);
+              unique_lock<boost::mutex> lk(this->mutex);
               if (has_value(lk))
               {
                   throw_exception(promise_already_satisfied());
@@ -478,7 +478,7 @@ namespace boost
 
             bool has_value() const
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
+                boost::lock_guard<boost::mutex> lock(this->mutex);
                 return done && !(exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     || thread_was_interrupted
@@ -497,7 +497,7 @@ namespace boost
 
             bool has_exception()  const
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
+                boost::lock_guard<boost::mutex> lock(this->mutex);
                 return done && (exception
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                     || thread_was_interrupted
@@ -525,7 +525,7 @@ namespace boost
 
             future_state::state get_state() const
             {
-                boost::lock_guard<boost::mutex> guard(mutex);
+                boost::lock_guard<boost::mutex> guard(this->mutex);
                 if(!done)
                 {
                     return future_state::waiting;
@@ -538,7 +538,7 @@ namespace boost
 
             exception_ptr get_exception_ptr()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 return get_exception_ptr(lock);
             }
             exception_ptr get_exception_ptr(boost::unique_lock<boost::mutex>& lock)
@@ -547,7 +547,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 if(thread_was_interrupted)
                 {
-                    return copy_exception(boost::thread_interrupted());
+                    return boost::copy_exception(boost::thread_interrupted());
                 }
 #endif
                 return exception;
@@ -556,7 +556,7 @@ namespace boost
             template<typename F,typename U>
             void set_wait_callback(F f,U* u)
             {
-                boost::lock_guard<boost::mutex> lock(mutex);
+                boost::lock_guard<boost::mutex> lock(this->mutex);
                 callback=boost::bind(f,boost::ref(*u));
             }
 
@@ -632,13 +632,13 @@ namespace boost
 
             void mark_finished_with_result(source_reference_type result_)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 this->mark_finished_with_result_internal(result_, lock);
             }
 
             void mark_finished_with_result(rvalue_source_type result_)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
 
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
                 mark_finished_with_result_internal(boost::move(result_), lock);
@@ -654,13 +654,13 @@ namespace boost
             }
             virtual move_dest_type get()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 return boost::move(*get_storage(lock));
             }
 
             virtual shared_future_get_result_type get_sh()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 return *get_storage(lock);
             }
 
@@ -735,20 +735,20 @@ namespace boost
 
             void mark_finished_with_result(source_reference_type result_)
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 mark_finished_with_result_internal(result_, lock);
             }
 
             virtual T& get()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait_internal(lock);
                 return *result;
             }
 
             virtual T& get_sh()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait_internal(lock);
                 return *result;
             }
@@ -785,19 +785,19 @@ namespace boost
 
             void mark_finished_with_result()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 mark_finished_with_result_internal(lock);
             }
 
             virtual void get()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 this->wait_internal(lock);
             }
 
             virtual void get_sh()
             {
-                boost::unique_lock<boost::mutex> lock(mutex);
+                boost::unique_lock<boost::mutex> lock(this->mutex);
                 this->wait_internal(lock);
             }
 
@@ -1303,6 +1303,14 @@ namespace boost
           p.set_exception(ex.ptr_);
           return p.get_future().future_;
         }
+
+        void set_exceptional_if_invalid() {
+          if (valid()) return;
+          promise<R> p;
+          p.set_exception(future_uninitialized());
+          future_ = p.get_future().future_;
+        }
+
 
         future_ptr future_;
 
@@ -2101,7 +2109,7 @@ namespace boost
         template <typename E>
         void set_exception(E ex)
         {
-          set_exception(copy_exception(ex));
+          set_exception(boost::copy_exception(ex));
         }
         // setting the result with deferred notification
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -2143,7 +2151,7 @@ namespace boost
         template <typename E>
         void set_exception_at_thread_exit(E ex)
         {
-          set_exception_at_thread_exit(copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(ex));
         }
 
         template<typename F>
@@ -2274,7 +2282,7 @@ namespace boost
         template <typename E>
         void set_exception(E ex)
         {
-          set_exception(copy_exception(ex));
+          set_exception(boost::copy_exception(ex));
         }
 
         // setting the result with deferred notification
@@ -2298,7 +2306,7 @@ namespace boost
         template <typename E>
         void set_exception_at_thread_exit(E ex)
         {
-          set_exception_at_thread_exit(copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(ex));
         }
 
         template<typename F>
@@ -2430,7 +2438,7 @@ namespace boost
         template <typename E>
         void set_exception(E ex)
         {
-          set_exception(copy_exception(ex));
+          set_exception(boost::copy_exception(ex));
         }
 
         // setting the result with deferred notification
@@ -2454,7 +2462,7 @@ namespace boost
         template <typename E>
         void set_exception_at_thread_exit(E ex)
         {
-          set_exception_at_thread_exit(copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(ex));
         }
 
         template<typename F>
@@ -3992,6 +4000,17 @@ namespace detail {
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
+  template <typename T>
+  BOOST_THREAD_FUTURE<T> make_exceptional_future_if_invalid(BOOST_THREAD_FWD_REF(BOOST_THREAD_FUTURE<T>) fut) {
+    fut.set_exceptional_if_invalid();
+    return boost::move(fut);
+  }
+  template <typename T>
+  shared_future<T> make_exceptional_future_if_invalid(shared_future<T> fut) {
+    fut.set_exceptional_if_invalid();
+    return fut;
+  }
+
 #if 0
   template<typename CLOSURE>
   make_future(CLOSURE closure) -> BOOST_THREAD_FUTURE<decltype(closure())> {
@@ -4355,13 +4374,20 @@ namespace detail
   public:
     explicit future_unwrap_shared_state(BOOST_THREAD_RV_REF(F) f)
     : parent(boost::move(f)) {}
+
+    typename F::value_type parent_value(boost::unique_lock<boost::mutex>& ) {
+        typename F::value_type r = parent.get();
+        r.set_exceptional_if_invalid();
+        return boost::move(r);
+    }
+
     virtual void wait(bool ) { // todo see if rethrow must be used
-        boost::unique_lock<boost::mutex> lock(mutex);
-        parent.get().wait();
+        boost::unique_lock<boost::mutex> lk(this->mutex);
+        parent_value(lk).wait();
     }
     virtual Rp get() {
-        boost::unique_lock<boost::mutex> lock(mutex);
-        return parent.get().get();
+        boost::unique_lock<boost::mutex> lk(this->mutex);
+        return parent_value(lk).get();
     }
   };
 
