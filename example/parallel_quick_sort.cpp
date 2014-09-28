@@ -8,7 +8,7 @@
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
-#define BOOST_RESULT_OF_USE_DECLTYPE
+//#define BOOST_RESULT_OF_USE_DECLTYPE
 #endif
 
 #include <boost/thread/executors/basic_thread_pool.hpp>
