@@ -229,7 +229,7 @@ int main()
     boost::csbl::tuple<boost::future<int>,boost::future<int> > res = all.get();
     BOOST_TEST(boost::csbl::get<0>(res).valid());
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
-    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
+    //BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
     BOOST_TEST(boost::csbl::get<1>(res).is_ready());
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
