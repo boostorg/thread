@@ -20,8 +20,8 @@
 // The invoker code is based on the one from libcxx.
 //===----------------------------------------------------------------------===//
 
-#ifndef BOOST_THREAD_DETAIL_ASYNC_FUNCT_HPP
-#define BOOST_THREAD_DETAIL_ASYNC_FUNCT_HPP
+#ifndef BOOST_THREAD_DETAIL_INVOKER_HPP
+#define BOOST_THREAD_DETAIL_INVOKER_HPP
 
 #include <boost/config.hpp>
 
