@@ -226,7 +226,7 @@ namespace boost
 #else
                 __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
 #endif
-                int __stdcall GetTickCount();
+                __declspec(dllimport) unsigned long __stdcall GetTickCount();
 #ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
