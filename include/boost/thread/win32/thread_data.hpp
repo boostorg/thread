@@ -125,8 +125,8 @@ namespace boost
             thread_data_base():
                 count(0),
                 thread_handle(),
-                id(0),
                 thread_exit_callbacks(0),
+                id(0),
                 tss_data(),
                 notify(),
                 async_states_()
