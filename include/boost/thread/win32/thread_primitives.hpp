@@ -41,8 +41,8 @@ namespace boost
             unsigned const event_modify_state=EVENT_MODIFY_STATE;
             unsigned const synchronize=SYNCHRONIZE;
             unsigned const wait_abandoned=WAIT_ABANDONED;
-            unsigned const create_event_initial_set = CREATE_EVENT_INITIAL_SET;
-            unsigned const create_event_manual_reset = CREATE_EVENT_MANUAL_RESET;
+            unsigned const create_event_initial_set = 0x00000002;
+            unsigned const create_event_manual_reset = 0x00000001;
             unsigned const event_all_access = EVENT_ALL_ACCESS;
             unsigned const semaphore_all_access = SEMAPHORE_ALL_ACCESS;
             
