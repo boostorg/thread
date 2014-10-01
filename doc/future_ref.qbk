@@ -445,6 +445,7 @@ There are not too much tests yet, so it is possible that you can find out some t
 [variablelist
 
 [[Requires:] [`other.valid()`.]
+
 [[Effects:] [Constructs a new __unique_future__, and transfers ownership of the shared state associated with `other` and unwrapping the inner future (see `unwrap()`).]]
 
 [[Postconditions:] [[unique_future_get_state_link `this->get_state()`] returns the value of `other->get_state()` prior to the
@@ -960,19 +961,19 @@ There are not too much tests yet, so it is possible that you can find out some t
   
 [variablelist
 
-[[Notes:] [Removes the outermost future and returns a future with the associated state been a proxy of inner future.]]
+[[Notes:] [Removes the outermost future and returns a future with the associated state been a proxy of the outer future.]]
 
 [[Effects:] [
 
-- Returns a future that becomes ready when the shared state of the inner future is ready.
+- Returns a future that becomes ready when the shared state of the outer future is ready. The validity of the future returned from `get()` applied on the outer future cannot be established a priori. If it is not valid, this future is forced to be valid and becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`.
 
 ]]
 
-[[Returns:] [An object of type future with the associated state been a proxy of inner future.]]
+[[Returns:] [An object of type future with the associated state been a proxy of outer future.]]
 
 [[Postconditions:] [
 
-- The returned future has `valid() == true` regardless of the validity of the inner future.
+- The returned future has `valid() == true`.
 
 ]]
 
