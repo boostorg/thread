@@ -965,7 +965,7 @@ There are not too much tests yet, so it is possible that you can find out some t
 
 [[Effects:] [
 
-- Returns a future that becomes ready when the shared state of the outer future is ready. The validity of the future returned from `get()` applied on the outer future cannot be established a priori. If it is not valid, this future is forced to be valid and becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`.
+- Returns a future that becomes ready when the shared state of the outer and inner future is ready. The validity of the future returned from `get()` applied on the outer future cannot be established a priori. If it is not valid, this future is forced to be valid and becomes ready with an exception of type `future_error`, with an error code of `future_errc::broken_promise`.
 
 ]]
 
@@ -1009,13 +1009,13 @@ There are not too much tests yet, so it is possible that you can find out some t
       // factories
       template<typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(F&& func); // EXTENSION
+      then(F&& func) const; // EXTENSION
       template<typename S, typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(S& scheduler, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
+      then(S& scheduler, F&& func) const; // EXTENSION NOT_YET_IMPLEMENTED
       template<typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(launch policy, F&& func); // EXTENSION
+      then(launch policy, F&& func) const; // EXTENSION
 
       void swap(shared_future& other);
 
@@ -1358,13 +1358,13 @@ associated with `*this` is ready for retrieval, __waiting__ otherwise.]]
 
       template<typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(F&& func); // EXTENSION
+      then(F&& func) const; // EXTENSION
       template<typename S, typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(S& scheduler, F&& func); // EXTENSION NOT_YET_IMPLEMENTED
+      then(S& scheduler, F&& func) const; // EXTENSION NOT_YET_IMPLEMENTED
       template<typename F>
       __unique_future__<typename boost::result_of<F(shared_future&)>::type> 
-      then(launch policy, F&& func); // EXTENSION
+      then(launch policy, F&& func) const; // EXTENSION
 
 
 [warning These functions are experimental and subject to change in future versions. 

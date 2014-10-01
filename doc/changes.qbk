@@ -37,6 +37,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 
 * [@http://svn.boost.org/trac/boost/ticket/10298 #10298] Synchro: Added queue views.
 * [@http://svn.boost.org/trac/boost/ticket/10300 #10300] Async: Added generic_executor_ref.
+* [@http://svn.boost.org/trac/boost/ticket/10552 #10552] Add make_valid_future
 
 [*Fixed Bugs:]
 
@@ -61,7 +62,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/10476 #10476] classes using BOOST_THREAD_MOVABLE_ONLY<T> dont satisfy is_copy_constructible<T>::value == false
 * [@http://svn.boost.org/trac/boost/ticket/10478 #10478] Data race in boost/thread/future.hpp
 * [@http://svn.boost.org/trac/boost/ticket/10529 #10529] The pthread/condition_variable_any constructor reports incorrect error code for pthread_cond_init
-
+* [@http://svn.boost.org/trac/boost/ticket/10563 #10563] shared_future<R>::then should be const
 
 [heading Version 4.3.0 - boost 1.56]
 
