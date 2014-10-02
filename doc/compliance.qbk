@@ -185,8 +185,6 @@
 [endsect]
 [section:executors Asynchronous Executors]
 
-While Boost.Thread implementation of executors would not use dynamic polymorphism, it is worth comparing with the current trend on the standard.
-
 [note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3785.pdf N3785 Executors and Schedulers]]
 
 [table Asynchronous Executors
@@ -203,6 +201,15 @@ While Boost.Thread implementation of executors would not use dynamic polymorphis
     [[V.2.3]      [loop_executor]  [Yes] [ static version loop_scheduler, dynamic one execduler_adaptor<loop_scheduler> ]]
     [[V.2.4]      [inline_executor]  [Yes] [ static version inline_executor, dynamic one execduler_adaptor<inline_executor> ]]
     [[V.2.5]      [thread_executor]  [Yes] [ static version thread_executor, dynamic one execduler_adaptor<thread_executor> ]]
+]
+
+[note [@http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2013/n3784.pdf N3784-Improvements to `std::future<T> and Related APIs]]
+
+[table `async, future/shared_future::then`and Executors
+    [[Section]  [Description]  [Status] [Comments]]
+    [[30.6.6]      [`future<T>::then`]  [Yes] [  ]]
+    [[30.6.7]      [`shared_future<T>::then`]  [Yes] [    ]]
+    [[30.6.8]      [`async`]  [Yes] [ - ]]
 ]
 
 [endsect]
