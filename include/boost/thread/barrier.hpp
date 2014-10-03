@@ -80,6 +80,7 @@ namespace boost
       }
       void_functor_barrier_reseter(BOOST_THREAD_RV_REF(void_functor_barrier_reseter) other) BOOST_NOEXCEPT :
       size_(BOOST_THREAD_RV(other).size_), fct_(BOOST_THREAD_RV(other).fct_)
+      //size_(BOOST_THREAD_RV(other).size_), fct_(boost::move(BOOST_THREAD_RV(other).fct_))
       {
       }
 
@@ -115,6 +116,10 @@ namespace boost
       }
     };
   }
+  //BOOST_THREAD_DCL_MOVABLE(thread_detail::default_barrier_reseter)
+  //BOOST_THREAD_DCL_MOVABLE(thread_detail::void_functor_barrier_reseter)
+  //BOOST_THREAD_DCL_MOVABLE(thread_detail::void_fct_ptr_barrier_reseter)
+
   class barrier
   {
     static inline unsigned int check_counter(unsigned int count)
