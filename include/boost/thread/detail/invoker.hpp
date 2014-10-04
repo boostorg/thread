@@ -65,6 +65,22 @@ namespace boost
       invoker(BOOST_THREAD_RV_REF(invoker) f) : f_(boost::move(BOOST_THREAD_RV(f).f_))
       {}
 
+      BOOST_SYMBOL_VISIBLE
+      invoker( const invoker& f) : f_(f.f_)
+      {}
+
+      BOOST_SYMBOL_VISIBLE
+      invoker& operator=(BOOST_THREAD_RV_REF(invoker) f)
+      {
+        f_ = boost::move(BOOST_THREAD_RV(f).f_);
+      }
+
+      BOOST_SYMBOL_VISIBLE
+      invoker& operator=( BOOST_THREAD_COPY_ASSIGN_REF(invoker) f)
+      {
+        f_ = f.f_;
+      }
+
       result_type operator()()
       {
         typedef typename make_tuple_indices<1+sizeof...(Args), 1>::type Index;
