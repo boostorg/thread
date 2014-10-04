@@ -390,6 +390,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/shared_future/wait_for_pass.cpp : shared_future__wait_for_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_until_pass.cpp : shared_future__wait_until_p ]
           [ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
+          [ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p ]
     ;
 
     #explicit ts_packaged_task ;
