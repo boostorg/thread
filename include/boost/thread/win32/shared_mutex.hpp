@@ -75,7 +75,13 @@ namespace boost
                 BOOST_VERIFY(detail::win32::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
             }
         }
-
+        void release_shared_waiters(state_data old_state)
+        {
+            if(old_state.shared_waiting || old_state.exclusive_waiting)
+            {
+                BOOST_VERIFY(detail::win32::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
+            }
+        }
 
     public:
         BOOST_THREAD_NO_COPYABLE(shared_mutex)
@@ -749,6 +755,9 @@ namespace boost
                     if(last_reader)
                     {
                         release_waiters(old_state);
+                    }
+                    else {
+                        release_shared_waiters(old_state);
                     }
                     // #7720
                     //else {
