@@ -6,6 +6,8 @@
 
 // adapted from the example given by Howard Hinnant in
 
+#include <boost/config.hpp>
+
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
