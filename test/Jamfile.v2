@@ -374,6 +374,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/future/wait_until_pass.cpp : future__wait_until_p ]
           [ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
           [ thread-run2-noit ./sync/futures/future/then_executor_pass.cpp : future__then_executor_p ]
+          [ thread-run2-noit ./sync/futures/future/async_deferred_then_pass.cpp : future__async_def_then_p ]
+          [ thread-run2-noit ./sync/futures/future/then_deferred_pass.cpp : future__then_def_p ]
     ;
 
     #explicit ts_shared_future ;
@@ -861,6 +863,11 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_9079_a.cpp ]
           [ thread-run test_9079_b.cpp ]
           [ thread-run test_9192.cpp ]
+          #[ thread-run test_9303.cpp ]
+          #[ thread-run test_9720.cpp ]
+          #[ thread-run test_10125.cpp ]
+          #[ thread-run test_10128.cpp ]
+          #[ thread-run test_10340.cpp ]
     ;
     
     explicit ts_more_cpp11 ;
@@ -869,22 +876,17 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_8596.cpp ]
           [ thread-run test_8600.cpp ]
     ;
+
+    explicit perf ;
+    test-suite perf
+    :
+          #[ thread-run ../example/perf_condition_variable.cpp ]
+          #[ thread-run ../example/perf_shared_mutex.cpp ]
+    ;
     
     explicit ts_ ;
     test-suite ts_
     :
-          #[ thread-run ../example/test_so.cpp ]
-          #[ thread-run ../example/test_so2.cpp ]
-          #[ thread-run ../example/perf_condition_variable.cpp ]
-          #[ thread-run ../example/perf_shared_mutex.cpp ]
-          #[ thread-run ../example/std_async_test.cpp ]
-          #[ compile virtual_noexcept.cpp ]
-          #[ thread-run clang_main.cpp ]         
-          #[ thread-run test_9303.cpp ]
-          #[ thread-run test_9720.cpp ]
-          #[ thread-run test_10125.cpp ]
-          #[ thread-run test_10128.cpp ]
-          #[ thread-run test_10340.cpp ]
     ;
 
 }
