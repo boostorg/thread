@@ -106,15 +106,15 @@
       unsigned wait_for_any(F1& f1,Fs&... fs); // EXTENSION
     
     template <class InputIterator>
-      future<vector<typename InputIterator::value_type::value_type>> 
+      future<std::vector<typename InputIterator::value_type::value_type>> 
       when_all(InputIterator first, InputIterator last);
     template <typename... T>
-      future<tuple<decay_t<T>...> when_all(T&&... futures);
+      future<std::tuple<decay_t<T>...> when_all(T&&... futures);
     template <class InputIterator>
-      future<vector<typename InputIterator::value_type::value_type>> 
+      future<std::vector<typename InputIterator::value_type::value_type>> 
       when_any(InputIterator first, InputIterator last); // EXTENSION
     template <typename... T>
-      future<tuple<decay_t<T>...> when_any(T&&... futures);
+      future<std::tuple<decay_t<T>...> when_any(T&&... futures);
 
     template <typename T>
       future<typename decay<T>::type> make_future(T&& value);  // DEPRECATED
@@ -2213,11 +2213,11 @@ __unique_future__ or __shared_future__.]]
 
 
   template <class InputIterator>
-    future<vector<typename InputIterator::value_type::value_type>> 
+    future<std::vector<typename InputIterator::value_type::value_type>> 
     when_all(InputIterator first, InputIterator last);
 
   template <typename... FutTypes>
-    future<tuple<decay_t<FutTypes>...> when_all(FutTypes&&... futures);
+    future<std::tuple<decay_t<FutTypes>...> when_all(FutTypes&&... futures);
 
 [variablelist
 
@@ -2285,11 +2285,11 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 
   template <class InputIterator>
-    future<vector<typename InputIterator::value_type::value_type>> 
+    future<std::vector<typename InputIterator::value_type::value_type>> 
     when_any(InputIterator first, InputIterator last);
 
   template <typename... FutTypes>
-    future<tuple<decay_t<FutTypes>...> 
+    future<std::tuple<decay_t<FutTypes>...> 
     when_any(FutTypes&&... futures);
 
 [variablelist

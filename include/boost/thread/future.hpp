@@ -351,6 +351,7 @@ namespace boost
               {
                 is_deferred_=false;
                 execute(lk);
+
                 return true;
               }
               else
@@ -4998,6 +4999,23 @@ namespace detail
     }
   };
 
+
+  template <class Tuple, std::size_t i=csbl::tuple_size<Tuple>::value>
+  struct accumulate_run_if_is_deferred {
+    bool operator ()(Tuple& t)
+    {
+      return (! csbl::get<i-1>(t).run_if_is_deferred()) || accumulate_run_if_is_deferred<Tuple,i-1>()(t);
+    }
+  };
+  template <class Tuple>
+  struct accumulate_run_if_is_deferred<Tuple, 0> {
+    bool operator ()(Tuple& )
+    {
+      return false;
+    }
+  };
+
+
   template< typename Tuple, typename T0, typename ...T>
   struct future_when_all_tuple_shared_state: future_async_shared_state_base<Tuple>
   {
@@ -5030,9 +5048,7 @@ namespace detail
 
     bool run_deferred() {
 
-      bool res = true;
-      // todo bool res = accumulate(tup_, false, run_if_is_deferred());
-      return res;
+      return accumulate_run_if_is_deferred<Tuple>()(tup_);
     }
     void init() {
       if (! run_deferred())
@@ -5055,6 +5071,24 @@ namespace detail
     }
 
   };
+
+
+  template <class Tuple, std::size_t i=csbl::tuple_size<Tuple>::value>
+  struct apply_any_run_if_is_deferred_or_ready {
+    bool operator ()(Tuple& t)
+    {
+      if (csbl::get<i-1>(t).run_if_is_deferred_or_ready()) return true;
+      return apply_any_run_if_is_deferred_or_ready<Tuple,i-1>()(t);
+    }
+  };
+  template <class Tuple>
+  struct apply_any_run_if_is_deferred_or_ready<Tuple, 0> {
+    bool operator ()(Tuple& )
+    {
+      return false;
+    }
+  };
+
   template< typename Tuple, typename T0, typename ...T >
   struct future_when_any_tuple_shared_state: future_async_shared_state_base<Tuple>
   {
@@ -5085,10 +5119,7 @@ namespace detail
 #endif
     }
     bool run_deferred() {
-      //bool res = false;
-      bool res = csbl::get<0>(tup_).run_if_is_deferred_or_ready();
-      // todo bool res = apply_any(tup_, run_if_is_deferred_or_ready());
-      return res;
+      return apply_any_run_if_is_deferred_or_ready<Tuple>()(tup_);
     }
     void init() {
       if (run_deferred())

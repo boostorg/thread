@@ -32,6 +32,7 @@
 
 int p1()
 {
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
   return 123;
 }
 
@@ -41,6 +42,7 @@ int thr()
 }
 int p2()
 {
+  boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
   return 321;
 }
 
@@ -246,9 +248,9 @@ int main()
     boost::csbl::tuple<boost::future<int>,boost::future<int> > res = all.get();
     BOOST_TEST(boost::csbl::get<0>(res).valid());
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
-    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
     BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
   // fixme darwin-4.8.0_11 terminate called without an active exception
@@ -262,9 +264,9 @@ int main()
     boost::csbl::tuple<boost::shared_future<int>,boost::shared_future<int> > res = all.get();
     BOOST_TEST(boost::csbl::get<0>(res).valid());
     BOOST_TEST(boost::csbl::get<0>(res).is_ready());
-    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).valid());
     BOOST_TEST(boost::csbl::get<1>(res).is_ready());
+    BOOST_TEST(boost::csbl::get<0>(res).get() == 123);
     BOOST_TEST(boost::csbl::get<1>(res).get() == 321);
   }
 #endif
