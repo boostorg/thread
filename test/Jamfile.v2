@@ -349,12 +349,19 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/promise/set_rvalue_pass.cpp : promise__set_rvalue_p ]
           [ thread-run2-noit ./sync/futures/promise/set_value_const_pass.cpp : promise__set_value_const_p ]
           [ thread-run2-noit ./sync/futures/promise/set_value_void_pass.cpp : promise__set_value_void_p ]
+          [ thread-run2-noit ./sync/futures/promise/emplace_pass.cpp : promise__emplace_p ]
           [ thread-run2-noit ./sync/futures/promise/use_allocator_pass.cpp : promise__use_allocator_p ]
           [ thread-run2-noit ./sync/futures/promise/set_exception_at_thread_exit_pass.cpp : promise__set_exception_at_thread_exit_p ]
           [ thread-run2-noit ./sync/futures/promise/set_lvalue_at_thread_exit_pass.cpp : promise__set_lvalue_at_thread_exit_p ]
           [ thread-run2-noit ./sync/futures/promise/set_rvalue_at_thread_exit_pass.cpp : promise__set_rvalue_at_thread_exit_p ]
           [ thread-run2-noit ./sync/futures/promise/set_value_at_thread_exit_const_pass.cpp : promise__set_value_at_thread_exit_const_p ]
           [ thread-run2-noit ./sync/futures/promise/set_value_at_thread_exit_void_pass.cpp : promise__set_value_at_thread_exit_void_p ]
+    ;
+
+    #explicit ts_make_ready_future ;
+    test-suite ts_make_ready_future
+    :
+          [ thread-run2-noit ./sync/futures/make_ready_future_pass.cpp : make_ready_future_p ]
     ;
 
     #explicit ts_future ;
