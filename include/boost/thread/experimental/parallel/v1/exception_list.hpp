@@ -54,7 +54,7 @@ BOOST_THREAD_INLINE_NAMESPACE(v1)
     {
       return list_.end();
     }
-    const char* what() const BOOST_NOEXCEPT
+    const char* what() const BOOST_NOEXCEPT_OR_NOTHROW
     {
       return "exception_list";
     }

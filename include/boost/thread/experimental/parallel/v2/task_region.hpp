@@ -37,10 +37,12 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     //task_canceled_exception() BOOST_NOEXCEPT {}
     //task_canceled_exception(const task_canceled_exception&) BOOST_NOEXCEPT {}
     //task_canceled_exception& operator=(const task_canceled_exception&) BOOST_NOEXCEPT {}
-    virtual const char* what() const BOOST_NOEXCEPT
+    virtual const char* what() const BOOST_NOEXCEPT_OR_NOTHROW
     { return "task_canceled_exception";}
   };
-  class task_region_handle;
+
+  template <class Executor>
+  class task_region_handle_gen;
 
   namespace detail
   {
@@ -97,7 +99,8 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
 #endif
   }
 
-  class task_region_handle
+  template <class Executor>
+  class task_region_handle_gen
   {
   private:
     // Private members and friends
@@ -109,6 +112,10 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     friend void task_region(F&& f);
     template<typename F>
     friend void task_region_final(F&& f);
+    template <class Ex, typename F>
+    friend void task_region(Ex&, F&& f);
+    template<class Ex, typename F>
+    friend void task_region_final(Ex&, F&& f);
 
     void wait_all()
     {
@@ -137,14 +144,41 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
         //throw exs;
       }
     }
-
-    task_region_handle()
-#if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
-    : canceled(false)
+protected:
+#if ! defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && ! defined BOOST_THREAD_PROVIDES_EXECUTORS
+    task_region_handle_gen()
+    {}
 #endif
+
+#if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && defined BOOST_THREAD_PROVIDES_EXECUTORS
+    task_region_handle_gen()
+    : canceled(false)
+    , ex(0)
+    {}
+    task_region_handle_gen(Executor& ex)
+    : canceled(false)
+    , ex(&ex)
+    {}
+
+#endif
+
+#if ! defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && defined BOOST_THREAD_PROVIDES_EXECUTORS
+    task_region_handle_gen()
+    : ex(0)
+    {}
+    task_region_handle_gen(Executor& ex)
+    : ex(&ex)
+    {}
+#endif
+
+#if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && ! defined BOOST_THREAD_PROVIDES_EXECUTORS
+    task_region_handle_gen()
+    : canceled(false)
     {
     }
-    ~task_region_handle()
+#endif
+
+    ~task_region_handle_gen()
     {
       //wait_all();
     }
@@ -153,7 +187,7 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     bool canceled;
 #endif
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-    basic_thread_pool tp;
+    Executor* ex;
 #endif
     exception_list exs;
     csbl::vector<future<void>> group;
@@ -161,9 +195,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
 
 
   public:
-    task_region_handle(const task_region_handle&) = delete;
-    task_region_handle& operator=(const task_region_handle&) = delete;
-    task_region_handle* operator&() const = delete;
+    task_region_handle_gen(const task_region_handle_gen&) = delete;
+    task_region_handle_gen& operator=(const task_region_handle_gen&) = delete;
+    task_region_handle_gen* operator&() const = delete;
 
     template<typename F>
     void run(F&& f)
@@ -175,13 +209,13 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
         //throw task_canceled_exception();
       }
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-      group.push_back(async(tp, detail::wrapped<task_region_handle, F>(*this, forward<F>(f))));
+      group.push_back(async(*ex, detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
 #else
-      group.push_back(async(detail::wrapped<task_region_handle, F>(*this, forward<F>(f))));
+      group.push_back(async(detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
 #endif
 #else
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-      group.push_back(async(tp, forward<F>(f)));
+      group.push_back(async(*ex, forward<F>(f)));
 #else
       group.push_back(async(forward<F>(f)));
 #endif
@@ -200,6 +234,54 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
       wait_all();
     }
   };
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
+  typedef basic_thread_pool default_executor;
+#else
+  typedef int default_executor;
+#endif
+  class task_region_handle :
+    public task_region_handle_gen<default_executor>
+  {
+    default_executor tp;
+    template <typename F>
+    friend void task_region(F&& f);
+    template<typename F>
+    friend void task_region_final(F&& f);
+
+  protected:
+    task_region_handle() : task_region_handle_gen<default_executor>()
+    {
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
+      ex = &tp;
+#endif
+    }
+    task_region_handle(const task_region_handle&) = delete;
+    task_region_handle& operator=(const task_region_handle&) = delete;
+    task_region_handle* operator&() const = delete;
+
+  };
+
+  template <typename Executor, typename F>
+  void task_region_final(Executor& ex, F&& f)
+  {
+    task_region_handle_gen<Executor> tr(ex);
+    try
+    {
+      f(tr);
+    }
+    catch (...)
+    {
+      lock_guard<mutex> lk(tr.mtx);
+      detail::handle_task_region_exceptions(tr.exs);
+    }
+    tr.wait_all();
+  }
+
+  template <typename Executor, typename F>
+  void task_region(Executor& ex, F&& f)
+  {
+    task_region_final(ex, forward<F>(f));
+  }
 
   template <typename F>
   void task_region_final(F&& f)
