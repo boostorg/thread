@@ -8,6 +8,40 @@
 
 [section:changes History]
 
+[heading Version 4.5.0 - boost 1.58]
+
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/2442 #2442] Application statically linked with Boost.Thread crashes when Google Desktop is installed (Windows XP)
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+* [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
+* [@http://svn.boost.org/trac/boost/ticket/7319 #7319] Take care of c++std-lib-32966 issue
+* [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
+* [@http://svn.boost.org/trac/boost/ticket/9118 #9118] Seg fault on thread join when llvm and libc++ are used
+* [@http://svn.boost.org/trac/boost/ticket/9309 #9309] test_latch fails often on clang-darwin-tot11
+* [@http://svn.boost.org/trac/boost/ticket/9310 #9310] test_4648_lib fails on clang-darwin-asan11
+* [@http://svn.boost.org/trac/boost/ticket/9311 #9311] ex_lambda_future fails on msvc-11.0
+* [@http://svn.boost.org/trac/boost/ticket/10537 #10537] Application crash on throw exception
+* [@http://svn.boost.org/trac/boost/ticket/10651 #10651] boost::thread leaks memory when using the MinGW compiler
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
+
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last snapshot.
+
+[*Sever limitations:]
+
+There are some severe bugs that prevent the use of the library on concrete contexts, in particular:
+
+* on thread specific storage that prevent the library to be used with dynamic libraries,
+
+[*New Experimental Features:]
+
+* [@http://svn.boost.org/trac/boost/ticket/9600 #9600] Async: Add task_region
+* [@http://svn.boost.org/trac/boost/ticket/10611 #10611] Add emplace promise::set_value and emplace make_ready_future
+
+[*Fixed Bugs:]
+
+
 [heading Version 4.4.0 - boost 1.57]
 
 [*Know Bugs:]
@@ -557,18 +591,12 @@ been moved to __thread_id__.
 
 The following features will be included in next releases. 
 
-# Complete the C++11 missing features, in particular
-  * [@http://svn.boost.org/trac/boost/ticket/6227 #6227] C++11 compliance: Use of variadic templates on Generic Locking Algorithms on compilers providing them. 
-
 # Add some minor features, in particular
   * [@http://svn.boost.org/trac/boost/ticket/7589 #7589] Synchro: Add polymorphic lockables.
 
 # Add some features based on C++ proposals, in particular
   * [@http://svn.boost.org/trac/boost/ticket/8273 #8273] Synchro: Add externally locked streams.
   * [@http://svn.boost.org/trac/boost/ticket/8514 #8514] Async: Add a thread_pool executor with work stealing.
-
-# Add extensions related to fork-join as:
-  * [@http://svn.boost.org/trac/boost/ticket/9600 #9600] Async: Add task_region/task_run.
 
 # And some additional extensions related to futures as:
 
