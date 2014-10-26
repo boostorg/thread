@@ -36,7 +36,7 @@ BOOST_THREAD_INLINE_NAMESPACE(v1)
   public:
     typedef exception_ptr_list::const_iterator const_iterator;
 
-    ~exception_list() throw() {}
+    ~exception_list() BOOST_NOEXCEPT_OR_NOTHROW {}
 
     void add(exception_ptr const& e)
     {
