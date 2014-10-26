@@ -883,6 +883,19 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/perf_condition_variable.cpp ]
           #[ thread-run ../example/perf_shared_mutex.cpp ]
     ;
+
+
+    #explicit ts_exception_list ;
+    test-suite ts_exception_list
+    :
+          [ thread-run2-noit ./experimental/parallel/v1/exception_list_pass.cpp : exception_list_p ]
+    ;
+    
+    #explicit ts_task_region ;
+    test-suite ts_task_region
+    :
+          [ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p ]
+    ;
     
     explicit ts_ ;
     test-suite ts_
