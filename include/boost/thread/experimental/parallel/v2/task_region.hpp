@@ -13,7 +13,9 @@
 #if ! defined BOOST_NO_CXX11_RANGE_BASED_FOR
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/future.hpp>
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/thread/executors/basic_thread_pool.hpp>
+#endif
 #include <boost/thread/experimental/exception_list.hpp>
 #include <boost/thread/experimental/parallel/v2/inline_namespace.hpp>
 
@@ -150,7 +152,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
     bool canceled;
 #endif
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
     basic_thread_pool tp;
+#endif
     exception_list exs;
     csbl::vector<future<void>> group;
     mutable mutex mtx;
@@ -170,9 +174,17 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
         boost::throw_exception(task_canceled_exception());
         //throw task_canceled_exception();
       }
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
       group.push_back(async(tp, detail::wrapped<task_region_handle, F>(*this, forward<F>(f))));
 #else
+      group.push_back(async(detail::wrapped<task_region_handle, F>(*this, forward<F>(f))));
+#endif
+#else
+#if defined BOOST_THREAD_PROVIDES_EXECUTORS
       group.push_back(async(tp, forward<F>(f)));
+#else
+      group.push_back(async(forward<F>(f)));
+#endif
 #endif
     }
 

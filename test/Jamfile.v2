@@ -765,7 +765,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
           [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
           [ thread-run2 ../example/with_lock_guard.cpp : ex_with_lock_guard ]
-
+          [ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region ]
     ;
 
     #explicit ts_shared_upwards ;
