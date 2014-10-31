@@ -8,17 +8,21 @@
 #ifndef BOOST_THREAD_SYNC_PRIORITY_QUEUE
 #define BOOST_THREAD_SYNC_PRIORITY_QUEUE
 
-#include <queue>
-#include <exception>
+#include <boost/thread/detail/config.hpp>
+
+#include <boost/thread/concurrent_queues/queue_op_status.hpp>
+#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/csbl/vector.hpp>
+#include <boost/thread/mutex.hpp>
 
 #include <boost/atomic.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
-
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/time_point.hpp>
-
 #include <boost/optional.hpp>
+
+#include <exception>
+#include <queue>
+#include <utility>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -27,7 +31,7 @@ namespace boost
 namespace concurrent
 {
   template <class ValueType,
-            class Container = std::vector<ValueType>,
+            class Container = csbl::vector<ValueType>,
             class Compare = std::less<typename Container::value_type> >
   class sync_priority_queue
   {
@@ -52,12 +56,16 @@ namespace concurrent
 
     void close()
     {
-      //lock_guard<mutex> lk(_qmutex);
+      lock_guard<mutex> lk(_qmutex);
       _closed.store(true);
       _qempty.notify_all();
     }
 
-    bool is_closed() const
+    bool closed(lock_guard<mutex> &) const
+    {
+      return _closed.load();
+    }
+    bool closed() const
     {
       return _closed.load();
     }
@@ -68,11 +76,19 @@ namespace concurrent
     }
 
     void push(const ValueType& elem);
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     bool try_push(const ValueType& elem);
+#else
+    queue_op_status try_push(const ValueType& elem);
+#endif
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     void push(ValueType&& elem);
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     bool try_push(ValueType&& elem);
+#else
+    queue_op_status try_push(ValueType&& elem);
+#endif
 #endif
 
     ValueType pull();
@@ -205,6 +221,7 @@ namespace concurrent
     return optional<T>();
   }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <class T, class Container,class Cmp>
   bool sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
   {
@@ -217,8 +234,22 @@ namespace concurrent
     }
     return false;
   }
+#else
+  template <class T, class Container,class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
+  {
+    lock_guard<mutex> lk(_qmutex);
+    if (closed(lk)) return queue_op_status::closed;
+    else {
+      _pq.push(elem);
+    }
+    _qempty.notify_one();
+    return queue_op_status::success;
+  }
+#endif
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <class T, class Container,class Cmp>
   bool sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
   {
@@ -231,6 +262,20 @@ namespace concurrent
     }
     return false;
   }
+#else
+  template <class T, class Container,class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
+  {
+    lock_guard<mutex> lk(_qmutex);
+    if (closed(lk)) return queue_op_status::closed;
+    else
+    {
+      _pq.emplace(elem);
+    }
+    _qempty.notify_one();
+    return queue_op_status::success;
+  }
+#endif
 #endif
 
 } //end concurrent namespace

@@ -47,7 +47,7 @@ namespace executors
   template<typename Executor>
   void scheduling_adpator<Executor>::scheduler_loop()
   {
-    while(!super::_workq.is_closed() || !super::_workq.empty())
+    while(!super::_workq.closed() || !super::_workq.empty())
     {
       try
       {

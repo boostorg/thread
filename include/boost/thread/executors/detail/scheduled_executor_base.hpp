@@ -12,6 +12,7 @@
 #include <boost/function.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/concurrent_queues/sync_timed_queue.hpp>
+#include <boost/thread/executors/work.hpp>
 
 namespace boost
 {
@@ -23,6 +24,7 @@ namespace detail
   {
   public:
     typedef boost::function<void()> work;
+    //typedef executors::work work;
     typedef chrono::steady_clock clock;
     typedef clock::duration duration;
     typedef clock::time_point time_point;
@@ -34,7 +36,7 @@ namespace detail
 
     ~scheduled_executor_base() //virtual?
     {
-      if(!_workq.is_closed())
+      if(!_workq.closed())
       {
         this->close();
       }

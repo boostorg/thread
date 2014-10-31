@@ -12,6 +12,7 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
+#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <exception>
 
@@ -47,7 +48,7 @@ void test_pull(const int n)
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), n);
     pq.close();
-    BOOST_TEST(pq.is_closed());
+    BOOST_TEST(pq.closed());
     boost::barrier b(n);
     boost::thread_group tg;
     for(int i = 0; i < n; i++)
@@ -134,7 +135,7 @@ void compute_sum(const int n)
     }
     tg1.join_all();
     pq.close();  //Wait until all enqueuing is done before closing.
-    BOOST_TEST(pq.is_closed());
+    BOOST_TEST(pq.closed());
     tg2.join_all();
     BOOST_TEST(pq.empty());
     BOOST_TEST_EQ(sum.load(), limit*(limit+1)/2);
@@ -178,7 +179,7 @@ void sum_with_moving(const int n)
     }
     tg1.join_all();
     pq1.close();  //Wait until all enqueuing is done before closing.
-    BOOST_TEST(pq1.is_closed());
+    BOOST_TEST(pq1.closed());
     tg2.join_all();
     BOOST_TEST(pq1.empty());
     BOOST_TEST(!pq2.empty());

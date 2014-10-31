@@ -12,6 +12,7 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
+#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/bind.hpp>
 #include <boost/chrono.hpp>

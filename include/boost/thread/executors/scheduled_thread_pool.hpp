@@ -42,7 +42,7 @@ namespace executors
 
   void scheduled_thread_pool::worker_loop()
   {
-    while(!super::_workq.is_closed() || !super::_workq.empty())
+    while(!super::_workq.closed() || !super::_workq.empty())
     {
       try
       {

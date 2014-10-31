@@ -8,8 +8,10 @@
 #ifndef BOOST_THREAD_SYNC_TIMED_QUEUE_HPP
 #define BOOST_THREAD_SYNC_TIMED_QUEUE_HPP
 
-#include <boost/chrono/time_point.hpp>
+#include <boost/thread/detail/config.hpp>
+
 #include <boost/thread/concurrent_queues/sync_priority_queue.hpp>
+#include <boost/chrono/time_point.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -26,8 +28,10 @@ namespace detail
     T data;
     time_point time;
 
-    scheduled_type(T pdata, time_point tp) : data(pdata), time(tp) {}
-
+    scheduled_type(T const&pdata, time_point tp) : data(pdata), time(tp) {}
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    scheduled_type(T &&pdata, time_point tp) : data(std::move(pdata)), time(tp) {}
+#endif
     bool operator <(const scheduled_type<T> other) const
     {
       return this->time > other.time;
@@ -52,7 +56,7 @@ namespace detail
     using super::size;
     using super::empty;
     using super::close;
-    using super::is_closed;
+    using super::closed;
 
     T pull();
     optional<T> try_pull();
@@ -60,8 +64,22 @@ namespace detail
 
     void push(const T& elem, const time_point& tp);
     void push(const T& elem, const duration& dura);
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     bool try_push(const T& elem, const time_point& tp);
     bool try_push(const T& elem, const duration& dura);
+#else
+    queue_op_status try_push(const T& elem, const time_point& tp);
+    queue_op_status try_push(const T& elem, const duration& dura);
+#endif
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
+    bool try_push(T&& elem, const time_point& tp);
+    bool try_push(T&& elem, const duration& dura);
+#else
+    queue_op_status try_push(T&& elem, const time_point& tp);
+    queue_op_status try_push(T&& elem, const duration& dura);
+#endif
+#endif
   private:
     sync_timed_queue(const sync_timed_queue&);
     sync_timed_queue& operator=(const sync_timed_queue&);
@@ -84,6 +102,7 @@ namespace detail
     super::push(stype(elem,tp));
   }
 
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template<typename T>
   bool sync_timed_queue<T>::try_push(const T& elem, const time_point& tp)
   {
@@ -97,6 +116,51 @@ namespace detail
     return super::try_push(stype(elem,tp));
   }
 
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+  template<typename T>
+  bool sync_timed_queue<T>::try_push(T&& elem, const time_point& tp)
+  {
+    return super::try_push(stype(std::forward<T>(elem), tp));
+  }
+
+  template<typename T>
+  bool sync_timed_queue<T>::try_push(T&& elem, const duration& dura)
+  {
+    const time_point tp = clock::now() + dura;
+    return super::try_push(stype(std::forward<T>(elem), tp));
+  }
+
+#endif
+#else
+  template<typename T>
+  queue_op_status sync_timed_queue<T>::try_push(const T& elem, const time_point& tp)
+  {
+    return super::try_push(stype(elem,tp));
+  }
+
+  template<typename T>
+  queue_op_status sync_timed_queue<T>::try_push(const T& elem, const duration& dura)
+  {
+    const time_point tp = clock::now() + dura;
+    return super::try_push(stype(elem,tp));
+  }
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+  template<typename T>
+  queue_op_status sync_timed_queue<T>::try_push(T&& elem, const time_point& tp)
+  {
+    return super::try_push(stype(std::forward<T>(elem), tp));
+  }
+
+  template<typename T>
+  queue_op_status sync_timed_queue<T>::try_push(T&& elem, const duration& dura)
+  {
+    const time_point tp = clock::now() + dura;
+    return super::try_push(stype(std::forward<T>(elem), tp));
+  }
+
+#endif
+#endif
   template<typename T>
   T sync_timed_queue<T>::pull()
   {

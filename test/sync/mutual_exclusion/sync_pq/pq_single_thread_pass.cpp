@@ -12,6 +12,7 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
+#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <iostream>
 
@@ -81,7 +82,7 @@ int main()
 {
   sync_pq pq;
   BOOST_TEST(pq.empty());
-  BOOST_TEST(!pq.is_closed());
+  BOOST_TEST(!pq.closed());
   BOOST_TEST_EQ(pq.size(), 0);
 
   for(int i = 1; i <= 5; i++){
@@ -91,8 +92,13 @@ int main()
   }
 
   for(int i = 6; i <= 10; i++){
+#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
     bool succ = pq.try_push(i);
     BOOST_TEST(succ);
+#else
+    boost::queue_op_status succ = pq.try_push(i);
+    BOOST_TEST(succ == boost::queue_op_status::success );
+#endif
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }
@@ -110,7 +116,7 @@ int main()
 
   BOOST_TEST(pq.empty());
   pq.close();
-  BOOST_TEST(pq.is_closed());
+  BOOST_TEST(pq.closed());
 
   test_pull_for();
   test_pull_until();
