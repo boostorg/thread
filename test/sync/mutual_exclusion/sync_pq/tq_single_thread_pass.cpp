@@ -22,7 +22,7 @@
 
 using namespace boost::chrono;
 
-typedef boost::detail::sync_timed_queue<int> sync_tq;
+typedef boost::concurrent::sync_timed_queue<int> sync_tq;
 
 void test_all()
 {
@@ -102,7 +102,7 @@ void func(steady_clock::time_point pushed, steady_clock::duration dur)
  */
 void test_deque_times()
 {
-    boost::detail::sync_timed_queue<boost::function<void()> > tq;
+    boost::concurrent::sync_timed_queue<boost::function<void()> > tq;
     for(int i = 0; i < 10; i++)
     {
         steady_clock::duration d = milliseconds(i*100);

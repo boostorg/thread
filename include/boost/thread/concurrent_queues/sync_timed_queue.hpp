@@ -15,6 +15,8 @@
 
 namespace boost
 {
+namespace concurrent
+{
 namespace detail
 {
   template<typename T>
@@ -31,17 +33,18 @@ namespace detail
       return this->time > other.time;
     }
   }; //end struct
+} //end detail namespace
 
   template<typename T>
-  class sync_timed_queue : private sync_priority_queue<scheduled_type<T> >
+  class sync_timed_queue : private sync_priority_queue<detail::scheduled_type<T> >
   {
   public:
     typedef typename chrono::steady_clock clock;
     typedef typename clock::duration duration;
     typedef typename clock::time_point time_point;
 
-    typedef scheduled_type<T> stype;
-    typedef sync_priority_queue<scheduled_type<T> > super;
+    typedef detail::scheduled_type<T> stype;
+    typedef sync_priority_queue<stype> super;
 
     sync_timed_queue() : super() {};
     ~sync_timed_queue() {} //Call super?
@@ -168,7 +171,10 @@ namespace detail
     }
   }
 
-} //end detail namespace
+} //end concurrent namespace
+
+using concurrent::sync_timed_queue;
+
 } //end boost namespace
 #include <boost/config/abi_suffix.hpp>
 

@@ -12,7 +12,10 @@
 
 namespace boost
 {
-  class scheduled_thread_pool : public detail::scheduled_executor_base
+namespace executors
+{
+
+  class scheduled_thread_pool : public scheduled_executor_base
   {
   private:
     thread_group _workers;
@@ -53,6 +56,10 @@ namespace boost
       }
     }
   }
+} //end executors namespace
+
+using executors::scheduled_thread_pool;
+
 } //end boost
 #endif
 

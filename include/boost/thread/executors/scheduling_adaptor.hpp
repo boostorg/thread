@@ -10,10 +10,13 @@
 
 #include <boost/thread/detail/scheduled_executor_base.hpp>
 
-namespace boost{
+namespace boost
+{
+namespace executors
+{
 
   template <typename Executor>
-  class scheduling_adpator : public detail::scheduled_executor_base
+  class scheduling_adpator : public scheduled_executor_base
   {
   private:
     Executor& _exec;
@@ -58,5 +61,9 @@ namespace boost{
       }
     }
   }
+} //end executors
+
+  using executors::scheduling_adpator;
+
 } //end boost
 #endif

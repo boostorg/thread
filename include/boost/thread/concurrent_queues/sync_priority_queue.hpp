@@ -24,7 +24,7 @@
 
 namespace boost
 {
-namespace detail
+namespace concurrent
 {
   template <class ValueType,
             class Container = std::vector<ValueType>,
@@ -52,7 +52,7 @@ namespace detail
 
     void close()
     {
-      lock_guard<mutex> lk(_qmutex);
+      //lock_guard<mutex> lk(_qmutex);
       _closed.store(true);
       _qempty.notify_all();
     }
@@ -233,7 +233,10 @@ namespace detail
   }
 #endif
 
-} //end detail namespace
+} //end concurrent namespace
+
+using concurrent::sync_priority_queue;
+
 } //end boost namespace
 #include <boost/config/abi_suffix.hpp>
 

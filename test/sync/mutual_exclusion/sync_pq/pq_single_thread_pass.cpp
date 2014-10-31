@@ -23,7 +23,7 @@
 
 using namespace boost::chrono;
 
-typedef boost::detail::sync_priority_queue<int> sync_pq;
+typedef boost::concurrent::sync_priority_queue<int> sync_pq;
 
 void test_pull_for()
 {

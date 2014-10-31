@@ -15,7 +15,7 @@
 
 namespace boost
 {
-namespace detail
+namespace executors
 {
   class scheduled_executor_base
   {
@@ -58,6 +58,6 @@ namespace detail
       _workq.push(w, dura);
     }
   }; //end class
-} //end detail namespace
+} //end executors namespace
 } //end boost namespace
 #endif

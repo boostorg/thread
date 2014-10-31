@@ -21,7 +21,7 @@
 
 #include <boost/core/lightweight_test.hpp>
 
-typedef boost::detail::sync_priority_queue<int> sync_pq;
+typedef boost::concurrent::sync_priority_queue<int> sync_pq;
 
 int call_pull(sync_pq* q, boost::barrier* go)
 {
