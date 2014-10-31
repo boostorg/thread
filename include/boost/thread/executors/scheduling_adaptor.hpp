@@ -8,7 +8,7 @@
 #ifndef SCHEDULING_ADAPTOR_HPP
 #define SCHEDULING_ADAPTOR_HPP
 
-#include <boost/thread/detail/scheduled_executor_base.hpp>
+#include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 
 namespace boost
 {
@@ -16,7 +16,7 @@ namespace executors
 {
 
   template <typename Executor>
-  class scheduling_adpator : public scheduled_executor_base
+  class scheduling_adpator : public detail::scheduled_executor_base
   {
   private:
     Executor& _exec;
@@ -40,7 +40,7 @@ namespace executors
     }
 
   private:
-    typedef scheduled_executor_base super;
+    typedef detail::scheduled_executor_base super;
     void scheduler_loop();
   }; //end class
 
@@ -61,6 +61,7 @@ namespace executors
       }
     }
   }
+
 } //end executors
 
   using executors::scheduling_adpator;

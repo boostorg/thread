@@ -8,14 +8,14 @@
 #ifndef SCHEDULED_THREAD_POOL_HPP
 #define SCHEDULED_THREAD_POOL_HPP
 
-#include <boost/thread/detail/scheduled_executor_base.hpp>
+#include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 
 namespace boost
 {
 namespace executors
 {
 
-  class scheduled_thread_pool : public scheduled_executor_base
+  class scheduled_thread_pool : public detail::scheduled_executor_base
   {
   private:
     thread_group _workers;
@@ -36,8 +36,8 @@ namespace executors
     }
 
   private:
-    typedef scheduled_executor_base super;
-    void worker_loop();
+    typedef detail::scheduled_executor_base super;
+    inline void worker_loop();
   }; //end class
 
   void scheduled_thread_pool::worker_loop()
@@ -56,6 +56,7 @@ namespace executors
       }
     }
   }
+
 } //end executors namespace
 
 using executors::scheduled_thread_pool;
