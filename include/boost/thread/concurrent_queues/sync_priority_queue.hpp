@@ -14,6 +14,7 @@
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/csbl/vector.hpp>
+#include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
 
 #include <boost/atomic.hpp>
@@ -29,15 +30,69 @@
 
 namespace boost
 {
+namespace detail {
+
+  template <
+    class Type,
+    class Container = csbl::vector<Type>,
+    class Compare = std::less<Type>
+  >
+  class priority_queue
+  {
+  private:
+      std::vector<Type> _elements;
+      Compare _compare;
+  public:
+      explicit priority_queue(const Compare& compare = Compare())
+          : _elements(), _compare(compare)
+      { }
+
+      std::size_t size() const
+      {
+          return _elements.size();
+      }
+
+      bool empty() const
+      {
+          return _elements.empty();
+      }
+
+      void push(Type const& element)
+      {
+          _elements.push_back(element);
+          std::push_heap(_elements.begin(), _elements.end(), _compare);
+      }
+      void push(BOOST_RV_REF(Type) element)
+      {
+          _elements.push_back(boost::move(element));
+          std::push_heap(_elements.begin(), _elements.end(), _compare);
+      }
+
+      Type pull()
+      {
+          std::pop_heap(_elements.begin(), _elements.end(), _compare);
+          Type result = boost::move(_elements.back());
+          _elements.pop_back();
+          return boost::move(result);
+      }
+
+      Type const& top()
+      {
+          return _elements.back();
+      }
+  };
+}
+
 namespace concurrent
 {
   template <class ValueType,
             class Container = csbl::vector<ValueType>,
             class Compare = std::less<typename Container::value_type> >
   class sync_priority_queue
-    : public detail::sync_queue_base<ValueType, std::priority_queue<ValueType,Container,Compare> >
+    : public detail::sync_queue_base<ValueType, boost::detail::priority_queue<ValueType,Container,Compare> >
   {
-    typedef detail::sync_queue_base<ValueType, std::priority_queue<ValueType,Container,Compare> >  super;
+    typedef detail::sync_queue_base<ValueType, boost::detail::priority_queue<ValueType,Container,Compare> >  super;
+
   public:
     typedef ValueType value_type;
     //typedef typename super::value_type value_type; // fixme
@@ -62,10 +117,8 @@ namespace concurrent
     void push(const ValueType& elem);
     queue_op_status try_push(const ValueType& elem);
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    void push(ValueType&& elem);
-    queue_op_status try_push(ValueType&& elem);
-#endif
+    void push(BOOST_THREAD_RV_REF(ValueType) elem);
+    queue_op_status try_push(BOOST_THREAD_RV_REF(ValueType) elem);
 
     ValueType pull();
     optional<ValueType> pull_until(const clock::time_point&);
@@ -78,36 +131,40 @@ namespace concurrent
   private:
     void push(unique_lock<mutex>&, const ValueType& elem);
     void push(lock_guard<mutex>&, const ValueType& elem);
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    void push(unique_lock<mutex>&, ValueType&& elem);
-    void push(lock_guard<mutex>&, ValueType&& elem);
-#endif
+    void push_rvalue(unique_lock<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
+    void push_rvalue(lock_guard<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
 
     ValueType pull(unique_lock<mutex>&);
     ValueType pull(lock_guard<mutex>&);
 
     sync_priority_queue(const sync_priority_queue&);
     sync_priority_queue& operator= (const sync_priority_queue&);
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    sync_priority_queue(sync_priority_queue&&);
-    sync_priority_queue& operator= (sync_priority_queue&&);
-#endif
+    sync_priority_queue(BOOST_THREAD_RV_REF(sync_priority_queue));
+    sync_priority_queue& operator= (BOOST_THREAD_RV_REF(sync_priority_queue));
   }; //end class
 
 
   template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull(unique_lock<mutex>&)
   {
-    T first = super::data_.top();
+#if 0
+    T first = boost::move(const_cast<T&>(super::data_.top()));
     super::data_.pop();
-    return first;
+    return boost::move(first);
+#else
+    return super::data_.pull();
+#endif
   }
   template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull(lock_guard<mutex>&)
   {
-    T first = super::data_.top();
+#if 0
+    T first = boost::move(const_cast<T&>(super::data_.top()));
     super::data_.pop();
-    return first;
+    return boost::move(first);
+#else
+    return super::data_.pull();
+#endif
   }
 
   template <class T,class Container, class Cmp>
@@ -166,26 +223,24 @@ namespace concurrent
     push(lk, elem);
   }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>&, T&& elem)
+  void sync_priority_queue<T,Container,Cmp>::push_rvalue(unique_lock<mutex>&, BOOST_THREAD_RV_REF(T) elem)
   {
-    super::data_.emplace(elem);
+    super::data_.push(boost::move(elem));
     super::not_empty_.notify_one();
   }
   template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>&, T&& elem)
+  void sync_priority_queue<T,Container,Cmp>::push_rvalue(lock_guard<mutex>&, BOOST_THREAD_RV_REF(T) elem)
   {
-    super::data_.emplace(elem);
+    super::data_.push(boost::move(elem));
     super::not_empty_.notify_one();
   }
   template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(T&& elem)
+  void sync_priority_queue<T,Container,Cmp>::push(BOOST_THREAD_RV_REF(T) elem)
   {
     lock_guard<mutex> lk(super::mtx_);
-    push(lk, std::forward<T>(elem));
+    push_rvalue(lk, boost::move(elem));
   }
-#endif
 
   template <class T, class Container,class Cmp>
   optional<T>
@@ -215,16 +270,15 @@ namespace concurrent
     return queue_op_status::success;
   }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   template <class T, class Container,class Cmp>
-  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
+  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(BOOST_THREAD_RV_REF(T) elem)
   {
     lock_guard<mutex> lk(super::mtx_);
     if (super::closed(lk)) return queue_op_status::closed;
-    push(lk, std::forward<T>(elem));
+    push_rvalue(lk, boost::move(elem));
+
     return queue_op_status::success;
   }
-#endif
 
 } //end concurrent namespace
 

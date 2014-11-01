@@ -5,8 +5,8 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SCHEDULING_ADAPTOR_HPP
-#define SCHEDULING_ADAPTOR_HPP
+#ifndef BOOST_THREAD_EXECUTORS_SCHEDULING_ADAPTOR_HPP
+#define BOOST_THREAD_EXECUTORS_SCHEDULING_ADAPTOR_HPP
 
 #include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 

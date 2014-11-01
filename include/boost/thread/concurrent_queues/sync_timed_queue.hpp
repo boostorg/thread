@@ -29,10 +29,25 @@ namespace detail
     T data;
     time_point time;
 
-    scheduled_type(T const&pdata, time_point tp) : data(pdata), time(tp) {}
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    scheduled_type(T &&pdata, time_point tp) : data(std::move(pdata)), time(tp) {}
-#endif
+    BOOST_THREAD_COPYABLE_AND_MOVABLE(scheduled_type)
+
+    scheduled_type(T const& pdata, time_point tp) : data(pdata), time(tp) {}
+    scheduled_type(BOOST_THREAD_RV_REF(T) pdata, time_point tp) : data(boost::move(pdata)), time(tp) {}
+
+    scheduled_type(scheduled_type const& other) : data(other.data), time(other.time) {}
+    scheduled_type& operator=(BOOST_THREAD_COPY_ASSIGN_REF(scheduled_type) other) {
+      data = other.data;
+      time = other.time;
+      return *this;
+    }
+
+    scheduled_type(BOOST_THREAD_RV_REF(scheduled_type) other) : data(boost::move(other.data)), time(other.time) {}
+    scheduled_type& operator=(BOOST_THREAD_RV_REF(scheduled_type) other) {
+      data = boost::move(other.data);
+      time = other.time;
+      return *this;
+    }
+
     bool time_not_reached() const
     {
       return time > clock::now();
@@ -43,6 +58,7 @@ namespace detail
       return this->time > other.time;
     }
   }; //end struct
+
 } //end detail namespace
 
   template <class T>
@@ -80,10 +96,8 @@ namespace detail
     void push(const T& elem, const duration& dura);
     queue_op_status try_push(const T& elem, const time_point& tp);
     queue_op_status try_push(const T& elem, const duration& dura);
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    queue_op_status try_push(T&& elem, const time_point& tp);
-    queue_op_status try_push(T&& elem, const duration& dura);
-#endif
+    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const time_point& tp);
+    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const duration& dura);
   private:
     T pull(unique_lock<mutex>&);
     T pull(lock_guard<mutex>&);
@@ -93,10 +107,8 @@ namespace detail
 
     sync_timed_queue(const sync_timed_queue&);
     sync_timed_queue& operator=(const sync_timed_queue&);
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-    sync_timed_queue(sync_timed_queue&&);
-    sync_timed_queue& operator=(sync_timed_queue&&);
-#endif
+    sync_timed_queue(BOOST_THREAD_RV_REF(sync_timed_queue));
+    sync_timed_queue& operator=(BOOST_THREAD_RV_REF(sync_timed_queue));
   }; //end class
 
   template <class T>
@@ -123,20 +135,17 @@ namespace detail
     return try_push(elem,clock::now() + dura);
   }
 
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(T&& elem, const time_point& tp)
+  queue_op_status sync_timed_queue<T>::try_push(BOOST_THREAD_RV_REF(T) elem, const time_point& tp)
   {
-    return super::try_push(stype(std::forward<T>(elem), tp));
+    return super::try_push(stype(boost::move(elem), tp));
   }
 
   template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(T&& elem, const duration& dura)
+  queue_op_status sync_timed_queue<T>::try_push(BOOST_THREAD_RV_REF(T) elem, const duration& dura)
   {
-    return try_push(std::forward<T>(elem), clock::now() + dura);
+    return try_push(boost::move(elem), clock::now() + dura);
   }
-
-#endif
 
   template <class T>
   bool sync_timed_queue<T>::time_not_reached(unique_lock<mutex>&)
@@ -153,17 +162,36 @@ namespace detail
   template <class T>
   T sync_timed_queue<T>::pull(unique_lock<mutex>&)
   {
-    const T temp = super::data_.top().data;
-    super::data_.pop();
-    return temp;
+
+#if 0
+        const T temp = super::data_.top().data;
+        super::data_.pop();
+        return temp;
+#else
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    return boost::move(super::data_.pull().data);
+#else
+    return super::data_.pull().data;
+#endif
+
+#endif
   }
 
   template <class T>
   T sync_timed_queue<T>::pull(lock_guard<mutex>&)
   {
-    const T temp = super::data_.top().data;
-    super::data_.pop();
-    return temp;
+#if 0
+        const T temp = super::data_.top().data;
+        super::data_.pop();
+        return temp;
+#else
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    return boost::move(super::data_.pull().data);
+#else
+    return super::data_.pull().data;
+#endif
+#endif
+
   }
 
   template <class T>

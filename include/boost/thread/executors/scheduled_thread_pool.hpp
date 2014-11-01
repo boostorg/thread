@@ -5,8 +5,8 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef SCHEDULED_THREAD_POOL_HPP
-#define SCHEDULED_THREAD_POOL_HPP
+#ifndef BOOST_THREAD_EXECUTORS_SCHEDULED_THREAD_POOL_HPP
+#define BOOST_THREAD_EXECUTORS_SCHEDULED_THREAD_POOL_HPP
 
 #include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 
