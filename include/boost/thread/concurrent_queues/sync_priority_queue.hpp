@@ -37,6 +37,27 @@ namespace concurrent
   {
   public:
     typedef chrono::steady_clock clock;
+  protected:
+    inline void wait_until_not_empty(unique_lock<mutex>& lk);
+    inline bool wait_until_not_empty_or_closed(unique_lock<mutex>& lk);
+    inline void throw_if_closed(unique_lock<mutex>&);
+    bool closed(unique_lock<mutex> &) const
+    {
+      return _closed.load();
+    }
+    bool closed(lock_guard<mutex> &) const
+    {
+      return _closed.load();
+    }
+    inline bool empty(unique_lock<mutex>& ) const BOOST_NOEXCEPT
+    {
+      return _pq.empty();
+    }
+    inline bool empty(lock_guard<mutex>& ) const BOOST_NOEXCEPT
+    {
+      return _pq.empty();
+    }
+
   public:
     sync_priority_queue() : _closed(false) {}
 
@@ -51,20 +72,16 @@ namespace concurrent
     bool empty() const
     {
       lock_guard<mutex> lk(_qmutex);
-      return _pq.empty();
+      return empty(lk);
     }
 
     void close()
     {
       lock_guard<mutex> lk(_qmutex);
       _closed.store(true);
-      _qempty.notify_all();
+      _not_empty.notify_all();
     }
 
-    bool closed(lock_guard<mutex> &) const
-    {
-      return _closed.load();
-    }
     bool closed() const
     {
       return _closed.load();
@@ -102,7 +119,7 @@ namespace concurrent
   protected:
     atomic<bool> _closed;
     mutable mutex _qmutex;
-    condition_variable _qempty;
+    condition_variable _not_empty;
     std::priority_queue<ValueType,Container,Compare> _pq;
 
   private:
@@ -115,14 +132,44 @@ namespace concurrent
   }; //end class
 
   template <class T,class Container, class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::throw_if_closed(unique_lock<mutex>& lk)
+  {
+    if (closed(lk))
+    {
+      BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+    }
+  }
+
+  template <class T,class Container, class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::wait_until_not_empty(unique_lock<mutex>& lk)
+  {
+    for (;;)
+    {
+      if (! empty(lk)) break;
+      throw_if_closed(lk);
+      //++waiting_empty_;
+      _not_empty.wait(lk);
+    }
+  }
+
+  template <class T,class Container, class Cmp>
+  bool sync_priority_queue<T,Container,Cmp>::wait_until_not_empty_or_closed(unique_lock<mutex>& lk)
+  {
+    for (;;)
+    {
+      if (! empty(lk)) break;
+      if (closed(lk)) {return true;}
+      //++waiting_empty_;
+      _not_empty.wait(lk);
+    }
+    return false;
+  }
+
+  template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull()
   {
     unique_lock<mutex> lk(_qmutex);
-    while(_pq.empty())
-    {
-      if(_closed.load()) throw std::exception();
-      _qempty.wait(lk);
-    }
+    wait_until_not_empty(lk);
     T first = _pq.top();
     _pq.pop();
     return first;
@@ -136,7 +183,7 @@ namespace concurrent
     while(_pq.empty())
     {
       if(_closed.load()) throw std::exception();
-      if(_qempty.wait_until(lk, tp) == cv_status::timeout )
+      if(_not_empty.wait_until(lk, tp) == cv_status::timeout )
       {
         return optional<T>();
       }
@@ -175,7 +222,7 @@ namespace concurrent
   {
     lock_guard<mutex> lk(_qmutex);
     _pq.push(elem);
-    _qempty.notify_one();
+    _not_empty.notify_one();
   }
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -184,7 +231,7 @@ namespace concurrent
   {
     lock_guard<mutex> lk(_qmutex);
     _pq.emplace(elem);
-    _qempty.notify_one();
+    _not_empty.notify_one();
   }
 #endif
 
@@ -195,11 +242,7 @@ namespace concurrent
     unique_lock<mutex> lk(_qmutex, try_to_lock);
     if(lk.owns_lock())
     {
-      while(_pq.empty())
-      {
-        if(_closed.load()) throw std::exception();
-        _qempty.wait(lk);
-      }
+      wait_until_not_empty(lk);
       optional<T> fst( _pq.top() );
       _pq.pop();
       return fst;
@@ -229,7 +272,7 @@ namespace concurrent
     if(lk.owns_lock())
     {
       _pq.push(elem);
-      _qempty.notify_one();
+      _not_empty.notify_one();
       return true;
     }
     return false;
@@ -243,7 +286,7 @@ namespace concurrent
     else {
       _pq.push(elem);
     }
-    _qempty.notify_one();
+    _not_empty.notify_one();
     return queue_op_status::success;
   }
 #endif
@@ -257,7 +300,7 @@ namespace concurrent
     if(lk.owns_lock())
     {
       _pq.emplace(elem);
-      _qempty.notify_one();
+      _not_empty.notify_one();
       return true;
     }
     return false;
@@ -272,7 +315,7 @@ namespace concurrent
     {
       _pq.emplace(elem);
     }
-    _qempty.notify_one();
+    _not_empty.notify_one();
     return queue_op_status::success;
   }
 #endif

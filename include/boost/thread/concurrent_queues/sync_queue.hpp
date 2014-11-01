@@ -136,7 +136,7 @@ namespace boost
     inline queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x, unique_lock<mutex>& lk);
 
     inline void wait_until_not_empty(unique_lock<mutex>& lk);
-    inline void wait_until_not_empty(unique_lock<mutex>& lk, bool&);
+    inline bool wait_until_not_empty_or_closed(unique_lock<mutex>& lk);
 
     inline void notify_not_empty_if_needed(unique_lock<mutex>& lk)
     {
@@ -322,8 +322,7 @@ namespace boost
     {
       if (closed(lk)) return queue_op_status::closed;
     }
-    bool has_been_closed = false;
-    wait_until_not_empty(lk, has_been_closed);
+    bool has_been_closed = wait_until_not_empty_or_closed(lk);
     if (has_been_closed) return queue_op_status::closed;
     pull_front(elem, lk);
     return queue_op_status::success;
@@ -401,16 +400,16 @@ namespace boost
     }
   }
   template <typename ValueType>
-  void sync_queue<ValueType>::wait_until_not_empty(unique_lock<mutex>& lk, bool & closed)
+  bool sync_queue<ValueType>::wait_until_not_empty_or_closed(unique_lock<mutex>& lk)
   {
     for (;;)
     {
       if (! empty(lk)) break;
-      if (closed_) {closed=true; return;}
+      if (closed_) return true;
       ++waiting_empty_;
       not_empty_.wait(lk);
     }
-    closed=false;
+     return false;
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
@@ -422,11 +421,11 @@ namespace boost
       pull(elem, lk);
   }
   template <typename ValueType>
-  void sync_queue<ValueType>::pull(ValueType& elem, bool & closed)
+  void sync_queue<ValueType>::pull(ValueType& elem, bool & has_been_closed)
   {
       unique_lock<mutex> lk(mtx_);
-      wait_until_not_empty(lk, closed);
-      if (closed) {return;}
+      has_been_closed = wait_until_not_empty_or_closed(lk);
+      if (has_been_closed) {return;}
       pull(elem, lk);
   }
 

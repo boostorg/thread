@@ -167,14 +167,10 @@ namespace detail
     unique_lock<mutex> lk(super::_qmutex);
     while(1)
     {
-      if(super::_pq.empty())
+      super::wait_until_not_empty(lk);
+      if(super::_pq.top().time > clock::now())
       {
-        if(super::_closed.load()) throw std::exception();
-        super::_qempty.wait(lk);
-      }
-      else if(super::_pq.top().time > clock::now())
-      {
-        super::_qempty.wait_until(lk,super::_pq.top().time);
+        super::_not_empty.wait_until(lk,super::_pq.top().time);
       }
       else
       {
@@ -194,14 +190,10 @@ namespace detail
     {
       while(1)
       {
-        if(super::_pq.empty())
+        super::wait_until_not_empty(lk);
+        if(super::_pq.top().time > clock::now())
         {
-          if(super::_closed.load()) throw std::exception();
-          super::_qempty.wait(lk);
-        }
-        else if(super::_pq.top().time > clock::now())
-        {
-          super::_qempty.wait_until(lk,super::_pq.top().time);
+          super::_not_empty.wait_until(lk,super::_pq.top().time);
         }
         else
         {
