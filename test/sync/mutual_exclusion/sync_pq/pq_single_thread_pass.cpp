@@ -12,7 +12,6 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <iostream>
 
@@ -92,13 +91,8 @@ int main()
   }
 
   for(int i = 6; i <= 10; i++){
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool succ = pq.try_push(i);
-    BOOST_TEST(succ);
-#else
     boost::queue_op_status succ = pq.try_push(i);
     BOOST_TEST(succ == boost::queue_op_status::success );
-#endif
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }

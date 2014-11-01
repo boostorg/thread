@@ -60,19 +60,11 @@ namespace concurrent
     }
 
     void push(const ValueType& elem);
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool try_push(const ValueType& elem);
-#else
     queue_op_status try_push(const ValueType& elem);
-#endif
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     void push(ValueType&& elem);
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool try_push(ValueType&& elem);
-#else
     queue_op_status try_push(ValueType&& elem);
-#endif
 #endif
 
     ValueType pull();
@@ -214,16 +206,6 @@ namespace concurrent
     return make_optional( pull(lk) );
   }
 
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-  template <class T, class Container,class Cmp>
-  bool sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
-  {
-    unique_lock<mutex> lk(super::mtx_, try_to_lock);
-    if (! lk.owns_lock() ) return false;
-    push(lk, elem);
-    return true;
-  }
-#else
   template <class T, class Container,class Cmp>
   queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
   {
@@ -232,19 +214,8 @@ namespace concurrent
     push(lk, elem);
     return queue_op_status::success;
   }
-#endif
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-  template <class T, class Container,class Cmp>
-  bool sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
-  {
-    unique_lock<mutex> lk(super::mtx_, try_to_lock);
-    if (! lk.owns_lock()) return false;
-    push(lk, std::forward<T>(elem));
-    return true;
-  }
-#else
   template <class T, class Container,class Cmp>
   queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
   {
@@ -253,7 +224,6 @@ namespace concurrent
     push(lk, std::forward<T>(elem));
     return queue_op_status::success;
   }
-#endif
 #endif
 
 } //end concurrent namespace

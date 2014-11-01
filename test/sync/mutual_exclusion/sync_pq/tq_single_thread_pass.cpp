@@ -12,7 +12,6 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/thread.hpp>
 #include <boost/chrono.hpp>
@@ -66,25 +65,15 @@ void test_all_with_try()
   BOOST_TEST_EQ(pq.size(), 0);
 
   for(int i = 1; i <= 5; i++){
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool succ = pq.try_push(i, milliseconds(i*100));
-    BOOST_TEST(succ);
-#else
     boost::queue_op_status succ = pq.try_push(i, milliseconds(i*100));
     BOOST_TEST(succ == boost::queue_op_status::success );
-#endif
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }
 
   for(int i = 6; i <= 10; i++){
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool succ = pq.try_push(i,steady_clock::now() + milliseconds(i*100));
-    BOOST_TEST(succ);
-#else
     boost::queue_op_status succ = pq.try_push(i,steady_clock::now() + milliseconds(i*100));
     BOOST_TEST(succ == boost::queue_op_status::success );
-#endif
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }

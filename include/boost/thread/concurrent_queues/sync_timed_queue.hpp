@@ -78,21 +78,11 @@ namespace detail
 
     void push(const T& elem, const time_point& tp);
     void push(const T& elem, const duration& dura);
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool try_push(const T& elem, const time_point& tp);
-    bool try_push(const T& elem, const duration& dura);
-#else
     queue_op_status try_push(const T& elem, const time_point& tp);
     queue_op_status try_push(const T& elem, const duration& dura);
-#endif
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-    bool try_push(T&& elem, const time_point& tp);
-    bool try_push(T&& elem, const duration& dura);
-#else
     queue_op_status try_push(T&& elem, const time_point& tp);
     queue_op_status try_push(T&& elem, const duration& dura);
-#endif
 #endif
   private:
     T pull(unique_lock<mutex>&);
@@ -121,34 +111,6 @@ namespace detail
     push(elem, clock::now() + dura);
   }
 
-#ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
-  template <class T>
-  bool sync_timed_queue<T>::try_push(const T& elem, const time_point& tp)
-  {
-    return super::try_push(stype(elem,tp));
-  }
-
-  template <class T>
-  bool sync_timed_queue<T>::try_push(const T& elem, const duration& dura)
-  {
-    return try_push(elem, clock::now() + dura);
-  }
-
-#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
-  template <class T>
-  bool sync_timed_queue<T>::try_push(T&& elem, const time_point& tp)
-  {
-    return super::try_push(stype(std::forward<T>(elem), tp));
-  }
-
-  template <class T>
-  bool sync_timed_queue<T>::try_push(T&& elem, const duration& dura)
-  {
-    return try_push(std::forward<T>(elem), clock::now() + dura);
-  }
-
-#endif
-#else
   template <class T>
   queue_op_status sync_timed_queue<T>::try_push(const T& elem, const time_point& tp)
   {
@@ -175,13 +137,13 @@ namespace detail
   }
 
 #endif
-#endif
 
   template <class T>
   bool sync_timed_queue<T>::time_not_reached(unique_lock<mutex>&)
   {
     return super::data_.top().time_not_reached();
   }
+
   template <class T>
   bool sync_timed_queue<T>::time_not_reached(lock_guard<mutex>&)
   {
@@ -195,6 +157,7 @@ namespace detail
     super::data_.pop();
     return temp;
   }
+
   template <class T>
   T sync_timed_queue<T>::pull(lock_guard<mutex>&)
   {

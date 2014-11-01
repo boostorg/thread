@@ -12,7 +12,6 @@
 
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
-#define BOOST_THREAD_QUEUE_DEPRECATE_OLD
 
 #include <boost/function.hpp>
 #include <boost/thread/executors/executor.hpp>
@@ -39,7 +38,6 @@ void test_timing(const int n)
         sa.submit_after(boost::bind(fn,i),seconds(i));
         sa.submit_after(boost::bind(fn,i), milliseconds(i*100));
     }
-
 }
 
 int main()
