@@ -36,7 +36,7 @@ namespace executors
     typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     /// A move aware vector
     thread_vector threads;
 

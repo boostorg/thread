@@ -10,6 +10,7 @@
 
 #include <boost/thread/detail/config.hpp>
 
+#include <boost/thread/concurrent_queues/detail/sync_queue_base.hpp>
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/csbl/vector.hpp>
@@ -34,62 +35,28 @@ namespace concurrent
             class Container = csbl::vector<ValueType>,
             class Compare = std::less<typename Container::value_type> >
   class sync_priority_queue
+    : public detail::sync_queue_base<ValueType, std::priority_queue<ValueType,Container,Compare> >
   {
+    typedef detail::sync_queue_base<ValueType, std::priority_queue<ValueType,Container,Compare> >  super;
   public:
+    typedef ValueType value_type;
+    //typedef typename super::value_type value_type; // fixme
+    typedef typename super::underlying_queue_type underlying_queue_type;
+    typedef typename super::size_type size_type;
+    typedef typename super::op_status op_status;
+
     typedef chrono::steady_clock clock;
   protected:
-    inline void wait_until_not_empty(unique_lock<mutex>& lk);
-    inline bool wait_until_not_empty_or_closed(unique_lock<mutex>& lk);
-    inline void throw_if_closed(unique_lock<mutex>&);
-    bool closed(unique_lock<mutex> &) const
-    {
-      return _closed.load();
-    }
-    bool closed(lock_guard<mutex> &) const
-    {
-      return _closed.load();
-    }
-    inline bool empty(unique_lock<mutex>& ) const BOOST_NOEXCEPT
-    {
-      return _pq.empty();
-    }
-    inline bool empty(lock_guard<mutex>& ) const BOOST_NOEXCEPT
-    {
-      return _pq.empty();
-    }
 
   public:
-    sync_priority_queue() : _closed(false) {}
+    sync_priority_queue() {}
 
     ~sync_priority_queue()
     {
-      if(!_closed.load())
+      if(!super::closed())
       {
-        this->close();
+        super::close();
       }
-    }
-
-    bool empty() const
-    {
-      lock_guard<mutex> lk(_qmutex);
-      return empty(lk);
-    }
-
-    void close()
-    {
-      lock_guard<mutex> lk(_qmutex);
-      _closed.store(true);
-      _not_empty.notify_all();
-    }
-
-    bool closed() const
-    {
-      return _closed.load();
-    }
-
-    std::size_t size() const
-    {
-      return _pq.size();
     }
 
     void push(const ValueType& elem);
@@ -116,13 +83,17 @@ namespace concurrent
     optional<ValueType> try_pull();
     optional<ValueType> try_pull_no_wait();
 
-  protected:
-    atomic<bool> _closed;
-    mutable mutex _qmutex;
-    condition_variable _not_empty;
-    std::priority_queue<ValueType,Container,Compare> _pq;
-
   private:
+    void push(unique_lock<mutex>&, const ValueType& elem);
+    void push(lock_guard<mutex>&, const ValueType& elem);
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    void push(unique_lock<mutex>&, ValueType&& elem);
+    void push(lock_guard<mutex>&, ValueType&& elem);
+#endif
+
+    ValueType pull(unique_lock<mutex>&);
+    ValueType pull(lock_guard<mutex>&);
+
     sync_priority_queue(const sync_priority_queue&);
     sync_priority_queue& operator= (const sync_priority_queue&);
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -131,66 +102,41 @@ namespace concurrent
 #endif
   }; //end class
 
-  template <class T,class Container, class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::throw_if_closed(unique_lock<mutex>& lk)
-  {
-    if (closed(lk))
-    {
-      BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
-    }
-  }
 
   template <class T,class Container, class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::wait_until_not_empty(unique_lock<mutex>& lk)
+  T sync_priority_queue<T,Container,Cmp>::pull(unique_lock<mutex>&)
   {
-    for (;;)
-    {
-      if (! empty(lk)) break;
-      throw_if_closed(lk);
-      //++waiting_empty_;
-      _not_empty.wait(lk);
-    }
+    T first = super::data_.top();
+    super::data_.pop();
+    return first;
   }
-
   template <class T,class Container, class Cmp>
-  bool sync_priority_queue<T,Container,Cmp>::wait_until_not_empty_or_closed(unique_lock<mutex>& lk)
+  T sync_priority_queue<T,Container,Cmp>::pull(lock_guard<mutex>&)
   {
-    for (;;)
-    {
-      if (! empty(lk)) break;
-      if (closed(lk)) {return true;}
-      //++waiting_empty_;
-      _not_empty.wait(lk);
-    }
-    return false;
+    T first = super::data_.top();
+    super::data_.pop();
+    return first;
   }
 
   template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull()
   {
-    unique_lock<mutex> lk(_qmutex);
-    wait_until_not_empty(lk);
-    T first = _pq.top();
-    _pq.pop();
-    return first;
+    unique_lock<mutex> lk(super::mtx_);
+    super::wait_until_not_empty(lk);
+    return pull(lk);
   }
 
   template <class T, class Cont,class Cmp>
   optional<T>
   sync_priority_queue<T,Cont,Cmp>::pull_until(const clock::time_point& tp)
   {
-    unique_lock<mutex> lk(_qmutex);
-    while(_pq.empty())
+    unique_lock<mutex> lk(super::mtx_);
+    while(super::data_.empty())
     {
-      if(_closed.load()) throw std::exception();
-      if(_not_empty.wait_until(lk, tp) == cv_status::timeout )
-      {
-        return optional<T>();
-      }
+      if(super::closed(lk)) throw std::exception();
+      if(super::not_empty_.wait_until(lk, tp) == cv_status::timeout ) return optional<T>();
     }
-    optional<T> fst( _pq.top() );
-    _pq.pop();
-    return fst;
+    return make_optional( pull(lk) );
   }
 
   template <class T, class Cont,class Cmp>
@@ -204,34 +150,48 @@ namespace concurrent
   optional<T>
   sync_priority_queue<T,Container,Cmp>::pull_no_wait()
   {
-    lock_guard<mutex> lk(_qmutex);
-    if(_pq.empty())
-    {
-      return optional<T>();
-    }
-    else
-    {
-      optional<T> fst( _pq.top() );
-      _pq.pop();
-      return fst;
-    }
+    lock_guard<mutex> lk(super::mtx_);
+    if (super::data_.empty()) return optional<T>();
+    return make_optional( pull(lk) );
   }
 
   template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>&, const T& elem)
+  {
+    super::data_.push(elem);
+    super::not_empty_.notify_one();
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>&, const T& elem)
+  {
+    super::data_.push(elem);
+    super::not_empty_.notify_one();
+  }
+  template <class T, class Container,class Cmp>
   void sync_priority_queue<T,Container,Cmp>::push(const T& elem)
   {
-    lock_guard<mutex> lk(_qmutex);
-    _pq.push(elem);
-    _not_empty.notify_one();
+    lock_guard<mutex> lk(super::mtx_);
+    push(lk, elem);
   }
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>&, T&& elem)
+  {
+    super::data_.emplace(elem);
+    super::not_empty_.notify_one();
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>&, T&& elem)
+  {
+    super::data_.emplace(elem);
+    super::not_empty_.notify_one();
+  }
+  template <class T, class Container,class Cmp>
   void sync_priority_queue<T,Container,Cmp>::push(T&& elem)
   {
-    lock_guard<mutex> lk(_qmutex);
-    _pq.emplace(elem);
-    _not_empty.notify_one();
+    lock_guard<mutex> lk(super::mtx_);
+    push(lk, std::forward<T>(elem));
   }
 #endif
 
@@ -239,54 +199,37 @@ namespace concurrent
   optional<T>
   sync_priority_queue<T,Container,Cmp>::try_pull()
   {
-    unique_lock<mutex> lk(_qmutex, try_to_lock);
-    if(lk.owns_lock())
-    {
-      wait_until_not_empty(lk);
-      optional<T> fst( _pq.top() );
-      _pq.pop();
-      return fst;
-    }
-    return optional<T>();
+    unique_lock<mutex> lk(super::mtx_, try_to_lock);
+    if (! lk.owns_lock() ) return optional<T>();
+    super::wait_until_not_empty(lk);
+    return make_optional( pull(lk) );
   }
 
   template <class T, class Container,class Cmp>
   optional<T>
   sync_priority_queue<T,Container,Cmp>::try_pull_no_wait()
   {
-    unique_lock<mutex> lk(_qmutex, try_to_lock);
-    if(lk.owns_lock() && !_pq.empty())
-    {
-      optional<T> fst( _pq.top() );
-      _pq.pop();
-      return fst;
-    }
-    return optional<T>();
+    unique_lock<mutex> lk(super::mtx_, try_to_lock);
+    if(! lk.owns_lock()  || super::data_.empty()) return optional<T>();
+    return make_optional( pull(lk) );
   }
 
 #ifndef BOOST_THREAD_QUEUE_DEPRECATE_OLD
   template <class T, class Container,class Cmp>
   bool sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
   {
-    unique_lock<mutex> lk(_qmutex, try_to_lock);
-    if(lk.owns_lock())
-    {
-      _pq.push(elem);
-      _not_empty.notify_one();
-      return true;
-    }
-    return false;
+    unique_lock<mutex> lk(super::mtx_, try_to_lock);
+    if (! lk.owns_lock() ) return false;
+    push(lk, elem);
+    return true;
   }
 #else
   template <class T, class Container,class Cmp>
   queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
   {
-    lock_guard<mutex> lk(_qmutex);
-    if (closed(lk)) return queue_op_status::closed;
-    else {
-      _pq.push(elem);
-    }
-    _not_empty.notify_one();
+    lock_guard<mutex> lk(super::mtx_);
+    if (super::closed(lk)) return queue_op_status::closed;
+    push(lk, elem);
     return queue_op_status::success;
   }
 #endif
@@ -296,26 +239,18 @@ namespace concurrent
   template <class T, class Container,class Cmp>
   bool sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
   {
-    unique_lock<mutex> lk(_qmutex, try_to_lock);
-    if(lk.owns_lock())
-    {
-      _pq.emplace(elem);
-      _not_empty.notify_one();
-      return true;
-    }
-    return false;
+    unique_lock<mutex> lk(super::mtx_, try_to_lock);
+    if (! lk.owns_lock()) return false;
+    push(lk, std::forward<T>(elem));
+    return true;
   }
 #else
   template <class T, class Container,class Cmp>
   queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(T&& elem)
   {
-    lock_guard<mutex> lk(_qmutex);
-    if (closed(lk)) return queue_op_status::closed;
-    else
-    {
-      _pq.emplace(elem);
-    }
-    _not_empty.notify_one();
+    lock_guard<mutex> lk(super::mtx_);
+    if (super::closed(lk)) return queue_op_status::closed;
+    push(lk, std::forward<T>(elem));
     return queue_op_status::success;
   }
 #endif

@@ -29,7 +29,7 @@ namespace detail
     typedef clock::duration duration;
     typedef clock::time_point time_point;
   protected:
-    sync_timed_queue<work> _workq;
+    concurrent::sync_timed_queue<work> _workq;
 
     scheduled_executor_base() {}
   public:

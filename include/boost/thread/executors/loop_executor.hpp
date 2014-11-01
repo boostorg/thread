@@ -31,7 +31,7 @@ namespace executors
     typedef  executors::work work;
   private:
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
 
   public:
     /**

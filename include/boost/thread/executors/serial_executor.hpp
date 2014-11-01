@@ -33,7 +33,7 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     generic_executor_ref ex;
     thread_t thr;
 

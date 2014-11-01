@@ -26,7 +26,8 @@
 
 namespace boost
 {
-
+namespace concurrent
+{
   template <typename ValueType>
   class sync_bounded_queue
   {
@@ -714,6 +715,8 @@ namespace boost
     sbq.pull_front(elem);
     return sbq;
   }
+}
+using concurrent::sync_bounded_queue;
 
 }
 
