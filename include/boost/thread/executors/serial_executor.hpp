@@ -43,15 +43,7 @@ namespace executors
       try_executing_one_task(work& task, boost::promise<void> &p)
       : task(task), p(p) {}
       void operator()() {
-        try
-        {
-          task();
-        }
-        catch (...)
-        {
-          std::terminate();
-          return;
-        }
+        task();
         p.set_value();
       }
     };
@@ -77,11 +69,6 @@ namespace executors
           boost::promise<void> p;
           try_executing_one_task tmp(task,p);
           ex.submit(tmp);
-//          ex.submit([&task, &p]()
-//          {
-//            task(); // if task() throws promise is not set but as the the program terminates and should terminate there is no need to use try-catch here.
-//            p.set_value();
-//          });
           p.get_future().wait();
           return true;
         }
