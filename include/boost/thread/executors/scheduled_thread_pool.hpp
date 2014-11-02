@@ -42,19 +42,21 @@ namespace executors
 
   void scheduled_thread_pool::worker_loop()
   {
-    while(!super::_workq.closed() || !super::_workq.empty())
-    {
       try
       {
-        super::work fn = super::_workq.pull();
-        fn();
+        for(;;)
+        {
+          super::work task;
+          queue_op_status st = super::_workq.wait_pull(task);
+          if (st == queue_op_status::closed) return;
+          task();
+        }
       }
-      catch(std::exception& err)
+      catch (...)
       {
-        // debug std::err << err.what() << std::endl;
+        std::terminate();
         return;
       }
-    }
   }
 
 } //end executors namespace

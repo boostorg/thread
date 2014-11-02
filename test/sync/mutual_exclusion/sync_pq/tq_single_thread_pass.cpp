@@ -49,8 +49,9 @@ void test_all()
     BOOST_TEST_EQ(val, i);
   }
 
-  boost::optional<int> val = pq.pull_no_wait();
-  BOOST_TEST(!val);
+  int val;
+  boost::queue_op_status st = pq.nonblocking_pull(val);
+  BOOST_TEST(boost::queue_op_status::empty == st);
 
   BOOST_TEST(pq.empty());
   pq.close();
@@ -65,27 +66,29 @@ void test_all_with_try()
   BOOST_TEST_EQ(pq.size(), 0);
 
   for(int i = 1; i <= 5; i++){
-    boost::queue_op_status succ = pq.try_push(i, milliseconds(i*100));
-    BOOST_TEST(succ == boost::queue_op_status::success );
+    boost::queue_op_status st = pq.try_push(i, milliseconds(i*100));
+    BOOST_TEST(st == boost::queue_op_status::success );
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }
 
   for(int i = 6; i <= 10; i++){
-    boost::queue_op_status succ = pq.try_push(i,steady_clock::now() + milliseconds(i*100));
-    BOOST_TEST(succ == boost::queue_op_status::success );
+    boost::queue_op_status st = pq.try_push(i,steady_clock::now() + milliseconds(i*100));
+    BOOST_TEST(st == boost::queue_op_status::success );
     BOOST_TEST(!pq.empty());
     BOOST_TEST_EQ(pq.size(), i);
   }
 
   for(int i = 1; i <= 10; i++){
-    boost::optional<int> val = pq.try_pull();
-    BOOST_TEST(val);
-    BOOST_TEST_EQ(*val, i);
+    int val=0;
+    boost::queue_op_status st = pq.wait_pull(val);
+    BOOST_TEST(st == boost::queue_op_status::success );
+    BOOST_TEST_EQ(val, i);
   }
 
-  boost::optional<int> val = pq.pull_no_wait();
-  BOOST_TEST(!val);
+  int val;
+  boost::queue_op_status st = pq.nonblocking_pull(val);
+  BOOST_TEST(st == boost::queue_op_status::empty );
 
   BOOST_TEST(pq.empty());
   pq.close();

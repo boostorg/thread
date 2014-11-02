@@ -15,8 +15,10 @@
 
 #include <boost/bind.hpp>
 #include <boost/chrono.hpp>
+#include <boost/chrono/chrono_io.hpp>
 #include <boost/function.hpp>
 #include <boost/thread/executors/scheduled_thread_pool.hpp>
+#include <iostream>
 
 #include <boost/core/lightweight_test.hpp>
 
@@ -24,9 +26,9 @@ using namespace boost::chrono;
 
 typedef boost::scheduled_thread_pool scheduled_tp;
 
-void fn(int )
+void fn(int x)
 {
-//  std::cout << x << std::endl;
+  std::cout << x << std::endl;
 }
 
 void func(steady_clock::time_point pushed, steady_clock::duration dur)
@@ -43,6 +45,7 @@ void test_timing(const int n)
   {
     se.submit_after(boost::bind(fn,i), milliseconds(i*100));
   }
+  boost::this_thread::sleep_for(boost::chrono::seconds(10));
   //dtor is called here so all task will have to be executed before we return
 }
 

@@ -47,18 +47,20 @@ namespace executors
   template<typename Executor>
   void scheduling_adpator<Executor>::scheduler_loop()
   {
-    while(!super::_workq.closed() || !super::_workq.empty())
+    try
     {
-      try
+      for(;;)
       {
-        super::work fn = super::_workq.pull();
-        _exec.submit(fn);
+        super::work task;
+        queue_op_status st = super::_workq.wait_pull(task);
+        if (st == queue_op_status::closed) return;
+        _exec.submit(task);
       }
-      catch(std::exception& err)
-      {
-        // debug std::err << err.what() << std::endl;
-        return;
-      }
+    }
+    catch (...)
+    {
+      std::terminate();
+      return;
     }
   }
 

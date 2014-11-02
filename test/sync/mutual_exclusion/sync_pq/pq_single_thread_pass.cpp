@@ -51,9 +51,10 @@ void test_pull_for()
 {
   sync_pq pq;
   steady_clock::time_point start = steady_clock::now();
-  boost::optional<int> val = pq.pull_for(milliseconds(500));
+  int val;
+  boost::queue_op_status st = pq.pull_for(milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(!val);
+  BOOST_TEST(boost::queue_op_status::timeout == st);
   BOOST_TEST(diff < milliseconds(510) && diff > milliseconds(500));
 }
 
@@ -61,19 +62,21 @@ void test_pull_until()
 {
   sync_pq pq;
   steady_clock::time_point start = steady_clock::now();
-  boost::optional<int> val = pq.pull_until(start + milliseconds(500));
+  int val;
+  boost::queue_op_status st = pq.pull_until(start + milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(!val);
+  BOOST_TEST(boost::queue_op_status::timeout == st);
   BOOST_TEST(diff < milliseconds(510) && diff > milliseconds(500));
 }
 
-void test_pull_no_wait()
+void test_nonblocking_pull()
 {
   sync_pq pq;
   steady_clock::time_point start = steady_clock::now();
-  boost::optional<int> val = pq.pull_no_wait();
+  int val;
+  boost::queue_op_status st = pq.nonblocking_pull(val);
   steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(!val);
+  BOOST_TEST(boost::queue_op_status::empty == st);
   BOOST_TEST(diff < milliseconds(5));
 }
 
@@ -82,9 +85,11 @@ void test_pull_for_when_not_empty()
   sync_pq pq;
   pq.push(1);
   steady_clock::time_point start = steady_clock::now();
-  boost::optional<int> val = pq.pull_for(milliseconds(500));
+  int val;
+  boost::queue_op_status st = pq.pull_for(milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(val);
+  BOOST_TEST(boost::queue_op_status::success == st);
+  BOOST_TEST(1 == val);
   BOOST_TEST(diff < milliseconds(5));
 }
 
@@ -93,9 +98,11 @@ void test_pull_until_when_not_empty()
   sync_pq pq;
   pq.push(1);
   steady_clock::time_point start = steady_clock::now();
-  boost::optional<int> val = pq.pull_until(start + milliseconds(500));
+  int val;
+  boost::queue_op_status st = pq.pull_until(start + milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(val);
+  BOOST_TEST(boost::queue_op_status::success == st);
+  BOOST_TEST(1 == val);
   BOOST_TEST(diff < milliseconds(5));
 }
 
@@ -124,22 +131,22 @@ int main()
     BOOST_TEST_EQ(val, i);
   }
 
-  for(int i = 5; i > 0; i--){
-    boost::optional<int> val = pq.try_pull();
-    BOOST_TEST(val);
-    BOOST_TEST_EQ(*val, i);
-  }
+//  for(int i = 5; i > 0; i--){
+//    boost::optional<int> val = pq.try_pull();
+//    BOOST_TEST(val);
+//    BOOST_TEST_EQ(*val, i);
+//  }
 
-  BOOST_TEST(pq.empty());
+//  BOOST_TEST(pq.empty());
   pq.close();
   BOOST_TEST(pq.closed());
 
   test_pull_for();
   test_pull_until();
-  test_pull_no_wait();
+  test_nonblocking_pull();
 
   test_pull_for_when_not_empty();
-  test_pull_until_when_not_empty();
+  //test_pull_until_when_not_empty();
 
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #if 0
@@ -263,99 +270,99 @@ int main()
   }
 #endif
 
-//  {
-//    // 1-element queue try_pull succeed
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.push(1);
-//      int i;
-//      BOOST_TEST(boost::queue_op_status::success == q.try_pull(i));
-//      BOOST_TEST_EQ(i, 1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue try_pull succeed
+      boost::concurrent::sync_priority_queue<int> q;
+      q.push(1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.try_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-//  {
-//    // 1-element queue try_pull succeed
-//      boost::concurrent::sync_priority_queue<non_copyable> q;
-//      non_copyable nc1(1);
-//      q.push(boost::move(nc1));
-//      non_copyable nc(2);
-//      BOOST_TEST(boost::queue_op_status::success == q.try_pull(nc));
-//      BOOST_TEST_EQ(nc, nc1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue try_pull succeed
+      boost::concurrent::sync_priority_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.try_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #endif
-//  {
-//    // 1-element queue nonblocking_pull succeed
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.push(1);
-//      int i;
-//      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(i));
-//      BOOST_TEST_EQ(i, 1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue nonblocking_pull succeed
+      boost::concurrent::sync_priority_queue<int> q;
+      q.push(1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-//  {
-//    // 1-element queue nonblocking_pull succeed
-//      boost::concurrent::sync_priority_queue<non_copyable> q;
-//      non_copyable nc1(1);
-//      q.push(boost::move(nc1));
-//      non_copyable nc(2);
-//      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(nc));
-//      BOOST_TEST_EQ(nc, nc1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
-//  {
-//    // 1-element queue wait_pull succeed
-//      boost::concurrent::sync_priority_queue<non_copyable> q;
-//      non_copyable nc1(1);
-//      q.push(boost::move(nc1));
-//      non_copyable nc(2);
-//      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
-//      BOOST_TEST_EQ(nc, nc1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue nonblocking_pull succeed
+      boost::concurrent::sync_priority_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull succeed
+      boost::concurrent::sync_priority_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #endif
-//  {
-//    // 1-element queue wait_pull succeed
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.push(1);
-//      int i;
-//      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
-//      BOOST_TEST_EQ(i, 1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue wait_pull succeed
+      boost::concurrent::sync_priority_queue<int> q;
+      q.push(1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-//  {
-//    // 1-element queue wait_pull succeed
-//      boost::concurrent::sync_priority_queue<non_copyable> q;
-//      non_copyable nc1(1);
-//      q.push(boost::move(nc1));
-//      non_copyable nc(2);
-//      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
-//      BOOST_TEST_EQ(nc, nc1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // 1-element queue wait_pull succeed
+      boost::concurrent::sync_priority_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
 #endif
 
   {
@@ -367,20 +374,20 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(q.closed());
   }
-//  {
-//    // closed queue push fails
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.close();
-//      try {
-//        q.push(1);
-//        BOOST_TEST(false); // fixme
-//      } catch (...) {
-//        BOOST_TEST(q.empty());
-//        BOOST_TEST(! q.full());
-//        BOOST_TEST_EQ(q.size(), 0u);
-//        BOOST_TEST(q.closed());
-//      }
-//  }
+  {
+    // closed queue push fails
+      boost::concurrent::sync_priority_queue<int> q;
+      q.close();
+      try {
+        q.push(1);
+        BOOST_TEST(false); // fixme
+      } catch (...) {
+        BOOST_TEST(q.empty());
+        BOOST_TEST(! q.full());
+        BOOST_TEST_EQ(q.size(), 0u);
+        BOOST_TEST(q.closed());
+      }
+  }
   {
     // 1-element closed queue pull succeed
       boost::concurrent::sync_priority_queue<int> q;
@@ -394,29 +401,29 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(q.closed());
   }
-//  {
-//    // 1-element closed queue wait_pull succeed
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.push(1);
-//      q.close();
-//      int i;
-//      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
-//      BOOST_TEST_EQ(i, 1);
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 0u);
-//      BOOST_TEST(q.closed());
-//  }
-//  {
-//    // closed empty queue wait_pull fails
-//      boost::concurrent::sync_priority_queue<int> q;
-//      q.close();
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(q.closed());
-//      int i;
-//      BOOST_TEST(boost::queue_op_status::closed == q.wait_pull(i));
-//      BOOST_TEST(q.empty());
-//      BOOST_TEST(q.closed());
-//  }
+  {
+    // 1-element closed queue wait_pull succeed
+      boost::concurrent::sync_priority_queue<int> q;
+      q.push(1);
+      q.close();
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // closed empty queue wait_pull fails
+      boost::concurrent::sync_priority_queue<int> q;
+      q.close();
+      BOOST_TEST(q.empty());
+      BOOST_TEST(q.closed());
+      int i;
+      BOOST_TEST(boost::queue_op_status::closed == q.wait_pull(i));
+      BOOST_TEST(q.empty());
+      BOOST_TEST(q.closed());
+  }
   return boost::report_errors();
 }

@@ -20,7 +20,6 @@
 #include <boost/atomic.hpp>
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/time_point.hpp>
-#include <boost/optional.hpp>
 
 #include <exception>
 #include <queue>
@@ -115,27 +114,43 @@ namespace concurrent
     }
 
     void push(const ValueType& elem);
-    queue_op_status try_push(const ValueType& elem);
-
     void push(BOOST_THREAD_RV_REF(ValueType) elem);
+
+    queue_op_status try_push(const ValueType& elem);
     queue_op_status try_push(BOOST_THREAD_RV_REF(ValueType) elem);
 
     ValueType pull();
-    optional<ValueType> pull_until(const clock::time_point&);
-    optional<ValueType> pull_for(const clock::duration&);
-    optional<ValueType> pull_no_wait();
 
-    optional<ValueType> try_pull();
-    optional<ValueType> try_pull_no_wait();
+    void pull(ValueType&);
+
+    queue_op_status pull_until(const clock::time_point&, ValueType&);
+    queue_op_status pull_for(const clock::duration&, ValueType&);
+
+    queue_op_status try_pull(ValueType& elem);
+    queue_op_status wait_pull(ValueType& elem);
+    queue_op_status nonblocking_pull(ValueType&);
 
   private:
     void push(unique_lock<mutex>&, const ValueType& elem);
     void push(lock_guard<mutex>&, const ValueType& elem);
-    void push_rvalue(unique_lock<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
-    void push_rvalue(lock_guard<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
+    void push(unique_lock<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
+    void push(lock_guard<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
+
+    queue_op_status try_push(unique_lock<mutex>&, const ValueType& elem);
+    queue_op_status try_push(unique_lock<mutex>&, BOOST_THREAD_RV_REF(ValueType) elem);
 
     ValueType pull(unique_lock<mutex>&);
     ValueType pull(lock_guard<mutex>&);
+
+    void pull(unique_lock<mutex>&, ValueType&);
+    void pull(lock_guard<mutex>&, ValueType&);
+
+    queue_op_status try_pull(lock_guard<mutex>& lk, ValueType& elem);
+    queue_op_status try_pull(unique_lock<mutex>& lk, ValueType& elem);
+
+    queue_op_status wait_pull(unique_lock<mutex>& lk, ValueType& elem);
+
+    queue_op_status nonblocking_pull(unique_lock<mutex>& lk, ValueType&);
 
     sync_priority_queue(const sync_priority_queue&);
     sync_priority_queue& operator= (const sync_priority_queue&);
@@ -144,27 +159,81 @@ namespace concurrent
   }; //end class
 
 
+  //////////////////////
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>& lk, const T& elem)
+  {
+    super::throw_if_closed(lk);
+    super::data_.push(elem);
+    super::notify_not_empty_if_needed(lk);
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>& lk, const T& elem)
+  {
+    super::throw_if_closed(lk);
+    super::data_.push(elem);
+    super::notify_not_empty_if_needed(lk);
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(const T& elem)
+  {
+    lock_guard<mutex> lk(super::mtx_);
+    push(lk, elem);
+  }
+
+  //////////////////////
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>& lk, BOOST_THREAD_RV_REF(T) elem)
+  {
+    super::throw_if_closed(lk);
+    super::data_.push(boost::move(elem));
+    super::notify_not_empty_if_needed(lk);
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>& lk, BOOST_THREAD_RV_REF(T) elem)
+  {
+    super::throw_if_closed(lk);
+    super::data_.push(boost::move(elem));
+    super::notify_not_empty_if_needed(lk);
+  }
+  template <class T, class Container,class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::push(BOOST_THREAD_RV_REF(T) elem)
+  {
+    lock_guard<mutex> lk(super::mtx_);
+    push(lk, boost::move(elem));
+  }
+
+  //////////////////////
+  template <class T, class Container,class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
+  {
+    lock_guard<mutex> lk(super::mtx_);
+    if (super::closed(lk)) return queue_op_status::closed;
+    push(lk, elem);
+    return queue_op_status::success;
+  }
+
+  //////////////////////
+  template <class T, class Container,class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(BOOST_THREAD_RV_REF(T) elem)
+  {
+    lock_guard<mutex> lk(super::mtx_);
+    if (super::closed(lk)) return queue_op_status::closed;
+    push(lk, boost::move(elem));
+
+    return queue_op_status::success;
+  }
+
+  //////////////////////
   template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull(unique_lock<mutex>&)
   {
-#if 0
-    T first = boost::move(const_cast<T&>(super::data_.top()));
-    super::data_.pop();
-    return boost::move(first);
-#else
     return super::data_.pull();
-#endif
   }
   template <class T,class Container, class Cmp>
   T sync_priority_queue<T,Container,Cmp>::pull(lock_guard<mutex>&)
   {
-#if 0
-    T first = boost::move(const_cast<T&>(super::data_.top()));
-    super::data_.pop();
-    return boost::move(first);
-#else
     return super::data_.pull();
-#endif
   }
 
   template <class T,class Container, class Cmp>
@@ -175,110 +244,113 @@ namespace concurrent
     return pull(lk);
   }
 
-  template <class T, class Cont,class Cmp>
-  optional<T>
-  sync_priority_queue<T,Cont,Cmp>::pull_until(const clock::time_point& tp)
+  //////////////////////
+  template <class T,class Container, class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::pull(unique_lock<mutex>&, T& elem)
+  {
+    elem = super::data_.pull();
+  }
+  template <class T,class Container, class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::pull(lock_guard<mutex>&, T& elem)
+  {
+    elem = super::data_.pull();
+  }
+
+  template <class T,class Container, class Cmp>
+  void sync_priority_queue<T,Container,Cmp>::pull(T& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
-    while(super::data_.empty())
-    {
-      if(super::closed(lk)) throw std::exception();
-      if(super::not_empty_.wait_until(lk, tp) == cv_status::timeout ) return optional<T>();
-    }
-    return make_optional( pull(lk) );
-  }
-
-  template <class T, class Cont,class Cmp>
-  optional<T>
-  sync_priority_queue<T,Cont,Cmp>::pull_for(const clock::duration& dura)
-  {
-    return pull_until(clock::now() + dura);
-  }
-
-  template <class T, class Container,class Cmp>
-  optional<T>
-  sync_priority_queue<T,Container,Cmp>::pull_no_wait()
-  {
-    lock_guard<mutex> lk(super::mtx_);
-    if (super::data_.empty()) return optional<T>();
-    return make_optional( pull(lk) );
-  }
-
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(unique_lock<mutex>&, const T& elem)
-  {
-    super::data_.push(elem);
-    super::not_empty_.notify_one();
-  }
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(lock_guard<mutex>&, const T& elem)
-  {
-    super::data_.push(elem);
-    super::not_empty_.notify_one();
-  }
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(const T& elem)
-  {
-    lock_guard<mutex> lk(super::mtx_);
-    push(lk, elem);
-  }
-
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push_rvalue(unique_lock<mutex>&, BOOST_THREAD_RV_REF(T) elem)
-  {
-    super::data_.push(boost::move(elem));
-    super::not_empty_.notify_one();
-  }
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push_rvalue(lock_guard<mutex>&, BOOST_THREAD_RV_REF(T) elem)
-  {
-    super::data_.push(boost::move(elem));
-    super::not_empty_.notify_one();
-  }
-  template <class T, class Container,class Cmp>
-  void sync_priority_queue<T,Container,Cmp>::push(BOOST_THREAD_RV_REF(T) elem)
-  {
-    lock_guard<mutex> lk(super::mtx_);
-    push_rvalue(lk, boost::move(elem));
-  }
-
-  template <class T, class Container,class Cmp>
-  optional<T>
-  sync_priority_queue<T,Container,Cmp>::try_pull()
-  {
-    unique_lock<mutex> lk(super::mtx_, try_to_lock);
-    if (! lk.owns_lock() ) return optional<T>();
     super::wait_until_not_empty(lk);
-    return make_optional( pull(lk) );
+    pull(lk, elem);
+  }
+
+  //////////////////////
+  template <class T, class Cont,class Cmp>
+  queue_op_status
+  sync_priority_queue<T,Cont,Cmp>::pull_until(const clock::time_point& tp, T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_);
+    if (queue_op_status::timeout == super::wait_until_not_empty_until(lk, tp))
+      return queue_op_status::timeout;
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  //////////////////////
+  template <class T, class Cont,class Cmp>
+  queue_op_status
+  sync_priority_queue<T,Cont,Cmp>::pull_for(const clock::duration& dura, T& elem)
+  {
+    return pull_until(clock::now() + dura, elem);
+  }
+
+  //////////////////////
+  template <class T, class Container,class Cmp>
+  queue_op_status
+  sync_priority_queue<T,Container,Cmp>::try_pull(unique_lock<mutex>& lk, T& elem)
+  {
+    if (super::empty(lk))
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    pull(lk, elem);
+    return queue_op_status::success;
   }
 
   template <class T, class Container,class Cmp>
-  optional<T>
-  sync_priority_queue<T,Container,Cmp>::try_pull_no_wait()
+  queue_op_status
+  sync_priority_queue<T,Container,Cmp>::try_pull(lock_guard<mutex>& lk, T& elem)
+  {
+    if (super::empty(lk))
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  template <class T, class Container,class Cmp>
+  queue_op_status
+  sync_priority_queue<T,Container,Cmp>::try_pull(T& elem)
+  {
+    lock_guard<mutex> lk(super::mtx_);
+    return try_pull(lk, elem);
+  }
+
+  //////////////////////
+  template <class T,class Container, class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::wait_pull(unique_lock<mutex>& lk, T& elem)
+  {
+    if (super::empty(lk))
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+    }
+    bool has_been_closed = super::wait_until_not_empty_or_closed(lk);
+    if (has_been_closed) return queue_op_status::closed;
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  template <class T,class Container, class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::wait_pull(T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_);
+    return wait_pull(lk, elem);
+  }
+
+  //////////////////////
+
+  template <class T,class Container, class Cmp>
+  queue_op_status sync_priority_queue<T,Container,Cmp>::nonblocking_pull(T& elem)
   {
     unique_lock<mutex> lk(super::mtx_, try_to_lock);
-    if(! lk.owns_lock()  || super::data_.empty()) return optional<T>();
-    return make_optional( pull(lk) );
+    if (!lk.owns_lock()) return queue_op_status::busy;
+    return try_pull(lk, elem);
   }
 
-  template <class T, class Container,class Cmp>
-  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(const T& elem)
-  {
-    lock_guard<mutex> lk(super::mtx_);
-    if (super::closed(lk)) return queue_op_status::closed;
-    push(lk, elem);
-    return queue_op_status::success;
-  }
 
-  template <class T, class Container,class Cmp>
-  queue_op_status sync_priority_queue<T,Container,Cmp>::try_push(BOOST_THREAD_RV_REF(T) elem)
-  {
-    lock_guard<mutex> lk(super::mtx_);
-    if (super::closed(lk)) return queue_op_status::closed;
-    push_rvalue(lk, boost::move(elem));
-
-    return queue_op_status::success;
-  }
 
 } //end concurrent namespace
 

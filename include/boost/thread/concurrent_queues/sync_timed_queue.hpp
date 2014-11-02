@@ -11,7 +11,10 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/concurrent_queues/sync_priority_queue.hpp>
+#include <boost/chrono/duration.hpp>
 #include <boost/chrono/time_point.hpp>
+#include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/chrono_io.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -89,27 +92,52 @@ namespace detail
     using super::closed;
 
     T pull();
-    optional<T> try_pull();
-    optional<T> pull_no_wait();
+    void pull(T& elem);
+
+    queue_op_status pull_until(const clock::time_point& tp, T& elem);
+    queue_op_status pull_for(const clock::duration& dura, T& elem);
+
+    queue_op_status try_pull(T& elem);
+    queue_op_status wait_pull(T& elem);
+    queue_op_status nonblocking_pull(T& elem);
 
     void push(const T& elem, const time_point& tp);
     void push(const T& elem, const duration& dura);
+
     queue_op_status try_push(const T& elem, const time_point& tp);
     queue_op_status try_push(const T& elem, const duration& dura);
+
     queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const time_point& tp);
     queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const duration& dura);
+
   private:
     T pull(unique_lock<mutex>&);
     T pull(lock_guard<mutex>&);
+
+    void pull(unique_lock<mutex>&, T& elem);
+    void pull(lock_guard<mutex>&, T& elem);
+
+    queue_op_status try_pull(unique_lock<mutex>&, T& elem);
+    queue_op_status try_pull(lock_guard<mutex>&, T& elem);
+
+    queue_op_status wait_pull(unique_lock<mutex>& lk, T& elem);
+
+    //queue_op_status nonblocking_pull(unique_lock<mutex>& lk, T& elem);
+
+    bool wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>&);
     T pull_when_time_reached(unique_lock<mutex>&);
+    queue_op_status pull_when_time_reached_until(unique_lock<mutex>&, const clock::time_point& tp, T& elem);
     bool time_not_reached(unique_lock<mutex>&);
     bool time_not_reached(lock_guard<mutex>&);
+    bool empty_or_time_not_reached(unique_lock<mutex>&);
+    bool empty_or_time_not_reached(lock_guard<mutex>&);
 
     sync_timed_queue(const sync_timed_queue&);
     sync_timed_queue& operator=(const sync_timed_queue&);
     sync_timed_queue(BOOST_THREAD_RV_REF(sync_timed_queue));
     sync_timed_queue& operator=(BOOST_THREAD_RV_REF(sync_timed_queue));
   }; //end class
+
 
   template <class T>
   void sync_timed_queue<T>::push(const T& elem, const time_point& tp)
@@ -147,6 +175,7 @@ namespace detail
     return try_push(boost::move(elem), clock::now() + dura);
   }
 
+  ///////////////////////////
   template <class T>
   bool sync_timed_queue<T>::time_not_reached(unique_lock<mutex>&)
   {
@@ -159,52 +188,94 @@ namespace detail
     return super::data_.top().time_not_reached();
   }
 
+  ///////////////////////////
   template <class T>
-  T sync_timed_queue<T>::pull(unique_lock<mutex>&)
+  bool sync_timed_queue<T>::wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>& lk)
   {
-
-#if 0
-        const T temp = super::data_.top().data;
-        super::data_.pop();
-        return temp;
-#else
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-    return boost::move(super::data_.pull().data);
-#else
-    return super::data_.pull().data;
-#endif
-
-#endif
+    for (;;)
+    {
+      if (super::closed(lk)) return true;
+      while (! super::empty(lk)) {
+        if (! time_not_reached(lk)) return false;
+        ++super::waiting_empty_;
+        super::not_empty_.wait_until(lk, super::data_.top().time);
+        if (super::closed(lk)) return true;
+      }
+      if (super::closed(lk)) return true;
+      ++super::waiting_empty_;
+      super::not_empty_.wait(lk);
+    }
+    return false;
   }
 
-  template <class T>
-  T sync_timed_queue<T>::pull(lock_guard<mutex>&)
-  {
-#if 0
-        const T temp = super::data_.top().data;
-        super::data_.pop();
-        return temp;
-#else
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-    return boost::move(super::data_.pull().data);
-#else
-    return super::data_.pull().data;
-#endif
-#endif
-
-  }
-
+  ///////////////////////////
   template <class T>
   T sync_timed_queue<T>::pull_when_time_reached(unique_lock<mutex>& lk)
   {
     while (time_not_reached(lk))
     {
+      super::throw_if_closed(lk);
+      ++super::waiting_empty_;
       super::not_empty_.wait_until(lk,super::data_.top().time);
       super::wait_until_not_empty(lk);
     }
     return pull(lk);
   }
 
+  template <class T>
+  queue_op_status
+  sync_timed_queue<T>::pull_when_time_reached_until(unique_lock<mutex>& lk, const clock::time_point& tp, T& elem)
+  {
+    clock::time_point tpmin = (tp < super::data_.top().time) ? tp : super::data_.top().time;
+    while (time_not_reached(lk))
+    {
+      super::throw_if_closed(lk);
+      ++super::waiting_empty_;
+      if (queue_op_status::timeout == super::not_empty_.wait_until(lk, tpmin)) {
+        if (time_not_reached(lk)) return queue_op_status::not_ready;
+        return queue_op_status::timeout;
+      }
+    }
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  ///////////////////////////
+  template <class T>
+  bool sync_timed_queue<T>::empty_or_time_not_reached(unique_lock<mutex>& lk)
+  {
+    if ( super::empty(lk) ) return true;
+    if ( time_not_reached(lk) ) return true;
+    return false;
+  }
+  template <class T>
+  bool sync_timed_queue<T>::empty_or_time_not_reached(lock_guard<mutex>& lk)
+  {
+    if ( super::empty(lk) ) return true;
+    if ( time_not_reached(lk) ) return true;
+    return false;
+  }
+
+  ///////////////////////////
+  template <class T>
+  T sync_timed_queue<T>::pull(unique_lock<mutex>&)
+  {
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    return boost::move(super::data_.pull().data);
+#else
+    return super::data_.pull().data;
+#endif
+  }
+
+  template <class T>
+  T sync_timed_queue<T>::pull(lock_guard<mutex>&)
+  {
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    return boost::move(super::data_.pull().data);
+#else
+    return super::data_.pull().data;
+#endif
+  }
   template <class T>
   T sync_timed_queue<T>::pull()
   {
@@ -213,22 +284,145 @@ namespace detail
     return pull_when_time_reached(lk);
   }
 
+  ///////////////////////////
   template <class T>
-  optional<T> sync_timed_queue<T>::try_pull()
+  void sync_timed_queue<T>::pull(unique_lock<mutex>&, T& elem)
   {
-    unique_lock<mutex> lk(super::mtx_);
-    if (! lk.owns_lock()) return optional<T>();
-    super::wait_until_not_empty(lk);
-    return make_optional( pull_when_time_reached(lk) );
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    elem = boost::move(super::data_.pull().data);
+#else
+    elem = super::data_.pull().data;
+#endif
   }
 
   template <class T>
-  optional<T> sync_timed_queue<T>::pull_no_wait()
+  void sync_timed_queue<T>::pull(lock_guard<mutex>&, T& elem)
+  {
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+    elem = boost::move(super::data_.pull().data);
+#else
+    elem = super::data_.pull().data;
+#endif
+  }
+
+  template <class T>
+  void sync_timed_queue<T>::pull(T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_);
+    super::wait_until_not_empty(lk);
+    elem = pull_when_time_reached(lk);
+  }
+
+  //////////////////////
+  template <class T>
+  queue_op_status
+  sync_timed_queue<T>::pull_until(const clock::time_point& tp, T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_);
+
+    if (queue_op_status::timeout == super::wait_until_not_empty_until(lk, tp))
+      return queue_op_status::timeout;
+    return pull_when_time_reached_until(lk, tp, elem);
+  }
+
+  //////////////////////
+  template <class T>
+  queue_op_status
+  sync_timed_queue<T>::pull_for(const clock::duration& dura, T& elem)
+  {
+    return pull_until(clock::now() + dura, elem);
+  }
+
+  ///////////////////////////
+  template <class T>
+  queue_op_status sync_timed_queue<T>::try_pull(unique_lock<mutex>& lk, T& elem)
+  {
+    if ( super::empty(lk) )
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    if ( time_not_reached(lk) )
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::not_ready;
+    }
+
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+  template <class T>
+  queue_op_status sync_timed_queue<T>::try_pull(lock_guard<mutex>& lk, T& elem)
+  {
+    if ( super::empty(lk) )
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::empty;
+    }
+    if ( time_not_reached(lk) )
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+      return queue_op_status::not_ready;
+    }
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  template <class T>
+  queue_op_status sync_timed_queue<T>::try_pull(T& elem)
   {
     lock_guard<mutex> lk(super::mtx_);
-    if ( super::data_.empty() ) return optional<T>();
-    if ( time_not_reached(lk) ) return optional<T>();
-    return make_optional( pull(lk) );
+    return try_pull(lk, elem);
+  }
+
+  ///////////////////////////
+  template <class T>
+  queue_op_status sync_timed_queue<T>::wait_pull(unique_lock<mutex>& lk, T& elem)
+  {
+    if (super::empty(lk))
+    {
+      if (super::closed(lk)) return queue_op_status::closed;
+    }
+    bool has_been_closed = wait_until_not_empty_time_reached_or_closed(lk);
+    if (has_been_closed) return queue_op_status::closed;
+    pull(lk, elem);
+    return queue_op_status::success;
+  }
+
+  template <class T>
+  queue_op_status sync_timed_queue<T>::wait_pull(T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_);
+    return wait_pull(lk, elem);
+  }
+
+//  ///////////////////////////
+//  template <class T>
+//  queue_op_status sync_timed_queue<T>::wait_pull(unique_lock<mutex> &lk, T& elem)
+//  {
+//    if (super::empty(lk))
+//    {
+//      if (super::closed(lk)) return queue_op_status::closed;
+//    }
+//    bool has_been_closed = super::wait_until_not_empty_or_closed(lk);
+//    if (has_been_closed) return queue_op_status::closed;
+//    pull(lk, elem);
+//    return queue_op_status::success;
+//  }
+//  template <class T>
+//  queue_op_status sync_timed_queue<T>::wait_pull(T& elem)
+//  {
+//    unique_lock<mutex> lk(super::mtx_);
+//    return wait_pull(lk, elem);
+//  }
+
+  ///////////////////////////
+  template <class T>
+  queue_op_status sync_timed_queue<T>::nonblocking_pull(T& elem)
+  {
+    unique_lock<mutex> lk(super::mtx_, try_to_lock);
+    if (! lk.owns_lock()) return queue_op_status::busy;
+    return try_pull(lk, elem);
   }
 
 } //end concurrent namespace

@@ -16,8 +16,10 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
 
+#include <boost/chrono/duration.hpp>
+#include <boost/chrono/time_point.hpp>
+#include <boost/chrono/system_clocks.hpp>
 #include <boost/throw_exception.hpp>
-
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -36,6 +38,10 @@ namespace detail
     typedef Queue underlying_queue_type;
     typedef std::size_t size_type;
     typedef queue_op_status op_status;
+
+    typedef typename chrono::steady_clock clock;
+    typedef typename clock::duration duration;
+    typedef typename clock::time_point time_point;
 
     // Constructors/Assignment/Destructors
     BOOST_THREAD_NO_COPYABLE(sync_queue_base)
@@ -83,18 +89,36 @@ namespace detail
     inline bool closed(lock_guard<mutex>& lk) const;
 
     inline void throw_if_closed(unique_lock<mutex>&);
+    inline void throw_if_closed(lock_guard<mutex>&);
 
     inline void wait_until_not_empty(unique_lock<mutex>& lk);
     inline bool wait_until_not_empty_or_closed(unique_lock<mutex>& lk);
+    inline queue_op_status wait_until_not_empty_until(unique_lock<mutex>& lk, time_point const&);
 
-    inline void notify_not_empty_if_needed(unique_lock<mutex>& lk)
+    inline void notify_not_empty_if_needed(unique_lock<mutex>& )
     {
+#if 1
+      not_empty_.notify_one();
+#else
       if (waiting_empty_ > 0)
       {
         --waiting_empty_;
         lk.unlock();
         not_empty_.notify_one();
       }
+#endif
+    }
+    inline void notify_not_empty_if_needed(lock_guard<mutex>& )
+    {
+#if 1
+      not_empty_.notify_one();
+#else
+      if (waiting_empty_ > 0)
+      {
+        --waiting_empty_;
+        not_empty_.notify_one();
+      }
+#endif
     }
 
   };
@@ -158,9 +182,17 @@ namespace detail
   }
 
   template <class ValueType, class Queue>
-  void sync_queue_base<ValueType, Queue>::throw_if_closed(unique_lock<mutex>&)
+  void sync_queue_base<ValueType, Queue>::throw_if_closed(unique_lock<mutex>& lk)
   {
-    if (closed_)
+    if (closed(lk))
+    {
+      BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+    }
+  }
+  template <class ValueType, class Queue>
+  void sync_queue_base<ValueType, Queue>::throw_if_closed(lock_guard<mutex>& lk)
+  {
+    if (closed(lk))
     {
       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
     }
@@ -183,12 +215,25 @@ namespace detail
     for (;;)
     {
       if (! empty(lk)) break;
-      if (closed_) return true;
+      if (closed(lk)) return true;
       ++waiting_empty_;
       not_empty_.wait(lk);
     }
      return false;
   }
+
+  template <class ValueType, class Queue>
+  queue_op_status sync_queue_base<ValueType, Queue>::wait_until_not_empty_until(unique_lock<mutex>& lk, time_point const&tp)
+  {
+    for (;;)
+    {
+      if (! empty(lk)) return queue_op_status::success;
+      throw_if_closed(lk);
+      ++waiting_empty_;
+      if (not_empty_.wait_until(lk, tp) == cv_status::timeout ) return queue_op_status::timeout;
+    }
+  }
+
 
 } // detail
 } // concurrent

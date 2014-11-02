@@ -17,15 +17,18 @@
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/scheduling_adaptor.hpp>
+#include <boost/chrono/chrono_io.hpp>
 
 #include <boost/core/lightweight_test.hpp>
 
 using namespace boost::chrono;
 
+
 typedef boost::executors::basic_thread_pool thread_pool;
 
 void fn(int x)
 {
+  //std::cout << "[" << __LINE__ << "] " << steady_clock::now() << std::endl;
     std::cout << x << std::endl;
 }
 
@@ -38,6 +41,7 @@ void test_timing(const int n)
         sa.submit_after(boost::bind(fn,i),seconds(i));
         sa.submit_after(boost::bind(fn,i), milliseconds(i*100));
     }
+    boost::this_thread::sleep_for(boost::chrono::seconds(10));
 }
 
 int main()
