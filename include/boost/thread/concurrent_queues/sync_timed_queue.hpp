@@ -197,12 +197,10 @@ namespace detail
       if (super::closed(lk)) return true;
       while (! super::empty(lk)) {
         if (! time_not_reached(lk)) return false;
-        ++super::waiting_empty_;
         super::not_empty_.wait_until(lk, super::data_.top().time);
         if (super::closed(lk)) return true;
       }
       if (super::closed(lk)) return true;
-      ++super::waiting_empty_;
       super::not_empty_.wait(lk);
     }
     return false;
@@ -215,7 +213,6 @@ namespace detail
     while (time_not_reached(lk))
     {
       super::throw_if_closed(lk);
-      ++super::waiting_empty_;
       super::not_empty_.wait_until(lk,super::data_.top().time);
       super::wait_until_not_empty(lk);
     }
@@ -230,7 +227,6 @@ namespace detail
     while (time_not_reached(lk))
     {
       super::throw_if_closed(lk);
-      ++super::waiting_empty_;
       if (queue_op_status::timeout == super::not_empty_.wait_until(lk, tpmin)) {
         if (time_not_reached(lk)) return queue_op_status::not_ready;
         return queue_op_status::timeout;

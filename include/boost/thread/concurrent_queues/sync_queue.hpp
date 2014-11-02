@@ -169,7 +169,7 @@ namespace concurrent
 //  template <typename ValueType>
 //  template <typename Range>
 //  explicit sync_queue<ValueType>::sync_queue(Range range) :
-//    waiting_empty_(0), data_(), closed_(false)
+//    data_(), closed_(false)
 //  {
 //    try
 //    {

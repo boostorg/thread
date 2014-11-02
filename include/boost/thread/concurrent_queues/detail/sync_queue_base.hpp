@@ -61,14 +61,12 @@ namespace detail
 
     inline underlying_queue_type underlying_queue() {
       lock_guard<mutex> lk(mtx_);
-      waiting_empty_ = 0;
       return boost::move(data_);
     }
 
   protected:
     mutable mutex mtx_;
     condition_variable not_empty_;
-    size_type waiting_empty_;
     underlying_queue_type data_;
     bool closed_;
 
@@ -97,35 +95,18 @@ namespace detail
 
     inline void notify_not_empty_if_needed(unique_lock<mutex>& )
     {
-#if 1
       not_empty_.notify_one();
-#else
-      if (waiting_empty_ > 0)
-      {
-        --waiting_empty_;
-        lk.unlock();
-        not_empty_.notify_one();
-      }
-#endif
     }
     inline void notify_not_empty_if_needed(lock_guard<mutex>& )
     {
-#if 1
       not_empty_.notify_one();
-#else
-      if (waiting_empty_ > 0)
-      {
-        --waiting_empty_;
-        not_empty_.notify_one();
-      }
-#endif
     }
 
   };
 
   template <class ValueType, class Queue>
   sync_queue_base<ValueType, Queue>::sync_queue_base() :
-    waiting_empty_(0), data_(), closed_(false)
+    data_(), closed_(false)
   {
     BOOST_ASSERT(data_.empty());
   }
@@ -205,7 +186,6 @@ namespace detail
     {
       if (! empty(lk)) break;
       throw_if_closed(lk);
-      ++waiting_empty_;
       not_empty_.wait(lk);
     }
   }
@@ -216,7 +196,6 @@ namespace detail
     {
       if (! empty(lk)) break;
       if (closed(lk)) return true;
-      ++waiting_empty_;
       not_empty_.wait(lk);
     }
      return false;
@@ -229,7 +208,6 @@ namespace detail
     {
       if (! empty(lk)) return queue_op_status::success;
       throw_if_closed(lk);
-      ++waiting_empty_;
       if (not_empty_.wait_until(lk, tp) == cv_status::timeout ) return queue_op_status::timeout;
     }
   }
