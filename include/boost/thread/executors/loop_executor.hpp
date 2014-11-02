@@ -51,12 +51,9 @@ namespace executors
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
+        std::terminate();
         return false;
       }
     }

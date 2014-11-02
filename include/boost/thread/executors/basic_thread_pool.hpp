@@ -48,9 +48,9 @@ namespace executors
      */
     bool try_executing_one()
     {
-      work task;
       try
       {
+        work task;
         if (work_queue.try_pull_front(task) == queue_op_status::success)
         {
           task();
@@ -58,12 +58,9 @@ namespace executors
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
+        std::terminate();
         return false;
       }
     }
@@ -95,12 +92,9 @@ namespace executors
           task();
         }
       }
-      catch (std::exception& )
-      {
-        return;
-      }
       catch (...)
       {
+        std::terminate();
         return;
       }
     }
