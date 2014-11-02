@@ -111,6 +111,7 @@ namespace executors
     {
       lock_guard<mutex> lk(mtx_);
       if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      threads_.reserve(threads_.size() + 1);
       thread th(closure);
       threads_.push_back(thread_t(boost::move(th)));
     }
@@ -119,6 +120,7 @@ namespace executors
     {
       lock_guard<mutex> lk(mtx_);
       if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      threads_.reserve(threads_.size() + 1);
       thread th(closure);
       threads_.push_back(thread_t(boost::move(th)));
     }
@@ -128,6 +130,7 @@ namespace executors
     {
       lock_guard<mutex> lk(mtx_);
       if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+      threads_.reserve(threads_.size() + 1);
       thread th(boost::forward<Closure>(closure));
       threads_.push_back(thread_t(boost::move(th)));
     }
