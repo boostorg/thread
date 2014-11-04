@@ -13,6 +13,7 @@
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/condition_variable.hpp>
+#include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
 
