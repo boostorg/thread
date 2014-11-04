@@ -128,7 +128,7 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency())
+    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
     {
       try
       {
