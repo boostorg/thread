@@ -34,9 +34,9 @@ namespace detail
     scheduled_executor_base() {}
   public:
 
-    ~scheduled_executor_base() //virtual?
+    ~scheduled_executor_base()
     {
-      if(!_workq.closed())
+      if(!closed())
       {
         this->close();
       }
@@ -45,6 +45,11 @@ namespace detail
     void close()
     {
       _workq.close();
+    }
+
+    bool closed()
+    {
+      return _workq.closed();
     }
 
     void submit(work w)
@@ -60,6 +65,25 @@ namespace detail
     void submit_after(work w, const duration& dura)
     {
       _workq.push(w, dura);
+    }
+
+    void loop()
+    {
+      try
+      {
+        for(;;)
+        {
+          work task;
+          queue_op_status st = _workq.wait_pull(task);
+          if (st == queue_op_status::closed) return;
+          task();
+        }
+      }
+      catch (...)
+      {
+        std::terminate();
+        return;
+      }
     }
   }; //end class
 

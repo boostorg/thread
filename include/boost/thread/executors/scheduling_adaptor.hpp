@@ -26,7 +26,7 @@ namespace executors
     scheduling_adpator(Executor& ex)
       : super(),
         _exec(ex),
-        _scheduler(&scheduling_adpator::scheduler_loop, this) {}
+        _scheduler(&scheduling_adpator::loop, this) {}
 
     ~scheduling_adpator()
     {
@@ -41,11 +41,11 @@ namespace executors
 
   private:
     typedef detail::scheduled_executor_base super;
-    void scheduler_loop();
+    void loop();
   }; //end class
 
   template<typename Executor>
-  void scheduling_adpator<Executor>::scheduler_loop()
+  void scheduling_adpator<Executor>::loop()
   {
     try
     {

@@ -25,7 +25,7 @@ namespace executors
     {
       for(size_t i = 0; i < num_threads; i++)
       {
-        _workers.create_thread(bind(&scheduled_thread_pool::worker_loop, this));
+        _workers.create_thread(bind(&super::loop, this));
       }
     }
 
@@ -37,10 +37,10 @@ namespace executors
 
   private:
     typedef detail::scheduled_executor_base super;
-    inline void worker_loop();
+    inline void loop();
   }; //end class
 
-  void scheduled_thread_pool::worker_loop()
+  void scheduled_thread_pool::loop()
   {
       try
       {

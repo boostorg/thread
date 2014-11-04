@@ -71,19 +71,7 @@ namespace executors
     }
 
 
-    /**
-     * The main loop of the worker thread
-     */
-    void worker_thread()
-    {
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
-    }
+
 
   public:
     /// loop_executor is not copyable.
@@ -109,9 +97,19 @@ namespace executors
     }
 
     /**
-     * loop
+     * The main loop of the worker thread
      */
-    void loop() { worker_thread(); }
+    void loop()
+    {
+      while (!closed())
+      {
+        schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
+      }
+    }
+
     /**
      * \b Effects: close the \c loop_executor for submissions.
      * The loop will work until there is no more closures to run.
