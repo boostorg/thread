@@ -56,7 +56,6 @@ void test_at(const int n, boost::scheduler& sch)
       sch.at(steady_clock::now()+seconds(i)).submit(boost::bind(fn,i));
       sch.at(steady_clock::now()+milliseconds(i*100)).submit(boost::bind(fn,i));
     }
-
 }
 
 void test_on(const int n, boost::scheduler& sch, thread_pool& tp)

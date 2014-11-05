@@ -691,7 +691,7 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-run2-noit ./test_scheduled_tp.cpp : test_scheduled_tp_p ]
           [ thread-run2-noit ./test_scheduling_adaptor.cpp : test_scheduling_adaptor_p ]
-          #[ thread-run2-noit ./test_scheduler.cpp : test_scheduler_p ]
+          [ thread-run2-noit ./test_scheduler.cpp : test_scheduler_p ]
     ;
 
     test-suite ts_queue_views
@@ -906,7 +906,6 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run2-noit ./test_scheduler.cpp : test_scheduler_p ]
     ;
 
 }
