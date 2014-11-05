@@ -36,7 +36,7 @@ namespace executors
     typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     /// A move aware vector
     thread_vector threads;
 
@@ -48,9 +48,9 @@ namespace executors
      */
     bool try_executing_one()
     {
-      work task;
       try
       {
+        work task;
         if (work_queue.try_pull_front(task) == queue_op_status::success)
         {
           task();
@@ -58,12 +58,9 @@ namespace executors
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
+        std::terminate();
         return false;
       }
     }
@@ -95,12 +92,9 @@ namespace executors
           task();
         }
       }
-      catch (std::exception& )
-      {
-        return;
-      }
       catch (...)
       {
+        std::terminate();
         return;
       }
     }
@@ -134,7 +128,7 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency())
+    basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
     {
       try
       {

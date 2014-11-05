@@ -682,6 +682,25 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/multi_thread_pass.cpp : sync_bounded_q_multi_thread_p ]
     ;
 
+    test-suite ts_sync_pq
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_pq/pq_single_thread_pass.cpp : sync_pq_single_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_pq/pq_multi_thread_pass.cpp : sync_pq_multi_thread_p ]
+    ;
+
+    test-suite ts_sync_tq
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_pq/tq_single_thread_pass.cpp : sync_tq_single_thread_p ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/sync_pq/tq_multi_thread_pass.cpp : sync_tq_multi_thread_p ]
+    ;
+
+    test-suite ts_scheduler
+    :
+          [ thread-run2-noit ./test_scheduled_tp.cpp : test_scheduled_tp_p ]
+          [ thread-run2-noit ./test_scheduling_adaptor.cpp : test_scheduling_adaptor_p ]
+          [ thread-run2-noit ./test_scheduler.cpp : test_scheduler_p ]
+    ;
+
     test-suite ts_queue_views
     :
           [ thread-run2-noit ./sync/mutual_exclusion/queue_views/single_thread_pass.cpp : queue_views__single_thread_p ]
