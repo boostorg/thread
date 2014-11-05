@@ -569,7 +569,7 @@ Polymorphic adaptor of a model of Executor to an executor.
       template <typename ...Args>
       executor_adaptor(Args&& ... args);
 
-      Executor& underlying_executor();
+      Executor& underlying_executor() noexcept;
   
       void close();
       bool closed();
@@ -615,13 +615,11 @@ Polymorphic adaptor of a model of Executor to an executor.
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      Executor& underlying_executor();
+      Executor& underlying_executor() noexcept;
 
 [variablelist
 
 [[Return:] [The underlying executor instance. ]]
-
-[[Throws:] [Nothing.]]
 
 ]
 
@@ -682,7 +680,7 @@ Executor providing time related functions.
       template <class Rep, class Period>  
       scheduled_executor_ref(Executor& ex, chrono::duration<Rep, Period> granularity=chrono::milliseconds(100));
  
-      Executor& underlying_executor();
+      Executor& underlying_executor() noexcept;
 
       void close();
       bool closed();
@@ -740,11 +738,28 @@ Executor providing time related functions.
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      Executor& underlying_executor();
+      Executor& underlying_executor() noexcept;
 
 [variablelist
 
 [[Return:] [The underlying executor instance. ]]
+
+]
+
+
+[endsect]
+
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit_at()`]
+
+      template <class Clock, class Duration, typename Closure>  
+      void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [The underlying executor instance. ]]
 
 [[Throws:] [Nothing.]]
 
@@ -752,6 +767,7 @@ Executor providing time related functions.
 
 
 [endsect]
+
 
 [endsect]
 
@@ -773,7 +789,7 @@ A serial executor ensuring that there are no two work units that executes concur
       template <class Executor>
       serial_executor(Executor& ex);
  
-      Executor& underlying_executor();
+      Executor& underlying_executor() noexcept;
 
       void close();
       bool closed();
@@ -821,7 +837,7 @@ A serial executor ensuring that there are no two work units that executes concur
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      generic_executor_ref underlying_executor();
+      generic_executor_ref& underlying_executor() noexcept;
 
 [variablelist
 
@@ -852,7 +868,7 @@ A serial executor ensuring that there are no two work units that executes concur
       template <class Executor>
       generic_serial_executor(Executor& ex);
  
-      generic_executor_ref underlying_executor();
+      generic_executor_ref& underlying_executor() noexcept;
 
       void close();
       bool closed();
@@ -900,13 +916,11 @@ A serial executor ensuring that there are no two work units that executes concur
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      generic_executor_ref underlying_executor();
+      Executor& underlying_executor() noexcept;
 
 [variablelist
 
 [[Return:] [The underlying executor instance. ]]
-
-[[Throws:] [Nothing.]]
 
 ]
 

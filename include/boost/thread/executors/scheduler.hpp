@@ -18,11 +18,12 @@ namespace boost
 {
   namespace executors
   {
+    /// Wraps the reference to an executor and a function to make a work that submit the function using the executor.
     template <class Executor, class Function>
-    class resubmiter
+    class resubmitter
     {
     public:
-      resubmiter(Executor& ex, Function funct) :
+      resubmitter(Executor& ex, Function funct) :
         ex(ex),
         funct(boost::move(funct))
       {}
@@ -37,24 +38,32 @@ namespace boost
       Function funct;
     };
 
+    /// resubmitter factory
     template <class Executor, class Function>
-    resubmiter<Executor, typename decay<Function>::type>
+    resubmitter<Executor, typename decay<Function>::type>
     resubmit(Executor& ex, BOOST_THREAD_FWD_REF(Function) funct) {
-      return resubmiter<Executor, typename decay<Function>::type >(ex, boost::move(funct));
+      return resubmitter<Executor, typename decay<Function>::type >(ex, boost::move(funct));
     }
 
+    /// Wraps references to a @c Scheduler and an @c Executor providing an @c Executor that
+    /// resubmit the function using the referenced Executor at a given @c time_point known at construction.
     template <class Scheduler, class Executor>
-    class scheduled_executor_time_point_wrapper
+    class resubmit_at_executor
     {
     public:
       typedef chrono::steady_clock clock;
 
-      scheduled_executor_time_point_wrapper(Scheduler& sch, Executor& ex, clock::time_point const& tp) :
+      resubmit_at_executor(Scheduler& sch, Executor& ex, clock::time_point const& tp) :
         sch(sch),
         ex(ex),
         tp(tp),
         is_closed(false)
       {
+      }
+
+      ~resubmit_at_executor()
+      {
+        close();
       }
 
       template <class Work>
@@ -94,20 +103,23 @@ namespace boost
     };
 
 
+    /// Expression template helper storing a pair of references to an @c Scheduler and an @c Executor
+    /// It provides factory helper functions such as at/after that convert these a pair of @c Scheduler @c Executor
+    /// into an new @c Executor that submit the work using the referenced @c Executor at/after a specific time/duration
+    /// respectively, using the referenced @Scheduler.
     template <class Scheduler, class Executor>
-    class scheduled_executor_wrapper
+    class scheduler_executor_wrapper
     {
     public:
       typedef chrono::steady_clock clock;
-      typedef scheduled_executor_time_point_wrapper<Scheduler, Executor> the_executor;
+      typedef resubmit_at_executor<Scheduler, Executor> the_executor;
 
-      scheduled_executor_wrapper(Scheduler& sch, Executor& ex) :
+      scheduler_executor_wrapper(Scheduler& sch, Executor& ex) :
           sch(sch),
-          ex(ex),
-          is_closed(false)
+          ex(ex)
       {}
 
-      ~scheduled_executor_wrapper()
+      ~scheduler_executor_wrapper()
       {
       }
 
@@ -118,26 +130,6 @@ namespace boost
       Scheduler& underlying_scheduler()
       {
           return sch;
-      }
-
-      void close()
-      {
-        is_closed = true;
-      }
-
-      bool closed()
-      {
-        return is_closed || ex.closed();
-      }
-
-      template <class Work>
-      void submit(BOOST_THREAD_FWD_REF(Work) w)
-      {
-        if (closed())
-        {
-          BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
-        }
-        ex.submit(boost::forward<Work>(w));
       }
 
       template <class Duration>
@@ -154,23 +146,25 @@ namespace boost
     private:
       Scheduler& sch;
       Executor& ex;
-      bool  is_closed;
     }; //end class
 
+    /// Wraps a reference to a @c Scheduler providing an @c Executor that
+    /// run the function at a given @c time_point known at construction.
     template <class Scheduler>
-    class scheduled_time_point_wrapper
+    class at_executor
     {
     public:
       typedef chrono::steady_clock clock;
 
-      scheduled_time_point_wrapper(Scheduler& sch, clock::time_point const& tp) :
+      at_executor(Scheduler& sch, clock::time_point const& tp) :
           sch(sch),
           tp(tp),
           is_closed(false)
       {}
 
-      ~scheduled_time_point_wrapper()
+      ~at_executor()
       {
+        close();
       }
 
       Scheduler& underlying_scheduler()
@@ -199,9 +193,9 @@ namespace boost
       }
 
       template <class Executor>
-      scheduled_executor_time_point_wrapper<Scheduler, Executor> on(Executor& ex)
+      resubmit_at_executor<Scheduler, Executor> on(Executor& ex)
       {
-        return scheduled_executor_time_point_wrapper<Scheduler, Executor>(sch, ex, tp);
+        return resubmit_at_executor<Scheduler, Executor>(sch, ex, tp);
       }
 
     private:
@@ -210,6 +204,9 @@ namespace boost
       bool  is_closed;
     }; //end class
 
+    /// A @c Scheduler using a specific thread. Note that a Scheduler is not an Executor.
+    /// It provides factory helper functions such as at/after that convert a @c Scheduler into an @c Executor
+    /// that submit the work at/after a specific time/duration respectively.
     class scheduler : public detail::scheduled_executor_base
     {
     public:
@@ -226,20 +223,20 @@ namespace boost
         thr.join();
       }
       template <class Ex>
-      scheduled_executor_wrapper<scheduler, Ex> on(Ex& ex)
+      scheduler_executor_wrapper<scheduler, Ex> on(Ex& ex)
       {
-        return scheduled_executor_wrapper<scheduler, Ex>(*this, ex);
+        return scheduler_executor_wrapper<scheduler, Ex>(*this, ex);
       }
 
       template <class Duration>
-      scheduled_time_point_wrapper<scheduler> after(Duration const& rel_time)
+      at_executor<scheduler> after(Duration const& rel_time)
       {
         return at(rel_time + clock::now());
       }
 
-      scheduled_time_point_wrapper<scheduler> at(time_point const& tp)
+      at_executor<scheduler> at(time_point const& tp)
       {
-        return scheduled_time_point_wrapper<scheduler>(*this, tp);
+        return at_executor<scheduler>(*this, tp);
       }
 
     private:
@@ -249,11 +246,11 @@ namespace boost
 
 
   }
-  using executors::resubmiter;
+  using executors::resubmitter;
   using executors::resubmit;
-  using executors::scheduled_executor_time_point_wrapper;
-  using executors::scheduled_executor_wrapper;
-  using executors::scheduled_time_point_wrapper;
+  using executors::resubmit_at_executor;
+  using executors::scheduler_executor_wrapper;
+  using executors::at_executor;
   using executors::scheduler;
 }
 

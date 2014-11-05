@@ -128,7 +128,7 @@ namespace executors
      */
     ~serial_executor()
     {
-      // signal to all the worker thread that there will be no more submissions.
+      // signal to the worker thread that there will be no more submissions.
       close();
     }
 
