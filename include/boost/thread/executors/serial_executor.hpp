@@ -33,7 +33,7 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     generic_executor_ref ex;
     thread_t thr;
 
@@ -43,7 +43,7 @@ namespace executors
       try_executing_one_task(work& task, boost::promise<void> &p)
       : task(task), p(p) {}
       void operator()() {
-        task(); // if task() throws promise is not set but as the the program terminates and should terminate there is no need to use try-catch here.
+        task();
         p.set_value();
       }
     };
@@ -52,7 +52,7 @@ namespace executors
      * \par Returns
      * The underlying executor wrapped on a generic executor reference.
      */
-    generic_executor_ref underlying_executor() BOOST_NOEXCEPT { return ex; }
+    generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex; }
 
     /**
      * Effects: try to execute one task.
@@ -69,22 +69,14 @@ namespace executors
           boost::promise<void> p;
           try_executing_one_task tmp(task,p);
           ex.submit(tmp);
-//          ex.submit([&task, &p]()
-//          {
-//            task(); // if task() throws promise is not set but as the the program terminates and should terminate there is no need to use try-catch here.
-//            p.set_value();
-//          });
           p.get_future().wait();
           return true;
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
+        std::terminate();
         return false;
       }
     }
@@ -136,7 +128,7 @@ namespace executors
      */
     ~serial_executor()
     {
-      // signal to all the worker thread that there will be no more submissions.
+      // signal to the worker thread that there will be no more submissions.
       close();
     }
 

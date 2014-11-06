@@ -432,24 +432,24 @@ namespace boost
             }
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            void mark_interrupted_finish()
-            {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
-                exception = boost::copy_exception(boost::thread_interrupted());
-                mark_finished_internal(lock);
-            }
+//            void mark_interrupted_finish()
+//            {
+//                boost::unique_lock<boost::mutex> lock(this->mutex);
+//                exception = boost::copy_exception(boost::thread_interrupted());
+//                mark_finished_internal(lock);
+//            }
 
-            void set_interrupted_at_thread_exit()
-            {
-              unique_lock<boost::mutex> lk(this->mutex);
-              if (has_value(lk))
-              {
-                  throw_exception(promise_already_satisfied());
-              }
-              exception = boost::copy_exception(boost::thread_interrupted());
-              this->is_constructed = true;
-              detail::make_ready_at_thread_exit(shared_from_this());
-            }
+//            void set_interrupted_at_thread_exit()
+//            {
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (has_value(lk))
+//              {
+//                  throw_exception(promise_already_satisfied());
+//              }
+//              exception = boost::copy_exception(boost::thread_interrupted());
+//              this->is_constructed = true;
+//              detail::make_ready_at_thread_exit(shared_from_this());
+//            }
 #endif
 
             void set_exception_at_thread_exit(exception_ptr e)
@@ -481,14 +481,14 @@ namespace boost
                 return done && exception;
             }
 
-            bool has_exception(unique_lock<boost::mutex>&) const
-            {
-                return done && exception;
-            }
+//            bool has_exception(unique_lock<boost::mutex>&) const
+//            {
+//                return done && exception;
+//            }
 
-            bool is_deferred(boost::lock_guard<boost::mutex>&)  const {
-                return is_deferred_;
-            }
+//            bool is_deferred(boost::lock_guard<boost::mutex>&)  const {
+//                return is_deferred_;
+//            }
 
             launch launch_policy(boost::unique_lock<boost::mutex>&) const
             {
@@ -511,13 +511,14 @@ namespace boost
             exception_ptr get_exception_ptr()
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
-                return get_exception_ptr(lock);
-            }
-            exception_ptr get_exception_ptr(boost::unique_lock<boost::mutex>& lock)
-            {
                 wait_internal(lock, false);
                 return exception;
             }
+//            exception_ptr get_exception_ptr(boost::unique_lock<boost::mutex>& lock)
+//            {
+//                wait_internal(lock, false);
+//                return exception;
+//            }
 
             template<typename F,typename U>
             void set_wait_callback(F f,U* u)
@@ -580,21 +581,29 @@ namespace boost
 
             void mark_finished_with_result_internal(rvalue_source_type result_, boost::unique_lock<boost::mutex>& lock)
             {
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
                 result = boost::move(result_);
-#else
+#elif ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
                 result.reset(new T(boost::move(result_)));
-#endif
-#else
-#if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
-                result = boost::move(result_);
 #else
                 result.reset(new T(static_cast<rvalue_source_type>(result_)));
 #endif
+                this->mark_finished_internal(lock);
+            }
+
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+            template <class ...Args>
+            void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock, BOOST_THREAD_FWD_REF(Args)... args)
+            {
+#if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
+                result.emplace(boost::forward<Args>(args)...);
+#else
+                result.reset(new T(boost::forward<Args>(args)...));
 #endif
                 this->mark_finished_internal(lock);
             }
+#endif
 
             void mark_finished_with_result(source_reference_type result_)
             {
@@ -830,12 +839,6 @@ namespace boost
             {
               that->mark_finished_with_result(f());
             }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            catch(thread_interrupted& )
-            {
-              that->mark_interrupted_finish();
-            }
-#endif
             catch(...)
             {
               that->mark_exceptional_finish();
@@ -858,12 +861,6 @@ namespace boost
               f();
               that->mark_finished_with_result();
             }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            catch(thread_interrupted& )
-            {
-              that->mark_interrupted_finish();
-            }
-#endif
             catch(...)
             {
               that->mark_exceptional_finish();
@@ -885,12 +882,6 @@ namespace boost
             {
               that->mark_finished_with_result(f());
             }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            catch(thread_interrupted& )
-            {
-              that->mark_interrupted_finish();
-            }
-#endif
             catch(...)
             {
               that->mark_exceptional_finish();
@@ -1276,7 +1267,6 @@ namespace boost
           p.set_exception(future_uninitialized());
           future_ = p.get_future().future_;
         }
-
 
         future_ptr future_;
 
@@ -2077,6 +2067,22 @@ namespace boost
             future_->mark_finished_with_result_internal(static_cast<rvalue_source_type>(r), lock);
 #endif
         }
+
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+        template <class ...Args>
+        void emplace(BOOST_THREAD_FWD_REF(Args) ...args)
+        {
+            lazy_init();
+            boost::unique_lock<boost::mutex> lock(future_->mutex);
+            if(future_->done)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->mark_finished_with_result_internal(lock, boost::forward<Args>(args)...);
+        }
+
+#endif
+
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
@@ -2606,12 +2612,12 @@ namespace boost
                     this->set_value_at_thread_exit(f());
                 }
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->set_interrupted_at_thread_exit();
-                }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                catch(thread_interrupted& )
+//                {
+//                    this->set_interrupted_at_thread_exit();
+//                }
+//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -2637,12 +2643,6 @@ namespace boost
                   this->mark_finished_with_result(f());
 #endif
                   }
-#endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->mark_interrupted_finish();
-                }
 #endif
                 catch(...)
                 {
@@ -2693,12 +2693,12 @@ namespace boost
                     this->set_value_at_thread_exit(f());
                 }
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->set_interrupted_at_thread_exit();
-                }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                catch(thread_interrupted& )
+//                {
+//                    this->set_interrupted_at_thread_exit();
+//                }
+//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -2719,12 +2719,6 @@ namespace boost
                 {
                   R& res((f()));
                   this->mark_finished_with_result(res);
-                }
-#endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->mark_interrupted_finish();
                 }
 #endif
                 catch(...)
@@ -2783,12 +2777,12 @@ namespace boost
                         this->set_value_at_thread_exit(boost::move(r));
                     }
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                    catch(thread_interrupted& )
-                    {
-                        this->set_interrupted_at_thread_exit();
-                    }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                    catch(thread_interrupted& )
+//                    {
+//                        this->set_interrupted_at_thread_exit();
+//                    }
+//#endif
                     catch(...)
                     {
                         this->set_exception_at_thread_exit(current_exception());
@@ -2810,12 +2804,6 @@ namespace boost
                     {
                         R res((f()));
                         this->mark_finished_with_result(boost::move(res));
-                    }
-#endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                    catch(thread_interrupted& )
-                    {
-                        this->mark_interrupted_finish();
                     }
 #endif
                     catch(...)
@@ -2870,12 +2858,12 @@ namespace boost
                       this->set_value_at_thread_exit(f());
                     }
 #endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                    catch(thread_interrupted& )
-                    {
-                        this->set_interrupted_at_thread_exit();
-                    }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                    catch(thread_interrupted& )
+//                    {
+//                        this->set_interrupted_at_thread_exit();
+//                    }
+//#endif
                     catch(...)
                     {
                         this->set_exception_at_thread_exit(current_exception());
@@ -2896,12 +2884,6 @@ namespace boost
                     try
                     {
                         this->mark_finished_with_result(f());
-                    }
-#endif
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                    catch(thread_interrupted& )
-                    {
-                        this->mark_interrupted_finish();
                     }
 #endif
                     catch(...)
@@ -2953,12 +2935,12 @@ namespace boost
 #endif
                   this->set_value_at_thread_exit();
                 }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->set_interrupted_at_thread_exit();
-                }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                catch(thread_interrupted& )
+//                {
+//                    this->set_interrupted_at_thread_exit();
+//                }
+//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -2980,12 +2962,6 @@ namespace boost
 #endif
                     this->mark_finished_with_result();
                 }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->mark_interrupted_finish();
-                }
-#endif
                 catch(...)
                 {
                     this->mark_exceptional_finish();
@@ -3032,12 +3008,12 @@ namespace boost
 #endif
                     this->set_value_at_thread_exit();
                 }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->set_interrupted_at_thread_exit();
-                }
-#endif
+//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+//                catch(thread_interrupted& )
+//                {
+//                    this->set_interrupted_at_thread_exit();
+//                }
+//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -3059,12 +3035,6 @@ namespace boost
 #endif
                   this->mark_finished_with_result();
                 }
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                catch(thread_interrupted& )
-                {
-                    this->mark_interrupted_finish();
-                }
-#endif
                 catch(...)
                 {
                     this->mark_exceptional_finish();
@@ -3602,10 +3572,6 @@ namespace detail {
       void operator()() {
         try {
           that->mark_finished_with_result(f_());
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        } catch(thread_interrupted& ) {
-          that->mark_interrupted_finish();
-#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         } catch(...) {
           that->mark_exceptional_finish();
         }
@@ -3653,10 +3619,6 @@ namespace detail {
         try {
           f_();
           that->mark_finished_with_result();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        } catch(thread_interrupted& ) {
-          that->mark_interrupted_finish();
-#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         } catch(...) {
           that->mark_exceptional_finish();
         }
@@ -3702,10 +3664,6 @@ namespace detail {
       void operator()() {
         try {
           that->mark_finished_with_result(f_());
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        } catch(thread_interrupted& ) {
-          that->mark_interrupted_finish();
-#endif // defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
         } catch(...) {
           that->mark_exceptional_finish();
         }
@@ -3929,13 +3887,46 @@ namespace detail {
   ////////////////////////////////
   // make_ready_future
   ////////////////////////////////
-  template <typename T>
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  template <int = 0, int..., class T>
+#else
+  template <class T>
+#endif
   BOOST_THREAD_FUTURE<typename decay<T>::type> make_ready_future(BOOST_THREAD_FWD_REF(T) value) {
     typedef typename decay<T>::type future_value_type;
     promise<future_value_type> p;
     p.set_value(boost::forward<future_value_type>(value));
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
+
+  // explicit overloads
+  template <class T>
+  BOOST_THREAD_FUTURE<T> make_ready_future(typename remove_reference<T>::type & x)
+  {
+    promise<T> p;
+    p.set_value(x);
+    return p.get_future();
+  }
+
+  template <class T>
+  BOOST_THREAD_FUTURE<T> make_ready_future(BOOST_THREAD_FWD_REF(typename remove_reference<T>::type) x)
+  {
+    promise<T> p;
+    p.set_value(forward<typename remove_reference<T>::type>(x));
+    return p.get_future();
+  }
+
+  // variadic overload
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+  template <class T, class ...Args>
+  BOOST_THREAD_FUTURE<T> make_ready_future(Args&&... args)
+  {
+    promise<T> p;
+    p.emplace(forward<Args>(args)...);
+    return p.get_future();
+
+  }
+#endif
 
   template <typename T, typename T1>
   BOOST_THREAD_FUTURE<T> make_ready_no_decay_future(T1 value) {
@@ -4052,10 +4043,6 @@ namespace detail
     static void run(future_async_continuation_shared_state* that) {
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4086,10 +4073,6 @@ namespace detail
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4135,10 +4118,6 @@ namespace detail
     static void run(future_executor_continuation_shared_state* that) {
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4172,10 +4151,6 @@ namespace detail
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4210,10 +4185,6 @@ namespace detail
     static void run(shared_future_async_continuation_shared_state* that) {
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4244,10 +4215,6 @@ namespace detail
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4285,10 +4252,6 @@ namespace detail
     static void run(shared_future_executor_continuation_shared_state* that) {
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4321,10 +4284,6 @@ namespace detail
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4811,10 +4770,6 @@ namespace detail
       try {
         boost::wait_for_all(that->vec_.begin(), that->vec_.end());
         that->mark_finished_with_result(boost::move(that->vec_));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4885,10 +4840,6 @@ namespace detail
       try {
         boost::wait_for_any(that->vec_.begin(), that->vec_.end());
         that->mark_finished_with_result(boost::move(that->vec_));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -4993,10 +4944,6 @@ namespace detail
         that->wait_for_all(Index());
 
         that->mark_finished_with_result(boost::move(that->tup_));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }
@@ -5067,10 +5014,6 @@ namespace detail
         that->wait_for_any(Index());
 
         that->mark_finished_with_result(boost::move(that->tup_));
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-      } catch(thread_interrupted& ) {
-        that->mark_interrupted_finish();
-#endif
       } catch(...) {
         that->mark_exceptional_finish();
       }

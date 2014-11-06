@@ -31,7 +31,7 @@ namespace executors
     typedef  executors::work work;
   private:
     /// the thread safe work queue
-    sync_queue<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
 
   public:
     /**
@@ -51,12 +51,9 @@ namespace executors
         }
         return false;
       }
-      catch (std::exception& )
-      {
-        return false;
-      }
       catch (...)
       {
+        std::terminate();
         return false;
       }
     }
@@ -74,19 +71,7 @@ namespace executors
     }
 
 
-    /**
-     * The main loop of the worker thread
-     */
-    void worker_thread()
-    {
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
-    }
+
 
   public:
     /// loop_executor is not copyable.
@@ -112,9 +97,19 @@ namespace executors
     }
 
     /**
-     * loop
+     * The main loop of the worker thread
      */
-    void loop() { worker_thread(); }
+    void loop()
+    {
+      while (!closed())
+      {
+        schedule_one_or_yield();
+      }
+      while (try_executing_one())
+      {
+      }
+    }
+
     /**
      * \b Effects: close the \c loop_executor for submissions.
      * The loop will work until there is no more closures to run.
