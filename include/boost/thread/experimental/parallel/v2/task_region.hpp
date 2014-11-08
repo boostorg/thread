@@ -10,14 +10,17 @@
 // See http://www.boost.org/libs/thread for documentation.
 //
 //////////////////////////////////////////////////////////////////////////////
-#if ! defined BOOST_NO_CXX11_RANGE_BASED_FOR
 #include <boost/thread/detail/config.hpp>
+
+#if ! defined BOOST_NO_CXX11_RANGE_BASED_FOR
+
 #include <boost/thread/future.hpp>
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #endif
 #include <boost/thread/experimental/exception_list.hpp>
 #include <boost/thread/experimental/parallel/v2/inline_namespace.hpp>
+#include <boost/thread/detail/move.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -80,7 +83,7 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     {
       TRH& tr;
       F f;
-      wrapped(TRH& tr, F&& f) : tr(tr), f(move(f))
+      wrapped(TRH& tr, BOOST_THREAD_RV_REF(F) f) : tr(tr), f(move(f))
       {}
       void operator()()
       {
@@ -109,13 +112,13 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     friend struct detail::wrapped;
 #endif
     template <typename F>
-    friend void task_region(F&& f);
+    friend void task_region(BOOST_THREAD_FWD_REF(F) f);
     template<typename F>
-    friend void task_region_final(F&& f);
+    friend void task_region_final(BOOST_THREAD_FWD_REF(F) f);
     template <class Ex, typename F>
-    friend void task_region(Ex&, F&& f);
+    friend void task_region(Ex&, BOOST_THREAD_FWD_REF(F) f);
     template<class Ex, typename F>
-    friend void task_region_final(Ex&, F&& f);
+    friend void task_region_final(Ex&, BOOST_THREAD_FWD_REF(F) f);
 
     void wait_all()
     {
@@ -195,12 +198,12 @@ protected:
 
 
   public:
-    task_region_handle_gen(const task_region_handle_gen&) = delete;
-    task_region_handle_gen& operator=(const task_region_handle_gen&) = delete;
-    task_region_handle_gen* operator&() const = delete;
+    BOOST_DELETED_FUNCTION(task_region_handle_gen(const task_region_handle_gen&))
+    BOOST_DELETED_FUNCTION(task_region_handle_gen& operator=(const task_region_handle_gen&))
+    BOOST_DELETED_FUNCTION(task_region_handle_gen* operator&() const)
 
     template<typename F>
-    void run(F&& f)
+    void run(BOOST_THREAD_FWD_REF(F) f)
     {
       lock_guard<mutex> lk(mtx);
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
@@ -244,9 +247,9 @@ protected:
   {
     default_executor tp;
     template <typename F>
-    friend void task_region(F&& f);
+    friend void task_region(BOOST_THREAD_FWD_REF(F) f);
     template<typename F>
-    friend void task_region_final(F&& f);
+    friend void task_region_final(BOOST_THREAD_FWD_REF(F) f);
 
   protected:
     task_region_handle() : task_region_handle_gen<default_executor>()
@@ -255,14 +258,14 @@ protected:
       ex = &tp;
 #endif
     }
-    task_region_handle(const task_region_handle&) = delete;
-    task_region_handle& operator=(const task_region_handle&) = delete;
-    task_region_handle* operator&() const = delete;
+    BOOST_DELETED_FUNCTION(task_region_handle(const task_region_handle&))
+    BOOST_DELETED_FUNCTION(task_region_handle& operator=(const task_region_handle&))
+    BOOST_DELETED_FUNCTION(task_region_handle* operator&() const)
 
   };
 
   template <typename Executor, typename F>
-  void task_region_final(Executor& ex, F&& f)
+  void task_region_final(Executor& ex, BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_handle_gen<Executor> tr(ex);
     try
@@ -278,13 +281,13 @@ protected:
   }
 
   template <typename Executor, typename F>
-  void task_region(Executor& ex, F&& f)
+  void task_region(Executor& ex, BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_final(ex, forward<F>(f));
   }
 
   template <typename F>
-  void task_region_final(F&& f)
+  void task_region_final(BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_handle tr;
     try
@@ -300,7 +303,7 @@ protected:
   }
 
   template <typename F>
-  void task_region(F&& f)
+  void task_region(BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_final(forward<F>(f));
   }
@@ -312,5 +315,5 @@ protected:
 
 #include <boost/config/abi_suffix.hpp>
 
-#endif
-#endif
+#endif // BOOST_NO_CXX11_RANGE_BASED_FOR
+#endif // header
