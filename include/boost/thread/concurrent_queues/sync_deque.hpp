@@ -29,11 +29,11 @@ namespace boost
 {
 namespace concurrent
 {
-  template <typename ValueType>
+  template <class ValueType, class Container = csbl::devector<ValueType> >
   class sync_deque
-    : public detail::sync_queue_base<ValueType, csbl::devector<ValueType> >
+    : public detail::sync_queue_base<ValueType, Container >
   {
-    typedef detail::sync_queue_base<ValueType, csbl::devector<ValueType> >  super;
+    typedef detail::sync_queue_base<ValueType, Container >  super;
 
   public:
     typedef ValueType value_type;
@@ -102,15 +102,15 @@ namespace concurrent
     }
   };
 
-  template <typename ValueType>
-  sync_deque<ValueType>::sync_deque() :
+  template <class ValueType, class Container>
+  sync_deque<ValueType, Container>::sync_deque() :
     super()
   {
   }
 
-//  template <typename ValueType>
-//  template <typename Range>
-//  explicit sync_deque<ValueType>::sync_deque(Range range) :
+//  template <class ValueType, class Container>
+//  template <class Range>
+//  explicit sync_deque<ValueType, Container>::sync_deque(Range range) :
 //    data_(), closed_(false)
 //  {
 //    try
@@ -130,13 +130,13 @@ namespace concurrent
 //    }
 //  }
 
-  template <typename ValueType>
-  sync_deque<ValueType>::~sync_deque()
+  template <class ValueType, class Container>
+  sync_deque<ValueType, Container>::~sync_deque()
   {
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_pull_front(ValueType& elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_pull_front(ValueType& elem, unique_lock<mutex>& lk)
   {
     if (super::empty(lk))
     {
@@ -146,8 +146,8 @@ namespace concurrent
     pull_front(elem, lk);
     return queue_op_status::success;
   }
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_pull_front(ValueType& elem, unique_lock<mutex>& lk)
   {
     if (super::empty(lk))
     {
@@ -159,22 +159,22 @@ namespace concurrent
     return queue_op_status::success;
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_pull_front(ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_pull_front(ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return try_pull_front(elem, lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_pull_front(ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_pull_front(ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return wait_pull_front(elem, lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::nonblocking_pull_front(ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::nonblocking_pull_front(ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_, try_to_lock);
     if (!lk.owns_lock())
@@ -184,8 +184,8 @@ namespace concurrent
     return try_pull_front(elem, lk);
   }
 
-  template <typename ValueType>
-  void sync_deque<ValueType>::pull_front(ValueType& elem)
+  template <class ValueType, class Container>
+  void sync_deque<ValueType, Container>::pull_front(ValueType& elem)
   {
       unique_lock<mutex> lk(super::mtx_);
       super::wait_until_not_empty(lk);
@@ -193,92 +193,92 @@ namespace concurrent
   }
 
   // enable if ValueType is nothrow movable
-  template <typename ValueType>
-  ValueType sync_deque<ValueType>::pull_front()
+  template <class ValueType, class Container>
+  ValueType sync_deque<ValueType, Container>::pull_front()
   {
       unique_lock<mutex> lk(super::mtx_);
       super::wait_until_not_empty(lk);
       return pull_front(lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_push_back(const ValueType& elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_push_back(const ValueType& elem, unique_lock<mutex>& lk)
   {
     if (super::closed(lk)) return queue_op_status::closed;
     push_back(elem, lk);
     return queue_op_status::success;
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_push_back(const ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_push_back(const ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return try_push_back(elem, lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_push_back(const ValueType& elem, unique_lock<mutex>& lk)
   {
     if (super::closed(lk)) return queue_op_status::closed;
     push_back(elem, lk);
     return queue_op_status::success;
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_push_back(const ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_push_back(const ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return wait_push_back(elem, lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::nonblocking_push_back(const ValueType& elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::nonblocking_push_back(const ValueType& elem)
   {
     unique_lock<mutex> lk(super::mtx_, try_to_lock);
     if (!lk.owns_lock()) return queue_op_status::busy;
     return try_push_back(elem, lk);
   }
 
-  template <typename ValueType>
-  void sync_deque<ValueType>::push_back(const ValueType& elem)
+  template <class ValueType, class Container>
+  void sync_deque<ValueType, Container>::push_back(const ValueType& elem)
   {
       unique_lock<mutex> lk(super::mtx_);
       super::throw_if_closed(lk);
       push_back(elem, lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     if (super::closed(lk)) return queue_op_status::closed;
     push_back(boost::move(elem), lk);
     return queue_op_status::success;
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::try_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return try_push_back(boost::move(elem), lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem, unique_lock<mutex>& lk)
   {
     if (super::closed(lk)) return queue_op_status::closed;
     push_back(boost::move(elem), lk);
     return queue_op_status::success;
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::wait_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return wait_push_back(boost::move(elem), lk);
   }
 
-  template <typename ValueType>
-  queue_op_status sync_deque<ValueType>::nonblocking_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  template <class ValueType, class Container>
+  queue_op_status sync_deque<ValueType, Container>::nonblocking_push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
     unique_lock<mutex> lk(super::mtx_, try_to_lock);
     if (!lk.owns_lock())
@@ -288,30 +288,30 @@ namespace concurrent
     return try_push_back(boost::move(elem), lk);
   }
 
-  template <typename ValueType>
-  void sync_deque<ValueType>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
+  template <class ValueType, class Container>
+  void sync_deque<ValueType, Container>::push_back(BOOST_THREAD_RV_REF(ValueType) elem)
   {
       unique_lock<mutex> lk(super::mtx_);
       super::throw_if_closed(lk);
       push_back(boost::move(elem), lk);
   }
 
-  template <typename ValueType>
-  sync_deque<ValueType>& operator<<(sync_deque<ValueType>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
+  template <class ValueType, class Container>
+  sync_deque<ValueType, Container>& operator<<(sync_deque<ValueType, Container>& sbq, BOOST_THREAD_RV_REF(ValueType) elem)
   {
     sbq.push_back(boost::move(elem));
     return sbq;
   }
 
-  template <typename ValueType>
-  sync_deque<ValueType>& operator<<(sync_deque<ValueType>& sbq, ValueType const&elem)
+  template <class ValueType, class Container>
+  sync_deque<ValueType, Container>& operator<<(sync_deque<ValueType, Container>& sbq, ValueType const&elem)
   {
     sbq.push_back(elem);
     return sbq;
   }
 
-  template <typename ValueType>
-  sync_deque<ValueType>& operator>>(sync_deque<ValueType>& sbq, ValueType &elem)
+  template <class ValueType, class Container>
+  sync_deque<ValueType, Container>& operator>>(sync_deque<ValueType, Container>& sbq, ValueType &elem)
   {
     sbq.pull_front(elem);
     return sbq;
