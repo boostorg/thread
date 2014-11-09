@@ -12,7 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_deque.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 #include <boost/thread/future.hpp>
@@ -33,7 +33,7 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
+    concurrent::sync_deque<work > work_queue;
     generic_executor_ref ex;
     thread_t thr;
 

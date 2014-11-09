@@ -676,6 +676,12 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/mutual_exclusion/sync_queue/multi_thread_pass.cpp : sync_queue__multi_thread_p ]
     ;
 
+    test-suite ts_sync_deque
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_deque/single_thread_pass.cpp : sync_deque__single_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_deque/multi_thread_pass.cpp : sync_deque__multi_thread_p ]
+    ;
+
     test-suite ts_sync_bounded_queue
     :
           [ thread-run2-noit ./sync/mutual_exclusion/sync_bounded_queue/single_thread_pass.cpp : sync_bounded_q_single_thread_p ]

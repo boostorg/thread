@@ -21,7 +21,7 @@
     typedef std::ostream the_ostream;
     typedef std::istream the_istream;
 #endif
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_deque.hpp>
 #include <boost/thread/concurrent_queues/queue_adaptor.hpp>
 #include <boost/thread/concurrent_queues/queue_views.hpp>
 #include <boost/static_assert.hpp>
@@ -129,7 +129,7 @@ int main()
   //the_istream &mcin = std::cin;
 #endif
 
-  queue_adaptor<sync_queue<int> > sbq;
+  queue_adaptor<sync_deque<int> > sbq;
 
   {
     mcout << "begin of main" << std::endl;

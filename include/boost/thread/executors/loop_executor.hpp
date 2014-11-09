@@ -14,7 +14,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_deque.hpp>
 #include <boost/thread/executors/work.hpp>
 
 #include <boost/config/abi_prefix.hpp>
@@ -31,7 +31,7 @@ namespace executors
     typedef  executors::work work;
   private:
     /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
+    concurrent::sync_deque<work > work_queue;
 
   public:
     /**
@@ -179,7 +179,7 @@ namespace executors
      */
     void run_queued_closures()
     {
-      sync_queue<work>::underlying_queue_type q = work_queue.underlying_queue();
+      sync_deque<work>::underlying_queue_type q = work_queue.underlying_queue();
       while (! q.empty())
       {
         work& task = q.front();

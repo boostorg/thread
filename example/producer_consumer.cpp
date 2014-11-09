@@ -22,9 +22,9 @@
     typedef std::ostream the_ostream;
     typedef std::istream the_istream;
 #endif
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_deque.hpp>
 
-void producer(the_ostream &mos, boost::sync_queue<int> & sbq)
+void producer(the_ostream &mos, boost::sync_deque<int> & sbq)
 {
   using namespace boost;
   try {
@@ -48,7 +48,7 @@ void producer(the_ostream &mos, boost::sync_queue<int> & sbq)
 
 void consumer(
     the_ostream &mos,
-    boost::sync_queue<int> & sbq)
+    boost::sync_deque<int> & sbq)
 {
   using namespace boost;
   try {
@@ -71,7 +71,7 @@ void consumer(
     mos << "exception !!!\n";
   }
 }
-void consumer2(the_ostream &mos, boost::sync_queue<int> & sbq)
+void consumer2(the_ostream &mos, boost::sync_deque<int> & sbq)
 {
   using namespace boost;
   try {
@@ -91,7 +91,7 @@ void consumer2(the_ostream &mos, boost::sync_queue<int> & sbq)
     mos << "exception !!!\n";
   }
 }
-void consumer3(the_ostream &mos, boost::sync_queue<int> & sbq)
+void consumer3(the_ostream &mos, boost::sync_deque<int> & sbq)
 {
   using namespace boost;
   try {
@@ -126,7 +126,7 @@ int main()
   //the_istream &mcin = std::cin;
 #endif
 
-  sync_queue<int> sbq;
+  sync_deque<int> sbq;
 
   {
     mcout << "begin of main" << std::endl;

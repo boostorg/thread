@@ -5,7 +5,7 @@
 //
 // 2013/09 Vicente J. Botet Escriba
 //    Adapt to boost from CCIA C++11 implementation
-//    first implementation of a simple pool thread using a vector of threads and a sync_queue.
+//    first implementation of a simple pool thread using a vector of threads and a sync_deque.
 
 #ifndef BOOST_THREAD_THREAD_POOL_HPP
 #define BOOST_THREAD_THREAD_POOL_HPP

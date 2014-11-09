@@ -5,7 +5,7 @@
 //
 // 2013/09 Vicente J. Botet Escriba
 //    Adapt to boost from CCIA C++11 implementation
-//    first implementation of a simple pool thread using a vector of threads and a sync_queue.
+//    first implementation of a simple pool thread using a vector of threads and a sync_deque.
 
 #ifndef BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
 #define BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
@@ -14,7 +14,7 @@
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/scoped_thread.hpp>
-#include <boost/thread/sync_queue.hpp>
+#include <boost/thread/concurrent_queues/sync_deque.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/csbl/vector.hpp>
 
@@ -36,7 +36,7 @@ namespace executors
     typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
+    concurrent::sync_deque<work > work_queue;
     /// A move aware vector
     thread_vector threads;
 
