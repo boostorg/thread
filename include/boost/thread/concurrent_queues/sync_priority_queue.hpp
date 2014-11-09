@@ -39,7 +39,7 @@ namespace detail {
   class priority_queue
   {
   private:
-      std::vector<Type> _elements;
+      Container _elements;
       Compare _compare;
   public:
       explicit priority_queue(const Compare& compare = Compare())
