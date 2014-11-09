@@ -52,11 +52,6 @@ namespace detail
       return _workq.closed();
     }
 
-    void submit(work w)
-    {
-      _workq.push(w, clock::now());
-    }
-
     void submit_at(work w, const time_point& tp)
     {
       _workq.push(w, tp);
@@ -64,7 +59,7 @@ namespace detail
 
     void submit_after(work w, const duration& dura)
     {
-      _workq.push(w, dura);
+      _workq.push(w, dura+clock::now());
     }
 
     void loop()

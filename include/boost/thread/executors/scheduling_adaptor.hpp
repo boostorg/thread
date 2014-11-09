@@ -26,7 +26,7 @@ namespace executors
     scheduling_adpator(Executor& ex)
       : super(),
         _exec(ex),
-        _scheduler(&scheduling_adpator::loop, this) {}
+        _scheduler(&super::loop, this) {}
 
     ~scheduling_adpator()
     {
@@ -41,28 +41,7 @@ namespace executors
 
   private:
     typedef detail::scheduled_executor_base super;
-    void loop();
   }; //end class
-
-  template<typename Executor>
-  void scheduling_adpator<Executor>::loop()
-  {
-    try
-    {
-      for(;;)
-      {
-        super::work task;
-        queue_op_status st = super::_workq.wait_pull(task);
-        if (st == queue_op_status::closed) return;
-        _exec.submit(task);
-      }
-    }
-    catch (...)
-    {
-      std::terminate();
-      return;
-    }
-  }
 
 } //end executors
 

@@ -37,27 +37,7 @@ namespace executors
 
   private:
     typedef detail::scheduled_executor_base super;
-    inline void loop();
   }; //end class
-
-  void scheduled_thread_pool::loop()
-  {
-      try
-      {
-        for(;;)
-        {
-          super::work task;
-          queue_op_status st = super::_workq.wait_pull(task);
-          if (st == queue_op_status::closed) return;
-          task();
-        }
-      }
-      catch (...)
-      {
-        std::terminate();
-        return;
-      }
-  }
 
 } //end executors namespace
 
