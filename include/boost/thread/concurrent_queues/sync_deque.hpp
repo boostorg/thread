@@ -15,7 +15,7 @@
 #include <boost/thread/concurrent_queues/detail/sync_queue_base.hpp>
 #include <boost/thread/concurrent_queues/queue_op_status.hpp>
 #include <boost/thread/condition_variable.hpp>
-#include <boost/thread/csbl/deque.hpp>
+#include <boost/thread/csbl/devector.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
 
@@ -31,9 +31,9 @@ namespace concurrent
 {
   template <typename ValueType>
   class sync_deque
-    : public detail::sync_queue_base<ValueType, csbl::deque<ValueType> >
+    : public detail::sync_queue_base<ValueType, csbl::devector<ValueType> >
   {
-    typedef detail::sync_queue_base<ValueType, csbl::deque<ValueType> >  super;
+    typedef detail::sync_queue_base<ValueType, csbl::devector<ValueType> >  super;
 
   public:
     typedef ValueType value_type;
