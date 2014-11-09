@@ -5,7 +5,7 @@
 //
 // 2013/09 Vicente J. Botet Escriba
 //    Adapt to boost from CCIA C++11 implementation
-//    first implementation of a simple pool thread using a vector of threads and a sync_deque.
+//    first implementation of a simple pool thread using a vector of threads and a sync_queue.
 
 #ifndef BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
 #define BOOST_THREAD_EXECUTORS_BASIC_THREAD_POOL_HPP
@@ -14,7 +14,7 @@
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/scoped_thread.hpp>
-#include <boost/thread/concurrent_queues/sync_deque.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/csbl/vector.hpp>
 
@@ -36,7 +36,7 @@ namespace executors
     typedef csbl::vector<thread_t> thread_vector;
 
     /// the thread safe work queue
-    concurrent::sync_deque<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     /// A move aware vector
     thread_vector threads;
 
@@ -51,7 +51,7 @@ namespace executors
       try
       {
         work task;
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -87,7 +87,7 @@ namespace executors
         for(;;)
         {
           work task;
-          queue_op_status st = work_queue.wait_pull_front(task);
+          queue_op_status st = work_queue.wait_pull(task);
           if (st == queue_op_status::closed) return;
           task();
         }
@@ -269,18 +269,18 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push_back(work(boost::forward<Closure>(closure)));
+      work_queue.push(work(boost::forward<Closure>(closure)));
     }
 
     /**

@@ -713,6 +713,12 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run2-noit ./sync/mutual_exclusion/queue_views/multi_thread_pass.cpp : queue_views__multi_thread_p ]
     ;
 
+    test-suite ts_deque_views
+    :
+          [ thread-run2-noit ./sync/mutual_exclusion/deque_views/single_thread_pass.cpp : deque_views__single_thread_p ]
+          #[ thread-run2-noit ./sync/mutual_exclusion/deque_views/multi_thread_pass.cpp : deque_views__multi_thread_p ]
+    ;
+
     #explicit ts_this_thread ;
     test-suite ts_this_thread
     :

@@ -12,7 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/concurrent_queues/sync_deque.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 #include <boost/thread/future.hpp>
@@ -33,7 +33,7 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    concurrent::sync_deque<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
     generic_executor_ref ex;
     thread_t thr;
 
@@ -64,7 +64,7 @@ namespace executors
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           boost::promise<void> p;
           try_executing_one_task tmp(task,p);
@@ -165,18 +165,18 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push_back(work(boost::forward<Closure>(closure)));
+      work_queue.push(work(boost::forward<Closure>(closure)));
     }
 
     /**

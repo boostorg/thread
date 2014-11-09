@@ -14,7 +14,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/concurrent_queues/sync_deque.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
 
 #include <boost/config/abi_prefix.hpp>
@@ -31,7 +31,7 @@ namespace executors
     typedef  executors::work work;
   private:
     /// the thread safe work queue
-    concurrent::sync_deque<work > work_queue;
+    concurrent::sync_queue<work > work_queue;
 
   public:
     /**
@@ -44,7 +44,7 @@ namespace executors
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -143,18 +143,18 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push_back(work(boost::forward<Closure>(closure)));
+      work_queue.push(work(boost::forward<Closure>(closure)));
     }
 
     /**
@@ -179,7 +179,7 @@ namespace executors
      */
     void run_queued_closures()
     {
-      sync_deque<work>::underlying_queue_type q = work_queue.underlying_queue();
+      sync_queue<work>::underlying_queue_type q = work_queue.underlying_queue();
       while (! q.empty())
       {
         work& task = q.front();

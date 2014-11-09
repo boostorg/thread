@@ -12,7 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/concurrent_queues/sync_deque.hpp>
+#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/detail/work.hpp>
 
 #include <boost/config/abi_prefix.hpp>
@@ -26,7 +26,7 @@ namespace boost
     typedef  thread_detail::work work;
 
     /// the thread safe work queue
-    sync_deque<work > work_queue;
+    sync_queue<work > work_queue;
 
   public:
     /**
@@ -39,7 +39,7 @@ namespace boost
       work task;
       try
       {
-        if (work_queue.try_pull_front(task) == queue_op_status::success)
+        if (work_queue.try_pull(task) == queue_op_status::success)
         {
           task();
           return true;
@@ -144,23 +144,23 @@ namespace boost
     void submit(Closure & closure)
     {
       work w ((closure));
-      work_queue.push_back(boost::move(w));
+      work_queue.push(boost::move(w));
       //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 #endif
     void submit(void (*closure)())
     {
       work w ((closure));
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(closure)); // todo check why this doesn't work
+      work_queue.push(boost::move(w));
+      //work_queue.push(work(closure)); // todo check why this doesn't work
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
       work w =boost::move(closure);
-      work_queue.push_back(boost::move(w));
-      //work_queue.push_back(work(boost::move(closure))); // todo check why this doesn't work
+      work_queue.push(boost::move(w));
+      //work_queue.push(work(boost::move(closure))); // todo check why this doesn't work
     }
 
     /**
@@ -184,7 +184,7 @@ namespace boost
      */
     void run_queued_closures()
     {
-      sync_deque<work>::underlying_queue_type q = work_queue.underlying_queue();
+      sync_queue<work>::underlying_queue_type q = work_queue.underlying_queue();
       while (q.empty())
       {
         work task = q.front();
