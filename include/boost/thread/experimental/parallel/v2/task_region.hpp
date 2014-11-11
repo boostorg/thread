@@ -202,6 +202,7 @@ protected:
     BOOST_DELETED_FUNCTION(task_region_handle_gen& operator=(const task_region_handle_gen&))
     BOOST_DELETED_FUNCTION(task_region_handle_gen* operator&() const)
 
+  public:
     template<typename F>
     void run(BOOST_THREAD_FWD_REF(F) f)
     {
