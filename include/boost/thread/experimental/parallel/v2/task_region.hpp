@@ -12,8 +12,6 @@
 //////////////////////////////////////////////////////////////////////////////
 #include <boost/thread/detail/config.hpp>
 
-#if ! defined BOOST_NO_CXX11_RANGE_BASED_FOR
-
 #include <boost/thread/future.hpp>
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/thread/executors/basic_thread_pool.hpp>
@@ -60,8 +58,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
       }
       catch (exception_list const& el)
       {
-        for (boost::exception_ptr const& e: el)
+        for (exception_list::const_iterator it = el.begin(); it != el.end(); ++it)
         {
+          boost::exception_ptr const& e = *it;
           try {
             rethrow_exception(e);
           }
@@ -126,8 +125,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
 
       #if ! defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
 
-      for (future<void>& f: group)
+      for (group_type::iterator it = group.begin(); it != group.end(); ++it)
       {
+        future<void>& f = *it;
         if (f.has_exception())
         {
           try
@@ -193,7 +193,8 @@ protected:
     Executor* ex;
 #endif
     exception_list exs;
-    csbl::vector<future<void>> group;
+    typedef csbl::vector<future<void>> group_type;
+    group_type group;
     mutable mutex mtx;
 
 
@@ -316,5 +317,4 @@ protected:
 
 #include <boost/config/abi_suffix.hpp>
 
-#endif // BOOST_NO_CXX11_RANGE_BASED_FOR
 #endif // header

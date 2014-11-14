@@ -18,13 +18,10 @@
 
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined BOOST_NO_CXX11_RANGE_BASED_FOR
+#if ! defined BOOST_NO_CXX11_LAMBDAS
 using boost::experimental::parallel::v2::task_region;
 using boost::experimental::parallel::v2::task_region_handle;
 using boost::experimental::parallel::v1::exception_list;
-#endif
-
-#if  ! defined BOOST_NO_CXX11_LAMBDAS
 
 void run_no_exception()
 {
@@ -278,16 +275,19 @@ void run_nested_exception()
   BOOST_TEST(task21_flag);
 }
 
-#endif
 
 int main()
 {
-#if ! defined BOOST_NO_CXX11_LAMBDAS
   run_no_exception();
   run_no_exception_wait();
   run_exception();
   run_exception_1();
   run_nested_exception();
-#endif
   return boost::report_errors();
 }
+#else
+int main()
+{
+  return boost::report_errors();
+}
+#endif
