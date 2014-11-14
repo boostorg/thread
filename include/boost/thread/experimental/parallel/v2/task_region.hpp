@@ -193,7 +193,7 @@ protected:
     Executor* ex;
 #endif
     exception_list exs;
-    typedef csbl::vector<future<void>> group_type;
+    typedef csbl::vector<future<void> > group_type;
     group_type group;
     mutable mutex mtx;
 
