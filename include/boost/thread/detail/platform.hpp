@@ -34,6 +34,8 @@
 #  define BOOST_THREAD_WIN32
 #elif defined(__BEOS__)
 #  define BOOST_THREAD_BEOS
+#elif defined(__HAIKU__)
+#  define BOOST_THREAD_HAIKU
 #elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 #  define BOOST_THREAD_MACOS
 //#  define BOOST_THREAD_WAIT_BUG boost::posix_time::microseconds(1000)
