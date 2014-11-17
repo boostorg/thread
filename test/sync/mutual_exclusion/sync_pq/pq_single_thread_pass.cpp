@@ -111,19 +111,19 @@ int main()
   sync_pq pq;
   BOOST_TEST(pq.empty());
   BOOST_TEST(!pq.closed());
-  BOOST_TEST_EQ(pq.size(), 0);
+  BOOST_TEST_EQ(pq.size(), std::size_t(0));
 
   for(int i = 1; i <= 5; i++){
     pq.push(i);
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 6; i <= 10; i++){
     boost::queue_op_status succ = pq.try_push(i);
     BOOST_TEST(succ == boost::queue_op_status::success );
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 10; i > 5; i--){

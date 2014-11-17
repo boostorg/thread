@@ -45,7 +45,7 @@ void test_pull(const int n)
         pq.push(i);
     }
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), n);
+    BOOST_TEST_EQ(pq.size(), std::size_t(n));
     pq.close();
     BOOST_TEST(pq.closed());
     boost::barrier b(n);
@@ -71,7 +71,7 @@ void test_push(const int n)
     }
     tg.join_all();
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), n);
+    BOOST_TEST_EQ(pq.size(), std::size_t(n));
 }
 
 void test_both(const int n)
@@ -88,7 +88,7 @@ void test_both(const int n)
     }
     tg.join_all();
     BOOST_TEST(pq.empty());
-    BOOST_TEST_EQ(pq.size(), 0);
+    BOOST_TEST_EQ(pq.size(), std::size_t(0));
 }
 
 void push_range(sync_pq* q, const int begin, const int end)

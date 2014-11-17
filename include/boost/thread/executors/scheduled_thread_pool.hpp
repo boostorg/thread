@@ -15,7 +15,7 @@ namespace boost
 namespace executors
 {
 
-  class scheduled_thread_pool : public detail::scheduled_executor_base
+  class scheduled_thread_pool : public detail::scheduled_executor_base<>
   {
   private:
     thread_group _workers;
@@ -36,7 +36,7 @@ namespace executors
     }
 
   private:
-    typedef detail::scheduled_executor_base super;
+    typedef detail::scheduled_executor_base<> super;
   }; //end class
 
 } //end executors namespace

@@ -31,7 +31,7 @@ void fn(int x)
     std::cout << x << std::endl;
 }
 
-void test_scheduler(const int n, boost::scheduler& sch)
+void test_scheduler(const int n, boost::scheduler<>& sch)
 {
     for(int i = 1; i <= n; i++)
     {
@@ -40,7 +40,7 @@ void test_scheduler(const int n, boost::scheduler& sch)
     }
 }
 
-void test_after(const int n, boost::scheduler& sch)
+void test_after(const int n, boost::scheduler<>& sch)
 {
     for(int i = 1; i <= n; i++)
     {
@@ -49,7 +49,7 @@ void test_after(const int n, boost::scheduler& sch)
     }
 }
 
-void test_at(const int n, boost::scheduler& sch)
+void test_at(const int n, boost::scheduler<>& sch)
 {
     for(int i = 1; i <= n; i++)
     {
@@ -58,7 +58,7 @@ void test_at(const int n, boost::scheduler& sch)
     }
 }
 
-void test_on(const int n, boost::scheduler& sch, thread_pool& tp)
+void test_on(const int n, boost::scheduler<>& sch, thread_pool& tp)
 {
     for(int i = 1; i <= n; i++)
     {
@@ -70,7 +70,7 @@ void test_on(const int n, boost::scheduler& sch, thread_pool& tp)
 int main()
 {
   thread_pool tp(4);
-  boost::scheduler sch;
+  boost::scheduler<> sch;
   test_scheduler(5, sch);
   test_after(5, sch);
   test_at(5, sch);

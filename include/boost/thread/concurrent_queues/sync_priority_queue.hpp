@@ -42,6 +42,8 @@ namespace detail {
       Container _elements;
       Compare _compare;
   public:
+      typedef Type value_type;
+
       explicit priority_queue(const Compare& compare = Compare())
           : _elements(), _compare(compare)
       { }

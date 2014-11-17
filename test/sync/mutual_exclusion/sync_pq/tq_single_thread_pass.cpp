@@ -30,18 +30,18 @@ void test_all()
   sync_tq pq;
   BOOST_TEST(pq.empty());
   BOOST_TEST(!pq.closed());
-  BOOST_TEST_EQ(pq.size(), 0);
+  BOOST_TEST_EQ(pq.size(), std::size_t(0));
 
   for(int i = 1; i <= 5; i++){
     pq.push(i, milliseconds(i*100));
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 6; i <= 10; i++){
     pq.push(i,steady_clock::now() + milliseconds(i*100));
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 1; i <= 10; i++){
@@ -63,20 +63,20 @@ void test_all_with_try()
   sync_tq pq;
   BOOST_TEST(pq.empty());
   BOOST_TEST(!pq.closed());
-  BOOST_TEST_EQ(pq.size(), 0);
+  BOOST_TEST_EQ(pq.size(), std::size_t(0));
 
   for(int i = 1; i <= 5; i++){
     boost::queue_op_status st = pq.try_push(i, milliseconds(i*100));
     BOOST_TEST(st == boost::queue_op_status::success );
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 6; i <= 10; i++){
     boost::queue_op_status st = pq.try_push(i,steady_clock::now() + milliseconds(i*100));
     BOOST_TEST(st == boost::queue_op_status::success );
     BOOST_TEST(!pq.empty());
-    BOOST_TEST_EQ(pq.size(), i);
+    BOOST_TEST_EQ(pq.size(), std::size_t(i));
   }
 
   for(int i = 1; i <= 10; i++){

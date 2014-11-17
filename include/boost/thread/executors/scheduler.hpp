@@ -10,6 +10,8 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 
+#include <boost/chrono/time_point.hpp>
+#include <boost/chrono/duration.hpp>
 #include <boost/chrono/system_clocks.hpp>
 
 #include <boost/config/abi_prefix.hpp>
@@ -51,9 +53,11 @@ namespace boost
     class resubmit_at_executor
     {
     public:
-      typedef chrono::steady_clock clock;
+      typedef typename Scheduler::clock clock;
+      typedef typename Scheduler::work work;
 
-      resubmit_at_executor(Scheduler& sch, Executor& ex, clock::time_point const& tp) :
+      template <class Duration>
+      resubmit_at_executor(Scheduler& sch, Executor& ex, chrono::time_point<clock, Duration> const& tp) :
         sch(sch),
         ex(ex),
         tp(tp),
@@ -98,7 +102,7 @@ namespace boost
     private:
       Scheduler&  sch;
       Executor&   ex;
-      clock::time_point  tp;
+      typename clock::time_point  tp;
       bool  is_closed;
     };
 
@@ -111,7 +115,8 @@ namespace boost
     class scheduler_executor_wrapper
     {
     public:
-      typedef chrono::steady_clock clock;
+      typedef typename Scheduler::clock clock;
+      typedef typename Scheduler::work work;
       typedef resubmit_at_executor<Scheduler, Executor> the_executor;
 
       scheduler_executor_wrapper(Scheduler& sch, Executor& ex) :
@@ -132,13 +137,14 @@ namespace boost
           return sch;
       }
 
-      template <class Duration>
-      the_executor after(Duration const& rel_time)
+      template <class Rep, class Period>
+      the_executor after(chrono::duration<Rep,Period> const& rel_time)
       {
         return at(clock::now() + rel_time );
       }
 
-      the_executor at(clock::time_point const& abs_time)
+      template <class Duration>
+      the_executor at(chrono::time_point<clock,Duration> const& abs_time)
       {
         return the_executor(sch, ex, abs_time);
       }
@@ -154,9 +160,12 @@ namespace boost
     class at_executor
     {
     public:
-      typedef chrono::steady_clock clock;
+      typedef typename Scheduler::clock clock;
+      typedef typename Scheduler::work work;
+      typedef typename clock::time_point time_point;
 
-      at_executor(Scheduler& sch, clock::time_point const& tp) :
+      template <class Duration>
+      at_executor(Scheduler& sch, chrono::time_point<clock,Duration> const& tp) :
           sch(sch),
           tp(tp),
           is_closed(false)
@@ -200,18 +209,20 @@ namespace boost
 
     private:
       Scheduler& sch;
-      clock::time_point  tp;
+      time_point  tp;
       bool  is_closed;
     }; //end class
 
     /// A @c Scheduler using a specific thread. Note that a Scheduler is not an Executor.
     /// It provides factory helper functions such as at/after that convert a @c Scheduler into an @c Executor
     /// that submit the work at/after a specific time/duration respectively.
-    class scheduler : public detail::scheduled_executor_base
+    template <class Clock = chrono::steady_clock>
+    class scheduler : public detail::scheduled_executor_base<Clock>
     {
     public:
-      typedef chrono::steady_clock clock;
-      typedef clock::time_point time_point;
+      typedef typename detail::scheduled_executor_base<Clock>::work work;
+
+      typedef Clock clock;
 
       scheduler()
         : super(),
@@ -228,19 +239,20 @@ namespace boost
         return scheduler_executor_wrapper<scheduler, Ex>(*this, ex);
       }
 
-      template <class Duration>
-      at_executor<scheduler> after(Duration const& rel_time)
+      template <class Rep, class Period>
+      at_executor<scheduler> after(chrono::duration<Rep,Period> const& rel_time)
       {
         return at(rel_time + clock::now());
       }
 
-      at_executor<scheduler> at(time_point const& tp)
+      template <class Duration>
+      at_executor<scheduler> at(chrono::time_point<clock,Duration> const& tp)
       {
         return at_executor<scheduler>(*this, tp);
       }
 
     private:
-      typedef detail::scheduled_executor_base super;
+      typedef detail::scheduled_executor_base<Clock> super;
       thread thr;
     };
 

@@ -142,6 +142,7 @@ The third one is related to performance. They assert that "any mechanism for sto
 
 In addition `std::function<void()>` can not be constructed by moving the closure, so e.g. `std::packaged_task` could not be a Closure.
 
+[/
 [heading Scheduled work]
 
 The approach of this library respect to scheduled work of the N3785 proposal is quite different. Instead of adding the scheduled operations to a specific scheduled_executor polymorphic interface, we opt by adding two member template functions to a class scheduled_executor that wraps an existing executor. This has several advantages:
@@ -155,6 +156,25 @@ In order to manage with all the clocks, there are two alternatives:
 * have a single instance of a `scheduled_executor<Clock>` for each `CLock`.
 
 The library chose the first of those options, largely for simplicity.
+]
+
+[heading Scheduled work]
+
+The approach of this library respect to scheduled work of the N3785 proposal is quite different. Instead of adding the scheduled operations to a specific scheduled_executor polymorphic interface, we opt by adding a specific `scheduler` class that is not an executor and knows how to manage with the scheduling of timed tasks `submit_at`/`submit_after`. 
+
+
+`scheduler` provides executor factories `at`/`after` given a specific `time_point` or a `duration`. The built executors wrap a reference to this scheduler and the time at which the submitted task will be executed. 
+
+If we want to schedule these operations on an existing executor (as `serial_executor` does), these classes provide a `on` factory taking another  executor as parameter and wraps both instance on the returned executor. 
+
+      sch.on(tp).after(seconds(i)).submit(boost::bind(fn,i));
+
+This has several advantages:
+
+* The scheduled operations are available for all the executors via wrappers.
+* The template functions could accept any chrono `time_point` and `duration` respectively as we are not working with virtual functions.
+
+In order to manage with all the clocks, this library propose generic solution. `scheduler<Clock>` know how to manage with the `submit_at`/`submit_after` `Clock::time_point`/`Clock::duration` tasks. Note that the durations on different clocks differ.
 
 [heading Not Handled Exceptions]
 As in N3785 and based on the same design decision than `std`/`boost::thread` if a user closure throws an exception, the executor must call the `std::terminate` function.
@@ -401,7 +421,7 @@ If invoked closure throws an exception the executor will call std::terminate, as
 
 [variablelist
 
-[[Effects:] [close the executor `e` for submissions.]]
+[[Effects:] [close the scheduler/executor `e` for submissions.]]
 
 [[Remark:] [The worker threads will work until there is no more closures to run.]]
 
@@ -421,7 +441,7 @@ If invoked closure throws an exception the executor will call std::terminate, as
 
 [[Return type:] [`bool`.]]
 
-[[Return:] [whether the pool is closed for submissions.]]
+[[Return:] [whether the scheduler/executor is closed for submissions.]]
 
 [[Throws:] [Whatever exception that can be throw while ensuring the thread safety.]]
 
@@ -659,8 +679,532 @@ Executor abstract base class.
 
 [endsect]
 
+[//////////////////////////////////////////////////////////]
+[section: scheduler Template Class `scheduler `]
+
+Scheduler providing time related functions. Note that `scheduler` is not an Executor.
+
+  #include <boost/thread/executors/scheduler.hpp>
+  namespace boost {
+
+    template <class Clock=steady_clock>
+    class scheduler
+    {
+    public:
+      using work = boost::function<void()> ;
+      using clock = Clock;
+
+      scheduler(scheduler const&) = delete;
+      scheduler& operator=(scheduler const&) = delete;
+  
+      scheduler();
+      ~scheduler();
+ 
+      void close();
+      bool closed();
+  
+      template <class Duration, typename Closure>  
+      void submit_at(chrono::time_point<clock,Duration> abs_time, Closure&& closure);
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+      template <class Duration>  
+      at_executor<scheduler> submit_at(chrono::time_point<clock,Duration> abs_time);
+      template <class Rep, class Period>  
+      at_executor<scheduler> submit_after(chrono::duration<Rep,Period> rel_time);
+
+      template <class Executor>
+      scheduler_executor_wrapper<scheduler, Executor> on(Executor& ex);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `scheduler()`]
+
+      scheduler();
+
+[variablelist
+
+[[Effects:] [Constructs a `scheduler`. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~scheduler()`]
+
+      ~scheduler();
+
+[variablelist
+
+[[Effects:] [Destroys the scheduler.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit_at()`]
+
+      template <class Clock, class Duration, typename Closure>  
+      void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule a `closure` to be executed at `abs_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_after Template Function Member `submit_after()`]
+
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule a `closure` to be executed after `rel_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+
+[endsect]
+
+[endsect]
 
 [//////////////////////////////////////////////////////////]
+[section:at_executor Template Class `at_executor`]
+
+
+  #include <boost/thread/executors/scheduler.hpp>
+  namespace boost {
+
+    template <class Scheduler>
+    class at_executor
+    {
+    public:
+      using work = Scheduler::work;
+      using clock = Scheduler::clock;
+
+      at_executor(at_executor const&) = default;
+      at_executor(at_executor &&) = default;
+      at_executor& operator=(at_executor const&) = default;
+      at_executor& operator=(at_executor &&) = default;
+  
+      at_executor(Scheduler& sch, clock::time_point const& tp);
+      ~at_executor();
+ 
+      void close();
+      bool closed();
+  
+      Scheduler& underlying_scheduler();
+
+      template <class Closure>
+      void submit(Closure&& closure);
+      template <class Duration, typename Work>  
+      void submit_at(chrono::time_point<clock,Duration> abs_time, Closure&& closure);
+      template <class Rep, class Period, typename Work>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+      template <class Executor>
+      resubmit_at_executor<Scheduler, Executor> on(Executor& ex);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `at_executor(Scheduler&)`]
+
+      at_executor(Scheduler& sch, clock::time_point const& tp);
+
+[variablelist
+
+[[Effects:] [Constructs a `at_executor`. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~at_executor()`]
+
+      ~at_executor();
+
+[variablelist
+
+[[Effects:] [Destroys the `at_executor`.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_scheduler Function member `underlying_scheduler()`]
+
+      Scheduler& underlying_scheduler() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying scheduler instance. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit()`]
+
+      template <typename Closure>  
+      void submit(Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule the `closure` to be executed at the `abs_time` given at construction time. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit_at()`]
+
+      template <class Clock, class Duration, typename Closure>  
+      void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule a `closure` to be executed at `abs_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_after Template Function Member `submit_after()`]
+
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule a `closure` to be executed after `rel_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+
+[endsect]
+
+[endsect]
+
+
+[//////////////////////////////////////////////////////////]
+[section:scheduler_executor_wrapper Template Class `scheduler_executor_wrapper`]
+
+  #include <boost/thread/executors/scheduler.hpp>
+  namespace boost {
+
+    template <class Scheduler, class Executor>
+    class scheduler_executor_wrapper
+    {
+    public:
+      using work = Scheduler::work;
+      using clock = Scheduler::clock;
+
+      scheduler_executor_wrapper(scheduler_executor_wrapper const&) = default;
+      scheduler_executor_wrapper(scheduler_executor_wrapper &&) = default;
+      scheduler_executor_wrapper& operator=(scheduler_executor_wrapper const&) = default;
+      scheduler_executor_wrapper& operator=(scheduler_executor_wrapper &&) = default;
+  
+      scheduler_executor_wrapper(Scheduler& sch, Executor& ex);
+
+      ~scheduler_executor_wrapper();
+ 
+      void close();
+      bool closed();
+
+      Executor& underlying_executor();
+      Scheduler& underlying_scheduler();
+ 
+      template <class Closure>
+      void submit(Closure&& closure);
+      template <class Duration, typename Work>  
+      void submit_at(chrono::time_point<clock,Duration> abs_time, Closure&& closure);
+      template <class Rep, class Period, typename Work>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+      template <class Duration>  
+      resubmit_at_executor<Scheduler, Executor> at(chrono::time_point<clock,Duration> abs_time);
+      template <class Rep, class Period>  
+      resubmit_at_executor<Scheduler, Executor> after(chrono::duration<Rep,Period> rel_time);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `scheduler_executor_wrapper(Scheduler&, Executor&)`]
+
+      scheduler_executor_wrapper(Scheduler& sch, Executor& ex);
+
+[variablelist
+
+[[Effects:] [Constructs a `scheduler_executor_wrapper`. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~scheduler_executor_wrapper()`]
+
+      ~scheduler_executor_wrapper();
+
+[variablelist
+
+[[Effects:] [Destroys the `scheduler_executor_wrapper`.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_scheduler Function member `underlying_scheduler()`]
+
+      Scheduler& underlying_scheduler() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying scheduler instance. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_executor Function member `underlying_executor()`]
+
+      Executor& underlying_executor() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying executor instance. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit()`]
+
+      template <typename Closure>  
+      void submit(Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Submit the `closure` on the underlying executor. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit_at()`]
+
+      template <class Clock, class Duration, typename Closure>  
+      void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor at `abs_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_after Template Function Member `submit_after()`]
+
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor after `rel_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[endsect]
+
+
+[//////////////////////////////////////////////////////////]
+[section:resubmit_at_executor Template Class `resubmit_at_executor`]
+
+`Executor` wrapping an `Scheduler`, an `Executor` and a `time_point` providing an `Executor` interface.
+
+  #include <boost/thread/executors/scheduler.hpp>
+  namespace boost {
+
+    template <class Scheduler, class Executor>
+    class resubmit_at_executor
+    {
+    public:
+      using work = Scheduler::work;
+      using clock = Scheduler::clock;
+  
+      resubmit_at_executor(resubmit_at_executor const&) = default;
+      resubmit_at_executor(resubmit_at_executor &&) = default;
+      resubmit_at_executor& operator=(resubmit_at_executor const&) = default;
+      resubmit_at_executor& operator=(resubmit_at_executor &&) = default;
+  
+      template <class Duration>  
+      resubmit_at_executor(Scheduler& sch, Executor& ex, clock::time_point<Duration> const& tp);
+      ~resubmit_at_executor();
+ 
+      void close();
+      bool closed();
+ 
+      Executor& underlying_executor();
+      Scheduler& underlying_scheduler();
+ 
+      template <class Closure>
+      void submit(Closure&& closure);
+      template <class Duration, typename Work>  
+      void submit_at(chrono::time_point<clock,Duration> abs_time, Closure&& closure);
+      template <class Rep, class Period, typename Work>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+    };
+  }
+
+
+[/////////////////////////////////////]
+[section:constructor Constructor `resubmit_at_executor(Scheduler&, Executor&, clock::time_point<Duration>)`]
+
+      template <class Duration>  
+      resubmit_at_executor(Scheduler& sch, Executor& ex, clock::time_point<Duration> const& tp);
+
+[variablelist
+
+[[Effects:] [Constructs a `resubmit_at_executor`. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~resubmit_at_executor()`]
+
+      ~resubmit_at_executor();
+
+[variablelist
+
+[[Effects:] [Destroys the executor_adaptor.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_executor Function member `underlying_executor()`]
+
+      Executor& underlying_executor() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying executor instance. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_scheduler Function member `underlying_scheduler()`]
+
+      Scheduler& underlying_scheduler() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying scheduler instance. ]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit()`]
+
+      template <typename Closure>  
+      void submit(Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor at the `abs_time` given at construction time. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit_at()`]
+
+      template <class Clock, class Duration, typename Closure>  
+      void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor at `abs_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:submit_after Template Function Member `submit_after()`]
+
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor after `rel_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
+
+[endsect]
+
+[endsect]
+
+
+[//////////////////////////////////////////////////////////]
+[/
 [section:scheduled_executor_ref Template Class `scheduled_executor_ref`]
 
 Executor providing time related functions.
@@ -694,10 +1238,6 @@ Executor providing time related functions.
       template <typename Pred>
       bool reschedule_until(Pred const& pred);
 
-      template <class Clock, class Duration>  
-      void submit_at(chrono::time_point<Clock,Duration> abs_time, work&& closure);
-      template <class Rep, class Period>  
-      void submit_after(chrono::duration<Rep,Period> rel_time, work&& closure);
       template <class Clock, class Duration, typename Closure>  
       void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
       template <class Rep, class Period, typename Closure>  
@@ -746,20 +1286,31 @@ Executor providing time related functions.
 
 ]
 
+[endsect]
+[/////////////////////////////////////]
+[section:submit_at Template Function Member `submit()`]
+
+      template <typename Closure>  
+      void submit(Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Resubmit the `closure` to be executed on the underlying executor. ]]
+
+[[Throws:] [Nothing.]]
+
+]
 
 [endsect]
-
 [/////////////////////////////////////]
 [section:submit_at Template Function Member `submit_at()`]
 
       template <class Clock, class Duration, typename Closure>  
       void submit_at(chrono::time_point<Clock,Duration> abs_time, Closure&& closure);
-      template <class Rep, class Period, typename Closure>  
-      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
 
 [variablelist
 
-[[Effects:] [The underlying executor instance. ]]
+[[Effects:] [Schedule a `closure` to be executed at `abs_time`. ]]
 
 [[Throws:] [Nothing.]]
 
@@ -767,10 +1318,25 @@ Executor providing time related functions.
 
 
 [endsect]
+[/////////////////////////////////////]
+[section:submit_after Template Function Member `submit_after()`]
 
+      template <class Rep, class Period, typename Closure>  
+      void submit_after(chrono::duration<Rep,Period> rel_time, Closure&& closure);
+
+[variablelist
+
+[[Effects:] [Schedule a `closure` to be executed after `rel_time`. ]]
+
+[[Throws:] [Nothing.]]
+
+]
 
 [endsect]
 
+
+[endsect]
+]
 
 [//////////////////////////////////////////////////////////]
 [section:serial_executor Template Class `serial_executor`]

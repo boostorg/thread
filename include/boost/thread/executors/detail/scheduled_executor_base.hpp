@@ -22,14 +22,15 @@ namespace executors
 {
 namespace detail
 {
-  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<boost::function<void() > > >
+  template <class Clock=chrono::steady_clock>
+  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<boost::function<void()>, Clock  > >
   {
   public:
     typedef boost::function<void()> work;
     //typedef executors::work work;
-    typedef chrono::steady_clock clock;
-    typedef clock::duration duration;
-    typedef clock::time_point time_point;
+    typedef Clock clock;
+    typedef typename clock::duration duration;
+    typedef typename clock::time_point time_point;
   protected:
 
     scheduled_executor_base() {}
@@ -37,7 +38,7 @@ namespace detail
 
     ~scheduled_executor_base()
     {
-      if(!closed())
+      if(! this->closed())
       {
         this->close();
       }
@@ -45,12 +46,12 @@ namespace detail
 
     void submit_at(work w, const time_point& tp)
     {
-      _workq.push(w, tp);
+      this->_workq.push(w, tp);
     }
 
     void submit_after(work w, const duration& dura)
     {
-      _workq.push(w, dura+clock::now());
+      this->_workq.push(w, dura+clock::now());
     }
 
   }; //end class

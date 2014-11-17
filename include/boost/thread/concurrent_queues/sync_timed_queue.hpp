@@ -24,11 +24,12 @@ namespace concurrent
 {
 namespace detail
 {
-  template <class T>
+  template <class T, class Clock = chrono::steady_clock>
   struct scheduled_type
   {
-    typedef typename chrono::steady_clock clock;
-    typedef chrono::steady_clock::time_point time_point;
+    typedef T value_type;
+    typedef Clock clock;
+    typedef typename clock::time_point time_point;
     T data;
     time_point time;
 
@@ -64,20 +65,17 @@ namespace detail
 
 } //end detail namespace
 
-  template <class T>
+  template <class T, class Clock = chrono::steady_clock>
   class sync_timed_queue
-    : private sync_priority_queue<detail::scheduled_type<T> >
+    : private sync_priority_queue<detail::scheduled_type<T, Clock> >
   {
     typedef detail::scheduled_type<T> stype;
     typedef sync_priority_queue<stype> super;
   public:
-    //typedef typename stype::clock clock; // fixme
-    typedef typename chrono::steady_clock clock;
-
+    typedef T value_type;
+    typedef Clock clock;
     typedef typename clock::duration duration;
     typedef typename clock::time_point time_point;
-    typedef T value_type;
-    //typedef typename super::value_type value_type; // fixme
     typedef typename super::underlying_queue_type underlying_queue_type;
     typedef typename super::size_type size_type;
     typedef typename super::op_status op_status;
@@ -94,21 +92,29 @@ namespace detail
     T pull();
     void pull(T& elem);
 
-    queue_op_status pull_until(const clock::time_point& tp, T& elem);
-    queue_op_status pull_for(const clock::duration& dura, T& elem);
+    template <class Duration>
+    queue_op_status pull_until(chrono::time_point<clock,Duration> const& tp, T& elem);
+    template <class Rep, class Period>
+    queue_op_status pull_for(chrono::duration<Rep,Period> const& dura, T& elem);
 
     queue_op_status try_pull(T& elem);
     queue_op_status wait_pull(T& elem);
     queue_op_status nonblocking_pull(T& elem);
 
-    void push(const T& elem, const time_point& tp);
-    void push(const T& elem, const duration& dura);
+    template <class Duration>
+    void push(const T& elem, chrono::time_point<clock,Duration> const& tp);
+    template <class Rep, class Period>
+    void push(const T& elem, chrono::duration<Rep,Period> const& dura);
 
-    queue_op_status try_push(const T& elem, const time_point& tp);
-    queue_op_status try_push(const T& elem, const duration& dura);
+    template <class Duration>
+    queue_op_status try_push(const T& elem, chrono::time_point<clock,Duration> const& tp);
+    template <class Rep, class Period>
+    queue_op_status try_push(const T& elem, chrono::duration<Rep,Period> const& dura);
 
-    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const time_point& tp);
-    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, const duration& dura);
+    template <class Duration>
+    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, chrono::time_point<clock,Duration> const& tp);
+    template <class Rep, class Period>
+    queue_op_status try_push(BOOST_THREAD_RV_REF(T) elem, chrono::duration<Rep,Period> const& dura);
 
   private:
     T pull(unique_lock<mutex>&);
@@ -122,11 +128,10 @@ namespace detail
 
     queue_op_status wait_pull(unique_lock<mutex>& lk, T& elem);
 
-    //queue_op_status nonblocking_pull(unique_lock<mutex>& lk, T& elem);
-
     bool wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>&);
     T pull_when_time_reached(unique_lock<mutex>&);
-    queue_op_status pull_when_time_reached_until(unique_lock<mutex>&, const clock::time_point& tp, T& elem);
+    template <class Duration>
+    queue_op_status pull_when_time_reached_until(unique_lock<mutex>&, chrono::time_point<clock,Duration> const& tp, T& elem);
     bool time_not_reached(unique_lock<mutex>&);
     bool time_not_reached(lock_guard<mutex>&);
     bool empty_or_time_not_reached(unique_lock<mutex>&);
@@ -139,58 +144,64 @@ namespace detail
   }; //end class
 
 
-  template <class T>
-  void sync_timed_queue<T>::push(const T& elem, const time_point& tp)
+  template <class T, class Clock>
+  template <class Duration>
+  void sync_timed_queue<T, Clock>::push(const T& elem, chrono::time_point<clock,Duration> const& tp)
   {
     super::push(stype(elem,tp));
   }
 
-  template <class T>
-  void sync_timed_queue<T>::push(const T& elem, const duration& dura)
+  template <class T, class Clock>
+  template <class Rep, class Period>
+  void sync_timed_queue<T, Clock>::push(const T& elem, chrono::duration<Rep,Period> const& dura)
   {
     push(elem, clock::now() + dura);
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(const T& elem, const time_point& tp)
+  template <class T, class Clock>
+  template <class Duration>
+  queue_op_status sync_timed_queue<T, Clock>::try_push(const T& elem, chrono::time_point<clock,Duration> const& tp)
   {
     return super::try_push(stype(elem,tp));
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(const T& elem, const duration& dura)
+  template <class T, class Clock>
+  template <class Rep, class Period>
+  queue_op_status sync_timed_queue<T, Clock>::try_push(const T& elem, chrono::duration<Rep,Period> const& dura)
   {
     return try_push(elem,clock::now() + dura);
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(BOOST_THREAD_RV_REF(T) elem, const time_point& tp)
+  template <class T, class Clock>
+  template <class Duration>
+  queue_op_status sync_timed_queue<T, Clock>::try_push(BOOST_THREAD_RV_REF(T) elem, chrono::time_point<clock,Duration> const& tp)
   {
     return super::try_push(stype(boost::move(elem), tp));
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_push(BOOST_THREAD_RV_REF(T) elem, const duration& dura)
+  template <class T, class Clock>
+  template <class Rep, class Period>
+  queue_op_status sync_timed_queue<T, Clock>::try_push(BOOST_THREAD_RV_REF(T) elem, chrono::duration<Rep,Period> const& dura)
   {
     return try_push(boost::move(elem), clock::now() + dura);
   }
 
   ///////////////////////////
-  template <class T>
-  bool sync_timed_queue<T>::time_not_reached(unique_lock<mutex>&)
+  template <class T, class Clock>
+  bool sync_timed_queue<T, Clock>::time_not_reached(unique_lock<mutex>&)
   {
     return super::data_.top().time_not_reached();
   }
 
-  template <class T>
-  bool sync_timed_queue<T>::time_not_reached(lock_guard<mutex>&)
+  template <class T, class Clock>
+  bool sync_timed_queue<T, Clock>::time_not_reached(lock_guard<mutex>&)
   {
     return super::data_.top().time_not_reached();
   }
 
   ///////////////////////////
-  template <class T>
-  bool sync_timed_queue<T>::wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>& lk)
+  template <class T, class Clock>
+  bool sync_timed_queue<T, Clock>::wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>& lk)
   {
     for (;;)
     {
@@ -207,8 +218,8 @@ namespace detail
   }
 
   ///////////////////////////
-  template <class T>
-  T sync_timed_queue<T>::pull_when_time_reached(unique_lock<mutex>& lk)
+  template <class T, class Clock>
+  T sync_timed_queue<T, Clock>::pull_when_time_reached(unique_lock<mutex>& lk)
   {
     while (time_not_reached(lk))
     {
@@ -219,11 +230,12 @@ namespace detail
     return pull(lk);
   }
 
-  template <class T>
+  template <class T, class Clock>
+  template <class Duration>
   queue_op_status
-  sync_timed_queue<T>::pull_when_time_reached_until(unique_lock<mutex>& lk, const clock::time_point& tp, T& elem)
+  sync_timed_queue<T, Clock>::pull_when_time_reached_until(unique_lock<mutex>& lk, chrono::time_point<clock,Duration> const& tp, T& elem)
   {
-    clock::time_point tpmin = (tp < super::data_.top().time) ? tp : super::data_.top().time;
+    chrono::time_point<clock,Duration> tpmin = (tp < super::data_.top().time) ? tp : super::data_.top().time;
     while (time_not_reached(lk))
     {
       super::throw_if_closed(lk);
@@ -237,15 +249,15 @@ namespace detail
   }
 
   ///////////////////////////
-  template <class T>
-  bool sync_timed_queue<T>::empty_or_time_not_reached(unique_lock<mutex>& lk)
+  template <class T, class Clock>
+  bool sync_timed_queue<T, Clock>::empty_or_time_not_reached(unique_lock<mutex>& lk)
   {
     if ( super::empty(lk) ) return true;
     if ( time_not_reached(lk) ) return true;
     return false;
   }
-  template <class T>
-  bool sync_timed_queue<T>::empty_or_time_not_reached(lock_guard<mutex>& lk)
+  template <class T, class Clock>
+  bool sync_timed_queue<T, Clock>::empty_or_time_not_reached(lock_guard<mutex>& lk)
   {
     if ( super::empty(lk) ) return true;
     if ( time_not_reached(lk) ) return true;
@@ -253,8 +265,8 @@ namespace detail
   }
 
   ///////////////////////////
-  template <class T>
-  T sync_timed_queue<T>::pull(unique_lock<mutex>&)
+  template <class T, class Clock>
+  T sync_timed_queue<T, Clock>::pull(unique_lock<mutex>&)
   {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     return boost::move(super::data_.pull().data);
@@ -263,8 +275,8 @@ namespace detail
 #endif
   }
 
-  template <class T>
-  T sync_timed_queue<T>::pull(lock_guard<mutex>&)
+  template <class T, class Clock>
+  T sync_timed_queue<T, Clock>::pull(lock_guard<mutex>&)
   {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     return boost::move(super::data_.pull().data);
@@ -272,8 +284,8 @@ namespace detail
     return super::data_.pull().data;
 #endif
   }
-  template <class T>
-  T sync_timed_queue<T>::pull()
+  template <class T, class Clock>
+  T sync_timed_queue<T, Clock>::pull()
   {
     unique_lock<mutex> lk(super::mtx_);
     super::wait_until_not_empty(lk);
@@ -281,8 +293,8 @@ namespace detail
   }
 
   ///////////////////////////
-  template <class T>
-  void sync_timed_queue<T>::pull(unique_lock<mutex>&, T& elem)
+  template <class T, class Clock>
+  void sync_timed_queue<T, Clock>::pull(unique_lock<mutex>&, T& elem)
   {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     elem = boost::move(super::data_.pull().data);
@@ -291,8 +303,8 @@ namespace detail
 #endif
   }
 
-  template <class T>
-  void sync_timed_queue<T>::pull(lock_guard<mutex>&, T& elem)
+  template <class T, class Clock>
+  void sync_timed_queue<T, Clock>::pull(lock_guard<mutex>&, T& elem)
   {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     elem = boost::move(super::data_.pull().data);
@@ -301,8 +313,8 @@ namespace detail
 #endif
   }
 
-  template <class T>
-  void sync_timed_queue<T>::pull(T& elem)
+  template <class T, class Clock>
+  void sync_timed_queue<T, Clock>::pull(T& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     super::wait_until_not_empty(lk);
@@ -310,9 +322,10 @@ namespace detail
   }
 
   //////////////////////
-  template <class T>
+  template <class T, class Clock>
+  template <class Duration>
   queue_op_status
-  sync_timed_queue<T>::pull_until(const clock::time_point& tp, T& elem)
+  sync_timed_queue<T, Clock>::pull_until(chrono::time_point<clock,Duration> const& tp, T& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
 
@@ -322,16 +335,17 @@ namespace detail
   }
 
   //////////////////////
-  template <class T>
+  template <class T, class Clock>
+  template <class Rep, class Period>
   queue_op_status
-  sync_timed_queue<T>::pull_for(const clock::duration& dura, T& elem)
+  sync_timed_queue<T, Clock>::pull_for(chrono::duration<Rep,Period> const& dura, T& elem)
   {
     return pull_until(clock::now() + dura, elem);
   }
 
   ///////////////////////////
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_pull(unique_lock<mutex>& lk, T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::try_pull(unique_lock<mutex>& lk, T& elem)
   {
     if ( super::empty(lk) )
     {
@@ -347,8 +361,8 @@ namespace detail
     pull(lk, elem);
     return queue_op_status::success;
   }
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_pull(lock_guard<mutex>& lk, T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::try_pull(lock_guard<mutex>& lk, T& elem)
   {
     if ( super::empty(lk) )
     {
@@ -364,16 +378,16 @@ namespace detail
     return queue_op_status::success;
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::try_pull(T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::try_pull(T& elem)
   {
     lock_guard<mutex> lk(super::mtx_);
     return try_pull(lk, elem);
   }
 
   ///////////////////////////
-  template <class T>
-  queue_op_status sync_timed_queue<T>::wait_pull(unique_lock<mutex>& lk, T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::wait_pull(unique_lock<mutex>& lk, T& elem)
   {
     if (super::empty(lk))
     {
@@ -385,16 +399,16 @@ namespace detail
     return queue_op_status::success;
   }
 
-  template <class T>
-  queue_op_status sync_timed_queue<T>::wait_pull(T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::wait_pull(T& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
     return wait_pull(lk, elem);
   }
 
 //  ///////////////////////////
-//  template <class T>
-//  queue_op_status sync_timed_queue<T>::wait_pull(unique_lock<mutex> &lk, T& elem)
+//  template <class T, class Clock>
+//  queue_op_status sync_timed_queue<T, Clock>::wait_pull(unique_lock<mutex> &lk, T& elem)
 //  {
 //    if (super::empty(lk))
 //    {
@@ -406,15 +420,15 @@ namespace detail
 //    return queue_op_status::success;
 //  }
 //  template <class T>
-//  queue_op_status sync_timed_queue<T>::wait_pull(T& elem)
+//  queue_op_status sync_timed_queue<T, Clock>::wait_pull(T& elem)
 //  {
 //    unique_lock<mutex> lk(super::mtx_);
 //    return wait_pull(lk, elem);
 //  }
 
   ///////////////////////////
-  template <class T>
-  queue_op_status sync_timed_queue<T>::nonblocking_pull(T& elem)
+  template <class T, class Clock>
+  queue_op_status sync_timed_queue<T, Clock>::nonblocking_pull(T& elem)
   {
     unique_lock<mutex> lk(super::mtx_, try_to_lock);
     if (! lk.owns_lock()) return queue_op_status::busy;

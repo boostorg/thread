@@ -16,7 +16,7 @@ namespace executors
 {
 
   template <typename Executor>
-  class scheduling_adpator : public detail::scheduled_executor_base
+  class scheduling_adpator : public detail::scheduled_executor_base<>
   {
   private:
     Executor& _exec;
@@ -40,7 +40,7 @@ namespace executors
     }
 
   private:
-    typedef detail::scheduled_executor_base super;
+    typedef detail::scheduled_executor_base<> super;
   }; //end class
 
 } //end executors
