@@ -69,17 +69,21 @@ namespace detail {
           std::push_heap(_elements.begin(), _elements.end(), _compare);
       }
 
-      Type pull()
+      void pop()
       {
           std::pop_heap(_elements.begin(), _elements.end(), _compare);
-          Type result = boost::move(_elements.back());
           _elements.pop_back();
+      }
+      Type pull()
+      {
+          Type result = boost::move(_elements.front());
+          pop();
           return boost::move(result);
       }
 
       Type const& top()
       {
-          return _elements.back();
+          return _elements.front();
       }
   };
 }
