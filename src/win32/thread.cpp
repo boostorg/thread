@@ -532,7 +532,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME                                    \
     || ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) \  // a bit too strict: Windows XP with SP3 would be sufficient
     || ( defined(__MINGW32__) && !defined(__MINGW64__) )
-        return hardware_concurrency();
+        return 0;
 #else
         unsigned cores = 0;
         DWORD size = 0;
