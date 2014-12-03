@@ -18,7 +18,7 @@
 
 #include <boost/detail/lightweight_test.hpp>
 
-#if ! defined BOOST_NO_CXX11_LAMBDAS
+#if ! defined BOOST_NO_CXX11_LAMBDAS  && defined(BOOST_THREAD_PROVIDES_INVOKE)
 using boost::experimental::parallel::v2::task_region;
 using boost::experimental::parallel::v2::task_region_handle;
 using boost::experimental::parallel::v1::exception_list;
