@@ -43,8 +43,13 @@ namespace executors
       try_executing_one_task(work& task, boost::promise<void> &p)
       : task(task), p(p) {}
       void operator()() {
-        task();
-        p.set_value();
+        try {
+          task();
+          p.set_value();
+        } catch (...)
+        {
+          p.set_exception(current_exception());
+        }
       }
     };
   public:
