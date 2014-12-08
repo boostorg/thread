@@ -330,7 +330,7 @@ namespace boost
       {
         try {
           m->unlock();
-        } catch (boost::lock_error) {
+        } catch (const boost::lock_error&) {
           //destructors may not throw
         }
       }
