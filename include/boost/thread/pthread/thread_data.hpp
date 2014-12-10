@@ -25,7 +25,9 @@
 #include <utility>
 
 #if defined(__ANDROID__)
-#include <asm/page.h> // http://code.google.com/p/android/issues/detail?id=39983
+# ifndef PAGE_SIZE
+#  define PAGE_SIZE 4096
+# endif
 #endif
 
 #include <pthread.h>
