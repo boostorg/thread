@@ -637,7 +637,7 @@ namespace boost
 
         bool interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time)
         {
-            detail::win32::handle handles[3]={0};
+            detail::win32::handle handles[4]={0};
             unsigned handle_count=0;
             unsigned wait_handle_index=~0U;
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
