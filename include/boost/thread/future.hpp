@@ -15,49 +15,45 @@
 
 #ifndef BOOST_NO_EXCEPTIONS
 
-#include <boost/core/scoped_enum.hpp>
-#include <stdexcept>
-#include <iostream>
-#include <boost/thread/exceptional_ptr.hpp>
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/detail/invoker.hpp>
 #include <boost/thread/detail/invoke.hpp>
-#include <boost/thread/thread_time.hpp>
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/condition_variable.hpp>
+#include <boost/thread/detail/is_convertible.hpp>
+#include <boost/thread/exceptional_ptr.hpp>
+#include <boost/thread/future_error_code.hpp>
 #include <boost/thread/lock_algorithms.hpp>
 #include <boost/thread/lock_types.hpp>
-#include <boost/exception_ptr.hpp>
-#include <boost/shared_ptr.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/thread_only.hpp>
+#include <boost/thread/thread_time.hpp>
+
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>
 #else
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
-//#include <boost/move/make_unique.hpp>
 #endif
-#include <boost/type_traits/is_fundamental.hpp>
-#include <boost/thread/detail/is_convertible.hpp>
-#include <boost/type_traits/decay.hpp>
-#include <boost/type_traits/is_void.hpp>
-#include <boost/type_traits/conditional.hpp>
-#include <boost/config.hpp>
-#include <boost/throw_exception.hpp>
-#include <algorithm>
-#include <boost/function.hpp>
+
 #include <boost/bind.hpp>
-#include <boost/core/ref.hpp>
-#include <boost/scoped_array.hpp>
-#include <boost/enable_shared_from_this.hpp>
-#include <boost/core/enable_if.hpp>
-
-#include <list>
-#include <boost/next_prior.hpp>
-#include <vector>
-
-#include <boost/thread/future_error_code.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #endif
+#include <boost/core/enable_if.hpp>
+#include <boost/core/ref.hpp>
+#include <boost/core/scoped_enum.hpp>
+#include <boost/enable_shared_from_this.hpp>
+#include <boost/exception_ptr.hpp>
+#include <boost/function.hpp>
+#include <boost/next_prior.hpp>
+#include <boost/scoped_array.hpp>
+#include <boost/shared_ptr.hpp>
+#include <boost/throw_exception.hpp>
+#include <boost/type_traits/is_fundamental.hpp>
+#include <boost/type_traits/decay.hpp>
+#include <boost/type_traits/is_void.hpp>
+#include <boost/type_traits/conditional.hpp>
+#include <boost/utility/result_of.hpp>
+
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
 #include <boost/thread/detail/memory.hpp>
@@ -67,13 +63,17 @@
 #endif
 #endif
 
-#include <boost/utility/result_of.hpp>
-#include <boost/thread/thread_only.hpp>
-
 #if defined BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
 #include <boost/thread/csbl/tuple.hpp>
 #include <boost/thread/csbl/vector.hpp>
 #endif
+
+#include <algorithm>
+#include <list>
+#include <stdexcept>
+#include <vector>
+
+
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
@@ -430,27 +430,6 @@ namespace boost
                 boost::unique_lock<boost::mutex> lock(this->mutex);
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
             }
-
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//            void mark_interrupted_finish()
-//            {
-//                boost::unique_lock<boost::mutex> lock(this->mutex);
-//                exception = boost::copy_exception(boost::thread_interrupted());
-//                mark_finished_internal(lock);
-//            }
-
-//            void set_interrupted_at_thread_exit()
-//            {
-//              unique_lock<boost::mutex> lk(this->mutex);
-//              if (has_value(lk))
-//              {
-//                  throw_exception(promise_already_satisfied());
-//              }
-//              exception = boost::copy_exception(boost::thread_interrupted());
-//              this->is_constructed = true;
-//              detail::make_ready_at_thread_exit(shared_from_this());
-//            }
-#endif
 
             void set_exception_at_thread_exit(exception_ptr e)
             {
@@ -2612,12 +2591,6 @@ namespace boost
                     this->set_value_at_thread_exit(f());
                 }
 #endif
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                catch(thread_interrupted& )
-//                {
-//                    this->set_interrupted_at_thread_exit();
-//                }
-//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -2693,12 +2666,6 @@ namespace boost
                     this->set_value_at_thread_exit(f());
                 }
 #endif
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                catch(thread_interrupted& )
-//                {
-//                    this->set_interrupted_at_thread_exit();
-//                }
-//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -2777,12 +2744,6 @@ namespace boost
                         this->set_value_at_thread_exit(boost::move(r));
                     }
 #endif
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                    catch(thread_interrupted& )
-//                    {
-//                        this->set_interrupted_at_thread_exit();
-//                    }
-//#endif
                     catch(...)
                     {
                         this->set_exception_at_thread_exit(current_exception());
@@ -2858,12 +2819,6 @@ namespace boost
                       this->set_value_at_thread_exit(f());
                     }
 #endif
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                    catch(thread_interrupted& )
-//                    {
-//                        this->set_interrupted_at_thread_exit();
-//                    }
-//#endif
                     catch(...)
                     {
                         this->set_exception_at_thread_exit(current_exception());
@@ -2935,12 +2890,6 @@ namespace boost
 #endif
                   this->set_value_at_thread_exit();
                 }
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                catch(thread_interrupted& )
-//                {
-//                    this->set_interrupted_at_thread_exit();
-//                }
-//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
@@ -3008,12 +2957,6 @@ namespace boost
 #endif
                     this->set_value_at_thread_exit();
                 }
-//#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-//                catch(thread_interrupted& )
-//                {
-//                    this->set_interrupted_at_thread_exit();
-//                }
-//#endif
                 catch(...)
                 {
                     this->set_exception_at_thread_exit(current_exception());
