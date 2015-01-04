@@ -52,6 +52,7 @@
 #include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/conditional.hpp>
+#include <boost/type_traits/is_copy_constructible.hpp>
 #include <boost/utility/result_of.hpp>
 
 
