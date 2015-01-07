@@ -1,12 +1,12 @@
 //  (C) Copyright 2008-10 Anthony Williams
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2012,2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#ifndef BOOST_THREAD_FUTURE_ERROR_CODE_HPP
-#define BOOST_THREAD_FUTURE_ERROR_CODE_HPP
+#ifndef BOOST_THREAD_FUTURES_FUTURE_ERROR_CODE_HPP
+#define BOOST_THREAD_FUTURES_FUTURE_ERROR_CODE_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/core/scoped_enum.hpp>

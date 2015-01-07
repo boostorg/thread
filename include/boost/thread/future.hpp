@@ -21,7 +21,7 @@
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/thread/exceptional_ptr.hpp>
-#include <boost/thread/future_error_code.hpp>
+#include <boost/thread/futures/future_error_code.hpp>
 #include <boost/thread/futures/is_future_type.hpp>
 #include <boost/thread/lock_algorithms.hpp>
 #include <boost/thread/lock_types.hpp>
