@@ -1,5 +1,5 @@
 //  (C) Copyright 2008-10 Anthony Williams
-//  (C) Copyright 2011-2014 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -22,6 +22,7 @@
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/thread/exceptional_ptr.hpp>
 #include <boost/thread/future_error_code.hpp>
+#include <boost/thread/futures/is_future_type.hpp>
 #include <boost/thread/lock_algorithms.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/mutex.hpp>
@@ -1073,24 +1074,13 @@ namespace boost
     class shared_future;
 
     template<typename T>
-    struct is_future_type
+    struct is_future_type<BOOST_THREAD_FUTURE<T> > : true_type
     {
-        BOOST_STATIC_CONSTANT(bool, value=false);
-        typedef void type;
     };
 
     template<typename T>
-    struct is_future_type<BOOST_THREAD_FUTURE<T> >
+    struct is_future_type<shared_future<T> > : true_type
     {
-        BOOST_STATIC_CONSTANT(bool, value=true);
-        typedef T type;
-    };
-
-    template<typename T>
-    struct is_future_type<shared_future<T> >
-    {
-        BOOST_STATIC_CONSTANT(bool, value=true);
-        typedef T type;
     };
 
     template<typename Iterator>
