@@ -221,6 +221,7 @@ namespace boost
         struct shared_state_base : enable_shared_from_this<shared_state_base>
         {
             typedef std::list<boost::condition_variable_any*> waiter_list;
+            typedef waiter_list::iterator notify_when_ready_handle;
             // This type should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             typedef shared_ptr<shared_state_base> continuation_ptr_type;
 
@@ -268,14 +269,14 @@ namespace boost
               policy_ = launch::executor;
             }
 #endif
-            waiter_list::iterator register_external_waiter(boost::condition_variable_any& cv)
+            notify_when_ready_handle notify_when_ready(boost::condition_variable_any& cv)
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
                 do_callback(lock);
                 return external_waiters.insert(external_waiters.end(),&cv);
             }
 
-            void remove_external_waiter(waiter_list::iterator it)
+            void unnotify_when_ready(notify_when_ready_handle it)
             {
                 boost::lock_guard<boost::mutex> lock(this->mutex);
                 external_waiters.erase(it);
@@ -962,13 +963,13 @@ namespace boost
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
-                detail::shared_state_base::waiter_list::iterator wait_iterator;
+                detail::shared_state_base::notify_when_ready_handle handle;
                 count_type index;
 
                 registered_waiter(boost::shared_ptr<detail::shared_state_base> const& a_future,
-                                  detail::shared_state_base::waiter_list::iterator wait_iterator_,
+                                  detail::shared_state_base::notify_when_ready_handle handle_,
                                   count_type index_):
-                    future_(a_future),wait_iterator(wait_iterator_),index(index_)
+                    future_(a_future),handle(handle_),index(index_)
                 {}
             };
 
@@ -1019,11 +1020,11 @@ namespace boost
             {
                 if(f.future_)
                 {
-                  registered_waiter waiter(f.future_,f.future_->register_external_waiter(cv),future_count);
+                  registered_waiter waiter(f.future_,f.future_->notify_when_ready(cv),future_count);
                   try {
                       futures.push_back(waiter);
                   } catch(...) {
-                    f.future_->remove_external_waiter(waiter.wait_iterator);
+                    f.future_->unnotify_when_ready(waiter.handle);
                     throw;
                   }
                 }
@@ -1058,7 +1059,7 @@ namespace boost
             {
                 for(count_type i=0;i<futures.size();++i)
                 {
-                    futures[i].future_->remove_external_waiter(futures[i].wait_iterator);
+                    futures[i].future_->unnotify_when_ready(futures[i].handle);
                 }
             }
         };
@@ -1223,6 +1224,7 @@ namespace boost
       /// Common implementation for all the futures independently of the return type
       class base_future
       {
+      public:
       };
       /// Common implementation for future and shared_future.
       template <typename R>
@@ -1337,6 +1339,26 @@ namespace boost
                 boost::throw_exception(future_uninitialized());
             }
             future_->wait(false);
+        }
+
+        typedef detail::shared_state_base::notify_when_ready_handle notify_when_ready_handle;
+
+        notify_when_ready_handle notify_when_ready(boost::condition_variable_any& cv)
+        {
+          if(!future_)
+          {
+              boost::throw_exception(future_uninitialized());
+          }
+          return future_->notify_when_ready(cv);
+        }
+
+        void unnotify_when_ready(notify_when_ready_handle h)
+        {
+          if(!future_)
+          {
+              boost::throw_exception(future_uninitialized());
+          }
+          return future_->unnotify_when_ready(h);
         }
 
 #if defined BOOST_THREAD_USES_DATETIME
