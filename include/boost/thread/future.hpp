@@ -24,6 +24,7 @@
 #include <boost/thread/futures/future_error_code.hpp>
 #include <boost/thread/futures/is_future_type.hpp>
 #include <boost/thread/futures/wait_for_all.hpp>
+#include <boost/thread/futures/wait_for_any.hpp>
 #include <boost/thread/lock_algorithms.hpp>
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/mutex.hpp>
@@ -464,20 +465,22 @@ namespace boost
                 return done && exception;
             }
 
-//            bool has_exception(unique_lock<boost::mutex>&) const
-//            {
-//                return done && exception;
-//            }
-
-//            bool is_deferred(boost::lock_guard<boost::mutex>&)  const {
-//                return is_deferred_;
-//            }
-
             launch launch_policy(boost::unique_lock<boost::mutex>&) const
             {
                 return policy_;
             }
 
+            future_state::state get_state(boost::unique_lock<boost::mutex>& lk) const
+            {
+                if(!done)
+                {
+                    return future_state::waiting;
+                }
+                else
+                {
+                    return future_state::ready;
+                }
+            }
             future_state::state get_state() const
             {
                 boost::lock_guard<boost::mutex> guard(this->mutex);
@@ -497,11 +500,6 @@ namespace boost
                 wait_internal(lock, false);
                 return exception;
             }
-//            exception_ptr get_exception_ptr(boost::unique_lock<boost::mutex>& lock)
-//            {
-//                wait_internal(lock, false);
-//                return exception;
-//            }
 
             template<typename F,typename U>
             void set_wait_callback(F f,U* u)
@@ -1084,19 +1082,19 @@ namespace boost
     {
     };
 
-    template<typename Iterator>
-    typename boost::disable_if<is_future_type<Iterator>,Iterator>::type wait_for_any(Iterator begin,Iterator end)
-    {
-        if(begin==end)
-            return end;
-
-        detail::future_waiter waiter;
-        for(Iterator current=begin;current!=end;++current)
-        {
-            waiter.add(*current);
-        }
-        return boost::next(begin,waiter.wait());
-    }
+//    template<typename Iterator>
+//    typename boost::disable_if<is_future_type<Iterator>,Iterator>::type wait_for_any(Iterator begin,Iterator end)
+//    {
+//        if(begin==end)
+//            return end;
+//
+//        detail::future_waiter waiter;
+//        for(Iterator current=begin;current!=end;++current)
+//        {
+//            waiter.add(*current);
+//        }
+//        return boost::next(begin,waiter.wait());
+//    }
 
 #ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
@@ -1227,6 +1225,14 @@ namespace boost
           future_.swap(that.future_);
         }
         // functions to check state, and wait for ready
+        state get_state(boost::unique_lock<boost::mutex>& lk) const
+        {
+            if(!future_)
+            {
+                return future_state::uninitialized;
+            }
+            return future_->get_state(lk);
+        }
         state get_state() const
         {
             if(!future_)
@@ -1241,6 +1247,10 @@ namespace boost
             return get_state()==future_state::ready;
         }
 
+        bool is_ready(boost::unique_lock<boost::mutex>& lk) const
+        {
+            return get_state(lk)==future_state::ready;
+        }
         bool has_exception() const
         {
             return future_ && future_->has_exception();
@@ -1279,6 +1289,14 @@ namespace boost
         }
 
         typedef detail::shared_state_base::notify_when_ready_handle notify_when_ready_handle;
+
+        boost::mutex& mutex() {
+          if(!future_)
+          {
+              boost::throw_exception(future_uninitialized());
+          }
+          return future_->mutex;
+        };
 
         notify_when_ready_handle notify_when_ready(boost::condition_variable_any& cv)
         {
