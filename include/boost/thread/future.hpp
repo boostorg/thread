@@ -21,8 +21,11 @@
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/thread/exceptional_ptr.hpp>
+#include <boost/thread/futures/future_error.hpp>
 #include <boost/thread/futures/future_error_code.hpp>
+#include <boost/thread/futures/future_status.hpp>
 #include <boost/thread/futures/is_future_type.hpp>
+#include <boost/thread/futures/launch.hpp>
 #include <boost/thread/futures/wait_for_all.hpp>
 #include <boost/thread/futures/wait_for_any.hpp>
 #include <boost/thread/lock_algorithms.hpp>
@@ -43,7 +46,6 @@
 #endif
 #include <boost/core/enable_if.hpp>
 #include <boost/core/ref.hpp>
-#include <boost/core/scoped_enum.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/function.hpp>
@@ -51,11 +53,11 @@
 #include <boost/scoped_array.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
-#include <boost/type_traits/is_fundamental.hpp>
-#include <boost/type_traits/decay.hpp>
-#include <boost/type_traits/is_void.hpp>
 #include <boost/type_traits/conditional.hpp>
+#include <boost/type_traits/decay.hpp>
 #include <boost/type_traits/is_copy_constructible.hpp>
+#include <boost/type_traits/is_fundamental.hpp>
+#include <boost/type_traits/is_void.hpp>
 #include <boost/utility/result_of.hpp>
 
 
@@ -74,10 +76,7 @@
 
 #include <algorithm>
 #include <list>
-#include <stdexcept>
 #include <vector>
-
-
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
@@ -87,111 +86,6 @@
 
 namespace boost
 {
-
-  //enum class launch
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(launch)
-  {
-      none = 0,
-      async = 1,
-      deferred = 2,
-#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
-      executor = 4,
-#endif
-      any = async | deferred
-  }
-  BOOST_SCOPED_ENUM_DECLARE_END(launch)
-
-  //enum class future_status
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_status)
-  {
-      ready,
-      timeout,
-      deferred
-  }
-  BOOST_SCOPED_ENUM_DECLARE_END(future_status)
-
-  class BOOST_SYMBOL_VISIBLE future_error
-      : public std::logic_error
-  {
-      system::error_code ec_;
-  public:
-      future_error(system::error_code ec)
-      : logic_error(ec.message()),
-        ec_(ec)
-      {
-      }
-
-      const system::error_code& code() const BOOST_NOEXCEPT
-      {
-        return ec_;
-      }
-  };
-
-    class BOOST_SYMBOL_VISIBLE future_uninitialized:
-        public future_error
-    {
-    public:
-        future_uninitialized() :
-          future_error(system::make_error_code(future_errc::no_state))
-        {}
-    };
-    class BOOST_SYMBOL_VISIBLE broken_promise:
-        public future_error
-    {
-    public:
-        broken_promise():
-          future_error(system::make_error_code(future_errc::broken_promise))
-        {}
-    };
-    class BOOST_SYMBOL_VISIBLE future_already_retrieved:
-        public future_error
-    {
-    public:
-        future_already_retrieved():
-          future_error(system::make_error_code(future_errc::future_already_retrieved))
-        {}
-    };
-    class BOOST_SYMBOL_VISIBLE promise_already_satisfied:
-        public future_error
-    {
-    public:
-        promise_already_satisfied():
-          future_error(system::make_error_code(future_errc::promise_already_satisfied))
-        {}
-    };
-
-    class BOOST_SYMBOL_VISIBLE task_already_started:
-        public future_error
-    {
-    public:
-        task_already_started():
-        future_error(system::make_error_code(future_errc::promise_already_satisfied))
-        {}
-    };
-
-    class BOOST_SYMBOL_VISIBLE task_moved:
-        public future_error
-    {
-    public:
-        task_moved():
-          future_error(system::make_error_code(future_errc::no_state))
-        {}
-    };
-
-    class promise_moved:
-        public future_error
-    {
-    public:
-          promise_moved():
-          future_error(system::make_error_code(future_errc::no_state))
-        {}
-    };
-
-    namespace future_state
-    {
-        enum state { uninitialized, waiting, ready, moved, deferred };
-    }
-
     namespace detail
     {
         struct relocker
