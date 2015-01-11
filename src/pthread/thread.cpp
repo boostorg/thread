@@ -36,8 +36,6 @@
 #include <set>
 #include <vector>
 
-#include "./timeconv.inl"
-
 namespace boost
 {
     namespace detail
@@ -433,6 +431,68 @@ namespace boost
 
     namespace this_thread
     {
+      namespace no_interruption_point
+      {
+        namespace hiden
+        {
+          void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+          {
+
+                if (boost::detail::timespec_ge(ts, boost::detail::timespec_zero()))
+                {
+
+    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+    #     if defined(__IBMCPP__) ||  defined(_AIX)
+                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
+    #     else
+                  BOOST_VERIFY(!pthread_delay_np(&ts));
+    #     endif
+    #   elif defined(BOOST_HAS_NANOSLEEP)
+                  //  nanosleep takes a timespec that is an offset, not
+                  //  an absolute time.
+                  nanosleep(&ts, 0);
+    #   else
+                  mutex mx;
+                  unique_lock<mutex> lock(mx);
+                  condition_variable cond;
+                  cond.do_wait_for(lock, ts);
+    #   endif
+                }
+          }
+
+          void BOOST_THREAD_DECL sleep_until(const timespec& ts)
+          {
+                timespec now = boost::detail::timespec_now();
+                if (boost::detail::timespec_gt(ts, now))
+                {
+                  for (int foo=0; foo < 5; ++foo)
+                  {
+
+    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+                    timespec d = boost::detail::timespec_minus(ts, now);
+                    BOOST_VERIFY(!pthread_delay_np(&d));
+    #   elif defined(BOOST_HAS_NANOSLEEP)
+                    //  nanosleep takes a timespec that is an offset, not
+                    //  an absolute time.
+                    timespec d = boost::detail::timespec_minus(ts, now);
+                    nanosleep(&d, 0);
+    #   else
+                    mutex mx;
+                    unique_lock<mutex> lock(mx);
+                    condition_variable cond;
+                    cond.do_wait_until(lock, ts);
+    #   endif
+                    timespec now2 = boost::detail::timespec_now();
+                    if (boost::detail::timespec_ge(now2, ts))
+                    {
+                      return;
+                    }
+                  }
+                }
+          }
+
+        }
+      }
       namespace hiden
       {
         void BOOST_THREAD_DECL sleep_for(const timespec& ts)
@@ -446,27 +506,7 @@ namespace boost
             }
             else
             {
-
-              if (boost::detail::timespec_ge(ts, boost::detail::timespec_zero()))
-              {
-
-  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-  #     if defined(__IBMCPP__)
-                BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
-  #     else
-                BOOST_VERIFY(!pthread_delay_np(&ts));
-  #     endif
-  #   elif defined(BOOST_HAS_NANOSLEEP)
-                //  nanosleep takes a timespec that is an offset, not
-                //  an absolute time.
-                nanosleep(&ts, 0);
-  #   else
-                mutex mx;
-                unique_lock<mutex> lock(mx);
-                condition_variable cond;
-                cond.do_wait_for(lock, ts);
-  #   endif
-              }
+              boost::this_thread::no_interruption_point::hiden::sleep_for(ts);
             }
         }
 
@@ -481,37 +521,12 @@ namespace boost
             }
             else
             {
-              timespec now = boost::detail::timespec_now();
-              if (boost::detail::timespec_gt(ts, now))
-              {
-                for (int foo=0; foo < 5; ++foo)
-                {
-
-  #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                  timespec d = boost::detail::timespec_minus(ts, now);
-                  BOOST_VERIFY(!pthread_delay_np(&d));
-  #   elif defined(BOOST_HAS_NANOSLEEP)
-                  //  nanosleep takes a timespec that is an offset, not
-                  //  an absolute time.
-                  timespec d = boost::detail::timespec_minus(ts, now);
-                  nanosleep(&d, 0);
-  #   else
-                  mutex mx;
-                  unique_lock<mutex> lock(mx);
-                  condition_variable cond;
-                  cond.do_wait_until(lock, ts);
-  #   endif
-                  timespec now2 = boost::detail::timespec_now();
-                  if (boost::detail::timespec_ge(now2, ts))
-                  {
-                    return;
-                  }
-                }
-              }
+              boost::this_thread::no_interruption_point::hiden::sleep_until(ts);
             }
         }
       } // hiden
     } // this_thread
+
     namespace this_thread
     {
         void yield() BOOST_NOEXCEPT
@@ -577,7 +592,7 @@ namespace boost
                 boost::split(key_val, line, boost::is_any_of(":"));
 
                 if (key_val.size() != 2)
-                    return 0;
+                  return hardware_concurrency();
 
                 string key   = key_val[0];
                 string value = key_val[1];
@@ -595,9 +610,11 @@ namespace boost
                     continue;
                 }
             }
-            return cores.size();
+            // Fall back to hardware_concurrency() in case
+            // /proc/cpuinfo is formatted differently than we expect.
+            return cores.size() != 0 ? cores.size() : hardware_concurrency();
         } catch(...) {
-            return 0;
+          return hardware_concurrency();
         }
 #elif defined(__APPLE__)
         int count;

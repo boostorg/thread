@@ -3,13 +3,18 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
+#include <boost/config.hpp>
+
 #define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_USES_LOG
+//#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #define BOOST_THREAD_QUEUE_DEPRECATE_OLD
+#if ! defined  BOOST_NO_CXX11_DECLTYPE
+#define BOOST_RESULT_OF_USE_DECLTYPE
+#endif
 
 #include <boost/thread/detail/log.hpp>
-#include <boost/thread/thread_pool.hpp>
+#include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/assert.hpp>
 #include <string>
 
@@ -25,7 +30,7 @@ void p2()
     << boost::this_thread::get_id()  << " P2" << BOOST_THREAD_END_LOG;
 }
 
-void submit_some(boost::thread_pool& tp) {
+void submit_some(boost::basic_thread_pool& tp) {
   tp.submit(&p1);
   tp.submit(&p2);
   tp.submit(&p1);
@@ -46,7 +51,7 @@ int main()
   {
     try
     {
-      boost::thread_pool tp;
+      boost::basic_thread_pool tp;
       submit_some(tp);
     }
     catch (std::exception& ex)

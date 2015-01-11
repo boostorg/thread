@@ -13,7 +13,10 @@
 
 #include <functional>
 
-#if defined BOOST_NO_CXX11_HDR_FUNCTIONAL || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_FUNCTIONAL || defined BOOST_NO_CXX11_HDR_FUNCTIONAL || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#ifndef BOOST_THREAD_USES_BOOST_FUNCTIONAL
+#define BOOST_THREAD_USES_BOOST_FUNCTIONAL
+#endif
 #include <boost/function.hpp>
 #endif
 
@@ -21,7 +24,7 @@ namespace boost
 {
   namespace csbl
   {
-#if defined BOOST_NO_CXX11_HDR_FUNCTIONAL || defined BOOST_NO_CXX11_RVALUE_REFERENCES
+#if defined BOOST_THREAD_USES_BOOST_FUNCTIONAL
     using ::boost::function;
 #else
     // D.8.1, base (deprecated):

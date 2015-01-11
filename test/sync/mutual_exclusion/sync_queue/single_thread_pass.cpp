@@ -46,44 +46,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-  {
-    // empty queue try_pull fails
-      boost::sync_queue<int> q;
-      int i;
-      BOOST_TEST(! q.try_pull(i));
-      BOOST_TEST(q.empty());
-      BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0u);
-      BOOST_TEST(! q.closed());
-  }
-  {
-    // empty queue try_pull fails
-      boost::sync_queue<int> q;
-      BOOST_TEST(! q.try_pull());
-      BOOST_TEST(q.empty());
-      BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 0u);
-      BOOST_TEST(! q.closed());
-  }
-  {
-    // empty queue push rvalue/copyable succeeds
-      boost::sync_queue<int> q;
-      q.push(1);
-      BOOST_TEST(! q.empty());
-      BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1u);
-      BOOST_TEST(! q.closed());
-  }
-  {
-    // empty queue push lvalue/copyable succeeds
-      boost::sync_queue<int> q;
-      int i;
-      q.push(i);
-      BOOST_TEST(! q.empty());
-      BOOST_TEST(! q.full());
-      BOOST_TEST_EQ(q.size(), 1u);
-      BOOST_TEST(! q.closed());
-  }
+
 #if 0
   {
     // empty queue push rvalue/non_copyable succeeds
@@ -129,7 +92,7 @@ int main()
   {
     // empty queue try_push rvalue/copyable succeeds
       boost::sync_queue<int> q;
-      BOOST_TEST(q.try_push(1));
+      BOOST_TEST(boost::queue_op_status::success == q.try_push(1));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -138,17 +101,18 @@ int main()
   {
     // empty queue try_push rvalue/copyable succeeds
       boost::sync_queue<int> q;
-      BOOST_TEST(q.try_push(1));
+      BOOST_TEST(boost::queue_op_status::success == q.try_push(1));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
+
 #if 0
   {
     // empty queue try_push rvalue/non-copyable succeeds
       boost::sync_queue<non_copyable> q;
-      BOOST_TEST(q.try_push(non_copyable()));
+      BOOST_TEST(boost::queue_op_status::success ==q.try_push(non_copyable()));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -159,7 +123,7 @@ int main()
     // empty queue try_push rvalue/non-copyable succeeds
       boost::sync_queue<non_copyable> q;
       non_copyable nc(1);
-      BOOST_TEST(q.try_push(boost::move(nc)));
+      BOOST_TEST(boost::queue_op_status::success == q.try_push(boost::move(nc)));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -169,8 +133,8 @@ int main()
   {
     // empty queue try_push lvalue succeeds
       boost::sync_queue<int> q;
-      int i;
-      BOOST_TEST(q.try_push(i));
+      int i=1;
+      BOOST_TEST(boost::queue_op_status::success == q.try_push(i));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -179,17 +143,18 @@ int main()
   {
     // empty queue try_push rvalue succeeds
       boost::sync_queue<int> q;
-      BOOST_TEST(q.try_push(boost::no_block, 1));
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(1));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
+
 #if 0
   {
-    // empty queue try_push rvalue/non-copyable succeeds
+    // empty queue nonblocking_push rvalue/non-copyable succeeds
       boost::sync_queue<non_copyable> q;
-      BOOST_TEST(q.try_push(boost::no_block, non_copyable(1)));
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(non_copyable(1)));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -197,10 +162,10 @@ int main()
   }
 #endif
   {
-    // empty queue try_push rvalue/non-copyable succeeds
+    // empty queue nonblocking_push rvalue/non-copyable succeeds
       boost::sync_queue<non_copyable> q;
       non_copyable nc(1);
-      BOOST_TEST(q.try_push(boost::no_block, boost::move(nc)));
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(boost::move(nc)));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -259,7 +224,7 @@ int main()
       boost::sync_queue<int> q;
       q.push(1);
       int i;
-      BOOST_TEST(q.try_pull(i));
+      BOOST_TEST(boost::queue_op_status::success == q.try_pull(i));
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
@@ -272,7 +237,7 @@ int main()
       non_copyable nc1(1);
       q.push(boost::move(nc1));
       non_copyable nc(2);
-      BOOST_TEST(q.try_pull(nc));
+      BOOST_TEST(boost::queue_op_status::success == q.try_pull(nc));
       BOOST_TEST_EQ(nc, nc1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
@@ -280,11 +245,11 @@ int main()
       BOOST_TEST(! q.closed());
   }
   {
-    // 1-element queue try_pull succeed
+    // 1-element queue nonblocking_pull succeed
       boost::sync_queue<int> q;
       q.push(1);
       int i;
-      BOOST_TEST(q.try_pull(boost::no_block, i));
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(i));
       BOOST_TEST_EQ(i, 1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
@@ -292,12 +257,12 @@ int main()
       BOOST_TEST(! q.closed());
   }
   {
-    // 1-element queue try_pull succeed
+    // 1-element queue nonblocking_pull succeed
       boost::sync_queue<non_copyable> q;
       non_copyable nc1(1);
       q.push(boost::move(nc1));
       non_copyable nc(2);
-      BOOST_TEST(q.try_pull(boost::no_block, nc));
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_pull(nc));
       BOOST_TEST_EQ(nc, nc1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
@@ -305,11 +270,38 @@ int main()
       BOOST_TEST(! q.closed());
   }
   {
-    // 1-element queue try_pull succeed
+    // 1-element queue wait_pull succeed
+      boost::sync_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull succeed
       boost::sync_queue<int> q;
       q.push(1);
-      boost::shared_ptr<int> i = q.try_pull();
-      BOOST_TEST_EQ(*i, 1);
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(! q.closed());
+  }
+  {
+    // 1-element queue wait_pull succeed
+      boost::sync_queue<non_copyable> q;
+      non_copyable nc1(1);
+      q.push(boost::move(nc1));
+      non_copyable nc(2);
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(nc));
+      BOOST_TEST_EQ(nc, nc1);
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 0u);
@@ -350,6 +342,30 @@ int main()
       BOOST_TEST(q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // 1-element closed queue wait_pull succeed
+      boost::sync_queue<int> q;
+      q.push(1);
+      q.close();
+      int i;
+      BOOST_TEST(boost::queue_op_status::success == q.wait_pull(i));
+      BOOST_TEST_EQ(i, 1);
+      BOOST_TEST(q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 0u);
+      BOOST_TEST(q.closed());
+  }
+  {
+    // closed empty queue wait_pull fails
+      boost::sync_queue<int> q;
+      q.close();
+      BOOST_TEST(q.empty());
+      BOOST_TEST(q.closed());
+      int i;
+      BOOST_TEST(boost::queue_op_status::closed == q.wait_pull(i));
+      BOOST_TEST(q.empty());
       BOOST_TEST(q.closed());
   }
 
