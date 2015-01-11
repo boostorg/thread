@@ -132,6 +132,21 @@ rule thread-test ( sources )
     ;
 }
 
+rule thread-test2 ( sources )
+{
+    sources = $(sources) winrt_init.cpp ;
+    return
+    [ run $(sources) ../build//boost_thread : : :
+      <library>/boost/test//boost_unit_test_framework/<link>static
+    ]
+    [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
+        : : :
+      <library>/boost/test//boost_unit_test_framework/<link>static
+    : $(sources[1]:B)_lib
+    ]
+    ;
+}
+
 rule thread-run2 ( sources : name )
 {
     sources = $(sources) winrt_init.cpp ;
@@ -219,46 +234,46 @@ rule thread-compile ( sources : reqs * : name )
 {
     test-suite t_threads
     :
-          [ thread-test test_thread.cpp ]
-          [ thread-test test_thread_id.cpp ]
-          [ thread-test test_hardware_concurrency.cpp ]
-          [ thread-test test_physical_concurrency.cpp ]
+          [ thread-test2 test_thread.cpp ]
+          [ thread-test2 test_thread_id.cpp ]
+          [ thread-test2 test_hardware_concurrency.cpp ]
+          [ thread-test2 test_physical_concurrency.cpp ]
           [ thread-test test_thread_move.cpp ]
-          [ thread-test test_thread_return_local.cpp ]
-          [ thread-test test_thread_move_return.cpp ]
-          [ thread-test test_thread_launching.cpp ]
-          [ thread-test test_thread_mf.cpp ]
-          [ thread-test test_thread_exit.cpp ]
-          [ thread-test test_move_function.cpp ]
+          [ thread-test2 test_thread_return_local.cpp ]
+          [ thread-test2 test_thread_move_return.cpp ]
+          [ thread-test2 test_thread_launching.cpp ]
+          [ thread-test2 test_thread_mf.cpp ]
+          [ thread-test2 test_thread_exit.cpp ]
+          [ thread-test2 test_move_function.cpp ]
           [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
           [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
-          [ thread-test test_tss.cpp ]
-          [ thread-test test_xtime.cpp ]
+          [ thread-test2 test_tss.cpp ]
+          [ thread-test2 test_xtime.cpp ]
     ;
 
     test-suite t_sync
     :
-          [ thread-test test_mutex.cpp ]
-          [ thread-test test_condition_notify_one.cpp ]
-          [ thread-test test_condition_timed_wait_times_out.cpp ]
+          [ thread-test2 test_mutex.cpp ]
+          [ thread-test2 test_condition_notify_one.cpp ]
+          [ thread-test2 test_condition_timed_wait_times_out.cpp ]
           [ thread-test test_condition_notify_all.cpp ]
           [ thread-test test_condition.cpp ]
-          [ thread-test test_once.cpp ]
+          [ thread-test2 test_once.cpp ]
           [ thread-run test_barrier.cpp ]
           [ thread-run test_barrier_void_fct.cpp ]
           [ thread-run test_barrier_size_fct.cpp ]
-          [ thread-test test_lock_concept.cpp ]
-          [ thread-test test_generic_locks.cpp ]
+          [ thread-test2 test_lock_concept.cpp ]
+          [ thread-test2 test_generic_locks.cpp ]
           [ thread-run  test_latch.cpp ]
           [ thread-run  test_completion_latch.cpp ]
     ;
 
     test-suite t_shared
     :
-          [ thread-test test_shared_mutex.cpp ]
-          [ thread-test test_shared_mutex_part_2.cpp ]
-          [ thread-test test_shared_mutex_timed_locks.cpp ]
-          [ thread-test test_shared_mutex_timed_locks_chrono.cpp ]
+          [ thread-test2 test_shared_mutex.cpp ]
+          [ thread-test2 test_shared_mutex_part_2.cpp ]
+          [ thread-test2 test_shared_mutex_timed_locks.cpp ]
+          [ thread-test2 test_shared_mutex_timed_locks_chrono.cpp ]
           #uncomment the following once these works on windows
           #[ thread-test test_vhh_shared_mutex.cpp ]
           #[ thread-test test_vhh_shared_mutex_part_2.cpp ]
@@ -268,7 +283,7 @@ rule thread-compile ( sources : reqs * : name )
     #explicit t_futures ;
     test-suite t_futures
     :
-          [ thread-test test_futures.cpp ]
+          [ thread-test2 test_futures.cpp ]
     ;
 
 

@@ -75,13 +75,3 @@ BOOST_AUTO_TEST_CASE(test_creation_with_attrs)
   timed_test(&do_test_creation_with_attrs, 1);
 }
 
-boost::unit_test_framework::test_suite* init_unit_test_suite(int, char*[])
-{
-  boost::unit_test_framework::test_suite* test = BOOST_TEST_SUITE("Boost.Threads: thread attributes test suite");
-
-  test->add(BOOST_TEST_CASE(test_native_handle));
-  test->add(BOOST_TEST_CASE(test_stack_size));
-  test->add(BOOST_TEST_CASE(test_creation_with_attrs));
-
-  return test;
-}
