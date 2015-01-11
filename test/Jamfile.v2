@@ -122,7 +122,7 @@ rule thread-test ( sources )
     sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) ../build//boost_thread : : :
-      <library>/boost/test//boost_unit_test_framework/<link>static
+      <library>/boost/test//boost_unit_test_framework
     ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
         : : :
