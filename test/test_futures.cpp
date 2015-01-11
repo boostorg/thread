@@ -5,6 +5,7 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 2
+#define BOOST_TEST_MODULE Boost.Threads: futures test suite
 
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/mutex.hpp>
@@ -93,7 +94,7 @@ void set_promise_exception_thread(boost::promise<int>* p)
 }
 
 
-void test_store_value_from_thread()
+BOOST_AUTO_TEST_CASE(test_store_value_from_thread)
 {
     LOG;
     try {
@@ -122,8 +123,7 @@ void test_store_value_from_thread()
     }
 }
 
-
-void test_store_exception()
+BOOST_AUTO_TEST_CASE(test_store_exception)
 {
   LOG;
     boost::promise<int> pi3;
@@ -145,7 +145,7 @@ void test_store_exception()
     BOOST_CHECK(fi3.get_state()==boost::future_state::ready);
 }
 
-void test_initial_state()
+BOOST_AUTO_TEST_CASE(test_initial_state)
 {
   LOG;
     boost::unique_future<int> fi;
@@ -166,7 +166,7 @@ void test_initial_state()
     }
 }
 
-void test_waiting_future()
+BOOST_AUTO_TEST_CASE(test_waiting_future)
 {
   LOG;
     boost::promise<int> pi;
@@ -181,7 +181,7 @@ void test_waiting_future()
     BOOST_CHECK(i==0);
 }
 
-void test_cannot_get_future_twice()
+BOOST_AUTO_TEST_CASE(test_cannot_get_future_twice)
 {
   LOG;
     boost::promise<int> pi;
@@ -198,7 +198,7 @@ void test_cannot_get_future_twice()
     }
 }
 
-void test_set_value_updates_future_state()
+BOOST_AUTO_TEST_CASE(test_set_value_updates_future_state)
 {
   LOG;
     boost::promise<int> pi;
@@ -213,7 +213,7 @@ void test_set_value_updates_future_state()
     BOOST_CHECK(fi.get_state()==boost::future_state::ready);
 }
 
-void test_set_value_can_be_retrieved()
+BOOST_AUTO_TEST_CASE(test_set_value_can_be_retrieved)
 {
   LOG;
     boost::promise<int> pi;
@@ -231,7 +231,7 @@ void test_set_value_can_be_retrieved()
     BOOST_CHECK(fi.get_state()==boost::future_state::ready);
 }
 
-void test_set_value_can_be_moved()
+BOOST_AUTO_TEST_CASE(test_set_value_can_be_moved)
 {
   LOG;
 //     boost::promise<int> pi;
@@ -249,7 +249,7 @@ void test_set_value_can_be_moved()
 //     BOOST_CHECK(fi.get_state()==boost::future_state::ready);
 }
 
-void test_future_from_packaged_task_is_waiting()
+BOOST_AUTO_TEST_CASE(test_future_from_packaged_task_is_waiting)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -262,7 +262,7 @@ void test_future_from_packaged_task_is_waiting()
     BOOST_CHECK(i==0);
 }
 
-void test_invoking_a_packaged_task_populates_future()
+BOOST_AUTO_TEST_CASE(test_invoking_a_packaged_task_populates_future)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -279,7 +279,7 @@ void test_invoking_a_packaged_task_populates_future()
     BOOST_CHECK(i==42);
 }
 
-void test_invoking_a_packaged_task_twice_throws()
+BOOST_AUTO_TEST_CASE(test_invoking_a_packaged_task_twice_throws)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -297,7 +297,7 @@ void test_invoking_a_packaged_task_twice_throws()
 }
 
 
-void test_cannot_get_future_twice_from_task()
+BOOST_AUTO_TEST_CASE(test_cannot_get_future_twice_from_task)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -313,7 +313,7 @@ void test_cannot_get_future_twice_from_task()
     }
 }
 
-void test_task_stores_exception_if_function_throws()
+BOOST_AUTO_TEST_CASE(test_task_stores_exception_if_function_throws)
 {
   LOG;
     boost::packaged_task<int> pt(throw_runtime_error);
@@ -341,7 +341,7 @@ void test_task_stores_exception_if_function_throws()
 
 }
 
-void test_void_promise()
+BOOST_AUTO_TEST_CASE(test_void_promise)
 {
   LOG;
     boost::promise<void> p;
@@ -354,7 +354,7 @@ void test_void_promise()
     f.get();
 }
 
-void test_reference_promise()
+BOOST_AUTO_TEST_CASE(test_reference_promise)
 {
   LOG;
     boost::promise<int&> p;
@@ -371,7 +371,7 @@ void test_reference_promise()
 void do_nothing()
 {}
 
-void test_task_returning_void()
+BOOST_AUTO_TEST_CASE(test_task_returning_void)
 {
   LOG;
     boost::packaged_task<void> pt(do_nothing);
@@ -392,7 +392,7 @@ int& return_ref()
     return global_ref_target;
 }
 
-void test_task_returning_reference()
+BOOST_AUTO_TEST_CASE(test_task_returning_reference)
 {
   LOG;
     boost::packaged_task<int&> pt(return_ref);
@@ -408,7 +408,7 @@ void test_task_returning_reference()
     BOOST_CHECK(&i==&global_ref_target);
 }
 
-void test_shared_future()
+BOOST_AUTO_TEST_CASE(test_shared_future)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -428,7 +428,7 @@ void test_shared_future()
     BOOST_CHECK(i==42);
 }
 
-void test_copies_of_shared_future_become_ready_together()
+BOOST_AUTO_TEST_CASE(test_copies_of_shared_future_become_ready_together)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -467,7 +467,7 @@ void test_copies_of_shared_future_become_ready_together()
     BOOST_CHECK(i==42);
 }
 
-void test_shared_future_can_be_move_assigned_from_unique_future()
+BOOST_AUTO_TEST_CASE(test_shared_future_can_be_move_assigned_from_unique_future)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -483,7 +483,7 @@ void test_shared_future_can_be_move_assigned_from_unique_future()
     BOOST_CHECK(sf.get_state()==boost::future_state::waiting);
 }
 
-void test_shared_future_void()
+BOOST_AUTO_TEST_CASE(test_shared_future_void)
 {
   LOG;
     boost::packaged_task<void> pt(do_nothing);
@@ -501,7 +501,7 @@ void test_shared_future_void()
     sf.get();
 }
 
-void test_shared_future_ref()
+BOOST_AUTO_TEST_CASE(test_shared_future_ref)
 {
   LOG;
     boost::promise<int&> p;
@@ -515,7 +515,7 @@ void test_shared_future_ref()
     BOOST_CHECK(&f.get()==&i);
 }
 
-void test_can_get_a_second_future_from_a_moved_promise()
+BOOST_AUTO_TEST_CASE(test_can_get_a_second_future_from_a_moved_promise)
 {
   LOG;
     boost::promise<int> pi;
@@ -533,7 +533,7 @@ void test_can_get_a_second_future_from_a_moved_promise()
     BOOST_CHECK(fi2.get()==42);
 }
 
-void test_can_get_a_second_future_from_a_moved_void_promise()
+BOOST_AUTO_TEST_CASE(test_can_get_a_second_future_from_a_moved_void_promise)
 {
   LOG;
     boost::promise<void> pi;
@@ -549,7 +549,7 @@ void test_can_get_a_second_future_from_a_moved_void_promise()
     BOOST_CHECK(fi2.is_ready());
 }
 
-void test_unique_future_for_move_only_udt()
+BOOST_AUTO_TEST_CASE(test_unique_future_for_move_only_udt)
 {
   LOG;
     boost::promise<X> pt;
@@ -560,7 +560,7 @@ void test_unique_future_for_move_only_udt()
     BOOST_CHECK(res.i==42);
 }
 
-void test_unique_future_for_string()
+BOOST_AUTO_TEST_CASE(test_unique_future_for_string)
 {
   LOG;
     boost::promise<std::string> pt;
@@ -611,7 +611,7 @@ void do_nothing_callback(boost::promise<int>& /*pi*/)
     ++callback_called;
 }
 
-void test_wait_callback()
+BOOST_AUTO_TEST_CASE(test_wait_callback)
 {
   LOG;
     callback_called=0;
@@ -626,7 +626,7 @@ void test_wait_callback()
     BOOST_CHECK(callback_called==1);
 }
 
-void test_wait_callback_with_timed_wait()
+BOOST_AUTO_TEST_CASE(test_wait_callback_with_timed_wait)
 {
   LOG;
     callback_called=0;
@@ -665,7 +665,7 @@ void wait_callback_for_task(boost::packaged_task<int>& pt)
 }
 
 
-void test_wait_callback_for_packaged_task()
+BOOST_AUTO_TEST_CASE(test_wait_callback_for_packaged_task)
 {
   LOG;
     callback_called=0;
@@ -680,7 +680,7 @@ void test_wait_callback_for_packaged_task()
     BOOST_CHECK(callback_called==1);
 }
 
-void test_packaged_task_can_be_moved()
+BOOST_AUTO_TEST_CASE(test_packaged_task_can_be_moved)
 {
   LOG;
     boost::packaged_task<int> pt(make_int);
@@ -708,7 +708,7 @@ void test_packaged_task_can_be_moved()
     BOOST_CHECK(fi.is_ready());
 }
 
-void test_destroying_a_promise_stores_broken_promise()
+BOOST_AUTO_TEST_CASE(test_destroying_a_promise_stores_broken_promise)
 {
   LOG;
     boost::unique_future<int> f;
@@ -728,7 +728,7 @@ void test_destroying_a_promise_stores_broken_promise()
     }
 }
 
-void test_destroying_a_packaged_task_stores_broken_promise()
+BOOST_AUTO_TEST_CASE(test_destroying_a_packaged_task_stores_broken_promise)
 {
   LOG;
     boost::unique_future<int> f;
@@ -754,7 +754,7 @@ int make_int_slowly()
     return 42;
 }
 
-void test_wait_for_either_of_two_futures_1()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_two_futures_1)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -772,7 +772,7 @@ void test_wait_for_either_of_two_futures_1()
     BOOST_CHECK(f1.get()==42);
 }
 
-void test_wait_for_either_of_two_futures_2()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_two_futures_2)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -790,7 +790,7 @@ void test_wait_for_either_of_two_futures_2()
     BOOST_CHECK(f2.get()==42);
 }
 
-void test_wait_for_either_of_three_futures_1()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_three_futures_1)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -811,7 +811,7 @@ void test_wait_for_either_of_three_futures_1()
     BOOST_CHECK(f1.get()==42);
 }
 
-void test_wait_for_either_of_three_futures_2()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_three_futures_2)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -832,7 +832,7 @@ void test_wait_for_either_of_three_futures_2()
     BOOST_CHECK(f2.get()==42);
 }
 
-void test_wait_for_either_of_three_futures_3()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_three_futures_3)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -853,7 +853,7 @@ void test_wait_for_either_of_three_futures_3()
     BOOST_CHECK(f3.get()==42);
 }
 
-void test_wait_for_either_of_four_futures_1()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_four_futures_1)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -877,7 +877,7 @@ void test_wait_for_either_of_four_futures_1()
     BOOST_CHECK(f1.get()==42);
 }
 
-void test_wait_for_either_of_four_futures_2()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_four_futures_2)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -901,7 +901,7 @@ void test_wait_for_either_of_four_futures_2()
     BOOST_CHECK(f2.get()==42);
 }
 
-void test_wait_for_either_of_four_futures_3()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_four_futures_3)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -925,7 +925,7 @@ void test_wait_for_either_of_four_futures_3()
     BOOST_CHECK(f3.get()==42);
 }
 
-void test_wait_for_either_of_four_futures_4()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_four_futures_4)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -949,7 +949,7 @@ void test_wait_for_either_of_four_futures_4()
     BOOST_CHECK(f4.get()==42);
 }
 
-void test_wait_for_either_of_five_futures_1()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_five_futures_1)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -976,7 +976,7 @@ void test_wait_for_either_of_five_futures_1()
     BOOST_CHECK(f1.get()==42);
 }
 
-void test_wait_for_either_of_five_futures_2()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_five_futures_2)
 {
   LOG;
    boost::packaged_task<int> pt(make_int_slowly);
@@ -1002,7 +1002,7 @@ void test_wait_for_either_of_five_futures_2()
     BOOST_CHECK(!f5.is_ready());
     BOOST_CHECK(f2.get()==42);
 }
-void test_wait_for_either_of_five_futures_3()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_five_futures_3)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -1028,7 +1028,7 @@ void test_wait_for_either_of_five_futures_3()
     BOOST_CHECK(!f5.is_ready());
     BOOST_CHECK(f3.get()==42);
 }
-void test_wait_for_either_of_five_futures_4()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_five_futures_4)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -1054,7 +1054,7 @@ void test_wait_for_either_of_five_futures_4()
     BOOST_CHECK(!f5.is_ready());
     BOOST_CHECK(f4.get()==42);
 }
-void test_wait_for_either_of_five_futures_5()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_of_five_futures_5)
 {
   LOG;
     boost::packaged_task<int> pt(make_int_slowly);
@@ -1081,7 +1081,7 @@ void test_wait_for_either_of_five_futures_5()
     BOOST_CHECK(f5.get()==42);
 }
 
-void test_wait_for_either_invokes_callbacks()
+BOOST_AUTO_TEST_CASE(test_wait_for_either_invokes_callbacks)
 {
   LOG;
     callback_called=0;
@@ -1098,7 +1098,7 @@ void test_wait_for_either_invokes_callbacks()
     BOOST_CHECK(fi.get()==42);
 }
 
-void test_wait_for_any_from_range()
+BOOST_AUTO_TEST_CASE(test_wait_for_any_from_range)
 {
   LOG;
     unsigned const count=10;
@@ -1133,7 +1133,7 @@ void test_wait_for_any_from_range()
     }
 }
 
-void test_wait_for_all_from_range()
+BOOST_AUTO_TEST_CASE(test_wait_for_all_from_range)
 {
   LOG;
     unsigned const count=10;
@@ -1153,7 +1153,7 @@ void test_wait_for_all_from_range()
     }
 }
 
-void test_wait_for_all_two_futures()
+BOOST_AUTO_TEST_CASE(test_wait_for_all_two_futures)
 {
   LOG;
     unsigned const count=2;
@@ -1173,7 +1173,7 @@ void test_wait_for_all_two_futures()
     }
 }
 
-void test_wait_for_all_three_futures()
+BOOST_AUTO_TEST_CASE(test_wait_for_all_three_futures)
 {
   LOG;
     unsigned const count=3;
@@ -1193,7 +1193,7 @@ void test_wait_for_all_three_futures()
     }
 }
 
-void test_wait_for_all_four_futures()
+BOOST_AUTO_TEST_CASE(test_wait_for_all_four_futures)
 {
   LOG;
     unsigned const count=4;
@@ -1213,7 +1213,7 @@ void test_wait_for_all_four_futures()
     }
 }
 
-void test_wait_for_all_five_futures()
+BOOST_AUTO_TEST_CASE(test_wait_for_all_five_futures)
 {
   LOG;
     unsigned const count=5;
@@ -1232,68 +1232,3 @@ void test_wait_for_all_five_futures()
         BOOST_CHECK(futures[j].is_ready());
     }
 }
-
-
-boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
-{
-    boost::unit_test::test_suite* test =
-        BOOST_TEST_SUITE("Boost.Threads: futures test suite");
-
-    test->add(BOOST_TEST_CASE(test_initial_state));
-    test->add(BOOST_TEST_CASE(test_waiting_future));
-    test->add(BOOST_TEST_CASE(test_cannot_get_future_twice));
-    test->add(BOOST_TEST_CASE(test_set_value_updates_future_state));
-    test->add(BOOST_TEST_CASE(test_set_value_can_be_retrieved));
-    test->add(BOOST_TEST_CASE(test_set_value_can_be_moved));
-    test->add(BOOST_TEST_CASE(test_store_value_from_thread));
-    test->add(BOOST_TEST_CASE(test_store_exception));
-    test->add(BOOST_TEST_CASE(test_future_from_packaged_task_is_waiting));
-    test->add(BOOST_TEST_CASE(test_invoking_a_packaged_task_populates_future));
-    test->add(BOOST_TEST_CASE(test_invoking_a_packaged_task_twice_throws));
-    test->add(BOOST_TEST_CASE(test_cannot_get_future_twice_from_task));
-    test->add(BOOST_TEST_CASE(test_task_stores_exception_if_function_throws));
-    test->add(BOOST_TEST_CASE(test_void_promise));
-    test->add(BOOST_TEST_CASE(test_reference_promise));
-    test->add(BOOST_TEST_CASE(test_task_returning_void));
-    test->add(BOOST_TEST_CASE(test_task_returning_reference));
-    test->add(BOOST_TEST_CASE(test_shared_future));
-    test->add(BOOST_TEST_CASE(test_copies_of_shared_future_become_ready_together));
-    test->add(BOOST_TEST_CASE(test_shared_future_can_be_move_assigned_from_unique_future));
-    test->add(BOOST_TEST_CASE(test_shared_future_void));
-    test->add(BOOST_TEST_CASE(test_shared_future_ref));
-    test->add(BOOST_TEST_CASE(test_can_get_a_second_future_from_a_moved_promise));
-    test->add(BOOST_TEST_CASE(test_can_get_a_second_future_from_a_moved_void_promise));
-    test->add(BOOST_TEST_CASE(test_unique_future_for_move_only_udt));
-    test->add(BOOST_TEST_CASE(test_unique_future_for_string));
-    test->add(BOOST_TEST_CASE(test_wait_callback));
-    test->add(BOOST_TEST_CASE(test_wait_callback_with_timed_wait));
-    test->add(BOOST_TEST_CASE(test_wait_callback_for_packaged_task));
-    test->add(BOOST_TEST_CASE(test_packaged_task_can_be_moved));
-    test->add(BOOST_TEST_CASE(test_destroying_a_promise_stores_broken_promise));
-    test->add(BOOST_TEST_CASE(test_destroying_a_packaged_task_stores_broken_promise));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_two_futures_1));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_two_futures_2));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_three_futures_1));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_three_futures_2));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_three_futures_3));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_four_futures_1));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_four_futures_2));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_four_futures_3));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_four_futures_4));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_five_futures_1));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_five_futures_2));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_five_futures_3));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_five_futures_4));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_of_five_futures_5));
-    test->add(BOOST_TEST_CASE(test_wait_for_either_invokes_callbacks));
-    test->add(BOOST_TEST_CASE(test_wait_for_any_from_range));
-    test->add(BOOST_TEST_CASE(test_wait_for_all_from_range));
-    test->add(BOOST_TEST_CASE(test_wait_for_all_two_futures));
-    test->add(BOOST_TEST_CASE(test_wait_for_all_three_futures));
-    test->add(BOOST_TEST_CASE(test_wait_for_all_four_futures));
-    test->add(BOOST_TEST_CASE(test_wait_for_all_five_futures));
-
-    return test;
-}
-
-

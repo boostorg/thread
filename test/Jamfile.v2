@@ -243,7 +243,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-test2 test_thread_move_return.cpp ]
           [ thread-test2 test_thread_launching.cpp ]
           [ thread-test2 test_thread_mf.cpp ]
-          [ thread-test2 test_thread_exit.cpp ]
+          [ thread-test test_thread_exit.cpp ]
           [ thread-test2 test_move_function.cpp ]
           [ compile-fail no_implicit_move_from_lvalue_thread.cpp ]
           [ compile-fail no_implicit_assign_from_lvalue_thread.cpp ]
@@ -283,7 +283,7 @@ rule thread-compile ( sources : reqs * : name )
     #explicit t_futures ;
     test-suite t_futures
     :
-          [ thread-test2 test_futures.cpp ]
+          [ thread-test test_futures.cpp ]
     ;
 
 
