@@ -3,7 +3,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 2
-
+#define BOOST_TEST_MODULE Boost.Threads: thread attributes test suite
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread_only.hpp>
@@ -29,7 +29,7 @@ void simple_thread()
   test_value = 999;
 }
 
-void test_native_handle()
+BOOST_AUTO_TEST_CASE(test_native_handle)
 {
 
   boost::thread_attributes attrs;
@@ -51,7 +51,7 @@ void test_native_handle()
 
 }
 
-void test_stack_size()
+BOOST_AUTO_TEST_CASE(test_stack_size)
 {
   boost::thread_attributes attrs;
 
@@ -70,7 +70,7 @@ void do_test_creation_with_attrs()
   BOOST_CHECK_EQUAL(test_value, 999);
 }
 
-void test_creation_with_attrs()
+BOOST_AUTO_TEST_CASE(test_creation_with_attrs)
 {
   timed_test(&do_test_creation_with_attrs, 1);
 }
