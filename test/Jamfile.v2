@@ -292,7 +292,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_7160.cpp ]
           [ thread-run test_7328.cpp ]
           [ thread-run test_7571.cpp ]
-          [ thread-run test_9319.cpp ]
+          #[ thread-run test_9319.cpp ]
           [ thread-run test_9711.cpp ]
           
     ;
@@ -405,8 +405,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/shared_future/wait_pass.cpp : shared_future__wait_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_for_pass.cpp : shared_future__wait_for_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_until_pass.cpp : shared_future__wait_until_p ]
-          [ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
-          [ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p ]
+          #[ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
+          #[ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p ]
     ;
 
     #explicit ts_packaged_task ;
@@ -787,7 +787,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run2 ../example/make_future.cpp : ex_make_future ]
-          [ thread-run2 ../example/future_then.cpp : ex_future_then ]
+          #[ thread-run2 ../example/future_then.cpp : ex_future_then ]
           [ thread-run2 ../example/future_fallback_to.cpp : ex_future_fallback_to ]
           [ thread-run2 ../example/future_unwrap.cpp : ex_future_unwrap ]
           [ thread-run2-noit ../example/synchronized_value.cpp : ex_synchronized_value ]
