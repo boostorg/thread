@@ -294,6 +294,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_7571.cpp ]
           [ thread-run test_9319.cpp ]
           [ thread-run test_9711.cpp ]
+          [ thread-run test_9856.cpp ]
           
     ;
 
