@@ -292,8 +292,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_7160.cpp ]
           [ thread-run test_7328.cpp ]
           [ thread-run test_7571.cpp ]
-          #[ thread-run test_9319.cpp ]
-          [ thread-run test_9711.cpp ]
+          [ thread-run test_9319.cpp ]
+          #[ thread-run test_9711.cpp ]
           
     ;
 
@@ -388,8 +388,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/future/wait_until_pass.cpp : future__wait_until_p ]
           [ thread-run2-noit ./sync/futures/future/then_pass.cpp : future__then_p ]
           [ thread-run2-noit ./sync/futures/future/then_executor_pass.cpp : future__then_executor_p ]
-          [ thread-run2-noit ./sync/futures/future/async_deferred_then_pass.cpp : future__async_def_then_p ]
-          [ thread-run2-noit ./sync/futures/future/then_deferred_pass.cpp : future__then_def_p ]
+          #[ thread-run2-noit ./sync/futures/future/async_deferred_then_pass.cpp : future__async_def_then_p ]
+          #[ thread-run2-noit ./sync/futures/future/then_deferred_pass.cpp : future__then_def_p ]
     ;
 
     #explicit ts_shared_future ;
@@ -945,6 +945,7 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+          [ thread-run2-noit ./sync/futures/future/async_deferred_then_pass.cpp : future__async_def_then_p2 ]
     ;
 
 }

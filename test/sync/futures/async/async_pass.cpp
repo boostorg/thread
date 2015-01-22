@@ -167,6 +167,46 @@ struct check_timer {
 
 int main()
 {
+  {
+    try {
+      boost::async(f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  {
+    try {
+      boost::async(boost::launch::async, f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    try {
+      boost::async(boost::launch::deferred, f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
