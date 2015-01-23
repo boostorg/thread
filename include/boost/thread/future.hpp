@@ -4246,11 +4246,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_deferred_continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
       this->set_deferred();
     }
 
@@ -4280,11 +4282,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_deferred_continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
       this->set_deferred();
     }
 
@@ -4319,11 +4323,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_deferred_continuation_shared_state(F f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
       this->set_deferred();
     }
 
@@ -4353,11 +4359,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_deferred_continuation_shared_state(F f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
       this->set_deferred();
     }
 
