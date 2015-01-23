@@ -210,11 +210,9 @@ namespace boost
                 if (continuation_ptr) {
                   continuation_ptr_type this_continuation_ptr;
                   this_continuation_ptr.swap(continuation_ptr);
-                  //relocker rlk(lock);
-                  lock.unlock();
+                  relocker rlk(lock);
                   boost::unique_lock<boost::mutex> cont_lock(this_continuation_ptr->mutex);
                   this_continuation_ptr->launch_continuation(cont_lock, this_continuation_ptr);
-                  lock.lock();
                 }
             }
 #else

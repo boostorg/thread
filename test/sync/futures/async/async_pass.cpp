@@ -193,6 +193,7 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try {
@@ -207,6 +208,7 @@ int main()
       BOOST_TEST(false && "exception thrown");
     }
   }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try
