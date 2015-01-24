@@ -4392,6 +4392,79 @@ namespace detail
     }
   }
 
+  ////////////////////////////////
+  // template<typename F>
+  // auto future<future<R2>>::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+  ////////////////////////////////
+
+  template <typename R2>
+  template <typename F>
+  inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >)>::type>
+  BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::then(launch policy, BOOST_THREAD_FWD_REF(F) func) {
+    typedef BOOST_THREAD_FUTURE<R2> R;
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    if (underlying_cast<int>(policy) & int(launch::async)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    } else {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    }
+  }
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+  template <typename R2>
+  template <typename Ex, typename F>
+  inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >)>::type>
+  BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::then(Ex& ex, BOOST_THREAD_FWD_REF(F) func) {
+    typedef BOOST_THREAD_FUTURE<R2> R;
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type, F>(ex,
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+  }
+#endif
+  template <typename R2>
+  template <typename F>
+  inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >)>::type>
+  BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::then(BOOST_THREAD_FWD_REF(F) func)  {
+    typedef BOOST_THREAD_FUTURE<R2> R;
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::async)) {
+      return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+          lock, boost::move(*this), boost::forward<F>(func)
+      );
+    } else if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::deferred)) {
+      this->future_->wait_internal(lock);
+      return boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+          lock, boost::move(*this), boost::forward<F>(func)
+      );
+    } else {
+      return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
+          lock, boost::move(*this), boost::forward<F>(func)
+      );
+    }
+  }
+
+  ////////////////////////////////
+  // template<typename F>
+  // auto shared_future<R>::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+  ////////////////////////////////
+
   template <typename R>
   template <typename F>
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(shared_future<R>)>::type>
