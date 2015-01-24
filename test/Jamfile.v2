@@ -295,7 +295,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_9319.cpp ]
           #[ thread-run test_9711.cpp ] this test is invalid and should not work :(
           [ thread-run test_9856.cpp ]
-          [ thread-compile test_10963.cpp : : test_10963_c ]         
+          [ thread-compile test_10963.cpp : : test_10963_c ]
+          [ thread-run test_10964.cpp ]
     ;
 
 
