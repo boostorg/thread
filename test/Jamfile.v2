@@ -294,7 +294,9 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_7571.cpp ]
           [ thread-run test_9319.cpp ]
           #[ thread-run test_9711.cpp ] This is an invalid use of ::then deferred.
-          
+          [ thread-run test_9856.cpp ]
+          [ thread-compile test_10963.cpp : : test_10963_c ]
+          [ thread-run test_10964.cpp ]
     ;
 
 
