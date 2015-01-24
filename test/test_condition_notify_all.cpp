@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 2
-#define BOOST_TEST_MODULE Boost.Threads: condition test suite
+#define BOOST_TEST_MODULE Boost.Threads: condition_variable notify_all test suite
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread_only.hpp>

@@ -7,6 +7,7 @@
 
 #define BOOST_THREAD_VERSION 2
 #define BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#define BOOST_TEST_MODULE Boost.Threads: tss test suite
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/predef/platform.h>
@@ -73,7 +74,7 @@ void test_tss_thread()
 #if BOOST_PLAT_WINDOWS_RUNTIME
     typedef std::shared_ptr<std::thread> native_thread_t;
 
-    void test_tss_thread_native()
+    BOOST_AUTO_TEST_CASE(test_tss_thread_native)
     {
         test_tss_thread();
     }
@@ -208,7 +209,7 @@ void do_test_tss()
     BOOST_CHECK_EQUAL(tss_total, 5);
 }
 
-void test_tss()
+BOOST_AUTO_TEST_CASE(test_tss)
 {
     timed_test(&do_test_tss, 2);
 }
@@ -224,6 +225,7 @@ void tss_void_custom_cleanup(void* d)
 }
 
 boost::thread_specific_ptr<void> tss_void(tss_void_custom_cleanup);
+
 void test_tss_void_thread()
 {
     tss_void.reset(new tss_value_t());
@@ -300,10 +302,10 @@ void do_test_tss_void()
 //    BOOST_CHECK_EQUAL(tss_total, 5);
 }
 
-void test_tss_void()
-{
-    timed_test(&do_test_tss_void, 2);
-}
+//BOOST_AUTO_TEST_CASE(test_tss_void)
+//{
+//    timed_test(&do_test_tss_void, 2);
+//}
 
 
 boost::thread_specific_ptr<void> tss_void_with_cleanup(tss_void_custom_cleanup);
@@ -331,7 +333,7 @@ void do_test_tss_void_with_custom_cleanup()
 }
 
 
-void test_tss_void_with_custom_cleanup()
+BOOST_AUTO_TEST_CASE(test_tss_void_with_custom_cleanup)
 {
     timed_test(&do_test_tss_void_with_custom_cleanup, 2);
 }
@@ -373,7 +375,7 @@ void do_test_tss_with_custom_cleanup()
 }
 
 
-void test_tss_with_custom_cleanup()
+BOOST_AUTO_TEST_CASE(test_tss_with_custom_cleanup)
 {
     timed_test(&do_test_tss_with_custom_cleanup, 2);
 }
@@ -450,12 +452,12 @@ void do_test_tss_does_no_cleanup_with_null_cleanup_function()
     }
 }
 
-void test_tss_does_no_cleanup_after_release()
+BOOST_AUTO_TEST_CASE(test_tss_does_no_cleanup_after_release)
 {
     timed_test(&do_test_tss_does_no_cleanup_after_release, 2);
 }
 
-void test_tss_does_no_cleanup_with_null_cleanup_function()
+BOOST_AUTO_TEST_CASE(test_tss_does_no_cleanup_with_null_cleanup_function)
 {
     timed_test(&do_test_tss_does_no_cleanup_with_null_cleanup_function, 2);
 }
@@ -472,14 +474,14 @@ void thread_with_local_tss_ptr()
 }
 
 
-void test_tss_does_not_call_cleanup_after_ptr_destroyed()
+BOOST_AUTO_TEST_CASE(test_tss_does_not_call_cleanup_after_ptr_destroyed)
 {
     boost::thread t(thread_with_local_tss_ptr);
     t.join();
     BOOST_CHECK(!tss_cleanup_called);
 }
 
-void test_tss_cleanup_not_called_for_null_pointer()
+BOOST_AUTO_TEST_CASE(test_tss_cleanup_not_called_for_null_pointer)
 {
     boost::thread_specific_ptr<Dummy> local_tss(tss_custom_cleanup);
     local_tss.reset(new Dummy);
@@ -491,34 +493,16 @@ void test_tss_cleanup_not_called_for_null_pointer()
     BOOST_CHECK(!tss_cleanup_called);
 }
 
-void test_tss_at_the_same_adress()
-{
-  for(int i=0; i<2; i++)
-  {
-    boost::thread_specific_ptr<Dummy> local_tss(tss_custom_cleanup);
-    local_tss.reset(new Dummy);
-    tss_cleanup_called=false;
-    BOOST_CHECK(tss_cleanup_called);
-    tss_cleanup_called=false;
-    BOOST_CHECK(!tss_cleanup_called);
-  }
-}
+//BOOST_AUTO_TEST_CASE(test_tss_at_the_same_adress)
+//{
+//  for(int i=0; i<2; i++)
+//  {
+//    boost::thread_specific_ptr<Dummy> local_tss(tss_custom_cleanup);
+//    local_tss.reset(new Dummy);
+//    tss_cleanup_called=false;
+//    BOOST_CHECK(tss_cleanup_called);
+//    tss_cleanup_called=false;
+//    BOOST_CHECK(!tss_cleanup_called);
+//  }
+//}
 
-
-boost::unit_test::test_suite* init_unit_test_suite(int, char*[])
-{
-    boost::unit_test::test_suite* test =
-        BOOST_TEST_SUITE("Boost.Threads: tss test suite");
-
-    test->add(BOOST_TEST_CASE(test_tss));
-    test->add(BOOST_TEST_CASE(test_tss_with_custom_cleanup));
-    test->add(BOOST_TEST_CASE(test_tss_does_no_cleanup_after_release));
-    test->add(BOOST_TEST_CASE(test_tss_does_no_cleanup_with_null_cleanup_function));
-    test->add(BOOST_TEST_CASE(test_tss_does_not_call_cleanup_after_ptr_destroyed));
-    test->add(BOOST_TEST_CASE(test_tss_cleanup_not_called_for_null_pointer));
-    //test->add(BOOST_TEST_CASE(test_tss_void));
-    test->add(BOOST_TEST_CASE(test_tss_void_with_custom_cleanup));
-
-
-    return test;
-}
