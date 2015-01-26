@@ -81,7 +81,7 @@ namespace boost
       };
 
       boost::condition_variable_any cv;
-      std::vector<registered_waiter> waiters;
+      std::vector<registered_waiter> waiters_;
       count_type future_count;
 
     public:
@@ -98,7 +98,7 @@ namespace boost
           registered_waiter waiter(f, f.notify_when_ready(cv), future_count);
           try
           {
-            waiters.push_back(waiter);
+            waiters_.push_back(waiter);
           }
           catch (...)
           {
@@ -120,14 +120,14 @@ namespace boost
 
       count_type wait()
       {
-        all_futures_lock lk(waiters);
+        all_futures_lock lk(waiters_);
         for (;;)
         {
-          for (count_type i = 0; i < waiters.size(); ++i)
+          for (count_type i = 0; i < waiters_.size(); ++i)
           {
-            if (waiters[i].future_->is_ready(lk.locks[i]))
+            if (waiters_[i].future_->is_ready(lk.locks[i]))
             {
-              return waiters[i].index;
+              return waiters_[i].index;
             }
           }
           cv.wait(lk);
@@ -136,9 +136,9 @@ namespace boost
 
       ~waiter_for_any_in_seq()
       {
-        for (count_type i = 0; i < waiters.size(); ++i)
+        for (count_type i = 0; i < waiters_.size(); ++i)
         {
-          waiters[i].future_->unnotify_when_ready(waiters[i].handle);
+          waiters_[i].future_->unnotify_when_ready(waiters_[i].handle);
         }
       }
     };
