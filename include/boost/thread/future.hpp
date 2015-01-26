@@ -1728,7 +1728,7 @@ namespace boost
           return this->future_->run_if_is_deferred_or_ready();
         }
         // retrieving the value
-        typename detail::shared_state<R>::shared_future_get_result_type get()
+        typename detail::shared_state<R>::shared_future_get_result_type get() const
         {
             if(!this->future_)
             {
@@ -1739,7 +1739,7 @@ namespace boost
 
         template <typename R2>
         typename boost::disable_if< is_void<R2>, typename detail::shared_state<R>::shared_future_get_result_type>::type
-        get_or(BOOST_THREAD_RV_REF(R2) v) // EXTENSION
+        get_or(BOOST_THREAD_RV_REF(R2) v)  const // EXTENSION
         {
             if(!this->future_)
             {
