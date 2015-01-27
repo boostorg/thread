@@ -952,7 +952,7 @@ namespace boost
             };
 
             boost::condition_variable_any cv;
-            std::vector<registered_waiter> futures;
+            std::vector<registered_waiter> futures_;
             count_type future_count;
 
         public:
@@ -967,7 +967,7 @@ namespace boost
                 {
                   registered_waiter waiter(f.future_,f.future_->notify_when_ready(cv),future_count);
                   try {
-                      futures.push_back(waiter);
+                    futures_.push_back(waiter);
                   } catch(...) {
                     f.future_->unnotify_when_ready(waiter.handle);
                     throw;
@@ -986,14 +986,14 @@ namespace boost
 
             count_type wait()
             {
-                all_futures_lock lk(futures);
+                all_futures_lock lk(futures_);
                 for(;;)
                 {
-                    for(count_type i=0;i<futures.size();++i)
+                    for(count_type i=0;i<futures_.size();++i)
                     {
-                        if(futures[i].future_->done)
+                        if(futures_[i].future_->done)
                         {
-                            return futures[i].index;
+                            return futures_[i].index;
                         }
                     }
                     cv.wait(lk);
@@ -1002,9 +1002,9 @@ namespace boost
 
             ~future_waiter()
             {
-                for(count_type i=0;i<futures.size();++i)
+                for(count_type i=0;i<futures_.size();++i)
                 {
-                    futures[i].future_->unnotify_when_ready(futures[i].handle);
+                    futures_[i].future_->unnotify_when_ready(futures_[i].handle);
                 }
             }
         };
@@ -1795,7 +1795,7 @@ namespace boost
           return this->future_->run_if_is_deferred_or_ready();
         }
         // retrieving the value
-        typename detail::shared_state<R>::shared_future_get_result_type get()
+        typename detail::shared_state<R>::shared_future_get_result_type get() const
         {
             if(!this->future_)
             {
@@ -1806,7 +1806,7 @@ namespace boost
 
         template <typename R2>
         typename boost::disable_if< is_void<R2>, typename detail::shared_state<R>::shared_future_get_result_type>::type
-        get_or(BOOST_THREAD_RV_REF(R2) v) // EXTENSION
+        get_or(BOOST_THREAD_RV_REF(R2) v)  const // EXTENSION
         {
             if(!this->future_)
             {

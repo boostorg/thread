@@ -1020,7 +1020,7 @@ There are not too much tests yet, so it is possible that you can find out some t
       void swap(shared_future& other);
 
       // retrieving the value
-      see below get();
+      see below get() const;
 
       exception_ptr get_exception_ptr(); // EXTENSION
 
@@ -1066,9 +1066,9 @@ There are not too much tests yet, so it is possible that you can find out some t
 [///////////////////////////////////]
 [section:get Member function `get()`]
 
-    const R& get();
-    R& get();
-    void get();
+    const R& get() const;
+    R& get() const;
+    void get() const;
 
 [variablelist
 
