@@ -77,6 +77,7 @@
 #include <algorithm>
 #include <list>
 #include <vector>
+#include <utility>
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE
 #define BOOST_THREAD_FUTURE future
@@ -3702,13 +3703,46 @@ namespace detail {
   ////////////////////////////////
   // make_ready_future
   ////////////////////////////////
+  namespace detail {
+    template <class T>
+    struct deduced_type_impl
+    {
+        typedef T type;
+    };
+
+    template <class T>
+    struct deduced_type_impl<reference_wrapper<T> const>
+    {
+        typedef T& type;
+    };
+    template <class T>
+    struct deduced_type_impl<reference_wrapper<T> >
+    {
+        typedef T& type;
+    };
+#if __cplusplus > 201103L
+    template <class T>
+    struct deduced_type_impl<std::reference_wrapper<T> >
+    {
+        typedef T& type;
+    };
+#endif
+    template <class T>
+    struct deduced_type
+    {
+        typedef typename detail::deduced_type_impl<typename decay<T>::type>::type type;
+    };
+
+  }
+
+
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
   template <int = 0, int..., class T>
 #else
   template <class T>
 #endif
-  BOOST_THREAD_FUTURE<typename decay<T>::type> make_ready_future(BOOST_THREAD_FWD_REF(T) value) {
-    typedef typename decay<T>::type future_value_type;
+  BOOST_THREAD_FUTURE<typename detail::deduced_type<T>::type> make_ready_future(BOOST_THREAD_FWD_REF(T) value) {
+    typedef typename detail::deduced_type<T>::type future_value_type;
     promise<future_value_type> p;
     p.set_value(boost::forward<future_value_type>(value));
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
