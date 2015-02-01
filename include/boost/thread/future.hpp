@@ -195,7 +195,7 @@ namespace boost
             }
 #endif
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-            void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
+            virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
             {
               continuation_ptr= continuation;
               if (done) {
@@ -4718,6 +4718,15 @@ namespace detail
         boost::unique_lock<boost::mutex> lk(this->mutex);
         return parent_value(lk).get();
     }
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+    typedef shared_ptr<shared_state_base> continuation_ptr_type;
+
+    virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
+    {
+      boost::unique_lock<boost::mutex> lk(parent.future_->mutex);
+      parent.future_->set_continuation_ptr(continuation, lk);
+    }
+#endif
   };
 
   template <class F, class Rp>
