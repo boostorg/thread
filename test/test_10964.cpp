@@ -29,6 +29,10 @@ struct TestCallback
   }
 };
 
+void p1()
+{
+}
+
 int main()
 {
 #if ! defined  BOOST_NO_CXX11_DECLTYPE && ! defined  BOOST_NO_CXX11_AUTO_DECLARATIONS
@@ -62,6 +66,11 @@ int main()
             TestCallback()).unwrap().then(TestCallback()).get();
   }
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    boost::future<void> f = boost::async(p1);
+    f.then(
+            TestCallback()).unwrap().then(TestCallback()).get();
+  }
 #endif
   return 0;
 }

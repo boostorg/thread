@@ -48,8 +48,6 @@ There are some severe bugs that prevent the use of the library on concrete conte
 
 [*Fixed Bugs:]
 
-* [@http://svn.boost.org/trac/boost/ticket/9600 #9600] Async: Add task_region
-
 
 * [@http://svn.boost.org/trac/boost/ticket/10734 #10734] Submit method work differently on different executors, some throw exception and some silently ignore error (thread_executor and inline_executor)
 * [@http://svn.boost.org/trac/boost/ticket/10736 #10736] Task exceptions silently ignored. I think std::terminate solution from N3785 and std::thread is better choice and more consistent.
@@ -59,6 +57,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/10963 #10963] future<future<T>>::then Has No Implementation
 * [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
 * [@http://svn.boost.org/trac/boost/ticket/10971 #10971] shared_future::get()/get_or() must be const
+* [@http://svn.boost.org/trac/boost/ticket/10979 #10979] Support T& type deduction when the make_ready_future parameter is reference_wrapper<T>
 
 
 [heading Version 4.4.0 - boost 1.57]
