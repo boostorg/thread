@@ -1020,7 +1020,7 @@ There are not too much tests yet, so it is possible that you can find out some t
       void swap(shared_future& other);
 
       // retrieving the value
-      see below get();
+      see below get() const;
 
       exception_ptr get_exception_ptr(); // EXTENSION
 
@@ -1066,9 +1066,9 @@ There are not too much tests yet, so it is possible that you can find out some t
 [///////////////////////////////////]
 [section:get Member function `get()`]
 
-    const R& get();
-    R& get();
-    void get();
+    const R& get() const;
+    R& get() const;
+    void get() const;
 
 [variablelist
 
@@ -2362,7 +2362,7 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 [section:make_ready_future Non-member function `make_ready_future()` EXTENSION]
 
     template <typename T>
-      future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
+      future<V> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
     template <typename T>
       future<T> make_ready_future(exception_ptr ex);  // DEPRECATED
@@ -2371,11 +2371,15 @@ All `R` types must be the same. If any of the `future<R>` or `shared_future<R>` 
 
 [variablelist
 
+[[Remark:][
+where `V` is determined as follows: Let `U` be `decay_t<T>`. Then `V` is `X&`
+if `U` equals `reference_wrapper<X>`, otherwise `V` is `U`.
+]]
 [[Effects:] [
-- value prototype: The value that is passed into the function is moved to the shared state of the returned function if it is an rvalue. 
-Otherwise the value is copied to the shared state of the returned function.
+- value prototype: The value that is passed into the function is moved to the shared state of the returned future if it is an rvalue. 
+Otherwise the value is copied to the shared state of the returned future.
 
-- exception: The exception that is passed into the function is copied to the shared state of the returned function.
+- exception: The exception that is passed into the function is copied to the shared state of the returned future.
 
 .]]
 
