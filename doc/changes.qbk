@@ -26,7 +26,6 @@
 * [@http://svn.boost.org/trac/boost/ticket/10942 #10942] Boost.Thread fails to build on Cygwin.
 * [@http://svn.boost.org/trac/boost/ticket/10967 #10967] Timed wait points inconsistently convert relative to absolute waits.
 * [@http://svn.boost.org/trac/boost/ticket/10968 #10968] The futures returned by async() and future::then() are not blocking.
-* [@http://svn.boost.org/trac/boost/ticket/10972 #10972] shared_future::then() can be called multiple times.
 
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
@@ -57,6 +56,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/10963 #10963] future<future<T>>::then Has No Implementation
 * [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
 * [@http://svn.boost.org/trac/boost/ticket/10971 #10971] shared_future::get()/get_or() must be const
+* [@http://svn.boost.org/trac/boost/ticket/10972 #10972] shared_future::then() can be called multiple times.
 * [@http://svn.boost.org/trac/boost/ticket/10979 #10979] Support T& type deduction when the make_ready_future parameter is reference_wrapper<T>
 
 

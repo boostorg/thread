@@ -123,6 +123,7 @@ namespace boost
             typedef waiter_list::iterator notify_when_ready_handle;
             // This type should be only included conditionally if interruptions are allowed, but is included to maintain the same layout.
             typedef shared_ptr<shared_state_base> continuation_ptr_type;
+            typedef std::vector<continuation_ptr_type> continuations_type;
 
             boost::exception_ptr exception;
             bool done;
@@ -136,7 +137,7 @@ namespace boost
             waiter_list external_waiters;
             boost::function<void()> callback;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
-            continuation_ptr_type continuation_ptr;
+            continuations_type continuations;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base>)
@@ -150,7 +151,7 @@ namespace boost
                 is_constructed(false),
                 cnt_(0),
                 policy_(launch::none),
-                continuation_ptr()
+                continuations()
             {}
             virtual ~shared_state_base()
             {
@@ -164,8 +165,7 @@ namespace boost
             void validate() { is_valid_ = true; }
 
             void inc(boost::unique_lock<boost::mutex>&) { ++cnt_; }
-            void inc() { boost::unique_lock<boost::mutex> lk(this->mutex);
-            inc(lk); }
+            void inc() { boost::unique_lock<boost::mutex> lk(this->mutex); inc(lk); }
 
             void dec(boost::unique_lock<boost::mutex>& lk) {
               if (--cnt_ == 0) {
@@ -208,12 +208,14 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
-                if (continuation_ptr) {
-                  continuation_ptr_type this_continuation_ptr;
-                  this_continuation_ptr.swap(continuation_ptr);
+                if (! continuations.empty()) {
+                  continuations_type this_continuations = continuations;
+                  continuations.clear();
                   relocker rlk(lock);
-                  boost::unique_lock<boost::mutex> cont_lock(this_continuation_ptr->mutex);
-                  this_continuation_ptr->launch_continuation(cont_lock, this_continuation_ptr);
+                  for (continuations_type::iterator it = this_continuations.begin(); it != this_continuations.end(); ++it) {
+                    boost::unique_lock<boost::mutex> cont_lock((*it)->mutex);
+                    (*it)->launch_continuation(cont_lock, *it);
+                  }
                 }
             }
 #else
@@ -224,7 +226,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
             {
-              continuation_ptr= continuation;
+              continuations.push_back(continuation);
               if (done) {
                 do_continuation(lock);
               }
