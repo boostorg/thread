@@ -250,7 +250,7 @@ namespace boost
           inline
           void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
           {
-              return boost::this_thread::hiden::sleep_for(boost::detail::to_timespec(ns));
+              return boost::this_thread::no_interruption_point::hiden::sleep_for(boost::detail::to_timespec(ns));
           }
     #endif
     #endif // BOOST_THREAD_USES_CHRONO
