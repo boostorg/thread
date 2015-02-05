@@ -19,6 +19,11 @@ int main() {
       }
     }
     if(failures)
-      std::cerr << "There were " << failures << " failures out of " << total << " timed waits." << std::endl;
-    return failures!=0;
+      std::cout << "There were " << failures << " failures out of " << total << " timed waits." << std::endl;
+    if((100*failures)/total>10)
+    {
+      std::cerr << "This exceeds 10%, so failing the test." << std::endl;
+      return 1;
+    }
+    return 0;
 }
