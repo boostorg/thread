@@ -657,12 +657,16 @@ namespace boost
             {
                 return SetWaitableTimer(hTimer, lpDueTime, lPeriod, pfnCompletionRoutine, lpArgToCompletionRoutine, FALSE);
             }
+#ifdef _MSC_VER
+#pragma warning(push)
+#pragma warning(disable: 6387) // MSVC sanitiser warns that GetModuleHandleA() might fail
+#endif
             static inline setwaitabletimerex_t SetWaitableTimerEx()
             {
                 static setwaitabletimerex_t setwaitabletimerex_impl;
                 if(setwaitabletimerex_impl)
                     return setwaitabletimerex_impl;
-                void *addr=(void *) GetProcAddress(
+                void (*addr)()=(void (*)()) GetProcAddress(
 #if !defined(BOOST_NO_ANSI_APIS)
                     GetModuleHandleA("KERNEL32.DLL"),
 #else
@@ -675,6 +679,9 @@ namespace boost
                     setwaitabletimerex_impl=&SetWaitableTimerEx_emulation;
                 return setwaitabletimerex_impl;
             }
+#ifdef _MSC_VER
+#pragma warning(pop)
+#endif
         }
 #endif
 #endif
