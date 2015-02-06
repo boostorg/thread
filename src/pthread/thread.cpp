@@ -27,6 +27,8 @@
 #include <unistd.h>
 #endif
 
+#include <memory>      // Android libc++ hasn't defined std::allocator<> yet
+#include <functional>  // Android libc++ hasn't defined std::less<> yet
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
