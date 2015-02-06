@@ -638,6 +638,20 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
         namespace detail_
         {
+            typedef struct _REASON_CONTEXT {
+                ULONG Version;
+                DWORD Flags;
+                union {
+                    LPWSTR SimpleReasonString;
+                    struct {
+                        HMODULE LocalizedReasonModule;
+                        ULONG   LocalizedReasonId;
+                        ULONG   ReasonStringCount;
+                        LPWSTR  *ReasonStrings;
+                    } Detailed;
+                } Reason;
+            } REASON_CONTEXT, *PREASON_CONTEXT;
+            static REASON_CONTEXT default_reason_context={0/*POWER_REQUEST_CONTEXT_VERSION*/, 0x00000001/*POWER_REQUEST_CONTEXT_SIMPLE_STRING*/, (LPWSTR)L"generic"};
             typedef BOOL (WINAPI *setwaitabletimerex_t)(HANDLE, const LARGE_INTEGER *, LONG, PTIMERAPCROUTINE, LPVOID, PREASON_CONTEXT, ULONG);
             static inline BOOL WINAPI SetWaitableTimerEx_emulation(HANDLE hTimer, const LARGE_INTEGER *lpDueTime, LONG lPeriod, PTIMERAPCROUTINE pfnCompletionRoutine, LPVOID lpArgToCompletionRoutine, PREASON_CONTEXT WakeContext, ULONG TolerableDelay)
             {
@@ -696,13 +710,11 @@ namespace boost
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
-                    REASON_CONTEXT rc={POWER_REQUEST_CONTEXT_VERSION, POWER_REQUEST_CONTEXT_SIMPLE_STRING};
-                    rc.Reason.SimpleReasonString=(LPWSTR)L"generic";
                     ULONG tolerable=32; // Empirical testing shows Windows ignores this when <= 26
                     if(time_left.milliseconds/20>tolerable)  // 5%
                         tolerable=time_left.milliseconds/20;
                     LARGE_INTEGER due_time=get_due_time(target_time);
-                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&rc,tolerable)!=0;
+                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
                     if(set_time_succeeded)
                     {
                         timeout_index=handle_count;
@@ -782,13 +794,11 @@ namespace boost
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
-                    REASON_CONTEXT rc={POWER_REQUEST_CONTEXT_VERSION, POWER_REQUEST_CONTEXT_SIMPLE_STRING};
-                    rc.Reason.SimpleReasonString=(LPWSTR)L"generic";
                     ULONG tolerable=32; // Empirical testing shows Windows ignores this when <= 26
                     if(time_left.milliseconds/20>tolerable)  // 5%
                         tolerable=time_left.milliseconds/20;
                     LARGE_INTEGER due_time=get_due_time(target_time);
-                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&rc,tolerable)!=0;
+                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
                     if(set_time_succeeded)
                     {
                         timeout_index=handle_count;
