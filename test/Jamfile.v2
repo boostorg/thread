@@ -407,8 +407,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/futures/shared_future/wait_pass.cpp : shared_future__wait_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_for_pass.cpp : shared_future__wait_for_p ]
           [ thread-run2-noit ./sync/futures/shared_future/wait_until_pass.cpp : shared_future__wait_until_p ]
-          #[ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
-          #[ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p ]
+          [ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p ]
+          [ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p ]
     ;
 
     #explicit ts_packaged_task ;
@@ -947,8 +947,10 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          [ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p2 ]
-          [ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p2 ]
+          #[ thread-run2 ../example/future_unwrap.cpp : ex_future_unwrap2 ]
+          #[ thread-run test_10964.cpp ]        
+          #[ thread-run2-noit ./sync/futures/shared_future/then_pass.cpp : shared_future__then_p2 ]
+          #[ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p2 ]
     ;
 
 }

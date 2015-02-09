@@ -160,9 +160,21 @@ namespace boost
             virtual void block_if_needed(boost::unique_lock<boost::mutex>&)
             {}
 
-            bool valid() { return is_valid_; }
-            void invalidate() { is_valid_ = false; }
-            void validate() { is_valid_ = true; }
+            bool valid(boost::unique_lock<boost::mutex>&) { return is_valid_; }
+            bool valid() {
+              boost::unique_lock<boost::mutex> lk(this->mutex);
+              return valid(lk);
+            }
+            void invalidate(boost::unique_lock<boost::mutex>&) { is_valid_ = false; }
+            void invalidate() {
+              boost::unique_lock<boost::mutex> lk(this->mutex);
+              invalidate(lk);
+            }
+            void validate(boost::unique_lock<boost::mutex>&) { is_valid_ = true; }
+            void validate() {
+              boost::unique_lock<boost::mutex> lk(this->mutex);
+              validate(lk);
+            }
 
             void inc(boost::unique_lock<boost::mutex>&) { ++cnt_; }
             void inc() { boost::unique_lock<boost::mutex> lk(this->mutex); inc(lk); }
@@ -532,21 +544,29 @@ namespace boost
 #endif
             }
 
-            storage_type& get_storage(boost::unique_lock<boost::mutex>& lock)
+            storage_type& get_storage(boost::unique_lock<boost::mutex>& lk)
             {
-                wait_internal(lock);
+                wait_internal(lk);
                 return result;
             }
-            virtual move_dest_type get()
+            virtual move_dest_type get(boost::unique_lock<boost::mutex>& lk)
             {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
-                return boost::move(*get_storage(lock));
+                return boost::move(*get_storage(lk));
+            }
+            move_dest_type get()
+            {
+                boost::unique_lock<boost::mutex> lk(this->mutex);
+                return this->get(lk);
             }
 
-            virtual shared_future_get_result_type get_sh()
+            virtual shared_future_get_result_type get_sh(boost::unique_lock<boost::mutex>& lk)
             {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
-                return *get_storage(lock);
+                return *get_storage(lk);
+            }
+            shared_future_get_result_type get_sh()
+            {
+                boost::unique_lock<boost::mutex> lk(this->mutex);
+                return this->get_sh(lk);
             }
 
             void set_value_at_thread_exit(source_reference_type result_)
@@ -624,18 +644,26 @@ namespace boost
                 mark_finished_with_result_internal(result_, lock);
             }
 
-            virtual T& get()
+            virtual T& get(boost::unique_lock<boost::mutex>& lock)
             {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait_internal(lock);
                 return *result;
             }
-
-            virtual T& get_sh()
+            T& get()
             {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
+                boost::unique_lock<boost::mutex> lk(this->mutex);
+                return get(lk);
+            }
+
+            virtual T& get_sh(boost::unique_lock<boost::mutex>& lock)
+            {
                 wait_internal(lock);
                 return *result;
+            }
+            T& get_sh()
+            {
+                boost::unique_lock<boost::mutex> lock(this->mutex);
+                return get_sh(lock);
             }
 
             void set_value_at_thread_exit(T& result_)
@@ -674,16 +702,24 @@ namespace boost
                 mark_finished_with_result_internal(lock);
             }
 
-            virtual void get()
+            virtual void get(boost::unique_lock<boost::mutex>& lock)
             {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
                 this->wait_internal(lock);
             }
-
-            virtual void get_sh()
+            void get()
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
+                this->get(lock);
+            }
+
+            virtual void get_sh(boost::unique_lock<boost::mutex>& lock)
+            {
                 this->wait_internal(lock);
+            }
+            void get_sh()
+            {
+                boost::unique_lock<boost::mutex> lock(this->mutex);
+                this->get_sh(lock);
             }
 
             void set_value_at_thread_exit()
@@ -1455,32 +1491,44 @@ namespace boost
         // retrieving the value
         move_dest_type get()
         {
-            if (! this->valid())
+            if (this->future_ == 0)
             {
                 boost::throw_exception(future_uninitialized());
             }
             future_ptr fut_=this->future_;
+            unique_lock<boost::mutex> lk(this->future_->mutex);
+            if (! this->future_->valid(lk))
+            {
+                boost::throw_exception(future_uninitialized());
+            }
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-            this->future_->invalidate();
+            this->future_->invalidate(lk);
 #endif
-            return fut_->get();
+            return fut_->get(lk);
         }
 
         template <typename R2>
         typename boost::disable_if< is_void<R2>, move_dest_type>::type
         get_or(BOOST_THREAD_RV_REF(R2) v)
         {
-            if (! this->valid())
+
+            if (this->future_ == 0)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            this->future_->wait(false);
+            unique_lock<boost::mutex> lk(this->future_->mutex);
+            if (! this->future_->valid(lk))
+            {
+                boost::throw_exception(future_uninitialized());
+            }
+            this->future_->wait(lk, false);
             future_ptr fut_=this->future_;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-            this->future_->invalidate();
+            this->future_->invalidate(lk);
 #endif
-            if (fut_->has_value()) {
-              return fut_->get();
+
+            if (fut_->has_value(lk)) {
+              return fut_->get(lk);
             }
             else {
               return boost::move(v);
@@ -1491,17 +1539,22 @@ namespace boost
         typename boost::disable_if< is_void<R2>, move_dest_type>::type
         get_or(R2 const& v)  // EXTENSION
         {
-            if (! this->valid())
+            if (this->future_ == 0)
             {
                 boost::throw_exception(future_uninitialized());
             }
-            this->future_->wait(false);
+            unique_lock<boost::mutex> lk(this->future_->mutex);
+            if (! this->future_->valid(lk))
+            {
+                boost::throw_exception(future_uninitialized());
+            }
+            this->future_->wait(lk, false);
             future_ptr fut_=this->future_;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-            this->future_->invalidate();
+            this->future_->invalidate(lk);
 #endif
-            if (fut_->has_value()) {
-              return fut_->get();
+            if (fut_->has_value(lk)) {
+              return fut_->get(lk);
             }
             else {
               return v;
@@ -1642,43 +1695,58 @@ namespace boost
             // retrieving the value
             move_dest_type get()
             {
-                if (! this->valid())
+                if (this->future_ == 0)
                 {
                     boost::throw_exception(future_uninitialized());
                 }
                 future_ptr fut_=this->future_;
+                unique_lock<boost::mutex> lk(this->future_->mutex);
+                if (! this->future_->valid(lk))
+                {
+                    boost::throw_exception(future_uninitialized());
+                }
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-                this->future_->invalidate();
+                this->future_->invalidate(lk);
     #endif
-                return fut_->get();
+                return fut_->get(lk);
             }
             move_dest_type get_or(BOOST_THREAD_RV_REF(R) v) // EXTENSION
             {
-                if (! this->valid())
+                if (this->future_ == 0)
                 {
                     boost::throw_exception(future_uninitialized());
                 }
-                this->future_->wait(false);
+                unique_lock<boost::mutex> lk(this->future_->mutex);
+                if (! this->future_->valid(lk))
+                {
+                    boost::throw_exception(future_uninitialized());
+                }
+                this->future_->wait(lk, false);
                 future_ptr fut_=this->future_;
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-                this->future_->invalidate();
+                this->future_->invalidate(lk);
     #endif
-                if (fut_->has_value()) return fut_->get();
+                if (fut_->has_value(lk)) return fut_->get(lk);
                 else return boost::move(v);
             }
 
             move_dest_type get_or(R const& v) // EXTENSION
             {
-                if (! this->valid())
+                if (this->future_ == 0)
                 {
                     boost::throw_exception(future_uninitialized());
                 }
-                this->future_->wait(false);
+                unique_lock<boost::mutex> lk(this->future_->mutex);
+                if (! this->future_->valid(lk))
+                {
+                    boost::throw_exception(future_uninitialized());
+                }
+                this->future_->wait(lk, false);
                 future_ptr fut_=this->future_;
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
-                this->future_->invalidate();
+                this->future_->invalidate(lk);
     #endif
-                if (fut_->has_value()) return fut_->get();
+                if (fut_->has_value(lk)) return fut_->get(lk);
                 else return v;
             }
 
@@ -4438,6 +4506,7 @@ namespace detail
         h(new future_deferred_continuation_shared_state<F, Rp, Fp>(boost::move(f), boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
 
@@ -4453,6 +4522,7 @@ namespace detail
         h(new future_async_continuation_shared_state<F,Rp, Fp>(boost::move(f), boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
@@ -4471,6 +4541,7 @@ namespace detail
         h(new future_executor_continuation_shared_state<Ex, F,Rp, Fp>(ex, boost::move(f), boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
@@ -4488,6 +4559,7 @@ namespace detail
         h(new shared_future_deferred_continuation_shared_state<F, Rp, Fp>(f, boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
   ////////////////////////////////
@@ -4502,6 +4574,7 @@ namespace detail
         h(new shared_future_async_continuation_shared_state<F,Rp, Fp>(f, boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
@@ -4518,6 +4591,7 @@ namespace detail
         h(new shared_future_executor_continuation_shared_state<Ex, F, Rp, Fp>(ex, f, boost::forward<Fp>(c)));
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
@@ -4813,8 +4887,7 @@ namespace detail
     virtual void wait(boost::unique_lock<boost::mutex>& lk, bool ) { // todo see if rethrow must be used
         parent_value(lk).wait();
     }
-    virtual Rp get() {
-        boost::unique_lock<boost::mutex> lk(this->mutex);
+    virtual Rp get(boost::unique_lock<boost::mutex>& lk) {
         return parent_value(lk).get();
     }
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
