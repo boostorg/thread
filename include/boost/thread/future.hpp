@@ -216,7 +216,6 @@ namespace boost
                 external_waiters.erase(it);
             }
 
-
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
@@ -866,9 +865,6 @@ namespace boost
           {
             this->set_deferred();
           }
-          ~future_deferred_shared_state()
-          {
-          }
 
           virtual void execute(boost::unique_lock<boost::mutex>& lck) {
             try
@@ -1431,7 +1427,8 @@ namespace boost
 
         BOOST_THREAD_FUTURE(future_ptr a_future):
           base_type(a_future)
-        {}
+        {
+        }
 
     public:
         BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
@@ -1441,8 +1438,7 @@ namespace boost
         BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
         //BOOST_CONSTEXPR
         BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
-            base_type(ex) {
-        }
+            base_type(ex) {}
 
         ~BOOST_THREAD_FUTURE() {}
 
@@ -1495,7 +1491,6 @@ namespace boost
             {
                 boost::throw_exception(future_uninitialized());
             }
-            future_ptr fut_=this->future_;
             unique_lock<boost::mutex> lk(this->future_->mutex);
             if (! this->future_->valid(lk))
             {
@@ -1504,7 +1499,7 @@ namespace boost
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
             this->future_->invalidate(lk);
 #endif
-            return fut_->get(lk);
+            return this->future_->get(lk);
         }
 
         template <typename R2>
@@ -1522,13 +1517,12 @@ namespace boost
                 boost::throw_exception(future_uninitialized());
             }
             this->future_->wait(lk, false);
-            future_ptr fut_=this->future_;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
             this->future_->invalidate(lk);
 #endif
 
-            if (fut_->has_value(lk)) {
-              return fut_->get(lk);
+            if (this->future_->has_value(lk)) {
+              return this->future_->get(lk);
             }
             else {
               return boost::move(v);
@@ -1549,12 +1543,11 @@ namespace boost
                 boost::throw_exception(future_uninitialized());
             }
             this->future_->wait(lk, false);
-            future_ptr fut_=this->future_;
 #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
             this->future_->invalidate(lk);
 #endif
-            if (fut_->has_value(lk)) {
-              return fut_->get(lk);
+            if (this->future_->has_value(lk)) {
+              return this->future_->get(lk);
             }
             else {
               return v;
@@ -1646,12 +1639,10 @@ namespace boost
             typedef future_state::state state;
             typedef R value_type; // EXTENSION
 
-            BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {
-            }
+            BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
             //BOOST_CONSTEXPR
             BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
-                base_type(ex) {
-            }
+                base_type(ex) {}
 
             ~BOOST_THREAD_FUTURE() {}
 
@@ -1699,7 +1690,6 @@ namespace boost
                 {
                     boost::throw_exception(future_uninitialized());
                 }
-                future_ptr fut_=this->future_;
                 unique_lock<boost::mutex> lk(this->future_->mutex);
                 if (! this->future_->valid(lk))
                 {
@@ -1708,7 +1698,7 @@ namespace boost
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
                 this->future_->invalidate(lk);
     #endif
-                return fut_->get(lk);
+                return this->future_->get(lk);
             }
             move_dest_type get_or(BOOST_THREAD_RV_REF(R) v) // EXTENSION
             {
@@ -1722,11 +1712,10 @@ namespace boost
                     boost::throw_exception(future_uninitialized());
                 }
                 this->future_->wait(lk, false);
-                future_ptr fut_=this->future_;
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
                 this->future_->invalidate(lk);
     #endif
-                if (fut_->has_value(lk)) return fut_->get(lk);
+                if (this->future_->has_value(lk)) return this->future_->get(lk);
                 else return boost::move(v);
             }
 
@@ -1742,11 +1731,10 @@ namespace boost
                     boost::throw_exception(future_uninitialized());
                 }
                 this->future_->wait(lk, false);
-                future_ptr fut_=this->future_;
     #ifdef BOOST_THREAD_PROVIDES_FUTURE_INVALID_AFTER_GET
                 this->future_->invalidate(lk);
     #endif
-                if (fut_->has_value(lk)) return fut_->get(lk);
+                if (this->future_->has_value(lk)) return this->future_->get(lk);
                 else return v;
             }
 
@@ -1883,9 +1871,8 @@ namespace boost
             {
                 boost::throw_exception(future_uninitialized());
             }
-            future_ptr fut_=this->future_;
-            fut_->wait();
-            if (fut_->has_value()) return fut_->get_sh();
+            this->future_->wait();
+            if (this->future_->has_value()) return this->future_->get_sh();
             else return boost::move(v);
         }
 
