@@ -22,6 +22,9 @@
 #if    defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
   && ! defined BOOST_NO_CXX11_LAMBDAS && ! (defined BOOST_MSVC && _MSC_VER < 1700)
 
+#ifdef BOOST_MSVC
+#pragma warning(disable: 4127) // conditional expression is constant
+#endif
 
 int main()
 {
