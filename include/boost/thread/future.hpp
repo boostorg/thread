@@ -4047,11 +4047,6 @@ namespace detail
       }
     }
 
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
-
     ~future_async_continuation_shared_state() {
     }
   };
@@ -4080,11 +4075,6 @@ namespace detail
       } catch(...) {
         that->mark_exceptional_finish();
       }
-    }
-
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
     }
 
     ~future_async_continuation_shared_state() {}
@@ -4122,7 +4112,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that ) {
+    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
+      relocker relock(lck);
       run_it<future_executor_continuation_shared_state> fct(that);
       ex->submit(fct);
     }
@@ -4158,7 +4149,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that ) {
+    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
+      relocker relock(lck);
       run_it<future_executor_continuation_shared_state> fct(that);
       ex->submit(fct);
     }
@@ -4211,10 +4203,6 @@ namespace detail
       }
     }
 
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
     ~shared_future_async_continuation_shared_state() {}
   };
 
@@ -4244,11 +4232,6 @@ namespace detail
       }
     }
 
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
-
     ~shared_future_async_continuation_shared_state() {}
   };
 
@@ -4271,7 +4254,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
+    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
+      relocker relock(lck);
       run_it<shared_future_executor_continuation_shared_state> fct(that);
       ex->submit(fct);
     }
@@ -4306,7 +4290,8 @@ namespace detail
       continuation(boost::move(c)) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
+    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
+      relocker relock(lck);
       run_it<shared_future_executor_continuation_shared_state> fct(that);
       ex->submit(fct);
     }
@@ -4900,8 +4885,7 @@ namespace detail
 
   template <typename R>
   inline BOOST_THREAD_FUTURE<R>::BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R> >) other)
-  : base_type(other.unwrap()) {
-  }
+  : base_type(other.unwrap()) {}
 
   template <typename R2>
   BOOST_THREAD_FUTURE<R2>
@@ -4988,11 +4972,6 @@ namespace detail
     }
 #endif
 
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
-
     ~future_when_all_vector_shared_state() {}
   };
 
@@ -5063,11 +5042,6 @@ namespace detail
       }; //second part of magic unpacker
     }
 #endif
-
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
 
     ~future_when_any_vector_shared_state() {}
   };
@@ -5150,10 +5124,6 @@ namespace detail
       tup_(boost::csbl::make_tuple(boost::forward<F>(f), boost::forward<Fs>(futures)...))
     {
     }
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
-    }
 
     ~future_when_all_tuple_shared_state() {}
 
@@ -5222,11 +5192,6 @@ namespace detail
     ) :
       tup_(boost::csbl::make_tuple(boost::forward<F>(f), boost::forward<Fs>(futures)...))
     {
-    }
-
-    virtual void block_if_needed(boost::unique_lock<boost::mutex>&lk)
-    {
-      this->wait(lk, false);
     }
 
     ~future_when_any_tuple_shared_state() {}
