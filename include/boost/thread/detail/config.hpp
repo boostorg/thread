@@ -63,9 +63,18 @@
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #endif
 
+#ifdef WIN32
+#if defined(_WIN32_WINNT)
+#if _WIN32_WINNT < 0x501
+#error Boost.Thread requires that _WIN32_WINNT must be 0x501 or greater (Microsoft Windows XP API or better)
+#else
+#define _WIN32_WINNT 0x501
+#endif
+#endif
 #if defined _WIN32_WCE && _WIN32_WCE==0x501 \
   && ! defined BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
 #define BOOST_THREAD_DONT_PROVIDE_FUTURE_CTOR_ALLOCATORS
+#endif
 #endif
 
 
