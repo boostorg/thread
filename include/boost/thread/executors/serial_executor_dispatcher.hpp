@@ -110,10 +110,11 @@ namespace executors
 		  bool bHaveDoneSomeWork = !registered_dispatchables.empty();
 		  for (auto& rEntry : registered_dispatchables)
 		  {
+			  bHaveDoneSomeWork = false;
 			  const auto& rFut = rEntry.second;
 			  if (!rFut.valid() || rFut.is_ready())
 			  {
-				  bHaveDoneSomeWork &= try_executing_one(rEntry);
+				  bHaveDoneSomeWork |= try_executing_one(rEntry);
 			  }
 		  }
 		  return bHaveDoneSomeWork;
@@ -135,7 +136,7 @@ namespace executors
 		  }
 		  catch (std::exception& ex)
 		  {
-			  std::cout << ex.what() << std::endl;
+			  //std::cout << ex.what() << std::endl;
 			  return true; // return true to keep continuing checking the other register serializer
 		  }
 		  catch (...)
@@ -163,12 +164,13 @@ namespace executors
     {
 		while (!closed())
 		{
-			//add other proxys here as local functors
+			//1. process own register/unregister tasks
 			std::shared_ptr<boost::packaged_task<bool>> spTask;
 			while (work_queue.try_pull_front(spTask) == boost::queue_op_status::success)
 			{
 				(*spTask)();
 			}
+			//2. do dispatcher work
 			schedule_or_yield();
 		}
 
