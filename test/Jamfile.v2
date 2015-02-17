@@ -947,6 +947,7 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+          [ thread-run2 ../example/serial_executor.cpp : ex_serial_executor ]
     ;
 
 }
