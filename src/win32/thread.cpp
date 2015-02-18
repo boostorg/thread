@@ -529,7 +529,7 @@ namespace boost
 
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
-#if BOOST_PLAT_WINDOWS_RUNTIME
+#if BOOST_PLAT_WINDOWS_RUNTIME || (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
         return hardware_concurrency();
 #else
         unsigned cores = 0;
