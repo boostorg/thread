@@ -18,7 +18,7 @@
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 #include <atomic>
-//#include <boost/config/abi_prefix.hpp>
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -115,5 +115,7 @@ namespace boost
 	}
 	using executors::cyclic_executor_dispatchable;
 }
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif

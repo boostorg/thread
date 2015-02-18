@@ -18,7 +18,7 @@
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 
-//#include <boost/config/abi_prefix.hpp>
+#include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
@@ -154,6 +154,6 @@ namespace executors
 using executors::serial_executor_dispatchable;
 }
 
-//#include <boost/config/abi_suffix.hpp>
+#include <boost/config/abi_suffix.hpp>
 
 #endif
