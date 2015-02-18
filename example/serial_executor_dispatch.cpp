@@ -22,7 +22,7 @@
 #include <boost/thread/executors/serial_executor_dispatcher.hpp>
 #include <boost/thread/executors/serial_executor_dispatchable.hpp>
 #include <boost/thread/executors/cyclic_executor_dispatchable.hpp>
-#include <boost/thread/executors/inline_executor.hpp>
+#include <boost/thread/executors/serial_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
@@ -32,6 +32,79 @@
 #include <string>
 #include <iostream>
 
+int test_weak_ptr_bind_shared_from_this()
+{
+	// std 
+	{
+		#define STLORBOOST std
+		class loop_executor_derived : public boost::executors::loop_executor, public STLORBOOST::enable_shared_from_this<loop_executor_derived>	{
+		};
+		STLORBOOST::shared_ptr<loop_executor_derived> sp = STLORBOOST::make_shared<loop_executor_derived>();
+		auto func = boost::bind<void>([](STLORBOOST::weak_ptr<loop_executor_derived> wpInt) -> void {; }, sp);
+		func();		
+		#undef STLORBOOST
+	}
+
+	// boost 
+	{
+		#define STLORBOOST boost
+		class loop_executor_derived : public boost::executors::loop_executor, public STLORBOOST::enable_shared_from_this<loop_executor_derived>	{
+		};
+		STLORBOOST::shared_ptr<loop_executor_derived> sp = STLORBOOST::make_shared<loop_executor_derived>();
+		auto func = boost::bind<void>([](STLORBOOST::weak_ptr<loop_executor_derived> wpInt) -> void {; }, sp);
+		func();
+		#undef STLORBOOST
+	}
+	return 0;
+}
+
+int test_serial_ex()
+{
+	boost::executors::basic_thread_pool t_pool;
+
+
+	std::list<std::shared_ptr<boost::executors::serial_executor>> lst_serial_executor;
+	const size_t num_dispatchables = 50;
+	for (size_t i = 0; i < num_dispatchables; ++i)
+	{
+		auto sp_ex = std::make_shared<boost::executors::serial_executor>(t_pool);
+		lst_serial_executor.push_back(sp_ex);
+	}
+
+	std::atomic<size_t> callcount = 0;
+	static std::mutex mtx;
+	auto work = std::bind([&](boost::chrono::milliseconds duration, size_t index_ex, size_t index_work) -> void {
+		std::lock_guard<decltype(mtx)> lock(mtx);
+
+		lst_serial_executor.front()->submit(boost::bind<void>([](size_t index_ex, size_t index_work, size_t callcount)
+		{
+			std::cout << "call" << callcount << " in work from " << index_ex << "," << index_work << std::endl;
+		}, index_ex, index_work, callcount++)); // submit to the first serializer to have threadsafe output...
+
+		boost::chrono::high_resolution_clock::time_point end = boost::chrono::high_resolution_clock::now() + duration;
+		while (end > boost::chrono::high_resolution_clock::now());
+	}, boost::chrono::milliseconds(1), std::placeholders::_1, std::placeholders::_2);
+
+	std::atomic<size_t> count = 0;
+	for (const auto& rSpSerialEx : lst_serial_executor)
+	{
+		++count;
+		const size_t num_tasks = 10;
+		for (size_t i = 0; i < num_tasks; ++i)
+		{
+			boost::function<void(void)> func = boost::bind<void>(work, (int)count, i);
+			auto bound = boost::bind<void>([](std::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(std::move(func_)); }, rSpSerialEx, func);
+			boost::async(bound); // make this a bit concurrently			
+		}		
+	}
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+
+	std::cout << callcount << std::endl;
+
+	return 0;
+
+}
 
 int test_dispatcher()
 {
@@ -122,5 +195,6 @@ int test_cyclic()
 
 int main()
 {
-	return test_dispatcher() & test_cyclic();
+	//test_weak_ptr_bind_shared_from_this();
+	return test_serial_ex() & test_dispatcher() & test_cyclic();
 }

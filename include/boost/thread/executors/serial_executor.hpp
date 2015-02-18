@@ -17,14 +17,14 @@
 #include <boost/thread/executors/generic_executor_ref.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
-
+#include <mutex>
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
 namespace executors
 {
-  class serial_executor
+class serial_executor : public std::enable_shared_from_this<serial_executor>
   {
   public:
     /// type-erasure to store the works to do
@@ -33,25 +33,10 @@ namespace executors
     typedef  scoped_thread<> thread_t;
 
     /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
+	concurrent::sync_queue<boost::function<void()> > work_queue;
     generic_executor_ref ex;
-    thread_t thr;
-
-    struct try_executing_one_task {
-      work& task;
-      boost::promise<void> &p;
-      try_executing_one_task(work& task, boost::promise<void> &p)
-      : task(task), p(p) {}
-      void operator()() {
-        try {
-          task();
-          p.set_value();
-        } catch (...)
-        {
-          p.set_exception(current_exception());
-        }
-      }
-    };
+	std::mutex mtx;
+	boost::BOOST_THREAD_FUTURE<void> fut;
   public:
     /**
      * \par Returns
@@ -59,58 +44,43 @@ namespace executors
      */
     generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex; }
 
-    /**
-     * Effects: try to execute one task.
-     * Returns: whether a task has been executed.
-     * Throws: whatever the current task constructor throws or the task() throws.
-     */
-    bool try_executing_one()
-    {
-      work task;
-      try
-      {
-        if (work_queue.try_pull(task) == queue_op_status::success)
-        {
-          boost::promise<void> p;
-          try_executing_one_task tmp(task,p);
-          ex.submit(tmp);
-          p.get_future().wait();
-          return true;
-        }
-        return false;
-      }
-      catch (...)
-      {
-        std::terminate();
-        return false;
-      }
-    }
   private:
-    /**
-     * Effects: schedule one task or yields
-     * Throws: whatever the current task constructor throws or the task() throws.
-     */
-    void schedule_one_or_yield()
-    {
-        if ( ! try_executing_one())
-        {
-          this_thread::yield();
-        }
-    }
 
-    /**
-     * The main loop of the worker thread
-     */
-    void worker_thread()
-    {
-      while (!closed())
-      {
-        schedule_one_or_yield();
-      }
-      while (try_executing_one())
-      {
-      }
-    }
+	 
+	  /**
+	  * Effects: try to execute one task.
+	  * Returns: whether a task has been executed.
+	  * Throws: whatever the current task constructor throws or the task() throws.
+	  */
+	  bool try_executing_one()
+	  {
+		  std::lock_guard<decltype(mtx)> lockguard(mtx);
+		  try
+		  {
+			  boost::function<void()> task;
+			  if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
+			  {
+				  auto task_with_cont = boost::bind<void>([](std::weak_ptr<serial_executor> _spEx, boost::function<void()> w) -> void
+				  {
+					  w();
+					  if (auto spEx = _spEx.lock())
+					  {
+						  spEx->try_executing_one();
+					  }
+				  }, this->shared_from_this(), boost::move(task));
+				  boost::packaged_task<void()> ptask(boost::move(task_with_cont));
+				  fut = ptask.get_future();
+				  ex.submit(boost::move(ptask));
+				  return true;
+			  }
+			  return false;
+		  }
+		  catch (...)
+		  {
+			  std::terminate();
+			  return false;
+		  }
+	  }
 
   public:
     /// serial_executor is not copyable.
@@ -123,7 +93,7 @@ namespace executors
      */
     template <class Executor>
     serial_executor(Executor& ex)
-    : ex(ex), thr(&serial_executor::worker_thread, this)
+		: ex(ex), fut(make_ready_future())
     {
     }
     /**
@@ -171,17 +141,20 @@ namespace executors
     void submit(Closure & closure)
     {
       work_queue.push(work(closure));
+	  try_executing_one();
     }
 #endif
     void submit(void (*closure)())
     {
       work_queue.push(work(closure));
+	  try_executing_one();
     }
 
     template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    void submit(Closure closure)
     {
-      work_queue.push(work(boost::forward<Closure>(closure)));
+      work_queue.push(closure);
+	  try_executing_one();
     }
 
     /**
