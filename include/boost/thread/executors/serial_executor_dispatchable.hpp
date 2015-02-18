@@ -53,9 +53,9 @@ namespace executors
 		work task;
 		try
 		{
-			if (work_queue.try_pull_front(task) == queue_op_status::success)
+			if (work_queue.try_pull(task) == queue_op_status::success)
 			{
-				boost::packaged_task<void> tmp(task);
+				boost::packaged_task<void()> tmp(task);
 				future = tmp.get_future();
 				ex.submit(std::move(tmp));
 				return true;
@@ -109,6 +109,8 @@ namespace executors
       work_queue.close();
     }
 
+
+
     /**
      * \b Returns: whether the pool is closed for submissions.
      */
@@ -138,13 +140,13 @@ namespace executors
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push_back(work(closure));
+      work_queue.push(work(closure));
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push_back(work(boost::forward<Closure>(closure)));
+      work_queue.push(work(boost::forward<Closure>(closure)));
     }
 
   };

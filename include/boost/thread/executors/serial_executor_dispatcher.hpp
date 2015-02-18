@@ -33,15 +33,14 @@ namespace executors
 
   private:
 
-	  typedef  scoped_thread<> thread_t;
-	  thread_t thr;
-
     /// the registered serial_executor_dispatchable
 	  typedef std::pair<std::shared_ptr<serial_executor_dispatchable>, boost::BOOST_THREAD_FUTURE<void>> dispatchable_with_future;
 	  typedef std::list<dispatchable_with_future> registered_dispatchable_lst;
 	  registered_dispatchable_lst registered_dispatchables;
 	  std::atomic<bool> _closed;
-	  boost::sync_queue< std::shared_ptr<boost::packaged_task<bool> > > work_queue;
+	  boost::sync_queue< std::shared_ptr<boost::packaged_task<bool()> > > work_queue;
+	  typedef  scoped_thread<> thread_t;
+	  thread_t thr;
 
   public:
 
@@ -66,7 +65,7 @@ namespace executors
 		  };
 
 		  boost::function<bool(void)> boundedTaskFunc = boost::bind<bool>(taskFunc, spProxy);
-		  std::shared_ptr<boost::packaged_task<bool>> task = std::make_shared<boost::packaged_task<bool>>(boundedTaskFunc);
+		  std::shared_ptr<boost::packaged_task<bool()>> task = std::make_shared<boost::packaged_task<bool()>>(boundedTaskFunc);
 
 		  boost::BOOST_THREAD_FUTURE<bool> fut = task->get_future();
 		  work_queue.push(std::move(task));
@@ -91,7 +90,7 @@ namespace executors
 
 
 		  boost::function<bool(void)> boundedTaskFunc = boost::bind<bool>(taskFunc, spProxy);
-		  std::shared_ptr<boost::packaged_task<bool>> task = std::make_shared<boost::packaged_task<bool>>(boundedTaskFunc);
+		  std::shared_ptr<boost::packaged_task<bool()>> task = std::make_shared<boost::packaged_task<bool()>>(boundedTaskFunc);
 
 		  boost::BOOST_THREAD_FUTURE<bool> fut = task->get_future();
 		  work_queue.push(std::move(task));
@@ -134,7 +133,7 @@ namespace executors
 			  }
 			  return false;
 		  }
-		  catch (std::exception& ex)
+		  catch (std::exception& )
 		  {
 			  //std::cout << ex.what() << std::endl;
 			  return true; // return true to keep continuing checking the other register serializer
@@ -165,8 +164,8 @@ namespace executors
 		while (!closed())
 		{
 			//1. process own register/unregister tasks
-			std::shared_ptr<boost::packaged_task<bool>> spTask;
-			while (work_queue.try_pull_front(spTask) == boost::queue_op_status::success)
+			std::shared_ptr<boost::packaged_task<bool()>> spTask;
+			while (work_queue.try_pull(spTask) == boost::queue_op_status::success)
 			{
 				(*spTask)();
 			}
@@ -202,7 +201,6 @@ namespace executors
     {
       // signal to all the worker thread that there will be no more submissions.
       close();
-	  join();
     }
 
     /**
