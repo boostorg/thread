@@ -6,8 +6,8 @@
 // 2015/02 Frank Schmitt
 //    first implementation of a simple serial scheduler.
 
-#ifndef BOOST_THREAD_serial_executor_dispatcher_DISPATCHER_HPP
-#define BOOST_THREAD_serial_executor_dispatcher_DISPATCHER_HPP
+#ifndef BOOST_THREAD_SERIAL_EXECUTOR_DISPATCHER_HPP
+#define BOOST_THREAD_SERIAL_EXECUTOR_DISPATCHER_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
@@ -34,9 +34,11 @@ namespace executors
   private:
 
     /// the registered serial_executor_dispatchable
-	  typedef std::pair<std::shared_ptr<serial_executor_dispatchable>, boost::BOOST_THREAD_FUTURE<void>> dispatchable_with_future;
-	  typedef std::list<dispatchable_with_future> registered_dispatchable_lst;
-	  registered_dispatchable_lst registered_dispatchables;
+	  typedef std::function<int(boost::BOOST_THREAD_FUTURE<void>& rFuture)> func_try_submit_one;
+	  typedef std::pair<func_try_submit_one, boost::BOOST_THREAD_FUTURE<void>>  func_try_submit_one_with_fut;
+	  typedef std::list<func_try_submit_one_with_fut> lst_registered_dispatchable;
+	  lst_registered_dispatchable registered_dispatchable;
+
 	  std::atomic<bool> _closed;
 	  boost::sync_queue< std::shared_ptr<boost::packaged_task<bool()> > > work_queue;
 	  typedef  scoped_thread<> thread_t;
@@ -44,105 +46,67 @@ namespace executors
 
   public:
 
-	  boost::BOOST_THREAD_FUTURE<bool> add_serial_pool_executor(std::shared_ptr<serial_executor_dispatchable> spProxy)
+	  template <class T>
+	  boost::BOOST_THREAD_FUTURE<bool> add_dispatchable_executor(std::shared_ptr<T> spExecutor) //overload with weak_ptr
 	  {
-		  boost::function<bool(std::shared_ptr<serial_executor_dispatchable>)> taskFunc = [&](std::shared_ptr<serial_executor_dispatchable> _spProxy) -> bool
+		  auto funcTrySubmitOne = [](std::weak_ptr<T> wpEx, boost::BOOST_THREAD_FUTURE<void>& rFuture) -> int
 		  {
-			  if (!closed())
+			  if (auto spEx = wpEx.lock())
 			  {
-				  auto it = std::find_if(registered_dispatchables.begin(), registered_dispatchables.end(), [&](registered_dispatchable_lst::value_type& rVal) -> bool
-				  {
-					  return _spProxy.get() == rVal.first.get();
-				  });
-				  bool bNotFound = registered_dispatchables.end() == it;
-				  if (bNotFound)
-				  {
-					  registered_dispatchables.push_back(std::make_pair(std::move(_spProxy), dispatchable_with_future::second_type()));
-				  }
-				  return bNotFound;
+				  return spEx->try_executing_one(rFuture); // 0 nothing to do // 1 have done something
 			  }
-			  return false;
+			  else
+			  {
+				  return -1; // pointer deleted
+			  }
 		  };
 
-		  boost::function<bool(void)> boundedTaskFunc = boost::bind<bool>(taskFunc, spProxy);
-		  std::shared_ptr<boost::packaged_task<bool()>> task = std::make_shared<boost::packaged_task<bool()>>(boundedTaskFunc);
+		  std::function<int(boost::BOOST_THREAD_FUTURE<void>& rFuture)> boundFuncTrySubmitOne = std::bind(funcTrySubmitOne, spExecutor, std::placeholders::_1);
 
-		  boost::BOOST_THREAD_FUTURE<bool> fut = task->get_future();
-		  work_queue.push(std::move(task));
-		  return std::move(fut);
-	  }
-
-	  boost::BOOST_THREAD_FUTURE<bool> remove_serial_pool_executor(std::shared_ptr<serial_executor_dispatchable> spProxy)
-	  {
-		  boost::function<bool(std::shared_ptr<serial_executor_dispatchable>)> taskFunc = [&](std::shared_ptr<serial_executor_dispatchable> _spProxy) -> bool
+		  auto taskFunc = [&](func_try_submit_one _f) -> bool
 		  {
-			  auto it = std::find_if(registered_dispatchables.begin(), registered_dispatchables.end(), [&](registered_dispatchable_lst::value_type& rVal) -> bool
+			  if (!_closed)
 			  {
-				  return _spProxy.get() == rVal.first.get();
-			  });
-			  bool bSuccess = registered_dispatchables.end() != it;
-			  if (bSuccess)
-			  {
-				  registered_dispatchables.erase(it);
-			  }
-			  return bSuccess;
-		  };
-
-
-		  boost::function<bool(void)> boundedTaskFunc = boost::bind<bool>(taskFunc, spProxy);
-		  std::shared_ptr<boost::packaged_task<bool()>> task = std::make_shared<boost::packaged_task<bool()>>(boundedTaskFunc);
-
-		  boost::BOOST_THREAD_FUTURE<bool> fut = task->get_future();
-		  work_queue.push(std::move(task));
-		  return std::move(fut);
-	  }
-
-	  void join()
-	  {
-		  thr.join();
-	  }
-
-
-
-	  bool try_executing()
-	  {
-		  bool bHaveDoneSomeWork = !registered_dispatchables.empty();
-		  for (auto& rEntry : registered_dispatchables)
-		  {
-			  bHaveDoneSomeWork = false;
-			  const auto& rFut = rEntry.second;
-			  if (!rFut.valid() || rFut.is_ready())
-			  {
-				  bHaveDoneSomeWork |= try_executing_one(rEntry);
-			  }
-		  }
-		  return bHaveDoneSomeWork;
-	  }
-
-  private:
-
-	  bool try_executing_one(dispatchable_with_future& rTaskContainer)
-	  {
-		  try
-		  {
-			  boost::BOOST_THREAD_FUTURE<void> fut;
-			  if (rTaskContainer.first->try_executing_one(fut))
-			  {
-				  rTaskContainer.second = std::move(fut);
+				  registered_dispatchable.push_back(func_try_submit_one_with_fut(std::move(_f), func_try_submit_one_with_fut::second_type()));
 				  return true;
 			  }
 			  return false;
-		  }
-		  catch (std::exception& )
-		  {
-			  //std::cout << ex.what() << std::endl;
-			  return true; // return true to keep continuing checking the other register serializer
-		  }
-		  catch (...)
-		  {
-			  return true; // return true to keep continuing checking the other register serializer
-		  }
+		  };
+
+		  boost::function<bool(void)> boundedTaskFunc = boost::bind<bool>(taskFunc, std::move(boundFuncTrySubmitOne));
+		  std::shared_ptr<boost::packaged_task<bool()>> task = std::make_shared<boost::packaged_task<bool()>>(std::move(boundedTaskFunc));
+		  boost::BOOST_THREAD_FUTURE<bool> fut = task->get_future();
+		  work_queue.push(std::move(task));
+		  return fut;
 	  }
+
+	bool try_executing()
+	{
+		bool bNothingTodo = registered_dispatchable.empty();
+
+		for (auto& rEntry : registered_dispatchable)
+		{
+			auto& rFut = rEntry.second;
+
+			if (!rFut.has_value() || rFut.is_ready())
+			{
+				int iRes = rEntry.first(rFut);
+				if (-1 == iRes)
+				{
+					//todo deregister automatically
+				}
+				else
+				{
+					bNothingTodo |= !(iRes);
+				}
+			}
+		}
+
+		return !bNothingTodo;
+	}
+
+  private:
+
 
     /**
      * Effects: schedule one task or yields

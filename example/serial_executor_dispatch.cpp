@@ -43,7 +43,7 @@ int test_executer()
 	{
 		auto sp_ex = std::make_shared<boost::executors::serial_executor_dispatchable>(t_pool);
 		lst_serial_executor.push_back(sp_ex);
-		sp_dispatcher->add_serial_pool_executor(sp_ex);
+		sp_dispatcher->add_dispatchable_executor(sp_ex);
 	}
 
 	std::atomic<size_t> callcount = 0;
@@ -70,7 +70,6 @@ int test_executer()
 
 	std::cout << callcount << std::endl;
 
-  // std::cout << BOOST_CONTEXTOF << std::endl;
   return 0;
 }
 
