@@ -21,6 +21,7 @@
 #include <boost/thread/executors/loop_executor.hpp>
 #include <boost/thread/executors/serial_executor_dispatcher.hpp>
 #include <boost/thread/executors/serial_executor_dispatchable.hpp>
+#include <boost/thread/executors/cyclic_executor_dispatchable.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
@@ -32,7 +33,7 @@
 #include <iostream>
 
 
-int test_executer()
+int test_dispatcher()
 {
 	boost::executors::basic_thread_pool t_pool;
 	auto sp_dispatcher = std::make_shared<boost::executors::serial_executor_dispatcher>();
@@ -73,8 +74,53 @@ int test_executer()
   return 0;
 }
 
+int test_cyclic()
+{
+	boost::executors::basic_thread_pool pool;
+	auto sp_dispatcher = std::make_shared<boost::executors::serial_executor_dispatcher>();
+
+	double avg = 0.0;
+	size_t callcount = 0;
+	boost::chrono::high_resolution_clock::time_point last_time;
+	auto cylicwork = [&]()
+	{
+		auto cur_time = boost::chrono::high_resolution_clock::now();
+
+		if (last_time.time_since_epoch().count() == 0)
+		{
+			std::cout << "measuring begins..." << std::endl;
+		}
+		else
+		{		
+			double dur = boost::chrono::duration_cast<boost::chrono::microseconds>(cur_time - last_time).count() / 1000.0;
+			std::cout << "time in between was " << dur << std::endl;
+			avg += dur;
+		}
+		last_time = cur_time;
+		++callcount;
+	};
+
+	std::vector<std::function<void(void)>> lstWork;
+	lstWork.push_back(cylicwork);
+
+	auto spProxy = std::make_shared < boost::executors::cyclic_executor_dispatchable >(pool, lstWork);
+	spProxy->set_min_duration_between_calls_in_ms(boost::chrono::milliseconds(20));
+	sp_dispatcher->add_dispatchable_executor(spProxy);
+
+	
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(2000));
+
+	spProxy.reset();
+	sp_dispatcher.reset();
+
+	boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+
+	std::cout << "callcount= " << callcount << ". avg time in between was " << avg / callcount << std::endl;
+
+	return 0;
+}
 
 int main()
 {
-	return test_executer();
+	return test_dispatcher() & test_cyclic();
 }
