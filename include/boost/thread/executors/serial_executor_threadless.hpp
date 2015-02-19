@@ -1,10 +1,10 @@
-// Copyright (C) 2013 Vicente J. Botet Escriba
+// Copyright (C) 2015 Frank Schmitt
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
-// 2013/11 Vicente J. Botet Escriba
-//    first implementation of a simple serial scheduler.
+// 2015/02 Frank Schmitt
+//    first implementation of a serial executor
 
 #ifndef BOOST_THREAD_SERIAL_EXECUTOR_HPP
 #define BOOST_THREAD_SERIAL_EXECUTOR_HPP

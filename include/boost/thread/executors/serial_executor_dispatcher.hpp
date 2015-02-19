@@ -4,7 +4,7 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
 // 2015/02 Frank Schmitt
-//    first implementation of a simple serial scheduler.
+//    first implementation of a simple dispatcher.
 
 #ifndef BOOST_THREAD_SERIAL_EXECUTOR_DISPATCHER_HPP
 #define BOOST_THREAD_SERIAL_EXECUTOR_DISPATCHER_HPP
