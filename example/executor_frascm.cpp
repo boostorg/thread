@@ -22,7 +22,7 @@
 #include <boost/thread/executors/serial_executor_dispatcher.hpp>
 #include <boost/thread/executors/serial_executor_dispatchable.hpp>
 #include <boost/thread/executors/cyclic_executor_dispatchable.hpp>
-#include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/serial_executor_threadless.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
