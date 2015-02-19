@@ -17,14 +17,13 @@
 #include <boost/thread/executors/generic_executor_ref.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
-#include <mutex>
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
 namespace executors
 {
-class serial_executor : public std::enable_shared_from_this<serial_executor>
+class serial_executor : public boost::enable_shared_from_this<serial_executor>
   {
   public:
     /// type-erasure to store the works to do
@@ -35,7 +34,7 @@ class serial_executor : public std::enable_shared_from_this<serial_executor>
     /// the thread safe work queue
 	concurrent::sync_queue<boost::function<void()> > work_queue;
     generic_executor_ref ex;
-	std::mutex mtx;
+	boost::mutex mtx;
 	boost::BOOST_THREAD_FUTURE<void> fut;
   public:
     /**
@@ -54,13 +53,13 @@ class serial_executor : public std::enable_shared_from_this<serial_executor>
 	  */
 	  bool try_executing_one()
 	  {
-		  std::lock_guard<decltype(mtx)> lockguard(mtx);
+		  boost::lock_guard<decltype(mtx)> lockguard(mtx);
 		  try
 		  {
 			  boost::function<void()> task;
 			  if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
 			  {
-				  auto task_with_cont = boost::bind<void>([](std::weak_ptr<serial_executor> _spEx, boost::function<void()> w) -> void
+				  auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor> _spEx, boost::function<void()> w) -> void
 				  {
 					  w();
 					  if (auto spEx = _spEx.lock())

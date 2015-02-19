@@ -31,43 +31,18 @@
 #include <boost/assert.hpp>
 #include <string>
 #include <iostream>
-
-int test_weak_ptr_bind_shared_from_this()
-{
-	// std 
-	{
-		#define STLORBOOST std
-		class loop_executor_derived : public boost::executors::loop_executor, public STLORBOOST::enable_shared_from_this<loop_executor_derived>	{
-		};
-		STLORBOOST::shared_ptr<loop_executor_derived> sp = STLORBOOST::make_shared<loop_executor_derived>();
-		auto func = boost::bind<void>([](STLORBOOST::weak_ptr<loop_executor_derived> wpInt) -> void {; }, sp);
-		func();		
-		#undef STLORBOOST
-	}
-
-	// boost 
-	{
-		#define STLORBOOST boost
-		class loop_executor_derived : public boost::executors::loop_executor, public STLORBOOST::enable_shared_from_this<loop_executor_derived>	{
-		};
-		STLORBOOST::shared_ptr<loop_executor_derived> sp = STLORBOOST::make_shared<loop_executor_derived>();
-		auto func = boost::bind<void>([](STLORBOOST::weak_ptr<loop_executor_derived> wpInt) -> void {; }, sp);
-		func();
-		#undef STLORBOOST
-	}
-	return 0;
-}
+#include <mutex>
 
 int test_serial_ex()
 {
 	boost::executors::basic_thread_pool t_pool;
 
 
-	std::list<std::shared_ptr<boost::executors::serial_executor>> lst_serial_executor;
+	std::list<boost::shared_ptr<boost::executors::serial_executor>> lst_serial_executor;
 	const size_t num_dispatchables = 50;
 	for (size_t i = 0; i < num_dispatchables; ++i)
 	{
-		auto sp_ex = std::make_shared<boost::executors::serial_executor>(t_pool);
+		auto sp_ex = boost::make_shared<boost::executors::serial_executor>(t_pool);
 		lst_serial_executor.push_back(sp_ex);
 	}
 
@@ -93,7 +68,7 @@ int test_serial_ex()
 		for (size_t i = 0; i < num_tasks; ++i)
 		{
 			boost::function<void(void)> func = boost::bind<void>(work, (int)count, i);
-			auto bound = boost::bind<void>([](std::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(std::move(func_)); }, rSpSerialEx, func);
+			auto bound = boost::bind<void>([](boost::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(std::move(func_)); }, rSpSerialEx, func);
 			boost::async(bound); // make this a bit concurrently			
 		}		
 	}
@@ -195,6 +170,5 @@ int test_cyclic()
 
 int main()
 {
-	//test_weak_ptr_bind_shared_from_this();
 	return test_serial_ex() & test_dispatcher() & test_cyclic();
 }
