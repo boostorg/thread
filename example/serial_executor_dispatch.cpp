@@ -68,7 +68,7 @@ int test_serial_ex()
 		for (size_t i = 0; i < num_tasks; ++i)
 		{
 			boost::function<void(void)> func = boost::bind<void>(work, (int)count, i);
-			auto bound = boost::bind<void>([](boost::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(std::move(func_)); }, rSpSerialEx, func);
+			auto bound = boost::bind<void>([](boost::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(boost::move(func_)); }, rSpSerialEx, func);
 			boost::async(bound); // make this a bit concurrently			
 		}		
 	}

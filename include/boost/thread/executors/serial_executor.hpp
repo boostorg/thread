@@ -19,6 +19,8 @@
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/config/abi_prefix.hpp>
 
+//#define old_impl
+
 namespace boost
 {
 namespace executors
@@ -28,11 +30,15 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
   public:
     /// type-erasure to store the works to do
     typedef  executors::work work;
+
   private:
     typedef  scoped_thread<> thread_t;
-
     /// the thread safe work queue
+#ifdef old_impl
+	concurrent::sync_queue<work> work_queue;
+#else
 	concurrent::sync_queue<boost::function<void()> > work_queue;
+#endif
     generic_executor_ref ex;
 	boost::mutex mtx;
 	boost::BOOST_THREAD_FUTURE<void> fut;
@@ -56,7 +62,11 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
 		  boost::lock_guard<decltype(mtx)> lockguard(mtx);
 		  try
 		  {
+#ifdef old_impl
+			  work task;
+#else
 			  boost::function<void()> task;
+#endif
 			  if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
 			  {
 				  auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor> _spEx, boost::function<void()> w) -> void
@@ -148,13 +158,21 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
       work_queue.push(work(closure));
 	  try_executing_one();
     }
-
+#ifdef old_impl
     template <typename Closure>
-    void submit(Closure closure)
+    void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push(closure);
+      work_queue.push(work(boost::forward<Closure>(closure)));
 	  try_executing_one();
     }
+#else
+	template <typename Closure>
+	void submit(Closure closure)
+	{
+		work_queue.push(closure);
+		try_executing_one();
+	}
+#endif
 
     /**
      * \b Requires: This must be called from an scheduled task.
