@@ -49,48 +49,51 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
      */
     generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex; }
 
-  private:
 
-	 
-	  /**
-	  * Effects: try to execute one task.
-	  * Returns: whether a task has been executed.
-	  * Throws: whatever the current task constructor throws or the task() throws.
-	  */
-	  bool try_executing_one()
-	  {
-		  boost::lock_guard<decltype(mtx)> lockguard(mtx);
-		  try
-		  {
+		/**
+		* Effects: try to execute one task.
+		* Returns: whether a task has been executed.
+		* Throws: whatever the current task constructor throws or the task() throws.
+		*/
+		bool try_executing_one()
+	{
+		boost::lock_guard<decltype(mtx)> lockguard(mtx);
+		try
+		{
 #ifdef old_impl
-			  work task;
+			work task;
 #else
-			  boost::function<void()> task;
+			boost::function<void()> task;
 #endif
-			  if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
-			  {
-				  auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor> _spEx, boost::function<void()> w) -> void
-				  {
-					  w();
-					  if (auto spEx = _spEx.lock())
-					  {
-						  spEx->try_executing_one();
-					  }
-				  }, this->shared_from_this(), boost::move(task));
-				  boost::packaged_task<void()> ptask(boost::move(task_with_cont));
-				  fut = ptask.get_future();
-				  ex.submit(boost::move(ptask));
-				  return true;
-			  }
-			  return false;
-		  }
-		  catch (...)
-		  {
-			  std::terminate();
-			  return false;
-		  }
-	  }
 
+			
+			if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
+			{
+				
+				boost::shared_ptr<boost::promise<void>> spProm = boost::make_shared<boost::promise<void>>();
+				fut = spProm->get_future();
+				auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor> _spEx, boost::shared_ptr<boost::promise<void>> spProm, boost::function<void()> w) -> void
+				{
+					w();
+					if (auto spEx = _spEx.lock())
+					{
+						spEx->try_executing_one();
+					}
+					spProm->set_value();
+				}, this->shared_from_this(), boost::move(spProm), boost::move(task));
+				
+				ex.submit(boost::move(task_with_cont));
+				return true;
+			}
+			return false;
+		}
+		catch (...)
+		{
+			std::terminate();
+			return false;
+		}
+	}
+	 
   public:
     /// serial_executor is not copyable.
     BOOST_THREAD_NO_COPYABLE(serial_executor)
