@@ -37,7 +37,6 @@ int test_serial_ex()
 {
 	boost::executors::basic_thread_pool t_pool;
 
-
 	std::list<boost::shared_ptr<boost::executors::serial_executor>> lst_serial_executor;
 	const size_t num_dispatchables = 50;
 	for (size_t i = 0; i < num_dispatchables; ++i)
