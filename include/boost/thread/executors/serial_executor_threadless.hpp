@@ -6,8 +6,8 @@
 // 2015/02 Frank Schmitt
 //    first implementation of a serial executor
 
-#ifndef BOOST_THREAD_SERIAL_EXECUTOR_HPP
-#define BOOST_THREAD_SERIAL_EXECUTOR_HPP
+#ifndef BOOST_THREAD_serial_executor_threadless_HPP
+#define BOOST_THREAD_serial_executor_threadless_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
@@ -25,7 +25,7 @@ namespace boost
 {
 namespace executors
 {
-class serial_executor : public boost::enable_shared_from_this<serial_executor>
+class serial_executor_threadless : public boost::enable_shared_from_this<serial_executor_threadless>
   {
   public:
     /// type-erasure to store the works to do
@@ -72,7 +72,7 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
 				
 				boost::shared_ptr<boost::promise<void>> spProm = boost::make_shared<boost::promise<void>>();
 				fut = spProm->get_future();
-				auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor> _spEx, boost::shared_ptr<boost::promise<void>> spProm, boost::function<void()> w) -> void
+				auto task_with_cont = boost::bind<void>([](boost::weak_ptr<serial_executor_threadless> _spEx, boost::shared_ptr<boost::promise<void>> spProm, boost::function<void()> w) -> void
 				{
 					w();
 					if (auto spEx = _spEx.lock())
@@ -95,8 +95,8 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
 	}
 	 
   public:
-    /// serial_executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(serial_executor)
+    /// serial_executor_threadless is not copyable.
+    BOOST_THREAD_NO_COPYABLE(serial_executor_threadless)
 
     /**
      * \b Effects: creates a thread pool that runs closures using one of its closure-executing methods.
@@ -104,23 +104,23 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     template <class Executor>
-    serial_executor(Executor& ex)
+    serial_executor_threadless(Executor& ex)
 		: ex(ex), fut(make_ready_future())
     {
     }
     /**
      * \b Effects: Destroys the thread pool.
      *
-     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor destructor.
+     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor_threadless destructor.
      */
-    ~serial_executor()
+    ~serial_executor_threadless()
     {
       // signal to the worker thread that there will be no more submissions.
       close();
     }
 
     /**
-     * \b Effects: close the \c serial_executor for submissions.
+     * \b Effects: close the \c serial_executor_threadless for submissions.
      * The loop will work until there is no more closures to run.
      */
     void close()
@@ -140,7 +140,7 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
      * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
      *
      * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
-     * If invoked closure throws an exception the \c serial_executor will call \c std::terminate, as is the case with threads.
+     * If invoked closure throws an exception the \c serial_executor_threadless will call \c std::terminate, as is the case with threads.
      *
      * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
      *
@@ -196,7 +196,7 @@ class serial_executor : public boost::enable_shared_from_this<serial_executor>
 
   };
 }
-using executors::serial_executor;
+using executors::serial_executor_threadless;
 }
 
 #include <boost/config/abi_suffix.hpp>

@@ -33,17 +33,47 @@
 #include <iostream>
 #include <mutex>
 
+//template <typename Closure>
+//void doSomething(BOOST_THREAD_RV_REF(Closure) closure)
+//{	
+//	boost::concurrent::sync_queue<boost::executors::work> work_queue;
+//	work_queue.push(boost::executors::work(boost::forward<Closure>(closure)));
+//
+//	boost::executors::work w;
+//	work_queue.try_pull(w); // we know its there
+//
+//	auto work = boost::bind([](boost::executors::work wo) -> void {
+//		wo();
+//	}, boost::move(w));
+//
+//	boost::async(work);
+//}
+//
+//int test_nullary_with_packaged_task()
+//{
+//	auto lambda = []() -> int {
+//		std::cout << "hi" << std::endl;
+//		return 42;
+//	};
+//	boost::packaged_task<int()> task(boost::move(lambda));
+//	auto fut = task.get_future();
+//	doSomething(boost::move(task));
+//	auto iRes = fut.get();
+//	
+//	return 0;
+//}
+
 int test_serial_ex()
 {
 	boost::executors::basic_thread_pool t_pool;
 
 
-	std::list<boost::shared_ptr<boost::executors::serial_executor>> lst_serial_executor;
+	std::list<boost::shared_ptr<boost::executors::serial_executor_threadless>> lst_serial_executor_threadless;
 	const size_t num_dispatchables = 50;
 	for (size_t i = 0; i < num_dispatchables; ++i)
 	{
-		auto sp_ex = boost::make_shared<boost::executors::serial_executor>(t_pool);
-		lst_serial_executor.push_back(sp_ex);
+		auto sp_ex = boost::make_shared<boost::executors::serial_executor_threadless>(t_pool);
+		lst_serial_executor_threadless.push_back(sp_ex);
 	}
 
 	std::atomic<size_t> callcount = 0;
@@ -51,7 +81,7 @@ int test_serial_ex()
 	auto work = std::bind([&](boost::chrono::milliseconds duration, size_t index_ex, size_t index_work) -> void {
 		std::lock_guard<decltype(mtx)> lock(mtx);
 
-		lst_serial_executor.front()->submit(boost::bind<void>([](size_t index_ex, size_t index_work, size_t callcount)
+		lst_serial_executor_threadless.front()->submit(boost::bind<void>([](size_t index_ex, size_t index_work, size_t callcount)
 		{
 			std::cout << "call" << callcount << " in work from " << index_ex << "," << index_work << std::endl;
 		}, index_ex, index_work, callcount++)); // submit to the first serializer to have threadsafe output...
@@ -61,14 +91,14 @@ int test_serial_ex()
 	}, boost::chrono::milliseconds(1), std::placeholders::_1, std::placeholders::_2);
 
 	std::atomic<size_t> count = 0;
-	for (const auto& rSpSerialEx : lst_serial_executor)
+	for (const auto& rSpSerialEx : lst_serial_executor_threadless)
 	{
 		++count;
 		const size_t num_tasks = 10;
 		for (size_t i = 0; i < num_tasks; ++i)
 		{
 			boost::function<void(void)> func = boost::bind<void>(work, (int)count, i);
-			auto bound = boost::bind<void>([](boost::shared_ptr<boost::executors::serial_executor> spEx, boost::function<void(void)> func_){ spEx->submit(boost::move(func_)); }, rSpSerialEx, func);
+			auto bound = boost::bind<void>([](boost::shared_ptr<boost::executors::serial_executor_threadless> spEx, boost::function<void(void)> func_){ spEx->submit(boost::move(func_)); }, rSpSerialEx, func);
 			boost::async(bound); // make this a bit concurrently			
 		}		
 	}
@@ -86,12 +116,12 @@ int test_dispatcher()
 	boost::executors::basic_thread_pool t_pool;
 	auto sp_dispatcher = std::make_shared<boost::executors::serial_executor_dispatcher>();
 
-	std::list<std::shared_ptr<boost::executors::serial_executor_dispatchable>> lst_serial_executor;
+	std::list<std::shared_ptr<boost::executors::serial_executor_dispatchable>> lst_serial_executor_threadless;
 	const size_t num_dispatchables = 50;
 	for (size_t i = 0; i < num_dispatchables; ++i)
 	{
 		auto sp_ex = std::make_shared<boost::executors::serial_executor_dispatchable>(t_pool);
-		lst_serial_executor.push_back(sp_ex);
+		lst_serial_executor_threadless.push_back(sp_ex);
 		sp_dispatcher->add_dispatchable_executor(sp_ex);
 	}
 
@@ -104,7 +134,7 @@ int test_dispatcher()
 		while (end > boost::chrono::high_resolution_clock::now());
 	}, boost::chrono::milliseconds(20));
 
-	for (const auto& rSpSerialEx : lst_serial_executor)
+	for (const auto& rSpSerialEx : lst_serial_executor_threadless)
 	{
 		const size_t num_tasks = 10;
 		for (size_t i = 0; i < num_tasks; ++i)
@@ -125,7 +155,7 @@ int test_dispatcher()
 int test_cyclic()
 {
 	boost::executors::basic_thread_pool pool;
-	auto sp_dispatcher = std::make_shared<boost::executors::serial_executor_dispatcher>();
+	auto sp_dispatcher = std::make_shared<boost::executors::serial_executor_dispatcher>();	
 
 	double avg = 0.0;
 	size_t callcount = 0;
@@ -170,5 +200,5 @@ int test_cyclic()
 
 int main()
 {
-	return test_serial_ex() & test_dispatcher() & test_cyclic();
+	return /*test_nullary_with_packaged_task() &&*/ test_serial_ex() & test_dispatcher() & test_cyclic();
 }
