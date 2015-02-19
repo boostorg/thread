@@ -24,7 +24,7 @@ namespace boost
 {
 namespace executors
 {
-  class serial_executor
+  class serial_executor_cont
   {
   public:
     /// type-erasure to store the works to do
@@ -65,8 +65,8 @@ namespace executors
      */
     generic_executor_ref& underlying_executor() BOOST_NOEXCEPT { return ex_; }
 
-    /// serial_executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(serial_executor)
+    /// serial_executor_cont is not copyable.
+    BOOST_THREAD_NO_COPYABLE(serial_executor_cont)
 
     /**
      * \b Effects: creates a serial executor that runs closures in fifo order using one the associated executor.
@@ -80,23 +80,23 @@ namespace executors
      *     - the continuation can not submit to this serial executor.
      */
     template <class Executor>
-    serial_executor(Executor& ex)
+    serial_executor_cont(Executor& ex)
     : ex_(ex), fut_(make_ready_future()), closed_(false)
     {
     }
     /**
      * \b Effects: Destroys the thread pool.
      *
-     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor destructor.
+     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor_cont destructor.
      */
-    ~serial_executor()
+    ~serial_executor_cont()
     {
       // signal to the worker thread that there will be no more submissions.
       close();
     }
 
     /**
-     * \b Effects: close the \c serial_executor for submissions.
+     * \b Effects: close the \c serial_executor_cont for submissions.
      * The loop will work until there is no more closures to run.
      */
     void close()
@@ -129,7 +129,7 @@ namespace executors
      * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
      *
      * \b Effects: The specified \c closure will be scheduled for execution after the last submitted closure finish.
-     * If the invoked closure throws an exception the \c serial_executor will call \c std::terminate, as is the case with threads.
+     * If the invoked closure throws an exception the \c serial_executor_cont will call \c std::terminate, as is the case with threads.
      *
      * \b Throws: \c sync_queue_is_closed if the executor is closed.
      * Whatever exception that can be throw while storing the closure.
@@ -162,7 +162,7 @@ namespace executors
 
   };
 }
-using executors::serial_executor;
+using executors::serial_executor_cont;
 }
 
 #include <boost/config/abi_suffix.hpp>

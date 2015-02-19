@@ -16,7 +16,7 @@
 
 #include <boost/thread/caller_context.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
-#include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/serial_executor_cont.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
 #include <boost/thread/executor.hpp>
@@ -52,7 +52,7 @@ int f2(int i)
   return i + 1;
 }
 
-void submit_some(boost::serial_executor& tp)
+void submit_some(boost::serial_executor_cont& tp)
 {
   std::cout << BOOST_CONTEXTOF << std::endl;
   for (int i = 0; i < 3; ++i) {
@@ -84,7 +84,7 @@ int test_executor_adaptor()
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::basic_thread_pool ea1(4);
-        boost::serial_executor ea2(ea1);
+        boost::serial_executor_cont ea2(ea1);
         submit_some(ea2);
         boost::this_thread::sleep_for(boost::chrono::seconds(10));
       }
