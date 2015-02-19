@@ -432,12 +432,14 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         class attributes; // EXTENSION
 
         thread() noexcept;
+        ~thread();
+        
         thread(const thread&) = delete;
         thread& operator=(const thread&) = delete;
 
+        // move support
         thread(thread&&) noexcept;
         thread& operator=(thread&&) noexcept;
-        ~thread();
 
         template <class F>
         explicit thread(F f);
@@ -455,10 +457,6 @@ This behavior is incompatible with the current Boost.Thread design, so the use o
         thread(attributes& attrs, F &&f); // EXTENSION
         template <class F, class ...Args> 
         explicit thread(attributes& attrs, F&& f, Args&&... args);
-
-        // move support
-        thread(thread && x) noexcept;
-        thread& operator=(thread && x) noexcept;
 
         void swap(thread& x) noexcept;
 
