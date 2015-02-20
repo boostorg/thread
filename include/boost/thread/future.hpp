@@ -93,24 +93,21 @@ namespace boost
         struct relocker
         {
             boost::unique_lock<boost::mutex>& lock_;
-            bool  unlocked_;
 
             relocker(boost::unique_lock<boost::mutex>& lk):
                 lock_(lk)
             {
                 lock_.unlock();
-                unlocked_=true;
             }
             ~relocker()
             {
-              if (unlocked_) {
+              if (! lock_.owns_lock()) {
                 lock_.lock();
               }
             }
             void lock() {
-              if (unlocked_) {
+              if (! lock_.owns_lock()) {
                 lock_.lock();
-                unlocked_=false;
               }
             }
         private:
@@ -220,10 +217,10 @@ namespace boost
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
                 if (! continuations.empty()) {
-                  continuations_type this_continuations = continuations;
+                  continuations_type the_continuations = continuations;
                   continuations.clear();
                   relocker rlk(lock);
-                  for (continuations_type::iterator it = this_continuations.begin(); it != this_continuations.end(); ++it) {
+                  for (continuations_type::iterator it = the_continuations.begin(); it != the_continuations.end(); ++it) {
                     boost::unique_lock<boost::mutex> cont_lock((*it)->mutex);
                     (*it)->launch_continuation(cont_lock, *it);
                   }
@@ -4026,11 +4023,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_async_continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
     }
 
 
@@ -4056,11 +4055,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_async_continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
@@ -4104,11 +4105,13 @@ namespace detail
     Ex* ex;
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_executor_continuation_shared_state(Ex& ex, BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : ex(&ex), parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_)  {
       this->set_executor();
     }
 
@@ -4141,11 +4144,13 @@ namespace detail
     Ex* ex;
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     future_executor_continuation_shared_state(Ex& ex, BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : ex(&ex), parent(boost::move(f)),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_)  {
       this->set_executor();
     }
 
@@ -4183,11 +4188,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_async_continuation_shared_state(F f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_)  {
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
@@ -4211,11 +4218,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_async_continuation_shared_state(F f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_)  {
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
@@ -4246,11 +4255,13 @@ namespace detail
     Ex* ex;
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_executor_continuation_shared_state(Ex& ex, F f, BOOST_THREAD_FWD_REF(Fp) c)
     : ex(&ex), parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_)  {
       this->set_executor();
     }
 
@@ -4283,11 +4294,13 @@ namespace detail
     Ex* ex;
     F parent;
     Fp continuation;
+    shared_ptr<shared_state_base> centinel;
 
   public:
     shared_future_executor_continuation_shared_state(Ex& ex, F f, BOOST_THREAD_FWD_REF(Fp) c)
     : ex(&ex), parent(f),
-      continuation(boost::move(c)) {
+      continuation(boost::move(c)),
+      centinel(parent.future_) {
     }
 
     void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
@@ -4532,6 +4545,7 @@ namespace detail
     lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
     lock.unlock();
+
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
   ////////////////////////////////

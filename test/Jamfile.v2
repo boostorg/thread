@@ -789,7 +789,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run2 ../example/make_future.cpp : ex_make_future ]
-          #[ thread-run2 ../example/future_then.cpp : ex_future_then ]
+          [ thread-run2 ../example/future_then.cpp : ex_future_then ]
           [ thread-run2 ../example/future_fallback_to.cpp : ex_future_fallback_to ]
           [ thread-run2 ../example/future_unwrap.cpp : ex_future_unwrap ]
           [ thread-run2-noit ../example/synchronized_value.cpp : ex_synchronized_value ]

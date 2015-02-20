@@ -35,39 +35,38 @@ int p1()
 
 int main()
 {
-  const int number_of_tests = 100;
+  const int number_of_tests = 200;
   BOOST_THREAD_LOG << "<MAIN" << BOOST_THREAD_END_LOG;
-
-//  {
-//    for (int i=0; i< number_of_tests; i++)
-//    try
-//    {
-//      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
-//      boost::future<int> f1 = boost::async(boost::launch::async, &p1);
-//      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
-//      f1.wait();
-//      BOOST_ASSERT(f1.get()==1);
-//      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
-//    }
-//    catch (std::exception& ex)
-//    {
-//      std::cout << __FILE__ << "["<< __LINE__<<"] " << "ERRORRRRR "<<ex.what() << "" << std::endl;
-//      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
-//      return 1;
-//    }
-//    catch (...)
-//    {
-//      std::cout << __FILE__ << "["<< __LINE__<<"] " << " ERRORRRRR exception thrown" << std::endl;
-//      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
-//      return 2;
-//    }
-//  }
 
   {
     for (int i=0; i< number_of_tests; i++)
     try
     {
-      //boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      boost::future<int> f1 = boost::async(boost::launch::async, &p1);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+      f1.wait();
+      BOOST_ASSERT(f1.get()==1);
+      BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
+    }
+    catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "["<< __LINE__<<"] " << "ERRORRRRR "<<ex.what() << "" << std::endl;
+      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
+      return 1;
+    }
+    catch (...)
+    {
+      std::cout << __FILE__ << "["<< __LINE__<<"] " << " ERRORRRRR exception thrown" << std::endl;
+      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
+      return 2;
+    }
+  }
+
+  {
+    for (int i=0; i< number_of_tests; i++)
+    try
+    {
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
       boost::future<int> f1 = boost::async(&p1);
       BOOST_THREAD_LOG << "" << BOOST_THREAD_END_LOG;
