@@ -3889,7 +3889,7 @@ namespace detail {
   BOOST_THREAD_FUTURE<typename detail::deduced_type<T>::type> make_ready_future(BOOST_THREAD_FWD_REF(T) value) {
     typedef typename detail::deduced_type<T>::type future_value_type;
     promise<future_value_type> p;
-    p.set_value(boost::forward<future_value_type>(value));
+    p.set_value(boost::forward<T>(value));
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
