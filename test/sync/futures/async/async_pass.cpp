@@ -85,7 +85,7 @@ public:
     return *this;
   }
 
-  int operator()()
+  int operator()() const
   {
     boost::this_thread::sleep_for(ms(200));
     return 3;
