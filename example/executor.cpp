@@ -65,7 +65,7 @@ void submit_some(boost::executor& tp)
 }
 
 
-void at_th_entry(boost::basic_thread_pool& )
+void at_th_entry( )
 {
 
 }
@@ -76,6 +76,10 @@ int test_executor_adaptor()
   {
     try
     {
+      {
+        boost::basic_thread_pool e1;
+        boost::basic_thread_pool e2 = e1;
+      }
       {
         boost::executor_adaptor < boost::basic_thread_pool > ea(4);
         submit_some( ea);
