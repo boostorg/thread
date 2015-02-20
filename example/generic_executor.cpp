@@ -22,7 +22,7 @@
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
-#include <boost/thread/executors/generic_executor_ref.hpp>
+#include <boost/thread/executors/generic_executor.hpp>
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
@@ -54,7 +54,7 @@ int f2(int i)
   return i + 1;
 }
 
-void submit_some(boost::generic_executor_ref tp)
+void submit_some(boost::generic_executor tp)
 {
   for (int i = 0; i < 3; ++i) {
     tp.submit(&p2);
@@ -72,7 +72,7 @@ void at_th_entry()
 
 
 
-int test_generic_executor_ref()
+int test_generic_executor()
 {
   // std::cout << BOOST_CONTEXTOF << std::endl;
   {
@@ -148,7 +148,7 @@ int test_generic_executor_ref()
 
 int main()
 {
-  return test_generic_executor_ref();
+  return test_generic_executor();
 
 
 }
