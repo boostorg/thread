@@ -99,6 +99,10 @@ int test_executor_adaptor()
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
+        boost::loop_executor e1;
+        boost::loop_executor e2 = e1;
+      }
+      {
         boost::executor_adaptor < boost::loop_executor > ea2;
         submit_some( ea2);
         ea2.underlying_executor().run_queued_closures();
@@ -113,10 +117,18 @@ int test_executor_adaptor()
 #endif
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
+        boost::inline_executor e1;
+        boost::inline_executor e2 = e1;
+      }
+      {
         boost::executor_adaptor < boost::inline_executor > ea1;
         submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::thread_executor e1;
+        boost::thread_executor e2 = e1;
+      }
       {
         boost::executor_adaptor < boost::thread_executor > ea1;
         submit_some(ea1);
