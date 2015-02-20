@@ -53,6 +53,29 @@ int main()
 {
   BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
   {
+    try
+    {
+      boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
+      BOOST_TEST(f1.valid());
+      {
+      boost::future<int> f2 = f1.then(&p2);
+      BOOST_TEST(f2.valid());
+      }
+      BOOST_TEST(! f1.valid());
+    }
+    catch (std::exception& ex)
+    {
+      BOOST_THREAD_LOG << "ERRORRRRR "<<ex.what() << "" << BOOST_THREAD_END_LOG;
+      BOOST_TEST(false);
+    }
+    catch (...)
+    {
+      BOOST_THREAD_LOG << " ERRORRRRR exception thrown" << BOOST_THREAD_END_LOG;
+      BOOST_TEST(false);
+    }
+  }
+  BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
+  {
     boost::future<int> f1 = boost::async(boost::launch::deferred, &p1);
     BOOST_TEST(f1.valid());
     boost::future<int> f2 = f1.then(&p2);
