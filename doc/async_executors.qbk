@@ -1,5 +1,5 @@
 [/
- / Copyright (c) 2014 Vicente J. Botet Escriba
+ / Copyright (c) 2014-2015 Vicente J. Botet Escriba
  /
  / Distributed under the Boost Software License, Version 1.0. (See accompanying
  / file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -516,9 +516,6 @@ Executor abstract base class.
     public:
       typedef  boost::work work;
   
-      executor(executor const&) = delete;
-      executor& operator=(executor const&) = delete;
-
       executor(); 
       virtual ~executor() {};
   
@@ -582,9 +579,6 @@ Polymorphic adaptor of a model of Executor to an executor.
       Executor ex; // for exposition only
     public:
       typedef  executor::work work;
-  
-      executor_adaptor(executor_adaptor const&) = delete;
-      executor_adaptor& operator=(executor_adaptor const&) = delete;
   
       template <typename ...Args>
       executor_adaptor(Args&& ... args);
@@ -651,20 +645,24 @@ Polymorphic adaptor of a model of Executor to an executor.
 [/////////////////////////////////]
 [section:generic_executor_ref Class `generic_executor_ref`]
 
-Executor abstract base class.
+Type erased executor class.
 
   #include <boost/thread/generic_executor_ref.hpp>
   namespace boost {
     class generic_executor_ref
     {
     public:
-      generic_executor_ref(generic_executor_ref const&);
-      generic_executor_ref& operator=(generic_executor_ref const&);
 
       template <class Executor>
       generic_executor_ref(Executor& ex); 
-      generic_executor_ref() {};
+      generic_executor_ref() = delete;
+      generic_executor_ref(generic_executor_ref const&) = default;
+      generic_executor_ref(generic_executor_ref &&) = default;
+      generic_executor_ref& operator=(generic_executor_ref const&) = default;
+      generic_executor_ref& operator=(generic_executor_ref &&) = default;
   
+      executor& underlying_executor() noexcept;
+
       void close() = 0;
       bool closed() = 0;
   
@@ -678,6 +676,44 @@ Executor abstract base class.
   }
 
 [endsect]
+
+
+[/////////////////////////////////]
+[section:generic_executor Class `generic_executor`]
+
+Type erased executor class.
+
+  #include <boost/thread/generic_executor.hpp>
+  namespace boost {
+    class generic_executor
+    {
+    public:
+
+      template <class Executor>
+      generic_executor(Executor& ex); 
+      generic_executor() = delete;
+
+      generic_executor(generic_executor const&) = default;
+      generic_executor(generic_executor &&) = default;
+      generic_executor& operator=(generic_executor const&) = default;
+      generic_executor& operator=(generic_executor &&) = default;
+  
+      executor& underlying_executor() noexcept;
+
+      void close() = 0;
+      bool closed() = 0;
+  
+      template <typename Closure>
+      void submit(Closure&& closure);
+  
+      virtual bool try_executing_one() = 0;
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred);
+    };
+  }
+
+[endsect]
+
 
 [//////////////////////////////////////////////////////////]
 [section: scheduler Template Class `scheduler `]
@@ -693,10 +729,7 @@ Scheduler providing time related functions. Note that `scheduler` is not an Exec
     public:
       using work = boost::function<void()> ;
       using clock = Clock;
-
-      scheduler(scheduler const&) = delete;
-      scheduler& operator=(scheduler const&) = delete;
-  
+ 
       scheduler();
       ~scheduler();
  
@@ -743,7 +776,7 @@ Scheduler providing time related functions. Note that `scheduler` is not an Exec
 
 [[Effects:] [Destroys the scheduler.]]
 
-[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+[[Synchronization:] [The completion of all the closures happen before the completion of the destructor.]]
 
 ]
 
@@ -1349,10 +1382,6 @@ A serial executor ensuring that there are no two work units that executes concur
     class serial_executor
     {
     public:
-      serial_executor(serial_executor const&) = delete;
-      serial_executor& operator=(serial_executor const&) = delete;
-  
-      template <class Executor>
       serial_executor(Executor& ex);
  
       Executor& underlying_executor() noexcept;
@@ -1403,7 +1432,7 @@ A serial executor ensuring that there are no two work units that executes concur
 [/////////////////////////////////////]
 [section:underlying_executor Function member `underlying_executor()`]
 
-      generic_executor_ref& underlying_executor() noexcept;
+      Executor& underlying_executor() noexcept;
 
 [variablelist
 
@@ -1428,13 +1457,10 @@ A serial executor ensuring that there are no two work units that executes concur
     class generic_serial_executor
     {
     public:
-      generic_serial_executor(generic_serial_executor const&) = delete;
-      generic_serial_executor& operator=(generic_serial_executor const&) = delete;
-  
       template <class Executor>
       generic_serial_executor(Executor& ex);
  
-      generic_executor_ref& underlying_executor() noexcept;
+      generic_executor& underlying_executor() noexcept;
 
       void close();
       bool closed();
@@ -1443,6 +1469,7 @@ A serial executor ensuring that there are no two work units that executes concur
       void submit(Closure&& closure);
   
       bool try_executing_one();
+
       template <typename Pred>
       bool reschedule_until(Pred const& pred);
 
@@ -1466,9 +1493,83 @@ A serial executor ensuring that there are no two work units that executes concur
 
 [endsect]
 [/////////////////////////////////////]
-[section:destructor Destructor `~serial_executor()`]
+[section:destructor Destructor `~generic_serial_executor()`]
 
       ~generic_serial_executor();
+
+[variablelist
+
+[[Effects:] [Destroys the serial_executor.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_executor Function member `underlying_executor()`]
+
+      generic_executor& underlying_executor() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying executor instance. ]]
+
+]
+
+
+[endsect]
+
+[endsect]
+
+[//////////////////////////////////////////////////////////]
+[section:serial_executor_cont Template Class `serial_executor_cont`]
+
+A serial executor ensuring that there are no two work units that executes concurrently.
+
+  #include <boost/thread/serial_executor_cont.hpp>
+  namespace boost {
+    template <class Executor>
+    class serial_executor_cont
+    {
+    public:
+      serial_executor_cont(Executor& ex);
+ 
+      Executor& underlying_executor() noexcept;
+
+      void close();
+      bool closed();
+  
+      template <typename Closure>
+      void submit(Closure&& closure);
+  
+      bool try_executing_one();
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `serial_executor_cont(Executor&)`]
+
+      template <class Executor>
+      serial_executor_cont(Executor& ex);
+
+[variablelist
+
+[[Effects:] [Constructs a serial_executor_cont. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~serial_executor_cont()`]
+
+      ~serial_executor_cont();
 
 [variablelist
 
@@ -1488,12 +1589,90 @@ A serial executor ensuring that there are no two work units that executes concur
 
 [[Return:] [The underlying executor instance. ]]
 
+[[Throws:] [Nothing.]]
+
 ]
 
 
 [endsect]
 
 [endsect]
+
+[//////////////////////////////////////////////////////////]
+[section:generic_serial_cont_executor Class `generic_serial_cont_executor`]
+
+A serial executor ensuring that there are no two work units that executes concurrently.
+
+  #include <boost/thread/generic_serial_cont_executor.hpp>
+  namespace boost {
+    class generic_serial_cont_executor
+    {
+    public:
+      template <class Executor>
+      generic_serial_cont_executor(Executor& ex);
+ 
+      generic_executor& underlying_executor() noexcept;
+
+      void close();
+      bool closed();
+  
+      template <typename Closure>
+      void submit(Closure&& closure);
+  
+      bool try_executing_one();
+
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred);
+
+    };
+  }
+
+[/////////////////////////////////////]
+[section:constructor Constructor `generic_serial_cont_executor(Executor&)`]
+
+      template <class Executor>
+      generic_serial_cont_executor(Executor& ex);
+
+[variablelist
+
+[[Effects:] [Constructs a generic_serial_cont_executor. ]]
+
+[[Throws:] [Nothing. ]]
+
+]
+
+
+[endsect]
+[/////////////////////////////////////]
+[section:destructor Destructor `~generic_serial_cont_executor()`]
+
+      ~generic_serial_cont_executor();
+
+[variablelist
+
+[[Effects:] [Destroys the generic_serial_cont_executor.]]
+
+[[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
+
+]
+
+[endsect]
+[/////////////////////////////////////]
+[section:underlying_executor Function member `underlying_executor()`]
+
+      generic_executor& underlying_executor() noexcept;
+
+[variablelist
+
+[[Return:] [The underlying executor instance. ]]
+
+]
+
+
+[endsect]
+
+[endsect]
+
 
 
 [//////////////////////////////////////////////////////////]
@@ -1506,10 +1685,8 @@ A serial executor ensuring that there are no two work units that executes concur
     class inline_executor
     {
     public:
-      inline_executor(inline_executor const&) = delete;
-      inline_executor& operator=(inline_executor const&) = delete;
-  
       inline_executor();
+      ~inline_executor();
  
       void close();
       bool closed();
@@ -1570,9 +1747,6 @@ A thread pool with up to a fixed number of threads.
     class basic_thread_pool
     { 
     public:
- 
-      basic_thread_pool(basic_thread_pool const&) = delete;
-      basic_thread_pool& operator=(basic_thread_pool const&) = delete;
   
       basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency());
       template <class AtThreadEntry>
@@ -1633,9 +1807,6 @@ A thread_executor with a threads for each task.
     { 
     public:
  
-      thread_executor(thread_executor const&) = delete;
-      thread_executor& operator=(thread_executor const&) = delete;
-  
       thread_executor();
       template <class AtThreadEntry>
       basic_thread_pool( unsigned const thread_count, AtThreadEntry at_thread_entry);
@@ -1690,9 +1861,6 @@ A user scheduled executor.
     class loop_executor
     { 
     public:
- 
-      loop_executor(loop_executor const&) = delete;
-      loop_executor& operator=(loop_executor const&) = delete;
   
       loop_executor();
       ~loop_executor();
