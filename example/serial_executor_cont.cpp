@@ -86,7 +86,6 @@ int test_executor_adaptor()
         boost::basic_thread_pool ea1(4);
         boost::serial_executor_cont ea2(ea1);
         submit_some(ea2);
-        boost::this_thread::sleep_for(boost::chrono::seconds(10));
       }
 #endif
       // std::cout << BOOST_CONTEXTOF << std::endl;
