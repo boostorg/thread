@@ -1,5 +1,5 @@
 // Copyright (C) 2014 Ian Forbed
-// Copyright (C) 2014 Vicente J. Botet Escriba
+// Copyright (C) 2014-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -26,7 +26,8 @@ namespace detail
   class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<boost::function<void()>, Clock  > >
   {
   public:
-    typedef boost::function<void()> work;
+    typedef priority_executor_base<concurrent::sync_timed_queue<boost::function<void()>, Clock  > > super;
+    typedef typename super::work work;
     //typedef executors::work work;
     typedef Clock clock;
     typedef typename clock::duration duration;

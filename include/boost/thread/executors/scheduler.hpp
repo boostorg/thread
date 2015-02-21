@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Vicente J. Botet Escriba
+// Copyright (C) 2014-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -150,8 +150,8 @@ namespace boost
       }
 
     private:
-      Scheduler& sch;
-      Executor& ex;
+      Scheduler sch;
+      Executor ex;
     }; //end class
 
     /// Wraps a reference to a @c Scheduler providing an @c Executor that
@@ -208,7 +208,7 @@ namespace boost
       }
 
     private:
-      Scheduler& sch;
+      Scheduler sch;
       time_point  tp;
       bool  is_closed;
     }; //end class
@@ -217,22 +217,71 @@ namespace boost
     /// It provides factory helper functions such as at/after that convert a @c Scheduler into an @c Executor
     /// that submit the work at/after a specific time/duration respectively.
     template <class Clock = chrono::steady_clock>
-    class scheduler : public detail::scheduled_executor_base<Clock>
+    class scheduler
     {
-    public:
-      typedef typename detail::scheduled_executor_base<Clock>::work work;
+    private:
 
+      struct shared_state : public detail::scheduled_executor_base<Clock> {
+        typedef detail::scheduled_executor_base<Clock> super;
+        typedef typename super::work work;
+        thread thr;
+
+        /// shared_state is not copyable.
+        BOOST_THREAD_NO_COPYABLE(shared_state)
+
+        shared_state()
+          : super(),
+            thr(&super::loop, this) {}
+
+        ~shared_state()
+        {
+          this->close();
+          thr.join();
+        }
+
+      };
+
+    public:
+      typedef typename shared_state::work work;
       typedef Clock clock;
+      typedef typename clock::duration duration;
+      typedef typename clock::time_point time_point;
 
       scheduler()
-        : super(),
-          thr(&super::loop, this) {}
+        : pimpl(make_shared<shared_state>())
+      {}
 
       ~scheduler()
       {
-        this->close();
-        thr.join();
       }
+
+      /**
+       * \b Effects: close the \c serial_executor for submissions.
+       * The loop will work until there is no more closures to run.
+       */
+      void close()
+      {
+        pimpl->close();
+      }
+
+      /**
+       * \b Returns: whether the pool is closed for submissions.
+       */
+      bool closed()
+      {
+        return pimpl->closed();
+      }
+
+      void submit_at(work w, const time_point& tp)
+      {
+        return pimpl->submit_at(w, tp);
+      }
+
+      void submit_after(work w, const duration& d)
+      {
+        return pimpl->submit_after(w, d);
+      }
+
       template <class Ex>
       scheduler_executor_wrapper<scheduler, Ex> on(Ex& ex)
       {
@@ -250,12 +299,9 @@ namespace boost
       {
         return at_executor<scheduler>(*this, tp);
       }
-
     private:
-      typedef detail::scheduled_executor_base<Clock> super;
-      thread thr;
+      shared_ptr<shared_state> pimpl;
     };
-
 
   }
   using executors::resubmitter;
