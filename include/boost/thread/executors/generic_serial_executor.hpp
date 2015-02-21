@@ -6,8 +6,8 @@
 // 2013/11 Vicente J. Botet Escriba
 //    first implementation of a simple serial scheduler.
 
-#ifndef BOOST_THREAD_SERIAL_EXECUTOR_HPP
-#define BOOST_THREAD_SERIAL_EXECUTOR_HPP
+#ifndef BOOST_THREAD_GENERIC_SERIAL_EXECUTOR_HPP
+#define BOOST_THREAD_GENERIC_SERIAL_EXECUTOR_HPP
 
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
@@ -24,8 +24,7 @@ namespace boost
 {
 namespace executors
 {
-  template <class Executor>
-  class serial_executor
+  class generic_serial_executor
   {
   public:
     /// type-erasure to store the works to do
@@ -38,7 +37,7 @@ namespace executors
 
       /// the thread safe work queue
       concurrent::sync_queue<work > work_queue;
-      Executor ex;
+      generic_executor ex;
       thread_t thr;
 
       struct try_executing_one_task {
@@ -61,7 +60,7 @@ namespace executors
        * \par Returns
        * The underlying executor wrapped on a generic executor reference.
        */
-      Executor& underlying_executor() BOOST_NOEXCEPT { return ex; }
+      generic_executor& underlying_executor() BOOST_NOEXCEPT { return ex; }
 
     private:
 
@@ -100,6 +99,7 @@ namespace executors
        *
        * \b Throws: Whatever exception is thrown while initializing the needed resources.
        */
+      template <class Executor>
       shared_state(Executor& ex)
       : ex(ex), thr(&shared_state::worker_thread, this)
       {
@@ -116,7 +116,7 @@ namespace executors
       }
 
       /**
-       * \b Effects: close the \c serial_executor for submissions.
+       * \b Effects: close the \c generic_serial_executor for submissions.
        * The loop will work until there is no more closures to run.
        */
       void close()
@@ -136,7 +136,7 @@ namespace executors
        * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
        *
        * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
-       * If invoked closure throws an exception the \c serial_executor will call \c std::terminate, as is the case with threads.
+       * If invoked closure throws an exception the \c generic_serial_executor will call \c std::terminate, as is the case with threads.
        *
        * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
        *
@@ -171,16 +171,17 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    serial_executor(Executor& ex)
+    template <class Executor>
+    generic_serial_executor(Executor& ex)
     : pimpl(make_shared<shared_state>(ex))
     {
     }
     /**
      * \b Effects: Destroys the thread pool.
      *
-     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor destructor.
+     * \b Synchronization: The completion of all the closures happen before the completion of the \c generic_serial_executor destructor.
      */
-    ~serial_executor()
+    ~generic_serial_executor()
     {
     }
 
@@ -188,7 +189,7 @@ namespace executors
      * \par Returns
      * The underlying executor wrapped on a generic executor reference.
      */
-    Executor& underlying_executor() BOOST_NOEXCEPT
+    generic_executor& underlying_executor() BOOST_NOEXCEPT
     {
       return pimpl->underlying_executor();
     }
@@ -203,7 +204,7 @@ namespace executors
     }
 
     /**
-     * \b Effects: close the \c serial_executor for submissions.
+     * \b Effects: close the \c generic_serial_executor for submissions.
      * The loop will work until there is no more closures to run.
      */
     void close()
@@ -223,7 +224,7 @@ namespace executors
      * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
      *
      * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
-     * If invoked closure throws an exception the \c serial_executor will call \c std::terminate, as is the case with threads.
+     * If invoked closure throws an exception the \c generic_serial_executor will call \c std::terminate, as is the case with threads.
      *
      * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
      *
@@ -262,7 +263,7 @@ namespace executors
     shared_ptr<shared_state> pimpl;
   };
 }
-using executors::serial_executor;
+using executors::generic_serial_executor;
 }
 
 #include <boost/config/abi_suffix.hpp>

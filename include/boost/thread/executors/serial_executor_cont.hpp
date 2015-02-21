@@ -12,9 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
-#include <boost/thread/executors/generic_executor.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 
@@ -24,6 +22,7 @@ namespace boost
 {
 namespace executors
 {
+  template <class Executor>
   class serial_executor_cont
   {
   public:
@@ -34,123 +33,122 @@ namespace executors
     struct shared_state {
       typedef  executors::work work;
 
-    generic_executor ex_;
-    future<void> fut_; // protected by mtx_
-    bool closed_; // protected by mtx_
-    mutex mtx_;
+      Executor ex_;
+      future<void> fut_; // protected by mtx_
+      bool closed_; // protected by mtx_
+      mutex mtx_;
 
-    struct continuation {
-      work task;
-      template <class X>
-      struct result {
-        typedef void type;
-      };
-      continuation(BOOST_THREAD_RV_REF(work) tsk)
-      : task(boost::move(tsk)) {}
-      void operator()(future<void> f)
-      {
-        try {
-          task();
-        } catch (...)  {
-          std::terminate();
+      struct continuation {
+        work task;
+        template <class X>
+        struct result {
+          typedef void type;
+        };
+        continuation(BOOST_THREAD_RV_REF(work) tsk)
+        : task(boost::move(tsk)) {}
+        void operator()(future<void> f)
+        {
+          try {
+            task();
+          } catch (...)  {
+            std::terminate();
+          }
         }
+      };
+
+      bool closed(lock_guard<mutex>&) const
+      {
+        return closed_;
       }
-    };
+    public:
+      /**
+       * \par Returns
+       * The underlying executor wrapped on a generic executor reference.
+       */
+      Executor& underlying_executor() BOOST_NOEXCEPT { return ex_; }
 
-    bool closed(lock_guard<mutex>&) const
-    {
-      return closed_;
-    }
-  public:
-    /**
-     * \par Returns
-     * The underlying executor wrapped on a generic executor reference.
-     */
-    generic_executor& underlying_executor() BOOST_NOEXCEPT { return ex_; }
+      /// shared_state is not copyable.
+      BOOST_THREAD_NO_COPYABLE(shared_state)
 
-    /// shared_state is not copyable.
-    BOOST_THREAD_NO_COPYABLE(shared_state)
+      /**
+       * \b Effects: creates a serial executor that runs closures in fifo order using one the associated executor.
+       *
+       * \b Throws: Whatever exception is thrown while initializing the needed resources.
+       *
+       * \b Notes:
+       * * The lifetime of the associated executor must outlive the serial executor.
+       * * The current implementation doesn't support submission from synchronous continuation, that is,
+       *     - the executor must execute the continuation asynchronously or
+       *     - the continuation can not submit to this serial executor.
+       */
+      shared_state(Executor& ex)
+      : ex_(ex), fut_(make_ready_future()), closed_(false)
+      {
+      }
+      /**
+       * \b Effects: Destroys the thread pool.
+       *
+       * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor_cont destructor.
+       */
+      ~shared_state()
+      {
+        // signal to the worker thread that there will be no more submissions.
+        close();
+      }
 
-    /**
-     * \b Effects: creates a serial executor that runs closures in fifo order using one the associated executor.
-     *
-     * \b Throws: Whatever exception is thrown while initializing the needed resources.
-     *
-     * \b Notes:
-     * * The lifetime of the associated executor must outlive the serial executor.
-     * * The current implementation doesn't support submission from synchronous continuation, that is,
-     *     - the executor must execute the continuation asynchronously or
-     *     - the continuation can not submit to this serial executor.
-     */
-    template <class Executor>
-    shared_state(Executor& ex)
-    : ex_(ex), fut_(make_ready_future()), closed_(false)
-    {
-    }
-    /**
-     * \b Effects: Destroys the thread pool.
-     *
-     * \b Synchronization: The completion of all the closures happen before the completion of the \c serial_executor_cont destructor.
-     */
-    ~shared_state()
-    {
-      // signal to the worker thread that there will be no more submissions.
-      close();
-    }
+      /**
+       * \b Effects: close the \c serial_executor_cont for submissions.
+       * The loop will work until there is no more closures to run.
+       */
+      void close()
+      {
+        lock_guard<mutex> lk(mtx_);
+        closed_ = true;;
+      }
 
-    /**
-     * \b Effects: close the \c serial_executor_cont for submissions.
-     * The loop will work until there is no more closures to run.
-     */
-    void close()
-    {
-      lock_guard<mutex> lk(mtx_);
-      closed_ = true;;
-    }
+      /**
+       * \b Returns: whether the pool is closed for submissions.
+       */
+      bool closed()
+      {
+        lock_guard<mutex> lk(mtx_);
+        return closed(lk);
+      }
 
-    /**
-     * \b Returns: whether the pool is closed for submissions.
-     */
-    bool closed()
-    {
-      lock_guard<mutex> lk(mtx_);
-      return closed(lk);
-    }
+      /**
+       * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
+       *
+       * \b Effects: The specified \c closure will be scheduled for execution after the last submitted closure finish.
+       * If the invoked closure throws an exception the \c serial_executor_cont will call \c std::terminate, as is the case with threads.
+       *
+       * \b Throws: \c sync_queue_is_closed if the executor is closed.
+       * Whatever exception that can be throw while storing the closure.
+       *
+       */
 
-    /**
-     * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
-     *
-     * \b Effects: The specified \c closure will be scheduled for execution after the last submitted closure finish.
-     * If the invoked closure throws an exception the \c serial_executor_cont will call \c std::terminate, as is the case with threads.
-     *
-     * \b Throws: \c sync_queue_is_closed if the executor is closed.
-     * Whatever exception that can be throw while storing the closure.
-     *
-     */
+  #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      template <typename Closure>
+      void submit(Closure & closure)
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+        fut_ = fut_.then(ex_, continuation(work(closure)));
+      }
+  #endif
+      void submit(void (*closure)())
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+        fut_ = fut_.then(ex_, continuation(work(closure)));
+      }
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-    template <typename Closure>
-    void submit(Closure & closure)
-    {
-      lock_guard<mutex> lk(mtx_);
-      if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
-      fut_ = fut_.then(ex_, continuation(work(closure)));
-    }
-#endif
-    void submit(void (*closure)())
-    {
-      lock_guard<mutex> lk(mtx_);
-      if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
-      fut_ = fut_.then(ex_, continuation(work(closure)));
-    }
-
-    template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
-    {
-      lock_guard<mutex> lk(mtx_);
-      if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
-      fut_ = fut_.then(ex_, continuation(work(boost::forward<Closure>(closure))));
-    }
+      template <typename Closure>
+      void submit(BOOST_THREAD_RV_REF(Closure) closure)
+      {
+        lock_guard<mutex> lk(mtx_);
+        if (closed(lk))       BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+        fut_ = fut_.then(ex_, continuation(work(boost::forward<Closure>(closure))));
+      }
     };
   public:
     /**
@@ -158,7 +156,6 @@ namespace executors
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
-    template <class Executor>
     serial_executor_cont(Executor& ex)
     : pimpl(make_shared<shared_state>(ex))
     {
@@ -176,7 +173,7 @@ namespace executors
      * \par Returns
      * The underlying executor wrapped on a generic executor reference.
      */
-    generic_executor& underlying_executor() BOOST_NOEXCEPT
+    Executor& underlying_executor() BOOST_NOEXCEPT
     {
       return pimpl->underlying_executor();
     }
