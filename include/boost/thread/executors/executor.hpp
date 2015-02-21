@@ -27,8 +27,6 @@ namespace boost
     /// type-erasure to store the works to do
     typedef  executors::work work;
 
-    /// executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(executor)
     executor() {}
 
     /**
@@ -128,7 +126,6 @@ namespace boost
     bool reschedule_until(Pred const& pred)
     {
       do {
-        //schedule_one_or_yield();
         if ( ! try_executing_one())
         {
           return false;
