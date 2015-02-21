@@ -62,56 +62,31 @@ namespace executors
        */
       generic_executor& underlying_executor() BOOST_NOEXCEPT { return ex; }
 
-      /**
-       * Effects: try to execute one task.
-       * Returns: whether a task has been executed.
-       * Throws: whatever the current task constructor throws or the task() throws.
-       */
-      bool try_executing_one()
-      {
-        work task;
-        try
-        {
-          if (work_queue.try_pull(task) == queue_op_status::success)
-          {
-            boost::promise<void> p;
-            try_executing_one_task tmp(task,p);
-            ex.submit(tmp);
-            p.get_future().wait();
-            return true;
-          }
-          return false;
-        }
-        catch (...)
-        {
-          std::terminate();
-          return false;
-        }
-      }
     private:
-      /**
-       * Effects: schedule one task or yields
-       * Throws: whatever the current task constructor throws or the task() throws.
-       */
-      void schedule_one_or_yield()
-      {
-          if ( ! try_executing_one())
-          {
-            this_thread::yield();
-          }
-      }
 
       /**
        * The main loop of the worker thread
        */
       void worker_thread()
       {
-        while (!closed())
+        try
         {
-          schedule_one_or_yield();
+          for(;;)
+          {
+            work task;
+            queue_op_status st = work_queue.wait_pull(task);
+            if (st == queue_op_status::closed) return;
+
+            boost::promise<void> p;
+            try_executing_one_task tmp(task,p);
+            ex.submit(tmp);
+            p.get_future().wait();
+          }
         }
-        while (try_executing_one())
+        catch (...)
         {
+          std::terminate();
+          return;
         }
       }
 
@@ -187,22 +162,6 @@ namespace executors
         work_queue.push(work(boost::forward<Closure>(closure)));
       }
 
-      /**
-       * \b Requires: This must be called from an scheduled task.
-       *
-       * \b Effects: reschedule functions until pred()
-       */
-      template <typename Pred>
-      bool reschedule_until(Pred const& pred)
-      {
-        do {
-          if ( ! try_executing_one())
-          {
-            return false;
-          }
-        } while (! pred());
-        return true;
-      }
     };
 
   public:
@@ -236,13 +195,12 @@ namespace executors
     }
 
     /**
-     * Effects: try to execute one task.
-     * Returns: whether a task has been executed.
-     * Throws: whatever the current task constructor throws or the task() throws.
+     * \b Returns: always false as a serial executor can not re-enter.
+     * Remark: A serial executor can not execute one of its pending tasks as the tasks depends on the other tasks.
      */
     bool try_executing_one()
     {
-      return pimpl->try_executing_one();
+      return false;
     }
 
     /**
@@ -293,14 +251,14 @@ namespace executors
     }
 
     /**
-     * \b Requires: This must be called from an scheduled task.
-     *
-     * \b Effects: reschedule functions until pred()
+     * \b Returns: always false as a serial executor can not re-enter.
+     * Remark: A serial executor can not execute one of its pending tasks as the tasks depends on the other tasks.
      */
     template <typename Pred>
     bool reschedule_until(Pred const& pred)
     {
-      return pimpl->reschedule_until(pred);
+      //return pimpl->reschedule_until(pred);
+      return false;
     }
   private:
     shared_ptr<shared_state> pimpl;
