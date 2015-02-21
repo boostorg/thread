@@ -30,9 +30,6 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executor::work work;
 
-    /// executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(executor_adaptor)
-
     /**
      * executor_adaptor constructor
      */
