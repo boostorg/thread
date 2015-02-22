@@ -23,11 +23,10 @@ namespace executors
 namespace detail
 {
   template <class Clock=chrono::steady_clock>
-  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<boost::function<void()>, Clock  > >
+  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<executors::work_pq, Clock  > >
   {
   public:
-    typedef boost::function<void()> work;
-    //typedef executors::work work;
+    typedef executors::work_pq work;
     typedef Clock clock;
     typedef typename clock::duration duration;
     typedef typename clock::time_point time_point;

@@ -18,12 +18,19 @@
 #if defined BOOST_THREAD_EXECUTORS_WORK_ACCEPTS_MOVABLE
 
 #include <boost/thread/detail/nullary_function.hpp>
+#include <boost/thread/csbl/functional.hpp>
 
 namespace boost
 {
   namespace executors
   {
     typedef detail::nullary_function<void()> work;
+
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
+    typedef detail::nullary_function<void()> work_pq;
+#else
+    typedef boost::function<void()> work_pq;
+#endif
   }
 } // namespace boost
 
