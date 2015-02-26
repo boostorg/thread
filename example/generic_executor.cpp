@@ -17,6 +17,7 @@
 #include <boost/thread/caller_context.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
+#include <boost/thread/executors/generic_serial_executor.hpp>
 #include <boost/thread/executors/serial_executor.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
@@ -65,6 +66,29 @@ void submit_some(boost::generic_executor tp)
 
 }
 
+template < class Executor>
+void submit_some2(Executor& tp)
+{
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p2);
+  }
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p1);
+  }
+
+}
+
+template <class Executor>
+void submit_some3(boost::serial_executor<Executor>& tp)
+{
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p2);
+  }
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p1);
+  }
+}
+
 void at_th_entry()
 {
 
@@ -106,11 +130,17 @@ int test_generic_executor()
         ea2.run_queued_closures();
       }
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+//      // std::cout << BOOST_CONTEXTOF << std::endl;
+//      {
+//        boost::basic_thread_pool ea1(4);
+//        boost::generic_serial_executor ea2(ea1);
+//        submit_some(ea2);
+//      }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::basic_thread_pool ea1(4);
-        boost::serial_executor ea2(ea1);
-        submit_some(ea2);
+        boost::serial_executor<boost::basic_thread_pool> ea2(ea1);
+        submit_some3(ea2);
       }
 #endif
       // std::cout << BOOST_CONTEXTOF << std::endl;

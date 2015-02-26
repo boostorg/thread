@@ -13,6 +13,8 @@
 #include <boost/chrono/time_point.hpp>
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/system_clocks.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -151,7 +153,7 @@ namespace boost
 
     private:
       Scheduler sch;
-      Executor ex;
+      Executor &ex;
     }; //end class
 
     /// Wraps a reference to a @c Scheduler providing an @c Executor that

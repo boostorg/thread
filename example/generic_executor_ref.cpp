@@ -17,7 +17,7 @@
 #include <boost/thread/caller_context.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
-#include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/generic_serial_executor.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
@@ -109,7 +109,7 @@ int test_generic_executor_ref()
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::basic_thread_pool ea1(4);
-        boost::serial_executor ea2(ea1);
+        boost::generic_serial_executor ea2(ea1);
         submit_some(ea2);
       }
 #endif

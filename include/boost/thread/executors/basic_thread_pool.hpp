@@ -423,6 +423,12 @@ namespace executors
     {
       return pimpl->reschedule_until(pred);
     }
+
+    void schedule_one_or_yield()
+    {
+      return pimpl->schedule_one_or_yield();
+    }
+
   private:
     shared_ptr<shared_state> pimpl;
   };

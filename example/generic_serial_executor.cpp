@@ -54,17 +54,16 @@ int f2(int i)
 
 void submit_some(boost::generic_serial_executor& tp)
 {
-  std::cout << BOOST_CONTEXTOF << std::endl;
+  //std::cout << BOOST_CONTEXTOF << std::endl;
   for (int i = 0; i < 3; ++i) {
-    std::cout << BOOST_CONTEXTOF << std::endl;
+    //std::cout << BOOST_CONTEXTOF << std::endl;
     tp.submit(&p2);
   }
   for (int i = 0; i < 3; ++i) {
-    std::cout << BOOST_CONTEXTOF << std::endl;
+    //std::cout << BOOST_CONTEXTOF << std::endl;
     tp.submit(&p1);
   }
-  std::cout << BOOST_CONTEXTOF << std::endl;
-
+  //std::cout << BOOST_CONTEXTOF << std::endl;
 }
 
 

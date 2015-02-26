@@ -14,6 +14,9 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/work.hpp>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost

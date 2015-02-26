@@ -18,6 +18,9 @@
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -165,6 +168,9 @@ namespace executors
     };
 
   public:
+
+//    generic_serial_executor(generic_serial_executor const&) = default;
+//    generic_serial_executor(generic_serial_executor &&) = default;
 
     /**
      * \b Effects: creates a thread pool that runs closures using one of its closure-executing methods.

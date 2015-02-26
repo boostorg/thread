@@ -30,6 +30,8 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executor::work work;
 
+//    executor_adaptor(executor_adaptor const&) = default;
+//    executor_adaptor(executor_adaptor &&) = default;
     /**
      * executor_adaptor constructor
      */

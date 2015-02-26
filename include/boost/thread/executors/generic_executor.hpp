@@ -13,7 +13,8 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -28,6 +29,9 @@ namespace boost
   public:
     /// type-erasure to store the works to do
     typedef executors::work work;
+
+    //generic_executor(generic_executor const&) = default;
+    //generic_executor(generic_executor &&) = default;
 
     template<typename Executor>
     generic_executor(Executor& ex)

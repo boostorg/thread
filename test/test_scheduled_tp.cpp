@@ -35,6 +35,13 @@ void func(steady_clock::time_point pushed, steady_clock::duration dur)
 {
     BOOST_TEST(pushed + dur < steady_clock::now());
 }
+void func2(scheduled_tp* tp, steady_clock::duration d)
+{
+  boost::function<void()> fn = boost::bind(func,steady_clock::now(),d);
+  tp->submit_after(fn, d);
+}
+
+
 
 void test_timing(const int n)
 {
@@ -67,8 +74,9 @@ void test_deque_multi(const int n)
     for(int i = 0; i < n; i++)
     {
         steady_clock::duration d = milliseconds(i*100);
-        boost::function<void()> fn = boost::bind(func,steady_clock::now(),d);
-        tg.create_thread(boost::bind(boost::mem_fn(&scheduled_tp::submit_after), &se, fn, d));
+        //boost::function<void()> fn = boost::bind(func,steady_clock::now(),d);
+        //tg.create_thread(boost::bind(boost::mem_fn(&scheduled_tp::submit_after), &se, fn, d));
+        tg.create_thread(boost::bind(func2, &se, d));
     }
     tg.join_all();
     //dtor is called here so execution will block untill all the closures

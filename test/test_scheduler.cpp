@@ -75,6 +75,8 @@ int main()
   test_after(5, sch);
   test_at(5, sch);
   test_on(5, sch, tp);
+  boost::this_thread::sleep_for(boost::chrono::seconds(10));
+  std::cout << "[" << __LINE__ << "] " << std::endl;
 
   return boost::report_errors();
 }
