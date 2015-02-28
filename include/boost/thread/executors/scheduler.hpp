@@ -38,7 +38,7 @@ namespace boost
       }
 
     private:
-      Executor&   ex;
+      Executor   ex;
       Function funct;
     };
 
@@ -103,7 +103,7 @@ namespace boost
 
     private:
       Scheduler   sch;
-      Executor&   ex;
+      Executor   ex;
       typename clock::time_point  tp;
       bool  is_closed;
     };
@@ -153,7 +153,7 @@ namespace boost
 
     private:
       Scheduler sch;
-      Executor &ex;
+      Executor ex;
     }; //end class
 
     /// Wraps a reference to a @c Scheduler providing an @c Executor that
@@ -276,12 +276,12 @@ namespace boost
 
       void submit_at(work w, const time_point& tp)
       {
-        return pimpl->submit_at(w, tp);
+        return pimpl->submit_at(boost::move(w), tp);
       }
 
       void submit_after(work w, const duration& d)
       {
-        return pimpl->submit_after(w, d);
+        return pimpl->submit_after(boost::move(w), d);
       }
 
       template <class Ex>
