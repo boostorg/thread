@@ -107,6 +107,11 @@ namespace detail
     void push(const T& elem, chrono::duration<Rep,Period> const& dura);
 
     template <class Duration>
+    void push(BOOST_THREAD_RV_REF(T) elem, chrono::time_point<clock,Duration> const& tp);
+    template <class Rep, class Period>
+    void push(BOOST_THREAD_RV_REF(T) elem, chrono::duration<Rep,Period> const& dura);
+
+    template <class Duration>
     queue_op_status try_push(const T& elem, chrono::time_point<clock,Duration> const& tp);
     template <class Rep, class Period>
     queue_op_status try_push(const T& elem, chrono::duration<Rep,Period> const& dura);
@@ -157,6 +162,22 @@ namespace detail
   {
     push(elem, clock::now() + dura);
   }
+
+  template <class T, class Clock>
+  template <class Duration>
+  void sync_timed_queue<T, Clock>::push(BOOST_THREAD_RV_REF(T) elem, chrono::time_point<clock,Duration> const& tp)
+  {
+    super::push(stype(boost::move(elem),tp));
+  }
+
+  template <class T, class Clock>
+  template <class Rep, class Period>
+  void sync_timed_queue<T, Clock>::push(BOOST_THREAD_RV_REF(T) elem, chrono::duration<Rep,Period> const& dura)
+  {
+    push(boost::move(elem), clock::now() + dura);
+  }
+
+
 
   template <class T, class Clock>
   template <class Duration>

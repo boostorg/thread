@@ -1,5 +1,5 @@
 // Copyright (C) 2014 Ian Forbed
-// Copyright (C) 2014 Vicente J. Botet Escriba
+// Copyright (C) 2014,2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -149,17 +149,15 @@ int main()
   //test_pull_until_when_not_empty();
 
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-#if 0
   {
     // empty queue try_push rvalue/non-copyable succeeds
       boost::concurrent::sync_priority_queue<non_copyable> q;
-      BOOST_TEST(boost::queue_op_status::success ==q.try_push(non_copyable()));
+      BOOST_TEST(boost::queue_op_status::success ==q.try_push(non_copyable(1)));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
-#endif
   {
     //fixme
     // empty queue try_push rvalue/non-copyable succeeds
@@ -183,17 +181,16 @@ int main()
       BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
-//  {
-//    // empty queue try_push rvalue succeeds
-//      boost::concurrent::sync_priority_queue<int> q;
-//      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(1));
-//      BOOST_TEST(! q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 1u);
-//      BOOST_TEST(! q.closed());
-//  }
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #if 0
+  {
+    // empty queue try_push rvalue succeeds
+      boost::concurrent::sync_priority_queue<int> q;
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(1));
+      BOOST_TEST(! q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 1u);
+      BOOST_TEST(! q.closed());
+  }
   {
     // empty queue nonblocking_push rvalue/non-copyable succeeds
       boost::concurrent::sync_priority_queue<non_copyable> q;
@@ -203,17 +200,16 @@ int main()
       BOOST_TEST_EQ(q.size(), 1u);
       BOOST_TEST(! q.closed());
   }
-#endif
-//  {
-//    // empty queue nonblocking_push rvalue/non-copyable succeeds
-//      boost::concurrent::sync_priority_queue<non_copyable> q;
-//      non_copyable nc(1);
-//      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(boost::move(nc)));
-//      BOOST_TEST(! q.empty());
-//      BOOST_TEST(! q.full());
-//      BOOST_TEST_EQ(q.size(), 1u);
-//      BOOST_TEST(! q.closed());
-//  }
+  {
+    // empty queue nonblocking_push rvalue/non-copyable succeeds
+      boost::concurrent::sync_priority_queue<non_copyable> q;
+      non_copyable nc(1);
+      BOOST_TEST(boost::queue_op_status::success == q.nonblocking_push(boost::move(nc)));
+      BOOST_TEST(! q.empty());
+      BOOST_TEST(! q.full());
+      BOOST_TEST_EQ(q.size(), 1u);
+      BOOST_TEST(! q.closed());
+  }
 #endif
 
   {
