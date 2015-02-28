@@ -102,7 +102,7 @@ namespace boost
       }
 
     private:
-      Scheduler&  sch;
+      Scheduler   sch;
       Executor&   ex;
       typename clock::time_point  tp;
       bool  is_closed;
