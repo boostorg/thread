@@ -9,6 +9,10 @@
 #define BOOST_THREAD_EXECUTORS_SCHEDULED_THREAD_POOL_HPP
 
 #include <boost/thread/executors/detail/scheduled_executor_base.hpp>
+#include <boost/thread/executors/work.hpp>
+#include <boost/thread/detail/move.hpp>
+#include <boost/thread/scoped_thread.hpp>
+#include <boost/thread/csbl/vector.hpp>
 
 namespace boost
 {
@@ -18,21 +22,38 @@ namespace executors
   class scheduled_thread_pool : public detail::scheduled_executor_base<>
   {
   private:
-    thread_group _workers;
+    typedef scoped_thread<> thread_t;
+    typedef csbl::vector<thread_t> thread_vector;
+    thread_vector threads;
+
   public:
 
-    scheduled_thread_pool(size_t num_threads) : super()
+    scheduled_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1) : super()
     {
-      for(size_t i = 0; i < num_threads; i++)
+
+      try
       {
-        _workers.create_thread(bind(&super::loop, this));
+        threads.reserve(thread_count);
+        for (unsigned i = 0; i < thread_count; ++i)
+        {
+#if 1
+          thread th (&super::loop, this);
+          threads.push_back(thread_t(boost::move(th)));
+#else
+          threads.push_back(thread_t(&super::loop, this)); // do not compile
+#endif
+        }
+      }
+      catch (...)
+      {
+        close();
+        throw;
       }
     }
 
     ~scheduled_thread_pool()
     {
       this->close();
-      _workers.join_all();
     }
 
   private:
