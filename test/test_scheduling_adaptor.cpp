@@ -28,7 +28,6 @@ typedef boost::executors::basic_thread_pool thread_pool;
 
 void fn(int x)
 {
-  //std::cout << "[" << __LINE__ << "] " << steady_clock::now() << std::endl;
     std::cout << x << std::endl;
 }
 
@@ -41,14 +40,10 @@ void test_timing(const int n)
         sa.submit_after(boost::bind(fn,i),seconds(i));
         sa.submit_after(boost::bind(fn,i), milliseconds(i*100));
     }
-    boost::this_thread::sleep_for(boost::chrono::seconds(10));
 }
 
 int main()
 {
-  steady_clock::time_point start = steady_clock::now();
   test_timing(5);
-  steady_clock::duration diff = steady_clock::now() - start;
-  BOOST_TEST(diff > seconds(5));
   return boost::report_errors();
 }

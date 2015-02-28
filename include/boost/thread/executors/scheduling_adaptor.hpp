@@ -19,7 +19,7 @@ namespace executors
   class scheduling_adpator : public detail::scheduled_executor_base<>
   {
   private:
-    Executor& _exec;
+    Executor _exec;
     thread _scheduler;
   public:
 
