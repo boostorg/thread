@@ -16,6 +16,8 @@
 #include <boost/atomic.hpp>
 #include <boost/function.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
 namespace executors
@@ -45,12 +47,12 @@ namespace detail
 
     void submit_at(work w, const time_point& tp)
     {
-      this->_workq.push(w, tp);
+      this->_workq.push(boost::move(w), tp);
     }
 
     void submit_after(work w, const duration& dura)
     {
-      this->_workq.push(w, dura+clock::now());
+      this->_workq.push(boost::move(w), dura+clock::now());
     }
 
   }; //end class
@@ -58,4 +60,7 @@ namespace detail
 } //end detail namespace
 } //end executors namespace
 } //end boost namespace
+
+#include <boost/config/abi_suffix.hpp>
+
 #endif
