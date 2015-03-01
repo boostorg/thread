@@ -262,8 +262,6 @@ class serial_executor_threadless
 		}
 	 
   public:
-    /// serial_executor_threadless is not copyable.
-    BOOST_THREAD_NO_COPYABLE(serial_executor_threadless)
 
     /**
      * \b Effects: creates a thread pool that runs closures using one of its closure-executing methods.
