@@ -1,5 +1,5 @@
 // Copyright (C) 2014 Ian Forbed
-// Copyright (C) 2014 Vicente J. Botet Escriba
+// Copyright (C) 2014-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -16,6 +16,8 @@
 #include <boost/atomic.hpp>
 #include <boost/function.hpp>
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost
 {
 namespace executors
@@ -23,11 +25,10 @@ namespace executors
 namespace detail
 {
   template <class Clock=chrono::steady_clock>
-  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<boost::function<void()>, Clock  > >
+  class scheduled_executor_base : public priority_executor_base<concurrent::sync_timed_queue<executors::work_pq, Clock  > >
   {
   public:
-    typedef boost::function<void()> work;
-    //typedef executors::work work;
+    typedef executors::work_pq work;
     typedef Clock clock;
     typedef typename clock::duration duration;
     typedef typename clock::time_point time_point;
@@ -46,12 +47,12 @@ namespace detail
 
     void submit_at(work w, const time_point& tp)
     {
-      this->_workq.push(w, tp);
+      this->_workq.push(boost::move(w), tp);
     }
 
     void submit_after(work w, const duration& dura)
     {
-      this->_workq.push(w, dura+clock::now());
+      this->_workq.push(boost::move(w), dura+clock::now());
     }
 
   }; //end class
@@ -59,4 +60,7 @@ namespace detail
 } //end detail namespace
 } //end executors namespace
 } //end boost namespace
+
+#include <boost/config/abi_suffix.hpp>
+
 #endif

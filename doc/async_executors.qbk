@@ -319,32 +319,22 @@ The reason is that the user can always use a thread_local variable and reset it 
 		}
 	);
 
+[
 [heading Default executor]
 
 The library authors share some of the concerns of the C++ standard committee (introduction of a new single shared resource, a singleton, could make it difficult to make it portable to all the environments) and that this library doesn't need to provide a default executor for the time been. 
 
-The user can always define his default executor himself and use the `at_thread_entry ` member function to set the default constructor.
+The user can always define his default executor himself.
 
-	thread_local default_executor_state_type default_executor_state;
-	executor* default_executor() { return default_executor_state.default_executor(); }
-
-	// in main
-	MyDefaultExecutor myDefaultExecutor( 
-		// at_thread_entry
-		[](MyDefaultExecutor& ex) { 
-			default_executor_state.set_default_executor(ex);
-		}
-	);
-
-	basic_thread_pool pool(
-		// at_thread_entry
-		[&myDefaultExecutor](basic_thread_pool& pool) { 
-			default_executor_state.set_default_executor(myDefaultExecutor);
-		}
-	);
+	boost::generic_executor_ref default_executor()
+	{
+  		static boost::basic_thread_pool tp(4);
+  		return generic_executor_ref(tp);
+	}
 
 
 [endsect]
+
 
 [/////////////////////]
 [section:ref Reference]

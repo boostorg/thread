@@ -1,4 +1,4 @@
-// Copyright (C) 2013 Vicente J. Botet Escriba
+// Copyright (C) 2013,2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -76,7 +76,7 @@ int main()
       BOOST_TEST(! q.closed());
   }
 
-#if 0
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   {
     // empty queue push rvalue/non_copyable succeeds
       boost::sync_deque<non_copyable> q;
@@ -137,11 +137,11 @@ int main()
       BOOST_TEST(! q.closed());
   }
 
-#if 0
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   {
     // empty queue try_push rvalue/non-copyable succeeds
       boost::sync_deque<non_copyable> q;
-      BOOST_TEST(boost::queue_op_status::success ==q.try_push_back(non_copyable()));
+      BOOST_TEST(boost::queue_op_status::success ==q.try_push_back(non_copyable(1)));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
       BOOST_TEST_EQ(q.size(), 1u);
@@ -179,8 +179,7 @@ int main()
       BOOST_TEST(! q.closed());
   }
 
-
-#if 0
+#ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
   {
     // empty queue nonblocking_push_back rvalue/non-copyable succeeds
       boost::sync_deque<non_copyable> q;

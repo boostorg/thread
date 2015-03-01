@@ -26,11 +26,10 @@
 #endif
 #include <boost/thread/detail/delete.hpp>
 
-#ifdef _POSIX_TIMEOUTS
-#if _POSIX_TIMEOUTS >= 0 && _POSIX_TIMEOUTS>=200112L
+#if (defined(_POSIX_TIMEOUTS) && (_POSIX_TIMEOUTS-0)>=200112L) \
+ || (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
 #ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
 #define BOOST_PTHREAD_HAS_TIMEDLOCK
-#endif
 #endif
 #endif
 

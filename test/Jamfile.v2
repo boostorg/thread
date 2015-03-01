@@ -293,9 +293,11 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_7328.cpp ]
           [ thread-run test_7571.cpp ]
           [ thread-run test_9319.cpp ]
-          #[ thread-run test_9711.cpp ] this test is invalid and should not work :(
+          #[ thread-run test_9711.cpp ] This is an invalid use of ::then deferred.
+          [ thread-run test_9856.cpp ]
           [ thread-compile test_10963.cpp : : test_10963_c ]
           [ thread-run test_10964.cpp ]
+          [ thread-test test_11053.cpp ]
     ;
 
 
@@ -807,6 +809,8 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/user_scheduler.cpp : ex_user_scheduler ]
           [ thread-run2 ../example/executor.cpp : ex_executor ]
           [ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref ]
+          [ thread-run2 ../example/serial_executor.cpp : ex_serial_executor ]
+          [ thread-run2 ../example/serial_executor_cont.cpp : ex_serial_executor_cont ]
           [ thread-run2 ../example/future_when_all.cpp : ex_future_when_all ]
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
           [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
@@ -911,7 +915,6 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run test_9192.cpp ]
           #[ thread-run test_9303.cpp ]
           #[ thread-run test_9720.cpp ]
-          [ thread-run test_9856.cpp ]
           #[ thread-run test_10125.cpp ]
           #[ thread-run test_10128.cpp ]
           #[ thread-run test_10340.cpp ]
@@ -947,6 +950,8 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+          [ thread-run2 ../example/this_executor.cpp : ex_this_executor ]
+          [ thread-run2 ../example/default_executor.cpp : ex_default_executor ]
     ;
 
 }
