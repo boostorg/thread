@@ -18,7 +18,10 @@
 #include <boost/thread/future.hpp>
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include <atomic>
+#include <future>
 #include <boost/config/abi_prefix.hpp>
+
 
 namespace boost
 {
@@ -37,7 +40,7 @@ class serial_executor_threadless
 	  {
 		  template <class Executor>
 		  serial_executor_threadless_impl(Executor& ex)
-			  : ex(ex), fut(make_ready_future())
+			  : ex(ex), sp_fut()
 		  {
 
 		  }
@@ -46,21 +49,89 @@ class serial_executor_threadless
 		  concurrent::sync_queue<work> work_queue;
 		  generic_executor_ref ex;
 		  boost::recursive_mutex mtx;
-		  boost::BOOST_THREAD_FUTURE<void> fut;
+		  //boost::mutex mtx;
+		  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> sp_fut;
 
 		  struct try_executing_one_task {
 			  work task;
 			  boost::function<void(void)> followup_task;
 			  boost::shared_ptr<boost::promise<void>> p;
-			  try_executing_one_task(work task, boost::function<void(void)> ftask)
-				  : task(boost::move(task)), followup_task(ftask), p(new boost::promise<void>()){}
+			  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> sp_fut;
 
-			  boost::BOOST_THREAD_FUTURE<void> get_future(){
-				  return p->get_future();
+			  try_executing_one_task(try_executing_one_task&& other)
+				  : task()
+				  , followup_task()
+				  , p()
+				  , sp_fut()
+			  {
+				  task = boost::move(other.task);
+				  followup_task = boost::move(other.followup_task);
+				  p.swap(other.p);
+				  sp_fut.swap(other.sp_fut);
+				  //std::cout << "move ctor " << this << std::endl;
+			  }
+
+			  try_executing_one_task(const try_executing_one_task& rOther)
+				  : task(rOther.task)
+				  , followup_task(rOther.followup_task)
+				  , p(rOther.p)
+				  , sp_fut(rOther.sp_fut)
+			  {
+				  //std::cout << "copy ctor " << this << std::endl;
+			  }
+
+			  try_executing_one_task(work _task, boost::function<void(void)> ftask)
+				  : task(boost::move(_task))
+				  , followup_task(ftask)
+				  , p(new boost::promise<void>())
+				  , sp_fut(new boost::BOOST_THREAD_FUTURE<void>(boost::move(p->get_future())))
+			  {
+				  //std::cout << "ctor " << this << std::endl;
+			  }
+
+			  //try_executing_one_task& operator=(const try_executing_one_task& rOther)
+			  //{
+				 // if (&rOther != this)
+				 // {
+					//  task = rOther.task;
+					//  followup_task = rOther.followup_task;
+					//  p = rOther.p;
+					//  sp_fut = rOther.sp_fut;
+				 // }
+				 // return *this;
+			  //}
+
+			  //try_executing_one_task& operator=(try_executing_one_task&& other)
+			  //{
+				 // if (&other != this)
+				 // {
+					//  task = boost::move(other.task);
+					//  followup_task = boost::move(other.followup_task);
+					//  p.swap(other.p);
+					//  sp_fut.swap(other.sp_fut);
+				 // }
+				 // return *this;
+			  //}
+
+			  ~try_executing_one_task()
+			  {
+				  //std::cout << "dtor " << this << std::endl;
+				  if (sp_fut && !sp_fut->has_value()) // prevent broken promise exception, there is surely a better way...
+				  {
+					  p->set_value();
+				  }
+				  sp_fut.reset();
+				  p.reset();
+			  }
+
+			  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> get_future(){
+				  
+				  return sp_fut;
 			  }
 
 			  void operator()() {
 				  try {
+					  //std::cout << "callable " << this << std::endl;
 					  task();
 					  p->set_value();
 					  followup_task();
@@ -96,7 +167,7 @@ class serial_executor_threadless
 			  try
 			  {
 				  work task;
-				  if (fut.is_ready() && (work_queue.try_pull(task) == queue_op_status::success))
+				  if ((!sp_fut || sp_fut->is_ready()) && (work_queue.try_pull(task) == queue_op_status::success))
 				  {
 					  auto task_cont = boost::bind<void>([](boost::weak_ptr<serial_executor_threadless_impl> _spEx) -> void
 					  {
@@ -107,8 +178,16 @@ class serial_executor_threadless
 					  }, this->shared_from_this());
 
 					  try_executing_one_task tmp(boost::move(task), task_cont);
-					  fut = tmp.get_future();
-					  ex.submit(boost::move(tmp));
+					  sp_fut = tmp.get_future();
+					  //don't move here
+					  //ex.submit(boost::move(tmp));
+
+					  //and this is also not so good...
+					  //work w(boost::move(tmp));
+					  //ex.submit(boost::move(w));
+
+					  //this works but makes a lot of copies down the road
+					  ex.submit(tmp);
 
 					  return true;
 				  }
@@ -116,7 +195,7 @@ class serial_executor_threadless
 			  }
 			  catch (boost::concurrent::sync_queue_is_closed& /*exp*/)
 			  {
-				  std::cout << "associated executor already closed..." << std::endl;
+				  //std::cout << "associated executor already closed..." << std::endl;
 				  return false;
 			  }
 			  catch (...)
@@ -138,26 +217,20 @@ class serial_executor_threadless
 		  * Whatever exception that can be throw while storing the closure.
 		  */
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
 		  template <typename Closure>
-		  void submit(Closure & closure)
+		  void submit(Closure closure)
 		  {
 			  work_queue.push(work(closure));
 			  try_executing_one();
 		  }
-#endif
+
 		  void submit(void(*closure)())
 		  {
 			  work_queue.push(work(closure));
 			  try_executing_one();
 		  }
 
-		  template <typename Closure>
-		  void submit(BOOST_THREAD_RV_REF(Closure) closure)
-		  {
-			  work_queue.push(work(boost::forward<Closure>(closure)));
-			  try_executing_one();
-		  }
+
 
 		  void submit(BOOST_THREAD_RV_REF(work) closure)  {
 			  work_queue.push(work(boost::forward<work>(closure)));
@@ -243,22 +316,16 @@ class serial_executor_threadless
      * Whatever exception that can be throw while storing the closure.
      */
 
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
 	template <typename Closure>
-	void submit(Closure & closure)
-	{
-		impl->submit(boost::move(closure));
-	}
-#endif
-	void submit(void(*closure)())
+	void submit(Closure closure)
 	{
 		impl->submit(boost::move(closure));
 	}
 
-	template <typename Closure>
-	void submit(BOOST_THREAD_RV_REF(Closure) closure)
+	void submit(void(*closure)())
 	{
-		impl->submit(boost::forward<Closure>(closure));
+		impl->submit(boost::move(closure));
 	}
 
 	void submit(BOOST_THREAD_RV_REF(work) closure)  {

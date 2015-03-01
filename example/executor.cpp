@@ -18,6 +18,7 @@
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
 #include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/serial_executor_threadless.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
@@ -30,13 +31,13 @@
 
 void p1()
 {
-  // std::cout << BOOST_CONTEXTOF << std::endl;
+  std::cout << BOOST_CONTEXTOF << std::endl;
   //boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
 }
 
 void p2()
 {
-  // std::cout << BOOST_CONTEXTOF << std::endl;
+  std::cout << BOOST_CONTEXTOF << std::endl;
   //boost::this_thread::sleep_for(boost::chrono::seconds(10));
 }
 
@@ -76,6 +77,23 @@ int test_executor_adaptor()
   {
     try
     {
+
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+		// std::cout << BOOST_CONTEXTOF << std::endl;
+	  {
+		  boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
+		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
+		  submit_some(ea2);
+	  }
+
+	  {
+		  boost::executor_adaptor < boost::inline_executor > ea1;
+		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
+		  submit_some(ea2);
+	  }
+#endif
+
+
       {
         boost::executor_adaptor < boost::basic_thread_pool > ea(4);
         submit_some( ea);
@@ -103,14 +121,7 @@ int test_executor_adaptor()
         submit_some( ea2);
         ea2.underlying_executor().run_queued_closures();
       }
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      // std::cout << BOOST_CONTEXTOF << std::endl;
-      {
-        boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
-        boost::executor_adaptor < boost::serial_executor > ea2(ea1);
-        submit_some(ea2);
-      }
-#endif
+
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::executor_adaptor < boost::inline_executor > ea1;
