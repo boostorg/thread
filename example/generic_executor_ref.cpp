@@ -65,7 +65,7 @@ void submit_some(boost::generic_executor_ref tp)
 
 }
 
-void at_th_entry()
+void at_th_entry(boost::basic_thread_pool)
 {
 
 }

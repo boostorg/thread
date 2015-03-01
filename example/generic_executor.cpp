@@ -89,7 +89,7 @@ void submit_some3(boost::serial_executor<Executor>& tp)
   }
 }
 
-void at_th_entry()
+void at_th_entry(boost::basic_thread_pool)
 {
 
 }

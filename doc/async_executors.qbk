@@ -174,7 +174,7 @@ This has several advantages:
 * The scheduled operations are available for all the executors via wrappers.
 * The template functions could accept any chrono `time_point` and `duration` respectively as we are not working with virtual functions.
 
-In order to manage with all the clocks, this library propose generic solution. `scheduler<Clock>` know how to manage with the `submit_at`/`submit_after` `Clock::time_point`/`Clock::duration` tasks. Note that the durations on different clocks differ.
+In order to manage with all the clocks, this library propose a generic solution. `scheduler<Clock>` know how to manage with the `submit_at`/`submit_after` `Clock::time_point`/`Clock::duration` tasks. Note that the durations on different clocks differ.
 
 [heading Not Handled Exceptions]
 As in N3785 and based on the same design decision than `std`/`boost::thread` if a user closure throws an exception, the executor must call the `std::terminate` function.

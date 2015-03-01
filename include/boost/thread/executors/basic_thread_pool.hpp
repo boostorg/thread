@@ -18,6 +18,11 @@
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/csbl/vector.hpp>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
+#include <boost/smart_ptr/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -31,17 +36,22 @@ namespace executors
     typedef  executors::work work;
   private:
 
-    struct shared_state {
+    struct shared_state : enable_shared_from_this<shared_state> {
       typedef  executors::work work;
       /// the kind of stored threads are scoped threads to ensure that the threads are joined.
       /// A move aware vector type
-      typedef scoped_thread<> thread_t;
+      //typedef scoped_thread<> thread_t;
+      typedef thread thread_t;
       typedef csbl::vector<thread_t> thread_vector;
 
       /// the thread safe work queue
       concurrent::sync_queue<work > work_queue;
       /// A move aware vector
       thread_vector threads;
+      unsigned const thread_count;
+      boost::function<void(basic_thread_pool)> at_thread_entry;
+      friend class basic_thread_pool;
+
 
     public:
       /**
@@ -85,13 +95,15 @@ namespace executors
        */
       void worker_thread()
       {
+        // fixme: this call results on segmentation fault
+        //at_thread_entry(basic_thread_pool(this->shared_from_this()));
         try
         {
           for(;;)
           {
             work task;
             queue_op_status st = work_queue.wait_pull(task);
-            if (st == queue_op_status::closed) return;
+            if (st == queue_op_status::closed) break;
             task();
           }
         }
@@ -101,26 +113,26 @@ namespace executors
           return;
         }
       }
-  #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      template <class AtThreadEntry>
-      void worker_thread1(AtThreadEntry& at_thread_entry)
+
+      static void do_nothing_at_thread_entry(basic_thread_pool) {}
+
+      void init()
       {
-        at_thread_entry();
-        worker_thread();
+        try
+        {
+          threads.reserve(thread_count);
+          for (unsigned i = 0; i < thread_count; ++i)
+          {
+            thread th (&shared_state::worker_thread, this);
+            threads.push_back(thread_t(boost::move(th)));
+          }
+        }
+        catch (...)
+        {
+          close();
+          throw;
+        }
       }
-  #endif
-      void worker_thread2(void(*at_thread_entry)())
-      {
-        at_thread_entry();
-        worker_thread();
-      }
-      template <class AtThreadEntry>
-      void worker_thread3(BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
-      {
-        at_thread_entry();
-        worker_thread();
-      }
-      static void do_nothing_at_thread_entry() {}
 
     public:
       /// basic_thread_pool is not copyable.
@@ -132,25 +144,9 @@ namespace executors
        * \b Throws: Whatever exception is thrown while initializing the needed resources.
        */
       shared_state(unsigned const thread_count = thread::hardware_concurrency()+1)
+      : thread_count(thread_count),
+        at_thread_entry(do_nothing_at_thread_entry)
       {
-        try
-        {
-          threads.reserve(thread_count);
-          for (unsigned i = 0; i < thread_count; ++i)
-          {
-  #if 1
-            thread th (&shared_state::worker_thread, this);
-            threads.push_back(thread_t(boost::move(th)));
-  #else
-            threads.push_back(thread_t(&shared_state::worker_thread, this)); // do not compile
-  #endif
-          }
-        }
-        catch (...)
-        {
-          close();
-          throw;
-        }
       }
       /**
        * \b Effects: creates a thread pool that runs closures on \c thread_count threads
@@ -161,60 +157,21 @@ namespace executors
   #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       template <class AtThreadEntry>
       shared_state( unsigned const thread_count, AtThreadEntry& at_thread_entry)
+      : thread_count(thread_count),
+        at_thread_entry(at_thread_entry)
       {
-        try
-        {
-          threads.reserve(thread_count);
-          for (unsigned i = 0; i < thread_count; ++i)
-          {
-            thread th (&shared_state::worker_thread1<AtThreadEntry>, this, at_thread_entry);
-            threads.push_back(thread_t(boost::move(th)));
-            //threads.push_back(thread_t(&shared_state::worker_thread, this)); // do not compile
-          }
-        }
-        catch (...)
-        {
-          close();
-          throw;
-        }
       }
   #endif
-      shared_state( unsigned const thread_count, void(*at_thread_entry)())
+      shared_state( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool))
+      : thread_count(thread_count),
+        at_thread_entry(at_thread_entry)
       {
-        try
-        {
-          threads.reserve(thread_count);
-          for (unsigned i = 0; i < thread_count; ++i)
-          {
-            thread th (&shared_state::worker_thread2, this, at_thread_entry);
-            threads.push_back(thread_t(boost::move(th)));
-            //threads.push_back(thread_t(&shared_state::worker_thread, this)); // do not compile
-          }
-        }
-        catch (...)
-        {
-          close();
-          throw;
-        }
       }
       template <class AtThreadEntry>
       shared_state( unsigned const thread_count, BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
+      : thread_count(thread_count),
+        at_thread_entry(boost::move(at_thread_entry))
       {
-        try
-        {
-          threads.reserve(thread_count);
-          for (unsigned i = 0; i < thread_count; ++i)
-          {
-            thread th (&shared_state::worker_thread3<AtThreadEntry>, this, boost::forward<AtThreadEntry>(at_thread_entry));
-            threads.push_back(thread_t(boost::move(th)));
-            //threads.push_back(thread_t(&shared_state::worker_thread, this)); // do not compile
-          }
-        }
-        catch (...)
-        {
-          close();
-          throw;
-        }
       }
       /**
        * \b Effects: Destroys the thread pool.
@@ -225,6 +182,7 @@ namespace executors
       {
         // signal to all the worker threads that there will be no more submissions.
         close();
+        join();
         // joins all the threads as the threads were scoped_threads
       }
 
@@ -235,6 +193,7 @@ namespace executors
       {
         for (unsigned i = 0; i < threads.size(); ++i)
         {
+          if (this_thread::get_id() == threads[i].get_id()) continue;
           threads[i].join();
         }
       }
@@ -304,6 +263,16 @@ namespace executors
       }
     };
 
+    /**
+     * \b Effects: creates a thread pool with this shared state.
+     *
+     * \b Throws: Whatever exception is thrown while initializing the needed resources.
+     */
+    friend struct shared_state;
+    basic_thread_pool(shared_ptr<shared_state> ptr)
+    : pimpl(ptr)
+    {
+    }
   public:
     /**
      * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
@@ -313,6 +282,7 @@ namespace executors
     basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
     : pimpl(make_shared<shared_state>(thread_count))
     {
+      pimpl->init();
     }
 
     /**
@@ -326,17 +296,20 @@ namespace executors
     basic_thread_pool( unsigned const thread_count, AtThreadEntry& at_thread_entry)
     : pimpl(make_shared<shared_state>(thread_count, at_thread_entry))
     {
+      pimpl->init();
     }
 #endif
 
-    basic_thread_pool( unsigned const thread_count, void(*at_thread_entry)())
+    basic_thread_pool( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool))
     : pimpl(make_shared<shared_state>(thread_count, at_thread_entry))
     {
+      pimpl->init();
     }
     template <class AtThreadEntry>
     basic_thread_pool( unsigned const thread_count, BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
     : pimpl(make_shared<shared_state>(thread_count, at_thread_entry))
     {
+      pimpl->init();
     }
 
     /**
