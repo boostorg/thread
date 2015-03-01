@@ -44,7 +44,7 @@
 #include <wrl\ftm.h>
 #include <windows.system.threading.h>
 #pragma comment(lib, "runtimeobject.lib")
-#endif 
+#endif
 
 namespace boost
 {
@@ -198,7 +198,7 @@ namespace boost
     namespace detail
     {
         std::atomic_uint threadCount;
-        
+
         bool win32::scoped_winrt_thread::start(thread_func address, void *parameter, unsigned int *thrdId)
         {
             Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IThreadPoolStatics> threadPoolFactory;
@@ -220,7 +220,7 @@ namespace boost
             m_completionHandle = completionHandle;
 
             // Create new work item.
-            Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IWorkItemHandler> workItem = 
+            Microsoft::WRL::ComPtr<ABI::Windows::System::Threading::IWorkItemHandler> workItem =
                 Microsoft::WRL::Callback<Microsoft::WRL::Implements<Microsoft::WRL::RuntimeClassFlags<Microsoft::WRL::ClassicCom>, ABI::Windows::System::Threading::IWorkItemHandler, Microsoft::WRL::FtmBase>>
                 ([address, parameter, completionHandle](ABI::Windows::Foundation::IAsyncAction *)
             {
@@ -274,13 +274,10 @@ namespace boost
                         }
                         boost::detail::heap_delete(current_node);
                     }
-                    for(std::map<void const*,detail::tss_data_node>::iterator next=current_thread_data->tss_data.begin(),
-                            current,
-                            end=current_thread_data->tss_data.end();
-                        next!=end;)
+                    while (!current_thread_data->tss_data.empty())
                     {
-                        current=next;
-                        ++next;
+                        std::map<void const*,detail::tss_data_node>::iterator current
+                            = current_thread_data->tss_data.begin();
                         if(current->second.func && (current->second.value!=0))
                         {
                             (*current->second.func)(current->second.value);
@@ -346,7 +343,7 @@ namespace boost
         return true;
 #endif
     }
-    
+
     bool thread::start_thread_noexcept(const attributes& attr)
     {
 #if BOOST_PLAT_WINDOWS_RUNTIME
@@ -367,7 +364,7 @@ namespace boost
       return true;
 #endif
     }
-    
+
     thread::thread(detail::thread_data_ptr data):
         thread_info(data)
     {}
