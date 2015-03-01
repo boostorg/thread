@@ -950,6 +950,8 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+          [ thread-run2 ../example/this_executor.cpp : ex_this_executor ]
+          [ thread-run2 ../example/default_executor.cpp : ex_default_executor ]
     ;
 
 }
