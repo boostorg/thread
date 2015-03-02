@@ -19,6 +19,9 @@
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
+#include <boost/utility/enable_if.hpp>
+#include <boost/type_traits/is_same.hpp>
+#include <boost/type_traits/decay.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -161,8 +164,12 @@ namespace executors
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     template <class Executor>
-    generic_serial_executor_cont(Executor& ex)
-    : pimpl(make_shared<shared_state>(ex))
+    generic_serial_executor_cont(Executor& ex,
+                typename boost::disable_if<is_same<typename decay<Executor>::type, generic_serial_executor_cont>,
+                  int* >::type =  (int*)0)
+    //: pimpl(make_shared<shared_state>(ex)) // todo check why this doesn't works with C++03
+    : pimpl(new shared_state(ex))
+
     {
     }
     /**

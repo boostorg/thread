@@ -15,6 +15,7 @@
 
 #include <boost/smart_ptr/shared_ptr.hpp>
 #include <boost/smart_ptr/make_shared.hpp>
+#include <boost/type_traits/decay.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -36,7 +37,7 @@ namespace boost
     template<typename Executor>
     generic_executor(Executor& ex)
     //: ex(make_shared<executor_ref<Executor> >(ex)) // todo check why this doesn't works with C++03
-    : ex( new executor_adaptor<Executor>(ex) )
+    : ex( new executor_adaptor<typename decay<Executor>::type>(ex) )
     {
     }
 
