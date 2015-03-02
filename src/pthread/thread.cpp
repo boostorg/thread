@@ -96,13 +96,10 @@ namespace boost
                                 }
                                 delete current_node;
                             }
-                            for(std::map<void const*,tss_data_node>::iterator next=thread_info->tss_data.begin(),
-                                    current,
-                                    end=thread_info->tss_data.end();
-                                next!=end;)
+                            while (!thread_info->tss_data.empty())
                             {
-                                current=next;
-                                ++next;
+                                std::map<void const*,detail::tss_data_node>::iterator current
+                                    = thread_info->tss_data.begin();
                                 if(current->second.func && (current->second.value!=0))
                                 {
                                     (*current->second.func)(current->second.value);

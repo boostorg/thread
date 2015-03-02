@@ -1,4 +1,4 @@
-// Copyright (C) 2013,2014 Vicente J. Botet Escriba
+// Copyright (C) 2013,2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -30,9 +30,8 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executor::work work;
 
-    /// executor is not copyable.
-    BOOST_THREAD_NO_COPYABLE(executor_adaptor)
-
+//    executor_adaptor(executor_adaptor const&) = default;
+//    executor_adaptor(executor_adaptor &&) = default;
     /**
      * executor_adaptor constructor
      */

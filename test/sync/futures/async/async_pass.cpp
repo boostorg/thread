@@ -85,7 +85,7 @@ public:
     return *this;
   }
 
-  int operator()()
+  int operator()() const
   {
     boost::this_thread::sleep_for(ms(200));
     return 3;
@@ -167,6 +167,48 @@ struct check_timer {
 
 int main()
 {
+  {
+    try {
+      boost::async(f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+  {
+    try {
+      boost::async(boost::launch::async, f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+#if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    try {
+      boost::async(boost::launch::deferred, f0);
+    } catch (std::exception& ex)
+    {
+      std::cout << __FILE__ << "[" << __LINE__ << "]" << ex.what() << std::endl;
+      BOOST_TEST(false && "exception thrown");
+    }
+    catch (...)
+    {
+      BOOST_TEST(false && "exception thrown");
+    }
+  }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     try

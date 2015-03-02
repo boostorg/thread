@@ -13,7 +13,8 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/executor.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
