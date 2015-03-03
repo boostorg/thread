@@ -123,17 +123,19 @@ int test_executor_adaptor()
         boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
         submit_some(ea3);
       }
-//      {
-//        boost::basic_thread_pool ea1(4);
-//        boost::executor_adaptor < boost::generic_serial_executor > ea2(ea1);
-//        submit_some(ea2);
-//      }
-//      {
-//        boost::basic_thread_pool ea1(4);
-//        boost::generic_serial_executor ea2(ea1);
-//        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
-//        submit_some(ea3);
-//      }
+      {
+        boost::basic_thread_pool ea1(4);
+        boost::generic_serial_executor ea2(ea1);
+        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
+        submit_some(ea3);
+      }
+#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+      {
+        boost::basic_thread_pool ea1(4);
+        boost::executor_adaptor < boost::generic_serial_executor > ea2(ea1);
+        submit_some(ea2);
+      }
+#endif
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::inline_executor e1;
