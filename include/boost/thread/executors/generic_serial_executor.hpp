@@ -186,7 +186,7 @@ namespace executors
     generic_serial_executor(Executor& ex,
         typename boost::disable_if<is_same<typename decay<Executor>::type, generic_serial_executor>,
           int* >::type =  (int*)0)
-    //: pimpl(make_shared<shared_state>(ex)) // // todo check why this doesn't works with C++03
+    //: pimpl(make_shared<shared_state>(ex)) // todo check why this doesn't works with C++03
     : pimpl(new shared_state(ex))
     {
     }

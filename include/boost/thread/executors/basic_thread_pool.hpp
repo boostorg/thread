@@ -280,7 +280,8 @@ namespace executors
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
-    : pimpl(make_shared<shared_state>(thread_count))
+    //: pimpl(make_shared<shared_state>(thread_count)) // todo check why this doesn't works with C++03
+    : pimpl(new shared_state(thread_count))
     {
       pimpl->init();
     }
