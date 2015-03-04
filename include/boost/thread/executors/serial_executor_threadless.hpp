@@ -39,7 +39,7 @@ class serial_executor_threadless
 	  struct serial_executor_threadless_impl : public boost::enable_shared_from_this < serial_executor_threadless_impl>
 	  {
 		  template <class Executor>
-		  serial_executor_threadless_impl(Executor& ex)
+		  serial_executor_threadless_impl(Executor const& ex)
 			  : ex(ex), sp_fut()
 		  {
 
@@ -47,7 +47,7 @@ class serial_executor_threadless
 
 		  /// the thread safe work queue
 		  concurrent::sync_queue<work> work_queue;
-		  generic_executor_ref ex;
+		  generic_executor ex;
 		  boost::recursive_mutex mtx;
 		  //boost::mutex mtx;
 		  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> sp_fut;
@@ -115,8 +115,7 @@ class serial_executor_threadless
 
 			  ~try_executing_one_task()
 			  {
-				  //std::cout << "dtor " << this << std::endl;
-				  if (sp_fut && !sp_fut->has_value()) // prevent broken promise exception, there is surely a better way...
+				  if (sp_fut && !sp_fut->has_value()) 
 				  {
 					  p->set_value();
 				  }
@@ -179,14 +178,6 @@ class serial_executor_threadless
 
 					  try_executing_one_task tmp(boost::move(task), task_cont);
 					  sp_fut = tmp.get_future();
-					  //don't move here
-					  //ex.submit(boost::move(tmp));
-
-					  //and this is also not so good...
-					  //work w(boost::move(tmp));
-					  //ex.submit(boost::move(w));
-
-					  //this works but makes a lot of copies down the road
 					  ex.submit(tmp);
 
 					  return true;
@@ -248,8 +239,8 @@ class serial_executor_threadless
      * \par Returns
      * The underlying executor wrapped on a generic executor reference.
      */
-	  generic_executor_ref& underlying_executor() BOOST_NOEXCEPT{ return impl->ex; }
 
+	  generic_executor& underlying_executor() BOOST_NOEXCEPT{ return impl->ex; }
 
 		/**
 		* Effects: try to execute one task.
