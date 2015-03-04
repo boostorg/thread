@@ -45,16 +45,21 @@ class serial_executor_threadless
 
 		  }
 
+		  ~serial_executor_threadless_impl()
+		  {
+			  close();
+		  }
+
 		  /// the thread safe work queue
-		  concurrent::sync_queue<work> work_queue;
 		  generic_executor ex;
-		  boost::recursive_mutex mtx;
+		  concurrent::sync_queue<work> work_queue;
 		  //boost::mutex mtx;
 		  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> sp_fut;
+		  boost::recursive_mutex mtx;
 
 		  struct try_executing_one_task {
 			  work task;
-			  boost::function<void(void)> followup_task;
+			  work followup_task;
 			  boost::shared_ptr<boost::promise<void>> p;
 			  boost::shared_ptr<boost::BOOST_THREAD_FUTURE<void>> sp_fut;
 
@@ -168,15 +173,17 @@ class serial_executor_threadless
 				  work task;
 				  if ((!sp_fut || sp_fut->is_ready()) && (work_queue.try_pull(task) == queue_op_status::success))
 				  {
-					  auto task_cont = boost::bind<void>([](boost::weak_ptr<serial_executor_threadless_impl> _spEx) -> void
+
+					  boost::weak_ptr<serial_executor_threadless_impl> _spEx = this->shared_from_this();
+					  auto task_cont = [_spEx]() -> void
 					  {
 						  if (auto spEx = _spEx.lock())
 						  {
 							  spEx->try_executing_one();
 						  }
-					  }, this->shared_from_this());
+					  };
 
-					  try_executing_one_task tmp(boost::move(task), task_cont);
+					  try_executing_one_task tmp(boost::move(task), boost::move(task_cont));
 					  sp_fut = tmp.get_future();
 					  ex.submit(tmp);
 

@@ -145,7 +145,10 @@ namespace executors
       {
         {
           lock_guard<mutex> lk(mtx_);
-          if (closed(lk))  BOOST_THROW_EXCEPTION( sync_queue_is_closed() );
+		  if (closed(lk))
+		  {
+			  BOOST_THROW_EXCEPTION(sync_queue_is_closed());
+		  }
         }
         try
         {

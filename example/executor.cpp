@@ -87,19 +87,21 @@ int test_executor_adaptor()
 			boost::serial_executor_threadless e2 = e1;
 
 	  }
-	  {
-		  boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
-		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
-		  submit_some(ea2);
-	  }
 
 	  {
 		  boost::executor_adaptor < boost::inline_executor > ea1;
 		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
 		  submit_some(ea2);
 	  }
-#endif
 
+	  {
+		  boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
+		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
+		  submit_some(ea2);
+		  //boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
+	  }
+
+#endif
 
       {
         boost::basic_thread_pool e1;
