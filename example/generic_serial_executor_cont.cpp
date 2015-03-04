@@ -75,6 +75,12 @@ void at_th_entry(boost::basic_thread_pool)
 
 int test_executor_adaptor()
 {
+  std::cout << BOOST_CONTEXTOF << std::endl;
+  {
+     boost::basic_thread_pool tp;
+     boost::generic_serial_executor_cont e1(tp);
+     boost::generic_serial_executor_cont e2 = e1;
+  }
   // std::cout << BOOST_CONTEXTOF << std::endl;
   {
     try
