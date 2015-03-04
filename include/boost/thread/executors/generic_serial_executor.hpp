@@ -108,7 +108,7 @@ namespace executors
        * \b Throws: Whatever exception is thrown while initializing the needed resources.
        */
       template <class Executor>
-      shared_state(Executor& ex)
+      shared_state(Executor const& ex)
       : ex(ex), thr(&shared_state::worker_thread, this)
       {
       }
@@ -183,11 +183,10 @@ namespace executors
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     template <class Executor>
-    generic_serial_executor(Executor& ex,
-        typename boost::disable_if<is_same<typename decay<Executor>::type, generic_serial_executor>,
+    generic_serial_executor(Executor const& ex
+        , typename boost::disable_if<is_same<Executor, generic_serial_executor>,
           int* >::type =  (int*)0)
-    //: pimpl(make_shared<shared_state>(ex)) // todo check why this doesn't works with C++03
-    : pimpl(new shared_state(ex))
+    : pimpl(make_shared<shared_state>(ex))
     {
     }
     /**

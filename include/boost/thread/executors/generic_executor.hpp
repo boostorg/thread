@@ -35,9 +35,12 @@ namespace boost
     //generic_executor(generic_executor &&) = default;
 
     template<typename Executor>
-    generic_executor(Executor& ex)
-    //: ex(make_shared<executor_ref<Executor> >(ex)) // todo check why this doesn't works with C++03
-    : ex( new executor_adaptor<typename decay<Executor>::type>(ex) )
+    generic_executor(Executor const& ex
+        , typename boost::disable_if<is_same<Executor, generic_executor>,
+          int* >::type =  (int*)0
+    )
+    //: ex(make_shared<executor_adaptor<Executor> >(ex)) // todo check why this doesn't work with C++03
+    : ex( new executor_adaptor<Executor>(ex) )
     {
     }
 

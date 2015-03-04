@@ -88,7 +88,7 @@ namespace executors
      *     - the continuation can not submit to this serial executor.
      */
     template <class Executor>
-    shared_state(Executor& ex)
+    shared_state(Executor const& ex)
     : ex_(ex), fut_(make_ready_future()), closed_(false)
     {
     }
@@ -164,12 +164,10 @@ namespace executors
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     template <class Executor>
-    generic_serial_executor_cont(Executor& ex,
-                typename boost::disable_if<is_same<typename decay<Executor>::type, generic_serial_executor_cont>,
+    generic_serial_executor_cont(Executor const& ex
+                , typename boost::disable_if<is_same<Executor, generic_serial_executor_cont>,
                   int* >::type =  (int*)0)
-    //: pimpl(make_shared<shared_state>(ex)) // todo check why this doesn't works with C++03
-    : pimpl(new shared_state(ex))
-
+    : pimpl(make_shared<shared_state>(ex))
     {
     }
     /**
