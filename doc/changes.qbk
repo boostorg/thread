@@ -15,6 +15,7 @@
 * [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
 * [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
 * [@http://svn.boost.org/trac/boost/ticket/6787 #6787] boost::thread::sleep() hangs if system time is rolled back
+
 * [@http://svn.boost.org/trac/boost/ticket/7319 #7319] Take care of c++std-lib-32966 issue
 * [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
 * [@http://svn.boost.org/trac/boost/ticket/9118 #9118] Seg fault on thread join when llvm and libc++ are used
@@ -25,7 +26,6 @@
 * [@http://svn.boost.org/trac/boost/ticket/10685 #10685] mfc_thread_init.hpp does not compile.
 * [@http://svn.boost.org/trac/boost/ticket/10942 #10942] Boost.Thread fails to build on Cygwin.
 * [@http://svn.boost.org/trac/boost/ticket/10967 #10967] Timed wait points inconsistently convert relative to absolute waits.
-* [@http://svn.boost.org/trac/boost/ticket/10968 #10968] The futures returned by async() and future::then() are not blocking.
 
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
@@ -44,10 +44,12 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/9600 #9600] Async: Add task_region
 * [@http://svn.boost.org/trac/boost/ticket/10611 #10611] Add emplace promise::set_value and emplace make_ready_future
 * [@http://svn.boost.org/trac/boost/ticket/10826 #10826] Add scheduled executor operations
+* [@http://svn.boost.org/trac/boost/ticket/11048 #11048] Add a serial_executor based on continuations
 
 [*Fixed Bugs:]
 
 
+* [@http://svn.boost.org/trac/boost/ticket/6787 #6787] boost::thread::sleep() hangs if system time is rolled back
 * [@http://svn.boost.org/trac/boost/ticket/10734 #10734] Submit method work differently on different executors, some throw exception and some silently ignore error (thread_executor and inline_executor)
 * [@http://svn.boost.org/trac/boost/ticket/10736 #10736] Task exceptions silently ignored. I think std::terminate solution from N3785 and std::thread is better choice and more consistent.
 * [@http://svn.boost.org/trac/boost/ticket/10737 #10737] In serial_executor we have infinite wait if task throw exception.
@@ -55,9 +57,13 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/10824 #10824] Boost.Thread 1.57 breaks Windows XP compatibility for SP2 and below.
 * [@http://svn.boost.org/trac/boost/ticket/10963 #10963] future<future<T>>::then Has No Implementation
 * [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
+* [@http://svn.boost.org/trac/boost/ticket/10968 #10968] The futures returned by async() and future::then() are not blocking.
 * [@http://svn.boost.org/trac/boost/ticket/10971 #10971] shared_future::get()/get_or() must be const
 * [@http://svn.boost.org/trac/boost/ticket/10972 #10972] shared_future::then() can be called multiple times.
 * [@http://svn.boost.org/trac/boost/ticket/10979 #10979] Support T& type deduction when the make_ready_future parameter is reference_wrapper<T>
+* [@http://svn.boost.org/trac/boost/ticket/10996 #10996] Thread physical_concurrency() is failing on Windows
+* [@http://svn.boost.org/trac/boost/ticket/11035 #11035] BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE not defined for Android
+* [@http://svn.boost.org/trac/boost/ticket/11053 #11053] The attached code results in a R6025 - pure virtual function call in run_thread_exit_callbacks
 
 
 [heading Version 4.4.0 - boost 1.57]
@@ -75,6 +81,7 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/9311 #9311] ex_lambda_future fails on msvc-11.0
 * [@http://svn.boost.org/trac/boost/ticket/10537 #10537] Application crash on throw exception
 * [@http://svn.boost.org/trac/boost/ticket/10651 #10651] boost::thread leaks memory when using the MinGW compiler
+
 
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
