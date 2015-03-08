@@ -115,9 +115,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     template<typename F>
     friend void task_region_final(BOOST_THREAD_FWD_REF(F) f);
     template <class Ex, typename F>
-    friend void task_region(Ex&, BOOST_THREAD_FWD_REF(F) f);
+    friend void task_region(Ex const&, BOOST_THREAD_FWD_REF(F) f);
     template<class Ex, typename F>
-    friend void task_region_final(Ex&, BOOST_THREAD_FWD_REF(F) f);
+    friend void task_region_final(Ex const&, BOOST_THREAD_FWD_REF(F) f);
 
     void wait_all()
     {
@@ -156,21 +156,20 @@ protected:
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && defined BOOST_THREAD_PROVIDES_EXECUTORS
     task_region_handle_gen()
     : canceled(false)
-    , ex(0)
     {}
-    task_region_handle_gen(Executor& ex)
+    task_region_handle_gen(Executor const& ex)
     : canceled(false)
-    , ex(&ex)
+    , ex(ex)
     {}
 
 #endif
 
 #if ! defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED && defined BOOST_THREAD_PROVIDES_EXECUTORS
     task_region_handle_gen()
-    : ex(0)
+    //: ex(0)
     {}
-    task_region_handle_gen(Executor& ex)
-    : ex(&ex)
+    task_region_handle_gen(Executor const& ex)
+    : ex(ex)
     {}
 #endif
 
@@ -190,7 +189,7 @@ protected:
     bool canceled;
 #endif
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-    Executor* ex;
+    Executor ex;
 #endif
     exception_list exs;
     typedef csbl::vector<future<void> > group_type;
@@ -214,13 +213,13 @@ protected:
         //throw task_canceled_exception();
       }
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-      group.push_back(async(*ex, detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
+      group.push_back(async(ex, detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
 #else
       group.push_back(async(detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
 #endif
 #else
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-      group.push_back(async(*ex, forward<F>(f)));
+      group.push_back(async(ex, forward<F>(f)));
 #else
       group.push_back(async(forward<F>(f)));
 #endif
@@ -247,17 +246,18 @@ protected:
   class task_region_handle :
     public task_region_handle_gen<default_executor>
   {
-    default_executor tp;
+    //default_executor tp;
     template <typename F>
     friend void task_region(BOOST_THREAD_FWD_REF(F) f);
     template<typename F>
     friend void task_region_final(BOOST_THREAD_FWD_REF(F) f);
 
   protected:
-    task_region_handle() : task_region_handle_gen<default_executor>()
+    task_region_handle()
+    : task_region_handle_gen<default_executor>()
     {
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
-      ex = &tp;
+      //ex = &tp;
 #endif
     }
     BOOST_DELETED_FUNCTION(task_region_handle(const task_region_handle&))
@@ -267,7 +267,7 @@ protected:
   };
 
   template <typename Executor, typename F>
-  void task_region_final(Executor& ex, BOOST_THREAD_FWD_REF(F) f)
+  void task_region_final(Executor const& ex, BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_handle_gen<Executor> tr(ex);
     try
@@ -283,7 +283,7 @@ protected:
   }
 
   template <typename Executor, typename F>
-  void task_region(Executor& ex, BOOST_THREAD_FWD_REF(F) f)
+  void task_region(Executor const& ex, BOOST_THREAD_FWD_REF(F) f)
   {
     task_region_final(ex, forward<F>(f));
   }
