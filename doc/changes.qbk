@@ -14,30 +14,28 @@
 
 * [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
 * [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
-* [@http://svn.boost.org/trac/boost/ticket/6787 #6787] boost::thread::sleep() hangs if system time is rolled back
-
-* [@http://svn.boost.org/trac/boost/ticket/7319 #7319] Take care of c++std-lib-32966 issue
 * [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
 * [@http://svn.boost.org/trac/boost/ticket/9118 #9118] Seg fault on thread join when llvm and libc++ are used
 * [@http://svn.boost.org/trac/boost/ticket/9309 #9309] test_latch fails often on clang-darwin-tot11
 * [@http://svn.boost.org/trac/boost/ticket/9311 #9311] ex_lambda_future fails on msvc-11.0
-* [@http://svn.boost.org/trac/boost/ticket/9856 #9856] [windows] condition_variable::wait_for returns wrong cv_status on timeout.
+* [@http://svn.boost.org/trac/boost/ticket/10942 #10942] Boost.Thread fails to build on Cygwin.
+
+[/
+* [@http://svn.boost.org/trac/boost/ticket/7319 #7319] Take care of c++std-lib-32966 issue
 * [@http://svn.boost.org/trac/boost/ticket/10651 #10651] boost::thread leaks memory when using the MinGW compiler.
 * [@http://svn.boost.org/trac/boost/ticket/10685 #10685] mfc_thread_init.hpp does not compile.
-* [@http://svn.boost.org/trac/boost/ticket/10942 #10942] Boost.Thread fails to build on Cygwin.
 * [@http://svn.boost.org/trac/boost/ticket/10967 #10967] Timed wait points inconsistently convert relative to absolute waits.
+]
 
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
-Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last snapshot.
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last regression test snapshot.
 
 [*Sever limitations:]
 
 There are some severe bugs that prevent the use of the library on concrete contexts, in particular:
 
 * on thread specific storage that prevent the library to be used with dynamic libraries ( [@http://svn.boost.org/trac/boost/ticket/3926 #3926], ),
-* timed operation on windows are inconsistent ( [@http://svn.boost.org/trac/boost/ticket/9856 #9856], [@http://svn.boost.org/trac/boost/ticket/10967 #10967]).
-* The futures returned by async() and future::then() are not blocking ([@http://svn.boost.org/trac/boost/ticket/10968 #10968]).
 
 [*New Experimental Features:]
 
@@ -47,7 +45,6 @@ There are some severe bugs that prevent the use of the library on concrete conte
 * [@http://svn.boost.org/trac/boost/ticket/11048 #11048] Add a serial_executor based on continuations
 
 [*Fixed Bugs:]
-
 
 * [@http://svn.boost.org/trac/boost/ticket/6787 #6787] boost::thread::sleep() hangs if system time is rolled back
 * [@http://svn.boost.org/trac/boost/ticket/10734 #10734] Submit method work differently on different executors, some throw exception and some silently ignore error (thread_executor and inline_executor)
