@@ -27,12 +27,12 @@ namespace concurrent
 namespace detail
 {
 
-  template <typename ValueType>
+  template <typename ValueType, class SizeType>
   class deque_base_copyable_only
   {
   public:
     typedef ValueType value_type;
-    typedef std::size_t size_type;
+    typedef SizeType size_type;
 
     // Constructors/Assignment/Destructors
     virtual ~deque_base_copyable_only() {};
@@ -58,16 +58,16 @@ namespace detail
     virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
 
     virtual queue_op_status wait_push_back(const value_type& x) = 0;
-    virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+    virtual queue_op_status wait_pull_front(value_type& elem) = 0;
 
   };
 
-  template <typename ValueType>
+  template <typename ValueType, class SizeType>
   class deque_base_movable_only
   {
   public:
     typedef ValueType value_type;
-    typedef std::size_t size_type;
+    typedef SizeType size_type;
     // Constructors/Assignment/Destructors
     virtual ~deque_base_movable_only() {};
 
@@ -88,7 +88,7 @@ namespace detail
 
     virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
 
-    virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+    virtual queue_op_status wait_pull_front(value_type& elem) = 0;
 
     virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
@@ -97,12 +97,12 @@ namespace detail
   };
 
 
-  template <typename ValueType>
+  template <typename ValueType, class SizeType>
   class deque_base_copyable_and_movable
   {
   public:
     typedef ValueType value_type;
-    typedef std::size_t size_type;
+    typedef SizeType size_type;
     // Constructors/Assignment/Destructors
     virtual ~deque_base_copyable_and_movable() {};
 
@@ -129,7 +129,7 @@ namespace detail
     virtual queue_op_status nonblocking_pull_front(value_type&) = 0;
 
     virtual queue_op_status wait_push_back(const value_type& x) = 0;
-    virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+    virtual queue_op_status wait_pull_front(value_type& elem) = 0;
 
     virtual void push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
     virtual queue_op_status try_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
@@ -137,7 +137,7 @@ namespace detail
     virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
   };
 
-  template <class T,
+  template <class T, class ST,
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #if defined __GNUC__ && ! defined __clang__
 #if __GNUC__ < 4 || (__GNUC__ == 4 && __GNUC_MINOR__ < 5) || !defined(__GXX_EXPERIMENTAL_CXX0X__)
@@ -166,28 +166,28 @@ namespace detail
       >
   struct deque_base;
 
-  template <class T>
-  struct deque_base<T, true, true> {
-    typedef deque_base_copyable_and_movable<T> type;
+  template <class T, class ST>
+  struct deque_base<T, ST, true, true> {
+    typedef deque_base_copyable_and_movable<T, ST> type;
   };
-  template <class T>
-  struct deque_base<T, true, false> {
-    typedef deque_base_copyable_only<T> type;
+  template <class T, class ST>
+  struct deque_base<T, ST, true, false> {
+    typedef deque_base_copyable_only<T, ST> type;
   };
-  template <class T>
-  struct deque_base<T, false, true> {
-    typedef deque_base_movable_only<T> type;
+  template <class T, class ST>
+  struct deque_base<T, ST, false, true> {
+    typedef deque_base_movable_only<T, ST> type;
   };
 
 }
 
-  template <typename ValueType>
+  template <class ValueType, class SizeType=std::size_t>
   class deque_base :
-    public detail::deque_base<ValueType>::type
+    public detail::deque_base<ValueType, SizeType>::type
   {
   public:
       typedef ValueType value_type;
-      typedef std::size_t size_type;
+      typedef SizeType size_type;
     // Constructors/Assignment/Destructors
     virtual ~deque_base() {};
   };

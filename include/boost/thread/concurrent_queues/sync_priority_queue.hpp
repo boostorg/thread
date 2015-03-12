@@ -43,12 +43,13 @@ namespace detail {
       Compare _compare;
   public:
       typedef Type value_type;
+      typedef typename Container::size_type size_type;
 
       explicit priority_queue(const Compare& compare = Compare())
           : _elements(), _compare(compare)
       { }
 
-      std::size_t size() const
+      size_type size() const
       {
           return _elements.size();
       }

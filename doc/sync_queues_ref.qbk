@@ -636,12 +636,12 @@ Closed queues add the following valid expressions
 
   namespace boost
   {
-    template <typename ValueType>
+    template <typename ValueType, class SizeType=std::size_t>
     class queue_base
     {
     public:
       typedef ValueType value_type;
-      typedef std::size_t size_type;
+      typedef SizeType size_type;
   
       // Constructors/Assignment/Destructors
       virtual ~queue_base() {};
@@ -671,7 +671,7 @@ Closed queues add the following valid expressions
   
       virtual queue_op_status wait_push_back(const value_type& x) = 0;
       virtual queue_op_status wait_push_back(BOOST_THREAD_RV_REF(value_type) x) = 0;
-      virtual queue_op_status wait_pull_front(ValueType& elem) = 0;
+      virtual queue_op_status wait_pull_front(value_type& elem) = 0;
   
     };
   }
@@ -685,11 +685,11 @@ Closed queues add the following valid expressions
   namespace boost
   {
     template <typename Queue>
-    class queue_adaptor : public queue_base<typename Queue::value_type>
+    class queue_adaptor : public queue_base<typename Queue::value_type, typename Queue::size_type>
     {
     public:
       typedef typename Queue::value_type value_type;
-      typedef std::size_t size_type;
+      typedef typename Queue::size_type size_type;
   
       // Constructors/Assignment/Destructors
   
@@ -1002,13 +1002,13 @@ Closed queues add the following valid expressions
 
   namespace boost
   {
-    template <typename ValueType>
+    template <typename ValueType, class Container = csbl::devector<ValueType>>
     class sync_queue
     {
     public:
       typedef ValueType value_type;
-      typedef csbl::deque<ValueType> underlying_queue_type;
-      typedef std::size_t size_type;
+      typedef Container underlying_queue_type;
+      typedef typename Container::size_type size_type;
 
       sync_queue(sync_queue const&) = delete;
       sync_queue& operator=(sync_queue const&) = delete;

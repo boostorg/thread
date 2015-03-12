@@ -37,7 +37,7 @@ namespace detail
   public:
     typedef ValueType value_type;
     typedef Queue underlying_queue_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
     typedef queue_op_status op_status;
 
     typedef typename chrono::steady_clock clock;
