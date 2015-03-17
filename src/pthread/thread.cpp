@@ -159,7 +159,7 @@ namespace boost
             static void* thread_proxy(void* param)
             {
                 boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
-                thread_info->self.reset();
+                //thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_TRY

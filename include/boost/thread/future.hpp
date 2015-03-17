@@ -4892,7 +4892,9 @@ namespace detail
   make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_RV_REF(F) f) {
     shared_ptr<future_unwrap_shared_state<F, Rp> >
         h(new future_unwrap_shared_state<F, Rp>(boost::move(f)));
+    lock.lock();
     h->parent.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
 }
@@ -4907,6 +4909,7 @@ namespace detail
   {
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    lock.unlock();
     return boost::detail::make_future_unwrap_shared_state<BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >, R2>(lock, boost::move(*this));
   }
 #endif
