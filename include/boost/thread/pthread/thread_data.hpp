@@ -25,9 +25,7 @@
 #include <utility>
 
 #if defined(__ANDROID__)
-# ifndef PAGE_SIZE
-#  define PAGE_SIZE 4096
-# endif
+#include <limits.h>
 #endif
 
 #include <pthread.h>
