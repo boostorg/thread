@@ -28,6 +28,10 @@
 #include <string>
 #include <iostream>
 
+boost::future<void> p(boost::future<void>) {
+    return boost::make_ready_future();
+}
+
 void p1()
 {
   // std::cout << BOOST_CONTEXTOF << std::endl;
@@ -147,4 +151,16 @@ int test_executor_adaptor()
 int main()
 {
   return test_executor_adaptor();
+
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
+  && defined BOOST_THREAD_PROVIDES_EXECUTORS \
+  &&  ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
+
+  // compiles
+  boost::make_ready_future().then(&p);
+
+  boost::basic_thread_pool executor;
+  // doesn't compile
+  boost::make_ready_future().then(executor, &p);
+#endif
 }

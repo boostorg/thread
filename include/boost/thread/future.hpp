@@ -1420,7 +1420,7 @@ namespace boost
 
 
         typedef typename base_type::move_dest_type move_dest_type;
-    public: // when_all
+    public: //  // todo move to private and add the needed friends (when_all, executors, ...)
 
         BOOST_THREAD_FUTURE(future_ptr a_future):
           base_type(a_future)
@@ -1626,12 +1626,13 @@ namespace boost
 
             typedef typename base_type::move_dest_type move_dest_type;
 
+        public: // todo move to private and add the needed friends
+
             BOOST_THREAD_FUTURE(future_ptr a_future):
               base_type(a_future)
             {
             }
 
-        public:
             BOOST_THREAD_MOVABLE_ONLY(BOOST_THREAD_FUTURE)
             typedef future_state::state state;
             typedef R value_type; // EXTENSION
