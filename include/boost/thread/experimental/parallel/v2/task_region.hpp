@@ -3,7 +3,7 @@
 
 //////////////////////////////////////////////////////////////////////////////
 //
-// (C) Copyright Vicente J. Botet Escriba 2014. Distributed under the Boost
+// (C) Copyright Vicente J. Botet Escriba 2014-2015. Distributed under the Boost
 // Software License, Version 1.0. (See accompanying file
 // LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 //
@@ -50,12 +50,13 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     void handle_task_region_exceptions(exception_list& errors)
     {
       try {
-        boost::rethrow_exception(boost::current_exception());
-        //throw boost::current_exception();
+        throw;
       }
+#if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
       catch (task_canceled_exception& ex)
       {
       }
+#endif
       catch (exception_list const& el)
       {
         for (exception_list::const_iterator it = el.begin(); it != el.end(); ++it)
@@ -94,7 +95,7 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
         {
           lock_guard<mutex> lk(tr.mtx);
           tr.canceled = true;
-          handle_task_region_exceptions(tr.exs);
+          throw;
         }
       }
     };
@@ -123,8 +124,6 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
     {
       wait_for_all(group.begin(), group.end());
 
-      #if ! defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
-
       for (group_type::iterator it = group.begin(); it != group.end(); ++it)
       {
         future<void>& f = *it;
@@ -140,11 +139,9 @@ BOOST_THREAD_INLINE_NAMESPACE(v2)
           }
         }
       }
-      #endif
       if (exs.size() != 0)
       {
         boost::throw_exception(exs);
-        //throw exs;
       }
     }
 protected:
@@ -186,6 +183,7 @@ protected:
     }
 
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
+    mutable mutex mtx;
     bool canceled;
 #endif
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
@@ -194,8 +192,6 @@ protected:
     exception_list exs;
     typedef csbl::vector<future<void> > group_type;
     group_type group;
-    mutable mutex mtx;
-
 
   public:
     BOOST_DELETED_FUNCTION(task_region_handle_gen(const task_region_handle_gen&))
@@ -206,11 +202,12 @@ protected:
     template<typename F>
     void run(BOOST_THREAD_FWD_REF(F) f)
     {
-      lock_guard<mutex> lk(mtx);
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
-      if (canceled) {
-        boost::throw_exception(task_canceled_exception());
-        //throw task_canceled_exception();
+      {
+        lock_guard<mutex> lk(mtx);
+        if (canceled) {
+          boost::throw_exception(task_canceled_exception());
+        }
       }
 #if defined BOOST_THREAD_PROVIDES_EXECUTORS
       group.push_back(async(ex, detail::wrapped<task_region_handle_gen<Executor>, F>(*this, forward<F>(f))));
@@ -228,11 +225,12 @@ protected:
 
     void wait()
     {
-      lock_guard<mutex> lk(mtx);
 #if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
-      if (canceled) {
-        boost::throw_exception(task_canceled_exception());
-        //throw task_canceled_exception{};
+      {
+        lock_guard<mutex> lk(mtx);
+        if (canceled) {
+          boost::throw_exception(task_canceled_exception());
+        }
       }
 #endif
       wait_all();
@@ -276,7 +274,6 @@ protected:
     }
     catch (...)
     {
-      lock_guard<mutex> lk(tr.mtx);
       detail::handle_task_region_exceptions(tr.exs);
     }
     tr.wait_all();
@@ -298,7 +295,6 @@ protected:
     }
     catch (...)
     {
-      lock_guard<mutex> lk(tr.mtx);
       detail::handle_task_region_exceptions(tr.exs);
     }
     tr.wait_all();

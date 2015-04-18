@@ -27,12 +27,12 @@ namespace detail
 
   template <typename Queue>
   class deque_adaptor_copyable_only :
-    public boost::deque_base<typename Queue::value_type>
+    public boost::deque_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
     deque_adaptor_copyable_only()  {}
@@ -63,12 +63,12 @@ namespace detail
   };
   template <typename Queue>
   class deque_adaptor_movable_only :
-    public boost::deque_base<typename Queue::value_type>
+    public boost::deque_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
 
@@ -102,12 +102,12 @@ namespace detail
 
   template <typename Queue>
   class deque_adaptor_copyable_and_movable :
-    public boost::deque_base<typename Queue::value_type>
+    public boost::deque_base<typename Queue::value_type, typename Queue::size_type>
   {
       Queue queue;
   public:
     typedef typename Queue::value_type value_type;
-    typedef std::size_t size_type;
+    typedef typename Queue::size_type size_type;
 
     // Constructors/Assignment/Destructors
 
@@ -195,7 +195,7 @@ namespace detail
   {
   public:
       typedef typename Queue::value_type value_type;
-      typedef std::size_t size_type;
+      typedef typename Queue::size_type size_type;
     // Constructors/Assignment/Destructors
     virtual ~deque_adaptor() {};
   };

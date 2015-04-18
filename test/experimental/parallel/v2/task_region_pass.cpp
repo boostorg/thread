@@ -1,4 +1,4 @@
-// Copyright (C) 2014 Vicente J. Botet Escriba
+// Copyright (C) 2014-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -132,7 +132,9 @@ void run_exception_1()
               {
                 std::cout << "task3" << std::endl;
               });
+#if defined BOOST_THREAD_TASK_REGION_HAS_SHARED_CANCELED
           BOOST_TEST(false);
+#endif
         });
     BOOST_TEST(false);
   }
