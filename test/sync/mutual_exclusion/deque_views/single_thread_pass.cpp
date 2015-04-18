@@ -21,9 +21,9 @@
 
 class non_copyable
 {
-  BOOST_THREAD_MOVABLE_ONLY(non_copyable)
   int val;
 public:
+  BOOST_THREAD_MOVABLE_ONLY(non_copyable)
   non_copyable(int v) : val(v){}
   non_copyable(BOOST_RV_REF(non_copyable) x): val(x.val) {}
   non_copyable& operator=(BOOST_RV_REF(non_copyable) x) { val=x.val; return *this; }
