@@ -13,7 +13,8 @@
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/executor.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -99,8 +100,8 @@ namespace boost
 
     template<typename Executor>
     generic_executor_ref(Executor& ex)
-    //: ex(make_shared<executor_ref<Executor> >(ex)) // todo check why this doesn't works with C++03
-    : ex( new executor_ref<Executor>(ex) )
+    //: ex(make_shared<executor_ref<typename decay<Executor>::type> >(ex)) // todo check why this doesn't work with C++03
+    : ex( new executor_ref<typename decay<Executor>::type>(ex) )
     {
     }
 

@@ -1,4 +1,4 @@
-// Copyright (C) 2012-2013 Vicente Botet
+// Copyright (C) 2014 Vicente Botet
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,30 +18,27 @@
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
 #include <boost/thread/executors/generic_serial_executor.hpp>
-#include <boost/thread/executors/serial_executor_threadless.hpp>
+#include <boost/thread/executors/serial_executor.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
 #include <boost/thread/executors/executor_adaptor.hpp>
+#include <boost/thread/executors/generic_executor.hpp>
 #include <boost/thread/executor.hpp>
 #include <boost/thread/future.hpp>
 #include <boost/assert.hpp>
 #include <string>
 #include <iostream>
 
-boost::future<void> p(boost::future<void>) {
-    return boost::make_ready_future();
-}
-
 void p1()
 {
-  std::cout << BOOST_CONTEXTOF << std::endl;
+  // std::cout << BOOST_CONTEXTOF << std::endl;
   //boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
 }
 
 void p2()
 {
-  std::cout << BOOST_CONTEXTOF << std::endl;
+  // std::cout << BOOST_CONTEXTOF << std::endl;
   //boost::this_thread::sleep_for(boost::chrono::seconds(10));
 }
 
@@ -58,7 +55,7 @@ int f2(int i)
   return i + 1;
 }
 
-void submit_some(boost::executor& tp)
+void submit_some(boost::generic_executor tp)
 {
   for (int i = 0; i < 3; ++i) {
     tp.submit(&p2);
@@ -69,50 +66,44 @@ void submit_some(boost::executor& tp)
 
 }
 
+template < class Executor>
+void submit_some2(Executor& tp)
+{
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p2);
+  }
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p1);
+  }
 
-void at_th_entry(boost::basic_thread_pool )
+}
+
+template <class Executor>
+void submit_some3(boost::serial_executor<Executor>& tp)
+{
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p2);
+  }
+  for (int i = 0; i < 3; ++i) {
+    tp.submit(&p1);
+  }
+}
+
+void at_th_entry(boost::basic_thread_pool)
 {
 
 }
 
-int test_executor_adaptor()
+
+
+int test_generic_executor()
 {
   // std::cout << BOOST_CONTEXTOF << std::endl;
   {
     try
     {
-
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-		// std::cout << BOOST_CONTEXTOF << std::endl;
-
-	   {
-			boost::basic_thread_pool tp;
-			boost::serial_executor_threadless e1(tp);
-			boost::serial_executor_threadless e2 = e1;
-
-	  }
-
-	  {
-		  boost::executor_adaptor < boost::inline_executor > ea1;
-		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
-		  submit_some(ea2);
-	  }
-
-	  {
-		  boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
-		  boost::executor_adaptor < boost::serial_executor_threadless > ea2(ea1);
-		  submit_some(ea2);
-		  //boost::this_thread::sleep_for(boost::chrono::milliseconds(200));
-	  }
-
-#endif
-
       {
-        boost::basic_thread_pool e1;
-        boost::basic_thread_pool e2 = e1;
-      }
-      {
-        boost::executor_adaptor < boost::basic_thread_pool > ea(4);
+        boost::basic_thread_pool ea(4);
         submit_some( ea);
         {
           boost::future<int> t1 = boost::async(ea, &f1);
@@ -134,67 +125,33 @@ int test_executor_adaptor()
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::loop_executor e1;
-        boost::loop_executor e2 = e1;
-        boost::executor_adaptor < boost::loop_executor > ea2(e2);
+        boost::loop_executor ea2;
         submit_some( ea2);
-        ea2.underlying_executor().run_queued_closures();
+        ea2.run_queued_closures();
       }
-      {
-        boost::executor_adaptor < boost::loop_executor > ea2;
-        submit_some( ea2);
-        ea2.underlying_executor().run_queued_closures();
-      }
+#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+//      // std::cout << BOOST_CONTEXTOF << std::endl;
+//      {
+//        boost::basic_thread_pool ea1(4);
+//        boost::generic_serial_executor ea2(ea1);
+//        submit_some(ea2);
+//      }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::basic_thread_pool tp;
-        boost::generic_serial_executor e1(tp);
-        boost::generic_serial_executor e2 = e1;
-      }
-      {
         boost::basic_thread_pool ea1(4);
-        boost::generic_serial_executor ea2(ea1);
-        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
-        submit_some(ea3);
+        boost::serial_executor<boost::basic_thread_pool> ea2(ea1);
+        submit_some3(ea2);
       }
-      {
-        boost::basic_thread_pool ea1(4);
-        boost::generic_serial_executor ea2(ea1);
-        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
-        submit_some(ea3);
-      }
-//#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-      {
-        boost::basic_thread_pool ea1(4);
-        boost::executor_adaptor < boost::generic_serial_executor > ea2(ea1);
-        submit_some(ea2);
-      }
-//#endif
+#endif
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::inline_executor e1;
-        boost::inline_executor e2 = e1;
-        boost::executor_adaptor < boost::inline_executor > ea2(e2);
-        submit_some(ea2);
-      }
-      {
-        boost::executor_adaptor < boost::inline_executor > ea1;
+        boost::inline_executor ea1;
         submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::thread_executor e1;
-        boost::thread_executor e2 = e1;
-      }
-      {
-        boost::thread_executor e1;
-        boost::executor_adaptor < boost::generic_executor > ea2(e1);
-        submit_some(ea2);
-      }
-
-      {
-        boost::executor_adaptor < boost::thread_executor > ea1;
-        submit_some(ea1);
+        //boost::thread_executor ea1;
+        //submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
@@ -221,17 +178,7 @@ int test_executor_adaptor()
 
 int main()
 {
-  return test_executor_adaptor();
+  return test_generic_executor();
 
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
-  && defined BOOST_THREAD_PROVIDES_EXECUTORS \
-  &&  ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
-  // compiles
-  boost::make_ready_future().then(&p);
-
-  boost::basic_thread_pool executor;
-  // doesn't compile
-  boost::make_ready_future().then(executor, &p);
-#endif
 }
