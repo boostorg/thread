@@ -327,30 +327,12 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time)
         {
-          if (abs_time.is_pos_infinity())
-          {
-              wait(m); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (abs_time.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,abs_time);
+            return do_wait(m,abs_time);
         }
 
         bool timed_wait(unique_lock<mutex>& m,boost::xtime const& abs_time)
         {
-          if (abs_time.is_pos_infinity())
-          {
-              wait(m); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (abs_time.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,system_time(abs_time));
+            return do_wait(m,system_time(abs_time));
         }
         template<typename duration_type>
         bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration)
@@ -370,44 +352,17 @@ namespace boost
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time,predicate_type pred)
         {
-          if (abs_time.is_pos_infinity())
-          {
-              wait(m, pred); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (wait_duration.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,abs_time,pred);
+            return do_wait(m,abs_time,pred);
         }
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::xtime const& abs_time,predicate_type pred)
         {
-          if (abs_time.is_pos_infinity())
-          {
-              wait(m, pred); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (wait_duration.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,system_time(abs_time),pred);
+            return do_wait(m,system_time(abs_time),pred);
         }
         template<typename duration_type,typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
         {
-          if (wait_duration.is_pos_infinity())
-          {
-              wait(m, pred); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (wait_duration.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,wait_duration.total_milliseconds(),pred);
+            return do_wait(m,wait_duration.total_milliseconds(),pred);
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
