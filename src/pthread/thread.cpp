@@ -80,6 +80,8 @@ namespace boost
                 static void tls_destructor(void* data)
                 {
                     boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
+                    //boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(data)->shared_from_this();
+
                     if(thread_info)
                     {
                         while(!thread_info->tss_data.empty() || thread_info->thread_exit_callbacks)
@@ -158,8 +160,9 @@ namespace boost
         {
             static void* thread_proxy(void* param)
             {
-                boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
-                //thread_info->self.reset();
+                //boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->self;
+                boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(param)->shared_from_this();
+                thread_info->self.reset();
                 detail::set_current_thread_data(thread_info.get());
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_TRY
