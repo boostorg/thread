@@ -173,7 +173,6 @@ namespace boost
     private:
         bool start_thread_noexcept();
         bool start_thread_noexcept(const attributes& attr);
-    //public:
         void start_thread()
         {
           if (!start_thread_noexcept())

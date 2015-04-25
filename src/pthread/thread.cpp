@@ -252,7 +252,6 @@ namespace boost
         {
             thread_info->self.reset();
             return false;
-//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
         return true;
     }
@@ -266,7 +265,6 @@ namespace boost
         {
             thread_info->self.reset();
             return false;
-//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_create"));
         }
         int detached_state;
         res = pthread_attr_getdetachstate(h, &detached_state);
@@ -274,7 +272,6 @@ namespace boost
         {
             thread_info->self.reset();
             return false;
-//            boost::throw_exception(thread_resource_error(res, "boost thread: failed in pthread_attr_getdetachstate"));
         }
         if (PTHREAD_CREATE_DETACHED==detached_state)
         {
