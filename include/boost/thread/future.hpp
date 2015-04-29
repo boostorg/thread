@@ -150,6 +150,19 @@ namespace boost
                 policy_(launch::none),
                 continuations()
             {}
+
+            shared_state_base(exceptional_ptr const& ex):
+                exception(ex.ptr_),
+                done(true),
+                is_valid_(true),
+                is_deferred_(false),
+                is_constructed(false),
+                cnt_(0),
+                policy_(launch::none),
+                continuations()
+            {}
+
+
             virtual ~shared_state_base()
             {
               BOOST_ASSERT(cnt_==0);
@@ -483,6 +496,10 @@ namespace boost
             shared_state():
                 result()
             {}
+            shared_state(exceptional_ptr const& ex):
+              detail::shared_state_base(ex), result()
+            {}
+
 
             ~shared_state()
             {}
@@ -624,6 +641,10 @@ namespace boost
                 result(0)
             {}
 
+            shared_state(exceptional_ptr const& ex):
+              detail::shared_state_base(ex), result(0)
+            {}
+
             ~shared_state()
             {
             }
@@ -685,6 +706,10 @@ namespace boost
             typedef void move_dest_type;
 
             shared_state()
+            {}
+
+            shared_state(exceptional_ptr const& ex):
+              detail::shared_state_base(ex)
             {}
 
             void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
@@ -1150,16 +1175,15 @@ namespace boost
 
         static //BOOST_CONSTEXPR
         future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
-          promise<R> p;
-          p.set_exception(ex.ptr_);
-          return p.get_future().future_;
+          return future_ptr(new detail::shared_state<R>(ex));
         }
 
         void set_exceptional_if_invalid() {
           if (valid()) return;
-          promise<R> p;
-          p.set_exception(future_uninitialized());
-          future_ = p.get_future().future_;
+//          promise<R> p;
+//          p.set_exception(future_uninitialized());
+//          future_ = p.get_future().future_;
+          future_ = make_exceptional_future_ptr(exceptional_ptr(future_uninitialized()));
         }
 
         future_ptr future_;
@@ -4092,12 +4116,6 @@ namespace detail {
   }
 #endif
 
-  template <typename T>
-  BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr ex)  {
-    promise<T> p;
-    p.set_exception(ex);
-    return BOOST_THREAD_MAKE_RV_REF(p.get_future());
-  }
 
   template <typename T>
   BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr ex) {
@@ -4118,6 +4136,10 @@ namespace detail {
     promise<T> p;
     p.set_exception(boost::current_exception());
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
+  }
+  template <typename T>
+  BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr ex)  {
+    return make_exceptional_future<T>(ex);
   }
 
   template <typename T>
