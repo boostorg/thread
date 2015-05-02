@@ -947,11 +947,19 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p ]
     ;
     
-    explicit ts_ ;
-    test-suite ts_
+    explicit ts_other ;
+    test-suite ts_other
     :
           [ thread-run2 ../example/this_executor.cpp : ex_this_executor ]
           [ thread-run2 ../example/default_executor.cpp : ex_default_executor ]
     ;
+
+    explicit ts_ ;
+    test-suite ts_
+    :
+          #[ thread-compile test_10963.cpp : : test_10963_c ]
+          #[ thread-run test_10964.cpp ]
+    ;
+
 
 }
