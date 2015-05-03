@@ -65,11 +65,9 @@ int main()
   }
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     auto f1 = boost::make_ready_future().then(TestCallback());
     BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
     boost::future<void> f2 = f1.get();
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   }
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {

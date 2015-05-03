@@ -4964,14 +4964,23 @@ namespace detail
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (underlying_cast<int>(policy) & int(launch::async)) {
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
     } else {
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4987,6 +4996,9 @@ namespace detail
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
     return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type, F>(ex,
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -5002,15 +5014,24 @@ namespace detail
 
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::async)) {
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
     } else if (underlying_cast<int>(this->launch_policy(lock)) & int(launch::deferred)) {
       this->future_->wait_internal(lock);
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
     } else {
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+      lock.unlock();
+#endif
       return boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
           lock, boost::move(*this), boost::forward<F>(func)
       );
@@ -5165,13 +5186,13 @@ namespace detail
   template<typename F, typename Rp>
   struct future_unwrap_shared_state: shared_state<Rp>
   {
-    F parent;
+    F wrapped;
   public:
     explicit future_unwrap_shared_state(BOOST_THREAD_RV_REF(F) f)
-    : parent(boost::move(f)) {}
+    : wrapped(boost::move(f)) {}
 
     typename F::value_type parent_value(boost::unique_lock<boost::mutex>& ) {
-        typename F::value_type r = parent.get();
+        typename F::value_type r = wrapped.get();
         r.set_exceptional_if_invalid();
         return boost::move(r);
     }
@@ -5187,8 +5208,8 @@ namespace detail
 
     virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
     {
-      boost::unique_lock<boost::mutex> lk(parent.future_->mutex);
-      parent.future_->set_continuation_ptr(continuation, lk);
+      boost::unique_lock<boost::mutex> lk(wrapped.parent.future_->mutex);
+      wrapped.parent.future_->set_continuation_ptr(continuation, lk);
     }
 #endif
   };
@@ -5198,13 +5219,13 @@ namespace detail
   make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_RV_REF(F) f) {
     shared_ptr<future_unwrap_shared_state<F, Rp> >
         h(new future_unwrap_shared_state<F, Rp>(boost::move(f)));
-#ifdef BOOST_THREAD_FUTURE_BLOCKING
-    lock.lock();
-    h->parent.future_->set_continuation_ptr(h, lock);
-    lock.unlock();
-#else
-    h->parent.future_->set_continuation_ptr(h, lock);
-#endif
+//#ifdef BOOST_THREAD_FUTURE_BLOCKING
+//    lock.lock();
+//    h->parent.future_->set_continuation_ptr(h, lock);
+//    lock.unlock();
+//#else
+//    h->parent.future_->set_continuation_ptr(h, lock);
+//#endif
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }
