@@ -94,15 +94,13 @@ int main()
     f.then(
             TestCallback()).unwrap().then(TestCallback()).get();
   }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     auto f1 = boost::make_ready_future().then(TestCallback());
     BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     auto f3 = f1.then(TestCallback());
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     f3.wait();
   }
 
@@ -110,16 +108,14 @@ int main()
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::basic_thread_pool executor;
-
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     auto f1 = boost::make_ready_future().then(executor, TestCallback());
-    //BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
     auto f3 = f1.then(executor, TestCallback());
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
+#if 0
+  // @fixme this doesn't works.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::basic_thread_pool executor;
