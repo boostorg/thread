@@ -957,9 +957,7 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          #[ thread-compile test_10963.cpp : : test_10963_c ]
-          #[ thread-run test_10964.cpp ]
-          [ thread-run test_11256.cpp ]
+          #[ thread-run test_11256.cpp ]
     ;
 
 
