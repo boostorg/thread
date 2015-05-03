@@ -5187,31 +5187,75 @@ namespace detail
   struct future_unwrap_shared_state: shared_state<Rp>
   {
     F wrapped;
+    typename F::value_type unwrapped;
   public:
     explicit future_unwrap_shared_state(BOOST_THREAD_RV_REF(F) f)
-    : wrapped(boost::move(f)) {}
-
-    typename F::value_type parent_value(boost::unique_lock<boost::mutex>& ) {
-        typename F::value_type r = wrapped.get();
-        r.set_exceptional_if_invalid();
-        return boost::move(r);
+    : wrapped(boost::move(f)) {
     }
 
-    virtual void wait(boost::unique_lock<boost::mutex>& lk, bool ) { // todo see if rethrow must be used
-        parent_value(lk).wait();
-    }
-    virtual Rp get(boost::unique_lock<boost::mutex>& lk) {
-        return parent_value(lk).get();
-    }
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
-    typedef shared_ptr<shared_state_base> continuation_ptr_type;
-
-    virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
+    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
     {
-      boost::unique_lock<boost::mutex> lk(wrapped.parent.future_->mutex);
-      wrapped.parent.future_->set_continuation_ptr(continuation, lk);
+      if (! unwrapped.valid() )
+      {
+        if (wrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(wrapped.get_exception_ptr(), lk);
+        } else {
+          unwrapped = wrapped.get();
+          if (unwrapped.valid())
+          {
+            lk.unlock();
+            boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
+            unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+          } else {
+            this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          }
+        }
+      } else {
+        if (unwrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
+        } else {
+          this->mark_finished_with_result_internal(unwrapped.get(), lk);
+        }
+      }
     }
-#endif
+  };
+
+  template<typename F>
+  struct future_unwrap_shared_state<F,void>: shared_state<void>
+  {
+    F wrapped;
+    typename F::value_type unwrapped;
+  public:
+    explicit future_unwrap_shared_state(BOOST_THREAD_RV_REF(F) f)
+    : wrapped(boost::move(f)) {
+    }
+
+    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
+    {
+      if (! unwrapped.valid() )
+      {
+        if (wrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(wrapped.get_exception_ptr(), lk);
+        } else {
+          unwrapped = wrapped.get();
+          if (unwrapped.valid())
+          {
+            lk.unlock();
+            boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
+            unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+          } else {
+            this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          }
+        }
+      } else {
+        if (unwrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
+        } else {
+          unwrapped.wait();
+          this->mark_finished_with_result_internal(lk);
+        }
+      }
+    }
   };
 
   template <class F, class Rp>
@@ -5219,13 +5263,13 @@ namespace detail
   make_future_unwrap_shared_state(boost::unique_lock<boost::mutex> &lock, BOOST_THREAD_RV_REF(F) f) {
     shared_ptr<future_unwrap_shared_state<F, Rp> >
         h(new future_unwrap_shared_state<F, Rp>(boost::move(f)));
-//#ifdef BOOST_THREAD_FUTURE_BLOCKING
-//    lock.lock();
-//    h->parent.future_->set_continuation_ptr(h, lock);
-//    lock.unlock();
-//#else
-//    h->parent.future_->set_continuation_ptr(h, lock);
-//#endif
+#ifdef BOOST_THREAD_FUTURE_BLOCKING
+    lock.lock();
+    h->wrapped.future_->set_continuation_ptr(h, lock);
+    lock.unlock();
+#else
+    h->wrapped.future_->set_continuation_ptr(h, lock);
+#endif
 
     return BOOST_THREAD_FUTURE<Rp>(h);
   }

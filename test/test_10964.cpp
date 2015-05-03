@@ -77,9 +77,6 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     auto f1 = boost::make_ready_future().then(TestCallback());
@@ -90,30 +87,17 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
-
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
         boost::make_ready_future().then(
             TestCallback()).unwrap().then(TestCallback()).get();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::future<void> f = boost::async(p1);
     f.then(
             TestCallback()).unwrap().then(TestCallback()).get();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     auto f1 = boost::make_ready_future().then(TestCallback());
@@ -125,10 +109,6 @@ int main()
     std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     f3.wait();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::basic_thread_pool executor;
@@ -142,10 +122,6 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::basic_thread_pool executor;
@@ -161,10 +137,6 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-#endif
-#if 0
-  // @fixme this doesn't works.
-  //Assertion failed: (future.is_ready()), function operator(), file test_10964.cpp, line 25.
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   {
     boost::basic_thread_pool executor;
@@ -177,7 +149,6 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
 
 #endif

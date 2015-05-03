@@ -89,7 +89,7 @@ int test_executor_adaptor()
         std::cout << BOOST_CONTEXTOF << std::endl;
         submit_some( ea);
         std::cout << BOOST_CONTEXTOF << std::endl;
-#if 0
+#if 1
       // fixme
       // ERROR= tr1::bad_weak_ptr
         {
@@ -143,7 +143,7 @@ int test_executor_adaptor()
         submit_some(ea1);
       }
       std::cout << BOOST_CONTEXTOF << std::endl;
-#if 0
+#if 1
       // fixme
       // ERROR= tr1::bad_weak_ptr
       {
@@ -156,7 +156,7 @@ int test_executor_adaptor()
       {
         boost::async(&f1);
       }
-#if 0
+#if 1
       // fixme
       // ERROR= tr1::bad_weak_ptr
 

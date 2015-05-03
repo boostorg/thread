@@ -296,7 +296,7 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_9711.cpp ] This is an invalid use of ::then deferred.
           [ thread-run test_9856.cpp ]
           [ thread-compile test_10963.cpp : : test_10963_c ]
-          #[ thread-run test_10964.cpp ]
+          [ thread-run test_10964.cpp ]
           [ thread-test test_11053.cpp ]
     ;
 
@@ -957,15 +957,14 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
-          #[ thread-compile test_10963.cpp : : test_10963_c ]
-          #[ thread-run test_10964.cpp ]
-          [ thread-run2 ../example/executor.cpp : ex_executor2 ]
+          #[ thread-run test_11256.cpp ] 
+          #[ thread-run2 ../example/executor.cpp : ex_executor2 ]
           #[ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref2 ]
-          [ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p2 ]
-          [ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region2 ]
-          [ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p2 ]
-          [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort2 ]
-          [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate2 ]
+          #[ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p2 ]
+          #[ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region2 ]
+          #[ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p2 ]
+          #[ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort2 ]
+          #[ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate2 ]
     ;
 
 
