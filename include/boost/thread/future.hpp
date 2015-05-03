@@ -5053,17 +5053,25 @@ namespace detail
     {
       if (! unwrapped.valid() )
       {
-        unwrapped = wrapped.get();
-        if (unwrapped.valid())
-        {
-          lk.unlock();
-          boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
-          unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+        if (wrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(wrapped.get_exception_ptr(), lk);
         } else {
-          this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          unwrapped = wrapped.get();
+          if (unwrapped.valid())
+          {
+            lk.unlock();
+            boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
+            unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+          } else {
+            this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          }
         }
       } else {
-        this->mark_finished_with_result_internal(unwrapped.get(), lk);
+        if (unwrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
+        } else {
+          this->mark_finished_with_result_internal(unwrapped.get(), lk);
+        }
       }
     }
   };
@@ -5082,18 +5090,26 @@ namespace detail
     {
       if (! unwrapped.valid() )
       {
-        unwrapped = wrapped.get();
-        if (unwrapped.valid())
-        {
-          lk.unlock();
-          boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
-          unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+        if (wrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(wrapped.get_exception_ptr(), lk);
         } else {
-          this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          unwrapped = wrapped.get();
+          if (unwrapped.valid())
+          {
+            lk.unlock();
+            boost::unique_lock<boost::mutex> lk2(unwrapped.future_->mutex);
+            unwrapped.future_->set_continuation_ptr(this->shared_from_this(), lk2);
+          } else {
+            this->mark_exceptional_finish_internal(boost::copy_exception(future_uninitialized()), lk);
+          }
         }
       } else {
-        unwrapped.wait();
-        this->mark_finished_with_result_internal(lk);
+        if (unwrapped.has_exception()) {
+          this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
+        } else {
+          unwrapped.wait();
+          this->mark_finished_with_result_internal(lk);
+        }
       }
     }
   };
