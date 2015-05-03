@@ -13,7 +13,7 @@
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/scoped_thread.hpp>
+#include <boost/thread/thread.hpp>
 #include <boost/thread/concurrent_queues/sync_queue.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/csbl/vector.hpp>
@@ -32,13 +32,13 @@ namespace executors
   private:
     /// the kind of stored threads are scoped threads to ensure that the threads are joined.
     /// A move aware vector type
-    typedef scoped_thread<> thread_t;
+    typedef thread thread_t;
     typedef csbl::vector<thread_t> thread_vector;
 
-    /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
     /// A move aware vector
     thread_vector threads;
+    /// the thread safe work queue
+    concurrent::sync_queue<work > work_queue;
 
   public:
     /**
@@ -88,7 +88,9 @@ namespace executors
         {
           work task;
           queue_op_status st = work_queue.wait_pull(task);
-          if (st == queue_op_status::closed) return;
+          if (st == queue_op_status::closed) {
+            return;
+          }
           task();
         }
       }
@@ -222,7 +224,10 @@ namespace executors
     {
       // signal to all the worker threads that there will be no more submissions.
       close();
-      // joins all the threads as the threads were scoped_threads
+
+      // joins all the threads before destroying the thread pool resources (e.g. the queue).
+      join();
+
     }
 
     /**
