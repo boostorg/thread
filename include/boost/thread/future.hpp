@@ -137,7 +137,7 @@ namespace boost
             continuations_type continuations;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
-            virtual void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base>)
+            virtual void launch_continuation()
             {
             }
 
@@ -234,8 +234,7 @@ namespace boost
                   continuations.clear();
                   relocker rlk(lock);
                   for (continuations_type::iterator it = the_continuations.begin(); it != the_continuations.end(); ++it) {
-                    boost::unique_lock<boost::mutex> cont_lock((*it)->mutex);
-                    (*it)->launch_continuation(cont_lock, *it);
+                    (*it)->launch_continuation();
                   }
                 }
             }
@@ -4209,8 +4208,9 @@ namespace detail
     }
 
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4240,8 +4240,9 @@ namespace detail
       centinel(parent.future_) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4291,9 +4292,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
-      relocker relock(lck);
-      run_it<future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4330,9 +4330,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
-      relocker relock(lck);
-      run_it<future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4373,8 +4372,9 @@ namespace detail
       centinel(parent.future_)  {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4403,8 +4403,9 @@ namespace detail
       centinel(parent.future_)  {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4441,9 +4442,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
-      relocker relock(lck);
-      run_it<shared_future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4479,9 +4479,8 @@ namespace detail
       centinel(parent.future_) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
-      relocker relock(lck);
-      run_it<shared_future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4521,7 +4520,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>&lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4559,7 +4559,8 @@ namespace detail
 
     ~future_deferred_continuation_shared_state() {
     }
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4598,7 +4599,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4634,7 +4636,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -5049,8 +5052,9 @@ namespace detail
     : wrapped(boost::move(f)) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
+    void launch_continuation()
     {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (! unwrapped.valid() )
       {
         if (wrapped.has_exception()) {
@@ -5086,8 +5090,9 @@ namespace detail
     : wrapped(boost::move(f)) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
+    void launch_continuation()
     {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (! unwrapped.valid() )
       {
         if (wrapped.has_exception()) {
@@ -5107,7 +5112,6 @@ namespace detail
         if (unwrapped.has_exception()) {
           this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
         } else {
-          unwrapped.wait();
           this->mark_finished_with_result_internal(lk);
         }
       }
