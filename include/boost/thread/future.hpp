@@ -1177,14 +1177,6 @@ namespace boost
           return future_ptr(new detail::shared_state<R>(ex));
         }
 
-        void set_exceptional_if_invalid() {
-          if (valid()) return;
-//          promise<R> p;
-//          p.set_exception(future_uninitialized());
-//          future_ = p.get_future().future_;
-          future_ = make_exceptional_future_ptr(exceptional_ptr(future_uninitialized()));
-        }
-
         future_ptr future_;
 
         basic_future(future_ptr a_future):
@@ -4139,17 +4131,6 @@ namespace detail {
   template <typename T>
   BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr ex)  {
     return make_exceptional_future<T>(ex);
-  }
-
-  template <typename T>
-  BOOST_THREAD_FUTURE<T> make_exceptional_future_if_invalid(BOOST_THREAD_FWD_REF(BOOST_THREAD_FUTURE<T>) fut) {
-    fut.set_exceptional_if_invalid();
-    return boost::move(fut);
-  }
-  template <typename T>
-  shared_future<T> make_exceptional_future_if_invalid(shared_future<T> fut) {
-    fut.set_exceptional_if_invalid();
-    return fut;
   }
 
 #if 0
