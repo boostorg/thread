@@ -2882,7 +2882,7 @@ namespace boost
             private:
               task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-              typedef R (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes) ... );
+              typedef R (*CallableType)(ArgTypes ... );
 #else
               typedef R (*CallableType)();
 #endif
@@ -3113,7 +3113,7 @@ namespace boost
         private:
           task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef void (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes)...);
+            typedef void (*CallableType)(ArgTypes...);
 #else
             typedef void (*CallableType)();
 #endif
@@ -3436,7 +3436,7 @@ namespace boost
 
         // execution
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-        void operator()(BOOST_THREAD_RV_REF(ArgTypes)... args) {
+        void operator()(ArgTypes... args) {
             if(!task) {
                 boost::throw_exception(task_moved());
             }
