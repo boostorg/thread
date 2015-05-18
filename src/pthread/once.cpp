@@ -15,7 +15,9 @@
 #include <pthread.h>
 #include <stdlib.h>
 #include <memory>
-
+#if defined BOOST_THREAD_PATCH
+#include <string.h> // memcmp.
+#endif
 namespace boost
 {
     namespace thread_detail
