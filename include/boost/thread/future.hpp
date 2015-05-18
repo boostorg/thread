@@ -431,7 +431,7 @@ namespace boost
                 return policy_;
             }
 
-            future_state::state get_state(boost::unique_lock<boost::mutex>& lk) const
+            future_state::state get_state(boost::unique_lock<boost::mutex>&) const
             {
                 if(!done)
                 {
@@ -1208,14 +1208,6 @@ namespace boost
         static //BOOST_CONSTEXPR
         future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
           return future_ptr(new detail::shared_state<R>(ex));
-        }
-
-        void set_exceptional_if_invalid() {
-          if (valid()) return;
-//          promise<R> p;
-//          p.set_exception(future_uninitialized());
-//          future_ = p.get_future().future_;
-          future_ = make_exceptional_future_ptr(exceptional_ptr(future_uninitialized()));
         }
 
         future_ptr future_;
@@ -2935,7 +2927,7 @@ namespace boost
             private:
               task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-              typedef R (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes) ... );
+              typedef R (*CallableType)(ArgTypes ... );
 #else
               typedef R (*CallableType)();
 #endif
@@ -3166,7 +3158,7 @@ namespace boost
         private:
           task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef void (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes)...);
+            typedef void (*CallableType)(ArgTypes...);
 #else
             typedef void (*CallableType)();
 #endif
@@ -3489,7 +3481,7 @@ namespace boost
 
         // execution
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-        void operator()(BOOST_THREAD_RV_REF(ArgTypes)... args) {
+        void operator()(ArgTypes... args) {
             if(!task) {
                 boost::throw_exception(task_moved());
             }
@@ -4193,17 +4185,6 @@ namespace detail {
   template <typename T>
   BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr ex)  {
     return make_exceptional_future<T>(ex);
-  }
-
-  template <typename T>
-  BOOST_THREAD_FUTURE<T> make_exceptional_future_if_invalid(BOOST_THREAD_FWD_REF(BOOST_THREAD_FUTURE<T>) fut) {
-    fut.set_exceptional_if_invalid();
-    return boost::move(fut);
-  }
-  template <typename T>
-  shared_future<T> make_exceptional_future_if_invalid(shared_future<T> fut) {
-    fut.set_exceptional_if_invalid();
-    return fut;
   }
 
 #if 0
@@ -4977,6 +4958,7 @@ namespace detail
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
       lock.unlock();
 #endif
+      lock.unlock();
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -5265,6 +5247,7 @@ namespace detail
       }
     }
   };
+
 
   template <class F, class Rp>
   BOOST_THREAD_FUTURE<Rp>

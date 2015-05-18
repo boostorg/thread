@@ -126,7 +126,8 @@ namespace boost
                 }
                 ~delete_current_thread_tls_key_on_dlclose_t()
                 {
-                    if (current_thread_tls_init_flag.epoch!=BOOST_ONCE_INITIAL_FLAG_VALUE)
+                    const boost::once_flag uninitialized = BOOST_ONCE_INIT;
+                    if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(boost::once_flag)))
                     {
                         pthread_key_delete(current_thread_tls_key);
                     }

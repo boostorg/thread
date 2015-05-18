@@ -30,9 +30,8 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executors::work work;
   private:
-    /// the kind of stored threads are scoped threads to ensure that the threads are joined.
-    /// A move aware vector type
     typedef thread thread_t;
+    /// A move aware vector type
     typedef csbl::vector<thread_t> thread_vector;
 
     /// A move aware vector
@@ -224,10 +223,8 @@ namespace executors
     {
       // signal to all the worker threads that there will be no more submissions.
       close();
-
       // joins all the threads before destroying the thread pool resources (e.g. the queue).
       join();
-
     }
 
     /**
