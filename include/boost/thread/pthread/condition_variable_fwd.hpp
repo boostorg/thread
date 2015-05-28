@@ -120,6 +120,15 @@ namespace boost
             unique_lock<mutex>& m,
             duration_type const& wait_duration)
         {
+            if (wait_duration.is_pos_infinity())
+            {
+                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return true;
+            }
             return timed_wait(m,get_system_time()+wait_duration);
         }
 
@@ -149,6 +158,18 @@ namespace boost
             unique_lock<mutex>& m,
             duration_type const& wait_duration,predicate_type pred)
         {
+            if (wait_duration.is_pos_infinity())
+            {
+                while (!pred())
+                {
+                  wait(m); // or do_wait(m,detail::timeout::sentinel());
+                }
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return pred();
+            }
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 #endif

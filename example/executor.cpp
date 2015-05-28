@@ -27,8 +27,10 @@
 #include <boost/assert.hpp>
 #include <string>
 #include <iostream>
+#include <cassert>
 
-boost::future<void> p(boost::future<void>) {
+boost::future<void> p(boost::future<void> f) {
+    assert(f.is_ready());
     return boost::make_ready_future();
 }
 
@@ -200,10 +202,13 @@ int main()
   && defined BOOST_THREAD_PROVIDES_EXECUTORS \
   &&  ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
+  boost::basic_thread_pool executor;
   // compiles
   boost::make_ready_future().then(&p);
 
-  boost::basic_thread_pool executor;
+  // ??
+  boost::make_ready_future().then(executor, &p);
+
   // doesn't compile
   boost::make_ready_future().then(executor, &p);
 #endif
