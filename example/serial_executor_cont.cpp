@@ -52,18 +52,19 @@ int f2(int i)
   return i + 1;
 }
 
-void submit_some(boost::serial_executor_cont& tp)
+template < class Executor>
+void submit_some(boost::serial_executor_cont<Executor>& tp)
 {
-  std::cout << BOOST_CONTEXTOF << std::endl;
+  //std::cout << BOOST_CONTEXTOF << std::endl;
   for (int i = 0; i < 3; ++i) {
-    std::cout << BOOST_CONTEXTOF << std::endl;
+    //std::cout << BOOST_CONTEXTOF << std::endl;
     tp.submit(&p2);
   }
   for (int i = 0; i < 3; ++i) {
-    std::cout << BOOST_CONTEXTOF << std::endl;
+    //std::cout << BOOST_CONTEXTOF << std::endl;
     tp.submit(&p1);
   }
-  std::cout << BOOST_CONTEXTOF << std::endl;
+  //std::cout << BOOST_CONTEXTOF << std::endl;
 
 }
 
@@ -84,9 +85,8 @@ int test_executor_adaptor()
       // std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::basic_thread_pool ea1(4);
-        boost::serial_executor_cont ea2(ea1);
+        boost::serial_executor_cont<boost::basic_thread_pool> ea2(ea1);
         submit_some(ea2);
-        boost::this_thread::sleep_for(boost::chrono::seconds(10));
       }
 #endif
       // std::cout << BOOST_CONTEXTOF << std::endl;

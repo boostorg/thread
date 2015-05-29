@@ -18,7 +18,7 @@
 #include <boost/thread/caller_context.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executors/loop_executor.hpp>
-#include <boost/thread/executors/serial_executor.hpp>
+#include <boost/thread/executors/generic_serial_executor.hpp>
 #include <boost/thread/executors/inline_executor.hpp>
 #include <boost/thread/executors/thread_executor.hpp>
 #include <boost/thread/executors/executor.hpp>
@@ -73,7 +73,7 @@ void submit_some(boost::executor& tp)
 }
 
 
-void at_th_entry(boost::basic_thread_pool& )
+void at_th_entry(boost::basic_thread_pool )
 {
 
 }
@@ -84,6 +84,10 @@ int test_executor_adaptor()
   {
     try
     {
+      {
+        boost::basic_thread_pool e1;
+        boost::basic_thread_pool e2 = e1;
+      }
       {
         boost::executor_adaptor < boost::basic_thread_pool > ea(4);
         std::cout << BOOST_CONTEXTOF << std::endl;
@@ -120,24 +124,64 @@ int test_executor_adaptor()
       }
       std::cout << BOOST_CONTEXTOF << std::endl;
       {
+        boost::loop_executor e1;
+        boost::loop_executor e2 = e1;
+        boost::executor_adaptor < boost::loop_executor > ea2(e2);
+        submit_some( ea2);
+        ea2.underlying_executor().run_queued_closures();
+      }
+      {
         boost::executor_adaptor < boost::loop_executor > ea2;
         submit_some( ea2);
         ea2.underlying_executor().run_queued_closures();
       }
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      std::cout << BOOST_CONTEXTOF << std::endl;
+      // std::cout << BOOST_CONTEXTOF << std::endl;
       {
-        boost::executor_adaptor < boost::basic_thread_pool > ea1(4);
-        boost::executor_adaptor < boost::serial_executor > ea2(ea1);
+        boost::basic_thread_pool tp;
+        boost::generic_serial_executor e1(tp);
+        boost::generic_serial_executor e2 = e1;
+      }
+      {
+        boost::basic_thread_pool ea1(4);
+        boost::generic_serial_executor ea2(ea1);
+        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
+        submit_some(ea3);
+      }
+      {
+        boost::basic_thread_pool ea1(4);
+        boost::generic_serial_executor ea2(ea1);
+        boost::executor_adaptor < boost::generic_serial_executor > ea3(ea2);
+        submit_some(ea3);
+      }
+//#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
+      {
+        boost::basic_thread_pool ea1(4);
+        boost::executor_adaptor < boost::generic_serial_executor > ea2(ea1);
         submit_some(ea2);
       }
-#endif
-      std::cout << BOOST_CONTEXTOF << std::endl;
+//#endif
+      // std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::inline_executor e1;
+        boost::inline_executor e2 = e1;
+        boost::executor_adaptor < boost::inline_executor > ea2(e2);
+        submit_some(ea2);
+      }
       {
         boost::executor_adaptor < boost::inline_executor > ea1;
         submit_some(ea1);
       }
       std::cout << BOOST_CONTEXTOF << std::endl;
+      {
+        boost::thread_executor e1;
+        boost::thread_executor e2 = e1;
+      }
+      {
+        boost::thread_executor e1;
+        boost::executor_adaptor < boost::generic_executor > ea2(e1);
+        submit_some(ea2);
+      }
+
       {
         boost::executor_adaptor < boost::thread_executor > ea1;
         submit_some(ea1);

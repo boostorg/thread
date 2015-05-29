@@ -24,7 +24,6 @@ namespace detail
   class priority_executor_base
   {
   public:
-    //typedef boost::function<void()> work;
     typedef executors::work_pq work;
   protected:
     typedef Queue queue_type;

@@ -1,4 +1,4 @@
-// Copyright (C) 2013-2014 Vicente J. Botet Escriba
+// Copyright (C) 2013-2015 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
@@ -18,6 +18,11 @@
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/csbl/vector.hpp>
 
+#include <boost/smart_ptr/shared_ptr.hpp>
+#include <boost/smart_ptr/make_shared.hpp>
+#include <boost/smart_ptr/enable_shared_from_this.hpp>
+#include <boost/function.hpp>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -30,126 +35,256 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executors::work work;
   private:
-    typedef thread thread_t;
-    /// A move aware vector type
-    typedef csbl::vector<thread_t> thread_vector;
 
-    /// A move aware vector
-    thread_vector threads;
-    /// the thread safe work queue
-    concurrent::sync_queue<work > work_queue;
+    struct shared_state : enable_shared_from_this<shared_state> {
+      typedef  executors::work work;
+      /// the kind of stored threads are scoped threads to ensure that the threads are joined.
+      /// A move aware vector type
+      //typedef scoped_thread<> thread_t;
+      typedef thread thread_t;
+      typedef csbl::vector<thread_t> thread_vector;
 
-  public:
-    /**
-     * Effects: try to execute one task.
-     * Returns: whether a task has been executed.
-     * Throws: whatever the current task constructor throws or the task() throws.
-     */
-    bool try_executing_one()
-    {
-      try
-      {
-        work task;
-        if (work_queue.try_pull(task) == queue_op_status::success)
-        {
-          task();
-          return true;
-        }
-        return false;
-      }
-      catch (...)
-      {
-        std::terminate();
-        return false;
-      }
-    }
-    /**
-     * Effects: schedule one task or yields
-     * Throws: whatever the current task constructor throws or the task() throws.
-     */
-    void schedule_one_or_yield()
-    {
-        if ( ! try_executing_one())
-        {
-          this_thread::yield();
-        }
-    }
-  private:
+      /// the thread safe work queue
+      concurrent::sync_queue<work > work_queue;
+      /// A move aware vector
+      thread_vector threads;
+      unsigned const thread_count;
+      boost::function<void(basic_thread_pool)> at_thread_entry;
+      friend class basic_thread_pool;
 
-    /**
-     * The main loop of the worker threads
-     */
-    void worker_thread()
-    {
-      try
+
+    public:
+      /**
+       * Effects: try to execute one task.
+       * Returns: whether a task has been executed.
+       * Throws: whatever the current task constructor throws or the task() throws.
+       */
+      bool try_executing_one()
       {
-        for(;;)
+        try
         {
           work task;
-          queue_op_status st = work_queue.wait_pull(task);
-          if (st == queue_op_status::closed) {
-            return;
+          if (work_queue.try_pull(task) == queue_op_status::success)
+          {
+            task();
+            return true;
           }
-          task();
+          return false;
+        }
+        catch (...)
+        {
+          std::terminate();
+          return false;
         }
       }
-      catch (...)
+      /**
+       * Effects: schedule one task or yields
+       * Throws: whatever the current task constructor throws or the task() throws.
+       */
+      void schedule_one_or_yield()
       {
-        std::terminate();
-        return;
+          if ( ! try_executing_one())
+          {
+            this_thread::yield();
+          }
       }
-    }
-#if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-    template <class AtThreadEntry>
-    void worker_thread1(AtThreadEntry& at_thread_entry)
-    {
-      at_thread_entry(*this);
-      worker_thread();
-    }
-#endif
-    void worker_thread2(void(*at_thread_entry)(basic_thread_pool&))
-    {
-      at_thread_entry(*this);
-      worker_thread();
-    }
-    template <class AtThreadEntry>
-    void worker_thread3(BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
-    {
-      at_thread_entry(*this);
-      worker_thread();
-    }
-    static void do_nothing_at_thread_entry(basic_thread_pool&) {}
+    private:
 
+      /**
+       * The main loop of the worker threads
+       */
+      void worker_thread()
+      {
+        // fixme: this call results on segmentation fault
+        //at_thread_entry(basic_thread_pool(this->shared_from_this()));
+        try
+        {
+          for(;;)
+          {
+            work task;
+            queue_op_status st = work_queue.wait_pull(task);
+            if (st == queue_op_status::closed) break;
+            task();
+          }
+        }
+        catch (...)
+        {
+          std::terminate();
+          return;
+        }
+      }
+
+      static void do_nothing_at_thread_entry(basic_thread_pool) {}
+
+      void init()
+      {
+        try
+        {
+          threads.reserve(thread_count);
+          for (unsigned i = 0; i < thread_count; ++i)
+          {
+            thread th (&shared_state::worker_thread, this);
+            threads.push_back(thread_t(boost::move(th)));
+          }
+        }
+        catch (...)
+        {
+          close();
+          throw;
+        }
+      }
+
+    public:
+      /// basic_thread_pool is not copyable.
+      BOOST_THREAD_NO_COPYABLE(shared_state)
+
+      /**
+       * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
+       *
+       * \b Throws: Whatever exception is thrown while initializing the needed resources.
+       */
+      shared_state(unsigned const thread_count = thread::hardware_concurrency()+1)
+      : thread_count(thread_count),
+        at_thread_entry(do_nothing_at_thread_entry)
+      {
+      }
+      /**
+       * \b Effects: creates a thread pool that runs closures on \c thread_count threads
+       * and executes the at_thread_entry function at the entry of each created thread. .
+       *
+       * \b Throws: Whatever exception is thrown while initializing the needed resources.
+       */
+  #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      template <class AtThreadEntry>
+      shared_state( unsigned const thread_count, AtThreadEntry& at_thread_entry)
+      : thread_count(thread_count),
+        at_thread_entry(at_thread_entry)
+      {
+      }
+  #endif
+      shared_state( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool))
+      : thread_count(thread_count),
+        at_thread_entry(at_thread_entry)
+      {
+      }
+      template <class AtThreadEntry>
+      shared_state( unsigned const thread_count, BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
+      : thread_count(thread_count),
+        at_thread_entry(boost::move(at_thread_entry))
+      {
+      }
+      /**
+       * \b Effects: Destroys the thread pool.
+       *
+       * \b Synchronization: The completion of all the closures happen before the completion of the \c basic_thread_pool destructor.
+       */
+      ~shared_state()
+      {
+        // signal to all the worker threads that there will be no more submissions.
+        close();
+        join();
+        // joins all the threads as the threads were scoped_threads
+      }
+
+      /**
+       * \b Effects: join all the threads.
+       */
+      void join()
+      {
+        for (unsigned i = 0; i < threads.size(); ++i)
+        {
+          if (this_thread::get_id() == threads[i].get_id()) continue;
+          threads[i].join();
+        }
+      }
+
+      /**
+       * \b Effects: close the \c basic_thread_pool for submissions.
+       * The worker threads will work until there is no more closures to run.
+       */
+      void close()
+      {
+        work_queue.close();
+      }
+
+      /**
+       * \b Returns: whether the pool is closed for submissions.
+       */
+      bool closed()
+      {
+        return work_queue.closed();
+      }
+
+      /**
+       * \b Requires: \c Closure is a model of \c Callable(void()) and a model of \c CopyConstructible/MoveConstructible.
+       *
+       * \b Effects: The specified \c closure will be scheduled for execution at some point in the future.
+       * If invoked closure throws an exception the \c basic_thread_pool will call \c std::terminate, as is the case with threads.
+       *
+       * \b Synchronization: completion of \c closure on a particular thread happens before destruction of thread's thread local variables.
+       *
+       * \b Throws: \c sync_queue_is_closed if the thread pool is closed.
+       * Whatever exception that can be throw while storing the closure.
+       */
+
+  #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+      template <typename Closure>
+      void submit(Closure & closure)
+      {
+        work_queue.push(work(closure));
+      }
+  #endif
+      void submit(void (*closure)())
+      {
+        work_queue.push(work(closure));
+      }
+
+      template <typename Closure>
+      void submit(BOOST_THREAD_RV_REF(Closure) closure)
+      {
+        work_queue.push(work(boost::forward<Closure>(closure)));
+      }
+
+      /**
+       * \b Requires: This must be called from an scheduled task.
+       *
+       * \b Effects: reschedule functions until pred()
+       */
+      template <typename Pred>
+      bool reschedule_until(Pred const& pred)
+      {
+        do {
+          if ( ! try_executing_one())
+          {
+            return false;
+          }
+        } while (! pred());
+        return true;
+      }
+    };
+
+    /**
+     * \b Effects: creates a thread pool with this shared state.
+     *
+     * \b Throws: Whatever exception is thrown while initializing the needed resources.
+     */
+    friend struct shared_state;
+    basic_thread_pool(shared_ptr<shared_state> ptr)
+    : pimpl(ptr)
+    {
+    }
   public:
-    /// basic_thread_pool is not copyable.
-    BOOST_THREAD_NO_COPYABLE(basic_thread_pool)
-
     /**
      * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
      *
      * \b Throws: Whatever exception is thrown while initializing the needed resources.
      */
     basic_thread_pool(unsigned const thread_count = thread::hardware_concurrency()+1)
+    : pimpl(make_shared<shared_state>(thread_count))
     {
-      try
-      {
-        threads.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-#if 1
-          thread th (&basic_thread_pool::worker_thread, this);
-          threads.push_back(thread_t(boost::move(th)));
-#else
-          threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
-#endif
-        }
-      }
-      catch (...)
-      {
-        close();
-        throw;
-      }
+      pimpl->init();
     }
+
     /**
      * \b Effects: creates a thread pool that runs closures on \c thread_count threads
      * and executes the at_thread_entry function at the entry of each created thread. .
@@ -159,61 +294,24 @@ namespace executors
 #if defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
     template <class AtThreadEntry>
     basic_thread_pool( unsigned const thread_count, AtThreadEntry& at_thread_entry)
+    : pimpl(make_shared<shared_state>(thread_count, at_thread_entry))
     {
-      try
-      {
-        threads.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-          thread th (&basic_thread_pool::worker_thread1<AtThreadEntry>, this, at_thread_entry);
-          threads.push_back(thread_t(boost::move(th)));
-          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
-        }
-      }
-      catch (...)
-      {
-        close();
-        throw;
-      }
+      pimpl->init();
     }
 #endif
-    basic_thread_pool( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool&))
+
+    basic_thread_pool( unsigned const thread_count, void(*at_thread_entry)(basic_thread_pool))
+    : pimpl(make_shared<shared_state>(thread_count, at_thread_entry))
     {
-      try
-      {
-        threads.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-          thread th (&basic_thread_pool::worker_thread2, this, at_thread_entry);
-          threads.push_back(thread_t(boost::move(th)));
-          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
-        }
-      }
-      catch (...)
-      {
-        close();
-        throw;
-      }
+      pimpl->init();
     }
     template <class AtThreadEntry>
     basic_thread_pool( unsigned const thread_count, BOOST_THREAD_FWD_REF(AtThreadEntry) at_thread_entry)
+    : pimpl(make_shared<shared_state>(thread_count, boost::forward<AtThreadEntry>(at_thread_entry)))
     {
-      try
-      {
-        threads.reserve(thread_count);
-        for (unsigned i = 0; i < thread_count; ++i)
-        {
-          thread th (&basic_thread_pool::worker_thread3<AtThreadEntry>, this, boost::forward<AtThreadEntry>(at_thread_entry));
-          threads.push_back(thread_t(boost::move(th)));
-          //threads.push_back(thread_t(&basic_thread_pool::worker_thread, this)); // do not compile
-        }
-      }
-      catch (...)
-      {
-        close();
-        throw;
-      }
+      pimpl->init();
     }
+
     /**
      * \b Effects: Destroys the thread pool.
      *
@@ -221,10 +319,16 @@ namespace executors
      */
     ~basic_thread_pool()
     {
-      // signal to all the worker threads that there will be no more submissions.
-      close();
-      // joins all the threads before destroying the thread pool resources (e.g. the queue).
-      join();
+    }
+
+    /**
+     * Effects: try to execute one task.
+     * Returns: whether a task has been executed.
+     * Throws: whatever the current task constructor throws or the task() throws.
+     */
+    bool try_executing_one()
+    {
+      return pimpl->try_executing_one();
     }
 
     /**
@@ -232,10 +336,7 @@ namespace executors
      */
     void join()
     {
-      for (unsigned i = 0; i < threads.size(); ++i)
-      {
-        threads[i].join();
-      }
+      pimpl->join();
     }
 
     /**
@@ -244,7 +345,7 @@ namespace executors
      */
     void close()
     {
-      work_queue.close();
+      pimpl->close();
     }
 
     /**
@@ -252,7 +353,7 @@ namespace executors
      */
     bool closed()
     {
-      return work_queue.closed();
+      return pimpl->closed();
     }
 
     /**
@@ -271,18 +372,18 @@ namespace executors
     template <typename Closure>
     void submit(Closure & closure)
     {
-      work_queue.push(work(closure));
+      pimpl->submit(closure);
     }
 #endif
     void submit(void (*closure)())
     {
-      work_queue.push(work(closure));
+      pimpl->submit(closure);
     }
 
     template <typename Closure>
     void submit(BOOST_THREAD_RV_REF(Closure) closure)
     {
-      work_queue.push(work(boost::forward<Closure>(closure)));
+      pimpl->submit(boost::forward<Closure>(closure));
     }
 
     /**
@@ -293,15 +394,16 @@ namespace executors
     template <typename Pred>
     bool reschedule_until(Pred const& pred)
     {
-      do {
-        if ( ! try_executing_one())
-        {
-          return false;
-        }
-      } while (! pred());
-      return true;
+      return pimpl->reschedule_until(pred);
     }
 
+    void schedule_one_or_yield()
+    {
+      return pimpl->schedule_one_or_yield();
+    }
+
+  private:
+    shared_ptr<shared_state> pimpl;
   };
 }
 using executors::basic_thread_pool;
