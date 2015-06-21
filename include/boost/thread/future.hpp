@@ -3548,8 +3548,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3572,12 +3572,12 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif
@@ -3612,8 +3612,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3637,8 +3637,8 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
       //          return boost::detail::make_future_deferred_shared_state<Rp>(
       //              BF(
       //                  thread_detail::decay_copy(boost::forward<F>(f))
@@ -3646,8 +3646,8 @@ namespace detail
       //          );
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)

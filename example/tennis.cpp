@@ -39,7 +39,7 @@ const char* player_name(int state)
     if (state == PLAYER_B)
         return "PLAYER-B";
     throw "bad player";
-    return 0;
+    //return 0;
 }
 
 void player(int active)
