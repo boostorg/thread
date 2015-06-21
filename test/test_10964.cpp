@@ -49,6 +49,7 @@ void p1()
 int main()
 {
   const int number_of_tests = 2;
+  (void)(number_of_tests);
 
 #if ! defined  BOOST_NO_CXX11_DECLTYPE && ! defined  BOOST_NO_CXX11_AUTO_DECLARATIONS
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
