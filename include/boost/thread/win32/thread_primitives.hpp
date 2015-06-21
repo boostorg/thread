@@ -59,7 +59,7 @@ namespace boost
             using ::CreateSemaphoreExW;
 # endif
             using ::OpenEventW;
-            using ::GetModuleGandleW;
+            using ::GetModuleHandleW;
 # else
             using ::CreateMutexA;
             using ::CreateEventA;
