@@ -24,7 +24,7 @@
 
 namespace boost
 {
-    class shared_mutex
+    class shared_timed_mutex
     {
     private:
         struct state_data
@@ -84,8 +84,8 @@ namespace boost
         }
 
     public:
-        BOOST_THREAD_NO_COPYABLE(shared_mutex)
-        shared_mutex()
+        BOOST_THREAD_NO_COPYABLE(shared_timed_mutex)
+        shared_timed_mutex()
         {
             semaphores[unlock_sem]=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
             semaphores[exclusive_sem]=detail::win32::create_anonymous_semaphore_nothrow(0,LONG_MAX);
@@ -105,7 +105,7 @@ namespace boost
             state=state_;
         }
 
-        ~shared_mutex()
+        ~shared_timed_mutex()
         {
             detail::win32::CloseHandle(upgrade_sem);
             detail::win32::CloseHandle(semaphores[unlock_sem]);
@@ -892,7 +892,8 @@ namespace boost
         }
 
     };
-    typedef shared_mutex upgrade_mutex;
+    typedef shared_timed_mutex shared_mutex;
+    typedef shared_timed_mutex upgrade_mutex;
 
 }
 

@@ -11,22 +11,22 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 /*
-<shared_mutex> synopsis
+<shared_timed_mutex> synopsis
 
 namespace boost
 {
 namespace thread_v2
 {
 
-class shared_mutex
+class shared_timed_mutex
 {
 public:
 
-    shared_mutex();
-    ~shared_mutex();
+    shared_timed_mutex();
+    ~shared_timed_mutex();
 
-    shared_mutex(const shared_mutex&) = delete;
-    shared_mutex& operator=(const shared_mutex&) = delete;
+    shared_timed_mutex(const shared_timed_mutex&) = delete;
+    shared_timed_mutex& operator=(const shared_timed_mutex&) = delete;
 
     // Exclusive ownership
 
@@ -161,7 +161,7 @@ public:
 namespace boost {
   namespace thread_v2 {
 
-    class shared_mutex
+    class shared_timed_mutex
     {
       typedef ::boost::mutex              mutex_t;
       typedef ::boost::condition_variable cond_t;
@@ -176,16 +176,16 @@ namespace boost {
       static const count_t n_readers_ = ~write_entered_;
 
     public:
-      BOOST_THREAD_INLINE shared_mutex();
-      BOOST_THREAD_INLINE ~shared_mutex();
+      BOOST_THREAD_INLINE shared_timed_mutex();
+      BOOST_THREAD_INLINE ~shared_timed_mutex();
 
 #ifndef BOOST_NO_CXX11_DELETED_FUNCTIONS
-      shared_mutex(shared_mutex const&) = delete;
-      shared_mutex& operator=(shared_mutex const&) = delete;
+      shared_timed_mutex(shared_timed_mutex const&) = delete;
+      shared_timed_mutex& operator=(shared_timed_mutex const&) = delete;
 #else // BOOST_NO_CXX11_DELETED_FUNCTIONS
     private:
-      shared_mutex(shared_mutex const&);
-      shared_mutex& operator=(shared_mutex const&);
+      shared_timed_mutex(shared_timed_mutex const&);
+      shared_timed_mutex& operator=(shared_timed_mutex const&);
     public:
 #endif // BOOST_NO_CXX11_DELETED_FUNCTIONS
 
@@ -240,7 +240,7 @@ namespace boost {
 
     template <class Clock, class Duration>
     bool
-    shared_mutex::try_lock_until(
+    shared_timed_mutex::try_lock_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -275,7 +275,7 @@ namespace boost {
 
     template <class Clock, class Duration>
     bool
-    shared_mutex::try_lock_shared_until(
+    shared_timed_mutex::try_lock_shared_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -298,7 +298,7 @@ namespace boost {
     }
 
 #if defined BOOST_THREAD_USES_DATETIME
-    bool shared_mutex::timed_lock(system_time const& abs_time)
+    bool shared_timed_mutex::timed_lock(system_time const& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ & write_entered_)
@@ -329,7 +329,7 @@ namespace boost {
       }
       return true;
     }
-      bool shared_mutex::timed_lock_shared(system_time const& abs_time)
+      bool shared_timed_mutex::timed_lock_shared(system_time const& abs_time)
       {
         boost::unique_lock<mutex_t> lk(mut_);
         if (state_ & write_entered_)
@@ -739,14 +739,14 @@ namespace boost {
     }
 
     //////
-    // shared_mutex
+    // shared_timed_mutex
 
-    shared_mutex::shared_mutex()
+    shared_timed_mutex::shared_timed_mutex()
     : state_(0)
     {
     }
 
-    shared_mutex::~shared_mutex()
+    shared_timed_mutex::~shared_timed_mutex()
     {
       boost::lock_guard<mutex_t> _(mut_);
     }
@@ -754,7 +754,7 @@ namespace boost {
     // Exclusive ownership
 
     void
-    shared_mutex::lock()
+    shared_timed_mutex::lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
       while (state_ & write_entered_)
@@ -765,7 +765,7 @@ namespace boost {
     }
 
     bool
-    shared_mutex::try_lock()
+    shared_timed_mutex::try_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ == 0)
@@ -777,7 +777,7 @@ namespace boost {
     }
 
     void
-    shared_mutex::unlock()
+    shared_timed_mutex::unlock()
     {
       boost::lock_guard<mutex_t> _(mut_);
       state_ = 0;
@@ -787,7 +787,7 @@ namespace boost {
     // Shared ownership
 
     void
-    shared_mutex::lock_shared()
+    shared_timed_mutex::lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
       while ((state_ & write_entered_) || (state_ & n_readers_) == n_readers_)
@@ -798,7 +798,7 @@ namespace boost {
     }
 
     bool
-    shared_mutex::try_lock_shared()
+    shared_timed_mutex::try_lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
       count_t num_readers = state_ & n_readers_;
@@ -813,7 +813,7 @@ namespace boost {
     }
 
     void
-    shared_mutex::unlock_shared()
+    shared_timed_mutex::unlock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
       count_t num_readers = (state_ & n_readers_) - 1;
@@ -1050,12 +1050,15 @@ namespace boost {
       gate1_.notify_all();
     }
 
+  typedef shared_timed_mutex shared_mutex;
+
   }  // thread_v2
 }  // boost
 
 namespace boost {
-  //using thread_v2::shared_mutex;
+  //using thread_v2::shared_timed_mutex;
   using thread_v2::upgrade_mutex;
+  typedef thread_v2::upgrade_mutex shared_timed_mutex;
   typedef thread_v2::upgrade_mutex shared_mutex;
 }
 
