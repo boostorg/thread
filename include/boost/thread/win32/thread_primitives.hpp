@@ -639,7 +639,7 @@ namespace boost
                     }
                     old=current;
                 }
-                for(;;);
+                for(;;) {}
                 return (old&value)!=0;
             }
 
@@ -656,7 +656,7 @@ namespace boost
                     }
                     old=current;
                 }
-                for(;;);
+                for(;;) {}
                 return (old&value)!=0;
             }
         }
