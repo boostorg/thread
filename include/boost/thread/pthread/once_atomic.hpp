@@ -214,7 +214,7 @@ namespace boost
       thread_detail::commit_once_region(flag);
     }
   }
-
+#if !(defined(__SUNPRO_CC) && BOOST_WORKAROUND(__SUNPRO_CC, <= 0x5130))
   template<typename Function>
   inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f)
   {
@@ -233,7 +233,7 @@ namespace boost
       thread_detail::commit_once_region(flag);
     }
   }
-#if !(defined(__SUNPRO_CC) && BOOST_WORKAROUND(__SUNPRO_CC, <= 0x5130))
+
   template<typename Function, typename T1>
   inline void call_once(once_flag& flag, BOOST_THREAD_RV_REF(Function) f, BOOST_THREAD_RV_REF(T1) p1)
   {
