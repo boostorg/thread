@@ -959,6 +959,7 @@ rule thread-compile ( sources : reqs * : name )
     test-suite ts_
     :
           #[ thread-run test_11256.cpp ]
+          [ thread-run test_11499.cpp ]
     ;
 
 
