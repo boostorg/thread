@@ -185,7 +185,7 @@ int main()
     // empty queue try_push lvalue succeeds
     boost::deque_adaptor<boost::sync_deque<int> > sq;
     boost::deque_back<int> q(sq);
-      int i;
+      int i=0;
       BOOST_TEST(boost::queue_op_status::success == q.try_push(i));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
