@@ -407,7 +407,7 @@ namespace boost
                 return policy_;
             }
 
-            future_state::state get_state(boost::unique_lock<boost::mutex>& lk) const
+            future_state::state get_state(boost::unique_lock<boost::mutex>&) const
             {
                 if(!done)
                 {
