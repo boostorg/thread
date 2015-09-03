@@ -68,10 +68,15 @@ namespace executors
        */
       void schedule_one_or_yield()
       {
+#if 1
           if ( ! try_executing_one())
           {
             this_thread::yield();
           }
+#else
+        std::terminate();
+        //return false;
+#endif
       }
 
       /// loop_executor is not copyable.

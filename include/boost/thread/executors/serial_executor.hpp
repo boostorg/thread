@@ -106,6 +106,7 @@ namespace executors
       shared_state(Executor& ex)
       : ex(ex), thr(&shared_state::worker_thread, this)
       {
+        //std::terminate();
       }
       /**
        * \b Effects: Destroys the thread pool.

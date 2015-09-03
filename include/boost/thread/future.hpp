@@ -991,9 +991,10 @@ namespace boost
 
         class future_waiter
         {
-            struct registered_waiter;
+        public:
             typedef std::vector<int>::size_type count_type;
-
+        private:
+            struct registered_waiter;
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
@@ -1132,7 +1133,7 @@ namespace boost
 
 #ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
-    typename boost::enable_if<is_future_type<F1>,unsigned>::type wait_for_any(F1& f1,F2& f2)
+    typename boost::enable_if<is_future_type<F1>,typename detail::future_waiter::count_type>::type wait_for_any(F1& f1,F2& f2)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1141,7 +1142,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1151,7 +1152,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1162,7 +1163,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1174,7 +1175,8 @@ namespace boost
     }
 #else
     template<typename F1, typename... Fs>
-    typename boost::enable_if<is_future_type<F1>, unsigned>::type wait_for_any(F1& f1, Fs&... fs)
+    typename boost::enable_if<is_future_type<F1>, typename detail::future_waiter::count_type>::type
+    wait_for_any(F1& f1, Fs&... fs)
     {
       detail::future_waiter waiter;
       waiter.add(f1, fs...);
@@ -3593,8 +3595,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3617,12 +3619,12 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif
@@ -3657,8 +3659,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3682,8 +3684,8 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
       //          return boost::detail::make_future_deferred_shared_state<Rp>(
       //              BF(
       //                  thread_detail::decay_copy(boost::forward<F>(f))
@@ -3691,8 +3693,8 @@ namespace detail
       //          );
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
