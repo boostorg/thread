@@ -13,6 +13,7 @@
 #define BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
 #include <boost/thread/executors/loop_executor.hpp>
 #include <boost/thread/executors/serial_executor_cont.hpp>
+#include <boost/thread/executors/serial_executor.hpp>
 #include <boost/thread/thread.hpp>
 
 using namespace std;
@@ -28,7 +29,8 @@ int main()
    });
 
    {
-      boost::serial_executor_cont serial(ex);
+     //boost::serial_executor_cont serial(ex);
+     boost::serial_executor serial(ex);
 
       for (size_t i = 0; i < 100000; i++)
          serial.submit([i] {
