@@ -35,6 +35,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <string.h> // memcmp.
 
 namespace boost
 {
@@ -117,7 +118,7 @@ namespace boost
                 }
             }
 
-#if defined BOOST_THREAD_PATCH
+//#if defined BOOST_THREAD_PATCH
 
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
@@ -126,14 +127,15 @@ namespace boost
                 }
                 ~delete_current_thread_tls_key_on_dlclose_t()
                 {
-                    if (current_thread_tls_init_flag.epoch!=BOOST_ONCE_INITIAL_FLAG_VALUE)
+                    const boost::once_flag uninitialized = BOOST_ONCE_INIT;
+                    if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(boost::once_flag)))
                     {
                         pthread_key_delete(current_thread_tls_key);
                     }
                 }
             };
             delete_current_thread_tls_key_on_dlclose_t delete_current_thread_tls_key_on_dlclose;
-#endif
+//#endif
 
             void create_current_thread_tls_key()
             {

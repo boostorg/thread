@@ -137,7 +137,7 @@ namespace boost
             continuations_type continuations;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
-            virtual void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base>)
+            virtual void launch_continuation()
             {
             }
 
@@ -234,8 +234,7 @@ namespace boost
                   continuations.clear();
                   relocker rlk(lock);
                   for (continuations_type::iterator it = the_continuations.begin(); it != the_continuations.end(); ++it) {
-                    boost::unique_lock<boost::mutex> cont_lock((*it)->mutex);
-                    (*it)->launch_continuation(cont_lock, *it);
+                    (*it)->launch_continuation();
                   }
                 }
             }
@@ -420,7 +419,7 @@ namespace boost
                 return policy_;
             }
 
-            future_state::state get_state(boost::unique_lock<boost::mutex>& lk) const
+            future_state::state get_state(boost::unique_lock<boost::mutex>&) const
             {
                 if(!done)
                 {
@@ -959,9 +958,10 @@ namespace boost
 
         class future_waiter
         {
-            struct registered_waiter;
+        public:
             typedef std::vector<int>::size_type count_type;
-
+        private:
+            struct registered_waiter;
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
@@ -1100,7 +1100,7 @@ namespace boost
 
 #ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
-    typename boost::enable_if<is_future_type<F1>,unsigned>::type wait_for_any(F1& f1,F2& f2)
+    typename boost::enable_if<is_future_type<F1>,typename detail::future_waiter::count_type>::type wait_for_any(F1& f1,F2& f2)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1109,7 +1109,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1119,7 +1119,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1130,7 +1130,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1142,7 +1142,8 @@ namespace boost
     }
 #else
     template<typename F1, typename... Fs>
-    typename boost::enable_if<is_future_type<F1>, unsigned>::type wait_for_any(F1& f1, Fs&... fs)
+    typename boost::enable_if<is_future_type<F1>, typename detail::future_waiter::count_type>::type
+    wait_for_any(F1& f1, Fs&... fs)
     {
       detail::future_waiter waiter;
       waiter.add(f1, fs...);
@@ -1176,14 +1177,6 @@ namespace boost
         static //BOOST_CONSTEXPR
         future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
           return future_ptr(new detail::shared_state<R>(ex));
-        }
-
-        void set_exceptional_if_invalid() {
-          if (valid()) return;
-//          promise<R> p;
-//          p.set_exception(future_uninitialized());
-//          future_ = p.get_future().future_;
-          future_ = make_exceptional_future_ptr(exceptional_ptr(future_uninitialized()));
         }
 
         future_ptr future_;
@@ -2891,7 +2884,7 @@ namespace boost
             private:
               task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-              typedef R (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes) ... );
+              typedef R (*CallableType)(ArgTypes ... );
 #else
               typedef R (*CallableType)();
 #endif
@@ -3122,7 +3115,7 @@ namespace boost
         private:
           task_shared_state(task_shared_state&);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-            typedef void (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes)...);
+            typedef void (*CallableType)(ArgTypes...);
 #else
             typedef void (*CallableType)();
 #endif
@@ -3445,7 +3438,7 @@ namespace boost
 
         // execution
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
-        void operator()(BOOST_THREAD_RV_REF(ArgTypes)... args) {
+        void operator()(ArgTypes... args) {
             if(!task) {
                 boost::throw_exception(task_moved());
             }
@@ -3557,8 +3550,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3581,12 +3574,12 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif
@@ -3621,8 +3614,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3646,8 +3639,8 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
       //          return boost::detail::make_future_deferred_shared_state<Rp>(
       //              BF(
       //                  thread_detail::decay_copy(boost::forward<F>(f))
@@ -3655,8 +3648,8 @@ namespace detail
       //          );
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -4140,17 +4133,6 @@ namespace detail {
     return make_exceptional_future<T>(ex);
   }
 
-  template <typename T>
-  BOOST_THREAD_FUTURE<T> make_exceptional_future_if_invalid(BOOST_THREAD_FWD_REF(BOOST_THREAD_FUTURE<T>) fut) {
-    fut.set_exceptional_if_invalid();
-    return boost::move(fut);
-  }
-  template <typename T>
-  shared_future<T> make_exceptional_future_if_invalid(shared_future<T> fut) {
-    fut.set_exceptional_if_invalid();
-    return fut;
-  }
-
 #if 0
   template<typename CLOSURE>
   make_future(CLOSURE closure) -> BOOST_THREAD_FUTURE<decltype(closure())> {
@@ -4207,8 +4189,9 @@ namespace detail
     }
 
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4238,8 +4221,9 @@ namespace detail
       centinel(parent.future_) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4289,9 +4273,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
-      relocker relock(lck);
-      run_it<future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4328,9 +4311,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that ) {
-      relocker relock(lck);
-      run_it<future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4371,8 +4353,9 @@ namespace detail
       centinel(parent.future_)  {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4401,8 +4384,9 @@ namespace detail
       centinel(parent.future_)  {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>&, shared_ptr<shared_state_base> that) {
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, that);
+    void launch_continuation() {
+      boost::lock_guard<boost::mutex> lk(this->mutex);
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
@@ -4439,9 +4423,8 @@ namespace detail
       this->set_executor();
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
-      relocker relock(lck);
-      run_it<shared_future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4477,9 +4460,8 @@ namespace detail
       centinel(parent.future_) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lck, shared_ptr<shared_state_base> that) {
-      relocker relock(lck);
-      run_it<shared_future_executor_continuation_shared_state> fct(that);
+    void launch_continuation() {
+      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
       ex->submit(fct);
     }
 
@@ -4519,7 +4501,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>&lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4557,7 +4540,8 @@ namespace detail
 
     ~future_deferred_continuation_shared_state() {
     }
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4596,7 +4580,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -4632,7 +4617,8 @@ namespace detail
       this->set_deferred();
     }
 
-    virtual void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> ) {
+    virtual void launch_continuation() {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (this->is_deferred_) {
         this->is_deferred_=false;
         this->execute(lk);
@@ -5047,8 +5033,9 @@ namespace detail
     : wrapped(boost::move(f)) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
+    void launch_continuation()
     {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (! unwrapped.valid() )
       {
         if (wrapped.has_exception()) {
@@ -5084,8 +5071,9 @@ namespace detail
     : wrapped(boost::move(f)) {
     }
 
-    void launch_continuation(boost::unique_lock<boost::mutex>& lk, shared_ptr<shared_state_base> that)
+    void launch_continuation()
     {
+      boost::unique_lock<boost::mutex> lk(this->mutex);
       if (! unwrapped.valid() )
       {
         if (wrapped.has_exception()) {
@@ -5105,7 +5093,6 @@ namespace detail
         if (unwrapped.has_exception()) {
           this->mark_exceptional_finish_internal(unwrapped.get_exception_ptr(), lk);
         } else {
-          unwrapped.wait();
           this->mark_finished_with_result_internal(lk);
         }
       }

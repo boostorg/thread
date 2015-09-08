@@ -154,7 +154,7 @@ int main()
 {
   return test_executor_adaptor();
 
-#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
+#if 0 && defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION \
   && defined BOOST_THREAD_PROVIDES_EXECUTORS \
   &&  ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
 
