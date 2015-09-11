@@ -78,23 +78,29 @@ int test_executor_adaptor()
   std::cout << BOOST_CONTEXTOF << std::endl;
   {
      boost::basic_thread_pool tp;
+     std::cout << BOOST_CONTEXTOF << std::endl;
      boost::generic_serial_executor_cont e1(tp);
+     std::cout << BOOST_CONTEXTOF << std::endl;
      boost::generic_serial_executor_cont e2 = e1;
+     std::cout << BOOST_CONTEXTOF << std::endl;
   }
-  // std::cout << BOOST_CONTEXTOF << std::endl;
+   std::cout << BOOST_CONTEXTOF << std::endl;
   {
     try
     {
 
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      // std::cout << BOOST_CONTEXTOF << std::endl;
+       std::cout << BOOST_CONTEXTOF << std::endl;
       {
         boost::basic_thread_pool ea1(4);
+        std::cout << BOOST_CONTEXTOF << std::endl;
         boost::generic_serial_executor_cont ea2(ea1);
+        std::cout << BOOST_CONTEXTOF << std::endl;
         submit_some(ea2);
+        std::cout << BOOST_CONTEXTOF << std::endl;
       }
 #endif
-      // std::cout << BOOST_CONTEXTOF << std::endl;
+      std::cout << BOOST_CONTEXTOF << std::endl;
     }
     catch (std::exception& ex)
     {

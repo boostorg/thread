@@ -139,10 +139,11 @@ namespace boost
 
         void lock_shared()
         {
-#if defined BOOST_THREAD_USES_DATETIME
-            BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
-#else
+#ifdef BOOST_THREAD_USES_CHRONO
             BOOST_VERIFY(try_lock_shared_until(chrono::steady_clock::now()));
+#else
+            //#if defined BOOST_THREAD_USES_DATETIME
+            BOOST_VERIFY(timed_lock_shared(::boost::detail::get_system_time_sentinel()));
 #endif
         }
 
@@ -389,10 +390,12 @@ namespace boost
 
         void lock()
         {
-#if defined BOOST_THREAD_USES_DATETIME
-            BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
-#else
+
+#ifdef BOOST_THREAD_USES_CHRONO
             BOOST_VERIFY(try_lock_until(chrono::steady_clock::now()));
+#else
+            //#if defined BOOST_THREAD_USES_DATETIME
+            BOOST_VERIFY(timed_lock(::boost::detail::get_system_time_sentinel()));
 #endif
         }
 

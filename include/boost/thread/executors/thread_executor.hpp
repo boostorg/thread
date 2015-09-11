@@ -37,7 +37,8 @@ namespace executors
     struct shared_state {
       typedef  executors::work work;
       bool closed_;
-      typedef scoped_thread<> thread_t;
+      //typedef scoped_thread<> thread_t;
+      typedef thread thread_t;
       typedef csbl::vector<thread_t> threads_type;
       threads_type threads_;
       mutable mutex mtx_;
@@ -64,6 +65,19 @@ namespace executors
         // signal to all the worker thread that there will be no more submissions.
         close();
         // all the scoped threads will join before destroying
+        join();
+      }
+
+      /**
+       * \b Effects: join all the threads.
+       */
+      void join()
+      {
+        for (unsigned i = 0; i < threads_.size(); ++i)
+        {
+          if (this_thread::get_id() == threads_[i].get_id()) continue;
+          threads_[i].join();
+        }
       }
 
       /**

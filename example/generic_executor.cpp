@@ -105,22 +105,22 @@ int test_generic_executor()
       {
         boost::basic_thread_pool ea(4);
         submit_some( ea);
-        {
-          boost::future<int> t1 = boost::async(ea, &f1);
-          boost::future<int> t2 = boost::async(ea, &f1);
-          // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
-          // std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
-        }
+//        {
+//          boost::future<int> t1 = boost::async(ea, &f1);
+//          boost::future<int> t2 = boost::async(ea, &f1);
+//          // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+//          // std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+//        }
         submit_some(ea);
-        {
-          boost::basic_thread_pool ea3(1);
-          boost::future<int> t1 = boost::async(ea3, &f1);
-          boost::future<int> t2 = boost::async(ea3, &f1);
-          //boost::future<int> t2 = boost::async(ea3, f2, 1); // todo this doesn't compiles yet on C++11
-          //boost::future<int> t2 = boost::async(ea3, boost::bind(f2, 1)); // todo this doesn't compiles yet on C++98
-          // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
-          // std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
-        }
+//        {
+//          boost::basic_thread_pool ea3(1);
+//          boost::future<int> t1 = boost::async(ea3, &f1);
+//          boost::future<int> t2 = boost::async(ea3, &f1);
+//          //boost::future<int> t2 = boost::async(ea3, f2, 1); // todo this doesn't compiles yet on C++11
+//          //boost::future<int> t2 = boost::async(ea3, boost::bind(f2, 1)); // todo this doesn't compiles yet on C++98
+//          // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+//          // std::cout << BOOST_CONTEXTOF << " t2= " << t2.get() << std::endl;
+//        }
         submit_some(ea);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
@@ -154,11 +154,11 @@ int test_generic_executor()
         //submit_some(ea1);
       }
       // std::cout << BOOST_CONTEXTOF << std::endl;
-      {
-        boost::basic_thread_pool  ea(4, at_th_entry);
-        boost::future<int> t1 = boost::async(ea, &f1);
-        // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
-      }
+//      {
+//        boost::basic_thread_pool  ea(4, at_th_entry);
+//        boost::future<int> t1 = boost::async(ea, &f1);
+//        // std::cout << BOOST_CONTEXTOF << " t1= " << t1.get() << std::endl;
+//      }
     }
     catch (std::exception& ex)
     {

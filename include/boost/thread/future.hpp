@@ -3745,7 +3745,8 @@ namespace detail {
       }
 #endif
       void operator()() {
-        shared_state<Rp>* that_ = dynamic_cast<shared_state<Rp>*>(that.get());
+        shared_ptr<shared_state<Rp>> that_ = dynamic_pointer_cast<shared_state<Rp>>(that);
+        if (! that) return;
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -3795,7 +3796,8 @@ namespace detail {
       }
 #endif
       void operator()() {
-        shared_state<void>* that_ = dynamic_cast<shared_state<void>*>(that.get());
+        shared_ptr<shared_state<void>> that_ = dynamic_pointer_cast<shared_state<void>>(that);
+        if (! that) return;
         try {
           f_();
           that_->mark_finished_with_result();
@@ -3842,7 +3844,8 @@ namespace detail {
       }
 #endif
       void operator()() {
-        shared_state<Rp&>* that_ = dynamic_cast<shared_state<Rp&>*>(that.get());
+        shared_ptr<shared_state<Rp&>> that_ = dynamic_pointer_cast<shared_state<Rp&>>(that);
+        if (! that) return;
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {

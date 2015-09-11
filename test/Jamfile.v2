@@ -973,7 +973,9 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate2 ]
           #[ thread-run test_11256.cpp ]
           #[ thread-run test_11499.cpp ]
-          [ thread-run test_11611.cpp ]
+          #[ thread-run test_11611.cpp ]
+          #[ thread-run test_11633.cpp ]
+          
     ;
 
 

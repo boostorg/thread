@@ -41,7 +41,8 @@ namespace executors
 
     struct shared_state {
       typedef  executors::work work;
-      typedef  scoped_thread<> thread_t;
+      typedef thread thread_t;
+      //typedef  scoped_thread<> thread_t;
 
       /// the thread safe work queue
       concurrent::sync_queue<work > work_queue;
@@ -121,6 +122,16 @@ namespace executors
       {
         // signal to the worker thread that there will be no more submissions.
         close();
+        join();
+      }
+
+      /**
+       * \b Effects: join all the threads.
+       */
+      void join()
+      {
+          if (this_thread::get_id() == thr.get_id()) return;
+          thr.join();
       }
 
       /**

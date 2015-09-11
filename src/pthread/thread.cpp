@@ -35,6 +35,7 @@
 #include <string>
 #include <set>
 #include <vector>
+#include <string.h> // memcmp.
 
 namespace boost
 {
@@ -117,7 +118,7 @@ namespace boost
                 }
             }
 
-#if defined BOOST_THREAD_PATCH
+//#if defined BOOST_THREAD_PATCH
 
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
@@ -134,7 +135,7 @@ namespace boost
                 }
             };
             delete_current_thread_tls_key_on_dlclose_t delete_current_thread_tls_key_on_dlclose;
-#endif
+//#endif
 
             void create_current_thread_tls_key()
             {
