@@ -25,6 +25,7 @@
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
 #endif
+#include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <algorithm>
 #ifndef UNDER_CE
@@ -153,7 +154,7 @@ namespace boost
 
         DWORD WINAPI ThreadProxy(LPVOID args)
         {
-            std::auto_ptr<ThreadProxyData> data(reinterpret_cast<ThreadProxyData*>(args));
+            boost::csbl::unique_ptr<ThreadProxyData> data(reinterpret_cast<ThreadProxyData*>(args));
             DWORD ret=data->start_address_(data->arglist_);
             return ret;
         }
