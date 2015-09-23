@@ -742,6 +742,7 @@ namespace boost
                 new_state.upgrade=false;
                 bool const last_reader=!--new_state.shared_count;
 
+                new_state.shared_waiting=0;
                 if(last_reader)
                 {
                     if(new_state.exclusive_waiting)
@@ -749,7 +750,6 @@ namespace boost
                         --new_state.exclusive_waiting;
                         new_state.exclusive_waiting_blocked=false;
                     }
-                    new_state.shared_waiting=0;
                 }
 
                 state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
