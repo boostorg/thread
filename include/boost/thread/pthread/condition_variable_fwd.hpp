@@ -28,6 +28,26 @@
 
 namespace boost
 {
+  namespace detail {
+    inline int monotonic_pthread_cond_init(pthread_cond_t& cond) {
+
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            pthread_condattr_t attr;
+            int res = pthread_condattr_init(&attr);
+            if (res)
+            {
+              return res;
+            }
+            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+            res=pthread_cond_init(&cond,&attr);
+            pthread_condattr_destroy(&attr);
+            return res;
+#else
+            return pthread_cond_init(&cond,NULL);
+#endif
+
+    }
+  }
 
     class condition_variable
     {
@@ -56,35 +76,19 @@ namespace boost
         condition_variable()
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            int const res=pthread_mutex_init(&internal_mutex,NULL);
+            int res=pthread_mutex_init(&internal_mutex,NULL);
             if(res)
             {
                 boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in pthread_mutex_init"));
             }
 #endif
-
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            pthread_condattr_t attr;
-            int res2 = pthread_condattr_init(&attr);
-            if(res2)
-            {
-  #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-                BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
-  #endif
-                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable_steady::condition_variable_steady() constructor failed in pthread_condattr_init"));
-            }
-            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-            res2=pthread_cond_init(&cond,&attr);
-            pthread_condattr_destroy(&attr);
-#else
-            int const res2=pthread_cond_init(&cond,NULL);
-#endif
-            if(res2)
+            res = detail::monotonic_pthread_cond_init(cond);
+            if (res)
             {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 #endif
-                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable::condition_variable() constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in detail::monotonic_pthread_cond_init"));
             }
         }
         ~condition_variable()
@@ -249,7 +253,7 @@ namespace boost
         }
 #endif
 
-#else
+#else // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 #ifdef BOOST_THREAD_USES_CHRONO
 
         template <class Duration>
@@ -304,7 +308,7 @@ namespace boost
         }
 #endif
 
-#endif
+#endif // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration, class Predicate>
@@ -330,13 +334,6 @@ namespace boost
                 Predicate pred)
         {
           return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
-
-//          while (!pred())
-//          {
-//              if (wait_for(lock, d) == cv_status::timeout)
-//                  return pred();
-//          }
-//          return true;
         }
 #endif
 
