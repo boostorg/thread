@@ -50,7 +50,7 @@ void player(int active)
 
     while (state < GAME_OVER)
     {
-        std::cout << player_name(active) << ": Play." << std::endl;
+        //std::cout << player_name(active) << ": Play." << std::endl;
         state = other;
         cond.notify_all();
         do
