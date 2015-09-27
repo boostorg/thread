@@ -646,7 +646,7 @@ namespace boost
                     } Detailed;
                 } Reason;
             } REASON_CONTEXT, *PREASON_CONTEXT;
-            static REASON_CONTEXT default_reason_context={0/*POWER_REQUEST_CONTEXT_VERSION*/, 0x00000001/*POWER_REQUEST_CONTEXT_SIMPLE_STRING*/, (LPWSTR)L"generic"};
+            //static REASON_CONTEXT default_reason_context={0/*POWER_REQUEST_CONTEXT_VERSION*/, 0x00000001/*POWER_REQUEST_CONTEXT_SIMPLE_STRING*/, (LPWSTR)L"generic"};
             typedef BOOL (WINAPI *setwaitabletimerex_t)(HANDLE, const LARGE_INTEGER *, LONG, PTIMERAPCROUTINE, LPVOID, PREASON_CONTEXT, ULONG);
             static inline BOOL WINAPI SetWaitableTimerEx_emulation(HANDLE hTimer, const LARGE_INTEGER *lpDueTime, LONG lPeriod, PTIMERAPCROUTINE pfnCompletionRoutine, LPVOID lpArgToCompletionRoutine, PREASON_CONTEXT WakeContext, ULONG TolerableDelay)
             {
@@ -716,7 +716,8 @@ namespace boost
                     if(time_left.milliseconds/20>tolerable)  // 5%
                         tolerable=time_left.milliseconds/20;
                     LARGE_INTEGER due_time=get_due_time(target_time);
-                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
+                    //bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
+                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,NULL,tolerable)!=0;
                     if(set_time_succeeded)
                     {
                         timeout_index=handle_count;
@@ -800,7 +801,8 @@ namespace boost
                     if(time_left.milliseconds/20>tolerable)  // 5%
                         tolerable=time_left.milliseconds/20;
                     LARGE_INTEGER due_time=get_due_time(target_time);
-                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
+                    //bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,&detail_::default_reason_context,tolerable)!=0;
+                    bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,NULL,tolerable)!=0;
                     if(set_time_succeeded)
                     {
                         timeout_index=handle_count;
