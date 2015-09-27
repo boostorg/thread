@@ -91,7 +91,7 @@ namespace boost
         cv.wait_until(lk, t);
     }
 
-#ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
+#if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY && ! defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
