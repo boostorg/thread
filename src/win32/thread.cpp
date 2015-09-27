@@ -527,8 +527,10 @@ namespace boost
 
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
-#if BOOST_PLAT_WINDOWS_RUNTIME || (defined(__MINGW32__) && !defined(__MINGW64_VERSION_MAJOR))
-        return hardware_concurrency();
+#if BOOST_PLAT_WINDOWS_RUNTIME                                    \
+    || ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) \  // a bit too strict: Windows XP with SP3 would be sufficient
+    || ( ( defined(__MINGW32__) && !defined(__MINGW64__) ) && _WIN32_WINNT < 0x0600)
+        return 0;
 #else
         unsigned cores = 0;
         DWORD size = 0;
