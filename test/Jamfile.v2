@@ -341,7 +341,7 @@ rule thread-compile ( sources : reqs * : name )
     test-suite ts_async
     :
           [ thread-run2-noit ./sync/futures/async/async_pass.cpp : async__async_p ]
-          #[ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p ]
+          [ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p ]
     ;
 
     #explicit ts_promise ;
@@ -808,18 +808,18 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/not_interleaved2.cpp : ex_not_interleaved2 ]
           [ thread-run2 ../example/thread_pool.cpp : ex_thread_pool ]
           [ thread-run2 ../example/user_scheduler.cpp : ex_user_scheduler ]
-          #[ thread-run2 ../example/executor.cpp : ex_executor ]
-          #[ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref ]
-          #[ thread-run2 ../example/generic_executor.cpp : ex_generic_executor ]
+          [ thread-run2 ../example/executor.cpp : ex_executor ]
+          [ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref ]
+          [ thread-run2 ../example/generic_executor.cpp : ex_generic_executor ]
           [ thread-run2 ../example/generic_serial_executor.cpp : ex_generic_serial_executor ]
           [ thread-run2 ../example/serial_executor.cpp : ex_serial_executor ]
           #[ thread-run2 ../example/generic_serial_executor_cont.cpp : ex_generic_serial_executor_cont ]
           [ thread-run2 ../example/serial_executor_cont.cpp : ex_serial_executor_cont ]
           [ thread-run2 ../example/future_when_all.cpp : ex_future_when_all ]
-          #[ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
-          #[ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
+          [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
+          [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
           [ thread-run2 ../example/with_lock_guard.cpp : ex_with_lock_guard ]
-          #[ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region ]
+          [ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region ]
     ;
 
     #explicit ts_shared_upwards ;
@@ -948,7 +948,7 @@ rule thread-compile ( sources : reqs * : name )
     #explicit ts_task_region ;
     test-suite ts_task_region
     :
-          #[ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p ]
+          [ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p ]
     ;
     
     explicit ts_other ;
@@ -962,15 +962,7 @@ rule thread-compile ( sources : reqs * : name )
     test-suite ts_
     :
           #[ thread-run test_11256.cpp ] 
-          #[ thread-run2 ../example/executor.cpp : ex_executor2 ]
-          #[ thread-run2 ../example/generic_executor_ref.cpp : ex_generic_executor_ref2 ]
-          #[ thread-run2 ../example/generic_executor.cpp : ex_generic_executor2 ]
           #[ thread-run2 ../example/generic_serial_executor_cont.cpp : ex_generic_serial_executor_cont2 ]
-          #[ thread-run2-noit ./sync/futures/async/async_executor_pass.cpp : async__async_executor_p2 ]
-          #[ thread-run2 ../example/fib_task_region.cpp : ex_fib_task_region2 ]
-          #[ thread-run2-noit ./experimental/parallel/v2/task_region_pass.cpp : task_region_p2 ]
-          #[ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort2 ]
-          #[ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate2 ]
           #[ thread-run test_11256.cpp ]
           #[ thread-run test_11499.cpp ]
           #[ thread-run test_11611.cpp ]

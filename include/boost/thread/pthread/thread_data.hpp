@@ -13,7 +13,8 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 
-#include <boost/shared_ptr.hpp>
+//#include <boost/shared_ptr.hpp>
+#include <boost/thread/csbl/memory/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
 #include <boost/assert.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -127,7 +128,7 @@ namespace boost
             > notify_list_t;
             notify_list_t notify;
 
-            typedef std::vector<shared_ptr<shared_state_base> > async_states_t;
+            typedef std::vector<csbl::shared_ptr<shared_state_base> > async_states_t;
             async_states_t async_states_;
 
 //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -162,7 +163,7 @@ namespace boost
               notify.push_back(std::pair<condition_variable*, mutex*>(cv, m));
             }
 
-            void make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
+            void make_ready_at_thread_exit(csbl::shared_ptr<shared_state_base> as)
             {
               async_states_.push_back(as);
             }

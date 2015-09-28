@@ -830,7 +830,7 @@ namespace boost
     }
 namespace detail {
 
-    void BOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
+    void BOOST_THREAD_DECL make_ready_at_thread_exit(csbl::shared_ptr<shared_state_base> as)
     {
       detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
       if(current_thread_data)

@@ -57,5 +57,6 @@ namespace boost
 // 20.8.2.4, class template enable_shared_from_this:
 // 20.8.2.5, shared_ptr atomic access:
 // 20.8.2.6 hash support
+#include <boost/thread/csbl/memory/shared_ptr.hpp>
 
 #endif // header
