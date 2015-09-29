@@ -3800,15 +3800,19 @@ namespace detail {
     /////////////////////////
     /// future_executor_shared_state_base
     /////////////////////////
-    template<typename Rp, typename Executor>
+    template<typename Rp>
     struct future_executor_shared_state: shared_state<Rp>
     {
       typedef shared_state<Rp> base_type;
     protected:
     public:
-      template<typename Fp>
-      future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
+      future_executor_shared_state() {
         this->set_executor();
+      }
+
+      template <class Fp, class Executor>
+      void init(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
+      {
         shared_state_nullary_task<Rp,Fp> t(this->shared_from_this(), boost::forward<Fp>(f));
         ex.submit(boost::move(t));
       }
@@ -3827,8 +3831,9 @@ namespace detail {
     template <class Rp, class Fp, class Executor>
     BOOST_THREAD_FUTURE<Rp>
     make_future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
-      shared_ptr<future_executor_shared_state<Rp, Executor> >
-          h(new future_executor_shared_state<Rp, Executor>(ex, boost::forward<Fp>(f)));
+      shared_ptr<future_executor_shared_state<Rp> >
+          h(new future_executor_shared_state<Rp>());
+      h->init(ex, boost::forward<Fp>(f));
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
