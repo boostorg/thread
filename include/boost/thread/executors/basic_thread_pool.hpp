@@ -60,7 +60,7 @@ namespace executors
       catch (...)
       {
         std::terminate();
-        return false;
+        //return false;
       }
     }
     /**

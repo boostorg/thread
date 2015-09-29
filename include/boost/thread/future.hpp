@@ -839,7 +839,7 @@ namespace boost
 
           static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = dynamic_cast<future_async_shared_state*>(that_.get());
+            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               that->mark_finished_with_result(f());
@@ -865,7 +865,7 @@ namespace boost
 
           static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = dynamic_cast<future_async_shared_state*>(that_.get());
+            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               f();
@@ -892,7 +892,7 @@ namespace boost
 
           static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = dynamic_cast<future_async_shared_state*>(that_.get());
+            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               that->mark_finished_with_result(f());
@@ -991,9 +991,10 @@ namespace boost
 
         class future_waiter
         {
-            struct registered_waiter;
+        public:
             typedef std::vector<int>::size_type count_type;
-
+        private:
+            struct registered_waiter;
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
@@ -1132,7 +1133,7 @@ namespace boost
 
 #ifdef BOOST_NO_CXX11_VARIADIC_TEMPLATES
     template<typename F1,typename F2>
-    typename boost::enable_if<is_future_type<F1>,unsigned>::type wait_for_any(F1& f1,F2& f2)
+    typename boost::enable_if<is_future_type<F1>,typename detail::future_waiter::count_type>::type wait_for_any(F1& f1,F2& f2)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1141,7 +1142,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1151,7 +1152,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1162,7 +1163,7 @@ namespace boost
     }
 
     template<typename F1,typename F2,typename F3,typename F4,typename F5>
-    unsigned wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
+    typename detail::future_waiter::count_type wait_for_any(F1& f1,F2& f2,F3& f3,F4& f4,F5& f5)
     {
         detail::future_waiter waiter;
         waiter.add(f1);
@@ -1174,7 +1175,8 @@ namespace boost
     }
 #else
     template<typename F1, typename... Fs>
-    typename boost::enable_if<is_future_type<F1>, unsigned>::type wait_for_any(F1& f1, Fs&... fs)
+    typename boost::enable_if<is_future_type<F1>, typename detail::future_waiter::count_type>::type
+    wait_for_any(F1& f1, Fs&... fs)
     {
       detail::future_waiter waiter;
       waiter.add(f1, fs...);
@@ -3593,8 +3595,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3617,12 +3619,12 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif
@@ -3657,8 +3659,8 @@ namespace detail
           ));
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 
@@ -3682,8 +3684,8 @@ namespace detail
       return ::boost::move(ret);
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
       //          return boost::detail::make_future_deferred_shared_state<Rp>(
       //              BF(
       //                  thread_detail::decay_copy(boost::forward<F>(f))
@@ -3691,8 +3693,8 @@ namespace detail
       //          );
     } else {
       std::terminate();
-      BOOST_THREAD_FUTURE<R> ret;
-      return ::boost::move(ret);
+      //BOOST_THREAD_FUTURE<R> ret;
+      //return ::boost::move(ret);
     }
   }
 #endif // defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -3706,14 +3708,12 @@ namespace detail {
     struct shared_state_nullary_task
     {
       shared_ptr<shared_state_base > that;
-
       Fp f_;
     public:
 
       shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3741,9 +3741,8 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
-        shared_state<Rp>* that_ = dynamic_cast<shared_state<Rp>*>(that.get());
+        shared_ptr<shared_state<Rp>> that_ = dynamic_pointer_cast<shared_state<Rp>>(that);
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -3764,7 +3763,6 @@ namespace detail {
       shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3791,7 +3789,6 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
         shared_state<void>* that_ = dynamic_cast<shared_state<void>*>(that.get());
         try {
@@ -3809,10 +3806,9 @@ namespace detail {
       shared_ptr<shared_state_base > that;
       Fp f_;
     public:
-      shared_state_nullary_task(shared_ptr<shared_state_base > st, BOOST_THREAD_FWD_REF(Fp) f)
+      shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
         : that(st), f_(boost::move(f))
       {}
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) BOOST_NOEXCEPT
       : that(x.that), f_(x.f_) {}
@@ -3838,9 +3834,8 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
-        shared_state<Rp&>* that_ = dynamic_cast<shared_state<Rp&>*>(that.get());
+        shared_ptr<shared_state<Rp&>> that_ = dynamic_pointer_cast<shared_state<Rp&>>(that);
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -3852,15 +3847,19 @@ namespace detail {
     /////////////////////////
     /// future_executor_shared_state_base
     /////////////////////////
-    template<typename Rp, typename Executor>
+    template<typename Rp>
     struct future_executor_shared_state: shared_state<Rp>
     {
       typedef shared_state<Rp> base_type;
     protected:
     public:
-      template<typename Fp>
-      future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
+      future_executor_shared_state() {
         this->set_executor();
+      }
+
+      template <class Fp, class Executor>
+      void init(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
+      {
         shared_state_nullary_task<Rp,Fp> t(this->shared_from_this(), boost::forward<Fp>(f));
         ex.submit(boost::move(t));
       }
@@ -3874,15 +3873,15 @@ namespace detail {
 
       ~future_executor_shared_state() {}
     };
-
     ////////////////////////////////
     // make_future_executor_shared_state
     ////////////////////////////////
     template <class Rp, class Fp, class Executor>
     BOOST_THREAD_FUTURE<Rp>
     make_future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
-      shared_ptr<future_executor_shared_state<Rp, Executor> >
-          h(new future_executor_shared_state<Rp, Executor>(ex, boost::forward<Fp>(f)));
+      shared_ptr<future_executor_shared_state<Rp> >
+          h(new future_executor_shared_state<Rp>());
+      h->init(ex, boost::forward<Fp>(f));
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
@@ -4253,7 +4252,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_async_continuation_shared_state* that = dynamic_cast<future_async_continuation_shared_state*>(that_.get());
+      future_async_continuation_shared_state* that = static_cast<future_async_continuation_shared_state*>(that_.get());
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
       } catch(...) {
@@ -4289,7 +4288,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_async_continuation_shared_state* that = dynamic_cast<future_async_continuation_shared_state*>(that_.get());
+      future_async_continuation_shared_state* that = static_cast<future_async_continuation_shared_state*>(that_.get());
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
@@ -4314,7 +4313,7 @@ namespace detail
     run_it(shared_ptr<boost::detail::shared_state_base> that) : that_ (that) {}
     void operator()()
     {
-      FutureExecutorContinuationSharedState* that = dynamic_cast<FutureExecutorContinuationSharedState*>(that_.get());
+      FutureExecutorContinuationSharedState* that = static_cast<FutureExecutorContinuationSharedState*>(that_.get());
       that->run(that_);
     }
   };
@@ -4341,7 +4340,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_executor_continuation_shared_state* that = dynamic_cast<future_executor_continuation_shared_state*>(that_.get());
+      future_executor_continuation_shared_state* that = static_cast<future_executor_continuation_shared_state*>(that_.get());
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
       } catch(...) {
@@ -4381,7 +4380,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_executor_continuation_shared_state* that = dynamic_cast<future_executor_continuation_shared_state*>(that_.get());
+      future_executor_continuation_shared_state* that = static_cast<future_executor_continuation_shared_state*>(that_.get());
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
@@ -4429,7 +4428,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_async_continuation_shared_state* that = dynamic_cast<shared_future_async_continuation_shared_state*>(that_.get());
+      shared_future_async_continuation_shared_state* that = static_cast<shared_future_async_continuation_shared_state*>(that_.get());
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
       } catch(...) {
@@ -4464,7 +4463,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_async_continuation_shared_state* that = dynamic_cast<shared_future_async_continuation_shared_state*>(that_.get());
+      shared_future_async_continuation_shared_state* that = static_cast<shared_future_async_continuation_shared_state*>(that_.get());
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
@@ -4503,7 +4502,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_executor_continuation_shared_state* that = dynamic_cast<shared_future_executor_continuation_shared_state*>(that_.get());
+      shared_future_executor_continuation_shared_state* that = static_cast<shared_future_executor_continuation_shared_state*>(that_.get());
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
       } catch(...) {
@@ -4542,7 +4541,7 @@ namespace detail
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_executor_continuation_shared_state* that = dynamic_cast<shared_future_executor_continuation_shared_state*>(that_.get());
+      shared_future_executor_continuation_shared_state* that = static_cast<shared_future_executor_continuation_shared_state*>(that_.get());
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
@@ -5306,7 +5305,7 @@ namespace detail
     vector_type vec_;
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_when_all_vector_shared_state* that = dynamic_cast<future_when_all_vector_shared_state*>(that_.get());
+      future_when_all_vector_shared_state* that = static_cast<future_when_all_vector_shared_state*>(that_.get());
       try {
         boost::wait_for_all(that->vec_.begin(), that->vec_.end());
         that->mark_finished_with_result(boost::move(that->vec_));
@@ -5377,7 +5376,7 @@ namespace detail
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
     {
-      future_when_any_vector_shared_state* that = dynamic_cast<future_when_any_vector_shared_state*>(that_.get());
+      future_when_any_vector_shared_state* that = static_cast<future_when_any_vector_shared_state*>(that_.get());
       try {
         boost::wait_for_any(that->vec_.begin(), that->vec_.end());
         that->mark_finished_with_result(boost::move(that->vec_));
@@ -5479,7 +5478,7 @@ namespace detail
     typedef typename make_tuple_indices<1+sizeof...(T)>::type Index;
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_when_all_tuple_shared_state* that = dynamic_cast<future_when_all_tuple_shared_state*>(that_.get());
+      future_when_all_tuple_shared_state* that = static_cast<future_when_all_tuple_shared_state*>(that_.get());
       try {
         // TODO make use of apply(that->tup_, boost::detail::wait_for_all_fctor());
         that->wait_for_all(Index());
@@ -5552,7 +5551,7 @@ namespace detail
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
     {
-      future_when_any_tuple_shared_state* that = dynamic_cast<future_when_any_tuple_shared_state*>(that_.get());
+      future_when_any_tuple_shared_state* that = static_cast<future_when_any_tuple_shared_state*>(that_.get());
       try {
         // TODO make use of apply(that->tup_, wait_for_any_fctr);
         that->wait_for_any(Index());
