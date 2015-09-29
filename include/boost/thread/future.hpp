@@ -3662,14 +3662,13 @@ namespace detail {
     template<typename Rp, typename Fp>
     struct shared_state_nullary_task
     {
-      shared_state<Rp>* that;
+      shared_ptr<shared_state_base > that;
       Fp f_;
     public:
 
-      shared_state_nullary_task(shared_state<Rp>* st, BOOST_THREAD_FWD_REF(Fp) f)
+      shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3686,23 +3685,23 @@ namespace detail {
       shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
       : that(x.that), f_(boost::move(x.f_))
       {
-        x.that=0;
+        x.that.reset();
       }
       shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) //BOOST_NOEXCEPT
       {
         if (this != &x) {
           that=x.that;
           f_=boost::move(x.f_);
-          x.that=0;
+          x.that.reset();
         }
         return *this;
       }
-#endif
       void operator()() {
+        shared_ptr<shared_state<Rp>> that_ = dynamic_pointer_cast<shared_state<Rp>>(that);
         try {
-          that->mark_finished_with_result(f_());
+          that_->mark_finished_with_result(f_());
         } catch(...) {
-          that->mark_exceptional_finish();
+          that_->mark_exceptional_finish();
         }
       }
     };
@@ -3710,13 +3709,12 @@ namespace detail {
     template<typename Fp>
     struct shared_state_nullary_task<void, Fp>
     {
-      shared_state<void>* that;
+      shared_ptr<shared_state_base > that;
       Fp f_;
     public:
-      shared_state_nullary_task(shared_state<void>* st, BOOST_THREAD_FWD_REF(Fp) f)
+      shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3733,23 +3731,23 @@ namespace detail {
       shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
       : that(x.that), f_(boost::move(x.f_))
       {
-        x.that=0;
+        x.that.reset();
       }
       shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT {
         if (this != &x) {
           that=x.that;
           f_=boost::move(x.f_);
-          x.that=0;
+          x.that.reset();
         }
         return *this;
       }
-#endif
       void operator()() {
+        shared_ptr<shared_state<void>> that_ = dynamic_pointer_cast<shared_state<void>>(that);
         try {
           f_();
-          that->mark_finished_with_result();
+          that_->mark_finished_with_result();
         } catch(...) {
-          that->mark_exceptional_finish();
+          that_->mark_exceptional_finish();
         }
       }
     };
@@ -3757,13 +3755,12 @@ namespace detail {
     template<typename Rp, typename Fp>
     struct shared_state_nullary_task<Rp&, Fp>
     {
-      shared_state<Rp&>* that;
+      shared_ptr<shared_state_base > that;
       Fp f_;
     public:
-      shared_state_nullary_task(shared_state<Rp&>* st, BOOST_THREAD_FWD_REF(Fp) f)
+      shared_state_nullary_task(shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
         : that(st), f_(boost::move(f))
       {}
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) BOOST_NOEXCEPT
       : that(x.that), f_(x.f_) {}
@@ -3779,22 +3776,22 @@ namespace detail {
       shared_state_nullary_task(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT
       : that(x.that), f_(boost::move(x.f_))
       {
-        x.that=0;
+        x.that.reset();
       }
       shared_state_nullary_task& operator=(BOOST_THREAD_RV_REF(shared_state_nullary_task) x) BOOST_NOEXCEPT {
         if (this != &x) {
           that=x.that;
           f_=boost::move(x.f_);
-          x.that=0;
+          x.that.reset();
         }
         return *this;
       }
-#endif
       void operator()() {
+        shared_ptr<shared_state<Rp&>> that_ = dynamic_pointer_cast<shared_state<Rp&>>(that);
         try {
-          that->mark_finished_with_result(f_());
+          that_->mark_finished_with_result(f_());
         } catch(...) {
-          that->mark_exceptional_finish();
+          that_->mark_exceptional_finish();
         }
       }
     };
@@ -3802,16 +3799,20 @@ namespace detail {
     /////////////////////////
     /// future_executor_shared_state_base
     /////////////////////////
-    template<typename Rp, typename Executor>
+    template<typename Rp>
     struct future_executor_shared_state: shared_state<Rp>
     {
       typedef shared_state<Rp> base_type;
     protected:
     public:
-      template<typename Fp>
-      future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
+      future_executor_shared_state() {
         this->set_executor();
-        shared_state_nullary_task<Rp,Fp> t(this, boost::forward<Fp>(f));
+      }
+
+      template <class Fp, class Executor>
+      void init(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
+      {
+        shared_state_nullary_task<Rp,Fp> t(this->shared_from_this(), boost::forward<Fp>(f));
         ex.submit(boost::move(t));
       }
 
@@ -3822,15 +3823,15 @@ namespace detail {
 
       ~future_executor_shared_state() {}
     };
-
     ////////////////////////////////
     // make_future_executor_shared_state
     ////////////////////////////////
     template <class Rp, class Fp, class Executor>
     BOOST_THREAD_FUTURE<Rp>
     make_future_executor_shared_state(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f) {
-      shared_ptr<future_executor_shared_state<Rp, Executor> >
-          h(new future_executor_shared_state<Rp, Executor>(ex, boost::forward<Fp>(f)));
+      shared_ptr<future_executor_shared_state<Rp> >
+          h(new future_executor_shared_state<Rp>());
+      h->init(ex, boost::forward<Fp>(f));
       return BOOST_THREAD_FUTURE<Rp>(h);
     }
 
