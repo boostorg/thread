@@ -3745,7 +3745,7 @@ namespace detail {
         return *this;
       }
       void operator()() {
-        csbl::shared_ptr<shared_state<Rp>> that_ = csbl::dynamic_pointer_cast<shared_state<Rp>>(that);
+        csbl::shared_ptr<shared_state<Rp> > that_ = csbl::dynamic_pointer_cast<shared_state<Rp> >(that);
         if (! that) return;
         try {
           that_->mark_finished_with_result(f_());
@@ -3794,7 +3794,7 @@ namespace detail {
         return *this;
       }
       void operator()() {
-        csbl::shared_ptr<shared_state<void>> that_ = csbl::dynamic_pointer_cast<shared_state<void>>(that);
+        csbl::shared_ptr<shared_state<void> > that_ = csbl::dynamic_pointer_cast<shared_state<void> >(that);
         if (! that) return;
         try {
           f_();
@@ -3840,7 +3840,7 @@ namespace detail {
         return *this;
       }
       void operator()() {
-        csbl::shared_ptr<shared_state<Rp&>> that_ = csbl::dynamic_pointer_cast<shared_state<Rp&>>(that);
+        csbl::shared_ptr<shared_state<Rp&> > that_ = csbl::dynamic_pointer_cast<shared_state<Rp&> >(that);
         if (! that) return;
         try {
           that_->mark_finished_with_result(f_());
@@ -4751,7 +4751,7 @@ namespace detail
 
   ////////////////////////////////
   // template<typename F>
-  // auto future<future<R2>>::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+  // auto future<future<R2> >::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
   ////////////////////////////////
 
   template <typename R2>
