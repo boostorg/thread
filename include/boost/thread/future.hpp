@@ -3866,7 +3866,8 @@ namespace detail {
       template <class Fp, class Executor>
       void init(Executor& ex, BOOST_THREAD_FWD_REF(Fp) f)
       {
-        shared_state_nullary_task<Rp,Fp> t(this->shared_from_this(), boost::forward<Fp>(f));
+        typedef typename decay<Fp>::type Cont;
+        shared_state_nullary_task<Rp,Cont> t(this->shared_from_this(), boost::forward<Fp>(f));
         ex.submit(boost::move(t));
       }
 
@@ -4359,7 +4360,7 @@ namespace detail
     Ex* ex;
   public:
     future_executor_continuation_shared_state(Ex& ex, BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
-    : base_type(boost::forward<F>(f), boost::forward<Fp>(c)),
+    : base_type(boost::move(f), boost::forward<Fp>(c)),
       ex(&ex)
     {
       this->set_executor();
@@ -4415,7 +4416,7 @@ namespace detail
     Ex* ex;
   public:
     shared_future_executor_continuation_shared_state(Ex& ex, F f, BOOST_THREAD_FWD_REF(Fp) c)
-    : base_type(boost::forward<F>(f), boost::forward<Fp>(c)),
+    : base_type(boost::move(f), boost::forward<Fp>(c)),
       ex(&ex)
     {
       this->set_executor();
