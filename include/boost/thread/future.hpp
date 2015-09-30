@@ -3742,7 +3742,7 @@ namespace detail {
         return *this;
       }
       void operator()() {
-        shared_ptr<shared_state<Rp>> that_ = dynamic_pointer_cast<shared_state<Rp>>(that);
+        shared_ptr<shared_state<Rp> > that_ = dynamic_pointer_cast<shared_state<Rp> >(that);
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -3835,7 +3835,7 @@ namespace detail {
         return *this;
       }
       void operator()() {
-        shared_ptr<shared_state<Rp&>> that_ = dynamic_pointer_cast<shared_state<Rp&>>(that);
+        shared_ptr<shared_state<Rp&> > that_ = dynamic_pointer_cast<shared_state<Rp&> >(that);
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -4934,7 +4934,7 @@ namespace detail
 
   ////////////////////////////////
   // template<typename F>
-  // auto future<future<R2>>::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
+  // auto future<future<R2> >::then(F&& func) -> BOOST_THREAD_FUTURE<decltype(func(*this))>;
   ////////////////////////////////
 
   template <typename R2>
