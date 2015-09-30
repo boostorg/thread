@@ -3717,7 +3717,6 @@ namespace detail {
       shared_state_nullary_task(csbl::shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3745,7 +3744,6 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
         csbl::shared_ptr<shared_state<Rp>> that_ = csbl::dynamic_pointer_cast<shared_state<Rp>>(that);
         if (! that) return;
@@ -3769,7 +3767,6 @@ namespace detail {
       shared_state_nullary_task(csbl::shared_ptr<shared_state_base> st, BOOST_THREAD_FWD_REF(Fp) f)
       : that(st), f_(boost::move(f))
       {};
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) //BOOST_NOEXCEPT
       : that(x.that), f_(x.f_)
@@ -3796,7 +3793,6 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
         csbl::shared_ptr<shared_state<void>> that_ = csbl::dynamic_pointer_cast<shared_state<void>>(that);
         if (! that) return;
@@ -3818,7 +3814,6 @@ namespace detail {
       shared_state_nullary_task(csbl::shared_ptr<shared_state_base > st, BOOST_THREAD_FWD_REF(Fp) f)
         : that(st), f_(boost::move(f))
       {}
-#if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
       BOOST_THREAD_COPYABLE_AND_MOVABLE(shared_state_nullary_task)
       shared_state_nullary_task(shared_state_nullary_task const& x) BOOST_NOEXCEPT
       : that(x.that), f_(x.f_) {}
@@ -3844,7 +3839,6 @@ namespace detail {
         }
         return *this;
       }
-#endif
       void operator()() {
         csbl::shared_ptr<shared_state<Rp&>> that_ = csbl::dynamic_pointer_cast<shared_state<Rp&>>(that);
         if (! that) return;
@@ -3885,7 +3879,6 @@ namespace detail {
 
       ~future_executor_shared_state() {}
     };
-
     ////////////////////////////////
     // make_future_executor_shared_state
     ////////////////////////////////
