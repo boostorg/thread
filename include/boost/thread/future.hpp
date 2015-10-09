@@ -88,6 +88,17 @@
 
 namespace boost
 {
+  template <class T>
+  shared_ptr<T> static_shared_from_this(T* that)
+  {
+    return static_pointer_cast<T>(that->shared_from_this());
+  }
+  template <class T>
+  shared_ptr<T const> static_shared_from_this(T const* that)
+  {
+    return static_pointer_cast<T const>(that->shared_from_this());
+  }
+
     namespace detail
     {
         struct relocker
@@ -808,13 +819,11 @@ namespace boost
 
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
-            shared_ptr<boost::detail::shared_state_base> that = this->shared_from_this();
-            this->thr_ = thread(&future_async_shared_state::run, that, boost::forward<Fp>(f));
+            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::forward<Fp>(f));
           }
 
-          static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(shared_ptr<future_async_shared_state> that, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               that->mark_finished_with_result(f());
@@ -831,12 +840,11 @@ namespace boost
         {
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
-            this->thr_ = thread(&future_async_shared_state::run, this->shared_from_this(), boost::move(f));
+            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
           }
 
-          static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(shared_ptr<future_async_shared_state> that, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               f();
@@ -854,12 +862,11 @@ namespace boost
         {
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
-            this->thr_ = thread(&future_async_shared_state::run, this->shared_from_this(), boost::move(f));
+            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
           }
 
-          static void run(shared_ptr<boost::detail::shared_state_base> that_, BOOST_THREAD_FWD_REF(Fp) f)
+          static void run(shared_ptr<future_async_shared_state> that, BOOST_THREAD_FWD_REF(Fp) f)
           {
-            future_async_shared_state* that = static_cast<future_async_shared_state*>(that_.get());
             try
             {
               that->mark_finished_with_result(f());
@@ -3704,7 +3711,7 @@ namespace detail {
       }
 #endif
       void operator()() {
-        shared_ptr<shared_state<Rp> > that_ = dynamic_pointer_cast<shared_state<Rp> >(that);
+        shared_ptr<shared_state<Rp> > that_ = static_pointer_cast<shared_state<Rp> >(that);
         try {
           that_->mark_finished_with_result(f_());
         } catch(...) {
@@ -3754,7 +3761,7 @@ namespace detail {
       }
 #endif
       void operator()() {
-        shared_ptr<shared_state<void> > that_ = dynamic_pointer_cast<shared_state<void> >(that);
+        shared_ptr<shared_state<void> > that_ = static_pointer_cast<shared_state<void> >(that);
         try {
           f_();
           that_->mark_finished_with_result();
@@ -4163,11 +4170,10 @@ namespace detail
 
     void launch_continuation() {
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
+      this->thr_ = thread(&future_async_continuation_shared_state::run, static_shared_from_this(this));
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_async_continuation_shared_state* that = static_cast<future_async_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<future_async_continuation_shared_state> that) {
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
       } catch(...) {
@@ -4195,11 +4201,10 @@ namespace detail
 
     void launch_continuation() {
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&future_async_continuation_shared_state::run, this->shared_from_this());
+      this->thr_ = thread(&future_async_continuation_shared_state::run, static_shared_from_this(this));
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_async_continuation_shared_state* that = static_cast<future_async_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<future_async_continuation_shared_state> that) {
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
@@ -4219,13 +4224,12 @@ namespace detail
 
   template <typename FutureExecutorContinuationSharedState>
   struct run_it {
-    shared_ptr<boost::detail::shared_state_base> that_;
+    shared_ptr<FutureExecutorContinuationSharedState> that_;
 
-    run_it(shared_ptr<boost::detail::shared_state_base> that) : that_ (that) {}
+    run_it(shared_ptr<FutureExecutorContinuationSharedState> that) : that_ (that) {}
     void operator()()
     {
-      FutureExecutorContinuationSharedState* that = static_cast<FutureExecutorContinuationSharedState*>(that_.get());
-      that->run(that_);
+      that_->run(that_);
     }
   };
 
@@ -4246,12 +4250,11 @@ namespace detail
     }
 
     void launch_continuation() {
-      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
+      run_it<future_executor_continuation_shared_state> fct(static_shared_from_this(this));
       ex->submit(fct);
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_executor_continuation_shared_state* that = static_cast<future_executor_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<future_executor_continuation_shared_state> that) {
       try {
         that->mark_finished_with_result(that->continuation(boost::move(that->parent)));
       } catch(...) {
@@ -4284,12 +4287,11 @@ namespace detail
     }
 
     void launch_continuation() {
-      run_it<future_executor_continuation_shared_state> fct(this->shared_from_this());
+      run_it<future_executor_continuation_shared_state> fct(static_shared_from_this(this));
       ex->submit(fct);
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      future_executor_continuation_shared_state* that = static_cast<future_executor_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<future_executor_continuation_shared_state> that) {
       try {
         that->continuation(boost::move(that->parent));
         that->mark_finished_with_result();
@@ -4327,11 +4329,10 @@ namespace detail
 
     void launch_continuation() {
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, static_shared_from_this(this));
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_async_continuation_shared_state* that = static_cast<shared_future_async_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<shared_future_async_continuation_shared_state> that) {
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
       } catch(...) {
@@ -4358,11 +4359,10 @@ namespace detail
 
     void launch_continuation() {
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, this->shared_from_this());
+      this->thr_ = thread(&shared_future_async_continuation_shared_state::run, static_shared_from_this(this));
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_async_continuation_shared_state* that = static_cast<shared_future_async_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<shared_future_async_continuation_shared_state> that) {
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
@@ -4396,12 +4396,11 @@ namespace detail
     }
 
     void launch_continuation() {
-      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
+      run_it<shared_future_executor_continuation_shared_state> fct(static_shared_from_this(this));
       ex->submit(fct);
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_executor_continuation_shared_state* that = static_cast<shared_future_executor_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<shared_future_executor_continuation_shared_state> that) {
       try {
         that->mark_finished_with_result(that->continuation(that->parent));
       } catch(...) {
@@ -4433,12 +4432,11 @@ namespace detail
     }
 
     void launch_continuation() {
-      run_it<shared_future_executor_continuation_shared_state> fct(this->shared_from_this());
+      run_it<shared_future_executor_continuation_shared_state> fct(static_shared_from_this(this));
       ex->submit(fct);
     }
 
-    static void run(shared_ptr<boost::detail::shared_state_base> that_) {
-      shared_future_executor_continuation_shared_state* that = static_cast<shared_future_executor_continuation_shared_state*>(that_.get());
+    static void run(shared_ptr<shared_future_executor_continuation_shared_state> that) {
       try {
         that->continuation(that->parent);
         that->mark_finished_with_result();
