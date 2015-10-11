@@ -123,7 +123,7 @@ namespace boost
 
     void submit(BOOST_THREAD_RV_REF(work) closure)
     {
-      ex->submit(boost::forward<work>(closure));
+      ex->submit(boost::move(closure));
     }
 
     /**
@@ -157,9 +157,9 @@ namespace boost
     }
 
     template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
-      work w = boost::move(closure);
+      work w((boost::forward<Closure>(closure)));
       submit(boost::move(w));
     }
 

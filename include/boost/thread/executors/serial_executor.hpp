@@ -179,7 +179,7 @@ namespace executors
     }
 
     template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
       work_queue.push(work(boost::forward<Closure>(closure)));
     }
