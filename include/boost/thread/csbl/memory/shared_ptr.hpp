@@ -29,7 +29,9 @@ namespace boost
   {
     using ::boost::shared_ptr;
     using ::boost::make_shared;
+    using ::boost::static_pointer_cast;
     using ::boost::dynamic_pointer_cast;
+    using ::boost::const_pointer_cast;
     using ::boost::enable_shared_from_this;
     using ::boost::atomic_load;
     using ::boost::atomic_compare_exchange_strong;
@@ -47,6 +49,8 @@ namespace boost
     using std::shared_ptr;
     using std::make_shared;
     using std::dynamic_pointer_cast;
+    using std::static_pointer_cast;
+    using std::const_pointer_cast;
     using std::enable_shared_from_this;
     using std::atomic_load;
     using std::atomic_compare_exchange_strong;

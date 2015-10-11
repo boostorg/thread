@@ -232,7 +232,7 @@ namespace executors
     }
 
     template <typename Closure>
-    void submit(BOOST_THREAD_RV_REF(Closure) closure)
+    void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
       pimpl->submit(boost::forward<Closure>(closure));
     }
