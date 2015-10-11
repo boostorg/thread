@@ -102,7 +102,6 @@ namespace boost
     void submit(BOOST_THREAD_FWD_REF(Closure) closure)
     {
       //submit(work(boost::forward<Closure>(closure)));
-
       work w((boost::forward<Closure>(closure)));
       submit(boost::move(w));
     }
