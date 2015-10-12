@@ -104,7 +104,9 @@ namespace boost
 
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
 #else
-    struct executor;
+    namespace executors {
+        class executor;
+    }
 #endif
     typedef shared_ptr<executor> executor_ptr_type;
 
