@@ -30,14 +30,23 @@ namespace executors
     /// type-erasure to store the works to do
     typedef  executor::work work;
 
-//    executor_adaptor(executor_adaptor const&) = default;
-//    executor_adaptor(executor_adaptor &&) = default;
     /**
      * executor_adaptor constructor
      */
+    //executor_adaptor(executor_adaptor const&) = default;
+    //executor_adaptor(executor_adaptor &&) = default;
+
+    executor_adaptor(executor_adaptor const& x) : ex(x.ex) {}
+    executor_adaptor(BOOST_THREAD_RV_REF(executor_adaptor) x)  : ex(boost::move(x.ex)) {}
+
+    executor_adaptor() : ex() {}
+
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-    template <typename ...Args>
-    executor_adaptor(BOOST_THREAD_RV_REF(Args) ... args) : ex(boost::forward<Args>(args)...) {}
+    template <typename Arg, typename ...Args>
+    executor_adaptor(BOOST_THREAD_FWD_REF(Arg) arg, BOOST_THREAD_FWD_REF(Args) ... args
+        , typename disable_if<is_same<typename decay<Arg>::type, executor_adaptor>, int* >::type=0
+        )
+    : ex(boost::forward<Arg>(arg), boost::forward<Args>(args)...) {}
 #else
     /**
      * executor_adaptor constructor

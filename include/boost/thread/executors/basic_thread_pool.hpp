@@ -283,6 +283,8 @@ namespace executors
     {
     }
   public:
+    //basic_thread_pool(basic_thread_pool const&)=default;
+    //basic_thread_pool(basic_thread_pool &&)=default;
     /**
      * \b Effects: creates a thread pool that runs closures on \c thread_count threads.
      *

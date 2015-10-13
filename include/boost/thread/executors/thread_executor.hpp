@@ -43,7 +43,7 @@ namespace executors
       threads_type threads_;
       mutable mutex mtx_;
 
-      /// thread_executor is not copyable.
+      /// thread_executor::shared_state is not copyable.
       BOOST_THREAD_NO_COPYABLE(shared_state)
 
       /**
