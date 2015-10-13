@@ -12,6 +12,7 @@
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/executors/executor.hpp>
+#include <boost/thread/detail/move.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -35,24 +36,47 @@ namespace executors
      */
     //executor_adaptor(executor_adaptor const&) = default;
     //executor_adaptor(executor_adaptor &&) = default;
+    BOOST_THREAD_COPYABLE_AND_MOVABLE(executor_adaptor)
 
     executor_adaptor(executor_adaptor const& x) : ex(x.ex) {}
     executor_adaptor(BOOST_THREAD_RV_REF(executor_adaptor) x)  : ex(boost::move(x.ex)) {}
+
+    executor_adaptor& operator=(BOOST_THREAD_COPY_ASSIGN_REF(executor_adaptor) x)
+    {
+      if (this != &ex)
+      {
+        ex = x.ex;
+      }
+      return *this;
+    }
+    executor_adaptor& operator=(BOOST_THREAD_RV_REF(executor_adaptor) x)
+    {
+      if (this != &ex)
+      {
+        ex = boost::move(x.ex);
+      }
+      return *this;
+    }
+
+    executor_adaptor(Executor const& ex) : ex(ex) {}
+    executor_adaptor(BOOST_THREAD_RV_REF(Executor) ex)  : ex(boost::move(ex)) {}
 
     executor_adaptor() : ex() {}
 
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
     template <typename Arg, typename ...Args>
     executor_adaptor(BOOST_THREAD_FWD_REF(Arg) arg, BOOST_THREAD_FWD_REF(Args) ... args
-        , typename disable_if<is_same<typename decay<Arg>::type, executor_adaptor>, int* >::type=0
+        , typename disable_if_c<
+          is_same<typename decay<Arg>::type, executor_adaptor>::value
+            ||
+          is_same<typename decay<Arg>::type, Executor>::value
+    , int* >::type=0
         )
     : ex(boost::forward<Arg>(arg), boost::forward<Args>(args)...) {}
 #else
     /**
      * executor_adaptor constructor
      */
-    executor_adaptor() : ex() {}
-
     template <typename A1>
     executor_adaptor(
         BOOST_THREAD_FWD_REF(A1) a1
@@ -137,6 +161,9 @@ namespace executors
   };
 }
 using executors::executor_adaptor;
+
+BOOST_THREAD_DCL_MOVABLE_BEG(T) executor_adaptor<T> BOOST_THREAD_DCL_MOVABLE_END
+
 }
 
 #include <boost/config/abi_suffix.hpp>
