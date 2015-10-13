@@ -33,8 +33,10 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/thread_time.hpp>
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
 #include <boost/thread/executor.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
+#endif
 
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>
@@ -49,12 +51,10 @@
 #endif
 #include <boost/core/enable_if.hpp>
 #include <boost/core/ref.hpp>
-//#include <boost/enable_shared_from_this.hpp>
 #include <boost/exception_ptr.hpp>
 #include <boost/function.hpp>
 #include <boost/next_prior.hpp>
 #include <boost/scoped_array.hpp>
-//#include <boost/shared_ptr.hpp>
 #include <boost/thread/csbl/memory/shared_ptr.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/type_traits/conditional.hpp>
@@ -105,7 +105,12 @@ namespace boost
 
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
 #else
-    struct executor;
+  namespace executors
+  {
+    class executor;
+  }
+  using executors::executor;
+
 #endif
     typedef shared_ptr<executor> executor_ptr_type;
 
@@ -4857,7 +4862,6 @@ namespace detail {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
       lock.unlock();
 #endif
-      lock.unlock();
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type, F>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
