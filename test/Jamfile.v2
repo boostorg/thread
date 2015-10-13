@@ -814,7 +814,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2 ../example/generic_serial_executor.cpp : ex_generic_serial_executor ]
           [ thread-run2 ../example/serial_executor.cpp : ex_serial_executor ]
           #[ thread-run2 ../example/generic_serial_executor_cont.cpp : ex_generic_serial_executor_cont ]
-          [ thread-run2 ../example/serial_executor_cont.cpp : ex_serial_executor_cont ]
+          #[ thread-run2 ../example/serial_executor_cont.cpp : ex_serial_executor_cont ]
           [ thread-run2 ../example/future_when_all.cpp : ex_future_when_all ]
           [ thread-run2 ../example/parallel_accumulate.cpp : ex_parallel_accumulate ]
           [ thread-run2 ../example/parallel_quick_sort.cpp : ex_parallel_quick_sort ]
@@ -963,6 +963,7 @@ rule thread-compile ( sources : reqs * : name )
     :
           #[ thread-run test_11256.cpp ] 
           #[ thread-run2 ../example/generic_serial_executor_cont.cpp : ex_generic_serial_executor_cont2 ]
+          #[ thread-run2 ../example/serial_executor_cont.cpp : ex_serial_executor_cont2 ]
           #[ thread-run test_11256.cpp ]
           #[ thread-run test_11499.cpp ]
           #[ thread-run test_11611.cpp ]
