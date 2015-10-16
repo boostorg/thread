@@ -40,6 +40,27 @@ struct TestCallback
 
     return boost::make_ready_future();
   }
+  result_type operator()(boost::shared_future<void> future) const
+  {
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    assert(future.is_ready());
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    future.wait();
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    return boost::make_ready_future();
+  }
+
+  result_type operator()(boost::shared_future<boost::future<void> > future) const
+  {
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    assert(future.is_ready());
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    assert(future.get().is_ready());
+    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+    //boost::future<void> ff = future.get();
+
+    return boost::make_ready_future();
+  }
 };
 
 void p1()
