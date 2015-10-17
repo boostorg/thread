@@ -1,5 +1,6 @@
 [/
   (C) Copyright 2008-11 Anthony Williams.
+  (C) Copyright 2012-2015 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
@@ -443,10 +444,10 @@ Input Parameters:
 success and one for error handling. However this option has not been retained for the moment. 
 The lambda function takes a future as its input which carries the exception 
 through. This makes propagating exceptions straightforward. This approach also simplifies the chaining of continuations.
-* Scheduler: Providing an overload to `.then`, to take a scheduler reference places great flexibility over the execution 
+* Executor: Providing an overload to `.then`, to take a executor reference places great flexibility over the execution 
 of the future in the programmer's hand. As described above, often taking a launch policy is not sufficient for powerful 
-asynchronous operations. The lifetime of the scheduler must outlive the continuation.
-* Launch policy: if the additional flexibility that the scheduler provides is not required.
+asynchronous operations. The lifetime of the executor must outlive the continuation.
+* Launch policy: if the additional flexibility that the executor provides is not required.
 
 Return values: The decision to return a future was based primarily on the ability to chain multiple continuations using
 `.then()`. This benefit of composability gives the programmer incredible control and flexibility over their code. Returning 
