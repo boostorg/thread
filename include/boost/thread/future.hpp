@@ -4763,7 +4763,37 @@ namespace detail {
   template <typename F>
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type>
   BOOST_THREAD_FUTURE<R>::then(BOOST_THREAD_FWD_REF(F) func)  {
-    return this->then(this->launch_policy(), boost::forward<F>(func));
+    //return this->then(this->launch_policy(), boost::forward<F>(func));
+
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    launch policy = this->launch_policy(lock);
+    if (underlying_cast<int>(policy) & int(launch::async)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+      this->future_->wait_internal(lock);
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+//#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+//    } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+//      typedef executor Ex;
+//      Ex& ex = *(this->future_->get_executor());
+//      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
+//                    lock, boost::move(*this), boost::forward<F>(func)
+//                )));
+//#endif
+    } else {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    }
+
+
   }
 
   ////////////////////////////////
@@ -4831,7 +4861,37 @@ namespace detail {
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >)>::type>
   BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::then(BOOST_THREAD_FWD_REF(F) func)  {
 
-    return this->then(this->launch_policy(), boost::forward<F>(func));
+    //return this->then(this->launch_policy(), boost::forward<F>(func));
+
+    typedef BOOST_THREAD_FUTURE<R2> R;
+    typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    launch policy = this->launch_policy(lock);
+
+    if (underlying_cast<int>(policy) & int(launch::async)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+//#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+//    } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+//      typedef executor Ex;
+//      Ex& ex = *(this->future_->get_executor());
+//      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
+//                    lock, boost::move(*this), boost::forward<F>(func)
+//                )));
+//#endif
+    } else {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
+    }
+
   }
 
   ////////////////////////////////
@@ -4899,7 +4959,35 @@ namespace detail {
   inline BOOST_THREAD_FUTURE<typename boost::result_of<F(shared_future<R>)>::type>
   shared_future<R>::then(BOOST_THREAD_FWD_REF(F) func)  const {
 
-    return this->then(this->launch_policy(), boost::forward<F>(func));
+    //return this->then(this->launch_policy(), boost::forward<F>(func));
+
+    typedef typename boost::result_of<F(shared_future<R>)>::type future_type;
+    BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
+
+    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    launch policy = this->launch_policy(lock);
+    if (underlying_cast<int>(policy) & int(launch::async)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_async_continuation_shared_state<shared_future<R>, future_type>(
+                  lock, *this, boost::forward<F>(func)
+              )));
+    } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+      this->future_->wait_internal(lock);
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_deferred_continuation_shared_state<shared_future<R>, future_type>(
+                  lock, *this, boost::forward<F>(func)
+              )));
+//#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+//    } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+//      typedef executor Ex;
+//      Ex& ex = *(this->future_->get_executor());
+//      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_executor_continuation_shared_state<Ex, shared_future<R>, future_type>(ex,
+//                    lock, *this, boost::forward<F>(func)
+//                )));
+//#endif
+    } else {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_async_continuation_shared_state<shared_future<R>, future_type>(
+                  lock, *this, boost::forward<F>(func)
+              )));
+    }
   }
 
 namespace detail
