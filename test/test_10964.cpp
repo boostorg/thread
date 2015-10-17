@@ -96,11 +96,17 @@ int main()
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   for (int i=0; i< number_of_tests; i++)
   {
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
     auto f1 = boost::make_ready_future().then(TestCallback());
     BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
     boost::future<void> f2 = f1.get();
-    std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  }
+  std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  {
+    auto f1 = boost::make_ready_future().then(TestCallback());
+    BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
+    auto f3 = f1.then(TestCallback());
+    BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
+    f3.wait();
   }
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   for (int i=0; i< number_of_tests; i++)
@@ -135,8 +141,6 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
-
-
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   for (int i=0; i< number_of_tests; i++)
   {

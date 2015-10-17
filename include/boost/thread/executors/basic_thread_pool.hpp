@@ -87,7 +87,9 @@ namespace executors
         {
           work task;
           queue_op_status st = work_queue.wait_pull(task);
-          if (st == queue_op_status::closed) return;
+          if (st == queue_op_status::closed) {
+            return;
+          }
           task();
         }
       }

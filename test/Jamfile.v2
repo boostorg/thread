@@ -958,9 +958,12 @@ rule thread-compile ( sources : reqs * : name )
     explicit ts_ ;
     test-suite ts_
     :
+          #[ thread-run test_11256.cpp ] 
           #[ thread-run test_11256.cpp ]
           #[ thread-run test_11499.cpp ]
-          [ thread-run test_11611.cpp ]
+          #[ thread-run test_11611.cpp ]
+          [ thread-run2-noit ./sync/futures/shared_future/then_executor_pass.cpp : shared_future__then_executor_p2 ]
+          [ thread-run2-noit ./sync/futures/future/then_executor_pass.cpp : future__then_executor_p2 ]
     ;
 
 
