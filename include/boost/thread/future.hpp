@@ -4725,12 +4725,39 @@ namespace detail {
               )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
     } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+      assert(this->future_->get_executor());
       typedef executor Ex;
       Ex& ex = *(this->future_->get_executor());
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
                     lock, boost::move(*this), boost::forward<F>(func)
                 )));
 #endif
+    } else if (underlying_cast<int>(policy) & int(launch::inherit)) {
+
+        launch policy = this->launch_policy(lock);
+        if (underlying_cast<int>(policy) & int(launch::async)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+          this->future_->wait_internal(lock);
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+        } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+          assert(this->future_->get_executor());
+          typedef executor Ex;
+          Ex& ex = *(this->future_->get_executor());
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
+                        lock, boost::move(*this), boost::forward<F>(func)
+                    )));
+#endif
+        } else {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        }
     } else {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
@@ -4787,6 +4814,7 @@ namespace detail {
 //                    lock, boost::move(*this), boost::forward<F>(func)
 //                )));
 //#endif
+
     } else {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
@@ -4819,12 +4847,38 @@ namespace detail {
               )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
     } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+      assert(this->future_->get_executor());
       typedef executor Ex;
       Ex& ex = *(this->future_->get_executor());
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
                     lock, boost::move(*this), boost::forward<F>(func)
                 )));
 #endif
+    } else if (underlying_cast<int>(policy) & int(launch::inherit)) {
+        launch policy = this->launch_policy(lock);
+
+        if (underlying_cast<int>(policy) & int(launch::async)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+        } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+          assert(this->future_->get_executor());
+          typedef executor Ex;
+          Ex& ex = *(this->future_->get_executor());
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
+                        lock, boost::move(*this), boost::forward<F>(func)
+                    )));
+#endif
+        } else {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        }
     } else {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
@@ -4924,6 +4978,32 @@ namespace detail {
                     lock, *this, boost::forward<F>(func)
                 )));
 #endif
+    } else if (underlying_cast<int>(policy) & int(launch::inherit)) {
+
+        launch policy = this->launch_policy(lock);
+        if (underlying_cast<int>(policy) & int(launch::async)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_async_continuation_shared_state<shared_future<R>, future_type>(
+                      lock, *this, boost::forward<F>(func)
+                  )));
+        } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
+          this->future_->wait_internal(lock);
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_deferred_continuation_shared_state<shared_future<R>, future_type>(
+                      lock, *this, boost::forward<F>(func)
+                  )));
+#ifdef BOOST_THREAD_PROVIDES_EXECUTORS
+        } else if (underlying_cast<int>(policy) & int(launch::executor)) {
+          typedef executor Ex;
+          Ex& ex = *(this->future_->get_executor());
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_executor_continuation_shared_state<Ex, shared_future<R>, future_type>(ex,
+                        lock, *this, boost::forward<F>(func)
+                    )));
+#endif
+        } else {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_async_continuation_shared_state<shared_future<R>, future_type>(
+                      lock, *this, boost::forward<F>(func)
+                  )));
+        }
+
     } else {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_async_continuation_shared_state<shared_future<R>, future_type>(
                   lock, *this, boost::forward<F>(func)
