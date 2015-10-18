@@ -14,7 +14,7 @@
 // due to boost::exception::exception_ptr dependency
 
 #define BOOST_THREAD_CONTINUATION_SYNC
-//#define BOOST_THREAD_FUTURE_BLOCKING
+#define BOOST_THREAD_FUTURE_BLOCKING
 
 #ifndef BOOST_NO_EXCEPTIONS
 

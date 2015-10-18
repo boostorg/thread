@@ -151,10 +151,12 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
+#if 1
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
+  // fixme
   for (int i=0; i< number_of_tests; i++)
   {
-    boost::basic_thread_pool executor(1);
+    boost::basic_thread_pool executor(2);
 
     auto f1 = boost::make_ready_future().then(executor, TestCallback());
     BOOST_STATIC_ASSERT(std::is_same<decltype(f1), boost::future<boost::future<void> > >::value);
@@ -167,6 +169,7 @@ int main()
     BOOST_STATIC_ASSERT(std::is_same<decltype(f3), boost::future<boost::future<void> > >::value);
     f3.wait();
   }
+#endif
   std::cout << __FILE__ << "[" << __LINE__ << "]" << std::endl;
   for (int i=0; i< number_of_tests; i++)
   {
