@@ -4224,8 +4224,8 @@ namespace detail
   //////////////////////
   // detail::continuation_shared_state
   //////////////////////
-  template<typename F, typename Rp, typename Fp, template <class> class ShSt=shared_state>
-  struct continuation_shared_state: ShSt<Rp>
+  template<typename F, typename Rp, typename Fp, class ShSt=shared_state<Rp> >
+  struct continuation_shared_state: ShSt
   {
     F parent;
     Fp continuation;
@@ -4261,8 +4261,8 @@ namespace detail
     ~continuation_shared_state() {}
   };
 
-  template<typename F, typename Fp, template <class> class ShSt>
-  struct continuation_shared_state<F, void, Fp, ShSt>: ShSt<void>
+  template<typename F, typename Fp, class ShSt>
+  struct continuation_shared_state<F, void, Fp, ShSt>: ShSt
   {
     F parent;
     Fp continuation;
@@ -4304,9 +4304,9 @@ namespace detail
   /////////////////////////
 
   template<typename F, typename Rp, typename Fp>
-  struct future_async_continuation_shared_state: continuation_shared_state<F,Rp,Fp,continuation_shared_state_base>
+  struct future_async_continuation_shared_state: continuation_shared_state<F,Rp,Fp,continuation_shared_state_base<Rp> >
   {
-    typedef continuation_shared_state<F,Rp,Fp,continuation_shared_state_base> base_type;
+    typedef continuation_shared_state<F,Rp,Fp,continuation_shared_state_base<Rp> > base_type;
   public:
     future_async_continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : base_type(boost::move(f), boost::forward<Fp>(c))
@@ -4404,9 +4404,9 @@ namespace detail {
   /////////////////////////
 
   template<typename F, typename Rp, typename Fp>
-  struct shared_future_async_continuation_shared_state: continuation_shared_state<F,Rp,Fp,continuation_shared_state_base>
+  struct shared_future_async_continuation_shared_state: continuation_shared_state<F,Rp,Fp,continuation_shared_state_base<Rp> >
   {
-    typedef continuation_shared_state<F,Rp,Fp,continuation_shared_state_base> base_type;
+    typedef continuation_shared_state<F,Rp,Fp,continuation_shared_state_base<Rp> > base_type;
 
   public:
     shared_future_async_continuation_shared_state(F f, BOOST_THREAD_FWD_REF(Fp) c)
