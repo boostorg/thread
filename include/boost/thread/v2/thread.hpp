@@ -139,7 +139,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        system_clock::time_point c_timeout = time_point_cast<system_clock::time_point>(system_clock::now() + ceil<nanoseconds>(d));
+        system_clock::time_point c_timeout = time_point_cast<system_clock::duration>(system_clock::now() + ceil<nanoseconds>(d));
         sleep_until(c_timeout);
       }
     }
