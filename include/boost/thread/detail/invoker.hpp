@@ -72,13 +72,21 @@ namespace boost
       BOOST_SYMBOL_VISIBLE
       invoker& operator=(BOOST_THREAD_RV_REF(invoker) f)
       {
-        f_ = boost::move(BOOST_THREAD_RV(f).f_);
+        if (this != &f)
+        {
+          f_ = boost::move(BOOST_THREAD_RV(f).f_);
+        }
+        return *this;
       }
 
       BOOST_SYMBOL_VISIBLE
       invoker& operator=( BOOST_THREAD_COPY_ASSIGN_REF(invoker) f)
       {
-        f_ = f.f_;
+        if (this != &f)
+        {
+          f_ = f.f_;
+        }
+        return *this;
       }
 
       result_type operator()()
