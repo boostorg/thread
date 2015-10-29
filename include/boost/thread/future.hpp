@@ -160,7 +160,10 @@ namespace boost
             boost::function<void()> callback;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuations_type continuations;
+// EXECUTOR
+#if 1
             executor_ptr_type ex;
+#endif
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation()
@@ -173,25 +176,36 @@ namespace boost
                 is_deferred_(false),
                 is_constructed(false),
                 policy_(launch::none),
-                continuations(),
+                continuations()
+// EXECUTOR
+#if 1
+            ,
                 ex()
+#endif
             {}
 
-            shared_state_base(exceptional_ptr const& ex):
-                exception(ex.ptr_),
+            shared_state_base(exceptional_ptr const& excp):
+                exception(excp.ptr_),
                 done(true),
                 is_valid_(true),
                 is_deferred_(false),
                 is_constructed(false),
                 policy_(launch::none),
-                continuations(),
+                continuations()
+// EXECUTOR
+#if 1
+            ,
                 ex()
+#endif
             {}
 
 
             virtual ~shared_state_base()
             {
             }
+// EXECUTOR
+#if 1
+
             executor_ptr_type get_executor()
             {
               return ex;
@@ -212,6 +226,7 @@ namespace boost
               set_executor();
               ex = aex;
             }
+#endif
 
             bool valid(boost::unique_lock<boost::mutex>&) { return is_valid_; }
             bool valid() {
@@ -532,8 +547,8 @@ namespace boost
             shared_state():
                 result()
             {}
-            shared_state(exceptional_ptr const& ex):
-              detail::shared_state_base(ex), result()
+            shared_state(exceptional_ptr const& excp):
+              detail::shared_state_base(excp), result()
             {}
 
 
@@ -678,8 +693,8 @@ namespace boost
                 result(0)
             {}
 
-            shared_state(exceptional_ptr const& ex):
-              detail::shared_state_base(ex), result(0)
+            shared_state(exceptional_ptr const& excp):
+              detail::shared_state_base(excp), result(0)
             {}
 
             ~shared_state()
@@ -745,8 +760,8 @@ namespace boost
             shared_state()
             {}
 
-            shared_state(exceptional_ptr const& ex):
-              detail::shared_state_base(ex)
+            shared_state(exceptional_ptr const& excp):
+              detail::shared_state_base(excp)
             {}
 
             void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
@@ -1227,8 +1242,8 @@ namespace boost
         typedef typename detail::shared_state<R>::move_dest_type move_dest_type;
 
         static //BOOST_CONSTEXPR
-        future_ptr make_exceptional_future_ptr(exceptional_ptr const& ex) {
-          return future_ptr(new detail::shared_state<R>(ex));
+        future_ptr make_exceptional_future_ptr(exceptional_ptr const& excp) {
+          return future_ptr(new detail::shared_state<R>(excp));
         }
 
         future_ptr future_;
@@ -1246,8 +1261,8 @@ namespace boost
 
 
         //BOOST_CONSTEXPR
-        basic_future(exceptional_ptr const& ex)
-          : future_(make_exceptional_future_ptr(ex))
+        basic_future(exceptional_ptr const& excp)
+          : future_(make_exceptional_future_ptr(excp))
         {
         }
 
@@ -1607,8 +1622,8 @@ namespace boost
 
         BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
         //BOOST_CONSTEXPR
-        BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
-            base_type(ex) {}
+        BOOST_THREAD_FUTURE(exceptional_ptr const& excp):
+            base_type(excp) {}
 
         ~BOOST_THREAD_FUTURE() {
         }
@@ -1865,8 +1880,8 @@ namespace boost
 
             BOOST_CONSTEXPR BOOST_THREAD_FUTURE() {}
             //BOOST_CONSTEXPR
-            BOOST_THREAD_FUTURE(exceptional_ptr const& ex):
-                base_type(ex) {}
+            BOOST_THREAD_FUTURE(exceptional_ptr const& excp):
+                base_type(excp) {}
 
             ~BOOST_THREAD_FUTURE() {
             }
@@ -2031,8 +2046,8 @@ namespace boost
         BOOST_CONSTEXPR shared_future()
         {}
         //BOOST_CONSTEXPR
-        shared_future(exceptional_ptr const& ex):
-            base_type(ex) {}
+        shared_future(exceptional_ptr const& excp):
+            base_type(excp) {}
         ~shared_future()
         {}
 
@@ -2291,9 +2306,9 @@ namespace boost
             future_->mark_exceptional_finish_internal(p, lock);
         }
         template <typename E>
-        void set_exception(E ex)
+        void set_exception(E excp)
         {
-          set_exception(boost::copy_exception(ex));
+          set_exception(boost::copy_exception(excp));
         }
         // setting the result with deferred notification
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
@@ -2333,9 +2348,9 @@ namespace boost
           future_->set_exception_at_thread_exit(e);
         }
         template <typename E>
-        void set_exception_at_thread_exit(E ex)
+        void set_exception_at_thread_exit(E excp)
         {
-          set_exception_at_thread_exit(boost::copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(excp));
         }
 
         template<typename F>
@@ -2464,9 +2479,9 @@ namespace boost
             future_->mark_exceptional_finish_internal(p, lock);
         }
         template <typename E>
-        void set_exception(E ex)
+        void set_exception(E excp)
         {
-          set_exception(boost::copy_exception(ex));
+          set_exception(boost::copy_exception(excp));
         }
 
         // setting the result with deferred notification
@@ -2488,9 +2503,9 @@ namespace boost
           future_->set_exception_at_thread_exit(e);
         }
         template <typename E>
-        void set_exception_at_thread_exit(E ex)
+        void set_exception_at_thread_exit(E excp)
         {
-          set_exception_at_thread_exit(boost::copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(excp));
         }
 
         template<typename F>
@@ -2620,9 +2635,9 @@ namespace boost
             future_->mark_exceptional_finish_internal(p,lock);
         }
         template <typename E>
-        void set_exception(E ex)
+        void set_exception(E excp)
         {
-          set_exception(boost::copy_exception(ex));
+          set_exception(boost::copy_exception(excp));
         }
 
         // setting the result with deferred notification
@@ -2644,9 +2659,9 @@ namespace boost
           future_->set_exception_at_thread_exit(e);
         }
         template <typename E>
-        void set_exception_at_thread_exit(E ex)
+        void set_exception_at_thread_exit(E excp)
         {
-          set_exception_at_thread_exit(boost::copy_exception(ex));
+          set_exception_at_thread_exit(boost::copy_exception(excp));
         }
 
         template<typename F>
@@ -4154,16 +4169,16 @@ namespace detail {
 
 
   template <typename T>
-  BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr ex) {
+  BOOST_THREAD_FUTURE<T> make_exceptional_future(exception_ptr excp) {
     promise<T> p;
-    p.set_exception(ex);
+    p.set_exception(excp);
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
   template <typename T, typename E>
-  BOOST_THREAD_FUTURE<T> make_exceptional_future(E ex) {
+  BOOST_THREAD_FUTURE<T> make_exceptional_future(E excp) {
     promise<T> p;
-    p.set_exception(boost::copy_exception(ex));
+    p.set_exception(boost::copy_exception(excp));
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
 
@@ -4174,8 +4189,8 @@ namespace detail {
     return BOOST_THREAD_MAKE_RV_REF(p.get_future());
   }
   template <typename T>
-  BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr ex)  {
-    return make_exceptional_future<T>(ex);
+  BOOST_THREAD_FUTURE<T> make_ready_future(exception_ptr excp)  {
+    return make_exceptional_future<T>(excp);
   }
 
 #if 0
