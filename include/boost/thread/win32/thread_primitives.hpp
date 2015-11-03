@@ -10,8 +10,9 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/config.hpp>
+#include <boost/config.hpp>
 #include <boost/predef/platform.h>
+#include <boost/thread/detail/config.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -21,6 +22,7 @@
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
 #include <thread>
+#include <windows.h>
 #endif
 
 #if defined( BOOST_USE_WINDOWS_H )
@@ -230,6 +232,13 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             extern "C"
             {
+                __declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
+#if !defined(BOOST_NO_ANSI_APIS)
+                __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
+#else
+                __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
+#endif
+                __declspec(dllimport) unsigned long __stdcall GetTickCount();
 #ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
@@ -301,7 +310,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 gettickcount64impl = &GetTickCount64;
 #else
-                farproc_t addr=GetProcAddress(
+                detail::farproc_t addr=GetProcAddress(
 #if !defined(BOOST_NO_ANSI_APIS)
                     GetModuleHandleA("KERNEL32.DLL"),
 #else
@@ -363,13 +372,13 @@ namespace boost
 
             inline handle create_anonymous_semaphore_nothrow(long initial_count,long max_count)
             {
-#if !defined(BOOST_NO_ANSI_APIS)
+#if !defined(BOOST_NO_ANSI_APIS) && !defined(BOOST_PLAT_WINDOWS_RUNTIME)
                 handle const res=win32::CreateSemaphoreA(0,initial_count,max_count,0);
 #else
 #if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
                 handle const res=win32::CreateSemaphoreEx(0,initial_count,max_count,0,0);
 #else
-                handle const res=win32::CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
+                handle const res=::CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
 #endif
 #endif
                 return res;
