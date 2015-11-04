@@ -22,7 +22,6 @@
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
 #include <thread>
-#include <windows.h>
 #endif
 
 #if defined( BOOST_USE_WINDOWS_H )
@@ -72,6 +71,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
             using ::GetNativeSystemInfo;
             using ::GetTickCount64;
+            using ::CreateSemaphoreExW;
 #else
             using ::GetSystemInfo;
             using ::GetTickCount;
@@ -179,6 +179,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 __declspec(dllimport) void __stdcall GetNativeSystemInfo(_SYSTEM_INFO*);
                 __declspec(dllimport) ticks_type __stdcall GetTickCount64();
+                __declspec(dllimport) void* __stdcall CreateSemaphoreExW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*,unsigned long,unsigned long);
 #else
                 __declspec(dllimport) void __stdcall GetSystemInfo(_SYSTEM_INFO*);
                 __declspec(dllimport) unsigned long __stdcall GetTickCount();
@@ -378,7 +379,7 @@ namespace boost
 #if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
                 handle const res=win32::CreateSemaphoreEx(0,initial_count,max_count,0,0);
 #else
-                handle const res=::CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
+                handle const res=win32::CreateSemaphoreExW(0,initial_count,max_count,0,0,semaphore_all_access);
 #endif
 #endif
                 return res;
