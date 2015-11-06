@@ -4226,13 +4226,11 @@ namespace detail
   {
     F parent;
     Fp continuation;
-    shared_ptr<shared_state_base> sentinel;
 
   public:
     continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)),
-      sentinel(parent.future_)
+      continuation(boost::move(c))
     {
     }
 
@@ -4243,7 +4241,6 @@ namespace detail
 
     void call() {
       try {
-        sentinel.reset();
         this->mark_finished_with_result(this->continuation(boost::move(this->parent)));
       } catch(...) {
         this->mark_exceptional_finish();
@@ -4264,13 +4261,11 @@ namespace detail
   {
     F parent;
     Fp continuation;
-    shared_ptr<shared_state_base> sentinel;
 
   public:
     continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
-      continuation(boost::move(c)),
-      sentinel(parent.future_)
+      continuation(boost::move(c))
     {
     }
 
@@ -4282,7 +4277,6 @@ namespace detail
     void call()
     {
       try {
-        sentinel.reset();
         this->continuation(boost::move(this->parent));
         this->mark_finished_with_result();
       } catch(...) {
@@ -4493,7 +4487,6 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
-      //this->sentinel.reset();
     }
   };
 
@@ -4530,7 +4523,6 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
-      //this->sentinel.reset();
     }
   };
 
@@ -4568,7 +4560,6 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
-      //this->sentinel.reset();
     }
   };
 
@@ -4602,7 +4593,6 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
-      //this->sentinel.reset();
     }
   };
 
@@ -4716,7 +4706,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
@@ -4779,7 +4772,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4800,7 +4796,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     launch policy = this->launch_policy(lock);
     if (underlying_cast<int>(policy) & int(launch::deferred)) {
       this->future_->wait_internal(lock);
@@ -4828,7 +4827,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     if (underlying_cast<int>(policy) & int(launch::async)) {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_async_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
@@ -4891,7 +4893,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_executor_continuation_shared_state<Ex, BOOST_THREAD_FUTURE<R>, future_type>(ex,
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4914,7 +4919,10 @@ namespace detail {
     typedef typename boost::result_of<F(BOOST_THREAD_FUTURE<R>)>::type future_type;
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
 
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     launch policy = this->launch_policy(lock);
 
     if  (underlying_cast<int>(policy) & int(launch::deferred)) {
@@ -5197,7 +5205,11 @@ namespace detail
   BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >::unwrap()
   {
     BOOST_THREAD_ASSERT_PRECONDITION(this->future_!=0, future_uninitialized());
-    boost::unique_lock<boost::mutex> lock(this->future_->mutex);
+
+    // keep state alive as we move ourself but hold the lock
+    shared_ptr<detail::shared_state_base> sentinel(this->future_);
+    boost::unique_lock<boost::mutex> lock(sentinel->mutex);
+
     return boost::detail::make_future_unwrap_shared_state<BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R2> >, R2>(lock, boost::move(*this));
   }
 #endif
