@@ -110,10 +110,7 @@ namespace boost
                                 thread_info->tss_data.erase(current);
                             }
                         }
-                        if (thread_info) // fixme: should we test this?
-                        {
-                          thread_info->self.reset();
-                        }
+                        thread_info->self.reset();
                     }
                 }
             }
