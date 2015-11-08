@@ -80,8 +80,8 @@ namespace boost
             {
                 static void tls_destructor(void* data)
                 {
-                    boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
-                    //boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(data)->shared_from_this();
+                    //boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
+                    boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(data)->shared_from_this();
 
                     if(thread_info)
                     {
