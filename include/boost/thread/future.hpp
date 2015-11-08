@@ -3664,9 +3664,6 @@ namespace detail
       typename decay<ArgTypes>::type...
   )>::type>
   async(launch policy, BOOST_THREAD_FWD_REF(F) f, BOOST_THREAD_FWD_REF(ArgTypes)... args) {
-    typedef typename boost::result_of<typename decay<F>::type(
-        typename decay<ArgTypes>::type...
-    )>::type R;
     typedef detail::invoker<typename decay<F>::type, typename decay<ArgTypes>::type...> BF;
     typedef typename BF::result_type Rp;
 
