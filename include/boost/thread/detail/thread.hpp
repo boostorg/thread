@@ -72,7 +72,7 @@ namespace boost
           void run2(tuple_indices<Indices...>)
           {
 
-              invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
+              detail::invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
           }
           void run()
           {
