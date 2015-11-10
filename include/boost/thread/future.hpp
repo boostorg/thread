@@ -4226,13 +4226,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
-    shared_ptr<shared_state_base> centinel;
+    shared_ptr<shared_state_base> sentinel;
 
   public:
     continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
       continuation(boost::move(c)),
-      centinel(parent.future_)
+      sentinel(parent.future_)
     {
     }
 
@@ -4243,6 +4243,7 @@ namespace detail
 
     void call() {
       try {
+        sentinel.reset();
         this->mark_finished_with_result(this->continuation(boost::move(this->parent)));
       } catch(...) {
         this->mark_exceptional_finish();
@@ -4263,13 +4264,13 @@ namespace detail
   {
     F parent;
     Fp continuation;
-    shared_ptr<shared_state_base> centinel;
+    shared_ptr<shared_state_base> sentinel;
 
   public:
     continuation_shared_state(BOOST_THREAD_RV_REF(F) f, BOOST_THREAD_FWD_REF(Fp) c)
     : parent(boost::move(f)),
       continuation(boost::move(c)),
-      centinel(parent.future_)
+      sentinel(parent.future_)
     {
     }
 
@@ -4281,6 +4282,7 @@ namespace detail
     void call()
     {
       try {
+        sentinel.reset();
         this->continuation(boost::move(this->parent));
         this->mark_finished_with_result();
       } catch(...) {
@@ -4491,6 +4493,7 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      //this->sentinel.reset();
     }
   };
 
@@ -4527,6 +4530,7 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      //this->sentinel.reset();
     }
   };
 
@@ -4564,6 +4568,7 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      //this->sentinel.reset();
     }
   };
 
@@ -4597,6 +4602,7 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      //this->sentinel.reset();
     }
   };
 
