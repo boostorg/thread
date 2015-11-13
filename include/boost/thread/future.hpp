@@ -4251,17 +4251,25 @@ namespace detail
 
     void call(boost::unique_lock<boost::mutex>& lck) {
       try {
-        Fp local_fuct = boost::move(this->continuation);
-        F local_parent = boost::move(this->parent);
         relocker relock(lck);
-        Rp res = local_fuct(boost::move(local_parent));
+
+        // neither continuation nor parent are protected by the lock - call() must only
+        // be called once, and no one else must modify it.
+        Rp res = this->continuation(boost::move(this->parent));
+
+        // make sure parent is really cleared to prevent memory "leaks"
+        this->parent = F();
+
         relock.lock();
+
         this->mark_finished_with_result_internal(boost::move(res), lck);
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
+
+        // make sure parent is really cleared to prevent memory "leaks"
+        relocker relock(lck);
+        this->parent = F();
       }
-      // make sure parent is really cleared to prevent memory "leaks"
-      this->parent = F();
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
@@ -4305,17 +4313,23 @@ namespace detail
 
     void call(boost::unique_lock<boost::mutex>& lck) {
       try {
-        Fp local_fuct = boost::move(this->continuation);
-        F local_parent = boost::move(this->parent);
-        relocker relock(lck);
-        local_fuct(boost::move(local_parent));
-        relock.lock();
+        {
+          relocker relock(lck);
+          // neither continuation nor parent are protected by the lock - call() must only
+          // be called once, and no one else must modify it.
+          this->continuation(boost::move(this->parent));
+
+          // make sure parent is really cleared to prevent memory "leaks"
+          this->parent = F();
+        }
         this->mark_finished_with_result_internal(lck);
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
+
+        // make sure parent is really cleared to prevent memory "leaks"
+        relocker relock(lck);
+        this->parent = F();
       }
-      // make sure parent is really cleared to prevent memory "leaks"
-      this->parent = F();
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
