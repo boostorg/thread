@@ -4245,6 +4245,8 @@ namespace detail
       } catch(...) {
         this->mark_exceptional_finish();
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
@@ -4282,6 +4284,8 @@ namespace detail
       } catch(...) {
         this->mark_exceptional_finish();
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
 
     static void run(shared_ptr<boost::detail::shared_state_base> that_)
@@ -4487,6 +4491,8 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
   };
 
@@ -4523,6 +4529,8 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
   };
 
@@ -4560,6 +4568,8 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
   };
 
@@ -4593,6 +4603,8 @@ namespace detail {
       } catch (...) {
         this->mark_exceptional_finish_internal(current_exception(), lck);
       }
+      // make sure parent is really cleared to prevent memory "leaks"
+      this->parent = F();
     }
   };
 
