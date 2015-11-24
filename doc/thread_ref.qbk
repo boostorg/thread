@@ -255,7 +255,7 @@ does not complete when the specified time has elapsed or reached respectively.
 
 [endsect]
 
-[section:destructor1 Destructor V1]
+[section:destructor1 Destructor V1-2]
 
 When the __thread__ object that represents a thread of execution is destroyed the thread becomes ['detached]. Once a thread is
 detached, it will continue executing until the invocation of the function or callable object supplied on construction has completed,
@@ -264,7 +264,7 @@ object. In this case, the __thread__ object ceases to represent the now-detached
 
 [endsect]
 
-[section:destructor2 Destructor V2]
+[section:destructor2 Destructor V3-X]
 
 When the __thread__ object that represents a thread of execution is destroyed the program terminates if the thread is __joinable__. 
 
