@@ -4516,13 +4516,12 @@ namespace detail {
       this->set_deferred();
     }
 
-    virtual void launch_continuation() {
-      boost::unique_lock<boost::mutex> lk(this->mutex);
-      if (this->is_deferred_) {
-        this->is_deferred_=false;
-        this->call(lk);
-      }
+    virtual void execute(boost::unique_lock<boost::mutex>& lk) {
+      this->parent.wait();
+      this->call(lk);
     }
+
+    virtual void launch_continuation() {    }
   };
 
   //////////////////////////
@@ -4540,13 +4539,12 @@ namespace detail {
       this->set_deferred();
     }
 
-    virtual void launch_continuation() {
-      boost::unique_lock<boost::mutex> lk(this->mutex);
-      if (this->is_deferred_) {
-        this->is_deferred_=false;
-        this->call(lk);
-      }
+    virtual void execute(boost::unique_lock<boost::mutex>& lk) {
+      this->parent.wait();
+      this->call(lk);
     }
+
+    virtual void launch_continuation() {    }
   };
 
   ////////////////////////////////
@@ -4668,7 +4666,6 @@ namespace detail {
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
-      this->future_->wait_internal(lock);
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4689,7 +4686,6 @@ namespace detail {
                       lock, boost::move(*this), boost::forward<F>(func)
                   )));
         } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
-          this->future_->wait_internal(lock);
           return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                       lock, boost::move(*this), boost::forward<F>(func)
                   )));
@@ -4755,7 +4751,6 @@ namespace detail {
 
     launch policy = this->launch_policy(lock);
     if (underlying_cast<int>(policy) & int(launch::deferred)) {
-      this->future_->wait_internal(lock);
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
@@ -4908,7 +4903,6 @@ namespace detail {
                   lock, *this, boost::forward<F>(func)
               )));
     } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
-      this->future_->wait_internal(lock);
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_deferred_continuation_shared_state<shared_future<R>, future_type>(
                   lock, *this, boost::forward<F>(func)
               )));
@@ -4928,7 +4922,6 @@ namespace detail {
                       lock, *this, boost::forward<F>(func)
                   )));
         } else if (underlying_cast<int>(policy) & int(launch::deferred)) {
-          this->future_->wait_internal(lock);
           return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_deferred_continuation_shared_state<shared_future<R>, future_type>(
                       lock, *this, boost::forward<F>(func)
                   )));
@@ -4989,7 +4982,6 @@ namespace detail {
     boost::unique_lock<boost::mutex> lock(this->future_->mutex);
     launch policy = this->launch_policy(lock);
     if (underlying_cast<int>(policy) & int(launch::deferred)) {
-      this->future_->wait_internal(lock);
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_shared_future_deferred_continuation_shared_state<shared_future<R>, future_type>(
                   lock, *this, boost::forward<F>(func)
               )));
