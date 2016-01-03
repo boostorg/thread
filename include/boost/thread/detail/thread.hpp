@@ -72,7 +72,7 @@ namespace boost
           void run2(tuple_indices<Indices...>)
           {
 
-              invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
+              detail::invoke(std::move(std::get<0>(fp)), std::move(std::get<Indices>(fp))...);
           }
           void run()
           {
@@ -354,6 +354,8 @@ namespace boost
 
 #if defined BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE
             if (joinable()) std::terminate();
+#else
+            detach();
 #endif
             thread_info=BOOST_THREAD_RV(other).thread_info;
             BOOST_THREAD_RV(other).thread_info.reset();

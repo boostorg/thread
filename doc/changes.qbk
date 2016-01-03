@@ -58,11 +58,15 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 * [@http://svn.boost.org/trac/boost/ticket/11377 #11377] Boost condition variable always waits for system clock deadline
 * [@http://svn.boost.org/trac/boost/ticket/11435 #11435] gcc compiler warning in future.hpp
 * [@http://svn.boost.org/trac/boost/ticket/11555 #11555] devector.hpp assumes allocator_traits_type is always present
-* [@http://svn.boost.org/trac/boost/ticket/11562 #11562] Timer (using steady_clock) expires after computer time is set forward on Ubuntu 64-bit
+* [@http://svn.boost.org/trac/boost/ticket/11562 #11562] (condition_variable_any::wait_until + recursive_mutex + steady_clock) timer expires after computer time is set forward on Ubuntu 64-bit
 * [@http://svn.boost.org/trac/boost/ticket/11672 #11672] Thread: Should use unique_ptr, not auto_ptr
 * [@http://svn.boost.org/trac/boost/ticket/11688 #11688] thread::try_join_until: Avoid busy wait if system clock changes
 * [@http://svn.boost.org/trac/boost/ticket/11672 #11716] ::then(f) should inherit the parent Executor
- 	
+* [@http://svn.boost.org/trac/boost/ticket/11795 #11795] Incorrect version specification for documentation of thread destructor
+* [@http://svn.boost.org/trac/boost/ticket/11796 #11796] Thread move assignment operator, does not detach previous thread data
+* [@http://svn.boost.org/trac/boost/ticket/11817 #11817] 'sync_queue_is_closed' was not declared in boost/thread/executors/thread_executor.hpp
+* [@http://svn.boost.org/trac/boost/ticket/11818 #11818] future.then will be blocked if promise is set after the invocation of then
+
 
 [heading Version 4.5.0 - boost 1.58]
 
