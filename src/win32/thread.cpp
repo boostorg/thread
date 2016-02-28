@@ -24,6 +24,7 @@
 #include <boost/cstdint.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
+#include <boost/thread/thread_time.hpp>
 #endif
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
@@ -467,7 +468,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
     bool thread::timed_join(boost::system_time const& wait_until)
     {
-      return do_try_join_until(get_milliseconds_until(wait_until));
+      return do_try_join_until(boost::detail::get_milliseconds_until(wait_until));
     }
 #endif
     bool thread::do_try_join_until_noexcept(uintmax_t milli, bool& res)
