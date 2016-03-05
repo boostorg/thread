@@ -530,7 +530,7 @@ namespace boost
     {
       // a bit too strict: Windows XP with SP3 would be sufficient
 #if BOOST_PLAT_WINDOWS_RUNTIME                                    \
-    || ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) \
+    || ( defined(BOOST_USE_WINAPI_VERSION) && ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) ) \
     || ( ( defined(__MINGW32__) && !defined(__MINGW64__) ) && _WIN32_WINNT < 0x0600)
         return 0;
 #else
