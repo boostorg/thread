@@ -8,6 +8,30 @@
 
 [section:changes History]
 
+
+[heading Version 4.7.0 - boost 1.61]
+
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
+* [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
+* [@http://svn.boost.org/trac/boost/ticket/9118 #9118] Seg fault on thread join when llvm and libc++ are used
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
+
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last regression test snapshot.
+
+[*New Experimental Features:]
+
+* [@http://svn.boost.org/trac/boost/ticket/11772 #11772] Add a launch::sync policy
+
+[*Fixed Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/11494 #11494] boost::this_thread::yield() is marked as deprecated in the synopsis
+* [@http://svn.boost.org/trac/boost/ticket/11562 #11562] (condition_variable_any::wait_until + recursive_mutex + steady_clock) timer expires after computer time is set forward on Ubuntu 64-bit
+* [@http://svn.boost.org/trac/boost/ticket/12013 #12013] F_pass and FArgs_pass tests segfault
+* [@http://svn.boost.org/trac/boost/ticket/12036 #12036] boost::physical_concurrency always returns 0 if BOOST_USE_WINAPI_VERSION is not defined
+
 [heading Version 4.6.0 - boost 1.60]
 
 [*Know Bugs:]
