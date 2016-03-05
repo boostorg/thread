@@ -21,7 +21,7 @@
     {
       thread::id get_id() noexcept;
       template<typename TimeDuration>
-      void yield() noexcept; // DEPRECATED
+      void yield() noexcept;
       template <class Clock, class Duration>
       void sleep_until(const chrono::time_point<Clock, Duration>& abs_time); 
       template <class Rep, class Period>
