@@ -337,13 +337,13 @@ namespace boost
         }
 
         inline cv_status wait_until(
-            unique_lock<mutex>& lk,
+            lock_type& lock,
             chrono::time_point<chrono::steady_clock, chrono::nanoseconds> tp)
         {
             using namespace chrono;
             nanoseconds d = tp.time_since_epoch();
             timespec ts = boost::detail::to_timespec(d);
-            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
+            if (do_wait_until(lock, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
 
