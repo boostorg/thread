@@ -336,6 +336,7 @@ namespace boost
                                                    cv_status::timeout;
         }
 
+        template <class lock_type>
         inline cv_status wait_until(
             lock_type& lock,
             chrono::time_point<chrono::steady_clock, chrono::nanoseconds> tp)
@@ -391,7 +392,7 @@ namespace boost
     private: // used by boost::thread::try_join_until
 
         template <class lock_type>
-        inline bool do_wait_until(
+        bool do_wait_until(
           lock_type& m,
           struct timespec const &timeout)
         {
