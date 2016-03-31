@@ -13,6 +13,10 @@
 
 [*Know Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+
+Please define BOOST_THREAD_PATCH to apply the patch that could unfortunately results is a regression as described in [@http://svn.boost.org/trac/boost/ticket/12049 #12049].
+
 * [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
 * [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
 * [@http://svn.boost.org/trac/boost/ticket/9118 #9118] Seg fault on thread join when llvm and libc++ are used
@@ -35,9 +39,6 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 [heading Version 4.6.0 - boost 1.60]
 
 [*Know Bugs:]
-* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
-
-Please define BOOST_THREAD_PATCH to apply the patch that could unfortunately results is a regression as described in [@http://svn.boost.org/trac/boost/ticket/12049 #12049].
 
 * [@http://svn.boost.org/trac/boost/ticket/4833 #4833] MinGW/test_tss_lib: Support of automatic tss cleanup for native threading API not available
 * [@http://svn.boost.org/trac/boost/ticket/8600 #8600] wait_for_any hangs, if called with multiple copies of shared_future referencing same task
