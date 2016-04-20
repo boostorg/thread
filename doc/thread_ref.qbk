@@ -953,7 +953,7 @@ a default-constructed __thread_id__.]]
 
 [[Effects:] [If `*this` refers to a thread of execution, request that the thread will be interrupted the next time it enters one of
 the predefined __interruption_points__ with interruption enabled, or if it is currently __blocked__ in a call to one of the
-predefined __interruption_points__ with interruption enabled .]]
+predefined __interruption_points__ with interruption enabled. Otherwise do noting.]]
 
 [[Throws:] [Nothing]]
 
