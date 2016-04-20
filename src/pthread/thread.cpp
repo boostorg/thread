@@ -126,7 +126,9 @@ namespace boost
                     const boost::once_flag uninitialized = BOOST_ONCE_INIT;
                     if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(boost::once_flag)))
                     {
-                        tls_destructor(pthread_getspecific(current_thread_tls_key));
+                        boost::detail::thread_data_base* data = (boost::detail::thread_data_base*)pthread_getspecific(current_thread_tls_key);
+                        if (data)
+                            tls_destructor(data);
                         pthread_key_delete(current_thread_tls_key);
                     }
                 }
