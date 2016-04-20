@@ -110,12 +110,14 @@ namespace boost
                                 thread_info->tss_data.erase(current);
                             }
                         }
-                        thread_info->self.reset();
+                        //if (thread_info) // fixme: should we test this?
+                        {
+                          thread_info->self.reset();
+                        }
                     }
                 }
             }
 
-#if defined BOOST_THREAD_PATCH
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
                 delete_current_thread_tls_key_on_dlclose_t()
@@ -126,15 +128,12 @@ namespace boost
                     const boost::once_flag uninitialized = BOOST_ONCE_INIT;
                     if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(boost::once_flag)))
                     {
-                        void* data = pthread_getspecific(current_thread_tls_key);
-                        if (data)
-                            tls_destructor(data);
                         pthread_key_delete(current_thread_tls_key);
                     }
                 }
             };
             delete_current_thread_tls_key_on_dlclose_t delete_current_thread_tls_key_on_dlclose;
-#endif
+
             void create_current_thread_tls_key()
             {
                 BOOST_VERIFY(!pthread_key_create(&current_thread_tls_key,&tls_destructor));

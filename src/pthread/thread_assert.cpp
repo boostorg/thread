@@ -30,12 +30,14 @@
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
+#include <boost/assert.hpp>
 
 #include <fstream>
 #include <string>
 #include <set>
 #include <vector>
 #include <string.h> // memcmp.
+#include <iostream>
 
 namespace boost
 {
@@ -46,12 +48,15 @@ namespace boost
             for (notify_list_t::iterator i = notify.begin(), e = notify.end();
                     i != e; ++i)
             {
+                BOOST_ASSERT_MSG( i->second != 0, "thread_data_base notify second is NULL");
                 i->second->unlock();
+                BOOST_ASSERT_MSG( i->first != 0,  "thread_data_base notify first is NULL");
                 i->first->notify_all();
             }
             for (async_states_t::iterator i = async_states_.begin(), e = async_states_.end();
                     i != e; ++i)
             {
+              BOOST_ASSERT_MSG( *i != 0,  "thread_data_base async_states_ is NULL");
                 (*i)->make_ready();
             }
         }
@@ -80,8 +85,8 @@ namespace boost
             {
                 static void tls_destructor(void* data)
                 {
-                    //boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
-                    boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(data)->shared_from_this();
+                    boost::detail::thread_data_base* thread_info=static_cast<boost::detail::thread_data_base*>(data);
+                    //boost::detail::thread_data_ptr thread_info = static_cast<boost::detail::thread_data_base*>(data)->shared_from_this();
 
                     if(thread_info)
                     {
@@ -110,12 +115,14 @@ namespace boost
                                 thread_info->tss_data.erase(current);
                             }
                         }
-                        thread_info->self.reset();
+                        if (thread_info) // fixme: should we test this?
+                        {
+                          thread_info->self.reset();
+                        }
                     }
                 }
             }
 
-#if defined BOOST_THREAD_PATCH
             struct  delete_current_thread_tls_key_on_dlclose_t
             {
                 delete_current_thread_tls_key_on_dlclose_t()
@@ -126,15 +133,12 @@ namespace boost
                     const boost::once_flag uninitialized = BOOST_ONCE_INIT;
                     if (memcmp(&current_thread_tls_init_flag, &uninitialized, sizeof(boost::once_flag)))
                     {
-                        void* data = pthread_getspecific(current_thread_tls_key);
-                        if (data)
-                            tls_destructor(data);
                         pthread_key_delete(current_thread_tls_key);
                     }
                 }
             };
             delete_current_thread_tls_key_on_dlclose_t delete_current_thread_tls_key_on_dlclose;
-#endif
+
             void create_current_thread_tls_key()
             {
                 BOOST_VERIFY(!pthread_key_create(&current_thread_tls_key,&tls_destructor));
