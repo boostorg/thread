@@ -853,9 +853,9 @@ namespace boost
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::forward<Fp>(f));
+            this->thr_ = boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::forward<Fp>(f));
 #else
-            thread(&future_async_shared_state::run, static_shared_from_this(this), boost::forward<Fp>(f)).detach();
+            boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::forward<Fp>(f)).detach();
 #endif
           }
 
@@ -878,9 +878,9 @@ namespace boost
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
+            this->thr_ = boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
 #else
-            thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f)).detach();
+            boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f)).detach();
 #endif
           }
 
@@ -904,9 +904,9 @@ namespace boost
           void init(BOOST_THREAD_FWD_REF(Fp) f)
           {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-            this->thr_ = thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
+            this->thr_ = boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f));
 #else
-            thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f)).detach();
+            boost::thread(&future_async_shared_state::run, static_shared_from_this(this), boost::move(f)).detach();
 #endif
           }
 
@@ -4379,9 +4379,9 @@ namespace detail
     void launch_continuation() {
 #if defined BOOST_THREAD_FUTURE_BLOCKING
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&future_async_continuation_shared_state::run, static_shared_from_this(this));
+      this->thr_ = boost::thread(&future_async_continuation_shared_state::run, static_shared_from_this(this));
 #else
-      thread(&base_type::run, static_shared_from_this(this)).detach();
+      boost::thread(&base_type::run, static_shared_from_this(this)).detach();
 #endif
     }
   };
@@ -4498,9 +4498,9 @@ namespace detail {
     void launch_continuation() {
 #if defined BOOST_THREAD_FUTURE_BLOCKING
       boost::lock_guard<boost::mutex> lk(this->mutex);
-      this->thr_ = thread(&base_type::run, static_shared_from_this(this));
+      this->thr_ = boost::thread(&base_type::run, static_shared_from_this(this));
 #else
-      thread(&base_type::run, static_shared_from_this(this)).detach();
+      boost::thread(&base_type::run, static_shared_from_this(this)).detach();
 #endif
     }
   };
@@ -5311,9 +5311,9 @@ namespace detail
         return;
       }
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-      this->thr_ = thread(&future_when_all_vector_shared_state::run, this->shared_from_this());
+      this->thr_ = boost::thread(&future_when_all_vector_shared_state::run, this->shared_from_this());
 #else
-      thread(&future_when_all_vector_shared_state::run, this->shared_from_this()).detach();
+      boost::thread(&future_when_all_vector_shared_state::run, this->shared_from_this()).detach();
 #endif
     }
 
@@ -5382,9 +5382,9 @@ namespace detail
       }
 
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-      this->thr_ = thread(&future_when_any_vector_shared_state::run, this->shared_from_this());
+      this->thr_ = boost::thread(&future_when_any_vector_shared_state::run, this->shared_from_this());
 #else
-      thread(&future_when_any_vector_shared_state::run, this->shared_from_this()).detach();
+      boost::thread(&future_when_any_vector_shared_state::run, this->shared_from_this()).detach();
 #endif
     }
 
@@ -5489,9 +5489,9 @@ namespace detail
         return;
       }
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-      this->thr_ = thread(&future_when_all_tuple_shared_state::run, this->shared_from_this());
+      this->thr_ = boost::thread(&future_when_all_tuple_shared_state::run, this->shared_from_this());
 #else
-      thread(&future_when_all_tuple_shared_state::run, this->shared_from_this()).detach();
+      boost::thread(&future_when_all_tuple_shared_state::run, this->shared_from_this()).detach();
 #endif
 
     }
@@ -5560,9 +5560,9 @@ namespace detail
       }
 
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
-      this->thr_ = thread(&future_when_any_tuple_shared_state::run, this->shared_from_this());
+      this->thr_ = boost::thread(&future_when_any_tuple_shared_state::run, this->shared_from_this());
 #else
-      thread(&future_when_any_tuple_shared_state::run, this->shared_from_this()).detach();
+      boost::thread(&future_when_any_tuple_shared_state::run, this->shared_from_this()).detach();
 #endif
     }
 
