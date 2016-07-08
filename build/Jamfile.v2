@@ -316,3 +316,5 @@ lib boost_thread
       <link>static:<define>BOOST_THREAD_USE_LIB=1
       <conditional>@usage-requirements
     ;
+
+boost-install boost_thread ;
