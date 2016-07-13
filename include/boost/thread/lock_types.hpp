@@ -1080,7 +1080,7 @@ namespace boost
     //std-2104 unique_lock move-assignment should not be noexcept
     upgrade_to_unique_lock& operator=(BOOST_THREAD_RV_REF_BEG upgrade_to_unique_lock<Mutex> BOOST_THREAD_RV_REF_END other) //BOOST_NOEXCEPT
     {
-      upgrade_to_unique_lock temp(other);
+      upgrade_to_unique_lock temp(::boost::move(other));
       swap(temp);
       return *this;
     }
