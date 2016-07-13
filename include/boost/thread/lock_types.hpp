@@ -1167,7 +1167,7 @@ private unique_lock<Mutex>
 #endif
     try_lock_wrapper& operator=(BOOST_THREAD_RV_REF_BEG try_lock_wrapper<Mutex> BOOST_THREAD_RV_REF_END other)
     {
-      try_lock_wrapper temp(other);
+      try_lock_wrapper temp(::boost::move(other));
       swap(temp);
       return *this;
     }
