@@ -260,7 +260,7 @@ namespace detail
     while (time_not_reached(lk))
     {
       super::throw_if_closed(lk);
-      if (queue_op_status::timeout == super::not_empty_.wait_until(lk, tpmin)) {
+      if (cv_status::timeout == super::not_empty_.wait_until(lk, tpmin)) {
         if (time_not_reached(lk)) return queue_op_status::not_ready;
         return queue_op_status::timeout;
       }
