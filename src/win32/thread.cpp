@@ -5,13 +5,6 @@
 // (C) Copyright 2007 David Deakins
 // (C) Copyright 2011-2013 Vicente J. Botet Escriba
 
-#ifndef _WIN32_WINNT
-#define _WIN32_WINNT 0x400
-#endif
-
-#ifndef WINVER
-#define WINVER 0x400
-#endif
 //#define BOOST_THREAD_VERSION 3
 
 #include <boost/thread/thread_only.hpp>
@@ -35,6 +28,7 @@
 #include <stdio.h>
 #include <windows.h>
 #include <boost/predef/platform.h>
+#include <boost/detail/winapi/config.hpp>
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
 #include <mutex>
@@ -530,7 +524,7 @@ namespace boost
     {
       // a bit too strict: Windows XP with SP3 would be sufficient
 #if BOOST_PLAT_WINDOWS_RUNTIME                                    \
-    || ( defined(BOOST_USE_WINAPI_VERSION) && ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) ) \
+    || ( BOOST_USE_WINAPI_VERSION <= BOOST_WINAPI_VERSION_WINXP ) \
     || ( ( defined(__MINGW32__) && !defined(__MINGW64__) ) && _WIN32_WINNT < 0x0600)
         return 0;
 #else

@@ -291,16 +291,14 @@ same non-deprecated interface with the exception of the construction.
 [variablelist
 
 [[Effects:] [Transfers ownership of the scoped_thread managed by `other` (if
-any) to `*this`. 
+any) to `*this` after having called to `CallableThread()(t_)`. 
 
-- if defined `BOOST_THREAD_DONT_PROVIDE_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE`: If there was a `scoped_thread` previously associated with `*this` then that `scoped_thread` is detached, DEPRECATED
-
-- if defined `BOOST_THREAD_PROVIDES_THREAD_MOVE_ASSIGN_CALLS_TERMINATE_IF_JOINABLE`: If the `scoped_thread` is joinable calls to std::terminate.
 ]]
 
 [[Postconditions:] [`other->get_id()==thread::id()` and `get_id()` returns the value of `other.get_id()` prior to the assignment.]]
 
-[[Throws:] [Nothing]]
+[[Throws:] [Nothing: The `CallableThread()(t_)` should not throw when joining the thread as the scoped variable is on a scope outside the thread function.]]
+
 
 ]
 
