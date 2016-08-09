@@ -127,10 +127,10 @@
       future<typename decay<T>::type> make_ready_future(T&& value);  // EXTENSION
     future<void> make_ready_future();  // EXTENSION
 
-    exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
+    exceptional_ptr make_exceptional_future(exception_ptr ex);  // EXTENSION
     template <typename E>
-      exceptional_ptr make_exceptional(E ex);  // EXTENSION
-    exceptional_ptr make_exceptional();  // EXTENSION
+      exceptional_ptr make_exceptional_future(E ex);  // EXTENSION
+    exceptional_ptr make_exceptional_future();  // EXTENSION
 
     
     template <typename T>
@@ -2451,12 +2451,12 @@ Otherwise the value is copied to the shared state of the returned future.
     
 [endsect]
 [/////////////////////////////////////////////////////////////////////////////]
-[section:make_exceptional Non-member function `make_exceptional()` EXTENSION]
+[section:make_exceptional_future Non-member function `make_exceptional_future()` EXTENSION]
 
-    exceptional_ptr make_exceptional(exception_ptr ex);  // EXTENSION
+    exceptional_ptr make_exceptional_future(exception_ptr ex);  // EXTENSION
     template <typename E>
-      exceptional_ptr make_exceptional(E ex);  // EXTENSION
-    exceptional_ptr make_exceptional();  // EXTENSION
+      exceptional_ptr make_exceptional_future(E ex);  // EXTENSION
+    exceptional_ptr make_exceptional_future();  // EXTENSION
 
 [variablelist
 
