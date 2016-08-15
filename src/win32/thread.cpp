@@ -7,6 +7,7 @@
 
 //#define BOOST_THREAD_VERSION 3
 
+#include <boost/detail/winapi/config.hpp>
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
@@ -28,7 +29,6 @@
 #include <stdio.h>
 #include <windows.h>
 #include <boost/predef/platform.h>
-#include <boost/detail/winapi/config.hpp>
 
 #if BOOST_PLAT_WINDOWS_RUNTIME
 #include <mutex>
