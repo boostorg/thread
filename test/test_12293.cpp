@@ -36,17 +36,17 @@ int main()
             promise2.set_value();
             std::cout << "Step 2 "<< std::endl; // should print 1 but prints 0
         });
-        //fut.wait();
         std::cout << "Step 1 "<< std::endl; // should print 1 but prints 0
 
         return promise2.get_future();
         //return ;
-    }).then([&value, &tmpValue](boost::future<void>& future){
-        // this lambda is being called before the future is ready.
+    }).then([&value, &tmpValue](boost::future<boost::future<void>> future){
+    //}).then([&value, &tmpValue](boost::future<void> future){
+      // error: no matching function for call to ‘boost::future<boost::future<void> >::then(main()::<lambda(boost::future<void>)>)’
+      // as expected
+
         assert(future.is_ready());  // this doesn't work correctly and is not ready.
 
-        // if we call future.get() this will block until the promise2 has been set be I don't want
-        // the then lambda to block. I want the lambda called when the future is ready.
 
         value = tmpValue;
     });

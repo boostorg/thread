@@ -44,7 +44,7 @@ int main()
 
 #ifndef BOOST_NO_CXX11_RVALUE_REFERENCES
     {
-      boost::future<int> inner_future = boost::async(boost::launch::async, &p2);
+      boost::future<int> inner_future = boost::async(boost::launch::async, &p2).unwrap();
       inner_future.wait();
       int ii = inner_future.get();
       BOOST_THREAD_LOG << "ii= "<< ii << "" << BOOST_THREAD_END_LOG;
