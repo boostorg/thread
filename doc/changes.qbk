@@ -25,7 +25,10 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 * [@http://svn.boost.org/trac/boost/ticket/12120 #12120] Performance improvement in thread/barrier.hpp
 * [@http://svn.boost.org/trac/boost/ticket/12146 #12146] make_exceptional_future is not mentioned in the docs
 * [@http://svn.boost.org/trac/boost/ticket/12202 #12202] shared_lock should be in shared_mutex header
+* [@http://svn.boost.org/trac/boost/ticket/12293 #12293] boost::future::then lambda called before future is ready.
+* [@http://svn.boost.org/trac/boost/ticket/12350 #12350] shared_mutex (pthreads) unlocked too early in unlock_shared()
 * [@http://svn.boost.org/trac/boost/ticket/12371 #12371] boost thread/future.hpp fails to build
+
 
 and several PR
 

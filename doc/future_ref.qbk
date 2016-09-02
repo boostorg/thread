@@ -349,7 +349,7 @@ The object's `name` virtual function returns a pointer to the string "future".]]
 
       // move support
       __unique_future__(__unique_future__ && other) noexcept;
-      __unique_future__(__unique_future__<__unique_future__<R>>&& rhs);  // EXTENSION
+      explicit __unique_future__(__unique_future__<__unique_future__<R>>&& rhs);  // EXTENSION
       __unique_future__& operator=(__unique_future__ && other) noexcept;
       
       // factories
@@ -453,7 +453,7 @@ associated with `*this`. `other` is not associated with any shared state.]]
 [///////////////////////////////////////////////////////////////////]
 [section:unwrap_move_constructor Unwrap Move Constructor - EXTENSION]
 
-      __unique_future__(__unique_future__<__unique_future__<R>>&& other);  // EXTENSION
+      explicit __unique_future__(__unique_future__<__unique_future__<R>>&& other);  // EXTENSION
 
 [warning This constructor is experimental and subject to change in future versions. 
 There are not too much tests yet, so it is possible that you can find out some trivial bugs :(] 
