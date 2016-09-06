@@ -14,6 +14,8 @@
 
 * [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
 
+Please define BOOST_THREAD_PATCH to apply the patch that could unfortunately results is a regression as described in [@http://svn.boost.org/trac/boost/ticket/12049 #12049].
+
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
 Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last regression test snapshot.
@@ -21,10 +23,13 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 
 [*Fixed Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/11097 #11097] 	test_scheduled_tp - ThreadSanitizer: heap-use-after-free
+* [@http://svn.boost.org/trac/boost/ticket/11951 #11951] 	Memory leak in boost::when_all
 * [@http://svn.boost.org/trac/boost/ticket/12102 #12102] condition_variable_fwd.hpp fails to compile when BOOST_THREAD_PROVIDES_INTERRUPTIONS is disabled
 * [@http://svn.boost.org/trac/boost/ticket/12120 #12120] Performance improvement in thread/barrier.hpp
 * [@http://svn.boost.org/trac/boost/ticket/12146 #12146] make_exceptional_future is not mentioned in the docs
 * [@http://svn.boost.org/trac/boost/ticket/12202 #12202] shared_lock should be in shared_mutex header
+* [@http://svn.boost.org/trac/boost/ticket/12220 #12220] 	Memory leak in future::then()
 * [@http://svn.boost.org/trac/boost/ticket/12293 #12293] boost::future::then lambda called before future is ready.
 * [@http://svn.boost.org/trac/boost/ticket/12350 #12350] shared_mutex (pthreads) unlocked too early in unlock_shared()
 * [@http://svn.boost.org/trac/boost/ticket/12371 #12371] boost thread/future.hpp fails to build
