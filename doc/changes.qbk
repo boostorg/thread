@@ -8,6 +8,15 @@
 
 [section:changes History]
 
+[heading Version 4.7.2 - boost 1.63]
+
+[*Fixed Bugs:]
+
+* fix boost::synchronized_value<>::load() 
+* fix relational operators of boost::synchronized_value<> 
+* fix compile failed with boost::user_scheduler
+* Fix minor possibility of loosing the notify
+
 [heading Version 4.7.1 - boost 1.62]
 
 [*Know Bugs:]
