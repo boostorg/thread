@@ -999,7 +999,7 @@ namespace boost
     return os;
   }
   template <typename IStream, typename T, typename L>
-  inline IStream& operator>>(IStream& is, synchronized_value<T,L>t& rhs)
+  inline IStream& operator>>(IStream& is, synchronized_value<T,L>& rhs)
   {
     rhs.load(is);
     return is;
