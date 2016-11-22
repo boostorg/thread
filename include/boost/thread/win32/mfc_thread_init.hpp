@@ -13,7 +13,7 @@
 
 // can't use ExtRawDllMain from afxdllx.h as it also defines the symbol _pRawDllMain
 extern "C"
-inline BOOL WINAPI ExtRawDllMain(HINSTANCE, DWORD dwReason, LPVOID)
+inline BOOL WINAPI ExtRawDllMain(HANDLE, DWORD dwReason, LPVOID)
 {
   if (dwReason == DLL_PROCESS_ATTACH)
   {
