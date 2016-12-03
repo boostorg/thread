@@ -3034,8 +3034,8 @@ An instance of __reverse_lock doesn't ['own] the lock never.
 [[Effects:] [Locks the __lockable_concept_type__ objects supplied as
 arguments in an unspecified and indeterminate order in a way that
 avoids deadlock. It is safe to call this function concurrently from
-multiple threads with the same mutexes (or other lockable objects) in
-different orders without risk of deadlock. If any of the __lock_ref__
+multiple threads for any set of mutexes (or other lockable objects) in
+any order without risk of deadlock. If any of the __lock_ref__
 or __try_lock_ref__ operations on the supplied
 __lockable_concept_type__ objects throws an exception any locks
 acquired by the function will be released before the function exits.]]
@@ -3062,8 +3062,8 @@ are locked by the calling thread.]]
 [[Effects:] [Locks all the __lockable_concept_type__ objects in the
 supplied range in an unspecified and indeterminate order in a way that
 avoids deadlock. It is safe to call this function concurrently from
-multiple threads with the same mutexes (or other lockable objects) in
-different orders without risk of deadlock. If any of the __lock_ref__
+multiple threads for any set of mutexes (or other lockable objects) in
+any order without risk of deadlock. If any of the __lock_ref__
 or __try_lock_ref__ operations on the __lockable_concept_type__
 objects in the supplied range throws an exception any locks acquired
 by the function will be released before the function exits.]]
