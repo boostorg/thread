@@ -5656,5 +5656,5 @@ namespace detail
 #endif // BOOST_THREAD_PROVIDES_FUTURE_WHEN_ALL_WHEN_ANY
 }
 
-#endif // BOOST_NO_EXCEPTION
+#endif // BOOST_NO_EXCEPTIONS
 #endif // header
