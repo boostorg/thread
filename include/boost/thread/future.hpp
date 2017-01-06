@@ -1355,7 +1355,7 @@ namespace boost
               boost::throw_exception(future_uninitialized());
           }
           return future_->mutex;
-        };
+        }
 
         notify_when_ready_handle notify_when_ready(boost::condition_variable_any& cv)
         {
