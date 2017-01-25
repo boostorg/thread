@@ -55,7 +55,8 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
 
   struct detach
   {
-    void operator()(thread& t)
+    template <class Thread>
+    void operator()(Thread& t)
     {
       t.detach();
     }
@@ -65,7 +66,8 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
 
   struct join_if_joinable
   {
-    void operator()(thread& t)
+    template <class Thread>
+    void operator()(Thread& t)
     {
       if (t.joinable())
       {
@@ -80,7 +82,8 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
 
   struct interrupt_and_join_if_joinable
   {
-    void operator()(thread& t)
+    template <class Thread>
+    void operator()(Thread& t)
     {
       t.interrupt();
       if (t.joinable())
@@ -97,7 +100,7 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
 
   // #include <boost/thread/scoped_thread.hpp>
 
-  template <class CallableThread = join_if_joinable>
+  template <class CallableThread = join_if_joinable, class Thread = ::boost::thread>
   class strict_scoped_thread
   {
     thread t_; // for exposition purposes only
@@ -106,7 +109,7 @@ The difference between strict_scoped_thread and scoped_thread is that the strict
     strict_scoped_thread(strict_scoped_thread const&) = delete;
     strict_scoped_thread& operator=(strict_scoped_thread const&) = delete;
 
-    explicit strict_scoped_thread(thread&& t) noexcept;
+    explicit strict_scoped_thread(Thread&& t) noexcept;
     template <typename F&&, typename ...Args>
     explicit strict_scoped_thread(F&&, Args&&...);
 
@@ -131,7 +134,7 @@ This wrapper can be used to join the thread before destroying it.
 
 [section:default_constructor Constructor from a __thread]
 
-    explicit strict_scoped_thread(thread&& t) noexcept;
+    explicit strict_scoped_thread(Thread&& t) noexcept;
 
 [variablelist
 
