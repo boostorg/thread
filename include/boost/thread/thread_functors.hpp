@@ -28,6 +28,18 @@ namespace boost
     }
   };
 
+  struct detach_if_joinable
+  {
+    template <class Thread>
+    void operator()(Thread& t)
+    {
+      if (t.joinable())
+      {
+        t.detach();
+      }
+    }
+  };
+
   struct join_if_joinable
   {
     template <class Thread>

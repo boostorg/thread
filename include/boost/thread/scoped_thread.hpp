@@ -287,6 +287,7 @@ BOOST_NOEXCEPT {
   return lhs.swap(rhs);
 }
 
+  typedef scoped_thread<> joining_thread;
 }
 #include <boost/config/abi_suffix.hpp>
 
