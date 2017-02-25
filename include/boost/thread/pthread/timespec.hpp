@@ -75,7 +75,7 @@ namespace boost
     {
       timespec ts;
 
-#ifdef CLOCK_MONOTONIC
+#ifdef BOOST_THREAD_TIMESPEC_CLOCK_MONOTONIC
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
         ts.tv_sec = 0;
@@ -97,6 +97,21 @@ namespace boost
 #endif
       return ts;
     }
+
+#ifdef CLOCK_MONOTONIC
+    inline timespec timespec_now_monotonic()
+    {
+      timespec ts;
+
+      if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
+      {
+        ts.tv_sec = 0;
+        ts.tv_nsec = 0;
+        BOOST_ASSERT(0 && "Boost::Thread - Internal Error");
+      }
+      return ts;
+    }
+#endif
 
     inline timespec timespec_zero()
     {
