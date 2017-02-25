@@ -75,7 +75,7 @@ namespace boost
     {
       timespec ts;
 
-#ifdef BOOST_THREAD_TIMESPEC_CLOCK_MONOTONIC
+#ifdef CLOCK_MONOTONIC
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
         ts.tv_sec = 0;
@@ -98,21 +98,25 @@ namespace boost
       return ts;
     }
 
-#ifdef CLOCK_MONOTONIC
-    inline timespec timespec_now_monotonic()
+    inline timespec timespec_now_realtime()
     {
       timespec ts;
 
-      if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
+#if defined(BOOST_THREAD_TIMESPEC_MAC_API)
+      timeval tv;
+      ::gettimeofday(&tv, 0);
+      ts.tv_sec = tv.tv_sec;
+      ts.tv_nsec = tv.tv_usec * 1000;
+#else
+      if ( ::clock_gettime( CLOCK_REALTIME, &ts ) )
       {
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
         BOOST_ASSERT(0 && "Boost::Thread - Internal Error");
       }
+#endif
       return ts;
     }
-#endif
-
     inline timespec timespec_zero()
     {
       timespec ts;
