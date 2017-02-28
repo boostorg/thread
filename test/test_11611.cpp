@@ -15,11 +15,14 @@
 #include <boost/thread/executors/serial_executor_cont.hpp>
 #include <boost/thread/executors/serial_executor.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/atomic.hpp>
 
 using namespace std;
 
 int main()
 {
+   static std::size_t const nWorks = 100000;
+   boost::atomic<unsigned> execCount(0u);
    boost::loop_executor ex;
 
    //thread t([&ex]()
@@ -32,17 +35,31 @@ int main()
      //boost::serial_executor_cont serial(ex);
      boost::serial_executor serial(ex);
 
-      for (size_t i = 0; i < 100000; i++)
-         serial.submit([i] {
+      for (size_t i = 0; i < nWorks; i++)
+         serial.submit([i, &execCount] {
              //std::cout << i << ".";
+             ++execCount;
          });
 
       serial.close();
+   }
+   unsigned const cnt = execCount.load();
+   if (cnt != nWorks) {
+      // Since the serial_executor is closed, all work should have been done,
+      // even though the loop_executor ex is not.
+      std::cerr << "Only " << cnt << " of " << nWorks << " works executed!\n";
+      return 1;
+   }
+
+   if (ex.try_executing_one()) {
+      std::cerr
+         << "loop_executor::try_executing_one suceeded on closed executor!\n";
+      return 1;
    }
 
    ex.close();
 
    t.join();
-   std::cout << "end" << std::endl;
+   std::cout << "end\n" << std::endl;
    return 0;
 }
