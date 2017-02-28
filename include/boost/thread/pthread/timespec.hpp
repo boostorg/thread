@@ -75,7 +75,7 @@ namespace boost
     {
       timespec ts;
 
-#ifdef CLOCK_MONOTONIC
+#if defined CLOCK_MONOTONIC && defined BOOST_THREAD_USEFIXES_TIMESPEC
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
         ts.tv_sec = 0;

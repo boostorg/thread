@@ -81,7 +81,7 @@ namespace boost
             return do_wait_until(lock, boost::detail::timespec_plus(timeout, ts));
 #else
             // old behavior was fine for monotonic
-            return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now()));
+            return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now_realtime()));
 #endif
         }
 
