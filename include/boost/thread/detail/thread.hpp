@@ -483,7 +483,7 @@ namespace boost
         }
 #endif
 
-#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC) and defined(BOOST_THREAD_USEFIXES_TIMESPEC)
+#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC) && defined(BOOST_THREAD_USEFIXES_TIMESPEC)
         typedef chrono::steady_clock my_clock_t;
 #else
         typedef chrono::system_clock my_clock_t;
