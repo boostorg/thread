@@ -20,6 +20,8 @@
 
 int main()
 {
+#if __cplusplus >= 201103L
+
     int value = 0;
     int tmpValue = 0;
     boost::promise<void> promise1;
@@ -56,6 +58,7 @@ int main()
     waitFuture.wait();
 
     std::cout << "value = " << value << std::endl; // should print 1 but prints 0
+#endif
     return 0;
 }
 
