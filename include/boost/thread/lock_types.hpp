@@ -328,7 +328,11 @@ namespace boost
     {
       if (owns_lock())
       {
-        m->unlock();
+        try {
+          m->unlock();
+        } catch (const boost::lock_error&) {
+          //destructors may not throw
+        }
       }
     }
     void lock()
