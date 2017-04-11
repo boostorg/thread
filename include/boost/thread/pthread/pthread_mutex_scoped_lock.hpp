@@ -23,11 +23,13 @@ namespace boost
             explicit pthread_mutex_scoped_lock(pthread_mutex_t* m_):
                 m(m_),locked(true)
             {
-                BOOST_VERIFY(!pthread_mutex_lock(m));
+                int error_code = pthread_mutex_lock(m);
+                BOOST_VERIFY(!error_code);
             }
             void unlock()
             {
-                BOOST_VERIFY(!pthread_mutex_unlock(m));
+                int error_code = pthread_mutex_unlock(m);
+                BOOST_VERIFY(!error_code);
                 locked=false;
             }
             
@@ -48,11 +50,13 @@ namespace boost
             explicit pthread_mutex_scoped_unlock(pthread_mutex_t* m_):
                 m(m_)
             {
-                BOOST_VERIFY(!pthread_mutex_unlock(m));
+                int error_code = pthread_mutex_unlock(m);
+                BOOST_VERIFY(!error_code);
             }
             ~pthread_mutex_scoped_unlock()
             {
-                BOOST_VERIFY(!pthread_mutex_lock(m));
+                int error_code = pthread_mutex_lock(m);
+                BOOST_VERIFY(!error_code);
             }
             
         };

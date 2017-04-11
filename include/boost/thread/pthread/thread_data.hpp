@@ -201,25 +201,29 @@ namespace boost
                     check_for_interruption();
                     thread_info->cond_mutex=cond_mutex;
                     thread_info->current_cond=cond;
-                    BOOST_VERIFY(!pthread_mutex_lock(m));
+                    int error_code = pthread_mutex_lock(m);
+                    BOOST_VERIFY(!error_code);
                 }
                 else
                 {
-                    BOOST_VERIFY(!pthread_mutex_lock(m));
+                    int error_code = pthread_mutex_lock(m);
+                    BOOST_VERIFY(!error_code);
                 }
             }
             ~interruption_checker()
             {
                 if(set)
                 {
-                    BOOST_VERIFY(!pthread_mutex_unlock(m));
+                    int error_code = pthread_mutex_unlock(m);
+                    BOOST_VERIFY(!error_code);
                     lock_guard<mutex> guard(thread_info->data_mutex);
                     thread_info->cond_mutex=NULL;
                     thread_info->current_cond=NULL;
                 }
                 else
                 {
-                    BOOST_VERIFY(!pthread_mutex_unlock(m));
+                    int error_code = pthread_mutex_unlock(m);
+                    BOOST_VERIFY(!error_code);
                 }
             }
         };
