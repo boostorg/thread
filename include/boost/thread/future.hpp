@@ -1639,7 +1639,9 @@ namespace boost
         base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
         {
         }
+#if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
         inline explicit BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(BOOST_THREAD_FUTURE<BOOST_THREAD_FUTURE<R> >) other); // EXTENSION
+#endif
 
         explicit BOOST_THREAD_FUTURE(BOOST_THREAD_RV_REF(shared_future<R>) other) :
         base_type(boost::move(static_cast<base_type&>(BOOST_THREAD_RV(other))))
