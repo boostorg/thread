@@ -153,9 +153,14 @@ namespace boost
                     lock.unlock();
                     unlocked=true;
                 }
-                ~relocker()
+                void lock()
                 {
-                    if(unlocked)
+                    lock.lock();
+                    unlocked=false;
+                }
+                ~relocker() BOOST_NOEXCEPT_IF(false)
+                {
+                    if (unlocked)
                     {
                         lock.lock();
                     }
@@ -215,11 +220,12 @@ namespace boost
             template<typename lock_type>
             bool do_wait(lock_type& lock,timeout abs_time)
             {
-                relocker<lock_type> locker(lock);
+                //relocker<lock_type> locker(lock);
 
+              try {
                 entry_manager entry(get_wait_entry(), internal_mutex);
 
-                locker.unlock();
+                lock.unlock();
 
                 bool woken=false;
                 while(!woken)
@@ -231,7 +237,13 @@ namespace boost
 
                     woken=entry->woken();
                 }
-                return woken;
+                lock.lock();
+              }
+              catch (E& ex )
+              {
+                throw;
+              }
+              return woken;
             }
 
             template<typename lock_type,typename predicate_type>
