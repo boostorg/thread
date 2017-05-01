@@ -142,27 +142,27 @@ namespace boost
             struct relocker
             {
                 BOOST_THREAD_NO_COPYABLE(relocker)
-                lock_type& lock;
-                bool unlocked;
+                lock_type& _lock;
+                bool _unlocked;
 
                 relocker(lock_type& lock_):
-                    lock(lock_),unlocked(false)
+                    _lock(lock_), _unlocked(false)
                 {}
                 void unlock()
                 {
-                    lock.unlock();
-                    unlocked=true;
+                    _lock.unlock();
+                    _unlocked=true;
                 }
                 void lock()
                 {
-                    lock.lock();
-                    unlocked=false;
+                    _lock.lock();
+                    _unlocked=false;
                 }
                 ~relocker() BOOST_NOEXCEPT_IF(false)
                 {
-                    if (unlocked)
+                    if (_unlocked)
                     {
-                        lock.lock();
+                        _lock.lock();
                     }
 
                 }
