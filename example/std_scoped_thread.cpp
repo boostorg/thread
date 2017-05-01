@@ -84,7 +84,7 @@ int main()
     else
       do_something_in_current_thread();
   }
-#if ! defined __clang__
+#if 0
   try
   {
     int some_local_state=1;
