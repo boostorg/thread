@@ -238,12 +238,12 @@ namespace boost
                     woken=entry->woken();
                 }
                 lock.lock();
+                return woken;
               }
               catch (...)
               {
                 throw;
               }
-              return woken;
             }
 
             template<typename lock_type,typename predicate_type>
