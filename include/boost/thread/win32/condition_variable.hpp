@@ -239,7 +239,7 @@ namespace boost
                 }
                 lock.lock();
               }
-              catch (E& ex )
+              catch (...)
               {
                 throw;
               }
