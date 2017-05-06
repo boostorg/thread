@@ -171,8 +171,9 @@ namespace boost
 //            };
 
 
-            entry_ptr get_wait_entry(boost::lock_guard<boost::mutex> &)
+            entry_ptr get_wait_entry()
             {
+                boost::lock_guard<boost::mutex> lk(internal_mutex);
                 if(!wake_sem)
                 {
                     wake_sem=detail::win32::create_anonymous_semaphore(0,LONG_MAX);
@@ -222,6 +223,7 @@ namespace boost
             {
               //relocker<lock_type> locker(lock);
               //entry_manager entry(get_wait_entry(), internal_mutex);
+              entry_ptr const entry = get_wait_entry();
               try {
                 lock.unlock();
 
@@ -236,7 +238,6 @@ namespace boost
                 }
                 {
                   boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
-                  entry_ptr const entry = get_wait_entry(internal_lock);
                   entry->remove_waiter();
                 }
                 lock.lock();
