@@ -232,6 +232,11 @@ namespace boost
                 {
                     if(!entry->wait(abs_time))
                     {
+                        {
+                          boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
+                          entry->remove_waiter();
+                        }
+                        lock.lock();
                         return false;
                     }
                     woken=entry->woken();
