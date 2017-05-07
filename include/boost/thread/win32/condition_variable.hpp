@@ -210,7 +210,7 @@ namespace boost
                   if (entry) {
                     boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
                     entry->remove_waiter();
-                    entry = 0;
+                    entry.reset();
                   }
                 }
                 ~entry_manager() BOOST_NOEXCEPT_IF(false)
