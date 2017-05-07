@@ -196,12 +196,12 @@ namespace boost
 
             struct entry_manager
             {
-                entry_ptr const entry;
+                entry_ptr entry;
                 boost::mutex& internal_mutex;
 
 
                 BOOST_THREAD_NO_COPYABLE(entry_manager)
-                entry_manager(entry_ptr const& entry_, boost::mutex& mutex_):
+                entry_manager(entry_ptr & entry_, boost::mutex& mutex_):
                     entry(entry_), internal_mutex(mutex_)
                 {}
 
