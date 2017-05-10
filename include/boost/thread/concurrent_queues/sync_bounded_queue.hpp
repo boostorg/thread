@@ -127,7 +127,7 @@ namespace concurrent
     inline size_type size(lock_guard<mutex>& lk) const BOOST_NOEXCEPT
     {
       if (full(lk)) return capacity(lk);
-      return ((out_+capacity(lk)-in_) % capacity(lk));
+      return ((in_+capacity(lk)-out_) % capacity(lk));
     }
 
     inline void throw_if_closed(unique_lock<mutex>&);
