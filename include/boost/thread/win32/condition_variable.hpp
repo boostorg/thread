@@ -201,9 +201,15 @@ namespace boost
 
 
                 BOOST_THREAD_NO_COPYABLE(entry_manager)
-                entry_manager(entry_ptr & entry_, boost::mutex& mutex_):
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+                entry_manager(entry_ptr&& entry_, boost::mutex& mutex_):
+                    entry(static_cast< entry_ptr&& >(entry_)), internal_mutex(mutex_)
+                {}
+#else
+                entry_manager(entry_ptr const& entry_, boost::mutex& mutex_):
                     entry(entry_), internal_mutex(mutex_)
                 {}
+#endif
 
                 void remove_waiter()
                 {
