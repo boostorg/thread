@@ -40,7 +40,8 @@ namespace boost
                 m(0)
             {}
 
-            void activate(MutexType& m_)
+            // remove attribute when OS X clang is not confused by this
+            void activate(MutexType& m_) __attribute__((no_thread_safety_analysis))
             {
                 m_.unlock();
                 m=&m_;
