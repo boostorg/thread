@@ -10,8 +10,9 @@
 //  accompanying file LICENSE_1_0.txt or copy at
 //  http://www.boost.org/LICENSE_1_0.txt)
 
-#include <boost/thread/detail/config.hpp>
+#include <boost/config.hpp>
 #include <boost/predef/platform.h>
+#include <boost/thread/detail/config.hpp>
 #include <boost/throw_exception.hpp>
 #include <boost/assert.hpp>
 #include <boost/thread/exceptions.hpp>
@@ -72,6 +73,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
             using ::GetNativeSystemInfo;
             using ::GetTickCount64;
+            using ::CreateSemaphoreExW;
 #else
             using ::GetSystemInfo;
             using ::GetTickCount;
@@ -179,6 +181,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 __declspec(dllimport) void __stdcall GetNativeSystemInfo(_SYSTEM_INFO*);
                 __declspec(dllimport) ticks_type __stdcall GetTickCount64();
+                __declspec(dllimport) void* __stdcall CreateSemaphoreExW(_SECURITY_ATTRIBUTES*,long,long,wchar_t const*,unsigned long,unsigned long);
 #else
                 __declspec(dllimport) void __stdcall GetSystemInfo(_SYSTEM_INFO*);
                 __declspec(dllimport) unsigned long __stdcall GetTickCount();
@@ -232,6 +235,13 @@ namespace boost
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             extern "C"
             {
+                __declspec(dllimport) detail::farproc_t __stdcall GetProcAddress(void *, const char *);
+#if !defined(BOOST_NO_ANSI_APIS)
+                __declspec(dllimport) void * __stdcall GetModuleHandleA(const char *);
+#else
+                __declspec(dllimport) void * __stdcall GetModuleHandleW(const wchar_t *);
+#endif
+                __declspec(dllimport) unsigned long __stdcall GetTickCount();
 #ifdef _MSC_VER
                 long _InterlockedCompareExchange(long volatile *, long, long);
 #pragma intrinsic(_InterlockedCompareExchange)
@@ -304,7 +314,7 @@ namespace boost
 #if BOOST_PLAT_WINDOWS_RUNTIME
                 gettickcount64impl = &GetTickCount64;
 #else
-                farproc_t addr=GetProcAddress(
+                detail::farproc_t addr=GetProcAddress(
 #if !defined(BOOST_NO_ANSI_APIS)
                     GetModuleHandleA("KERNEL32.DLL"),
 #else
@@ -366,7 +376,7 @@ namespace boost
 
             inline handle create_anonymous_semaphore_nothrow(long initial_count,long max_count)
             {
-#if !defined(BOOST_NO_ANSI_APIS)
+#if !defined(BOOST_NO_ANSI_APIS) && !defined(BOOST_PLAT_WINDOWS_RUNTIME)
                 handle const res=win32::CreateSemaphoreA(0,initial_count,max_count,0);
 #else
 #if BOOST_USE_WINAPI_VERSION < BOOST_WINAPI_VERSION_VISTA
