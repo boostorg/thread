@@ -26,7 +26,7 @@
 
 namespace boost
 {
-    class shared_mutex
+    class shared_timed_mutex
     {
     private:
         class state_data
@@ -170,13 +170,13 @@ namespace boost
 
     public:
 
-        BOOST_THREAD_NO_COPYABLE(shared_mutex)
+        BOOST_THREAD_NO_COPYABLE(shared_timed_mutex)
 
-        shared_mutex()
+        shared_timed_mutex()
         {
         }
 
-        ~shared_mutex()
+        ~shared_timed_mutex()
         {
         }
 
@@ -708,7 +708,8 @@ namespace boost
 #endif
     };
 
-    typedef shared_mutex upgrade_mutex;
+    typedef shared_timed_mutex shared_mutex;
+    typedef shared_timed_mutex upgrade_mutex;
 }
 
 #include <boost/config/abi_suffix.hpp>
