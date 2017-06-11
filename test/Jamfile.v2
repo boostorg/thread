@@ -964,10 +964,11 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_11256.cpp ] 
           #[ thread-run test_11256.cpp ]
           #[ thread-run test_11499.cpp ]
-          [ thread-run test_11611.cpp ]
+          #[ thread-run test_11611.cpp ]
           #[ thread-run test_11818.cpp ]
           #[ thread-run test_11796.cpp ]
-          [ thread-run test_12293.cpp ]
+          #[ thread-run test_12293.cpp ]
+          [ thread-run test_12949.cpp ]
           
     ;
 

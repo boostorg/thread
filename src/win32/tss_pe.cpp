@@ -10,7 +10,7 @@
 #include <boost/detail/winapi/config.hpp>
 #include <boost/thread/detail/config.hpp>
 
-#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB) 
+#if defined(BOOST_HAS_WINTHREADS) && defined(BOOST_THREAD_BUILD_LIB)
 
 #if (defined(__MINGW32__) && !defined(_WIN64)) || defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR)
 
@@ -39,7 +39,7 @@ namespace {
     }
 }
 
-#if defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR) || (__MINGW32_MAJOR_VERSION >3) ||             \
+#if defined(__MINGW64__) || (__MINGW64_VERSION_MAJOR) || (__MINGW32__) || (__MINGW32_MAJOR_VERSION >3) ||   \
     ((__MINGW32_MAJOR_VERSION==3) && (__MINGW32_MINOR_VERSION>=18))
 extern "C"
 {
@@ -112,15 +112,9 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
 
     //Definitions required by implementation
 
-    #if (_MSC_VER < 1300) || (_MSC_VER > 2000) // 1300 == VC++ 7.0, 1900 == VC++ 14.0
-        typedef void (__cdecl *_PVFV)();
-        #define INIRETSUCCESS
-        #define PVAPI void __cdecl
-    #else
-        typedef int (__cdecl *_PVFV)();
-        #define INIRETSUCCESS 0
-        #define PVAPI int __cdecl
-    #endif
+    typedef int (__cdecl *_PVFV)();
+    #define INIRETSUCCESS 0
+    #define PVAPI int __cdecl
 
     typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
 

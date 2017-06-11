@@ -11,6 +11,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/once.hpp>
+#include <iostream>
 
 #define LOG \
   if (false) {} else std::cout << std::endl << __FILE__ << "[" << __LINE__ << "]"

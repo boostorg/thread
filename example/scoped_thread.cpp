@@ -63,6 +63,7 @@ int main()
     else
       do_something_in_current_thread();
   }
+#if 0
   {
     int some_local_state=0;
     boost::thread t(( func(some_local_state) ));
@@ -72,6 +73,7 @@ int main()
 
     do_something_in_current_thread();
   }
+#endif
   {
     boost::scoped_thread<> g( &f, 1, 2 );
     do_something_in_current_thread();
