@@ -35,6 +35,13 @@
 
 #include <boost/config/abi_prefix.hpp>
 
+// Some systems reportedly don't have _SC_PAGESIZE, but do have _SC_PAGE_SIZE
+// instead. The following makes sure that the corresponding sysconf() call
+// works anyway.
+#ifndef _SC_PAGESIZE
+# define _SC_PAGESIZE _SC_PAGE_SIZE 
+#endif
+
 namespace boost
 {
     class thread_attributes {
@@ -50,7 +57,7 @@ namespace boost
         // stack
         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {
           if (size==0) return;
-          std::size_t page_size = getpagesize();
+          std::size_t page_size = ::sysconf( _SC_PAGESIZE);
 #ifdef PTHREAD_STACK_MIN
           if (size<PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;
 #endif
