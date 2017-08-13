@@ -50,7 +50,11 @@ namespace boost
         // stack
         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {
           if (size==0) return;
+#ifdef BOOST_THREAD_USES_GETPAGESIZE
           std::size_t page_size = getpagesize();
+#else
+          std::size_t page_size = ::sysconf( _SC_PAGESIZE);
+#endif
 #ifdef PTHREAD_STACK_MIN
           if (size<PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;
 #endif
