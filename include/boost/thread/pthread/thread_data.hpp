@@ -244,7 +244,7 @@ namespace boost
         namespace hidden
         {
           void BOOST_THREAD_DECL sleep_for(const timespec& ts);
-          void BOOST_THREAD_DECL sleep_until(const timespec& ts);
+          void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts);
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -263,7 +263,7 @@ namespace boost
           namespace hidden
           {
             void BOOST_THREAD_DECL sleep_for(const timespec& ts);
-            void BOOST_THREAD_DECL sleep_until(const timespec& ts);
+            void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts);
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
@@ -288,7 +288,7 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          return boost::this_thread::hidden::sleep_until(boost::detail::to_timespec(abs_time));
+          return boost::this_thread::hidden::sleep_until_realtime(boost::detail::to_timespec(abs_time));
         }
 
         template<typename TimeDuration>

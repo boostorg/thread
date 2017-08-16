@@ -157,7 +157,7 @@ namespace boost
     }
 namespace thread_detail {
 #ifdef BOOST_THREAD_USES_CHRONO
-#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC) && defined(BOOST_THREAD_USEFIXES_TIMESPEC)
+#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
         typedef chrono::steady_clock internal_clock_t;
 #else
         typedef chrono::system_clock internal_clock_t;
