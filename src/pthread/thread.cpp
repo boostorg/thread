@@ -459,7 +459,7 @@ namespace boost
 
           void BOOST_THREAD_DECL sleep_until(const timespec& ts)
           {
-                timespec now = boost::detail::timespec_now();
+                timespec now = boost::detail::timespec_now_realtime();
                 if (boost::detail::timespec_gt(ts, now))
                 {
                   for (int foo=0; foo < 5; ++foo)
@@ -479,7 +479,7 @@ namespace boost
                     condition_variable cond;
                     cond.do_wait_until(lock, ts);
     #   endif
-                    timespec now2 = boost::detail::timespec_now();
+                    timespec now2 = boost::detail::timespec_now_realtime();
                     if (boost::detail::timespec_ge(now2, ts))
                     {
                       return;
