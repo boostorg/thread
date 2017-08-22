@@ -299,7 +299,7 @@ namespace thread_detail {
         template <class F>
         explicit thread(F f
         , typename disable_if_c<
-        boost::thread_detail::is_rv<F>::value // todo ass a thread_detail::is_rv
+        boost::thread_detail::is_rv<F>::value // todo as a thread_detail::is_rv
         //boost::thread_detail::is_convertible<F&,BOOST_THREAD_RV_REF(F)>::value
             //|| is_same<typename decay<F>::type, thread>::value
            , dummy* >::type=0
