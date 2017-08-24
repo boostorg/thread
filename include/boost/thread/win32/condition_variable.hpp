@@ -211,7 +211,7 @@ namespace boost
                 {}
 #endif
 
-                void remove_waiter()
+                void remove_waiter_and_reset()
                 {
                   if (entry) {
                     boost::lock_guard<boost::mutex> internal_lock(internal_mutex);
@@ -250,7 +250,7 @@ namespace boost
                   woken=entry->woken();
               }
               // do it here to avoid throwing on the destructor
-              entry->remove_waiter();
+              entry.remove_waiter_and_reset();
               locker.lock();
               return woken;
             }
