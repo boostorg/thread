@@ -221,7 +221,7 @@ namespace boost
                 }
                 ~entry_manager() BOOST_NOEXCEPT_IF(false)
                 {
-                    remove_waiter();
+                  remove_waiter_and_reset();
                 }
 
                 list_entry* operator->()
