@@ -248,6 +248,8 @@ namespace boost
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        void sleep_for(const chrono::duration<Rep, Period>& d);
 #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
         inline
@@ -267,6 +269,8 @@ namespace boost
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
+          template <class Rep, class Period>
+          void sleep_for(const chrono::duration<Rep, Period>& d);
     #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
           inline
