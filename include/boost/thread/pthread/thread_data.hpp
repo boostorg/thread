@@ -50,7 +50,11 @@ namespace boost
         // stack
         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {
           if (size==0) return;
+#ifdef BOOST_THREAD_USES_GETPAGESIZE
           std::size_t page_size = getpagesize();
+#else
+          std::size_t page_size = ::sysconf( _SC_PAGESIZE);
+#endif
 #ifdef PTHREAD_STACK_MIN
           if (size<PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;
 #endif
@@ -240,10 +244,12 @@ namespace boost
         namespace hidden
         {
           void BOOST_THREAD_DECL sleep_for(const timespec& ts);
-          void BOOST_THREAD_DECL sleep_until(const timespec& ts);
+          void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts);
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
+        template <class Rep, class Period>
+        void sleep_for(const chrono::duration<Rep, Period>& d);
 #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
         inline
@@ -259,10 +265,12 @@ namespace boost
           namespace hidden
           {
             void BOOST_THREAD_DECL sleep_for(const timespec& ts);
-            void BOOST_THREAD_DECL sleep_until(const timespec& ts);
+            void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts);
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
+          template <class Rep, class Period>
+          void sleep_for(const chrono::duration<Rep, Period>& d);
     #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
           inline
@@ -284,7 +292,7 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          return boost::this_thread::hidden::sleep_until(boost::detail::to_timespec(abs_time));
+          return boost::this_thread::hidden::sleep_until_realtime(boost::detail::to_timespec(abs_time));
         }
 
         template<typename TimeDuration>

@@ -1,12 +1,55 @@
 [/
   (C) Copyright 2007-11 Anthony Williams.
-  (C) Copyright 2011-16 Vicente J. Botet Escriba.
+  (C) Copyright 2011-17 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
 [section:changes History]
+
+[heading Version 4.8.0 - boost 1.66]
+
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+
+* [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
+
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
+
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread master regression test] to see the last regression test snapshot.
+
+[*Fixed Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/12949 #12949] using sleep_for in a thread context without including boost/thread/thread.hpp yields incorrect behaviour when BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC is defined
+* [@http://svn.boost.org/trac/boost/ticket/13019 #13019] ABI compatibility for BOOST_THREAD_PROVIDES_INTERRUPTIONS incomplete
+* [@http://svn.boost.org/trac/boost/ticket/13163 #13163] boost::detail::heap_new does not have a variadic variant
+
+* [@https://github.com/boostorg/thread/issues/130 #130] windows: Bug in boost::condition_variable on Windows
+
+[heading Version 4.7.4 - boost 1.65]
+
+[*Fixed Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/6787 #6787] boost::thread::sleep() hangs if system time is rolled back
+* [@http://svn.boost.org/trac/boost/ticket/12519 #12519] boost::thread::try_join_for does not return after timeout
+* [@http://svn.boost.org/trac/boost/ticket/12874 #12874] future<> extension constructor must be under BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
+* [@http://svn.boost.org/trac/boost/ticket/12888 #12888] Linking with boost thread does not work on mingw/gcc 4.4
+* [@http://svn.boost.org/trac/boost/ticket/12958 #12958] sync_bounded_queue::wait_pull_front( lve ) might throw
+* [@http://svn.boost.org/trac/boost/ticket/13077 #13077] Linking to static 64bit libboost_thread fails DLL initialization
+* [@http://svn.boost.org/trac/boost/ticket/13155 #13155] log doesn't build on a system with pthreads
+
+* [@https://github.com/boostorg/thread/issues/121 #121] on_tls_prepare is broken under VS2017
+
+[heading Version 4.7.3 - boost 1.64]
+
+[*Fixed Bugs:]
+
+* [@https://github.com/boostorg/thread/issues/113 #113] Add a Thread template on all the scoped thread and thread guard classes
+* [@https://github.com/boostorg/thread/issues/117 #117] loop_executor should block on it's work_queue instead of polling
+* [@https://github.com/boostorg/thread/issues/119 #119] basic_condition_variable::relocker::~relocker can throw an exception
 
 [heading Version 4.7.2 - boost 1.63]
 
@@ -27,7 +70,7 @@ Please define BOOST_THREAD_PATCH to apply the patch that could unfortunately res
 
 Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
 
-Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread trunk regression test] to see the last regression test snapshot.
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread master regression test] to see the last regression test snapshot.
 
 
 [*Fixed Bugs:]

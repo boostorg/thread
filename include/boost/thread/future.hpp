@@ -299,7 +299,7 @@ namespace boost
                 }
                 do_continuation(lock);
             }
-            void make_ready()
+            void notify_deferred()
             {
               boost::unique_lock<boost::mutex> lock(this->mutex);
               mark_finished_internal(lock);
