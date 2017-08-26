@@ -27,6 +27,8 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 * [@http://svn.boost.org/trac/boost/ticket/13019 #13019] ABI compatibility for BOOST_THREAD_PROVIDES_INTERRUPTIONS incomplete
 * [@http://svn.boost.org/trac/boost/ticket/13163 #13163] boost::detail::heap_new does not have a variadic variant
 
+* [@https://github.com/boostorg/thread/issues/130 #130] windows: Bug in boost::condition_variable on Windows
+
 [heading Version 4.7.4 - boost 1.65]
 
 [*Fixed Bugs:]
