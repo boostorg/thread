@@ -57,7 +57,7 @@ namespace boost
         for (async_states_t::iterator i = async_states_.begin(), e = async_states_.end();
                 i != e; ++i)
         {
-            (*i)->make_ready();
+            (*i)->notify_deferred();
         }
     }
   }
