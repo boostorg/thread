@@ -31,6 +31,7 @@ namespace executors
     ~scheduling_adpator()
     {
       this->close();
+      _scheduler.interrupt();
       _scheduler.join();
     }
 

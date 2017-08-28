@@ -231,6 +231,7 @@ namespace boost
       ~scheduler()
       {
         this->close();
+        thr.interrupt();
         thr.join();
       }
       template <class Ex>
