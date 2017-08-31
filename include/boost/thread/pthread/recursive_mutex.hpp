@@ -43,6 +43,12 @@
 #define BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
 #endif
 
+// CLOCK_MONOTONIC only works with pthread_cond_timedwait(), not with pthread_mutex_timedlock()
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#undef BOOST_PTHREAD_HAS_TIMEDLOCK
+#undef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#endif
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -193,6 +199,15 @@ namespace boost
         pthread_t owner;
         unsigned count;
 #endif
+
+#ifdef BOOST_THREAD_USES_CHRONO
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+        typedef chrono::steady_clock internal_clock_t;
+#else
+        typedef chrono::system_clock internal_clock_t;
+#endif
+#endif
+
     public:
         BOOST_THREAD_NO_COPYABLE(recursive_timed_mutex)
         recursive_timed_mutex()
@@ -218,13 +233,24 @@ namespace boost
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
             }
             BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
-#else
+#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
             }
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            pthread_condattr_t attr;
+            int res2=pthread_condattr_init(&attr);
+            if (!res2)
+            {
+                pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+                res2=pthread_cond_init(&cond,&attr);
+                pthread_condattr_destroy(&attr);
+            }
+#else
             int const res2=pthread_cond_init(&cond,NULL);
+#endif
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&m));
@@ -232,7 +258,7 @@ namespace boost
             }
             is_locked=false;
             count=0;
-#endif
+#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
         }
         ~recursive_timed_mutex()
         {
@@ -246,7 +272,7 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-            return timed_lock(get_system_time()+relative_time);
+            return do_try_lock_until(detail::timespec_plus_internal_clock(relative_time));
         }
 #endif
 
@@ -277,7 +303,7 @@ namespace boost
 
     public:
 
-#else
+#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
         void lock()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
@@ -344,44 +370,34 @@ namespace boost
         }
     public:
 
-#endif
+#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
 
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            struct timespec const ts=detail::to_timespec(abs_time);
-            return do_try_lock_until(ts);
+            return do_try_lock_until(detail::timespec_to_internal_clock(abs_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(chrono::steady_clock::now() + rel_time);
+          return try_lock_until(internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
+          internal_clock_t::time_point s_now = internal_clock_t::now();
           typename Clock::time_point  c_now = Clock::now();
           return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
         }
         template <class Duration>
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        bool try_lock_until(const chrono::time_point<internal_clock_t, Duration>& t)
         {
-          using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
-          return try_lock_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+          return do_try_lock_until(boost::detail::to_timespec(t.time_since_epoch()));
         }
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
-        {
-          //using namespace chrono;
-          chrono::nanoseconds d = tp.time_since_epoch();
-          timespec ts = boost::detail::to_timespec(d);
-          return do_try_lock_until(ts);
-        }
-#endif
+#endif // defined BOOST_THREAD_USES_CHRONO
 
 #define BOOST_THREAD_DEFINES_RECURSIVE_TIMED_MUTEX_NATIVE_HANDLE
         typedef pthread_mutex_t* native_handle_type;

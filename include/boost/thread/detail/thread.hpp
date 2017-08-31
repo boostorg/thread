@@ -157,7 +157,7 @@ namespace boost
     }
 namespace thread_detail {
 #ifdef BOOST_THREAD_USES_CHRONO
-#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC) || defined(BOOST_THREAD_PLATFORM_WIN32)
         typedef chrono::steady_clock internal_clock_t;
 #else
         typedef chrono::system_clock internal_clock_t;
@@ -487,7 +487,7 @@ namespace thread_detail {
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_join_until(chrono::steady_clock::now() + rel_time);
+          return try_join_until(thread_detail::internal_clock_t::now() + rel_time);
         }
 #endif
 
@@ -495,21 +495,10 @@ namespace thread_detail {
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          bool joined= false;
-          do {
-            thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-            typename Clock::duration   d = ceil<nanoseconds>(t-Clock::now());
-            if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
-            joined = try_join_until(s_now + d);
-          } while (! joined);
-          return true;
-        }
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
-        {
-          using namespace chrono;
-          typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
-          return try_join_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+          thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
+          typename Clock::duration   d = ceil<nanoseconds>(t-Clock::now());
+          if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
+          return try_join_until(s_now + d);
         }
 #endif
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
@@ -523,9 +512,10 @@ namespace thread_detail {
         //}
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& tp)
         {
-          chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-chrono::system_clock::now());
+          chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-thread_detail::internal_clock_t::now());
           return do_try_join_until(rel_time.count());
         }
 #endif
@@ -539,17 +529,14 @@ namespace thread_detail {
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
-          struct timespec const ts=detail::to_timespec(abs_time);
-          return do_try_join_until(ts);
+          return do_try_join_until(detail::timespec_to_internal_clock(abs_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
-        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& tp)
         {
-          using namespace chrono;
-          nanoseconds d = tp.time_since_epoch();
-          timespec ts = boost::detail::to_timespec(d);
-          return do_try_join_until(ts);
+          return do_try_join_until(boost::detail::to_timespec(tp.time_since_epoch()));
         }
 #endif
 
@@ -560,7 +547,7 @@ namespace thread_detail {
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
-            return timed_join(get_system_time()+rel_time);
+            return do_try_join_until(detail::timespec_plus_internal_clock(rel_time));
         }
 #endif
         void detach();

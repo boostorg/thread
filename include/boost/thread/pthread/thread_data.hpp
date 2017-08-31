@@ -292,13 +292,13 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          return boost::this_thread::hidden::sleep_until_realtime(boost::detail::to_timespec(abs_time));
+          boost::this_thread::hidden::sleep_until_realtime(boost::detail::to_timespec(abs_time));
         }
 
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
-            this_thread::sleep(get_system_time()+rel_time);
+          boost::this_thread::hidden::sleep_for(boost::detail::to_timespec(rel_time));
         }
 #endif // BOOST_THREAD_USES_DATETIME
     } // this_thread

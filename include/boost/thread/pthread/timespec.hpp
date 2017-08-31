@@ -18,6 +18,7 @@
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/duration.hpp>
+#include <boost/chrono/ceil.hpp>
 #endif
 
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -34,19 +35,23 @@ namespace boost
   namespace detail
   {
 #if defined BOOST_THREAD_USES_DATETIME
-    inline struct timespec to_timespec(boost::system_time const& abs_time)
+    inline struct timespec to_timespec(boost::posix_time::time_duration const& rel_time)
     {
       struct timespec timeout = { 0,0};
-      boost::posix_time::time_duration const time_since_epoch=abs_time-boost::posix_time::from_time_t(0);
-
-      timeout.tv_sec=time_since_epoch.total_seconds();
-      timeout.tv_nsec=(long)(time_since_epoch.fractional_seconds()*(1000000000l/time_since_epoch.ticks_per_second()));
+      timeout.tv_sec=rel_time.total_seconds();
+      timeout.tv_nsec=(long)(rel_time.fractional_seconds()*(1000000000l/rel_time.ticks_per_second()));
       return timeout;
+    }
+    inline struct timespec to_timespec(boost::system_time const& abs_time)
+    {
+      return to_timespec(abs_time-boost::posix_time::from_time_t(0));
     }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-    inline timespec to_timespec(chrono::nanoseconds const& ns)
+    template <class Rep, class Period>
+    timespec to_timespec(chrono::duration<Rep, Period> const& rel_time)
     {
+      chrono::nanoseconds ns = chrono::ceil<chrono::nanoseconds>(rel_time);
       struct timespec ts;
       ts.tv_sec = static_cast<long>(chrono::duration_cast<chrono::seconds>(ns).count());
       ts.tv_nsec = static_cast<long>((ns - chrono::duration_cast<chrono::seconds>(ns)).count());
@@ -129,6 +134,38 @@ namespace boost
     {
       return to_nanoseconds_int_max(lhs) >= to_nanoseconds_int_max(rhs);
     }
+
+    inline timespec timespec_to_internal_clock(timespec const& abs_time)
+    {
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+      struct timespec const m_now = boost::detail::timespec_now_monotonic();
+      struct timespec const r_now = boost::detail::timespec_now_realtime();
+      struct timespec const diff = boost::detail::timespec_minus(abs_time, r_now);
+      return boost::detail::timespec_plus(m_now, diff);
+#else
+      return abs_time;
+#endif
+    }
+    inline timespec timespec_plus_internal_clock(timespec const& rel_time)
+    {
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+      struct timespec const now = boost::detail::timespec_now_monotonic();
+#else
+      struct timespec const now = boost::detail::timespec_now_realtime();
+#endif
+      return boost::detail::timespec_plus(now, rel_time);
+    }
+
+#if defined BOOST_THREAD_USES_DATETIME
+    inline timespec timespec_to_internal_clock(boost::system_time const& abs_time)
+    {
+      return timespec_to_internal_clock(to_timespec(abs_time));
+    }
+    inline timespec timespec_plus_internal_clock(boost::posix_time::time_duration const& rel_time)
+    {
+      return timespec_plus_internal_clock(to_timespec(rel_time));
+    }
+#endif
 
   }
 }

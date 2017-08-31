@@ -438,21 +438,22 @@ namespace boost
                 if (boost::detail::timespec_ge(ts, boost::detail::timespec_zero()))
                 {
 
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
                   BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
     #     else
                   BOOST_VERIFY(!pthread_delay_np(&ts));
     #     endif
-    #   elif defined(BOOST_HAS_NANOSLEEP)
+    #   elif defined(BOOST_HAS_NANOSLEEP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
                   //  nanosleep takes a timespec that is an offset, not
                   //  an absolute time.
                   nanosleep(&ts, 0);
     #   else
+                  const timespec ts2 = boost::detail::timespec_plus_internal_clock(ts);
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
-                  cond.do_wait_for(lock, ts);
+                  while(cond.do_wait_until(lock, ts2)) {}
     #   endif
                 }
           }
@@ -462,6 +463,7 @@ namespace boost
                 timespec now = boost::detail::timespec_now_realtime();
                 if (boost::detail::timespec_gt(ts, now))
                 {
+    # if (defined(BOOST_HAS_PTHREAD_DELAY_NP) || defined(BOOST_HAS_NANOSLEEP)) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
                   for (int foo=0; foo < 5; ++foo)
                   {
 
@@ -473,11 +475,6 @@ namespace boost
                     //  an absolute time.
                     timespec d = boost::detail::timespec_minus(ts, now);
                     nanosleep(&d, 0);
-    #   else
-                    mutex mx;
-                    unique_lock<mutex> lock(mx);
-                    condition_variable cond;
-                    cond.do_wait_until(lock, ts);
     #   endif
                     timespec now2 = boost::detail::timespec_now_realtime();
                     if (boost::detail::timespec_ge(now2, ts))
@@ -485,6 +482,13 @@ namespace boost
                       return;
                     }
                   }
+    # else
+                  const timespec ts2 = boost::detail::timespec_to_internal_clock(ts);
+                  mutex mx;
+                  unique_lock<mutex> lock(mx);
+                  condition_variable cond;
+                  while(cond.do_wait_until(lock, ts2)) {}
+    # endif
                 }
           }
         }
@@ -497,8 +501,9 @@ namespace boost
 
             if(thread_info)
             {
+              const timespec ts2 = boost::detail::timespec_plus_internal_clock(ts);
               unique_lock<mutex> lk(thread_info->sleep_mutex);
-              while( thread_info->sleep_condition.do_wait_for(lk,ts)) {}
+              while(thread_info->sleep_condition.do_wait_until(lk,ts2)) {}
             }
             else
             {
@@ -512,8 +517,9 @@ namespace boost
 
             if(thread_info)
             {
+              const timespec ts2 = boost::detail::timespec_to_internal_clock(ts);
               unique_lock<mutex> lk(thread_info->sleep_mutex);
-              while(thread_info->sleep_condition.do_wait_until(lk,ts)) {}
+              while(thread_info->sleep_condition.do_wait_until(lk,ts2)) {}
             }
             else
             {
