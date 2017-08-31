@@ -45,7 +45,7 @@ namespace boost
     {
         namespace win32
         {
-            typedef HANDLE handle;
+            typedef ::boost::detail::winapi::HANDLE_ handle;
             typedef ::boost::detail::winapi::SYSTEM_INFO_ system_info;
             typedef unsigned __int64 ticks_type;
             typedef ::boost::detail::winapi::FARPROC_ farproc_t;
