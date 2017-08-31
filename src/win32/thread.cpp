@@ -508,7 +508,7 @@ namespace boost
     bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
-        return local_thread_info.get() && (detail::win32::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
+        return local_thread_info.get() && (detail::winapi::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
     }
 
 #endif
@@ -738,7 +738,7 @@ namespace boost
 
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -748,7 +748,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                         else if(notified_index==interruption_index)
                         {
-                            detail::win32::ResetEvent(detail::get_current_thread_data()->interruption_handle);
+                            detail::winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
                             throw thread_interrupted();
                         }
 #endif
@@ -823,7 +823,7 @@ namespace boost
 
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::win32::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -860,7 +860,7 @@ namespace boost
                 return current_thread_data->id;
             }
 #endif
-            return detail::win32::GetCurrentThreadId();
+            return detail::winapi::GetCurrentThreadId();
 #else
             return thread::id(get_or_make_current_thread_data());
 #endif
@@ -871,7 +871,7 @@ namespace boost
         {
             if(interruption_enabled() && interruption_requested())
             {
-                detail::win32::ResetEvent(detail::get_current_thread_data()->interruption_handle);
+                detail::winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
                 throw thread_interrupted();
             }
         }
@@ -883,7 +883,7 @@ namespace boost
 
         bool interruption_requested() BOOST_NOEXCEPT
         {
-            return detail::get_current_thread_data() && (detail::win32::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
+            return detail::get_current_thread_data() && (detail::winapi::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
         }
 #endif
 
