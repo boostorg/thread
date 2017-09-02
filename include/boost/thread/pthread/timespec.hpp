@@ -57,6 +57,11 @@ namespace boost
       ts.tv_nsec = static_cast<long>((ns - chrono::duration_cast<chrono::seconds>(ns)).count());
       return ts;
     }
+    template <class Clock, class Duration>
+    timespec to_timespec(chrono::time_point<Clock, Duration> const& t)
+    {
+      return to_timespec(t.time_since_epoch());
+    }
 
 #endif
 
@@ -135,7 +140,7 @@ namespace boost
       return to_nanoseconds_int_max(lhs) >= to_nanoseconds_int_max(rhs);
     }
 
-    inline timespec timespec_to_internal_clock(timespec const& abs_time)
+    inline timespec real_to_abs_internal_timespec(timespec const& abs_time)
     {
 #ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
       struct timespec const m_now = boost::detail::timespec_now_monotonic();
@@ -146,7 +151,8 @@ namespace boost
       return abs_time;
 #endif
     }
-    inline timespec timespec_plus_internal_clock(timespec const& rel_time)
+
+    inline timespec duration_to_abs_internal_timespec(timespec const& rel_time)
     {
 #ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
       struct timespec const now = boost::detail::timespec_now_monotonic();
@@ -157,15 +163,63 @@ namespace boost
     }
 
 #if defined BOOST_THREAD_USES_DATETIME
-    inline timespec timespec_to_internal_clock(boost::system_time const& abs_time)
+    inline timespec to_abs_internal_timespec(boost::system_time const& abs_time)
     {
-      return timespec_to_internal_clock(to_timespec(abs_time));
+      return real_to_abs_internal_timespec(to_timespec(abs_time));
     }
-    inline timespec timespec_plus_internal_clock(boost::posix_time::time_duration const& rel_time)
+
+    inline timespec to_abs_internal_timespec(boost::posix_time::time_duration const& rel_time)
     {
-      return timespec_plus_internal_clock(to_timespec(rel_time));
+      return duration_to_abs_internal_timespec(to_timespec(rel_time));
     }
 #endif
+
+#if defined BOOST_THREAD_USES_CHRONO
+#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+    typedef chrono::steady_clock internal_clock_t;
+#else
+    typedef chrono::system_clock internal_clock_t;
+#endif
+
+    template <class Duration>
+    timespec to_abs_internal_timespec(chrono::time_point<internal_clock_t, Duration> const& t)
+    {
+      return to_timespec(t);
+    }
+
+    template <class Clock, class Duration>
+    timespec to_abs_internal_timespec(chrono::time_point<Clock, Duration> const& t)
+    {
+      internal_clock_t::time_point s_now = internal_clock_t::now();
+      typename Clock::time_point c_now = Clock::now();
+      return to_timespec(s_now + chrono::ceil<chrono::nanoseconds>(t - c_now));
+    }
+
+    template <class Rep, class Period>
+    timespec to_abs_internal_timespec(chrono::duration<Rep, Period> const& d)
+    {
+      return to_timespec(internal_clock_t::now() + d);
+    }
+#endif
+
+    // TODO: This needs to be moved to some place more appropriate.
+    inline int cond_init(pthread_cond_t& cond)
+    {
+#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+      pthread_condattr_t attr;
+      int res = pthread_condattr_init(&attr);
+      if (res)
+      {
+        return res;
+      }
+      pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+      res=pthread_cond_init(&cond,&attr);
+      pthread_condattr_destroy(&attr);
+      return res;
+#else
+      return pthread_cond_init(&cond,NULL);
+#endif
+    }
 
   }
 }

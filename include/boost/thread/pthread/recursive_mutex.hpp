@@ -43,13 +43,12 @@
 #define BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
 #endif
 
-// CLOCK_MONOTONIC only works with pthread_cond_timedwait(), not with pthread_mutex_timedlock()
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-#undef BOOST_PTHREAD_HAS_TIMEDLOCK
-#undef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
-#endif
-
 #include <boost/config/abi_prefix.hpp>
+
+// CLOCK_MONOTONIC only works with pthread_cond_timedwait(), not with pthread_mutex_timedlock()
+#if defined(BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+#define BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
+#endif
 
 namespace boost
 {
@@ -193,26 +192,17 @@ namespace boost
     {
     private:
         pthread_mutex_t m;
-#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
         pthread_cond_t cond;
         bool is_locked;
         pthread_t owner;
         unsigned count;
 #endif
-
-#ifdef BOOST_THREAD_USES_CHRONO
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-        typedef chrono::steady_clock internal_clock_t;
-#else
-        typedef chrono::system_clock internal_clock_t;
-#endif
-#endif
-
     public:
         BOOST_THREAD_NO_COPYABLE(recursive_timed_mutex)
         recursive_timed_mutex()
         {
-#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
             pthread_mutexattr_t attr;
 
             int const init_attr_res=pthread_mutexattr_init(&attr);
@@ -233,37 +223,26 @@ namespace boost
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
             }
             BOOST_VERIFY(!pthread_mutexattr_destroy(&attr));
-#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
             int const res=pthread_mutex_init(&m,NULL);
             if(res)
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
             }
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            pthread_condattr_t attr;
-            int res2=pthread_condattr_init(&attr);
-            if (!res2)
-            {
-                pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-                res2=pthread_cond_init(&cond,&attr);
-                pthread_condattr_destroy(&attr);
-            }
-#else
-            int const res2=pthread_cond_init(&cond,NULL);
-#endif
+            int const res2=boost::detail::cond_init(cond);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&m));
-                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_timed_mutex constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_timed_mutex constructor failed in boost::detail::cond_init"));
             }
             is_locked=false;
             count=0;
-#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
         }
         ~recursive_timed_mutex()
         {
             BOOST_VERIFY(!pthread_mutex_destroy(&m));
-#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#ifndef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
             BOOST_VERIFY(!pthread_cond_destroy(&cond));
 #endif
         }
@@ -272,11 +251,11 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-            return do_try_lock_until(detail::timespec_plus_internal_clock(relative_time));
+            return do_try_lock_until(boost::detail::to_abs_internal_timespec(relative_time));
         }
 #endif
 
-#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#ifdef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
         void lock()
         {
             BOOST_VERIFY(!pthread_mutex_lock(&m));
@@ -303,7 +282,7 @@ namespace boost
 
     public:
 
-#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#else // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
         void lock()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
@@ -370,32 +349,24 @@ namespace boost
         }
     public:
 
-#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
+#endif // !defined BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
 
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            return do_try_lock_until(detail::timespec_to_internal_clock(abs_time));
+            return do_try_lock_until(boost::detail::to_abs_internal_timespec(abs_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(internal_clock_t::now() + rel_time);
+          return do_try_lock_until(boost::detail::to_abs_internal_timespec(rel_time));
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
-          internal_clock_t::time_point s_now = internal_clock_t::now();
-          typename Clock::time_point  c_now = Clock::now();
-          return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
-        }
-        template <class Duration>
-        bool try_lock_until(const chrono::time_point<internal_clock_t, Duration>& t)
-        {
-          return do_try_lock_until(boost::detail::to_timespec(t.time_since_epoch()));
+          return do_try_lock_until(boost::detail::to_abs_internal_timespec(t));
         }
 #endif // defined BOOST_THREAD_USES_CHRONO
 
@@ -414,6 +385,8 @@ namespace boost
     };
 
 }
+
+#undef BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK_LOCAL
 
 #include <boost/config/abi_suffix.hpp>
 

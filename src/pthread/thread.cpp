@@ -449,7 +449,7 @@ namespace boost
                   //  an absolute time.
                   nanosleep(&ts, 0);
     #   else
-                  const timespec ts2 = boost::detail::timespec_plus_internal_clock(ts);
+                  const timespec ts2 = boost::detail::duration_to_abs_internal_timespec(ts);
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
@@ -483,7 +483,7 @@ namespace boost
                     }
                   }
     # else
-                  const timespec ts2 = boost::detail::timespec_to_internal_clock(ts);
+                  const timespec ts2 = boost::detail::real_to_abs_internal_timespec(ts);
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
@@ -501,7 +501,7 @@ namespace boost
 
             if(thread_info)
             {
-              const timespec ts2 = boost::detail::timespec_plus_internal_clock(ts);
+              const timespec ts2 = boost::detail::duration_to_abs_internal_timespec(ts);
               unique_lock<mutex> lk(thread_info->sleep_mutex);
               while(thread_info->sleep_condition.do_wait_until(lk,ts2)) {}
             }
@@ -517,7 +517,7 @@ namespace boost
 
             if(thread_info)
             {
-              const timespec ts2 = boost::detail::timespec_to_internal_clock(ts);
+              const timespec ts2 = boost::detail::real_to_abs_internal_timespec(ts);
               unique_lock<mutex> lk(thread_info->sleep_mutex);
               while(thread_info->sleep_condition.do_wait_until(lk,ts2)) {}
             }

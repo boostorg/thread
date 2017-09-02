@@ -29,27 +29,6 @@
 
 namespace boost
 {
-  namespace detail {
-    inline int monotonic_pthread_cond_init(pthread_cond_t& cond) {
-
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            pthread_condattr_t attr;
-            int res = pthread_condattr_init(&attr);
-            if (res)
-            {
-              return res;
-            }
-            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-            res=pthread_cond_init(&cond,&attr);
-            pthread_condattr_destroy(&attr);
-            return res;
-#else
-            return pthread_cond_init(&cond,NULL);
-#endif
-
-    }
-  }
-
     class condition_variable
     {
     private:
@@ -57,14 +36,6 @@ namespace boost
         pthread_mutex_t internal_mutex;
 //#endif
         pthread_cond_t cond;
-
-#ifdef BOOST_THREAD_USES_CHRONO
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-        typedef chrono::steady_clock internal_clock_t;
-#else
-        typedef chrono::system_clock internal_clock_t;
-#endif
-#endif
 
     public:
     //private: // used by boost::thread::try_join_until
@@ -95,14 +66,14 @@ namespace boost
                 boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in pthread_mutex_init"));
             }
 //#endif
-            res = detail::monotonic_pthread_cond_init(cond);
+            res=boost::detail::cond_init(cond);
             if (res)
             {
 //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 // ditto
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 //#endif
-                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in detail::monotonic_pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in boost::detail::cond_init"));
             }
         }
         ~condition_variable()
@@ -135,9 +106,9 @@ namespace boost
             boost::system_time const& abs_time)
         {
 #if defined BOOST_THREAD_WAIT_BUG
-            return do_wait_until(m,detail::timespec_to_internal_clock(abs_time + BOOST_THREAD_WAIT_BUG));
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(abs_time + BOOST_THREAD_WAIT_BUG));
 #else
-            return do_wait_until(m,detail::timespec_to_internal_clock(abs_time));
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(abs_time));
 #endif
         }
         bool timed_wait(
@@ -161,7 +132,7 @@ namespace boost
             {
                 return true;
             }
-            return do_wait_until(m,detail::timespec_plus_internal_clock(wait_duration));
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(wait_duration));
         }
 
         template<typename predicate_type>
@@ -169,7 +140,7 @@ namespace boost
             unique_lock<mutex>& m,
             boost::system_time const& abs_time,predicate_type pred)
         {
-            return do_wait_until(m,detail::timespec_to_internal_clock(abs_time),pred);
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(abs_time),pred);
         }
 
         template<typename predicate_type>
@@ -197,21 +168,11 @@ namespace boost
             {
                 return pred();
             }
-            return do_wait_until(m,detail::timespec_plus_internal_clock(wait_duration),pred);
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(wait_duration),pred);
         }
 #endif // defined BOOST_THREAD_USES_DATETIME
 
 #ifdef BOOST_THREAD_USES_CHRONO
-
-        template <class Duration>
-        cv_status
-        wait_until(
-                unique_lock<mutex>& lock,
-                const chrono::time_point<internal_clock_t, Duration>& t)
-        {
-          return do_wait_until(lock, boost::detail::to_timespec(t.time_since_epoch()))
-            ? cv_status::no_timeout : cv_status::timeout;
-        }
 
         template <class Clock, class Duration>
         cv_status
@@ -219,13 +180,9 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
-          internal_clock_t::time_point s_now = internal_clock_t::now();
-          typename Clock::time_point  c_now = Clock::now();
-          return wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(t))
+            ? cv_status::no_timeout : cv_status::timeout;
         }
-
-
 
         template <class Rep, class Period>
         cv_status
@@ -233,17 +190,8 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          return wait_until(lock, internal_clock_t::now() + d);
-        }
-
-        template <class Duration, class Predicate>
-        bool
-        wait_until(
-                unique_lock<mutex>& lock,
-                const chrono::time_point<internal_clock_t, Duration>& t,
-                Predicate pred)
-        {
-            return do_wait_until(lock, boost::detail::to_timespec(t.time_since_epoch()), boost::move(pred));
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(d))
+            ? cv_status::no_timeout : cv_status::timeout;
         }
 
         template <class Clock, class Duration, class Predicate>
@@ -253,10 +201,7 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t,
                 Predicate pred)
         {
-            using namespace chrono;
-            internal_clock_t::time_point s_now = internal_clock_t::now();
-            typename Clock::time_point  c_now = Clock::now();
-            return wait_until(lock, s_now + ceil<nanoseconds>(t - c_now), boost::move(pred));
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(t), boost::move(pred));
         }
 
         template <class Rep, class Period, class Predicate>
@@ -266,7 +211,7 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          return wait_until(lock, internal_clock_t::now() + d, boost::move(pred));
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(d), boost::move(pred));
         }
 #endif // defined BOOST_THREAD_USES_CHRONO
 
