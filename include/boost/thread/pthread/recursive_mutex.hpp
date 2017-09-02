@@ -21,25 +21,21 @@
 #include <errno.h>
 #include <boost/thread/pthread/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#include <boost/thread/pthread/pthread_helpers.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
 #include <boost/thread/detail/delete.hpp>
 
-#if (defined _POSIX_TIMEOUTS && (_POSIX_TIMEOUTS-0)>=200112L) \
- || (defined __ANDROID__ && defined __ANDROID_API__ && __ANDROID_API__ >= 21)
-#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
-#define BOOST_PTHREAD_HAS_TIMEDLOCK
-#endif
-#endif
 
 #if  defined BOOST_HAS_PTHREAD_MUTEXATTR_SETTYPE \
  ||  defined __ANDROID__
 #define BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
 #endif
 
-#if defined BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE && defined BOOST_PTHREAD_HAS_TIMEDLOCK
+#if defined BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE && defined BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
 #define BOOST_USE_PTHREAD_RECURSIVE_TIMEDLOCK
 #endif
 
@@ -89,11 +85,11 @@ namespace boost
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_mutex constructor failed in pthread_mutex_init"));
             }
-            int const res2=pthread_cond_init(&cond,NULL);
+            int const res2=pthread::cond_init(cond);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&m));
-                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_mutex constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_mutex constructor failed in pthread::cond_init"));
             }
             is_locked=false;
             count=0;
@@ -224,11 +220,11 @@ namespace boost
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: recursive_timed_mutex constructor failed in pthread_mutex_init"));
             }
-            int const res2=pthread_cond_init(&cond,NULL);
+            int const res2=pthread::cond_init(cond);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&m));
-                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_timed_mutex constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost:: recursive_timed_mutex constructor failed in pthread::cond_init"));
             }
             is_locked=false;
             count=0;
@@ -246,6 +242,7 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
+          // fixme: make use of internal_timespec_clock here
             return timed_lock(get_system_time()+relative_time);
         }
 #endif
@@ -268,9 +265,9 @@ namespace boost
             return !res;
         }
     private:
-        bool do_try_lock_until(struct timespec const &timeout)
+        bool do_try_lock_until(detail::real_timespec_timepoint const &timeout)
         {
-            int const res=pthread_mutex_timedlock(&m,&timeout);
+            int const res=pthread_mutex_timedlock(&m,&timeout.get());
             BOOST_ASSERT(!res || res==ETIMEDOUT);
             return !res;
         }
@@ -320,7 +317,7 @@ namespace boost
         }
 
     private:
-        bool do_try_lock_until(struct timespec const &timeout)
+        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && pthread_equal(owner,pthread_self()))
@@ -330,7 +327,7 @@ namespace boost
             }
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout);
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.get());
                 if(cond_res==ETIMEDOUT)
                 {
                     return false;
@@ -349,7 +346,8 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            struct timespec const ts=detail::to_timespec(abs_time);
+          // fixme
+            detail::internal_timespec_timepoint const ts = abs_time;
             return do_try_lock_until(ts);
         }
 #endif
@@ -357,28 +355,26 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(chrono::steady_clock::now() + rel_time);
+          return try_lock_until(thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
+          thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
           typename Clock::time_point  c_now = Clock::now();
           return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
         }
         template <class Duration>
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, Duration>& t)
+        bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
           using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
+          typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
           return try_lock_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
         }
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
+        bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
         {
-          //using namespace chrono;
-          chrono::nanoseconds d = tp.time_since_epoch();
-          timespec ts = boost::detail::to_timespec(d);
+          detail::internal_timespec_timepoint ts = tp;
           return do_try_lock_until(ts);
         }
 #endif

@@ -350,7 +350,7 @@ namespace boost
         }
     }
 
-    bool thread::do_try_join_until_noexcept(struct timespec const &timeout, bool& res)
+    bool thread::do_try_join_until_noexcept(detail::real_timespec_timepoint const &timeout, bool& res)
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
@@ -432,22 +432,21 @@ namespace boost
       {
         namespace hidden
         {
-          void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+          void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
           {
 
-                if (boost::detail::timespec_ge(ts, boost::detail::timespec_zero()))
+                if (ts >=  detail::timespec_duration::zero())
                 {
 
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+
+    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
-                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts)));
+                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.get())));
     #     else
-                  BOOST_VERIFY(!pthread_delay_np(&ts));
+                  BOOST_VERIFY(!pthread_delay_np(&ts.get()));
     #     endif
-    #   elif defined(BOOST_HAS_NANOSLEEP)
-                  //  nanosleep takes a timespec that is an offset, not
-                  //  an absolute time.
-                  nanosleep(&ts, 0);
+    #   elif defined(BOOST_HAS_NANOSLEEP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+                  nanosleep(&ts.get(), 0);
     #   else
                   mutex mx;
                   unique_lock<mutex> lock(mx);
@@ -457,30 +456,28 @@ namespace boost
                 }
           }
 
-          void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts)
+          void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts)
           {
-                timespec now = boost::detail::timespec_now_realtime();
-                if (boost::detail::timespec_gt(ts, now))
+                detail::real_timespec_timepoint now = detail::real_timespec_clock::now();
+                if (ts > now)
                 {
                   for (int foo=0; foo < 5; ++foo)
                   {
 
     #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                    timespec d = boost::detail::timespec_minus(ts, now);
-                    BOOST_VERIFY(!pthread_delay_np(&d));
+                    detail::timespec_duration d = ts - now;
+                    BOOST_VERIFY(!pthread_delay_np(&d.get()));
     #   elif defined(BOOST_HAS_NANOSLEEP)
-                    //  nanosleep takes a timespec that is an offset, not
-                    //  an absolute time.
-                    timespec d = boost::detail::timespec_minus(ts, now);
-                    nanosleep(&d, 0);
+                    detail::timespec_duration d = ts - now;
+                    nanosleep(&d.get(), 0);
     #   else
                     mutex mx;
                     unique_lock<mutex> lock(mx);
                     condition_variable cond;
                     cond.do_wait_until(lock, ts);
     #   endif
-                    timespec now2 = boost::detail::timespec_now_realtime();
-                    if (boost::detail::timespec_ge(now2, ts))
+                    detail::real_timespec_timepoint now2 = detail::real_timespec_clock::now();
+                    if (now2 >= ts)
                     {
                       return;
                     }
@@ -491,7 +488,7 @@ namespace boost
       }
       namespace hidden
       {
-        void BOOST_THREAD_DECL sleep_for(const timespec& ts)
+        void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
         {
             boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
 
@@ -506,7 +503,7 @@ namespace boost
             }
         }
 
-        void BOOST_THREAD_DECL sleep_until_realtime(const timespec& ts)
+        void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts)
         {
             boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
 
@@ -538,10 +535,10 @@ namespace boost
 //            sleep_for(chrono::milliseconds(0));
 #   else
 #error
-            timespec ts;
-            ts.tv_sec= 0;
-            ts.tv_nsec= 0;
-            hidden::sleep_for(ts);
+//            timespec ts;
+//            ts.tv_sec= 0;
+//            ts.tv_nsec= 0;
+            hidden::sleep_for(detail::timespec_duration::zero());
 #   endif
         }
     }

@@ -462,10 +462,10 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
     bool thread::timed_join(boost::system_time const& wait_until)
     {
-      return do_try_join_until(boost::detail::get_milliseconds_until(wait_until));
+      return do_try_join_for(boost::detail::get_milliseconds_until(wait_until));
     }
 #endif
-    bool thread::do_try_join_until_noexcept(uintmax_t milli, bool& res)
+    bool thread::do_try_join_for_noexcept(uintmax_t milli, bool& res)
     {
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)

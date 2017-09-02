@@ -382,6 +382,16 @@
   #   endif
 #endif
 
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#elif ! defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_PTHREAD_HAS_TIMEDLOCK
+#define BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
+#elif (defined(_POSIX_TIMEOUTS) && (_POSIX_TIMEOUTS-0)>=200112L) \
+ || (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
+#define BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
+#endif
+#endif
+
 // provided for backwards compatibility, since this
 // macro was used for several releases by mistake.
 #if defined(BOOST_THREAD_DYN_DLL) && ! defined BOOST_THREAD_DYN_LINK

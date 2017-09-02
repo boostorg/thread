@@ -89,9 +89,9 @@ namespace boost
                 return notified;
             }
 
-            bool wait(timeout abs_time)
+            bool wait(timeout abs_or_rel_time)
             {
-                return this_thread::interruptible_wait(semaphore,abs_time);
+                return this_thread::interruptible_wait(semaphore,abs_or_rel_time);
             }
 
             bool woken()
@@ -233,7 +233,7 @@ namespace boost
 
         protected:
             template<typename lock_type>
-            bool do_wait(lock_type& lock,timeout abs_time)
+            bool do_wait(lock_type& lock,timeout abs_or_rel_time)
             {
               relocker<lock_type> locker(lock);
               entry_manager entry(get_wait_entry(), internal_mutex);
@@ -242,7 +242,7 @@ namespace boost
               bool woken=false;
               while(!woken)
               {
-                  if(!entry->wait(abs_time))
+                  if(!entry->wait(abs_or_rel_time))
                   {
                       return false;
                   }
@@ -256,11 +256,11 @@ namespace boost
             }
 
             template<typename lock_type,typename predicate_type>
-            bool do_wait(lock_type& m,timeout const& abs_time,predicate_type pred)
+            bool do_wait(lock_type& m,timeout const& abs_or_rel_time,predicate_type pred)
             {
                 while (!pred())
                 {
-                    if(!do_wait(m, abs_time))
+                    if(!do_wait(m, abs_or_rel_time))
                         return pred();
                 }
                 return true;

@@ -14,11 +14,14 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/pthread/pthread_helpers.hpp>
+
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
 #endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
+#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
@@ -29,26 +32,27 @@
 
 namespace boost
 {
-  namespace detail {
-    inline int monotonic_pthread_cond_init(pthread_cond_t& cond) {
-
-#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            pthread_condattr_t attr;
-            int res = pthread_condattr_init(&attr);
-            if (res)
-            {
-              return res;
-            }
-            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
-            res=pthread_cond_init(&cond,&attr);
-            pthread_condattr_destroy(&attr);
-            return res;
-#else
-            return pthread_cond_init(&cond,NULL);
-#endif
-
-    }
-  }
+//  // todo: move to pthread_helpers.hpp and rename to internal_pthread_cond_init
+//  namespace detail {
+//    inline int monotonic_pthread_cond_init(pthread_cond_t& cond) {
+//
+//#ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+//            pthread_condattr_t attr;
+//            int res = pthread_condattr_init(&attr);
+//            if (res)
+//            {
+//              return res;
+//            }
+//            pthread_condattr_setclock(&attr, CLOCK_MONOTONIC);
+//            res=pthread_cond_init(&cond,&attr);
+//            pthread_condattr_destroy(&attr);
+//            return res;
+//#else
+//            return pthread_cond_init(&cond,NULL);
+//#endif
+//
+//    }
+//  }
 
     class condition_variable
     {
@@ -63,18 +67,13 @@ namespace boost
 
         inline bool do_wait_until(
             unique_lock<mutex>& lock,
-            struct timespec const &timeout);
+            detail::real_timespec_timepoint const &timeout);
 
         bool do_wait_for(
             unique_lock<mutex>& lock,
-            struct timespec const &timeout)
+            detail::timespec_duration const &timeout)
         {
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now_monotonic()));
-#else
-            // old behavior was fine for monotonic
-            return do_wait_until(lock, boost::detail::timespec_plus(timeout, boost::detail::timespec_now_realtime()));
-#endif
+            return do_wait_until(lock, timeout + detail::internal_timespec_clock::now());
         }
 
     public:
@@ -93,14 +92,14 @@ namespace boost
                 boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in pthread_mutex_init"));
             }
 //#endif
-            res = detail::monotonic_pthread_cond_init(cond);
+            res = pthread::cond_init(cond);
             if (res)
             {
 //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                 // ditto
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
 //#endif
-                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in detail::monotonic_pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res, "boost::condition_variable::condition_variable() constructor failed in pthread::cond_init"));
             }
         }
         ~condition_variable()
@@ -133,12 +132,11 @@ namespace boost
             boost::system_time const& abs_time)
         {
 #if defined BOOST_THREAD_WAIT_BUG
-            struct timespec const timeout=detail::to_timespec(abs_time + BOOST_THREAD_WAIT_BUG);
-            return do_wait_until(m, timeout);
+            detail::real_timespec_timepoint const timeout = abs_time + BOOST_THREAD_WAIT_BUG;
 #else
-            struct timespec const timeout=detail::to_timespec(abs_time);
-            return do_wait_until(m, timeout);
+            detail::real_timespec_timepoint const timeout = abs_time;
 #endif
+            return do_wait_until(m, timeout);
         }
         bool timed_wait(
             unique_lock<mutex>& m,
@@ -161,6 +159,7 @@ namespace boost
             {
                 return true;
             }
+            // fixme: make use of internal_timespec_clock here
             return timed_wait(m,get_system_time()+wait_duration);
         }
 
@@ -202,6 +201,7 @@ namespace boost
             {
                 return pred();
             }
+            // fixme: make use of internal_timespec_clock here
             return timed_wait(m,get_system_time()+wait_duration,pred);
         }
 #endif
@@ -214,14 +214,13 @@ namespace boost
         cv_status
         wait_until(
                 unique_lock<mutex>& lock,
-                const chrono::time_point<chrono::system_clock, Duration>& t)
+                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
           using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
-          wait_until(lock,
+          typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
+          return wait_until(lock,
                         nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-          return system_clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
+          //return system_clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
         }
 
         template <class Clock, class Duration>
@@ -230,13 +229,13 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
+          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
           using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
+          thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
           typename Clock::time_point  c_now = Clock::now();
           wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
           return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
         }
-
 
 
         template <class Rep, class Period>
@@ -246,21 +245,17 @@ namespace boost
                 const chrono::duration<Rep, Period>& d)
         {
           using namespace chrono;
-          system_clock::time_point s_now = system_clock::now();
-          steady_clock::time_point c_now = steady_clock::now();
-          wait_until(lock, s_now + ceil<nanoseconds>(d));
-          return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
+          thread_detail::internal_clock_t::time_point c_now = thread_detail::internal_clock_t::now();
+          return wait_until(lock, c_now + ceil<nanoseconds>(d));
+          //return steady_clock::now() - c_now < d ? cv_status::no_timeout :  cv_status::timeout;
 
         }
 
         inline cv_status wait_until(
             unique_lock<mutex>& lk,
-            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
+            chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds> tp)
         {
-            using namespace chrono;
-            nanoseconds d = tp.time_since_epoch();
-            timespec ts = boost::detail::to_timespec(d);
+            const boost::detail::internal_timespec_timepoint ts = tp;
             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
@@ -268,19 +263,19 @@ namespace boost
 
 #else // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 #ifdef BOOST_THREAD_USES_CHRONO
+        // todo this should be removed with the if BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC as is the same
 
         template <class Duration>
         cv_status
         wait_until(
               unique_lock<mutex>& lock,
-              const chrono::time_point<chrono::steady_clock, Duration>& t)
+              const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
             using namespace chrono;
-            typedef time_point<steady_clock, nanoseconds> nano_sys_tmpt;
-            wait_until(lock,
+            typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
+            return wait_until(lock,
                         nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-            return steady_clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
+            //return thread_detail::internal_clock_t::now() < t ? cv_status::no_timeout : cv_status::timeout;
         }
 
         template <class Clock, class Duration>
@@ -289,8 +284,9 @@ namespace boost
             unique_lock<mutex>& lock,
             const chrono::time_point<Clock, Duration>& t)
         {
+          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
             using namespace chrono;
-            steady_clock::time_point     s_now = steady_clock::now();
+            thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
             typename Clock::time_point  c_now = Clock::now();
             wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
             return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
@@ -303,19 +299,16 @@ namespace boost
             const chrono::duration<Rep, Period>& d)
         {
             using namespace chrono;
-            steady_clock::time_point c_now = steady_clock::now();
-            wait_until(lock, c_now + ceil<nanoseconds>(d));
-            return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
+            thread_detail::internal_clock_t::time_point c_now = thread_detail::internal_clock_t::now();
+            return wait_until(lock, c_now + ceil<nanoseconds>(d));
+            //return steady_clock::now() - c_now < d ? cv_status::no_timeout : cv_status::timeout;
         }
 
         inline cv_status wait_until(
             unique_lock<mutex>& lk,
-            chrono::time_point<chrono::steady_clock, chrono::nanoseconds> tp)
+            chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds> tp)
         {
-            using namespace chrono;
-            nanoseconds d = tp.time_since_epoch();
-            timespec ts = boost::detail::to_timespec(d);
+            boost::detail::internal_timespec_timepoint ts = tp;
             if (do_wait_until(lk, ts)) return cv_status::no_timeout;
             else return cv_status::timeout;
         }
@@ -346,7 +339,7 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+          return wait_until(lock, thread_detail::internal_clock_t::now() + d, boost::move(pred));
         }
 #endif
 
