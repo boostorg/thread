@@ -210,10 +210,11 @@ namespace boost
     explicit mono_timespec_timepoint(timespec const& v) : value(v) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
-      inline mono_timespec_timepoint(boost::system_time const& abs_time);
+    inline mono_timespec_timepoint(boost::system_time const& abs_time);
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-      inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time);
+    inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time);
+    inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, chrono::nanoseconds> const& abs_time);
 #endif
 
     timespec& get() { return value; }
@@ -260,7 +261,7 @@ namespace boost
   inline timespec_duration operator-(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
     // fixme: replace by to_timespec_duration
-    return timespec_duration(int_to_timespec(to_nanoseconds_int_max(lhs) - to_nanoseconds_int_max(rhs)));
+    return timespec_duration(int_to_timespec(to_nanoseconds_int_max(lhs.get()) - to_nanoseconds_int_max(rhs.get())));
   }
 
   struct mono_timespec_clock
@@ -284,7 +285,7 @@ namespace boost
   {
     boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
     timespec_duration d = since_now ;
-    value = mono_timespec_clock::now() + d;
+    value = (mono_timespec_clock::now() + d).get();
   }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
@@ -292,7 +293,12 @@ namespace boost
   {
     chrono::nanoseconds since_now = abs_time - chrono::system_clock::now();
     timespec_duration d = since_now ;
-    value = mono_timespec_clock::now() + d;;
+    value = (mono_timespec_clock::now() + d).get();
+  }
+  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, chrono::nanoseconds> const& abs_time)
+  {
+    timespec_duration d = abs_time.time_since_epoch() ;
+    value =  d.get();
   }
 #endif
 

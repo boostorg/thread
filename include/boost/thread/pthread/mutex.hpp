@@ -316,7 +316,7 @@ namespace boost
         {
           // fixme: we should iterate here until try_lock_until or Clock::now() >= t
           thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-          return try_lock_until(s_now + ceil<chrono::nanoseconds>(t - Clock::now()));
+          return try_lock_until(s_now + chrono::ceil<chrono::nanoseconds>(t - Clock::now()));
         }
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
