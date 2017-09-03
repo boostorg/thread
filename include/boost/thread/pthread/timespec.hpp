@@ -53,6 +53,15 @@ namespace boost
     public:
       explicit timespec_duration(timespec const& v) : value(v) {}
 
+#if defined BOOST_THREAD_USES_DATETIME
+      timespec_duration(boost::posix_time::time_duration const& rel_time)
+      {
+        struct timespec d = { 0,0};
+        d.tv_sec=rel_time.total_seconds();
+        d.tv_nsec=(long)(rel_time.fractional_seconds()*(1000000000l/rel_time.ticks_per_second()));
+        value =  d;
+      }
+#endif
 #if defined BOOST_THREAD_USES_CHRONO
       timespec_duration(chrono::nanoseconds const& ns)
       {
@@ -62,6 +71,7 @@ namespace boost
         value =  d;
       }
 #endif
+
       timespec& get() { return value; }
       timespec const& get() const { return value; }
 
@@ -110,23 +120,15 @@ namespace boost
       real_timespec_timepoint(boost::system_time const& abs_time)
       {
         boost::posix_time::time_duration const time_since_epoch = abs_time-boost::posix_time::from_time_t(0);
-
-        struct timespec t = { 0, 0 };
-        t.tv_sec = time_since_epoch.total_seconds();
-        t.tv_nsec = (long)(time_since_epoch.fractional_seconds()*(1000000000l/time_since_epoch.ticks_per_second()));
-        value = t;
+        timespec_duration d = time_since_epoch ;
+        value =  d.get();
       }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
       real_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time)
       {
-        using namespace chrono;
-        nanoseconds ns = abs_time.time_since_epoch();
-        struct timespec d = { 0, 0 };
-        d.tv_sec = static_cast<long>(chrono::duration_cast<chrono::seconds>(ns).count());
-        d.tv_nsec = static_cast<long>((ns - chrono::duration_cast<chrono::seconds>(ns)).count());
-        value =  d;
-
+        timespec_duration d = abs_time.time_since_epoch() ;
+        value =  d.get();
       }
 #endif
 
@@ -179,6 +181,7 @@ namespace boost
 
     struct real_timespec_clock
     {
+      // fixme: Why not use ststem_clock::now()?
       static inline real_timespec_timepoint now()
       {
         timespec ts;
@@ -205,6 +208,13 @@ namespace boost
   {
   public:
     explicit mono_timespec_timepoint(timespec const& v) : value(v) {}
+
+#if defined BOOST_THREAD_USES_DATETIME
+      inline mono_timespec_timepoint(boost::system_time const& abs_time);
+#endif
+#if defined BOOST_THREAD_USES_CHRONO
+      inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time);
+#endif
 
     timespec& get() { return value; }
     timespec const& get() const { return value; }
@@ -255,6 +265,7 @@ namespace boost
 
   struct mono_timespec_clock
   {
+    // fixme: Why not use steady_clock::now()?
     static inline mono_timespec_timepoint now()
     {
       timespec ts;
@@ -267,6 +278,24 @@ namespace boost
       return mono_timespec_timepoint(ts);
     }
   };
+
+#if defined BOOST_THREAD_USES_DATETIME
+  mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
+  {
+    boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
+    timespec_duration d = since_now ;
+    value = mono_timespec_clock::now() + d;
+  }
+#endif
+#if defined BOOST_THREAD_USES_CHRONO
+  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time)
+  {
+    chrono::nanoseconds since_now = abs_time - chrono::system_clock::now();
+    timespec_duration d = since_now ;
+    value = mono_timespec_clock::now() + d;;
+  }
+#endif
+
 #endif
 
 #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC

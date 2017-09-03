@@ -244,7 +244,7 @@ namespace boost
         namespace hidden
         {
           void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
-          void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts);
+          void BOOST_THREAD_DECL sleep_until_realtime(const detail::internal_timespec_timepoint& ts);
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -265,7 +265,7 @@ namespace boost
           namespace hidden
           {
             void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
-            void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts);
+            void BOOST_THREAD_DECL sleep_until_realtime(const detail::internal_timespec_timepoint& ts);
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
@@ -292,14 +292,13 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          boost::this_thread::hidden::sleep_until_realtime(detail::real_timespec_timepoint(abs_time));
+          boost::this_thread::hidden::sleep_until_realtime(detail::internal_timespec_timepoint(abs_time));
         }
 
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
-          // fixme: make use of internal_timespec_clock here
-          this_thread::sleep(get_system_time()+rel_time);
+          boost::this_thread::hidden::sleep_until_realtime(detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
         }
 #endif // BOOST_THREAD_USES_DATETIME
     } // this_thread

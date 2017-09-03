@@ -226,15 +226,16 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock_shared(TimeDuration const & relative_time)
         {
-          // fixme: make use of internal_timespec_clock here
+            // fixme: make use of internal_timespec_clock here
             return timed_lock_shared(get_system_time()+relative_time);
+            //return do_try_lock_shared_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_shared_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
+          return try_lock_shared_until(thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -325,15 +326,16 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-          // fixme: make use of internal_timespec_clock here
+            // fixme: make use of internal_timespec_clock here
             return timed_lock(get_system_time()+relative_time);
+            //return do_try_lock_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(chrono::steady_clock::now() + rel_time);
+          return try_lock_until(thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -428,7 +430,8 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock_upgrade(TimeDuration const & relative_time)
         {
-          // fixme: make use of internal_timespec_clock here
+            // fixme: make use of internal_timespec_clock here
+            //return do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
             return timed_lock_upgrade(get_system_time()+relative_time);
         }
 #endif
@@ -436,7 +439,7 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_upgrade_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
+          return try_lock_upgrade_until(thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& abs_time)
@@ -545,7 +548,7 @@ namespace boost
                                 const chrono::duration<Rep, Period>& rel_time)
         {
           return try_unlock_upgrade_and_lock_until(
-                                 chrono::steady_clock::now() + rel_time);
+              thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool
@@ -610,7 +613,7 @@ namespace boost
                                 const chrono::duration<Rep, Period>& rel_time)
         {
           return try_unlock_shared_and_lock_until(
-                                 chrono::steady_clock::now() + rel_time);
+              thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
             bool
@@ -674,7 +677,7 @@ namespace boost
                                 const chrono::duration<Rep, Period>& rel_time)
         {
           return try_unlock_shared_and_lock_upgrade_until(
-                                 chrono::steady_clock::now() + rel_time);
+              thread_detail::internal_clock_t::now() + rel_time);
         }
         template <class Clock, class Duration>
             bool

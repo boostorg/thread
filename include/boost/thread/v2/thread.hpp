@@ -69,7 +69,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        steady_clock::time_point c_timeout = steady_clock::now() + ceil<nanoseconds>(d);
+        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::::duration>(d);
         sleep_until(c_timeout);
       }
     }
@@ -103,6 +103,13 @@ namespace boost
       }
     }
 
+    template <class Duration>
+    inline BOOST_SYMBOL_VISIBLE
+    void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
+    {
+      using namespace chrono;
+      sleep_for(t - steady_clock::now());
+    }
 #elif defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
     template <class Rep, class Period>
@@ -111,15 +118,17 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-          duration<long double> Max = nanoseconds::max BOOST_PREVENT_MACRO_SUBSTITUTION ();
+          const duration<long double> Max = nanoseconds::max BOOST_PREVENT_MACRO_SUBSTITUTION ();
           nanoseconds ns;
           if (d < Max)
           {
+              // fixme: ceil?
               ns = duration_cast<nanoseconds>(d);
               if (ns < d)
                   ++ns;
           }
           else
+              // fixme: it is normal to sleep less than requested? Shouldn't we need to iterate until d has been elapsed?
               ns = nanoseconds:: max BOOST_PREVENT_MACRO_SUBSTITUTION ();
           sleep_for(ns);
       }
@@ -139,8 +148,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        //system_clock::time_point c_timeout = time_point_cast<system_clock::duration>(system_clock::now() + ceil<nanoseconds>(d));
-        system_clock::time_point c_timeout = system_clock::now() + ceil<system_clock::duration>(d);
+        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::duration>(d);
         sleep_until(c_timeout);
       }
     }

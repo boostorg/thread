@@ -242,8 +242,7 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-          // fixme: make use of internal_timespec_clock here
-            return timed_lock(get_system_time()+relative_time);
+            return do_try_lock_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
         }
 #endif
 
@@ -265,7 +264,7 @@ namespace boost
             return !res;
         }
     private:
-        bool do_try_lock_until(detail::real_timespec_timepoint const &timeout)
+        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
             int const res=pthread_mutex_timedlock(&m,&timeout.get());
             BOOST_ASSERT(!res || res==ETIMEDOUT);
@@ -346,7 +345,6 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-          // fixme
             detail::internal_timespec_timepoint const ts = abs_time;
             return do_try_lock_until(ts);
         }

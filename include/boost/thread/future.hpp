@@ -1379,6 +1379,7 @@ namespace boost
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
+            // fixme: make use of internal_clock instead of get_system_time
             return timed_wait_until(boost::get_system_time()+rel_time);
         }
 
@@ -1396,7 +1397,7 @@ namespace boost
         future_status
         wait_for(const chrono::duration<Rep, Period>& rel_time) const
         {
-          return wait_until(chrono::steady_clock::now() + rel_time);
+          return wait_until(thread_detail::internal_clock_t::now() + rel_time);
 
         }
         template <class Clock, class Duration>

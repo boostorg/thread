@@ -14,6 +14,8 @@
 #include <boost/chrono/system_clocks.hpp>
 #endif
 
+#include <boost/config/abi_prefix.hpp>
+
 namespace boost {
 namespace thread_detail {
 
@@ -29,5 +31,7 @@ namespace thread_detail {
 
 } // namespace thread_detail
 } // namespace boost
+
+#include <boost/config/abi_suffix.hpp>
 
 #endif // header

@@ -180,7 +180,6 @@ namespace boost
             if(res2)
             {
                 BOOST_VERIFY(!posix::pthread_mutex_destroy(&m));
-                //BOOST_VERIFY(!pthread_mutex_destroy(&m));
                 boost::throw_exception(thread_resource_error(res2, "boost:: timed_mutex constructor failed in pthread::cond_init"));
             }
             is_locked=false;
@@ -198,8 +197,7 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-          // fixme: make use of internal_timespec_clock here
-            return timed_lock(get_system_time()+relative_time);
+            return do_try_lock_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
         }
         bool timed_lock(boost::xtime const & absolute_time)
         {
@@ -244,7 +242,7 @@ namespace boost
 
 
     private:
-        bool do_try_lock_until(detail::real_timespec_timepoint const &timeout)
+        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
           int const res=pthread_mutex_timedlock(&m,&timeout.get());
           BOOST_ASSERT(!res || res==ETIMEDOUT);
@@ -282,7 +280,7 @@ namespace boost
         }
 
     private:
-        bool do_try_lock_until(detail::real_timespec_timepoint const &timeout)
+        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             while(is_locked)
@@ -316,11 +314,9 @@ namespace boost
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
-          using namespace chrono;
+          // fixme: we should iterate here until try_lock_until or Clock::now() >= t
           thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-          typename Clock::time_point  c_now = Clock::now();
-          return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
+          return try_lock_until(s_now + ceil<chrono::nanoseconds>(t - Clock::now()));
         }
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
@@ -349,7 +345,6 @@ namespace boost
         typedef scoped_timed_lock scoped_lock;
 #endif
     };
-
 }
 
 #include <boost/config/abi_suffix.hpp>

@@ -156,15 +156,7 @@ namespace boost
         };
 #endif
     }
-//namespace thread_detail {
-//#ifdef BOOST_THREAD_USES_CHRONO
-//#if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
-//        typedef chrono::steady_clock internal_clock_t;
-//#else
-//        typedef chrono::system_clock internal_clock_t;
-//#endif
-//#endif
-//}
+
     class BOOST_THREAD_DECL thread
     {
     public:
@@ -524,7 +516,6 @@ namespace boost
         //}
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        // fixme. This shouldn't be internal_clock_t as
         bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
         {
           chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-thread_detail::internal_clock_t::now());
@@ -533,25 +524,25 @@ namespace boost
 #endif
 
 
-#else
+#else // ! defined(BOOST_THREAD_PLATFORM_WIN32)
     private:
-        bool do_try_join_until_noexcept(detail::real_timespec_timepoint const &timeout, bool& res);
-        inline bool do_try_join_until(detail::real_timespec_timepoint const &timeout);
+        bool do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res);
+        inline bool do_try_join_until(detail::internal_timespec_timepoint const &timeout);
     public:
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
-          const detail::real_timespec_timepoint ts = abs_time;
+          const detail::internal_timespec_timepoint ts = abs_time;
           return do_try_join_until(ts);
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
         {
-          const boost::detail::real_timespec_timepoint ts = tp;
+          const boost::detail::internal_timespec_timepoint ts = tp;
           return do_try_join_until(ts);
         }
-#endif
+#endif // defined(BOOST_THREAD_PLATFORM_WIN32)
 
 #endif
       public:
@@ -560,8 +551,12 @@ namespace boost
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
-          // fixme: make use of internal_timespec_clock here
-            return timed_join(get_system_time()+rel_time);
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+            return do_try_join_for(rel_time.total_milliseconds());
+#else
+            const boost::detail::internal_timespec_timepoint ts = boost::detail::internal_timespec_clock::now() + boost::detail::timespec_duration(rel_time);
+            return do_try_join_until(ts);
+#endif
         }
 #endif
         void detach();
@@ -779,7 +774,7 @@ namespace boost
     }
 
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
-    bool thread::do_try_join_until(detail::real_timespec_timepoint const &timeout)
+    bool thread::do_try_join_until(detail::internal_timespec_timepoint const &timeout)
     {
         if (this_thread::get_id() == get_id())
           boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
