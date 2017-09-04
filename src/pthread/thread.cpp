@@ -350,7 +350,7 @@ namespace boost
         }
     }
 
-    bool thread::do_try_join_until_noexcept(detail::real_timespec_timepoint const &timeout, bool& res)
+    bool thread::do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res)
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
@@ -456,9 +456,9 @@ namespace boost
                 }
           }
 
-          void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts)
+          void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
           {
-                detail::real_timespec_timepoint now = detail::real_timespec_clock::now();
+                detail::internal_timespec_timepoint now = detail::internal_timespec_clock::now();
                 if (ts > now)
                 {
                   for (int foo=0; foo < 5; ++foo)
@@ -476,7 +476,7 @@ namespace boost
                     condition_variable cond;
                     cond.do_wait_until(lock, ts);
     #   endif
-                    detail::real_timespec_timepoint now2 = detail::real_timespec_clock::now();
+                    detail::internal_timespec_timepoint now2 = detail::internal_timespec_clock::now();
                     if (now2 >= ts)
                     {
                       return;
@@ -503,7 +503,7 @@ namespace boost
             }
         }
 
-        void BOOST_THREAD_DECL sleep_until_realtime(const detail::real_timespec_timepoint& ts)
+        void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
         {
             boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
 
@@ -514,7 +514,7 @@ namespace boost
             }
             else
             {
-              boost::this_thread::no_interruption_point::hidden::sleep_until_realtime(ts);
+              boost::this_thread::no_interruption_point::hidden::sleep_until(ts);
             }
         }
       } // hidden
