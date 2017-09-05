@@ -25,6 +25,7 @@
 #include <boost/detail/winapi/event.hpp>
 #include <boost/detail/winapi/thread.hpp>
 #include <boost/detail/winapi/get_current_thread.hpp>
+#include <boost/detail/winapi/get_current_thread_id.hpp>
 #include <boost/detail/winapi/get_current_process.hpp>
 #include <boost/detail/winapi/get_current_process_id.hpp>
 #include <boost/detail/winapi/wait.hpp>
