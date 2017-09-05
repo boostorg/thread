@@ -21,7 +21,7 @@ namespace thread_detail {
 
   #ifdef BOOST_THREAD_USES_CHRONO
   #if defined(BOOST_THREAD_PLATFORM_WIN32)
-          typedef chrono::system_clock internal_clock_t;
+          typedef chrono::steady_clock internal_clock_t;
   #elif defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
           typedef chrono::steady_clock internal_clock_t;
   #else
