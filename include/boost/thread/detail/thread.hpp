@@ -507,12 +507,12 @@ namespace boost
 #endif
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
     private:
-        bool do_try_join_until_noexcept(uintmax_t milli, bool& res);
+        bool do_try_join_for_noexcept(uintmax_t milli, bool& res);
         inline bool do_try_join_for(uintmax_t milli);
     public:
         bool timed_join(const system_time& abs_time);
         //{
-        //  return do_try_join_until(get_milliseconds_until(wait_until));
+        //  return do_try_join_for(get_milliseconds_until(wait_until));
         //}
 
 #ifdef BOOST_THREAD_USES_CHRONO
