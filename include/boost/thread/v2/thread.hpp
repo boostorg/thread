@@ -91,26 +91,27 @@ namespace boost
         cv.wait_until(lk, t);
     }
 
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC && defined BOOST_CHRONO_HAS_CLOCK_STEADY
-    template <class Rep, class Period>
-    void sleep_for(const chrono::duration<Rep, Period>& d)
-    {
-      using namespace chrono;
-      if (d > duration<Rep, Period>::zero())
-      {
-        steady_clock::time_point c_timeout = steady_clock::now() + ceil<nanoseconds>(d);
-        sleep_until(c_timeout);
-      }
-    }
+//#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC && defined BOOST_CHRONO_HAS_CLOCK_STEADY
+//    template <class Rep, class Period>
+//    void sleep_for(const chrono::duration<Rep, Period>& d)
+//    {
+//      using namespace chrono;
+//      if (d > duration<Rep, Period>::zero())
+//      {
+//        steady_clock::time_point c_timeout = steady_clock::now() + ceil<nanoseconds>(d);
+//        sleep_until(c_timeout);
+//      }
+//    }
+//
+//    template <class Duration>
+//    inline BOOST_SYMBOL_VISIBLE
+//    void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
+//    {
+//      using namespace chrono;
+//      sleep_for(t - steady_clock::now());
+//    }
 
-    template <class Duration>
-    inline BOOST_SYMBOL_VISIBLE
-    void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
-    {
-      using namespace chrono;
-      sleep_for(t - steady_clock::now());
-    }
-#elif defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
+#if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
