@@ -295,12 +295,23 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
           using namespace chrono;
+#if 0
+          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
           thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
           typename Clock::time_point  c_now = Clock::now();
           wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
           return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
+#else
+          Duration d = t - Clock::now();
+          if ( d <= Duration::zero() ) return cv_status::timeout;
+          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d)))
+          {
+              d = t - Clock::now();
+              if ( d <= Duration::zero() ) return cv_status::timeout;
+          }
+          return cv_status::no_timeout;
+#endif
         }
 
         template <class lock_type, class Rep, class Period>
@@ -312,7 +323,6 @@ namespace boost
           using namespace chrono;
           thread_detail::internal_clock_t::time_point s_now = thread_detail::internal_clock_t::now();
           return wait_until(lock, s_now + ceil<nanoseconds>(d));
-          //return steady_clock::now() - c_now < d ? cv_status::no_timeout : cv_status::timeout;
 
         }
 
