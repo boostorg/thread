@@ -28,6 +28,8 @@
 #include <boost/thread/detail/delete.hpp>
 #include <boost/date_time/posix_time/posix_time_duration.hpp>
 
+#include <algorithm>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
@@ -221,22 +223,17 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          // fixme: we should iterate here until wait_until == cv_status::no_timeout or Clock::now() >= t
           using namespace chrono;
           Duration d = t - Clock::now();
           if ( d <= Duration::zero() ) return cv_status::timeout;
-#if 0
-          //thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-          return wait_until(lock, thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d));
-          //return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
-#else
+          d = (std::min)(d, Duration(milliseconds(100)));
           while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d)))
           {
               d = t - Clock::now();
               if ( d <= Duration::zero() ) return cv_status::timeout;
+              d = (std::min)(d, Duration(milliseconds(100)));
           }
           return cv_status::no_timeout;
-#endif
         }
 
         template <class Rep, class Period>
@@ -245,9 +242,7 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          using namespace chrono;
-          thread_detail::internal_clock_t::time_point c_now = thread_detail::internal_clock_t::now();
-          return wait_until(lock, c_now + ceil<nanoseconds>(d));
+          return wait_until(lock, chrono::steady_clock::now() + d);
         }
 
         inline cv_status wait_until(
@@ -281,7 +276,7 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          return wait_until(lock, thread_detail::internal_clock_t::now() + d, boost::move(pred));
+          return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
 
