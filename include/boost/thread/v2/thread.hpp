@@ -69,7 +69,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::::duration>(d);
+        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::duration>(d);
         sleep_until(c_timeout);
       }
     }

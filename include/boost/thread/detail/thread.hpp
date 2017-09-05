@@ -491,7 +491,7 @@ namespace boost
           bool joined= false;
           do {
             thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-            typename Clock::duration   d = ceil<nanoseconds>(t-Clock::now());
+            typename Clock::duration   d = t-Clock::now();
             if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
             joined = try_join_until(s_now + d);
           } while (! joined);
