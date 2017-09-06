@@ -309,14 +309,22 @@ namespace boost
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(thread_detail::internal_clock_t::now() + rel_time);
+          return try_lock_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          // fixme: we should iterate here until try_lock_until or Clock::now() >= t
-          thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-          return try_lock_until(s_now + chrono::ceil<chrono::nanoseconds>(t - Clock::now()));
+          using namespace chrono;
+          Duration d = t - Clock::now();
+          if ( d <= Duration::zero() ) return false;
+          d = (std::min)(d, Duration(milliseconds(100)));
+          while ( ! try_lock_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d)))
+          {
+              d = t - Clock::now();
+              if ( d <= Duration::zero() ) return false;
+              d = (std::min)(d, Duration(milliseconds(100)));
+          }
+          return true;
         }
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
