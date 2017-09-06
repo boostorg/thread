@@ -22,17 +22,29 @@ namespace boost
     {
 #ifdef BOOST_THREAD_USES_CHRONO
 
-    template <class Clock, class Duration>
-    void sleep_until(const chrono::time_point<Clock, Duration>& t)
+    template <class Duration>
+    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
     {
       using namespace chrono;
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
-      while (Clock::now() < t)
+      while (thread_detail::internal_clock_t::now() < t)
+      {
         cv.wait_until(lk, t);
+      }
     }
-
+    template <class Clock, class Duration>
+    void sleep_until(const chrono::time_point<Clock, Duration>& t)
+    {
+      using namespace chrono;
+      Duration d = t - Clock::now();
+      while (d > Duration::zero() )
+      {
+        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
+      }
+    }
 #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
     template <class Rep, class Period>
@@ -69,8 +81,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::duration>(d);
-        sleep_until(c_timeout);
+        sleep_until(chrono::steady_clock::now() + d);
       }
     }
 
@@ -80,36 +91,27 @@ namespace boost
     }
 #ifdef BOOST_THREAD_USES_CHRONO
 
-    template <class Clock, class Duration>
-    void sleep_until(const chrono::time_point<Clock, Duration>& t)
+    template <class Duration>
+    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
     {
       using namespace chrono;
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
-      while (Clock::now() < t)
+      while (thread_detail::internal_clock_t::now() < t)
         cv.wait_until(lk, t);
     }
-
-//#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC && defined BOOST_CHRONO_HAS_CLOCK_STEADY
-//    template <class Rep, class Period>
-//    void sleep_for(const chrono::duration<Rep, Period>& d)
-//    {
-//      using namespace chrono;
-//      if (d > duration<Rep, Period>::zero())
-//      {
-//        steady_clock::time_point c_timeout = steady_clock::now() + ceil<nanoseconds>(d);
-//        sleep_until(c_timeout);
-//      }
-//    }
-//
-//    template <class Duration>
-//    inline BOOST_SYMBOL_VISIBLE
-//    void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
-//    {
-//      using namespace chrono;
-//      sleep_for(t - steady_clock::now());
-//    }
+    template <class Clock, class Duration>
+    void sleep_until(const chrono::time_point<Clock, Duration>& t)
+    {
+      using namespace chrono;
+      Duration d = t - Clock::now();
+      while (d > Duration::zero() )
+      {
+        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
+      }
+    }
 
 #if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
 
@@ -149,8 +151,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        thread_detail::internal_clock_t::time_point c_timeout = thread_detail::internal_clock_t::now() + ceil<thread_detail::internal_clock_t::duration>(d);
-        sleep_until(c_timeout);
+        sleep_until(chrono::steady_clock::now() + d);
       }
     }
 
