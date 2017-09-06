@@ -39,10 +39,11 @@ namespace boost
     {
       using namespace chrono;
       Duration d = t - Clock::now();
-      while (d > Duration::zero() )
+      while (d > Duration::zero())
       {
         Duration d100 = (std::min)(d, Duration(milliseconds(100)));
         sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
+        Duration d = t - Clock::now();
       }
     }
 #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
@@ -81,7 +82,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        sleep_until(chrono::steady_clock::now() + d);
+        sleep_until(steady_clock::now() + d);
       }
     }
 
@@ -99,17 +100,20 @@ namespace boost
       condition_variable cv;
       unique_lock<mutex> lk(mut);
       while (thread_detail::internal_clock_t::now() < t)
+      {
         cv.wait_until(lk, t);
+      }
     }
     template <class Clock, class Duration>
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
       using namespace chrono;
       Duration d = t - Clock::now();
-      while (d > Duration::zero() )
+      while (d > Duration::zero())
       {
         Duration d100 = (std::min)(d, Duration(milliseconds(100)));
         sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
+        d = t - Clock::now();
       }
     }
 
@@ -156,7 +160,6 @@ namespace boost
     }
 
 #endif
-
 #endif
   }
 }

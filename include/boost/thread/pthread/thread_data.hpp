@@ -298,7 +298,7 @@ namespace boost
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
-          boost::this_thread::hidden::sleep_until(detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
+          boost::this_thread::hidden::sleep_for(detail::timespec_duration(rel_time));
         }
 #endif // BOOST_THREAD_USES_DATETIME
     } // this_thread
