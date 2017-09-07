@@ -435,10 +435,8 @@ namespace boost
           void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
           {
 
-                if (ts >=  detail::timespec_duration::zero())
+                if (ts >  detail::timespec_duration::zero())
                 {
-
-
     #   if defined(BOOST_HAS_PTHREAD_DELAY_NP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
                   BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.get())));
@@ -463,7 +461,6 @@ namespace boost
                 {
                   for (int foo=0; foo < 5; ++foo)
                   {
-
     #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
                     detail::timespec_duration d = ts - now;
                     BOOST_VERIFY(!pthread_delay_np(&d.get()));

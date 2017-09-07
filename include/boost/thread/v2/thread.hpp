@@ -43,10 +43,10 @@ namespace boost
       {
         Duration d100 = (std::min)(d, Duration(milliseconds(100)));
         sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
-        Duration d = t - Clock::now();
+        d = t - Clock::now();
       }
     }
-#ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
+#if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
@@ -58,12 +58,12 @@ namespace boost
           nanoseconds ns;
           if (d < Max)
           {
-              ns = duration_cast<nanoseconds>(d);
-              if (ns < d)
-                  ++ns;
+            ns = ceil<nanoseconds>(d);
           }
           else
+          {
               ns = nanoseconds:: max BOOST_PREVENT_MACRO_SUBSTITUTION ();
+          }
           sleep_for(ns);
       }
     }
@@ -117,7 +117,7 @@ namespace boost
       }
     }
 
-#if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
+#if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
@@ -125,18 +125,17 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-          const duration<long double> Max = nanoseconds::max BOOST_PREVENT_MACRO_SUBSTITUTION ();
+          const duration<long double> Max = (nanoseconds::max)();
           nanoseconds ns;
           if (d < Max)
           {
-              // fixme: ceil?
-              ns = duration_cast<nanoseconds>(d);
-              if (ns < d)
-                  ++ns;
+              ns = ceil<nanoseconds>(d);
           }
           else
+          {
               // fixme: it is normal to sleep less than requested? Shouldn't we need to iterate until d has been elapsed?
-              ns = nanoseconds:: max BOOST_PREVENT_MACRO_SUBSTITUTION ();
+              ns = (nanoseconds::max)();
+          }
           sleep_for(ns);
       }
     }
