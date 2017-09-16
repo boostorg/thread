@@ -38,4 +38,4 @@ install:
 build: off
 
 test_script:
-  - b2 libs/mp11/test toolset=%TOOLSET%
+  - b2 libs/thread/test toolset=%TOOLSET%
