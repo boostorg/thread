@@ -111,10 +111,28 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
 
 
     //Definitions required by implementation
-
-    typedef int (__cdecl *_PVFV)();
-    #define INIRETSUCCESS 0
-    #define PVAPI int __cdecl
+    #if (_MSC_VER < 1300) || ((_MSC_VER > 1900) && (_MSC_VER < 1910)) // 1300 == VC++ 7.0, 1900 == VC++ 14.0, 1910 == VC++ 2017
+        typedef void ( __cdecl *_PVFV_ )();
+        typedef void ( __cdecl *_PIFV_ )();
+        #define INIRETSUCCESS_V
+        #define INIRETSUCCESS_I
+        #define PVAPI_V void __cdecl
+        #define PVAPI_I void __cdecl
+    #elif (_MSC_VER >= 1910)
+        typedef void ( __cdecl *_PVFV_ )();
+        typedef int ( __cdecl *_PIFV_ )();
+        #define INIRETSUCCESS_V
+        #define INIRETSUCCESS_I 0
+        #define PVAPI_V void __cdecl
+        #define PVAPI_I int __cdecl
+    #else
+        typedef int ( __cdecl *_PVFV_ )();
+        typedef int ( __cdecl *_PIFV_ )();
+        #define INIRETSUCCESS_V 0
+        #define INIRETSUCCESS_I 0
+        #define PVAPI_V int __cdecl
+        #define PVAPI_I int __cdecl
+    #endif
 
     typedef void (NTAPI* _TLSCB)(HINSTANCE, DWORD, PVOID);
 
@@ -130,9 +148,9 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
     {
         //Forward declarations
 
-        static PVAPI on_tls_prepare();
-        static PVAPI on_process_init();
-        static PVAPI on_process_term();
+        static PVAPI_I on_tls_prepare();
+        static PVAPI_V on_process_init();
+        static PVAPI_V on_process_term();
         static void NTAPI on_tls_callback(HINSTANCE, DWORD, PVOID);
 
         //The .CRT$Xxx information is taken from Codeguru:
@@ -144,9 +162,9 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
 #pragma section(".CRT$XTU",long,read)
 #pragma section(".CRT$XLC",long,read)
         __declspec(allocate(".CRT$XLC")) _TLSCB __xl_ca=on_tls_callback;
-        __declspec(allocate(".CRT$XIU"))_PVFV p_tls_prepare = on_tls_prepare;
-        __declspec(allocate(".CRT$XCU"))_PVFV p_process_init = on_process_init;
-        __declspec(allocate(".CRT$XTU"))_PVFV p_process_term = on_process_term;
+        __declspec(allocate(".CRT$XIU"))_PIFV_ p_tls_prepare = on_tls_prepare;
+        __declspec(allocate(".CRT$XCU"))_PVFV_ p_process_init = on_process_init;
+        __declspec(allocate(".CRT$XTU"))_PVFV_ p_process_term = on_process_term;
 #else
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(push, old_seg)
@@ -158,13 +176,13 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
             //this could be changed easily if required.
 
             #pragma data_seg(".CRT$XIU")
-            static _PVFV p_tls_prepare = on_tls_prepare;
+            static _PIFV_ p_tls_prepare = on_tls_prepare;
             #pragma data_seg()
 
             //Callback after all global ctors.
 
             #pragma data_seg(".CRT$XCU")
-            static _PVFV p_process_init = on_process_init;
+            static _PVFV_ p_process_init = on_process_init;
             #pragma data_seg()
 
             //Callback for tls notifications.
@@ -175,7 +193,7 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
             //Callback for termination.
 
             #pragma data_seg(".CRT$XTU")
-            static _PVFV p_process_term = on_process_term;
+            static _PVFV_ p_process_term = on_process_term;
             #pragma data_seg()
         #if (_MSC_VER >= 1300) // 1300 == VC++ 7.0
         #   pragma data_seg(pop, old_seg)
@@ -187,7 +205,7 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
 #pragma warning(disable:4189)
 #endif
 
-        PVAPI on_tls_prepare()
+        PVAPI_I on_tls_prepare()
         {
             //The following line has an important side effect:
             //if the TLS directory is not already there, it will
@@ -222,13 +240,13 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
                 *pfdst = 0;
             #endif
 
-            return INIRETSUCCESS;
+            return INIRETSUCCESS_I;
         }
 #ifdef BOOST_MSVC
 #pragma warning(pop)
 #endif
 
-        PVAPI on_process_init()
+        PVAPI_V on_process_init()
         {
             //Schedule on_thread_exit() to be called for the main
             //thread before destructors of global objects have been
@@ -245,13 +263,13 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HANDLE, DWORD, LPVOID) = NU
 
             boost::on_process_enter();
 
-            return INIRETSUCCESS;
+            return INIRETSUCCESS_V;
         }
 
-        PVAPI on_process_term()
+        PVAPI_V on_process_term()
         {
             boost::on_process_exit();
-            return INIRETSUCCESS;
+            return INIRETSUCCESS_V;
         }
 
         void NTAPI on_tls_callback(HINSTANCE /*h*/, DWORD dwReason, PVOID /*pv*/)
