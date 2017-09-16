@@ -16,19 +16,19 @@ namespace executors
 {
 
   template <typename Executor>
-  class scheduling_adpator : public detail::scheduled_executor_base<>
+  class scheduling_adaptor : public detail::scheduled_executor_base<>
   {
   private:
     Executor& _exec;
     thread _scheduler;
   public:
 
-    scheduling_adpator(Executor& ex)
+    scheduling_adaptor(Executor& ex)
       : super(),
         _exec(ex),
         _scheduler(&super::loop, this) {}
 
-    ~scheduling_adpator()
+    ~scheduling_adaptor()
     {
       this->close();
       _scheduler.interrupt();
@@ -46,7 +46,7 @@ namespace executors
 
 } //end executors
 
-  using executors::scheduling_adpator;
+  using executors::scheduling_adaptor;
 
 } //end boost
 #endif
