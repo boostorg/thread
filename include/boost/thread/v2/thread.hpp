@@ -154,7 +154,7 @@ namespace boost
       using namespace chrono;
       if (d > duration<Rep, Period>::zero())
       {
-        sleep_until(chrono::steady_clock::now() + d);
+        sleep_until(steady_clock::now() + d);
       }
     }
 
