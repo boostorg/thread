@@ -445,6 +445,12 @@ namespace boost
     #     endif
     #   elif defined(BOOST_HAS_NANOSLEEP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
                   nanosleep(&ts.get(), 0);
+    #   elif defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+                  const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
+                  mutex mx;
+                  unique_lock<mutex> lock(mx);
+                  condition_variable cond;
+                  while (cond.do_wait_until(lock, ts2)) {}
     #   else
                   mutex mx;
                   unique_lock<mutex> lock(mx);
@@ -487,6 +493,9 @@ namespace boost
       {
         void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
         {
+#if 0
+            boost::this_thread::no_interruption_point::hidden::sleep_for(ts);
+#else // VBE
             boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
 
             if(thread_info)
@@ -498,6 +507,7 @@ namespace boost
             {
               boost::this_thread::no_interruption_point::hidden::sleep_for(ts);
             }
+#endif
         }
 
         void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
