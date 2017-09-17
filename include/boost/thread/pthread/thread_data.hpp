@@ -292,7 +292,29 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-          boost::this_thread::hidden::sleep_until(detail::internal_timespec_timepoint(abs_time));
+#if 0
+            boost::this_thread::hidden::sleep_until(detail::internal_timespec_timepoint(abs_time));
+#else
+            const detail::real_timespec_timepoint ts(abs_time);
+            mutex mx;
+            unique_lock<mutex> lock(mx);
+            condition_variable cond;
+
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const timespec maxSleepTs = {0, 100000000}; // 100 milliseconds
+            const detail::timespec_duration maxSleep(maxSleepTs);
+
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            while (d > detail::timespec_duration::zero())
+            {
+                detail::timespec_duration d100 = (std::min)(d, maxSleep);
+                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d100);
+                d = ts - detail::real_timespec_clock::now();
+            }
+#else
+            while (cond.do_wait_until(lock, ts)) {}
+#endif
+#endif
         }
 
         template<typename TimeDuration>
