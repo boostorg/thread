@@ -23,9 +23,17 @@ Please take a look at [@http://www.boost.org/development/tests/master/developer/
 
 [*Fixed Bugs:]
 
+* [@http://svn.boost.org/trac/boost/ticket/12976 #12976] Boost Thread Executors documentation mistakes
 * [@http://svn.boost.org/trac/boost/ticket/12949 #12949] using sleep_for in a thread context without including boost/thread/thread.hpp yields incorrect behaviour when BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC is defined
 * [@http://svn.boost.org/trac/boost/ticket/13019 #13019] ABI compatibility for BOOST_THREAD_PROVIDES_INTERRUPTIONS incomplete
 * [@http://svn.boost.org/trac/boost/ticket/13163 #13163] boost::detail::heap_new does not have a variadic variant
+
+[*New Experimental Features:]
+
+
+[heading Version 4.7.5 - boost 1.65.1]
+
+[*Fixed Bugs:]
 
 * [@https://github.com/boostorg/thread/issues/130 #130] windows: Bug in boost::condition_variable on Windows
 

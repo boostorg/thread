@@ -76,7 +76,7 @@ namespace boost
             void release(unsigned count_to_release)
             {
                 notified=true;
-                detail::win32::ReleaseSemaphore(semaphore,count_to_release,0);
+                detail::winapi::ReleaseSemaphore(semaphore,count_to_release,0);
             }
 
             void release_waiters()
@@ -96,7 +96,7 @@ namespace boost
 
             bool woken()
             {
-                unsigned long const woken_result=detail::win32::WaitForSingleObjectEx(wake_sem,0,0);
+                unsigned long const woken_result=detail::winapi::WaitForSingleObjectEx(wake_sem,0,0);
                 BOOST_ASSERT((woken_result==detail::win32::timeout) || (woken_result==0));
                 return woken_result==0;
             }
@@ -135,7 +135,7 @@ namespace boost
             void wake_waiters(long count_to_wake)
             {
                 detail::interlocked_write_release(&total_count,total_count-count_to_wake);
-                detail::win32::ReleaseSemaphore(wake_sem,count_to_wake,0);
+                detail::winapi::ReleaseSemaphore(wake_sem,count_to_wake,0);
             }
 
             template<typename lock_type>
