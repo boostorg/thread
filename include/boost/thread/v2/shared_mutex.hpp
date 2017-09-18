@@ -156,6 +156,7 @@ public:
 #include <boost/chrono.hpp>
 #include <climits>
 #include <boost/system/system_error.hpp>
+#include <boost/thread/detail/internal_clock.hpp>
 #define BOOST_THREAD_INLINE inline
 
 namespace boost {

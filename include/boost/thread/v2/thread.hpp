@@ -13,6 +13,7 @@
 #endif
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/lock_types.hpp>
+#include <boost/thread/detail/internal_clock.hpp>
 
 namespace boost
 {

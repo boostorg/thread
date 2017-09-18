@@ -19,6 +19,7 @@
 
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/detail/move.hpp>
+#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/thread/detail/invoker.hpp>
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
