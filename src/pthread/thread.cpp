@@ -437,25 +437,23 @@ namespace boost
 
                 if (ts >  detail::timespec_duration::zero())
                 {
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+                  // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
+                  // namespace because they do not provide an interruption point.
+    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
                   BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.get())));
     #     else
                   BOOST_VERIFY(!pthread_delay_np(&ts.get()));
     #     endif
-    #   elif defined(BOOST_HAS_NANOSLEEP) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+    #   elif defined(BOOST_HAS_NANOSLEEP)
                   nanosleep(&ts.get(), 0);
-    #   elif defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+    #   else
+                  // Fall back to using a condition variable even though it does provide an interruption point.
                   const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
                   while (cond.do_wait_until(lock, ts2)) {}
-    #   else
-                  mutex mx;
-                  unique_lock<mutex> lock(mx);
-                  condition_variable cond;
-                  cond.do_wait_for(lock, ts);
     #   endif
                 }
           }
@@ -493,21 +491,11 @@ namespace boost
       {
         void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
         {
-#if 0
-            boost::this_thread::no_interruption_point::hidden::sleep_for(ts);
-#else // VBE
-            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
-
-            if(thread_info)
-            {
-              unique_lock<mutex> lk(thread_info->sleep_mutex);
-              while( thread_info->sleep_condition.do_wait_for(lk,ts)) {}
-            }
-            else
-            {
-              boost::this_thread::no_interruption_point::hidden::sleep_for(ts);
-            }
-#endif
+            const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
+            mutex mx;
+            unique_lock<mutex> lock(mx);
+            condition_variable cond;
+            while (cond.do_wait_until(lock, ts2)) {}
         }
 
         void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
