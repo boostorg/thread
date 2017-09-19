@@ -16,7 +16,9 @@
 #include <boost/thread/lock_types.hpp>
 #endif
 #include <boost/thread/thread_time.hpp>
+#if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
+#endif
 #include <boost/assert.hpp>
 #include <errno.h>
 #include <boost/thread/pthread/timespec.hpp>
@@ -36,6 +38,11 @@
 
 
 #include <boost/config/abi_prefix.hpp>
+
+// CLOCK_MONOTONIC only works with pthread_cond_timedwait(), not with pthread_mutex_timedlock()
+#if defined(BOOST_PTHREAD_HAS_TIMEDLOCK) && !defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+#define BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
+#endif
 
 #ifndef BOOST_THREAD_HAS_NO_EINTR_BUG
 #define BOOST_THREAD_HAS_EINTR_BUG
@@ -165,7 +172,7 @@ namespace boost
     {
     private:
         pthread_mutex_t m;
-#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
         pthread_cond_t cond;
         bool is_locked;
 #endif
@@ -178,21 +185,21 @@ namespace boost
             {
                 boost::throw_exception(thread_resource_error(res, "boost:: timed_mutex constructor failed in pthread_mutex_init"));
             }
-#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
-            int const res2=pthread_cond_init(&cond,NULL);
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
+            int const res2=boost::detail::cond_init(cond);
             if(res2)
             {
                 BOOST_VERIFY(!posix::pthread_mutex_destroy(&m));
                 //BOOST_VERIFY(!pthread_mutex_destroy(&m));
-                boost::throw_exception(thread_resource_error(res2, "boost:: timed_mutex constructor failed in pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost:: timed_mutex constructor failed in boost::detail::cond_init"));
             }
             is_locked=false;
-#endif
+#endif // !defined BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
         }
         ~timed_mutex()
         {
             BOOST_VERIFY(!posix::pthread_mutex_destroy(&m));
-#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifndef BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
             BOOST_VERIFY(!pthread_cond_destroy(&cond));
 #endif
         }
@@ -201,14 +208,14 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-            return timed_lock(get_system_time()+relative_time);
+            return do_try_lock_until(boost::detail::to_abs_internal_timespec(relative_time));
         }
         bool timed_lock(boost::xtime const & absolute_time)
         {
             return timed_lock(system_time(absolute_time));
         }
 #endif
-#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK
+#ifdef BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
         void lock()
         {
             int res = posix::pthread_mutex_lock(&m);
@@ -254,7 +261,7 @@ namespace boost
         }
     public:
 
-#else
+#else // !defined BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
         void lock()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
@@ -300,44 +307,26 @@ namespace boost
             return true;
         }
     public:
-#endif
+#endif // !defined BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
 
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            struct timespec const ts=boost::detail::to_timespec(abs_time);
-            return do_try_lock_until(ts);
+            return do_try_lock_until(boost::detail::to_abs_internal_timespec(abs_time));
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
         bool try_lock_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_lock_until(chrono::steady_clock::now() + rel_time);
+          return do_try_lock_until(boost::detail::to_abs_internal_timespec(rel_time));
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
-          typename Clock::time_point  c_now = Clock::now();
-          return try_lock_until(s_now + ceil<nanoseconds>(t - c_now));
+          return do_try_lock_until(boost::detail::to_abs_internal_timespec(t));
         }
-        template <class Duration>
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, Duration>& t)
-        {
-          using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
-          return try_lock_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-        }
-        bool try_lock_until(const chrono::time_point<chrono::system_clock, chrono::nanoseconds>& tp)
-        {
-          //using namespace chrono;
-          chrono::nanoseconds d = tp.time_since_epoch();
-          timespec ts = boost::detail::to_timespec(d);
-          return do_try_lock_until(ts);
-        }
-#endif
+#endif // defined BOOST_THREAD_USES_CHRONO
 
 #define BOOST_THREAD_DEFINES_TIMED_MUTEX_NATIVE_HANDLE
         typedef pthread_mutex_t* native_handle_type;
@@ -354,6 +343,8 @@ namespace boost
     };
 
 }
+
+#undef BOOST_PTHREAD_HAS_TIMEDLOCK_LOCAL
 
 #include <boost/config/abi_suffix.hpp>
 

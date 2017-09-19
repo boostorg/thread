@@ -134,6 +134,20 @@ namespace boost
         return true;
     }
 
+    template<typename predicate_type>
+    bool condition_variable::do_wait_until(
+         unique_lock<mutex>& m,
+         struct timespec const &timeout,
+         predicate_type pred)
+    {
+        while (!pred())
+        {
+            if (!do_wait_until(m, timeout))
+                return pred();
+        }
+        return true;
+    }
+
     inline void condition_variable::notify_one() BOOST_NOEXCEPT
     {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -164,11 +178,11 @@ namespace boost
             {
                 boost::throw_exception(thread_resource_error(res, "boost::condition_variable_any::condition_variable_any() failed in pthread_mutex_init"));
             }
-            int const res2 = detail::monotonic_pthread_cond_init(cond);
+            int const res2=boost::detail::cond_init(cond);
             if(res2)
             {
                 BOOST_VERIFY(!pthread_mutex_destroy(&internal_mutex));
-                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable_any::condition_variable_any() failed in detail::monotonic_pthread_cond_init"));
+                boost::throw_exception(thread_resource_error(res2, "boost::condition_variable_any::condition_variable_any() failed in boost::detail::cond_init"));
             }
         }
         ~condition_variable_any()
@@ -212,8 +226,7 @@ namespace boost
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
-            struct timespec const timeout=detail::to_timespec(abs_time);
-            return do_wait_until(m, timeout);
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(abs_time));
         }
         template<typename lock_type>
         bool timed_wait(lock_type& m,xtime const& abs_time)
@@ -224,18 +237,22 @@ namespace boost
         template<typename lock_type,typename duration_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration)
         {
-            return timed_wait(m,get_system_time()+wait_duration);
+            if (wait_duration.is_pos_infinity())
+            {
+                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return true;
+            }
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(wait_duration));
         }
 
         template<typename lock_type,typename predicate_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time, predicate_type pred)
         {
-            while (!pred())
-            {
-                if(!timed_wait(m, abs_time))
-                    return pred();
-            }
-            return true;
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(abs_time),pred);
         }
 
         template<typename lock_type,typename predicate_type>
@@ -247,37 +264,31 @@ namespace boost
         template<typename lock_type,typename duration_type,typename predicate_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
         {
-            return timed_wait(m,get_system_time()+wait_duration,pred);
+            if (wait_duration.is_pos_infinity())
+            {
+                while (!pred())
+                {
+                  wait(m); // or do_wait(m,detail::timeout::sentinel());
+                }
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return pred();
+            }
+            return do_wait_until(m,boost::detail::to_abs_internal_timespec(wait_duration),pred);
         }
-#endif
-#ifndef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#endif // defined BOOST_THREAD_USES_DATETIME
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class lock_type,class Duration>
-        cv_status
-        wait_until(
-                lock_type& lock,
-                const chrono::time_point<chrono::system_clock, Duration>& t)
-        {
-          using namespace chrono;
-          typedef time_point<system_clock, nanoseconds> nano_sys_tmpt;
-          wait_until(lock,
-                        nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-          return system_clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
-        }
-
         template <class lock_type, class Clock, class Duration>
         cv_status
         wait_until(
                 lock_type& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
-          system_clock::time_point     s_now = system_clock::now();
-          typename Clock::time_point  c_now = Clock::now();
-          wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
-          return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(t))
+            ? cv_status::no_timeout : cv_status::timeout;
         }
 
         template <class lock_type, class Rep, class Period>
@@ -286,86 +297,10 @@ namespace boost
                 lock_type& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          using namespace chrono;
-          system_clock::time_point s_now = system_clock::now();
-          steady_clock::time_point c_now = steady_clock::now();
-          wait_until(lock, s_now + ceil<nanoseconds>(d));
-          return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
-
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(d))
+            ? cv_status::no_timeout : cv_status::timeout;
         }
 
-        template <class lock_type>
-        cv_status wait_until(
-            lock_type& lk,
-            chrono::time_point<chrono::system_clock, chrono::nanoseconds> tp)
-        {
-            using namespace chrono;
-            nanoseconds d = tp.time_since_epoch();
-            timespec ts = boost::detail::to_timespec(d);
-            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
-            else return cv_status::timeout;
-        }
-#endif
-#else // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-#ifdef BOOST_THREAD_USES_CHRONO
-
-        template <class lock_type, class Duration>
-        cv_status
-        wait_until(
-            lock_type& lock,
-            const chrono::time_point<chrono::steady_clock, Duration>& t)
-        {
-            using namespace chrono;
-            typedef time_point<steady_clock, nanoseconds> nano_sys_tmpt;
-            wait_until(lock,
-                        nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-            return steady_clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
-        }
-
-        template <class lock_type, class Clock, class Duration>
-        cv_status
-        wait_until(
-            lock_type& lock,
-            const chrono::time_point<Clock, Duration>& t)
-        {
-            using namespace chrono;
-            steady_clock::time_point     s_now = steady_clock::now();
-            typename Clock::time_point  c_now = Clock::now();
-            wait_until(lock, s_now + ceil<nanoseconds>(t - c_now));
-            return Clock::now() < t ? cv_status::no_timeout : cv_status::timeout;
-        }
-
-        template <class lock_type, class Rep, class Period>
-        cv_status
-        wait_for(
-            lock_type& lock,
-            const chrono::duration<Rep, Period>& d)
-        {
-            using namespace chrono;
-            steady_clock::time_point c_now = steady_clock::now();
-            wait_until(lock, c_now + ceil<nanoseconds>(d));
-            return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
-        }
-
-        template <class lock_type>
-        inline cv_status wait_until(
-            lock_type& lock,
-            chrono::time_point<chrono::steady_clock, chrono::nanoseconds> tp)
-        {
-            using namespace chrono;
-            nanoseconds d = tp.time_since_epoch();
-            timespec ts = boost::detail::to_timespec(d);
-            if (do_wait_until(lock, ts)) return cv_status::no_timeout;
-            else return cv_status::timeout;
-        }
-
-#endif
-#endif // defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-
-#ifdef BOOST_THREAD_USES_CHRONO
         template <class lock_type, class Clock, class Duration, class Predicate>
         bool
         wait_until(
@@ -373,12 +308,7 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t,
                 Predicate pred)
         {
-            while (!pred())
-            {
-                if (wait_until(lock, t) == cv_status::timeout)
-                    return pred();
-            }
-            return true;
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(t), boost::move(pred));
         }
 
         template <class lock_type, class Rep, class Period, class Predicate>
@@ -388,9 +318,9 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+          return do_wait_until(lock, boost::detail::to_abs_internal_timespec(d), boost::move(pred));
         }
-#endif
+#endif // defined BOOST_THREAD_USES_CHRONO
 
         void notify_one() BOOST_NOEXCEPT
         {
@@ -435,6 +365,20 @@ namespace boost
               boost::throw_exception(condition_error(res, "boost::condition_variable_any::do_wait_until() failed in pthread_cond_timedwait"));
           }
           return true;
+        }
+
+        template <class lock_type, typename predicate_type>
+        bool do_wait_until(
+          lock_type& m,
+          struct timespec const &timeout,
+          predicate_type pred)
+        {
+            while (!pred())
+            {
+                if (!do_wait_until(m, timeout))
+                    return pred();
+            }
+            return true;
         }
     };
 
