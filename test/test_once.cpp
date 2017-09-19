@@ -13,8 +13,7 @@
 #include <boost/thread/once.hpp>
 #include <iostream>
 
-#define LOG \
-  if (false) {} else std::cout << std::endl << __FILE__ << "[" << __LINE__ << "]"
+#include <boost/thread/detail/log.hpp>
 
 boost::once_flag flag=BOOST_ONCE_INIT;
 int var_to_init=0;
@@ -47,7 +46,7 @@ void call_once_thread()
 
 BOOST_AUTO_TEST_CASE(test_call_once)
 {
-  LOG;
+  BOOST_DETAIL_THREAD_LOG;
 
     unsigned const num_threads=20;
     boost::thread_group group;
@@ -106,7 +105,7 @@ void call_once_with_functor()
 
 BOOST_AUTO_TEST_CASE(test_call_once_arbitrary_functor)
 {
-  LOG;
+  BOOST_DETAIL_THREAD_LOG;
 
     unsigned const num_threads=20;
     boost::thread_group group;
@@ -167,7 +166,7 @@ void call_once_with_exception()
 
 BOOST_AUTO_TEST_CASE(test_call_once_retried_on_exception)
 {
-  LOG;
+  BOOST_DETAIL_THREAD_LOG;
     unsigned const num_threads=20;
     boost::thread_group group;
 
