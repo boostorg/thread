@@ -23,33 +23,6 @@ namespace boost
     {
 #ifdef BOOST_THREAD_USES_CHRONO
 
-#if !defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
-    template <class Duration>
-    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
-    {
-      using namespace chrono;
-      mutex mut;
-      condition_variable cv;
-      unique_lock<mutex> lk(mut);
-      while (thread_detail::internal_clock_t::now() < t)
-      {
-        cv.wait_until(lk, t);
-      }
-    }
-    template <class Clock, class Duration>
-    void sleep_until(const chrono::time_point<Clock, Duration>& t)
-    {
-      using namespace chrono;
-      Duration d = t - Clock::now();
-      while (d > Duration::zero())
-      {
-        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
-        sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
-        d = t - Clock::now();
-      }
-    }
-#endif
-
 // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
 // namespace because they do not provide an interruption point.
 #if defined BOOST_THREAD_SLEEP_FOR_IS_STEADY
@@ -96,6 +69,7 @@ namespace boost
     }
 
 #else
+
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
     {
@@ -103,6 +77,32 @@ namespace boost
       if (d > duration<Rep, Period>::zero())
       {
         sleep_until(steady_clock::now() + d);
+      }
+    }
+
+    template <class Duration>
+    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+    {
+      using namespace chrono;
+      mutex mut;
+      condition_variable cv;
+      unique_lock<mutex> lk(mut);
+      while (thread_detail::internal_clock_t::now() < t)
+      {
+        cv.wait_until(lk, t);
+      }
+    }
+
+    template <class Clock, class Duration>
+    void sleep_until(const chrono::time_point<Clock, Duration>& t)
+    {
+      using namespace chrono;
+      Duration d = t - Clock::now();
+      while (d > Duration::zero())
+      {
+        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        sleep_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d100));
+        d = t - Clock::now();
       }
     }
 
@@ -124,6 +124,7 @@ namespace boost
         cv.wait_until(lk, t);
       }
     }
+
     template <class Clock, class Duration>
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
@@ -136,6 +137,7 @@ namespace boost
         d = t - Clock::now();
       }
     }
+
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
     {
