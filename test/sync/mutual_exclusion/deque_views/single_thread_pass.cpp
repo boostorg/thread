@@ -111,7 +111,7 @@ int main()
       BOOST_TEST(! q.closed());
   }
 #endif
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // empty queue push rvalue/non_copyable succeeds
     boost::deque_adaptor<boost::sync_deque<non_copyable> > q;
@@ -217,7 +217,7 @@ int main()
       BOOST_TEST(! q.closed());
   }
 #endif
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // empty queue nonblocking_push_back rvalue/non-copyable succeeds
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
@@ -243,7 +243,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // 1-element queue pull_front succeed
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
@@ -271,7 +271,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // 1-element queue pull_front succeed
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
@@ -299,7 +299,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // 1-element queue try_pull_front succeed
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
@@ -329,7 +329,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // 1-element queue nonblocking_pull_front succeed
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
@@ -372,7 +372,7 @@ int main()
       BOOST_TEST_EQ(q.size(), 0u);
       BOOST_TEST(! q.closed());
   }
-#if ! defined _MSC_VER || (_MSC_VER >= 1910)
+#if !BOOST_WORKAROUND(BOOST_MSVC, <= 1900)
   {
     // 1-element queue wait_pull_front succeed
     boost::deque_adaptor<boost::sync_deque<non_copyable> > sq;
