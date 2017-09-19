@@ -111,8 +111,6 @@ namespace boost
             pthread_t thread_handle;
             boost::mutex data_mutex;
             boost::condition_variable done_condition;
-            boost::mutex sleep_mutex;
-            boost::condition_variable sleep_condition;
             bool done;
             bool join_started;
             bool joined;
@@ -244,7 +242,6 @@ namespace boost
         namespace hidden
         {
           void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
-          void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts);
         }
 
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -265,7 +262,6 @@ namespace boost
           namespace hidden
           {
             void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
-            void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts);
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
@@ -292,9 +288,6 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-#if 0
-            boost::this_thread::hidden::sleep_until(detail::internal_timespec_timepoint(abs_time));
-#else
             const detail::real_timespec_timepoint ts(abs_time);
             mutex mx;
             unique_lock<mutex> lock(mx);
@@ -313,7 +306,6 @@ namespace boost
             }
 #else
             while (cond.do_wait_until(lock, ts)) {}
-#endif
 #endif
         }
 
