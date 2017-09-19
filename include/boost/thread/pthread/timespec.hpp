@@ -203,7 +203,7 @@ namespace boost
       }
     };
 
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(CLOCK_MONOTONIC)
   class mono_timespec_timepoint
   {
   public:

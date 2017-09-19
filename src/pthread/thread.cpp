@@ -491,11 +491,26 @@ namespace boost
       {
         void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
         {
-            const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
             mutex mx;
             unique_lock<mutex> lock(mx);
             condition_variable cond;
+
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const timespec maxSleepTs = {0, 100000000}; // 100 milliseconds
+            const detail::timespec_duration maxSleep(maxSleepTs);
+
+            const detail::mono_timespec_timepoint& ts2 = detail::mono_timespec_clock::now() + ts;
+            detail::timespec_duration d = ts;
+            while (d > detail::timespec_duration::zero())
+            {
+                detail::timespec_duration d100 = (std::min)(d, maxSleep);
+                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d100);
+                d = ts2 - detail::mono_timespec_clock::now();
+            }
+#else
+            const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
             while (cond.do_wait_until(lock, ts2)) {}
+#endif
         }
 
         void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
