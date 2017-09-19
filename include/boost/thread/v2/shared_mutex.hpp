@@ -249,7 +249,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ & write_entered_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate1_.wait_until(lk, abs_time);
           if ((state_ & write_entered_) == 0)
@@ -261,7 +261,7 @@ namespace boost {
       state_ |= write_entered_;
       if (state_ & n_readers_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate2_.wait_until(lk, abs_time);
           if ((state_ & n_readers_) == 0)
@@ -284,7 +284,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if ((state_ & write_entered_) || (state_ & n_readers_) == n_readers_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate1_.wait_until(lk, abs_time);
           if ((state_ & write_entered_) == 0 &&
@@ -306,7 +306,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ & write_entered_)
       {
-        while (true)
+        for (;;)
         {
           bool status = gate1_.timed_wait(lk, abs_time);
           if ((state_ & write_entered_) == 0)
@@ -318,7 +318,7 @@ namespace boost {
       state_ |= write_entered_;
       if (state_ & n_readers_)
       {
-        while (true)
+        for (;;)
         {
           bool status = gate2_.timed_wait(lk, abs_time);
           if ((state_ & n_readers_) == 0)
@@ -337,7 +337,7 @@ namespace boost {
         boost::unique_lock<mutex_t> lk(mut_);
         if (state_ & write_entered_)
         {
-          while (true)
+          for (;;)
           {
             bool status = gate1_.timed_wait(lk, abs_time);
             if ((state_ & write_entered_) == 0)
@@ -349,7 +349,7 @@ namespace boost {
         state_ |= write_entered_;
         if (state_ & n_readers_)
         {
-          while (true)
+          for (;;)
           {
             bool status = gate2_.timed_wait(lk, abs_time);
             if ((state_ & n_readers_) == 0)
@@ -530,7 +530,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ & (write_entered_ | upgradable_entered_))
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate1_.wait_until(lk, abs_time);
           if ((state_ & (write_entered_ | upgradable_entered_)) == 0)
@@ -542,7 +542,7 @@ namespace boost {
       state_ |= write_entered_;
       if (state_ & n_readers_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate2_.wait_until(lk, abs_time);
           if ((state_ & n_readers_) == 0)
@@ -565,7 +565,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if ((state_ & write_entered_) || (state_ & n_readers_) == n_readers_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate1_.wait_until(lk, abs_time);
           if ((state_ & write_entered_) == 0 &&
@@ -590,7 +590,7 @@ namespace boost {
       if ((state_ & (write_entered_ | upgradable_entered_)) ||
           (state_ & n_readers_) == n_readers_)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate1_.wait_until(lk, abs_time);
           if ((state_ & (write_entered_ | upgradable_entered_)) == 0 &&
@@ -612,7 +612,7 @@ namespace boost {
         boost::unique_lock<mutex_t> lk(mut_);
         if (state_ & (write_entered_ | upgradable_entered_))
         {
-          while (true)
+          for (;;)
           {
             bool status = gate1_.timed_wait(lk, abs_time);
             if ((state_ & (write_entered_ | upgradable_entered_)) == 0)
@@ -624,7 +624,7 @@ namespace boost {
         state_ |= write_entered_;
         if (state_ & n_readers_)
         {
-          while (true)
+          for (;;)
           {
             bool status = gate2_.timed_wait(lk, abs_time);
             if ((state_ & n_readers_) == 0)
@@ -643,7 +643,7 @@ namespace boost {
         boost::unique_lock<mutex_t> lk(mut_);
         if ((state_ & write_entered_) || (state_ & n_readers_) == n_readers_)
         {
-          while (true)
+          for (;;)
           {
             bool status = gate1_.timed_wait(lk, abs_time);
             if ((state_ & write_entered_) == 0 &&
@@ -664,7 +664,7 @@ namespace boost {
         if ((state_ & (write_entered_ | upgradable_entered_)) ||
             (state_ & n_readers_) == n_readers_)
         {
-          while (true)
+          for (;;)
           {
             bool status = gate1_.timed_wait(lk, abs_time);
             if ((state_ & (write_entered_ | upgradable_entered_)) == 0 &&
@@ -689,7 +689,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if (state_ != 1)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate2_.wait_until(lk, abs_time);
           if (state_ == 1)
@@ -710,7 +710,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if ((state_ & (write_entered_ | upgradable_entered_)) != 0)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate2_.wait_until(lk, abs_time);
           if ((state_ & (write_entered_ | upgradable_entered_)) == 0)
@@ -731,7 +731,7 @@ namespace boost {
       boost::unique_lock<mutex_t> lk(mut_);
       if ((state_ & n_readers_) != 1)
       {
-        while (true)
+        for (;;)
         {
           boost::cv_status status = gate2_.wait_until(lk, abs_time);
           if ((state_ & n_readers_) == 1)
