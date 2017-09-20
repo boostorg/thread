@@ -19,6 +19,7 @@
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/duration.hpp>
 #include <boost/chrono/system_clocks.hpp>
+#include <boost/chrono/ceil.hpp>
 #endif
 
 #if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
@@ -63,12 +64,11 @@ namespace boost
       }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-      timespec_duration(chrono::nanoseconds const& ns)
+      template <class Rep, class Period>
+      timespec_duration(chrono::duration<Rep, Period> const& d)
       {
-        struct timespec d = { 0, 0 };
-        d.tv_sec = static_cast<long>(chrono::duration_cast<chrono::seconds>(ns).count());
-        d.tv_nsec = static_cast<long>((ns - chrono::duration_cast<chrono::seconds>(ns)).count());
-        value =  d;
+        value.tv_sec  = static_cast<long>(chrono::duration_cast<chrono::seconds>(d).count());
+        value.tv_nsec = static_cast<long>((chrono::ceil<chrono::nanoseconds>(d) - chrono::duration_cast<chrono::seconds>(d)).count());
       }
 #endif
 
@@ -120,15 +120,14 @@ namespace boost
       real_timespec_timepoint(boost::system_time const& abs_time)
       {
         boost::posix_time::time_duration const time_since_epoch = abs_time-boost::posix_time::from_time_t(0);
-        timespec_duration d = time_since_epoch ;
-        value =  d.get();
+        value = timespec_duration(time_since_epoch).get();
       }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-      real_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time)
+      template <class Duration>
+      real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
       {
-        timespec_duration d = abs_time.time_since_epoch() ;
-        value =  d.get();
+        value = timespec_duration(abs_time.time_since_epoch()).get();
       }
 #endif
 
@@ -213,8 +212,10 @@ namespace boost
     inline mono_timespec_timepoint(boost::system_time const& abs_time);
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-    inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time);
-    inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, chrono::nanoseconds> const& abs_time);
+    template <class Duration>
+    inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time);
+    template <class Duration>
+    inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
 #endif
 
     timespec& get() { return value; }
@@ -284,21 +285,20 @@ namespace boost
   mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
   {
     boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
-    timespec_duration d = since_now ;
-    value = (mono_timespec_clock::now() + d).get();
+    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
   }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::system_clock, chrono::nanoseconds> const& abs_time)
+  template <class Duration>
+  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
   {
-    chrono::nanoseconds since_now = abs_time - chrono::system_clock::now();
-    timespec_duration d = since_now ;
-    value = (mono_timespec_clock::now() + d).get();
+    Duration since_now = abs_time - chrono::system_clock::now();
+    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
   }
-  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, chrono::nanoseconds> const& abs_time)
+  template <class Duration>
+  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
   {
-    timespec_duration d = abs_time.time_since_epoch() ;
-    value =  d.get();
+    value = timespec_duration(abs_time.time_since_epoch()).get();
   }
 #endif
 

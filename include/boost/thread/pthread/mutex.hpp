@@ -318,7 +318,7 @@ namespace boost
           Duration d = t - Clock::now();
           if ( d <= Duration::zero() ) return false;
           d = (std::min)(d, Duration(milliseconds(100)));
-          while ( ! try_lock_until(thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d)))
+          while ( ! try_lock_until(thread_detail::internal_clock_t::now() + d))
           {
               d = t - Clock::now();
               if ( d <= Duration::zero() ) return false;
@@ -329,13 +329,7 @@ namespace boost
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
-          using namespace chrono;
-          typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
-          return try_lock_until(nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
-        }
-        bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds>& tp)
-        {
-          detail::internal_timespec_timepoint ts = tp;
+          detail::internal_timespec_timepoint ts = t;
           return do_try_lock_until(ts);
         }
 #endif

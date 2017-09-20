@@ -252,14 +252,11 @@ namespace boost
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
-          template <class Rep, class Period>
-          void sleep_for(const chrono::duration<Rep, Period>& d);
     #ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
-
-          inline
-          void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
+          template <class Rep, class Period>
+          void sleep_for(const chrono::duration<Rep, Period>& d)
           {
-              return boost::this_thread::no_interruption_point::hidden::sleep_for(detail::timespec_duration(ns));
+              return boost::this_thread::no_interruption_point::hidden::sleep_for(detail::timespec_duration(d));
           }
     #endif
     #endif // BOOST_THREAD_USES_CHRONO

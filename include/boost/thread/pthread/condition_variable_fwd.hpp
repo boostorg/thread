@@ -205,10 +205,9 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
-          using namespace chrono;
-          typedef time_point<thread_detail::internal_clock_t, nanoseconds> nano_sys_tmpt;
-          return wait_until(lock,
-                        nano_sys_tmpt(ceil<nanoseconds>(t.time_since_epoch())));
+          const boost::detail::internal_timespec_timepoint ts = t;
+          if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+          else return cv_status::timeout;
         }
 
         template <class Clock, class Duration>
@@ -221,7 +220,7 @@ namespace boost
           Duration d = t - Clock::now();
           if ( d <= Duration::zero() ) return cv_status::timeout;
           d = (std::min)(d, Duration(milliseconds(100)));
-          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + ceil<nanoseconds>(d)))
+          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
           {
               d = t - Clock::now();
               if ( d <= Duration::zero() ) return cv_status::timeout;
@@ -237,15 +236,6 @@ namespace boost
                 const chrono::duration<Rep, Period>& d)
         {
           return wait_until(lock, chrono::steady_clock::now() + d);
-        }
-
-        inline cv_status wait_until(
-            unique_lock<mutex>& lk,
-            chrono::time_point<thread_detail::internal_clock_t, chrono::nanoseconds> tp)
-        {
-            const boost::detail::internal_timespec_timepoint ts = tp;
-            if (do_wait_until(lk, ts)) return cv_status::no_timeout;
-            else return cv_status::timeout;
         }
 
         template <class Clock, class Duration, class Predicate>
