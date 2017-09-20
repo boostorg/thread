@@ -292,7 +292,8 @@ namespace boost
   template <class Duration>
   mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
   {
-    Duration since_now = abs_time - chrono::system_clock::now();
+    typedef typename common_type<Duration, typename chrono::system_clock::duration>::type CD;
+    CD since_now = abs_time - chrono::system_clock::now();
     value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
   }
   template <class Duration>

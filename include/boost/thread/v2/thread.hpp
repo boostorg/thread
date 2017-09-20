@@ -41,10 +41,11 @@ namespace boost
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
       using namespace chrono;
-      Duration d = t - Clock::now();
-      while (d > Duration::zero())
+      typedef typename common_type<Duration, typename Clock::duration>::type CD;
+      CD d = t - Clock::now();
+      while (d > CD::zero())
       {
-        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        CD d100 = (std::min)(d, CD(milliseconds(100)));
         sleep_for(d100);
         d = t - Clock::now();
       }
@@ -76,10 +77,11 @@ namespace boost
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
       using namespace chrono;
-      Duration d = t - Clock::now();
-      while (d > Duration::zero())
+      typedef typename common_type<Duration, typename Clock::duration>::type CD;
+      CD d = t - Clock::now();
+      while (d > CD::zero())
       {
-        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        CD d100 = (std::min)(d, CD(milliseconds(100)));
         sleep_until(thread_detail::internal_clock_t::now() + d100);
         d = t - Clock::now();
       }
@@ -105,10 +107,11 @@ namespace boost
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
       using namespace chrono;
-      Duration d = t - Clock::now();
-      while (d > Duration::zero())
+      typedef typename common_type<Duration, typename Clock::duration>::type CD;
+      CD d = t - Clock::now();
+      while (d > CD::zero())
       {
-        Duration d100 = (std::min)(d, Duration(milliseconds(100)));
+        CD d100 = (std::min)(d, CD(milliseconds(100)));
         sleep_until(thread_detail::internal_clock_t::now() + d100);
         d = t - Clock::now();
       }

@@ -297,14 +297,15 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          Duration d = t - Clock::now();
-          if ( d <= Duration::zero() ) return cv_status::timeout;
-          d = (std::min)(d, Duration(milliseconds(100)));
+          typedef typename common_type<Duration, typename Clock::duration>::type CD;
+          CD d = t - Clock::now();
+          if ( d <= CD::zero() ) return cv_status::timeout;
+          d = (std::min)(d, CD(milliseconds(100)));
           while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
           {
               d = t - Clock::now();
-              if ( d <= Duration::zero() ) return cv_status::timeout;
-              d = (std::min)(d, Duration(milliseconds(100)));
+              if ( d <= CD::zero() ) return cv_status::timeout;
+              d = (std::min)(d, CD(milliseconds(100)));
           }
           return cv_status::no_timeout;
         }
