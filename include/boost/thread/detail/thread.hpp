@@ -493,7 +493,7 @@ namespace boost
             thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
             typedef typename common_type<Duration, typename Clock::duration>::type CD;
             CD d = t - Clock::now();
-            if (d <= Clock::duration::zero()) return false; // in case the Clock::time_point t is already reached
+            if (d <= CD::zero()) return false; // in case the Clock::time_point t is already reached
             joined = try_join_until(s_now + d);
           } while (! joined);
           return true;
