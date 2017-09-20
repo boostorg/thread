@@ -244,19 +244,6 @@ namespace boost
           void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
         }
 
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Rep, class Period>
-        void sleep_for(const chrono::duration<Rep, Period>& d);
-#ifdef BOOST_THREAD_SLEEP_FOR_IS_STEADY
-
-        inline
-        void BOOST_SYMBOL_VISIBLE sleep_for(const chrono::nanoseconds& ns)
-        {
-            return boost::this_thread::hidden::sleep_for(detail::timespec_duration(ns));
-        }
-#endif
-#endif // BOOST_THREAD_USES_CHRONO
-
         namespace no_interruption_point
         {
           namespace hidden
