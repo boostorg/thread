@@ -61,12 +61,6 @@ namespace boost
           }
           return true;
         }
-        bool do_wait_for(
-            unique_lock<mutex>& lock,
-            detail::timespec_duration const &timeout)
-        {
-            return do_wait_until(lock, timeout + detail::internal_timespec_clock::now());
-        }
 
     public:
       BOOST_THREAD_NO_COPYABLE(condition_variable)

@@ -87,10 +87,7 @@ namespace boost
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
-      while (thread_detail::internal_clock_t::now() < t)
-      {
-        cv.wait_until(lk, t);
-      }
+      while (cv_status::no_timeout == cv.wait_until(lk, t)) {}
     }
 
     template <class Clock, class Duration>
@@ -119,10 +116,7 @@ namespace boost
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
-      while (thread_detail::internal_clock_t::now() < t)
-      {
-        cv.wait_until(lk, t);
-      }
+      while (cv_status::no_timeout == cv.wait_until(lk, t)) {}
     }
 
     template <class Clock, class Duration>

@@ -457,34 +457,6 @@ namespace boost
     #   endif
                 }
           }
-
-          void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
-          {
-                detail::internal_timespec_timepoint now = detail::internal_timespec_clock::now();
-                if (ts > now)
-                {
-                  for (int foo=0; foo < 5; ++foo)
-                  {
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-                    detail::timespec_duration d = ts - now;
-                    BOOST_VERIFY(!pthread_delay_np(&d.get()));
-    #   elif defined(BOOST_HAS_NANOSLEEP)
-                    detail::timespec_duration d = ts - now;
-                    nanosleep(&d.get(), 0);
-    #   else
-                    mutex mx;
-                    unique_lock<mutex> lock(mx);
-                    condition_variable cond;
-                    cond.do_wait_until(lock, ts);
-    #   endif
-                    detail::internal_timespec_timepoint now2 = detail::internal_timespec_clock::now();
-                    if (now2 >= ts)
-                    {
-                      return;
-                    }
-                  }
-                }
-          }
         }
       }
       namespace hidden
@@ -511,21 +483,6 @@ namespace boost
             const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
             while (cond.do_wait_until(lock, ts2)) {}
 #endif
-        }
-
-        void BOOST_THREAD_DECL sleep_until(const detail::internal_timespec_timepoint& ts)
-        {
-            boost::detail::thread_data_base* const thread_info=boost::detail::get_current_thread_data();
-
-            if(thread_info)
-            {
-              unique_lock<mutex> lk(thread_info->sleep_mutex);
-              while(thread_info->sleep_condition.do_wait_until(lk,ts)) {}
-            }
-            else
-            {
-              boost::this_thread::no_interruption_point::hidden::sleep_until(ts);
-            }
         }
       } // hidden
     } // this_thread
