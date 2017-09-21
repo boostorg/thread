@@ -216,11 +216,11 @@ namespace boost
     explicit mono_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
+    // fixme: delete this function once it's no longer being used because it's
+    // not a valid way to convert from system time to steady time
     inline mono_timespec_timepoint(boost::system_time const& abs_time);
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-    template <class Duration>
-    inline mono_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time);
     template <class Duration>
     inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
 #endif
@@ -273,6 +273,8 @@ namespace boost
 
   struct mono_timespec_clock
   {
+    // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
+    // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
     static inline mono_timespec_timepoint now()
     {
       timespec ts;
@@ -287,6 +289,8 @@ namespace boost
   };
 
 #if defined BOOST_THREAD_USES_DATETIME
+  // fixme: delete this function once it's no longer being used because it's
+  // not a valid way to convert from system time to steady time
   mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
   {
     boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
@@ -294,13 +298,6 @@ namespace boost
   }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
-  template <class Duration>
-  mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
-  {
-    typedef typename common_type<Duration, typename chrono::system_clock::duration>::type CD;
-    CD since_now = abs_time - chrono::system_clock::now();
-    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
-  }
   template <class Duration>
   mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
   {
