@@ -506,10 +506,20 @@ namespace boost
         bool do_try_join_for_noexcept(uintmax_t milli, bool& res);
         inline bool do_try_join_for(uintmax_t milli);
     public:
-        bool timed_join(const system_time& abs_time);
-        //{
-        //  return do_try_join_for(get_milliseconds_until(wait_until));
-        //}
+#if defined BOOST_THREAD_USES_DATETIME
+        bool timed_join(const system_time& abs_time)
+        {
+          posix_time::time_duration d = abs_time - get_system_time();
+          d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
+          while ( ! do_try_join_for(d.total_milliseconds()) )
+          {
+            d = abs_time - get_system_time();
+            if ( d <= posix_time::milliseconds(0) ) return false;
+            d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
+          }
+          return true;
+        }
+#endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Duration>
