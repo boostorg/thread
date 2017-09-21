@@ -113,7 +113,7 @@ namespace boost
       return lhs.getNs() >= rhs.getNs();
     }
 
-    inline timespec_duration timespec_milliseconds(long const& ms)
+    static inline timespec_duration timespec_milliseconds(long const& ms)
     {
       return timespec_duration(ms * 1000000l);
     }
