@@ -480,7 +480,7 @@ namespace boost
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
-          return try_join_until(thread_detail::internal_clock_t::now() + rel_time);
+          return try_join_until(chrono::steady_clock::now() + rel_time);
         }
 #endif
 
@@ -488,14 +488,16 @@ namespace boost
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          bool joined= false;
-          do {
-            thread_detail::internal_clock_t::time_point     s_now = thread_detail::internal_clock_t::now();
-            typedef typename common_type<Duration, typename Clock::duration>::type CD;
-            CD d = t - Clock::now();
-            if (d <= CD::zero()) return false; // in case the Clock::time_point t is already reached
-            joined = try_join_until(s_now + d);
-          } while (! joined);
+          typedef typename common_type<Duration, typename Clock::duration>::type CD;
+          CD d = t - Clock::now();
+          if ( d < CD::zero() ) return false; // d == zero() is valid
+          d = (std::min)(d, CD(milliseconds(100)));
+          while ( ! try_join_until(thread_detail::internal_clock_t::now() + d) )
+          {
+            d = t - Clock::now();
+            if ( d <= CD::zero() ) return false;
+            d = (std::min)(d, CD(milliseconds(100)));
+          }
           return true;
         }
 #endif
@@ -504,17 +506,26 @@ namespace boost
         bool do_try_join_for_noexcept(uintmax_t milli, bool& res);
         inline bool do_try_join_for(uintmax_t milli);
     public:
-        bool timed_join(const system_time& abs_time);
-        //{
-        //  return do_try_join_for(get_milliseconds_until(wait_until));
-        //}
+#if defined BOOST_THREAD_USES_DATETIME
+        bool timed_join(const system_time& abs_time)
+        {
+          posix_time::time_duration d = abs_time - get_system_time();
+          d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
+          while ( ! do_try_join_for(d.total_milliseconds()) )
+          {
+            d = abs_time - get_system_time();
+            if ( d <= posix_time::milliseconds(0) ) return false;
+            d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
+          }
+          return true;
+        }
+#endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Duration>
-        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_join_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
         {
-          chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(t-thread_detail::internal_clock_t::now());
-          return do_try_join_for(rel_time.count());
+          return try_join_for(t - chrono::steady_clock::now());
         }
 #endif
 
@@ -527,16 +538,27 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
-          const detail::internal_timespec_timepoint ts = abs_time;
+          const detail::real_timespec_timepoint ts(abs_time);
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+          detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+          d = (std::min)(d, detail::timespec_milliseconds(100));
+          while ( ! do_try_join_until(detail::internal_timespec_clock::now() + d) )
+          {
+            d = ts - detail::real_timespec_clock::now();
+            if ( d <= detail::timespec_duration::zero() ) return false;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+          }
+          return true;
+#else
           return do_try_join_until(ts);
+#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Duration>
         bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
-          const boost::detail::internal_timespec_timepoint ts = t;
-          return do_try_join_until(ts);
+          return do_try_join_until(boost::detail::internal_timespec_timepoint(t));
         }
 #endif // defined(BOOST_THREAD_PLATFORM_WIN32)
 
@@ -548,10 +570,23 @@ namespace boost
         inline bool timed_join(TimeDuration const& rel_time)
         {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-            return do_try_join_for(rel_time.total_milliseconds());
+          return do_try_join_for(rel_time.total_milliseconds());
 #else
-            const boost::detail::internal_timespec_timepoint ts = boost::detail::internal_timespec_clock::now() + boost::detail::timespec_duration(rel_time);
-            return do_try_join_until(ts);
+          detail::timespec_duration d(rel_time);
+          if ( d < detail::timespec_duration::zero() ) return false; // d == zero() is valid
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+          const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+          d = (std::min)(d, detail::timespec_milliseconds(100));
+          while ( ! do_try_join_until(detail::internal_timespec_clock::now() + d) )
+          {
+            d = ts - detail::mono_timespec_clock::now();
+            if ( d <= detail::timespec_duration::zero() ) return false;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+          }
+          return true;
+#else
+          return do_try_join_until(detail::internal_timespec_clock::now() + d);
+#endif
 #endif
         }
 #endif

@@ -1471,7 +1471,7 @@ namespace boost
         future_status
         wait_for(const chrono::duration<Rep, Period>& rel_time) const
         {
-          return wait_until(thread_detail::internal_clock_t::now() + rel_time);
+          return wait_until(chrono::steady_clock::now() + rel_time);
 
         }
         template <class Clock, class Duration>

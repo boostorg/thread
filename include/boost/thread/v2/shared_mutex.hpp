@@ -197,7 +197,7 @@ namespace boost {
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_lock_until(thread_detail::internal_clock_t::now() + rel_time);
+        return try_lock_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -214,8 +214,7 @@ namespace boost {
       bool
       try_lock_shared_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_lock_shared_until(thread_detail::internal_clock_t::now() +
-            rel_time);
+        return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -401,7 +400,7 @@ namespace boost {
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_lock_until(thread_detail::internal_clock_t::now() + rel_time);
+        return try_lock_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -417,8 +416,7 @@ namespace boost {
       bool
       try_lock_shared_for(const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_lock_shared_until(thread_detail::internal_clock_t::now() +
-            rel_time);
+        return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -435,8 +433,7 @@ namespace boost {
       try_lock_upgrade_for(
           const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_lock_upgrade_until(thread_detail::internal_clock_t::now() +
-            rel_time);
+        return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -452,8 +449,7 @@ namespace boost {
       try_unlock_shared_and_lock_for(
           const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_unlock_shared_and_lock_until(
-            thread_detail::internal_clock_t::now() + rel_time);
+        return try_unlock_shared_and_lock_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -469,8 +465,7 @@ namespace boost {
       try_unlock_shared_and_lock_upgrade_for(
           const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_unlock_shared_and_lock_upgrade_until(
-            thread_detail::internal_clock_t::now() + rel_time);
+        return try_unlock_shared_and_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
@@ -487,8 +482,7 @@ namespace boost {
       try_unlock_upgrade_and_lock_for(
           const boost::chrono::duration<Rep, Period>& rel_time)
       {
-        return try_unlock_upgrade_and_lock_until(
-            thread_detail::internal_clock_t::now() + rel_time);
+        return try_unlock_upgrade_and_lock_until(chrono::steady_clock::now() + rel_time);
       }
       template <class Clock, class Duration>
       bool
