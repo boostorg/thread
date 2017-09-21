@@ -422,7 +422,7 @@ namespace boost
                 mark_exceptional_finish_internal(boost::current_exception(), lock);
             }
 
-            void set_exception_at_thread_exit(exception_ptr e)
+            void set_exception_deferred(exception_ptr e)
             {
               unique_lock<boost::mutex> lk(this->mutex);
               if (has_value(lk))
@@ -431,6 +431,17 @@ namespace boost
               }
               exception=e;
               this->is_constructed = true;
+            }
+            void set_exception_at_thread_exit(exception_ptr e)
+            {
+              set_exception_deferred(e);
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (has_value(lk))
+//              {
+//                  throw_exception(promise_already_satisfied());
+//              }
+//              exception=e;
+//              this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
 
@@ -618,8 +629,7 @@ namespace boost
                 boost::unique_lock<boost::mutex> lk(this->mutex);
                 return this->get_sh(lk);
             }
-
-            void set_value_at_thread_exit(source_reference_type result_)
+            void set_value_deferred(source_reference_type result_)
             {
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
@@ -633,13 +643,14 @@ namespace boost
 #endif
 
               this->is_constructed = true;
-              detail::make_ready_at_thread_exit(shared_from_this());
             }
-            void set_value_at_thread_exit(rvalue_source_type result_)
+            void set_value_deferred(rvalue_source_type result_)
             {
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
+              {
                   throw_exception(promise_already_satisfied());
+              }
 
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
@@ -655,6 +666,46 @@ namespace boost
 #endif
 #endif
               this->is_constructed = true;
+            }
+
+            void set_value_at_thread_exit(source_reference_type result_)
+            {
+                set_value_deferred(result_);
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (this->has_value(lk))
+//              {
+//                  throw_exception(promise_already_satisfied());
+//              }
+//#if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
+//              result = result_;
+//#else
+//              result.reset(new T(result_));
+//#endif
+//
+//              this->is_constructed = true;
+              detail::make_ready_at_thread_exit(shared_from_this());
+            }
+            void set_value_at_thread_exit(rvalue_source_type result_)
+            {
+                set_value_deferred(boost::move(result_));
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (this->has_value(lk))
+//                  throw_exception(promise_already_satisfied());
+//
+//#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+//#if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
+//                result = boost::move(result_);
+//#else
+//                result.reset(new T(boost::move(result_)));
+//#endif
+//#else
+//#if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
+//                result = boost::move(result_);
+//#else
+//                result.reset(new T(static_cast<rvalue_source_type>(result_)));
+//#endif
+//#endif
+//              this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
 
@@ -720,13 +771,25 @@ namespace boost
                 return get_sh(lock);
             }
 
-            void set_value_at_thread_exit(T& result_)
+            void set_value_deferred(T& result_)
             {
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
+              {
                   throw_exception(promise_already_satisfied());
+              }
               result= &result_;
               this->is_constructed = true;
+            }
+
+            void set_value_at_thread_exit(T& result_)
+            {
+              set_value_deferred(result_);
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (this->has_value(lk))
+//                  throw_exception(promise_already_satisfied());
+//              result= &result_;
+//              this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
 
@@ -780,7 +843,7 @@ namespace boost
                 this->get_sh(lock);
             }
 
-            void set_value_at_thread_exit()
+            void set_value_deferred()
             {
               unique_lock<boost::mutex> lk(this->mutex);
               if (this->has_value(lk))
@@ -788,6 +851,16 @@ namespace boost
                   throw_exception(promise_already_satisfied());
               }
               this->is_constructed = true;
+            }
+            void set_value_at_thread_exit()
+            {
+              set_value_deferred();
+//              unique_lock<boost::mutex> lk(this->mutex);
+//              if (this->has_value(lk))
+//              {
+//                  throw_exception(promise_already_satisfied());
+//              }
+//              this->is_constructed = true;
               detail::make_ready_at_thread_exit(shared_from_this());
             }
         private:
@@ -2265,7 +2338,8 @@ namespace boost
 
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class TR>
-        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type set_value(TR const &  r)
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type
+            set_value(TR const &  r)
         {
             lazy_init();
             boost::unique_lock<boost::mutex> lock(future_->mutex);
@@ -2303,6 +2377,44 @@ namespace boost
 #endif
         }
 
+#if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+        template <class TR>
+        typename boost::enable_if_c<is_copy_constructible<TR>::value && is_same<R, TR>::value, void>::type
+            set_value_deferred(TR const &  r)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_value_deferred(r);
+        }
+#else
+        void set_value_deferred(source_reference_type r)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_value_deferred(r);
+        }
+#endif
+
+        void set_value_deferred(rvalue_source_type r)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
+            future_->set_value_deferred(boost::move(r));
+#else
+            future_->set_value_deferred(static_cast<rvalue_source_type>(r));
+#endif
+        }
+
 #if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
         template <class ...Args>
         void emplace(BOOST_THREAD_FWD_REF(Args) ...args)
@@ -2333,6 +2445,21 @@ namespace boost
         {
           set_exception(boost::copy_exception(ex));
         }
+        void set_exception_deferred(boost::exception_ptr p)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_exception_deferred(p);
+        }
+        template <typename E>
+        void set_exception_deferred(E ex)
+        {
+          set_exception_deferred(boost::copy_exception(ex));
+        }
+
         // setting the result with deferred notification
 #if defined  BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class TR>
@@ -2381,6 +2508,14 @@ namespace boost
         {
             lazy_init();
             future_->set_wait_callback(f,this);
+        }
+        void notify_deferred()
+        {
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->notify_deferred();
         }
 
     };
@@ -2490,7 +2625,15 @@ namespace boost
             }
             future_->mark_finished_with_result_internal(r, lock);
         }
-
+        void set_value_deferred(R& r)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_already_satisfied());
+            }
+            future_->set_value_deferred(r);
+        }
         void set_exception(boost::exception_ptr p)
         {
             lazy_init();
@@ -2506,7 +2649,20 @@ namespace boost
         {
           set_exception(boost::copy_exception(ex));
         }
-
+        void set_exception_deferred(boost::exception_ptr p)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_exception_deferred(p);
+        }
+        template <typename E>
+        void set_exception_deferred(E ex)
+        {
+          set_exception_deferred(boost::copy_exception(ex));
+        }
         // setting the result with deferred notification
         void set_value_at_thread_exit(R& r)
         {
@@ -2536,6 +2692,14 @@ namespace boost
         {
             lazy_init();
             future_->set_wait_callback(f,this);
+        }
+        void notify_deferred()
+        {
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->notify_deferred();
         }
     };
 
@@ -2646,6 +2810,15 @@ namespace boost
             }
             future_->mark_finished_with_result_internal(lock);
         }
+        void set_value_deferred()
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_value_deferred();
+        }
 
         void set_exception(boost::exception_ptr p)
         {
@@ -2662,7 +2835,20 @@ namespace boost
         {
           set_exception(boost::copy_exception(ex));
         }
-
+        void set_exception_deferred(boost::exception_ptr p)
+        {
+            lazy_init();
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->set_exception_deferred(p);
+        }
+        template <typename E>
+        void set_exception_deferred(E ex)
+        {
+          set_exception_deferred(boost::copy_exception(ex));
+        }
         // setting the result with deferred notification
         void set_value_at_thread_exit()
         {
@@ -2693,7 +2879,14 @@ namespace boost
             lazy_init();
             future_->set_wait_callback(f,this);
         }
-
+        void notify_deferred()
+        {
+            if (future_.get()==0)
+            {
+                boost::throw_exception(promise_moved());
+            }
+            future_->notify_deferred();
+        }
     };
 }
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
