@@ -278,14 +278,11 @@ namespace boost
             condition_variable cond;
 
 #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            const timespec maxSleepTs = {0, 100000000}; // 100 milliseconds
-            const detail::timespec_duration maxSleep(maxSleepTs);
-
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             while (d > detail::timespec_duration::zero())
             {
-                detail::timespec_duration d100 = (std::min)(d, maxSleep);
-                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d100);
+                d = (std::min)(d, detail::timespec_milliseconds(100));
+                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d);
                 d = ts - detail::real_timespec_clock::now();
             }
 #else
@@ -294,9 +291,9 @@ namespace boost
         }
 
         template<typename TimeDuration>
-        inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
+        void sleep(TimeDuration const& rel_time)
         {
-          boost::this_thread::hidden::sleep_for(detail::timespec_duration(rel_time));
+            boost::this_thread::hidden::sleep_for(detail::timespec_duration(rel_time));
         }
 #endif // BOOST_THREAD_USES_DATETIME
     } // this_thread

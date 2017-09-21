@@ -30,7 +30,6 @@ namespace boost
     // sleep_for(const chrono::duration<Rep, Period>& d) is defined in pthread/thread_data.hpp
 
     template <class Duration>
-    inline BOOST_SYMBOL_VISIBLE
     void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
     {
       using namespace chrono;
@@ -45,8 +44,8 @@ namespace boost
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        CD d100 = (std::min)(d, CD(milliseconds(100)));
-        sleep_for(d100);
+        d = (std::min)(d, CD(milliseconds(100)));
+        sleep_for(d);
         d = t - Clock::now();
       }
     }
@@ -81,8 +80,8 @@ namespace boost
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        CD d100 = (std::min)(d, CD(milliseconds(100)));
-        sleep_until(thread_detail::internal_clock_t::now() + d100);
+        d = (std::min)(d, CD(milliseconds(100)));
+        sleep_until(thread_detail::internal_clock_t::now() + d);
         d = t - Clock::now();
       }
     }
@@ -111,8 +110,8 @@ namespace boost
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        CD d100 = (std::min)(d, CD(milliseconds(100)));
-        sleep_until(thread_detail::internal_clock_t::now() + d100);
+        d = (std::min)(d, CD(milliseconds(100)));
+        sleep_until(thread_detail::internal_clock_t::now() + d);
         d = t - Clock::now();
       }
     }

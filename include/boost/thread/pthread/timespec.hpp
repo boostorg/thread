@@ -36,7 +36,7 @@ namespace boost
   namespace detail
   {
 
-    inline timespec int_to_timespec(boost::intmax_t const& ns)
+    inline timespec ns_to_timespec(boost::intmax_t const& ns)
     {
       boost::intmax_t s = ns / 1000000000l;
       struct timespec ts;
@@ -44,7 +44,7 @@ namespace boost
       ts.tv_nsec = static_cast<long> (ns - s * 1000000000l);
       return ts;
     }
-    inline boost::intmax_t to_nanoseconds_int_max(timespec const& ts)
+    inline boost::intmax_t timespec_to_ns(timespec const& ts)
     {
       return static_cast<boost::intmax_t>(ts.tv_sec) * 1000000000l + ts.tv_nsec;
     }
@@ -53,6 +53,7 @@ namespace boost
     {
     public:
       explicit timespec_duration(timespec const& v) : value(v) {}
+      explicit timespec_duration(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
       timespec_duration(boost::posix_time::time_duration const& rel_time)
@@ -74,6 +75,7 @@ namespace boost
 
       timespec& get() { return value; }
       timespec const& get() const { return value; }
+      boost::intmax_t getNs() const { return timespec_to_ns(value); }
 
       static inline timespec_duration zero()
       {
@@ -88,33 +90,39 @@ namespace boost
 
     inline bool operator==(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) == to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() == rhs.getNs();
     }
     inline bool operator!=(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) != to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() != rhs.getNs();
     }
     inline bool operator<(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) < to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() < rhs.getNs();
     }
     inline bool operator<=(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) <= to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() <= rhs.getNs();
     }
     inline bool operator>(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) > to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() > rhs.getNs();
     }
     inline bool operator>=(timespec_duration const& lhs, timespec_duration const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) >= to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() >= rhs.getNs();
+    }
+
+    inline timespec_duration timespec_milliseconds(long const& ms)
+    {
+      return timespec_duration(ms * 1000000l);
     }
 
     class real_timespec_timepoint
     {
     public:
       explicit real_timespec_timepoint(timespec const& v) : value(v) {}
+      explicit real_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
       real_timespec_timepoint(boost::system_time const& abs_time)
@@ -133,54 +141,52 @@ namespace boost
 
       timespec& get() { return value; }
       timespec const& get() const { return value; }
+      boost::intmax_t getNs() const { return timespec_to_ns(value); }
+
     private:
       timespec value;
     };
 
     inline bool operator==(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) == to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() == rhs.getNs();
     }
     inline bool operator!=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) != to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() != rhs.getNs();
     }
     inline bool operator<(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) < to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() < rhs.getNs();
     }
     inline bool operator<=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) <= to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() <= rhs.getNs();
     }
     inline bool operator>(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) > to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() > rhs.getNs();
     }
     inline bool operator>=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      return to_nanoseconds_int_max(lhs.get()) >= to_nanoseconds_int_max(rhs.get());
+      return lhs.getNs() >= rhs.getNs();
     }
 
     inline real_timespec_timepoint operator+(real_timespec_timepoint const& lhs, timespec_duration const& rhs)
     {
-      // fixme: replace by to_timespec_duration
-      return real_timespec_timepoint(int_to_timespec(to_nanoseconds_int_max(lhs.get()) + to_nanoseconds_int_max(rhs.get())));
+      return real_timespec_timepoint(lhs.getNs() + rhs.getNs());
     }
     inline real_timespec_timepoint operator+(timespec_duration const& lhs, real_timespec_timepoint const& rhs)
     {
-      // fixme: replace by to_timespec_duration
-      return real_timespec_timepoint(int_to_timespec(to_nanoseconds_int_max(lhs.get()) + to_nanoseconds_int_max(rhs.get())));
+      return real_timespec_timepoint(lhs.getNs() + rhs.getNs());
     }
     inline timespec_duration operator-(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
     {
-      // fixme: replace by to_timespec_duration
-      return timespec_duration(int_to_timespec(to_nanoseconds_int_max(lhs.get()) - to_nanoseconds_int_max(rhs.get())));
+      return timespec_duration(lhs.getNs() - rhs.getNs());
     }
 
     struct real_timespec_clock
     {
-      // fixme: Why not use ststem_clock::now()?
       static inline real_timespec_timepoint now()
       {
         timespec ts;
@@ -207,6 +213,7 @@ namespace boost
   {
   public:
     explicit mono_timespec_timepoint(timespec const& v) : value(v) {}
+    explicit mono_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
     inline mono_timespec_timepoint(boost::system_time const& abs_time);
@@ -220,54 +227,52 @@ namespace boost
 
     timespec& get() { return value; }
     timespec const& get() const { return value; }
+    boost::intmax_t getNs() const { return timespec_to_ns(value); }
+
   private:
     timespec value;
   };
 
   inline bool operator==(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) == to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() == rhs.getNs();
   }
   inline bool operator!=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) != to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() != rhs.getNs();
   }
   inline bool operator<(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) < to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() < rhs.getNs();
   }
   inline bool operator<=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) <= to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() <= rhs.getNs();
   }
   inline bool operator>(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) > to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() > rhs.getNs();
   }
   inline bool operator>=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    return to_nanoseconds_int_max(lhs.get()) >= to_nanoseconds_int_max(rhs.get());
+    return lhs.getNs() >= rhs.getNs();
   }
 
   inline mono_timespec_timepoint operator+(mono_timespec_timepoint const& lhs, timespec_duration const& rhs)
   {
-    // fixme: replace by to_timespec_duration
-    return mono_timespec_timepoint(int_to_timespec(to_nanoseconds_int_max(lhs.get()) + to_nanoseconds_int_max(rhs.get())));
+    return mono_timespec_timepoint(lhs.getNs() + rhs.getNs());
   }
   inline mono_timespec_timepoint operator+(timespec_duration const& lhs, mono_timespec_timepoint const& rhs)
   {
-    // fixme: replace by to_timespec_duration
-    return mono_timespec_timepoint(int_to_timespec(to_nanoseconds_int_max(lhs.get()) + to_nanoseconds_int_max(rhs.get())));
+    return mono_timespec_timepoint(lhs.getNs() + rhs.getNs());
   }
   inline timespec_duration operator-(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
   {
-    // fixme: replace by to_timespec_duration
-    return timespec_duration(int_to_timespec(to_nanoseconds_int_max(lhs.get()) - to_nanoseconds_int_max(rhs.get())));
+    return timespec_duration(lhs.getNs() - rhs.getNs());
   }
 
   struct mono_timespec_clock
   {
-    // fixme: Why not use steady_clock::now()?
     static inline mono_timespec_timepoint now()
     {
       timespec ts;

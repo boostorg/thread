@@ -468,15 +468,12 @@ namespace boost
             condition_variable cond;
 
 #if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            const timespec maxSleepTs = {0, 100000000}; // 100 milliseconds
-            const detail::timespec_duration maxSleep(maxSleepTs);
-
             const detail::mono_timespec_timepoint& ts2 = detail::mono_timespec_clock::now() + ts;
             detail::timespec_duration d = ts;
             while (d > detail::timespec_duration::zero())
             {
-                detail::timespec_duration d100 = (std::min)(d, maxSleep);
-                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d100);
+                d = (std::min)(d, detail::timespec_milliseconds(100));
+                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d);
                 d = ts2 - detail::mono_timespec_clock::now();
             }
 #else
