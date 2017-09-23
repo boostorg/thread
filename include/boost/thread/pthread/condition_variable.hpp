@@ -217,9 +217,25 @@ namespace boost
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
-          // fixme: should we return false even when abs_time < now() or should we iterate?
-            detail::internal_timespec_timepoint const timeout = abs_time;
-            return do_wait_until(m, timeout);
+#if defined BOOST_THREAD_WAIT_BUG
+            boost::system_time const& abs_time_fixed = abs_time + BOOST_THREAD_WAIT_BUG;
+#else
+            boost::system_time const& abs_time_fixed = abs_time;
+#endif
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::real_timespec_timepoint ts(abs_time_fixed);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_wait_until(m, detail::internal_timespec_timepoint(abs_time_fixed));
+#endif
         }
         template<typename lock_type>
         bool timed_wait(lock_type& m,xtime const& abs_time)
@@ -230,16 +246,29 @@ namespace boost
         template<typename lock_type,typename duration_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration)
         {
-          if (wait_duration.is_pos_infinity())
-          {
-              wait(m); // or do_wait(m,detail::timeout::sentinel());
-              return true;
-          }
-          if (wait_duration.is_special())
-          {
-              return true;
-          }
-          return do_wait_until(m, detail::internal_timespec_clock::now() + detail::timespec_duration(wait_duration));
+            if (wait_duration.is_pos_infinity())
+            {
+                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                return true;
+            }
+            if (wait_duration.is_special())
+            {
+                return true;
+            }
+            detail::timespec_duration d(wait_duration);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+#endif
         }
 
         template<typename lock_type,typename predicate_type>
@@ -274,7 +303,20 @@ namespace boost
             {
                 return pred();
             }
-            return do_wait_until(m, detail::internal_timespec_clock::now() + detail::timespec_duration(wait_duration), move(pred));
+            detail::timespec_duration d(wait_duration);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! pred() && ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return pred();
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return pred();
+#else
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d, move(pred));
+#endif
         }
 #endif
 

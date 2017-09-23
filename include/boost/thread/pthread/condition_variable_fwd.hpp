@@ -117,8 +117,13 @@ namespace boost
             unique_lock<mutex>& m,
             boost::system_time const& abs_time)
         {
-  #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            const detail::real_timespec_timepoint ts(abs_time);
+#if defined BOOST_THREAD_WAIT_BUG
+            boost::system_time const& abs_time_fixed = abs_time + BOOST_THREAD_WAIT_BUG;
+#else
+            boost::system_time const& abs_time_fixed = abs_time;
+#endif
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::real_timespec_timepoint ts(abs_time_fixed);
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
@@ -128,14 +133,9 @@ namespace boost
               d = (std::min)(d, detail::timespec_milliseconds(100));
             }
             return true;
-  #else
-#if defined BOOST_THREAD_WAIT_BUG
-            detail::internal_timespec_timepoint const timeout = abs_time + BOOST_THREAD_WAIT_BUG;
 #else
-            detail::internal_timespec_timepoint const timeout = abs_time;
+            return do_wait_until(m, detail::internal_timespec_timepoint(abs_time_fixed));
 #endif
-            return do_wait_until(m, timeout);
-  #endif
         }
         bool timed_wait(
             unique_lock<mutex>& m,
@@ -158,11 +158,19 @@ namespace boost
             {
                 return true;
             }
-#ifdef BOOST_THREAD_USES_CHRONO
-            chrono::nanoseconds ns(detail::timespec_duration(wait_duration).getNs());
-            return (wait_for(m, ns) == cv_status::no_timeout);
+            detail::timespec_duration d(wait_duration);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
 #else
-            return do_wait_until(m, detail::internal_timespec_clock::now() + detail::timespec_duration(wait_duration));
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
 #endif
         }
 
@@ -171,22 +179,12 @@ namespace boost
             unique_lock<mutex>& m,
             boost::system_time const& abs_time,predicate_type pred)
         {
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
-            //fixme: this should work also when BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC is not defined, isn't it?
             while (!pred())
             {
                 if(!timed_wait(m, abs_time))
                     return pred();
             }
             return true;
-#else
-#if defined BOOST_THREAD_WAIT_BUG
-            detail::internal_timespec_timepoint const timeout = abs_time + BOOST_THREAD_WAIT_BUG;
-#else
-            detail::internal_timespec_timepoint const timeout = abs_time;
-#endif
-            return do_wait_until(m, timeout, move(pred));
-#endif
         }
 
         template<typename predicate_type>
@@ -214,13 +212,20 @@ namespace boost
             {
                 return pred();
             }
-//#ifdef BOOST_THREAD_USES_CHRONO
-//            //fixme: why this doesn't work: deadlock or takes too much time?
-//            chrono::nanoseconds ns(detail::timespec_duration(wait_duration).getNs());
-//            return wait_for(m, ns, move(pred));
-//#else
-            return do_wait_until(m, detail::internal_timespec_clock::now() + detail::timespec_duration(wait_duration), move(pred));
-//#endif
+            detail::timespec_duration d(wait_duration);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! pred() && ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return pred();
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return pred();
+#else
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d, move(pred));
+#endif
         }
 #endif
 
