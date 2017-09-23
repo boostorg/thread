@@ -242,7 +242,29 @@ namespace boost
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
         {
-            return do_try_lock_until(detail::internal_timespec_clock::now() + detail::timespec_duration(relative_time));
+            if (relative_time.is_pos_infinity())
+            {
+                lock();
+                return true;
+            }
+            if (relative_time.is_special())
+            {
+                return true;
+            }
+            detail::timespec_duration d(relative_time);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_try_lock_until(detail::internal_timespec_clock::now() + d);
+#endif
         }
 #endif
 
