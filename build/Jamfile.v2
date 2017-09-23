@@ -142,6 +142,8 @@ project boost/thread
       #<define>BOOST_SYSTEM_NO_DEPRECATED
       #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <library>/boost/system//boost_system
+
+      <conditional>@detect_threadapi
     ;
 
 local rule default_threadapi ( property-set )
