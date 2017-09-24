@@ -28,6 +28,7 @@ boost::upgrade_mutex m;
 
 int main()
 {
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
   {
   boost::upgrade_lock<boost::upgrade_mutex> lk0(m);
   boost::unique_lock<boost::upgrade_mutex> lk(boost::move(lk0), boost::try_to_lock );
@@ -58,7 +59,7 @@ int main()
   BOOST_TEST(lk0.mutex() == 0);
   BOOST_TEST(lk0.owns_lock() == false);
   }
-
+#endif
   return boost::report_errors();
 }
 

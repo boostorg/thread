@@ -32,6 +32,7 @@ boost::shared_mutex m;
 
 int main()
 {
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
   {
     boost::shared_lock<boost::shared_mutex> lk0(m);
     boost::unique_lock<boost::shared_mutex> lk( boost::move(lk0), boost::chrono::steady_clock::now()+boost::chrono::milliseconds(1));
@@ -63,6 +64,7 @@ int main()
     BOOST_TEST(lk0.mutex() == 0);
     BOOST_TEST(lk0.owns_lock() == false);
   }
+#endif
 
   return boost::report_errors();
 }
