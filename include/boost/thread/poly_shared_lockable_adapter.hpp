@@ -141,6 +141,7 @@ namespace boost
       this->mtx().unlock_upgrade_and_lock();
     }
 
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
     bool try_unlock_upgrade_and_lock()
     {
       return this->mtx().try_unlock_upgrade_and_lock();
@@ -157,7 +158,7 @@ namespace boost
     {
       return this->mtx().try_unlock_upgrade_and_lock_for(rel_time);
     }
-
+#endif
     void unlock_upgrade_and_lock_shared()
     {
       this->mtx().unlock_upgrade_and_lock_shared();

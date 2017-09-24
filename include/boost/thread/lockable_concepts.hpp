@@ -139,9 +139,11 @@ namespace boost
       if (l.try_unlock_shared_and_lock_upgrade_for(d)) return;
       l.unlock_and_lock_upgrade();
       l.unlock_upgrade_and_lock();
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
       if (l.try_unlock_upgrade_and_lock()) return;
       if (l.try_unlock_upgrade_and_lock_until(t)) return;
       if (l.try_unlock_upgrade_and_lock_for(d)) return;
+#endif
       l.unlock_upgrade_and_lock_shared();
     }
     UpgradeLockable() : l(*static_cast<Mutex*>(0)) {}

@@ -109,6 +109,7 @@ namespace boost
 
     virtual void unlock_and_lock_upgrade() = 0;
     virtual void unlock_upgrade_and_lock() = 0;
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
     virtual bool try_unlock_upgrade_and_lock() = 0;
 
     virtual bool try_unlock_upgrade_and_lock_until(chrono::system_clock::time_point const & abs_time)=0;
@@ -125,7 +126,7 @@ namespace boost
     {
       return try_unlock_upgrade_and_lock_for(duration_cast<Clock::duration>(rel_time));
     }
-
+#endif
     virtual void unlock_upgrade_and_lock_shared() = 0;
 
   };
