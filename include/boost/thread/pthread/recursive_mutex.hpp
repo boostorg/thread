@@ -369,8 +369,20 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            detail::internal_timespec_timepoint const ts = abs_time;
+            const detail::real_timespec_timepoint ts(abs_time);
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
             return do_try_lock_until(ts);
+#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO

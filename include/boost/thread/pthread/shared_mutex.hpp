@@ -210,7 +210,20 @@ namespace boost
         bool timed_lock_shared(system_time const& timeout)
         {
 #if 1
-            return do_try_lock_shared_until(boost::detail::internal_timespec_timepoint(timeout));
+            const detail::real_timespec_timepoint ts(timeout);
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_try_lock_shared_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_try_lock_shared_until(ts);
+#endif
 #else
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             boost::this_thread::disable_interruption do_not_disturb;
@@ -445,7 +458,20 @@ namespace boost
         bool timed_lock(system_time const& timeout)
         {
 #if 1
-            return do_try_lock_until(boost::detail::internal_timespec_timepoint(timeout));
+            const detail::real_timespec_timepoint ts(timeout);
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_try_lock_until(ts);
+#endif
 #else
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             boost::this_thread::disable_interruption do_not_disturb;
@@ -601,7 +627,20 @@ namespace boost
         bool timed_lock_upgrade(system_time const& timeout)
         {
 #if 1
-            return do_try_lock_upgrade_until(boost::detail::internal_timespec_timepoint(timeout));
+            const detail::real_timespec_timepoint ts(timeout);
+#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_try_lock_upgrade_until(ts);
+#endif
 #else
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             boost::this_thread::disable_interruption do_not_disturb;
