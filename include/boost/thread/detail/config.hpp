@@ -24,8 +24,11 @@
 
   #define BOOST_THREAD_DETAIL_USE_ATTRIBUTE_MAY_ALIAS
 #endif
+#if defined(BOOST_MAY_ALIAS)
 #define BOOST_THREAD_ATTRIBUTE_MAY_ALIAS BOOST_MAY_ALIAS
-
+#else
+#define BOOST_THREAD_ATTRIBUTE_MAY_ALIAS
+#endif
 
 #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
 #define BOOST_THREAD_ASSERT_PRECONDITION(EXPR, EX) \
@@ -443,7 +446,7 @@
 // Tell the autolink to link dynamically, this will get undef'ed by auto_link.hpp
 // once it's done with it:
 //
-#if defined(BOOST_THREAD_USE_DLL)
+#if defined(BOOST_THREAD_USE_DLL) &  ! defined(BOOST_DYN_LINK)
 #   define BOOST_DYN_LINK
 #endif
 //

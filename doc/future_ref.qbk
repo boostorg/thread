@@ -1507,6 +1507,13 @@ executor, then the parent is filled by immediately calling `.wait()`, and the po
 
       template<typename F>
       void set_wait_callback(F f); // EXTENSION
+
+      void set_value_deferred(see below);  // EXTENSION
+      void set_exception_deferred(exception_ptr p);  // EXTENSION
+      template <typename E>
+      void set_exception_deferred(E e); // EXTENSION
+      void notify_deferred(); // EXTENSION
+
     };
 
 [///////////////////////////////////////////////]
@@ -1683,9 +1690,10 @@ Stores the value r in the shared state without making that state ready immediate
 Schedules that state to be made ready when the current thread exits, after all objects of thread storage duration 
 associated with the current thread have been destroyed.]]
 
+[[Postconditions:] [the result associated with `*this` is set as deferred]]
 
 [[Throws:] [
-- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready] or deferred. 
 
 - __broken_promise__ if `*this` has no shared state. 
 
@@ -1711,11 +1719,11 @@ Stores the exception pointer p in the shared state without making that state rea
 Schedules that state to be made ready when the current thread exits, after all objects of thread storage duration
  associated with the current thread have been destroyed.]]
 
-[[Postconditions:] [All futures waiting on the shared state are ['ready] and __unique_future_has_exception__ or
-__shared_future_has_exception__ for those futures shall return `true`.]]
+[[Postconditions:] [the result associated with `*this` is set as deferred]]
+
 
 [[Throws:] [
-- __promise_already_satisfied__ if the result associated with `*this` is already ['ready]. 
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready] or deferred. 
 
 - __broken_promise__ if `*this` has no shared state. 
 
@@ -1745,6 +1753,82 @@ or __shared_future__ associated with this result, and the result is not ['ready]
 ]
 
 [endsect]
+[///////////////////////////////////////////////]
+[section:set_value Member Function `set_value_deferred()` EXTENSION]
+
+    void set_value_deferred(R&& r);
+    void set_value_deferred(const R& r);
+    void promise<R&>:: set_value_deferred(R& r);
+    void promise<void>:: set_value_deferred();
+
+[variablelist
+
+[[Effects:] [
+- If BOOST_THREAD_PROVIDES_PROMISE_LAZY is defined and if `*this` was not associated with a result, allocate storage for a new shared state and associate it with `*this`. 
+
+- Stores the value `r` in the shared state without making that state ready immediately. Threads blocked waiting for the asynchronous result are not woken. They will be woken only when `notify_deferred` is called.
+]]
+
+[[Postconditions:] [the result associated with `*this` is set as deferred]]
+
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready] or deferred. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated. 
+
+- Any exception thrown by the copy or move-constructor of `R`.]]
+
+]
+
+[endsect]
+[///////////////////////////////////////////////////////]
+[section:set_exception Member Function `set_exception_deferred()` EXTENSION]
+
+    void set_exception_deferred(boost::exception_ptr e);
+    template <typename E>
+    void set_exception_deferred(E e); // EXTENSION
+
+[variablelist
+
+[[Effects:] [
+- If BOOST_THREAD_PROVIDES_PROMISE_LAZY is defined and if `*this` was not associated with a result, allocate storage for a new shared state and associate it with `*this`. 
+
+- Store the exception `e` in the shared state associated with `*this`without making that state ready immediately. Threads blocked waiting for the asynchronous result are not woken. They will be woken only when `notify_deferred` is called.]]
+
+[[Postconditions:] [the result associated with `*this` is set as deferred]]
+
+
+[[Throws:] [
+- __promise_already_satisfied__ if the result associated with `*this` is already ['ready] or deferred. 
+
+- __broken_promise__ if `*this` has no shared state. 
+
+- `std::bad_alloc` if the memory required for storage of the result cannot be allocated.
+]]
+
+]
+
+[endsect]
+
+[///////////////////////////////////////////////]
+[section:set_value Member Function `notify_deferred()` EXTENSION]
+
+[variablelist
+
+[[Effects:] [
+Any threads blocked waiting for the asynchronous result are woken.
+]]
+
+[[Postconditions:] [All futures waiting on the shared state are ['ready] and __unique_future_has_value__ or
+__shared_future_has_value__ for those futures shall return `true`.]]
+
+[[Postconditions:] [the result associated with `*this` is ready.]]
+
+]
+[endsect]
+
 
 [endsect]
 [////////////////////////////////////////////////////]

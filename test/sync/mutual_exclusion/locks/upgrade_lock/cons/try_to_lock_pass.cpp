@@ -51,7 +51,7 @@ void f()
     boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
   }
-  while (true)
+  for (;;)
   {
     boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
     if (lk.owns_lock()) break;
@@ -75,7 +75,7 @@ void f()
 //    boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
 //    BOOST_TEST(lk.owns_lock() == false);
 //  }
-  while (true)
+  for (;;)
   {
     boost::upgrade_lock<boost::shared_mutex> lk(m, boost::try_to_lock);
     if (lk.owns_lock()) break;

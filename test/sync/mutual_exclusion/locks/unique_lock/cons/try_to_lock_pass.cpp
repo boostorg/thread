@@ -52,7 +52,7 @@ void f()
     boost::unique_lock<boost::mutex> lk(m, boost::try_to_lock);
     BOOST_TEST(lk.owns_lock() == false);
   }
-  while (true)
+  for (;;)
   {
     boost::unique_lock<boost::mutex> lk(m, boost::try_to_lock);
     if (lk.owns_lock()) break;
@@ -76,7 +76,7 @@ void f()
 //    boost::unique_lock<boost::mutex> lk(m, boost::try_to_lock);
 //    BOOST_TEST(lk.owns_lock() == false);
 //  }
-  while (true)
+  for (;;)
   {
     boost::unique_lock<boost::mutex> lk(m, boost::try_to_lock);
     if (lk.owns_lock()) break;
