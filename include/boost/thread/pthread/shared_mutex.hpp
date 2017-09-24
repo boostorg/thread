@@ -21,6 +21,7 @@
 #endif
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/internal_clock.hpp>
+#include <boost/thread/pthread/timespec.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
