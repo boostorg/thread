@@ -21,7 +21,9 @@
 #endif
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/internal_clock.hpp>
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #include <boost/thread/pthread/timespec.hpp>
+#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -209,7 +211,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_shared(system_time const& timeout)
         {
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
 #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
@@ -254,6 +256,7 @@ namespace boost
             {
                 return true;
             }
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
 #if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
@@ -268,7 +271,9 @@ namespace boost
 #else
             return do_try_lock_shared_until(detail::internal_timespec_clock::now() + d);
 #endif
-            //return timed_lock_shared(get_system_time()+relative_time);
+#else
+            return timed_lock_shared(get_system_time()+relative_time);
+#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -277,7 +282,7 @@ namespace boost
         {
           return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
         }
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_shared_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -362,6 +367,7 @@ namespace boost
         }
 
     private:
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         // fixme: Shouldn't these functions be located on a .cpp file?
         bool do_try_lock_until(const detail::internal_timespec_timepoint& abs_time)
         {
@@ -451,13 +457,14 @@ namespace boost
           state.shared_count=0;
           return true;
         }
+#endif
     public:
 
 
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const& timeout)
         {
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
 #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
@@ -509,6 +516,7 @@ namespace boost
             {
                 return true;
             }
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
 #if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
@@ -523,7 +531,9 @@ namespace boost
 #else
             return do_try_lock_until(detail::internal_timespec_clock::now() + d);
 #endif
-            //return timed_lock(get_system_time()+d);
+#else
+            return timed_lock(get_system_time()+d);
+#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -532,7 +542,7 @@ namespace boost
         {
           return try_lock_until(chrono::steady_clock::now() + rel_time);
         }
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -626,7 +636,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_upgrade(system_time const& timeout)
         {
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
 #if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
@@ -675,6 +685,7 @@ namespace boost
             {
                 return true;
             }
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
 #if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
@@ -689,7 +700,9 @@ namespace boost
 #else
             return do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d);
 #endif
-            //return timed_lock_upgrade(get_system_time()+relative_time);
+#else
+            return timed_lock_upgrade(get_system_time()+relative_time);
+#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -698,7 +711,7 @@ namespace boost
         {
           return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
         }
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -830,7 +843,7 @@ namespace boost
         {
           return try_unlock_upgrade_and_lock_until(chrono::steady_clock::now() + rel_time);
         }
-#if 1
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_unlock_upgrade_and_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {

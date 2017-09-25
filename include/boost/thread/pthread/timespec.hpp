@@ -218,7 +218,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
     // fixme: delete this function once it's no longer being used because it's
     // not a valid way to convert from system time to steady time
-    inline mono_timespec_timepoint(boost::system_time const& abs_time);
+    //inline mono_timespec_timepoint(boost::system_time const& abs_time);
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
     template <class Duration>
@@ -288,15 +288,15 @@ namespace boost
     }
   };
 
-#if defined BOOST_THREAD_USES_DATETIME
-  // fixme: delete this function once it's no longer being used because it's
-  // not a valid way to convert from system time to steady time
-  mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
-  {
-    boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
-    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
-  }
-#endif
+//#if defined BOOST_THREAD_USES_DATETIME
+//  // fixme: delete this function once it's no longer being used because it's
+//  // not a valid way to convert from system time to steady time
+//  mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
+//  {
+//    boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
+//    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
+//  }
+//#endif
 #if defined BOOST_THREAD_USES_CHRONO
   template <class Duration>
   mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)

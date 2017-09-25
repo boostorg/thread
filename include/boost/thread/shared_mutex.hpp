@@ -13,8 +13,8 @@
 #include <boost/thread/detail/config.hpp>
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 #if defined(BOOST_THREAD_PROVIDES_GENERIC_SHARED_MUTEX_ON_WIN)
-//#include <boost/thread/pthread/shared_mutex.hpp>
-#include <boost/thread/v2/shared_mutex.hpp>
+#include <boost/thread/pthread/shared_mutex.hpp>
+//#include <boost/thread/v2/shared_mutex.hpp>
 #else
 #include <boost/thread/win32/shared_mutex.hpp>
 #endif
