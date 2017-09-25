@@ -532,7 +532,7 @@ namespace boost
             return do_try_lock_until(detail::internal_timespec_clock::now() + d);
 #endif
 #else
-            return timed_lock(get_system_time()+d);
+            return timed_lock(get_system_time()+relative_time);
 #endif
         }
 #endif
