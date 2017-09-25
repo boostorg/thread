@@ -39,6 +39,10 @@
 #include <boost/thread/executor.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+#include <boost/thread/pthread/timespec.hpp>
+#endif
+
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>
 #else
@@ -369,7 +373,25 @@ namespace boost
                 boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait(lock, rethrow);
             }
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+        bool do_wait_until(detail::internal_timespec_timepoint const &abs_time)
+        {
+            boost::unique_lock<boost::mutex> lock(this->mutex);
+            if (is_deferred_)
+                return false;
 
+            do_callback(lock);
+            while(!done)
+            {
+                bool const success=waiters.do_wait_until(lock, abs_time);
+                if(!success && !done)
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+#endif
 #if defined BOOST_THREAD_USES_DATETIME
             bool timed_wait_until(boost::system_time const& target_time)
             {
@@ -1448,13 +1470,40 @@ namespace boost
           }
           return future_->unnotify_when_ready(h);
         }
-
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+        bool do_wait_until(detail::internal_timespec_timepoint const &abs_time) const
+        {
+            if(!future_)
+            {
+                boost::throw_exception(future_uninitialized());
+            }
+            return future_->do_wait_until(abs_time);
+        }
+#endif
 #if defined BOOST_THREAD_USES_DATETIME
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
+
+#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
+            detail::timespec_duration d(rel_time);
+#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::mono_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
+#else
+            return do_wait_until(detail::internal_timespec_clock::now() + d);
+#endif
+#else
             // fixme: make use of internal_clock instead of get_system_time
             return timed_wait_until(boost::get_system_time()+rel_time);
+#endif
         }
 
         bool timed_wait_until(boost::system_time const& abs_time) const
