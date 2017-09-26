@@ -339,7 +339,7 @@ namespace boost
         return start_thread_noexcept();
 #else
       uintptr_t const new_thread=_beginthreadex(0,static_cast<unsigned int>(attr.get_stack_size()),&thread_start_function,thread_info.get(),
-                                                CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_info->id);
+                                                CREATE_SUSPENDED | STACK_SIZE_PARAM_IS_A_RESERVATION, &thread_info->id);
       if(!new_thread)
       {
         return false;
