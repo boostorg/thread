@@ -397,7 +397,7 @@
 
 // provided for backwards compatibility, since this
 // macro was used for several releases by mistake.
-#if defined(BOOST_THREAD_DYN_DLL) && ! defined BOOST_THREAD_DYN_LINK
+#if defined(BOOST_THREAD_DYN_DLL) && ! defined(BOOST_THREAD_DYN_LINK)
 # define BOOST_THREAD_DYN_LINK
 #endif
 

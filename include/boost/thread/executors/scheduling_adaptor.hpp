@@ -10,6 +10,11 @@
 
 #include <boost/thread/executors/detail/scheduled_executor_base.hpp>
 
+#if defined(BOOST_MSVC)
+# pragma warning(push)
+# pragma warning(disable: 4355) // 'this' : used in base member initializer list
+#endif
+
 namespace boost
 {
 namespace executors
@@ -49,4 +54,9 @@ namespace executors
   using executors::scheduling_adaptor;
 
 } //end boost
+
+#if defined(BOOST_MSVC)
+# pragma warning(pop)
+#endif
+
 #endif
