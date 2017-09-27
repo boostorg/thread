@@ -37,7 +37,7 @@ import feature ;
 import indirect ;
 import path ;
 import configure ; 
-import property-set ;
+import threadapi ;
 
 project boost/thread
     : source-location ../src
@@ -130,9 +130,9 @@ project boost/thread
         <target-os>windows:<define>WIN32_LEAN_AND_MEAN
         <target-os>windows:<define>BOOST_USE_WINDOWS_H
         
-        <conditional>@detect_threadapi
+        <conditional>@threadapi.detect
 
-    # : default-build <threading>multi      
+    # : default-build <threading>multi
     : usage-requirements  # pass these requirement to dependents (i.e. users)
       #<link>static:<define>BOOST_THREAD_STATIC_LINK=1
       #<link>shared:<define>BOOST_THREAD_DYN_LINK=1
@@ -144,23 +144,8 @@ project boost/thread
       <library>/boost/system//boost_system
     ;
 
-local rule default_threadapi ( property-set )
-{
-    local api = pthread ;
-    if [ $(property-set).get <target-os> ] = windows { api = win32 ; }
-    return $(api) ;
-}
+feature.feature threadapi : pthread win32 : optional propagated ;
 
-feature.feature threadapi : native pthread win32 : propagated ;
-
-rule detect_threadapi ( properties * )
-{
-    local property-set = [ property-set.create $(properties) ] ;
-    local api = [ $(property-set).get <threadapi> ] ;
-    if $(api) = native { api = [ default_threadapi $(property-set) ] ; }
-    return <threadapi>$(api) ;
-}
-    
 exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ; 
 
 rule tag ( name : type ? : property-set )
@@ -172,7 +157,7 @@ rule tag ( name : type ? : property-set )
         local api = [ $(property-set).get <threadapi> ] ;
 
         # non native api gets additional tag
-        if $(api) != [ default_threadapi $(property-set) ] {
+        if $(api) != [ threadapi.get-default $(property-set) ] {
             result = $(result)_$(api) ;
         }
     }

@@ -18,7 +18,7 @@
 
 # bring in rules for testing
 import testing ;
-import property-set ;
+import threadapi ;
 
 project
     : requirements
@@ -107,23 +107,8 @@ project
         <toolset>msvc:<cxxflags>/wd4512
         <toolset>msvc:<cxxflags>/wd6246
 
-        <conditional>@detect_threadapi
+        <conditional>@threadapi.detect
     ;
-
-local rule default_threadapi ( property-set )
-{
-    local api = pthread ;
-    if [ $(property-set).get <target-os> ] = windows { api = win32 ; }
-    return $(api) ;
-}
-
-rule detect_threadapi ( properties * )
-{
-    local property-set = [ property-set.create $(properties) ] ;
-    local api = [ $(property-set).get <threadapi> ] ;
-    if $(api) = native { api = [ default_threadapi $(property-set) ] ; }
-    return <threadapi>$(api) ;
-}
 
 rule thread-run ( sources )
 {
