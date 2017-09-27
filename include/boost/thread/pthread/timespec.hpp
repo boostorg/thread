@@ -23,7 +23,7 @@
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 #include <boost/detail/winapi/time.hpp>
-#include <boost/detail/winapi/timers.hpp>
+#include <boost/thread/win32/thread_primitives.hpp>
 #elif defined(BOOST_THREAD_MACOS)
 #include <sys/time.h> //for gettimeofday and timeval
 #else
@@ -192,7 +192,7 @@ namespace boost
       {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
         boost::detail::winapi::FILETIME_ ft;
-        boost::detail::winapi::GetSystemTimeAsFileTime( &ft );  // never fails
+        boost::detail::winapi::GetSystemTimeAsFileTime(&ft);  // never fails
         boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
         return real_timespec_timepoint(ns);
 #elif defined(BOOST_THREAD_MACOS)
@@ -278,31 +278,8 @@ namespace boost
     static inline mono_timespec_timepoint now()
     {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-      boost::detail::winapi::LARGE_INTEGER_ freq;
-      if ( !boost::detail::winapi::QueryPerformanceFrequency( &freq ) )
-      {
-        BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
-        return mono_timespec_timepoint(0);
-      }
-      if ( freq.QuadPart <= 0 )
-      {
-        BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
-        return mono_timespec_timepoint(0);
-      }
-
-      boost::detail::winapi::LARGE_INTEGER_ pcount;
-      unsigned times=0;
-      while ( ! boost::detail::winapi::QueryPerformanceCounter( &pcount ) )
-      {
-        if ( ++times > 3 )
-        {
-          BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceCounter Internal Error");
-          return mono_timespec_timepoint(0);
-        }
-      }
-
-      long double ns = 1000000000.0L * pcount.QuadPart / freq.QuadPart;
-      return mono_timespec_timepoint(static_cast<boost::intmax_t>(ns));
+      win32::tick_types msec = win32::GetTickCount64_()();
+      return mono_timespec_timepoint(msec * 1000000);
 #elif defined(BOOST_THREAD_MACOS)
       // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
       // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
