@@ -439,7 +439,7 @@ namespace boost
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
-            this_thread::interruptible_wait(this->native_handle(),detail::timeout::sentinel());
+            this_thread::interruptible_wait(this->native_handle(), detail::internal_timespec_timepoint::getMax());
             release_handle();
             return true;
         }
@@ -449,12 +449,12 @@ namespace boost
         }
     }
 
-    bool thread::do_try_join_for_noexcept(uintmax_t milli, bool& res)
+    bool thread::do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res)
     {
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
       {
-          if(!this_thread::interruptible_wait(this->native_handle(),milli))
+          if(!this_thread::interruptible_wait(this->native_handle(), timeout))
           {
             res=false;
             return true;
@@ -555,62 +555,6 @@ namespace boost
 
     namespace this_thread
     {
-        namespace
-        {
-            LARGE_INTEGER get_due_time(detail::timeout const&  target_time)
-            {
-                LARGE_INTEGER due_time={{0,0}};
-                if(target_time.relative)
-                {
-                    detail::win32::ticks_type const elapsed_milliseconds=detail::win32::GetTickCount64_()()-target_time.start;
-                    LONGLONG const remaining_milliseconds=(target_time.milliseconds-elapsed_milliseconds);
-                    LONGLONG const hundred_nanoseconds_in_one_millisecond=10000;
-
-                    if(remaining_milliseconds>0)
-                    {
-                        due_time.QuadPart=-(remaining_milliseconds*hundred_nanoseconds_in_one_millisecond);
-                    }
-                }
-                else
-                {
-                    SYSTEMTIME target_system_time={0,0,0,0,0,0,0,0};
-                    target_system_time.wYear=target_time.abs_time.date().year();
-                    target_system_time.wMonth=target_time.abs_time.date().month();
-                    target_system_time.wDay=target_time.abs_time.date().day();
-                    target_system_time.wHour=(WORD)target_time.abs_time.time_of_day().hours();
-                    target_system_time.wMinute=(WORD)target_time.abs_time.time_of_day().minutes();
-                    target_system_time.wSecond=(WORD)target_time.abs_time.time_of_day().seconds();
-
-                    if(!SystemTimeToFileTime(&target_system_time,((FILETIME*)&due_time)))
-                    {
-                        due_time.QuadPart=0;
-                    }
-                    else
-                    {
-                        long const hundred_nanoseconds_in_one_second=10000000;
-                        posix_time::time_duration::tick_type const ticks_per_second=
-                            target_time.abs_time.time_of_day().ticks_per_second();
-                        if(ticks_per_second>hundred_nanoseconds_in_one_second)
-                        {
-                            posix_time::time_duration::tick_type const
-                                ticks_per_hundred_nanoseconds=
-                                ticks_per_second/hundred_nanoseconds_in_one_second;
-                            due_time.QuadPart+=
-                                target_time.abs_time.time_of_day().fractional_seconds()/
-                                ticks_per_hundred_nanoseconds;
-                        }
-                        else
-                        {
-                            due_time.QuadPart+=
-                                target_time.abs_time.time_of_day().fractional_seconds()*
-                                (hundred_nanoseconds_in_one_second/ticks_per_second);
-                        }
-                    }
-                }
-                return due_time;
-            }
-        }
-
 #ifndef UNDER_CE
 #if !BOOST_PLAT_WINDOWS_RUNTIME
         namespace detail_
@@ -661,7 +605,7 @@ namespace boost
         }
 #endif
 #endif
-        bool interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time)
+        bool interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout)
         {
             detail::win32::handle handles[4]={0};
             unsigned handle_count=0;
@@ -687,16 +631,20 @@ namespace boost
 #ifndef UNDER_CE
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             // Preferentially use coalescing timers for better power consumption and timer accuracy
-            if(!target_time.is_sentinel())
+            if(timeout != detail::internal_timespec_timepoint::getMax())
             {
-                detail::timeout::remaining_time const time_left=target_time.remaining_milliseconds();
+                boost::intmax_t const time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
                     ULONG tolerable=32; // Empirical testing shows Windows ignores this when <= 26
-                    if(time_left.milliseconds/20>tolerable)  // 5%
-                        tolerable=time_left.milliseconds/20;
-                    LARGE_INTEGER due_time=get_due_time(target_time);
+                    if(time_left_msec/20>tolerable)  // 5%
+                        tolerable=static_cast<ULONG>(time_left_msec/20);
+                    LARGE_INTEGER due_time={{0,0}};
+                    if(time_left_msec>0)
+                    {
+                        due_time.QuadPart=-(time_left_msec*10000); // negative indicates relative time
+                    }
                     bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,NULL,tolerable)!=0;
                     if(set_time_succeeded)
                     {
@@ -709,18 +657,21 @@ namespace boost
 #endif
 
             bool const using_timer=timeout_index!=~0u;
-            detail::timeout::remaining_time time_left(0);
+            boost::intmax_t time_left_msec(INFINITE);
+            if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+            {
+                time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                if(time_left_msec < 0)
+                {
+                    time_left_msec = 0;
+                }
+            }
 
             do
             {
-                if(!using_timer)
-                {
-                    time_left=target_time.remaining_milliseconds();
-                }
-
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -742,20 +693,21 @@ namespace boost
                 }
                 else
                 {
-                    detail::win32::sleep(time_left.milliseconds);
+                    detail::win32::sleep(static_cast<unsigned long>(time_left_msec));
                 }
-                if(target_time.relative)
+
+                if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
                 {
-                    target_time.milliseconds-=detail::timeout::max_non_infinite_wait;
+                    time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
                 }
             }
-            while(time_left.more);
+            while(time_left_msec == INFINITE || time_left_msec > 0);
             return false;
         }
 
         namespace no_interruption_point
         {
-        bool non_interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time)
+        bool non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout)
         {
             detail::win32::handle handles[3]={0};
             unsigned handle_count=0;
@@ -771,16 +723,20 @@ namespace boost
 #ifndef UNDER_CE
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             // Preferentially use coalescing timers for better power consumption and timer accuracy
-            if(!target_time.is_sentinel())
+            if(timeout != detail::internal_timespec_timepoint::getMax())
             {
-                detail::timeout::remaining_time const time_left=target_time.remaining_milliseconds();
+                boost::intmax_t const time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
                     ULONG tolerable=32; // Empirical testing shows Windows ignores this when <= 26
-                    if(time_left.milliseconds/20>tolerable)  // 5%
-                        tolerable=time_left.milliseconds/20;
-                    LARGE_INTEGER due_time=get_due_time(target_time);
+                    if(time_left_msec/20>tolerable)  // 5%
+                        tolerable=static_cast<ULONG>(time_left_msec/20);
+                    LARGE_INTEGER due_time={{0,0}};
+                    if(time_left_msec>0)
+                    {
+                        due_time.QuadPart=-(time_left_msec*10000); // negative indicates relative time
+                    }
                     bool const set_time_succeeded=detail_::SetWaitableTimerEx()(timer_handle,&due_time,0,0,0,NULL,tolerable)!=0;
                     if(set_time_succeeded)
                     {
@@ -793,18 +749,21 @@ namespace boost
 #endif
 
             bool const using_timer=timeout_index!=~0u;
-            detail::timeout::remaining_time time_left(0);
+            boost::intmax_t time_left_msec(INFINITE);
+            if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+            {
+                time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                if(time_left_msec < 0)
+                {
+                    time_left_msec = 0;
+                }
+            }
 
             do
             {
-                if(!using_timer)
-                {
-                    time_left=target_time.remaining_milliseconds();
-                }
-
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,using_timer?INFINITE:time_left.milliseconds, 0);
+                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -819,14 +778,15 @@ namespace boost
                 }
                 else
                 {
-                    detail::win32::sleep(time_left.milliseconds);
+                    detail::win32::sleep(static_cast<unsigned long>(time_left_msec));
                 }
-                if(target_time.relative)
+
+                if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
                 {
-                    target_time.milliseconds-=detail::timeout::max_non_infinite_wait;
+                    time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
                 }
             }
-            while(time_left.more);
+            while(time_left_msec == INFINITE || time_left_msec > 0);
             return false;
         }
         }

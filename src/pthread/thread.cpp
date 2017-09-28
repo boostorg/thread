@@ -467,7 +467,7 @@ namespace boost
             unique_lock<mutex> lock(mx);
             condition_variable cond;
 
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts2 = detail::mono_timespec_clock::now() + ts;
             detail::timespec_duration d = ts;
             while (d > detail::timespec_duration::zero())
@@ -498,10 +498,6 @@ namespace boost
 //            sleep(xt);
 //            sleep_for(chrono::milliseconds(0));
 #   else
-#error
-//            timespec ts;
-//            ts.tv_sec= 0;
-//            ts.tv_nsec= 0;
             hidden::sleep_for(detail::timespec_duration::zero());
 #   endif
         }

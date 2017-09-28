@@ -21,9 +21,7 @@
 #endif
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/internal_clock.hpp>
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
 #include <boost/thread/pthread/timespec.hpp>
-#endif
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -211,9 +209,8 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_shared(system_time const& timeout)
         {
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_shared_until(detail::internal_timespec_clock::now() + d) )
@@ -225,22 +222,6 @@ namespace boost
             return true;
 #else
             return do_try_lock_shared_until(ts);
-#endif
-#else
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            boost::this_thread::disable_interruption do_not_disturb;
-#endif
-            boost::unique_lock<boost::mutex> lk(state_change);
-
-            while(!state.can_lock_shared())
-            {
-                if(!shared_cond.timed_wait(lk,timeout))
-                {
-                    return false;
-                }
-            }
-            state.lock_shared();
-            return true;
 #endif
         }
 
@@ -256,9 +237,8 @@ namespace boost
             {
                 return true;
             }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_shared_until(detail::internal_timespec_clock::now() + d) )
@@ -271,9 +251,6 @@ namespace boost
 #else
             return do_try_lock_shared_until(detail::internal_timespec_clock::now() + d);
 #endif
-#else
-            return timed_lock_shared(get_system_time()+relative_time);
-#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -282,7 +259,6 @@ namespace boost
         {
           return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
         }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_shared_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -304,27 +280,6 @@ namespace boost
             }
             return true;
         }
-#else // 0
-        template <class Clock, class Duration>
-        bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& abs_time)
-        {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-          boost::this_thread::disable_interruption do_not_disturb;
-#endif
-          boost::unique_lock<boost::mutex> lk(state_change);
-
-          while(!state.can_lock_shared())
-          //while(state.exclusive || state.exclusive_waiting_blocked)
-          {
-              if(cv_status::timeout==shared_cond.wait_until(lk,abs_time))
-              {
-                  return false;
-              }
-          }
-          state.lock_shared();
-          return true;
-        }
-#endif
 #endif
         void unlock_shared()
         {
@@ -367,7 +322,6 @@ namespace boost
         }
 
     private:
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         // fixme: Shouldn't these functions be located on a .cpp file?
         bool do_try_lock_until(const detail::internal_timespec_timepoint& abs_time)
         {
@@ -457,16 +411,14 @@ namespace boost
           state.shared_count=0;
           return true;
         }
-#endif
     public:
 
 
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const& timeout)
         {
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
@@ -478,29 +430,6 @@ namespace boost
             return true;
 #else
             return do_try_lock_until(ts);
-#endif
-#else
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            boost::this_thread::disable_interruption do_not_disturb;
-#endif
-            boost::unique_lock<boost::mutex> lk(state_change);
-
-            while(state.shared_count || state.exclusive)
-            {
-                state.exclusive_waiting_blocked=true;
-                if(!exclusive_cond.timed_wait(lk,timeout))
-                {
-                    if(state.shared_count || state.exclusive)
-                    {
-                        state.exclusive_waiting_blocked=false;
-                        release_waiters();
-                        return false;
-                    }
-                    break;
-                }
-            }
-            state.exclusive=true;
-            return true;
 #endif
         }
 
@@ -516,9 +445,8 @@ namespace boost
             {
                 return true;
             }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
@@ -531,9 +459,6 @@ namespace boost
 #else
             return do_try_lock_until(detail::internal_timespec_clock::now() + d);
 #endif
-#else
-            return timed_lock(get_system_time()+relative_time);
-#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -542,7 +467,6 @@ namespace boost
         {
           return try_lock_until(chrono::steady_clock::now() + rel_time);
         }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -564,33 +488,6 @@ namespace boost
             }
             return true;
         }
-#else // 0
-        template <class Clock, class Duration>
-        bool try_lock_until(const chrono::time_point<Clock, Duration>& abs_time)
-        {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-          boost::this_thread::disable_interruption do_not_disturb;
-#endif
-          boost::unique_lock<boost::mutex> lk(state_change);
-
-          while(state.shared_count || state.exclusive)
-          {
-              state.exclusive_waiting_blocked=true;
-              if(cv_status::timeout == exclusive_cond.wait_until(lk,abs_time))
-              {
-                  if(state.shared_count || state.exclusive)
-                  {
-                      state.exclusive_waiting_blocked=false;
-                      release_waiters();
-                      return false;
-                  }
-                  break;
-              }
-          }
-          state.exclusive=true;
-          return true;
-        }
-#endif //0
 #endif
 
         bool try_lock()
@@ -636,9 +533,8 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_upgrade(system_time const& timeout)
         {
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             const detail::real_timespec_timepoint ts(timeout);
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d) )
@@ -650,26 +546,6 @@ namespace boost
             return true;
 #else
             return do_try_lock_upgrade_until(ts);
-#endif
-#else
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-            boost::this_thread::disable_interruption do_not_disturb;
-#endif
-            boost::unique_lock<boost::mutex> lk(state_change);
-            while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-            {
-                if(!shared_cond.timed_wait(lk,timeout))
-                {
-                    if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-                    {
-                        return false;
-                    }
-                    break;
-                }
-            }
-            state.lock_shared();
-            state.upgrade=true;
-            return true;
 #endif
         }
 
@@ -685,9 +561,8 @@ namespace boost
             {
                 return true;
             }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
             detail::timespec_duration d(relative_time);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d) )
@@ -700,9 +575,6 @@ namespace boost
 #else
             return do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d);
 #endif
-#else
-            return timed_lock_upgrade(get_system_time()+relative_time);
-#endif
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -711,7 +583,6 @@ namespace boost
         {
           return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
         }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -733,30 +604,6 @@ namespace boost
             }
             return true;
         }
-#else // 0
-        template <class Clock, class Duration>
-        bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& abs_time)
-        {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-          boost::this_thread::disable_interruption do_not_disturb;
-#endif
-          boost::unique_lock<boost::mutex> lk(state_change);
-          while(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-          {
-              if(cv_status::timeout == shared_cond.wait_until(lk,abs_time))
-              {
-                  if(state.exclusive || state.exclusive_waiting_blocked || state.upgrade)
-                  {
-                      return false;
-                  }
-                  break;
-              }
-          }
-          state.lock_shared();
-          state.upgrade=true;
-          return true;
-        }
-#endif // 0
 #endif
         bool try_lock_upgrade()
         {
@@ -843,7 +690,6 @@ namespace boost
         {
           return try_unlock_upgrade_and_lock_until(chrono::steady_clock::now() + rel_time);
         }
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
         template <class Duration>
         bool try_unlock_upgrade_and_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
@@ -865,35 +711,6 @@ namespace boost
             }
             return true;
         }
-#else // 0
-        template <class Clock, class Duration>
-        bool
-        try_unlock_upgrade_and_lock_until(
-                          const chrono::time_point<Clock, Duration>& abs_time)
-        {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-          boost::this_thread::disable_interruption do_not_disturb;
-#endif
-          boost::unique_lock<boost::mutex> lk(state_change);
-          state.assert_lock_upgraded();
-          if (state.shared_count != 1)
-          {
-              for (;;)
-              {
-                cv_status status = shared_cond.wait_until(lk,abs_time);
-                if (state.shared_count == 1)
-                  break;
-                if(status == cv_status::timeout)
-                  return false;
-              }
-          }
-          state.upgrade=false;
-          state.exclusive=true;
-          state.exclusive_waiting_blocked=false;
-          state.shared_count=0;
-          return true;
-        }
-#endif // 0
 #endif
 
         // Shared <-> Exclusive

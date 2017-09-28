@@ -277,7 +277,7 @@ namespace boost
             unique_lock<mutex> lock(mx);
             condition_variable cond;
 
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             while (d > detail::timespec_duration::zero())
             {
