@@ -17,7 +17,7 @@
 # PTW32_INCLUDE and PTW32_LIB respectively. You can specify these
 # paths in site-config.jam, user-config.jam or in the environment.
 # A new feature is provided to request a specific API:
-# <threadapi>win32 and <threadapi)pthread.
+# <threadapi>win32 and <threadapi>pthread.
 #
 # The naming of the resulting libraries is mostly the same for the
 # variant native to the build platform, i.e.
@@ -33,7 +33,6 @@
 #########################################################################
 
 import os ;
-import feature ;
 import indirect ;
 import path ;
 import configure ; 
@@ -143,8 +142,6 @@ project boost/thread
       #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <library>/boost/system//boost_system
     ;
-
-feature.feature threadapi : pthread win32 : optional propagated ;
 
 exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ; 
 

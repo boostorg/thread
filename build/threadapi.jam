@@ -1,4 +1,7 @@
 import property-set ;
+import feature : feature ;
+
+feature threadapi : win32 pthread : optional propagated ;
 
 rule get-default ( property-set )
 {
