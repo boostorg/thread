@@ -12,7 +12,6 @@
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/date_time/posix_time/conversion.hpp>
 #endif
-#include <pthread.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif
@@ -22,8 +21,10 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 
-#if defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
-#     define BOOST_THREAD_TIMESPEC_MAC_API
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#include <boost/detail/winapi/time.hpp>
+#include <boost/thread/win32/thread_primitives.hpp>
+#elif defined(BOOST_THREAD_MACOS)
 #include <sys/time.h> //for gettimeofday and timeval
 #else
 #include <time.h>  // for clock_gettime
@@ -189,37 +190,38 @@ namespace boost
     {
       static inline real_timespec_timepoint now()
       {
-        timespec ts;
-
-  #if defined(BOOST_THREAD_TIMESPEC_MAC_API)
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+        boost::detail::winapi::FILETIME_ ft;
+        boost::detail::winapi::GetSystemTimeAsFileTime(&ft);  // never fails
+        boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
+        return real_timespec_timepoint(ns);
+#elif defined(BOOST_THREAD_MACOS)
         timeval tv;
         ::gettimeofday(&tv, 0);
+        timespec ts;
         ts.tv_sec = tv.tv_sec;
         ts.tv_nsec = tv.tv_usec * 1000;
-  #else
+        return real_timespec_timepoint(ts);
+#else
+        timespec ts;
         if ( ::clock_gettime( CLOCK_REALTIME, &ts ) )
         {
-          ts.tv_sec = 0;
-          ts.tv_nsec = 0;
           BOOST_ASSERT(0 && "Boost::Thread - Internal Error");
+          return real_timespec_timepoint(0);
         }
-  #endif
         return real_timespec_timepoint(ts);
+#endif
       }
     };
 
-#if defined(CLOCK_MONOTONIC)
+#if defined(BOOST_THREAD_HAS_MONO_TIMESPEC)
+
   class mono_timespec_timepoint
   {
   public:
     explicit mono_timespec_timepoint(timespec const& v) : value(v) {}
     explicit mono_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
 
-#if defined BOOST_THREAD_USES_DATETIME
-    // fixme: delete this function once it's no longer being used because it's
-    // not a valid way to convert from system time to steady time
-    //inline mono_timespec_timepoint(boost::system_time const& abs_time);
-#endif
 #if defined BOOST_THREAD_USES_CHRONO
     template <class Duration>
     inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
@@ -273,30 +275,29 @@ namespace boost
 
   struct mono_timespec_clock
   {
-    // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
-    // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
     static inline mono_timespec_timepoint now()
     {
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+      win32::tick_types msec = win32::GetTickCount64_()();
+      return mono_timespec_timepoint(msec * 1000000);
+#elif defined(BOOST_THREAD_MACOS)
+      // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
+      // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
+      // Also update BOOST_THREAD_HAS_MONO_TIMESPEC in config.hpp
+      return mono_timespec_timepoint(0);
+#else
       timespec ts;
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
         ts.tv_sec = 0;
         ts.tv_nsec = 0;
-        BOOST_ASSERT(0 && "Boost::Thread - Internal Error");
+        BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_MONOTONIC) Internal Error");
       }
       return mono_timespec_timepoint(ts);
+#endif
     }
   };
 
-//#if defined BOOST_THREAD_USES_DATETIME
-//  // fixme: delete this function once it's no longer being used because it's
-//  // not a valid way to convert from system time to steady time
-//  mono_timespec_timepoint::mono_timespec_timepoint(boost::system_time const& abs_time)
-//  {
-//    boost::posix_time::time_duration const since_now = abs_time - boost::get_system_time();
-//    value = (mono_timespec_clock::now() + timespec_duration(since_now)).get();
-//  }
-//#endif
 #if defined BOOST_THREAD_USES_CHRONO
   template <class Duration>
   mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)

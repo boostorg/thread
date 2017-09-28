@@ -395,6 +395,17 @@
 #endif
 #endif
 
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#define BOOST_THREAD_HAS_MONO_TIMESPEC
+#elif defined(BOOST_THREAD_MACOS)
+//#define BOOST_THREAD_HAS_MONO_TIMESPEC
+#else
+#include <time.h> // check for CLOCK_MONOTONIC
+#if defined(CLOCK_MONOTONIC)
+#define BOOST_THREAD_HAS_MONO_TIMESPEC
+#endif
+#endif
+
 // provided for backwards compatibility, since this
 // macro was used for several releases by mistake.
 #if defined(BOOST_THREAD_DYN_DLL) && ! defined(BOOST_THREAD_DYN_LINK)
