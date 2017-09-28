@@ -23,6 +23,7 @@
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 #include <boost/detail/winapi/time.hpp>
+#include <boost/detail/winapi/timers.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #elif defined(BOOST_THREAD_MACOS)
 #include <sys/time.h> //for gettimeofday and timeval
@@ -77,6 +78,21 @@ namespace boost
       timespec& get() { return value; }
       timespec const& get() const { return value; }
       boost::intmax_t getNs() const { return timespec_to_ns(value); }
+      inline boost::intmax_t getMs() const
+      {
+        const boost::intmax_t& ns = timespec_to_ns(value);
+        // ceil/floor away from zero
+        if (ns >= 0)
+        {
+          // return ceiling of positive numbers
+          return (ns + 999999) / 1000000;
+        }
+        else
+        {
+          // return floor of negative numbers
+          return (ns - 999999) / 1000000;
+        }
+      }
 
       static inline timespec_duration zero()
       {
@@ -140,9 +156,9 @@ namespace boost
       }
 #endif
 
-      timespec& get() { return value; }
-      timespec const& get() const { return value; }
-      boost::intmax_t getNs() const { return timespec_to_ns(value); }
+      inline timespec& get() { return value; }
+      inline timespec const& get() const { return value; }
+      inline boost::intmax_t getNs() const { return timespec_to_ns(value); }
 
     private:
       timespec value;
@@ -206,7 +222,7 @@ namespace boost
         timespec ts;
         if ( ::clock_gettime( CLOCK_REALTIME, &ts ) )
         {
-          BOOST_ASSERT(0 && "Boost::Thread - Internal Error");
+          BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_REALTIME) Internal Error");
           return real_timespec_timepoint(0);
         }
         return real_timespec_timepoint(ts);
@@ -214,7 +230,7 @@ namespace boost
       }
     };
 
-#if defined(BOOST_THREAD_HAS_MONO_TIMESPEC)
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK)
 
   class mono_timespec_timepoint
   {
@@ -224,12 +240,21 @@ namespace boost
 
 #if defined BOOST_THREAD_USES_CHRONO
     template <class Duration>
-    inline mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
+    mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
 #endif
 
-    timespec& get() { return value; }
-    timespec const& get() const { return value; }
-    boost::intmax_t getNs() const { return timespec_to_ns(value); }
+    inline timespec& get() { return value; }
+    inline timespec const& get() const { return value; }
+    inline boost::intmax_t getNs() const { return timespec_to_ns(value); }
+
+    // can't use max() since that is a macro on some Windows systems
+    static inline mono_timespec_timepoint getMax()
+    {
+      timespec ts;
+      ts.tv_sec  = 0x7fffffff;
+      ts.tv_nsec = 0x7fffffff;
+      return mono_timespec_timepoint(ts);
+    }
 
   private:
     timespec value;
@@ -278,20 +303,52 @@ namespace boost
     static inline mono_timespec_timepoint now()
     {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
-      win32::tick_types msec = win32::GetTickCount64_()();
+#if defined(BOOST_THREAD_USES_CHRONO)
+      // Use QueryPerformanceCounter() to match the implementation in Boost
+      // Chrono so that chrono::steady_clock::now() and this function share the
+      // same epoch and so can be converted between each other.
+      boost::detail::winapi::LARGE_INTEGER_ freq;
+      if ( !boost::detail::winapi::QueryPerformanceFrequency( &freq ) )
+      {
+        BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
+        return mono_timespec_timepoint(0);
+      }
+      if ( freq.QuadPart <= 0 )
+      {
+        BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
+        return mono_timespec_timepoint(0);
+      }
+
+      boost::detail::winapi::LARGE_INTEGER_ pcount;
+      unsigned times=0;
+      while ( ! boost::detail::winapi::QueryPerformanceCounter( &pcount ) )
+      {
+        if ( ++times > 3 )
+        {
+          BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceCounter Internal Error");
+          return mono_timespec_timepoint(0);
+        }
+      }
+
+      long double ns = 1000000000.0L * pcount.QuadPart / freq.QuadPart;
+      return mono_timespec_timepoint(static_cast<boost::intmax_t>(ns));
+#else
+      // Use GetTickCount64() because it's more reliable on older
+      // systems like Windows XP and Windows Server 2003.
+      win32::ticks_type msec = win32::GetTickCount64_()();
       return mono_timespec_timepoint(msec * 1000000);
+#endif
 #elif defined(BOOST_THREAD_MACOS)
       // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
       // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
-      // Also update BOOST_THREAD_HAS_MONO_TIMESPEC in config.hpp
+      // Also update BOOST_THREAD_HAS_MONO_CLOCK in config.hpp
       return mono_timespec_timepoint(0);
 #else
       timespec ts;
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
-        ts.tv_sec = 0;
-        ts.tv_nsec = 0;
         BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_MONOTONIC) Internal Error");
+        return mono_timespec_timepoint(0);
       }
       return mono_timespec_timepoint(ts);
 #endif
@@ -302,13 +359,15 @@ namespace boost
   template <class Duration>
   mono_timespec_timepoint::mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
   {
+    // This conversion assumes that chrono::steady_clock::now() and
+    // mono_timespec_clock::now() share the same epoch.
     value = timespec_duration(abs_time.time_since_epoch()).get();
   }
 #endif
 
 #endif
 
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
   typedef mono_timespec_clock internal_timespec_clock;
   typedef mono_timespec_timepoint internal_timespec_timepoint;
 #else

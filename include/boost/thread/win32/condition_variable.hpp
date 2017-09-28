@@ -18,6 +18,8 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/lock_types.hpp>
+#include <boost/thread/detail/internal_clock.hpp>
+#include <boost/thread/pthread/timespec.hpp>
 
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -89,9 +91,9 @@ namespace boost
                 return notified;
             }
 
-            bool wait(timeout abs_or_rel_time)
+            bool do_wait_until(detail::internal_timespec_timepoint const &timeout)
             {
-                return this_thread::interruptible_wait(semaphore,abs_or_rel_time);
+                return this_thread::interruptible_wait(semaphore, timeout);
             }
 
             bool woken()
@@ -230,10 +232,20 @@ namespace boost
                 }
             };
 
-
         protected:
+            basic_condition_variable(const basic_condition_variable& other);
+            basic_condition_variable& operator=(const basic_condition_variable& other);
+
+        public:
+            basic_condition_variable():
+                total_count(0),active_generation_count(0),wake_sem(0)
+            {}
+
+            ~basic_condition_variable()
+            {}
+
             template<typename lock_type>
-            bool do_wait(lock_type& lock,timeout abs_or_rel_time)
+            bool do_wait_until(lock_type& lock, detail::internal_timespec_timepoint const &timeout)
             {
               relocker<lock_type> locker(lock);
               entry_manager entry(get_wait_entry(), internal_mutex);
@@ -242,7 +254,7 @@ namespace boost
               bool woken=false;
               while(!woken)
               {
-                  if(!entry->wait(abs_or_rel_time))
+                  if(!entry->do_wait_until(timeout))
                   {
                       return false;
                   }
@@ -254,28 +266,6 @@ namespace boost
               locker.lock();
               return woken;
             }
-
-            template<typename lock_type,typename predicate_type>
-            bool do_wait(lock_type& m,timeout const& abs_or_rel_time,predicate_type pred)
-            {
-                while (!pred())
-                {
-                    if(!do_wait(m, abs_or_rel_time))
-                        return pred();
-                }
-                return true;
-            }
-
-            basic_condition_variable(const basic_condition_variable& other);
-            basic_condition_variable& operator=(const basic_condition_variable& other);
-
-        public:
-            basic_condition_variable():
-                total_count(0),active_generation_count(0),wake_sem(0)
-            {}
-
-            ~basic_condition_variable()
-            {}
 
             void notify_one() BOOST_NOEXCEPT
             {
@@ -330,12 +320,13 @@ namespace boost
         condition_variable()
         {}
 
+        using detail::basic_condition_variable::do_wait_until;
         using detail::basic_condition_variable::notify_one;
         using detail::basic_condition_variable::notify_all;
 
         void wait(unique_lock<mutex>& m)
         {
-            do_wait(m,detail::timeout::sentinel());
+            do_wait_until(m, detail::internal_timespec_timepoint::getMax());
         }
 
         template<typename predicate_type>
@@ -348,37 +339,53 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time)
         {
-            return do_wait(m,abs_time);
+            const detail::real_timespec_timepoint ts(abs_time);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
         }
 
         bool timed_wait(unique_lock<mutex>& m,boost::xtime const& abs_time)
         {
-            return do_wait(m,system_time(abs_time));
+            return timed_wait(m, system_time(abs_time));
         }
         template<typename duration_type>
         bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration)
         {
-          if (wait_duration.is_pos_infinity())
-          {
-            wait(m); // or do_wait(m,detail::timeout::sentinel());
-            return true;
-          }
-          if (wait_duration.is_special())
-          {
-            return true;
-          }
-          return do_wait(m,wait_duration.total_milliseconds());
+            if (wait_duration.is_pos_infinity())
+            {
+              wait(m);
+              return true;
+            }
+            if (wait_duration.is_special())
+            {
+              return true;
+            }
+            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
+                                                          + detail::timespec_duration(wait_duration);
+            return do_wait_until(m, ts);
         }
 
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time,predicate_type pred)
         {
-            return do_wait(m,abs_time,pred);
+            while (!pred())
+            {
+              if(!timed_wait(m, abs_time))
+                return pred();
+            }
+            return true;
         }
         template<typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,boost::xtime const& abs_time,predicate_type pred)
         {
-            return do_wait(m,system_time(abs_time),pred);
+            return timed_wait(m, system_time(abs_time), pred);
         }
         template<typename duration_type,typename predicate_type>
         bool timed_wait(unique_lock<mutex>& m,duration_type const& wait_duration,predicate_type pred)
@@ -387,7 +394,7 @@ namespace boost
             {
               while (!pred())
               {
-                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                wait(m);
               }
               return true;
             }
@@ -395,10 +402,27 @@ namespace boost
             {
               return pred();
             }
-            return do_wait(m,wait_duration.total_milliseconds(),pred);
+            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
+                                                          + detail::timespec_duration(wait_duration);
+            while (!pred())
+            {
+              if(!do_wait_until(m, ts))
+                return pred();
+            }
+            return true;
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
+        template <class Duration>
+        cv_status
+        wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        {
+          const detail::internal_timespec_timepoint& ts = t;
+          if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+          else return cv_status::timeout;
+        }
 
         template <class Clock, class Duration>
         cv_status
@@ -407,13 +431,17 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          chrono::time_point<Clock, Duration> now = Clock::now();
-          if (t<=now) {
-            return cv_status::timeout;
+          typedef typename common_type<Duration, typename Clock::duration>::type CD;
+          CD d = t - Clock::now();
+          if ( d <= CD::zero() ) return cv_status::timeout;
+          d = (std::min)(d, CD(milliseconds(100)));
+          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
+          {
+              d = t - Clock::now();
+              if ( d <= CD::zero() ) return cv_status::timeout;
+              d = (std::min)(d, CD(milliseconds(100)));
           }
-          do_wait(lock, ceil<milliseconds>(t-now).count());
-          return Clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
+          return cv_status::no_timeout;
         }
 
         template <class Rep, class Period>
@@ -422,15 +450,7 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          using namespace chrono;
-          if (d<=chrono::duration<Rep, Period>::zero()) {
-            return cv_status::timeout;
-          }
-
-          steady_clock::time_point c_now = steady_clock::now();
-          do_wait(lock, ceil<milliseconds>(d).count());
-          return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
+          return wait_until(lock, chrono::steady_clock::now() + d);
         }
 
         template <class Clock, class Duration, class Predicate>
@@ -447,6 +467,7 @@ namespace boost
             }
             return true;
         }
+
         template <class Rep, class Period, class Predicate>
         bool
         wait_for(
@@ -467,13 +488,14 @@ namespace boost
         condition_variable_any()
         {}
 
+        using detail::basic_condition_variable::do_wait_until;
         using detail::basic_condition_variable::notify_one;
         using detail::basic_condition_variable::notify_all;
 
         template<typename lock_type>
         void wait(lock_type& m)
         {
-            do_wait(m,detail::timeout::sentinel());
+            do_wait_until(m, detail::internal_timespec_timepoint::getMax());
         }
 
         template<typename lock_type,typename predicate_type>
@@ -486,40 +508,94 @@ namespace boost
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
-            return do_wait(m,abs_time);
+            const detail::real_timespec_timepoint ts(abs_time);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            {
+              d = ts - detail::real_timespec_clock::now();
+              if ( d <= detail::timespec_duration::zero() ) return false;
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+            }
+            return true;
         }
 
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::xtime const& abs_time)
         {
-            return do_wait(m,system_time(abs_time));
+            return timed_wait(m, system_time(abs_time));
         }
 
         template<typename lock_type,typename duration_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration)
         {
-            return do_wait(m,wait_duration.total_milliseconds());
+            if (wait_duration.is_pos_infinity())
+            {
+              wait(m);
+              return true;
+            }
+            if (wait_duration.is_special())
+            {
+              return true;
+            }
+            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
+                                                          + detail::timespec_duration(wait_duration);
+            return do_wait_until(m, ts);
         }
 
         template<typename lock_type,typename predicate_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time,predicate_type pred)
         {
-            return do_wait(m,abs_time,pred);
+            while (!pred())
+            {
+              if(!timed_wait(m, abs_time))
+                return pred();
+            }
+            return true;
         }
 
         template<typename lock_type,typename predicate_type>
         bool timed_wait(lock_type& m,boost::xtime const& abs_time,predicate_type pred)
         {
-            return do_wait(m,system_time(abs_time),pred);
+            return timed_wait(m, system_time(abs_time), pred);
         }
 
         template<typename lock_type,typename duration_type,typename predicate_type>
         bool timed_wait(lock_type& m,duration_type const& wait_duration,predicate_type pred)
         {
-            return do_wait(m,wait_duration.total_milliseconds(),pred);
+            if (wait_duration.is_pos_infinity())
+            {
+              while (!pred())
+              {
+                wait(m);
+              }
+              return true;
+            }
+            if (wait_duration.is_special())
+            {
+              return pred();
+            }
+            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
+                                                          + detail::timespec_duration(wait_duration);
+            while (!pred())
+            {
+              if(!do_wait_until(m, ts))
+                return pred();
+            }
+            return true;
         }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
+        template <class lock_type,class Duration>
+        cv_status
+        wait_until(
+                lock_type& lock,
+                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        {
+          const detail::internal_timespec_timepoint& ts = t;
+          if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+          else return cv_status::timeout;
+        }
 
         template <class lock_type, class Clock, class Duration>
         cv_status
@@ -528,13 +604,17 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t)
         {
           using namespace chrono;
-          chrono::time_point<Clock, Duration> now = Clock::now();
-          if (t<=now) {
-            return cv_status::timeout;
+          typedef typename common_type<Duration, typename Clock::duration>::type CD;
+          CD d = t - Clock::now();
+          if ( d <= CD::zero() ) return cv_status::timeout;
+          d = (std::min)(d, CD(milliseconds(100)));
+          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
+          {
+              d = t - Clock::now();
+              if ( d <= CD::zero() ) return cv_status::timeout;
+              d = (std::min)(d, CD(milliseconds(100)));
           }
-          do_wait(lock, ceil<milliseconds>(t-now).count());
-          return Clock::now() < t ? cv_status::no_timeout :
-                                             cv_status::timeout;
+          return cv_status::no_timeout;
         }
 
         template <class lock_type,  class Rep, class Period>
@@ -543,14 +623,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          using namespace chrono;
-          if (d<=chrono::duration<Rep, Period>::zero()) {
-            return cv_status::timeout;
-          }
-          steady_clock::time_point c_now = steady_clock::now();
-          do_wait(lock, ceil<milliseconds>(d).count());
-          return steady_clock::now() - c_now < d ? cv_status::no_timeout :
-                                                   cv_status::timeout;
+          return wait_until(lock, chrono::steady_clock::now() + d);
         }
 
         template <class lock_type, class Clock, class Duration, class Predicate>

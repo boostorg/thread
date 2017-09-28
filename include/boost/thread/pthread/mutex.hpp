@@ -207,7 +207,7 @@ namespace boost
                 return true;
             }
             detail::timespec_duration d(relative_time);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
@@ -326,7 +326,7 @@ namespace boost
         bool timed_lock(system_time const & abs_time)
         {
             const detail::real_timespec_timepoint ts(abs_time);
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )

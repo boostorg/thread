@@ -10,6 +10,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
+#include <boost/thread/pthread/timespec.hpp>
 
 #include <boost/predef/platform.h>
 
@@ -174,131 +175,48 @@ namespace boost
         BOOST_THREAD_DECL thread_data_base* get_current_thread_data();
 
         typedef boost::intrusive_ptr<detail::thread_data_base> thread_data_ptr;
-
-        struct BOOST_SYMBOL_VISIBLE timeout
-        {
-            win32::ticks_type start;
-            uintmax_t milliseconds;
-            bool relative;
-            boost::system_time abs_time;
-
-            static unsigned long const max_non_infinite_wait=0xfffffffe;
-
-            timeout(uintmax_t milliseconds_):
-                start(win32::GetTickCount64_()()),
-                milliseconds(milliseconds_),
-                relative(true)
-            //,
-            //    abs_time(boost::get_system_time())
-            {}
-
-            timeout(boost::system_time const& abs_time_):
-                start(win32::GetTickCount64_()()),
-                milliseconds(0),
-                relative(false),
-                abs_time(abs_time_)
-            {}
-
-            struct BOOST_SYMBOL_VISIBLE remaining_time
-            {
-                bool more;
-                unsigned long milliseconds;
-
-                remaining_time(uintmax_t remaining):
-                    more(remaining>max_non_infinite_wait),
-                    milliseconds(more?max_non_infinite_wait:(unsigned long)remaining)
-                {}
-            };
-
-            remaining_time remaining_milliseconds() const
-            {
-                if(is_sentinel())
-                {
-                    return remaining_time(win32::infinite);
-                }
-                else if(relative)
-                {
-                    win32::ticks_type const now=win32::GetTickCount64_()();
-                    win32::ticks_type const elapsed=now-start;
-                    return remaining_time((elapsed<milliseconds)?(milliseconds-elapsed):0);
-                }
-                else
-                {
-                    system_time const now=get_system_time();
-                    if(abs_time<=now)
-                    {
-                        return remaining_time(0);
-                    }
-                    return remaining_time((abs_time-now).total_milliseconds()+1);
-                }
-            }
-
-            bool is_sentinel() const
-            {
-                return milliseconds==~uintmax_t(0);
-            }
-
-
-            static timeout sentinel()
-            {
-                return timeout(sentinel_type());
-            }
-        private:
-            struct sentinel_type
-            {};
-
-            explicit timeout(sentinel_type):
-                start(0),milliseconds(~uintmax_t(0)),relative(true)
-            {}
-        };
-
-        inline uintmax_t pin_to_zero(intmax_t value)
-        {
-            return (value<0)?0u:(uintmax_t)value;
-        }
     }
 
     namespace this_thread
     {
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
-        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
-        inline void interruptible_wait(uintmax_t milliseconds)
-        {
-            interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
-        }
-        inline BOOST_SYMBOL_VISIBLE void interruptible_wait(system_time const& abs_time)
-        {
-            interruptible_wait(detail::win32::invalid_handle_value,abs_time);
-        }
+        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
-            interruptible_wait(detail::pin_to_zero(rel_time.total_milliseconds()));
+          interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
         }
         inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
         {
-            interruptible_wait(abs_time);
+          const detail::real_timespec_timepoint ts(abs_time);
+          detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+          while (d > detail::timespec_duration::zero())
+          {
+            d = (std::min)(d, detail::timespec_milliseconds(100));
+            interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + d);
+            d = ts - detail::real_timespec_clock::now();
+          }
         }
+
         namespace no_interruption_point
         {
-          bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for,detail::timeout target_time);
-          inline void non_interruptible_wait(uintmax_t milliseconds)
-          {
-            non_interruptible_wait(detail::win32::invalid_handle_value,milliseconds);
-          }
-          inline BOOST_SYMBOL_VISIBLE void non_interruptible_wait(system_time const& abs_time)
-          {
-            non_interruptible_wait(detail::win32::invalid_handle_value,abs_time);
-          }
+          bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
           template<typename TimeDuration>
           inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
           {
-            non_interruptible_wait(detail::pin_to_zero(rel_time.total_milliseconds()));
+            non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
           }
           inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
           {
-            non_interruptible_wait(abs_time);
+            const detail::real_timespec_timepoint ts(abs_time);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            while (d > detail::timespec_duration::zero())
+            {
+              d = (std::min)(d, detail::timespec_milliseconds(100));
+              non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + d);
+              d = ts - detail::real_timespec_clock::now();
+            }
           }
         }
     }

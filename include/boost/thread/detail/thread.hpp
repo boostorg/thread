@@ -469,20 +469,11 @@ namespace boost
         inline void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-        template <class Rep, class Period>
-        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
-        {
-          chrono::milliseconds rel_time2= chrono::ceil<chrono::milliseconds>(rel_time);
-          return do_try_join_for(rel_time2.count());
-        }
-#else
         template <class Rep, class Period>
         bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
         {
           return try_join_until(chrono::steady_clock::now() + rel_time);
         }
-#endif
 
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
@@ -501,36 +492,6 @@ namespace boost
           return true;
         }
 #endif
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-    private:
-        bool do_try_join_for_noexcept(uintmax_t milli, bool& res);
-        inline bool do_try_join_for(uintmax_t milli);
-    public:
-#if defined BOOST_THREAD_USES_DATETIME
-        bool timed_join(const system_time& abs_time)
-        {
-          posix_time::time_duration d = abs_time - get_system_time();
-          d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
-          while ( ! do_try_join_for(d.total_milliseconds()) )
-          {
-            d = abs_time - get_system_time();
-            if ( d <= posix_time::milliseconds(0) ) return false;
-            d = (std::min)(d, posix_time::time_duration(posix_time::milliseconds(100)));
-          }
-          return true;
-        }
-#endif
-
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
-        {
-          return try_join_for(t - chrono::steady_clock::now());
-        }
-#endif
-
-
-#else // ! defined(BOOST_THREAD_PLATFORM_WIN32)
     private:
         bool do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res);
         inline bool do_try_join_until(detail::internal_timespec_timepoint const &timeout);
@@ -539,7 +500,7 @@ namespace boost
         bool timed_join(const system_time& abs_time)
         {
           const detail::real_timespec_timepoint ts(abs_time);
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
           detail::timespec_duration d = ts - detail::real_timespec_clock::now();
           d = (std::min)(d, detail::timespec_milliseconds(100));
           while ( ! do_try_join_until(detail::internal_timespec_clock::now() + d) )
@@ -560,8 +521,6 @@ namespace boost
         {
           return do_try_join_until(boost::detail::internal_timespec_timepoint(t));
         }
-#endif // defined(BOOST_THREAD_PLATFORM_WIN32)
-
 #endif
       public:
 
@@ -569,12 +528,9 @@ namespace boost
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-          return do_try_join_for(rel_time.total_milliseconds());
-#else
           detail::timespec_duration d(rel_time);
           if ( d < detail::timespec_duration::zero() ) return false; // d == zero() is valid
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
           const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
           d = (std::min)(d, detail::timespec_milliseconds(100));
           while ( ! do_try_join_until(detail::internal_timespec_clock::now() + d) )
@@ -586,7 +542,6 @@ namespace boost
           return true;
 #else
           return do_try_join_until(detail::internal_timespec_clock::now() + d);
-#endif
 #endif
         }
 #endif
@@ -804,7 +759,6 @@ namespace boost
         );
     }
 
-#ifdef BOOST_THREAD_PLATFORM_PTHREAD
     bool thread::do_try_join_until(detail::internal_timespec_timepoint const &timeout)
     {
         if (this_thread::get_id() == get_id())
@@ -822,26 +776,6 @@ namespace boost
           );
         }
     }
-#else
-    bool thread::do_try_join_for(uintmax_t timeout)
-    {
-        if (this_thread::get_id() == get_id())
-          boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
-        bool res;
-        if (do_try_join_for_noexcept(timeout, res))
-        {
-          return res;
-        }
-        else
-        {
-          BOOST_THREAD_THROW_ELSE_RETURN(
-            (thread_resource_error(static_cast<int>(system::errc::invalid_argument), "boost thread: thread not joinable")),
-            false
-          );
-        }
-    }
-#endif
-
 
 #if !defined(BOOST_NO_IOSTREAM) && defined(BOOST_NO_MEMBER_TEMPLATE_FRIENDS)
     template<class charT, class traits>

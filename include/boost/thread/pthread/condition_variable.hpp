@@ -222,7 +222,7 @@ namespace boost
 #else
             boost::system_time const& abs_time_fixed = abs_time;
 #endif
-#if defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
             const detail::real_timespec_timepoint ts(abs_time_fixed);
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
@@ -248,7 +248,7 @@ namespace boost
         {
             if (wait_duration.is_pos_infinity())
             {
-                wait(m); // or do_wait(m,detail::timeout::sentinel());
+                wait(m);
                 return true;
             }
             if (wait_duration.is_special())
@@ -256,7 +256,7 @@ namespace boost
                 return true;
             }
             detail::timespec_duration d(wait_duration);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
@@ -295,7 +295,7 @@ namespace boost
             {
                 while (!pred())
                 {
-                    wait(m); // or do_wait(m,detail::timeout::sentinel());
+                    wait(m);
                 }
                 return true;
             }
@@ -304,7 +304,7 @@ namespace boost
                 return pred();
             }
             detail::timespec_duration d(wait_duration);
-#if defined(CLOCK_MONOTONIC) && !defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
             const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
             d = (std::min)(d, detail::timespec_milliseconds(100));
             while ( ! pred() && ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
@@ -327,7 +327,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
         {
-          boost::detail::internal_timespec_timepoint ts = t;
+          const boost::detail::internal_timespec_timepoint& ts = t;
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }

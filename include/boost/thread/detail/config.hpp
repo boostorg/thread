@@ -12,7 +12,6 @@
 #include <boost/detail/workaround.hpp>
 #include <boost/thread/detail/platform.hpp>
 
-//#define BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 //#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 // ATTRIBUTE_MAY_ALIAS
 
@@ -386,23 +385,29 @@
 #endif
 
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
+  #define BOOST_THREAD_HAS_MONO_CLOCK
+  #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+#elif defined(BOOST_THREAD_MACOS)
+  //#define BOOST_THREAD_HAS_MONO_CLOCK
+#else
+  #include <time.h> // check for CLOCK_MONOTONIC
+  #if defined(CLOCK_MONOTONIC)
+    #define BOOST_THREAD_HAS_MONO_CLOCK
+    #if defined(BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC)
+      #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+    #endif
+  #else
+    #undef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+  #endif
+#endif
+
+#if defined(BOOST_THREAD_PLATFORM_WIN32)
 #elif ! defined BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 #if defined BOOST_PTHREAD_HAS_TIMEDLOCK
 #define BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
 #elif (defined(_POSIX_TIMEOUTS) && (_POSIX_TIMEOUTS-0)>=200112L) \
  || (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
 #define BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
-#endif
-#endif
-
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
-#define BOOST_THREAD_HAS_MONO_TIMESPEC
-#elif defined(BOOST_THREAD_MACOS)
-//#define BOOST_THREAD_HAS_MONO_TIMESPEC
-#else
-#include <time.h> // check for CLOCK_MONOTONIC
-#if defined(CLOCK_MONOTONIC)
-#define BOOST_THREAD_HAS_MONO_TIMESPEC
 #endif
 #endif
 
