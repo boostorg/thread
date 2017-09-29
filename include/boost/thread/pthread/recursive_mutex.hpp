@@ -19,11 +19,10 @@
 #endif
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <errno.h>
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/pthread/pthread_helpers.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
-#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
@@ -289,7 +288,8 @@ namespace boost
         // fixme: Shouldn't this functions be located on a .cpp file?
         bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
-            int const res=pthread_mutex_timedlock(&m,&timeout.get());
+            timespec const& ts = timeout.getTs();
+            int const res=pthread_mutex_timedlock(&m,&ts);
             BOOST_ASSERT(!res || res==ETIMEDOUT);
             return !res;
         }
@@ -348,9 +348,10 @@ namespace boost
                 ++count;
                 return true;
             }
+            timespec const& ts = timeout.getTs();
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.get());
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&ts);
                 if(cond_res==ETIMEDOUT)
                 {
                     return false;
@@ -394,22 +395,20 @@ namespace boost
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
-          if ( d <= CD::zero() ) return false;
-          d = (std::min)(d, CD(milliseconds(100)));
-          while ( ! try_lock_until(thread_detail::internal_clock_t::now() + d))
+          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          while ( ! try_lock_until(detail::internal_chrono_clock::now() + d))
           {
               d = t - Clock::now();
               if ( d <= CD::zero() ) return false;
-              d = (std::min)(d, CD(milliseconds(100)));
+              d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return true;
 
         }
         template <class Duration>
-        bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
           detail::internal_timespec_timepoint ts = t;
           return do_try_lock_until(ts);

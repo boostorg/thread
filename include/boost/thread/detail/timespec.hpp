@@ -1,5 +1,5 @@
-#ifndef BOOST_THREAD_PTHREAD_TIMESPEC_HPP
-#define BOOST_THREAD_PTHREAD_TIMESPEC_HPP
+#ifndef BOOST_THREAD_DETAIL_TIMESPEC_HPP
+#define BOOST_THREAD_DETAIL_TIMESPEC_HPP
 //  (C) Copyright 2007-8 Anthony Williams
 //  (C) Copyright 2012 Vicente J. Botet Escriba
 //
@@ -31,17 +31,19 @@
 #include <time.h>  // for clock_gettime
 #endif
 
+#include <limits>
+
 #include <boost/config/abi_prefix.hpp>
 
 namespace boost
 {
   namespace detail
   {
-
+#if defined BOOST_THREAD_PLATFORM_PTHREAD
     inline timespec ns_to_timespec(boost::intmax_t const& ns)
     {
       boost::intmax_t s = ns / 1000000000l;
-      struct timespec ts;
+      timespec ts;
       ts.tv_sec = static_cast<long> (s);
       ts.tv_nsec = static_cast<long> (ns - s * 1000000000l);
       return ts;
@@ -50,59 +52,53 @@ namespace boost
     {
       return static_cast<boost::intmax_t>(ts.tv_sec) * 1000000000l + ts.tv_nsec;
     }
+#endif
 
     class timespec_duration
     {
     public:
-      explicit timespec_duration(timespec const& v) : value(v) {}
-      explicit timespec_duration(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
+      explicit timespec_duration(boost::intmax_t const& ns) : value(ns) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
       timespec_duration(boost::posix_time::time_duration const& rel_time)
       {
-        struct timespec d = { 0,0};
-        d.tv_sec=rel_time.total_seconds();
-        d.tv_nsec=(long)(rel_time.fractional_seconds()*(1000000000l/rel_time.ticks_per_second()));
-        value =  d;
+        value = static_cast<boost::intmax_t>(rel_time.total_seconds()) * 1000000000l;
+        value += rel_time.fractional_seconds() * (1000000000l / rel_time.ticks_per_second());
       }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       timespec_duration(chrono::duration<Rep, Period> const& d)
       {
-        value.tv_sec  = static_cast<long>(chrono::duration_cast<chrono::seconds>(d).count());
-        value.tv_nsec = static_cast<long>((chrono::ceil<chrono::nanoseconds>(d) - chrono::duration_cast<chrono::seconds>(d)).count());
+        value = chrono::ceil<chrono::nanoseconds>(d).count();
       }
 #endif
 
-      timespec& get() { return value; }
-      timespec const& get() const { return value; }
-      boost::intmax_t getNs() const { return timespec_to_ns(value); }
+#if defined BOOST_THREAD_PLATFORM_PTHREAD
+      inline timespec getTs() const { return ns_to_timespec(value); }
+#endif
+      inline boost::intmax_t getNs() const { return value; }
       inline boost::intmax_t getMs() const
       {
-        const boost::intmax_t& ns = timespec_to_ns(value);
         // ceil/floor away from zero
-        if (ns >= 0)
+        if (value >= 0)
         {
           // return ceiling of positive numbers
-          return (ns + 999999) / 1000000;
+          return (value + 999999) / 1000000;
         }
         else
         {
           // return floor of negative numbers
-          return (ns - 999999) / 1000000;
+          return (value - 999999) / 1000000;
         }
       }
 
       static inline timespec_duration zero()
       {
-        timespec ts;
-        ts.tv_sec = 0;
-        ts.tv_nsec = 0;
-        return timespec_duration(ts);
+        return timespec_duration(0);
       }
     private:
-      timespec value;
+      boost::intmax_t value;
     };
 
     inline bool operator==(timespec_duration const& lhs, timespec_duration const& rhs)
@@ -138,30 +134,30 @@ namespace boost
     class real_timespec_timepoint
     {
     public:
-      explicit real_timespec_timepoint(timespec const& v) : value(v) {}
-      explicit real_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
+      explicit real_timespec_timepoint(boost::intmax_t const& ns) : value(ns) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
       real_timespec_timepoint(boost::system_time const& abs_time)
       {
         boost::posix_time::time_duration const time_since_epoch = abs_time-boost::posix_time::from_time_t(0);
-        value = timespec_duration(time_since_epoch).get();
+        value = timespec_duration(time_since_epoch).getNs();
       }
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Duration>
       real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
       {
-        value = timespec_duration(abs_time.time_since_epoch()).get();
+        value = timespec_duration(abs_time.time_since_epoch()).getNs();
       }
 #endif
 
-      inline timespec& get() { return value; }
-      inline timespec const& get() const { return value; }
-      inline boost::intmax_t getNs() const { return timespec_to_ns(value); }
+#if defined BOOST_THREAD_PLATFORM_PTHREAD
+      inline timespec getTs() const { return ns_to_timespec(value); }
+#endif
+      inline boost::intmax_t getNs() const { return value; }
 
     private:
-      timespec value;
+      boost::intmax_t value;
     };
 
     inline bool operator==(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
@@ -212,7 +208,7 @@ namespace boost
         boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
         return real_timespec_timepoint(ns);
 #elif defined(BOOST_THREAD_MACOS)
-        timeval tv;
+        struct timeval tv;
         ::gettimeofday(&tv, 0);
         timespec ts;
         ts.tv_sec = tv.tv_sec;
@@ -225,7 +221,7 @@ namespace boost
           BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_REALTIME) Internal Error");
           return real_timespec_timepoint(0);
         }
-        return real_timespec_timepoint(ts);
+        return real_timespec_timepoint(timespec_to_ns(ts));
 #endif
       }
     };
@@ -235,29 +231,27 @@ namespace boost
   class mono_timespec_timepoint
   {
   public:
-    explicit mono_timespec_timepoint(timespec const& v) : value(v) {}
-    explicit mono_timespec_timepoint(boost::intmax_t const& ns) : value(ns_to_timespec(ns)) {}
+    explicit mono_timespec_timepoint(boost::intmax_t const& ns) : value(ns) {}
 
 #if defined BOOST_THREAD_USES_CHRONO
     template <class Duration>
     mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
 #endif
 
-    inline timespec& get() { return value; }
-    inline timespec const& get() const { return value; }
-    inline boost::intmax_t getNs() const { return timespec_to_ns(value); }
+#if defined BOOST_THREAD_PLATFORM_PTHREAD
+    inline timespec getTs() const { return ns_to_timespec(value); }
+#endif
+    inline boost::intmax_t getNs() const { return value; }
 
-    // can't use max() since that is a macro on some Windows systems
+    // can't name this max() since that is a macro on some Windows systems
     static inline mono_timespec_timepoint getMax()
     {
-      timespec ts;
-      ts.tv_sec  = 0x7fffffff;
-      ts.tv_nsec = 0x7fffffff;
-      return mono_timespec_timepoint(ts);
+      boost::intmax_t ns = (std::numeric_limits<boost::intmax_t>::max)();
+      return mono_timespec_timepoint(ns);
     }
 
   private:
-    timespec value;
+    boost::intmax_t value;
   };
 
   inline bool operator==(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
@@ -350,7 +344,7 @@ namespace boost
         BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_MONOTONIC) Internal Error");
         return mono_timespec_timepoint(0);
       }
-      return mono_timespec_timepoint(ts);
+      return mono_timespec_timepoint(timespec_to_ns(ts));
 #endif
     }
   };
@@ -361,7 +355,7 @@ namespace boost
   {
     // This conversion assumes that chrono::steady_clock::now() and
     // mono_timespec_clock::now() share the same epoch.
-    value = timespec_duration(abs_time.time_since_epoch()).get();
+    value = timespec_duration(abs_time.time_since_epoch()).getNs();
   }
 #endif
 
@@ -373,6 +367,14 @@ namespace boost
 #else
   typedef real_timespec_clock internal_timespec_clock;
   typedef real_timespec_timepoint internal_timespec_timepoint;
+#endif
+
+#ifdef BOOST_THREAD_USES_CHRONO
+#ifdef BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+  typedef chrono::steady_clock internal_chrono_clock;
+#else
+  typedef chrono::system_clock internal_chrono_clock;
+#endif
 #endif
 
   }

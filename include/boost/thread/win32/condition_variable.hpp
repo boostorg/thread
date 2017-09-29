@@ -18,8 +18,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/lock_types.hpp>
-#include <boost/thread/detail/internal_clock.hpp>
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -417,7 +416,7 @@ namespace boost
         cv_status
         wait_until(
                 unique_lock<mutex>& lock,
-                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+                const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
           const detail::internal_timespec_timepoint& ts = t;
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
@@ -430,16 +429,14 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
-          if ( d <= CD::zero() ) return cv_status::timeout;
-          d = (std::min)(d, CD(milliseconds(100)));
-          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
+          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          while (cv_status::timeout == wait_until(lock, detail::internal_chrono_clock::now() + d))
           {
               d = t - Clock::now();
               if ( d <= CD::zero() ) return cv_status::timeout;
-              d = (std::min)(d, CD(milliseconds(100)));
+              d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return cv_status::no_timeout;
         }
@@ -590,7 +587,7 @@ namespace boost
         cv_status
         wait_until(
                 lock_type& lock,
-                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+                const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
           const detail::internal_timespec_timepoint& ts = t;
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
@@ -603,16 +600,14 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
-          if ( d <= CD::zero() ) return cv_status::timeout;
-          d = (std::min)(d, CD(milliseconds(100)));
-          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
+          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          while (cv_status::timeout == wait_until(lock, detail::internal_chrono_clock::now() + d))
           {
               d = t - Clock::now();
               if ( d <= CD::zero() ) return cv_status::timeout;
-              d = (std::min)(d, CD(milliseconds(100)));
+              d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return cv_status::no_timeout;
         }

@@ -37,7 +37,6 @@
 #include <boost/type_traits/decay.hpp>
 #include <boost/functional/hash.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
-#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
@@ -478,16 +477,14 @@ namespace boost
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
-          if ( d < CD::zero() ) return false; // d == zero() is valid
-          d = (std::min)(d, CD(milliseconds(100)));
-          while ( ! try_join_until(thread_detail::internal_clock_t::now() + d) )
+          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
           {
             d = t - Clock::now();
             if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(milliseconds(100)));
+            d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return true;
         }
@@ -517,7 +514,7 @@ namespace boost
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Duration>
-        bool try_join_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
           return do_try_join_until(boost::detail::internal_timespec_timepoint(t));
         }
@@ -529,7 +526,6 @@ namespace boost
         inline bool timed_join(TimeDuration const& rel_time)
         {
           detail::timespec_duration d(rel_time);
-          if ( d < detail::timespec_duration::zero() ) return false; // d == zero() is valid
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
           const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
           d = (std::min)(d, detail::timespec_milliseconds(100));

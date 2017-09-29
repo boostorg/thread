@@ -13,7 +13,6 @@
 #endif
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/lock_types.hpp>
-#include <boost/thread/detail/internal_clock.hpp>
 
 namespace boost
 {
@@ -32,19 +31,17 @@ namespace boost
     template <class Duration>
     void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
     {
-      using namespace chrono;
-      sleep_for(t - steady_clock::now());
+      sleep_for(t - chrono::steady_clock::now());
     }
 
     template <class Clock, class Duration>
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
-      using namespace chrono;
       typedef typename common_type<Duration, typename Clock::duration>::type CD;
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        d = (std::min)(d, CD(milliseconds(100)));
+        d = (std::min)(d, CD(chrono::milliseconds(100)));
         sleep_for(d);
         d = t - Clock::now();
       }
@@ -55,17 +52,15 @@ namespace boost
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
     {
-      using namespace chrono;
-      if (d > duration<Rep, Period>::zero())
+      if (d > chrono::duration<Rep, Period>::zero())
       {
-        sleep_until(steady_clock::now() + d);
+        sleep_until(chrono::steady_clock::now() + d);
       }
     }
 
     template <class Duration>
-    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+    void sleep_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
     {
-      using namespace chrono;
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
@@ -75,13 +70,12 @@ namespace boost
     template <class Clock, class Duration>
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
-      using namespace chrono;
       typedef typename common_type<Duration, typename Clock::duration>::type CD;
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        d = (std::min)(d, CD(milliseconds(100)));
-        sleep_until(thread_detail::internal_clock_t::now() + d);
+        d = (std::min)(d, CD(chrono::milliseconds(100)));
+        sleep_until(detail::internal_chrono_clock::now() + d);
         d = t - Clock::now();
       }
     }
@@ -93,9 +87,8 @@ namespace boost
 #ifdef BOOST_THREAD_USES_CHRONO
 
     template <class Duration>
-    void sleep_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+    void sleep_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
     {
-      using namespace chrono;
       mutex mut;
       condition_variable cv;
       unique_lock<mutex> lk(mut);
@@ -105,13 +98,12 @@ namespace boost
     template <class Clock, class Duration>
     void sleep_until(const chrono::time_point<Clock, Duration>& t)
     {
-      using namespace chrono;
       typedef typename common_type<Duration, typename Clock::duration>::type CD;
       CD d = t - Clock::now();
       while (d > CD::zero())
       {
-        d = (std::min)(d, CD(milliseconds(100)));
-        sleep_until(thread_detail::internal_clock_t::now() + d);
+        d = (std::min)(d, CD(chrono::milliseconds(100)));
+        sleep_until(detail::internal_chrono_clock::now() + d);
         d = t - Clock::now();
       }
     }
@@ -119,10 +111,9 @@ namespace boost
     template <class Rep, class Period>
     void sleep_for(const chrono::duration<Rep, Period>& d)
     {
-      using namespace chrono;
-      if (d > duration<Rep, Period>::zero())
+      if (d > chrono::duration<Rep, Period>::zero())
       {
-        sleep_until(steady_clock::now() + d);
+        sleep_until(chrono::steady_clock::now() + d);
       }
     }
 
