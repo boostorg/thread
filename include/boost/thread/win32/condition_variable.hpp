@@ -338,6 +338,11 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time)
         {
+#if 1
+            const detail::real_timespec_timepoint ts(abs_time);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+#else // fixme: this code allows notifications to be missed
             const detail::real_timespec_timepoint ts(abs_time);
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
@@ -348,6 +353,7 @@ namespace boost
               d = (std::min)(d, detail::timespec_milliseconds(100));
             }
             return true;
+#endif
         }
 
         bool timed_wait(unique_lock<mutex>& m,boost::xtime const& abs_time)
@@ -429,6 +435,10 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
+#if 1
+          Duration d = t - Clock::now();
+          return wait_until(lock, detail::internal_chrono_clock::now() + d);
+#else // fixme: this code allows notifications to be missed
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
           d = (std::min)(d, CD(chrono::milliseconds(100)));
@@ -439,6 +449,7 @@ namespace boost
               d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return cv_status::no_timeout;
+#endif
         }
 
         template <class Rep, class Period>
@@ -505,6 +516,11 @@ namespace boost
         template<typename lock_type>
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
+#if 1
+            const detail::real_timespec_timepoint ts(abs_time);
+            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
+            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+#else // fixme: this code allows notifications to be missed
             const detail::real_timespec_timepoint ts(abs_time);
             detail::timespec_duration d = ts - detail::real_timespec_clock::now();
             d = (std::min)(d, detail::timespec_milliseconds(100));
@@ -515,6 +531,7 @@ namespace boost
               d = (std::min)(d, detail::timespec_milliseconds(100));
             }
             return true;
+#endif
         }
 
         template<typename lock_type>
@@ -600,6 +617,10 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
+#if 1
+          Duration d = t - Clock::now();
+          return wait_until(lock, detail::internal_chrono_clock::now() + d);
+#else // fixme: this code allows notifications to be missed
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
           d = (std::min)(d, CD(chrono::milliseconds(100)));
@@ -610,6 +631,7 @@ namespace boost
               d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return cv_status::no_timeout;
+#endif
         }
 
         template <class lock_type,  class Rep, class Period>
