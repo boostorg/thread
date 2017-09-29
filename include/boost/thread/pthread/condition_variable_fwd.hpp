@@ -236,7 +236,7 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_timespec_timepoint& ts = t;
+          const detail::internal_timespec_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }

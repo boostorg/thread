@@ -137,7 +137,7 @@ namespace boost
       explicit real_timespec_timepoint(boost::intmax_t const& ns) : value(ns) {}
 
 #if defined BOOST_THREAD_USES_DATETIME
-      real_timespec_timepoint(boost::system_time const& abs_time)
+      explicit real_timespec_timepoint(boost::system_time const& abs_time)
       {
         boost::posix_time::time_duration const time_since_epoch = abs_time-boost::posix_time::from_time_t(0);
         value = timespec_duration(time_since_epoch).getNs();
@@ -145,7 +145,7 @@ namespace boost
 #endif
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Duration>
-      real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
+      explicit real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
       {
         value = timespec_duration(abs_time.time_since_epoch()).getNs();
       }
@@ -208,7 +208,7 @@ namespace boost
         boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
         return real_timespec_timepoint(ns);
 #elif defined(BOOST_THREAD_MACOS)
-        struct timeval tv;
+        timeval tv;
         ::gettimeofday(&tv, 0);
         timespec ts;
         ts.tv_sec = tv.tv_sec;
@@ -235,7 +235,7 @@ namespace boost
 
 #if defined BOOST_THREAD_USES_CHRONO
     template <class Duration>
-    mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
+    explicit mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time);
 #endif
 
 #if defined BOOST_THREAD_PLATFORM_PTHREAD

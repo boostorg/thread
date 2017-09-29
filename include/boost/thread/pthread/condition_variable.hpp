@@ -111,7 +111,7 @@ namespace boost
 #endif
         int cond_res;
         {
-            timespec const& ts = timeout.getTs();
+            const timespec ts = timeout.getTs();
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             thread_cv_detail::lock_on_exit<unique_lock<mutex> > guard;
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
@@ -327,7 +327,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const boost::detail::internal_timespec_timepoint& ts = t;
+          const boost::detail::internal_timespec_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
@@ -412,7 +412,7 @@ namespace boost
               boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
               guard.activate(m);
-              timespec const& ts = timeout.getTs();
+              const timespec ts = timeout.getTs();
               res=pthread_cond_timedwait(&cond,&internal_mutex,&ts);
               check_for_interruption.check();
               guard.deactivate();

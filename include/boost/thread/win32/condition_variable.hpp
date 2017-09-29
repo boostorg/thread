@@ -366,8 +366,8 @@ namespace boost
             {
               return true;
             }
-            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
-                                                          + detail::timespec_duration(wait_duration);
+            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
+                                                         + detail::timespec_duration(wait_duration);
             return do_wait_until(m, ts);
         }
 
@@ -401,8 +401,8 @@ namespace boost
             {
               return pred();
             }
-            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
-                                                          + detail::timespec_duration(wait_duration);
+            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
+                                                         + detail::timespec_duration(wait_duration);
             while (!pred())
             {
               if(!do_wait_until(m, ts))
@@ -418,7 +418,7 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_timespec_timepoint& ts = t;
+          const detail::internal_timespec_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
@@ -535,8 +535,8 @@ namespace boost
             {
               return true;
             }
-            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
-                                                          + detail::timespec_duration(wait_duration);
+            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
+                                                         + detail::timespec_duration(wait_duration);
             return do_wait_until(m, ts);
         }
 
@@ -572,8 +572,8 @@ namespace boost
             {
               return pred();
             }
-            const detail::internal_timespec_timepoint& ts = detail::internal_timespec_clock::now()
-                                                          + detail::timespec_duration(wait_duration);
+            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
+                                                         + detail::timespec_duration(wait_duration);
             while (!pred())
             {
               if(!do_wait_until(m, ts))
@@ -589,7 +589,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_timespec_timepoint& ts = t;
+          const detail::internal_timespec_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }

@@ -266,7 +266,7 @@ namespace boost
         // fixme: Shouldn't this functions be located on a .cpp file?
         bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
-          timespec const& ts = timeout.getTs();
+          const timespec ts = timeout.getTs();
           int const res=pthread_mutex_timedlock(&m,&ts);
           BOOST_ASSERT(!res || res==ETIMEDOUT);
           return !res;
@@ -307,7 +307,7 @@ namespace boost
         bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
-            timespec const& ts = timeout.getTs();
+            const timespec ts = timeout.getTs();
             while(is_locked)
             {
                 int const cond_res=pthread_cond_timedwait(&cond,&m,&ts);
@@ -365,7 +365,7 @@ namespace boost
         template <class Duration>
         bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          detail::internal_timespec_timepoint ts = t;
+          detail::internal_timespec_timepoint ts(t);
           return do_try_lock_until(ts);
         }
 #endif

@@ -439,7 +439,7 @@ namespace boost
                 {
                   // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
                   // namespace because they do not provide an interruption point.
-                  timespec const& ts2 = ts.getTs();
+                  const timespec ts2 = ts.getTs();
     #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
                   BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts2)));
@@ -450,7 +450,7 @@ namespace boost
                   nanosleep(&ts2, 0);
     #   else
                   // Fall back to using a condition variable even though it does provide an interruption point.
-                  const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
+                  const detail::internal_timespec_timepoint ts2 = detail::internal_timespec_clock::now() + ts;
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
@@ -478,7 +478,7 @@ namespace boost
                 d = ts2 - detail::mono_timespec_clock::now();
             }
 #else
-            const detail::internal_timespec_timepoint& ts2 = detail::internal_timespec_clock::now() + ts;
+            const detail::internal_timespec_timepoint ts2 = detail::internal_timespec_clock::now() + ts;
             while (cond.do_wait_until(lock, ts2)) {}
 #endif
         }
