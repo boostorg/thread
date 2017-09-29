@@ -288,8 +288,7 @@ namespace boost
         // fixme: Shouldn't this functions be located on a .cpp file?
         bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
         {
-            const timespec ts = timeout.getTs();
-            int const res=pthread_mutex_timedlock(&m,&ts);
+            int const res=pthread_mutex_timedlock(&m,&timeout.getTs());
             BOOST_ASSERT(!res || res==ETIMEDOUT);
             return !res;
         }
@@ -348,10 +347,9 @@ namespace boost
                 ++count;
                 return true;
             }
-            const timespec ts = timeout.getTs();
             while(is_locked)
             {
-                int const cond_res=pthread_cond_timedwait(&cond,&m,&ts);
+                int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.getTs());
                 if(cond_res==ETIMEDOUT)
                 {
                     return false;

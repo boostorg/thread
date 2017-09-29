@@ -439,15 +439,14 @@ namespace boost
                 {
                   // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
                   // namespace because they do not provide an interruption point.
-                  const timespec ts2 = ts.getTs();
     #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
     #     if defined(__IBMCPP__) ||  defined(_AIX)
-                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts2)));
+                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.getTs())));
     #     else
-                  BOOST_VERIFY(!pthread_delay_np(&ts2));
+                  BOOST_VERIFY(!pthread_delay_np(&ts.getTs()));
     #     endif
     #   elif defined(BOOST_HAS_NANOSLEEP)
-                  nanosleep(&ts2, 0);
+                  nanosleep(&ts.getTs(), 0);
     #   else
                   // Fall back to using a condition variable even though it does provide an interruption point.
                   const detail::internal_timespec_timepoint ts2 = detail::internal_timespec_clock::now() + ts;
