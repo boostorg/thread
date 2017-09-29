@@ -199,7 +199,6 @@ namespace boost
       this->lockable().unlock_upgrade_and_lock();
     }
 
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
     bool try_unlock_upgrade_and_lock() const
     {
       return this->lockable().try_unlock_upgrade_and_lock();
@@ -214,7 +213,6 @@ namespace boost
     {
       return this->lockable().try_unlock_upgrade_and_lock_for(rel_time);
     }
-#endif
 
     void unlock_upgrade_and_lock_shared() const
     {
