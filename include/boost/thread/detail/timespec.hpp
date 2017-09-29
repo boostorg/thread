@@ -164,13 +164,13 @@ namespace boost
       inline boost::intmax_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_DATETIME
-      explicit real_timespec_timepoint(boost::system_time const& abs_time)
+      real_timespec_timepoint(boost::system_time const& abs_time)
         : dur(abs_time - boost::posix_time::from_time_t(0)) {}
 #endif
 
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Duration>
-      explicit real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
+      real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
         : dur(abs_time.time_since_epoch()) {}
 #endif
 
@@ -260,7 +260,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_CHRONO
     // This conversion assumes that chrono::steady_clock::time_point and mono_timespec_timepoint share the same epoch.
     template <class Duration>
-    explicit mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
+    mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
       : dur(abs_time.time_since_epoch()) {}
 #endif
 
