@@ -71,7 +71,7 @@ int main()
 }
 #else
 
-#warning "This test is not supported in this configuration, either because  Bosst.Thread has been configured to don't support continuations, the compiler doesn't provides lambdas or because they are buggy as for MSV versions < msvc-12.0"
+//#warning "This test is not supported in this configuration, either because  Bosst.Thread has been configured to don't support continuations, the compiler doesn't provides lambdas or because they are buggy as for MSV versions < msvc-12.0"
 
 int main()
 {
