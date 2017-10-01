@@ -20,8 +20,7 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 #include <boost/thread/detail/delete.hpp>
-#include <boost/thread/detail/internal_clock.hpp>
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -260,23 +259,21 @@ namespace boost
           return try_lock_shared_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Duration>
-        bool try_lock_shared_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_lock_shared_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
             return do_try_lock_shared_until(boost::detail::internal_timespec_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& t)
         {
-            using namespace chrono;
             typedef typename common_type<Duration, typename Clock::duration>::type CD;
             CD d = t - Clock::now();
-            if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(milliseconds(100)));
-            while ( ! try_lock_shared_until(thread_detail::internal_clock_t::now() + d) )
+            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            while ( ! try_lock_shared_until(detail::internal_chrono_clock::now() + d) )
             {
                 d = t - Clock::now();
                 if ( d <= CD::zero() ) return false;
-                d = (std::min)(d, CD(milliseconds(100)));
+                d = (std::min)(d, CD(chrono::milliseconds(100)));
             }
             return true;
         }
@@ -468,23 +465,21 @@ namespace boost
           return try_lock_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Duration>
-        bool try_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
             return do_try_lock_until(boost::detail::internal_timespec_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-            using namespace chrono;
             typedef typename common_type<Duration, typename Clock::duration>::type CD;
             CD d = t - Clock::now();
-            if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(milliseconds(100)));
-            while ( ! try_lock_until(thread_detail::internal_clock_t::now() + d) )
+            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            while ( ! try_lock_until(detail::internal_chrono_clock::now() + d) )
             {
                 d = t - Clock::now();
                 if ( d <= CD::zero() ) return false;
-                d = (std::min)(d, CD(milliseconds(100)));
+                d = (std::min)(d, CD(chrono::milliseconds(100)));
             }
             return true;
         }
@@ -584,23 +579,21 @@ namespace boost
           return try_lock_upgrade_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Duration>
-        bool try_lock_upgrade_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_lock_upgrade_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
             return do_try_lock_upgrade_until(boost::detail::internal_timespec_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& t)
         {
-            using namespace chrono;
             typedef typename common_type<Duration, typename Clock::duration>::type CD;
             CD d = t - Clock::now();
-            if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(milliseconds(100)));
-            while ( ! try_lock_upgrade_until(thread_detail::internal_clock_t::now() + d) )
+            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            while ( ! try_lock_upgrade_until(detail::internal_chrono_clock::now() + d) )
             {
                 d = t - Clock::now();
                 if ( d <= CD::zero() ) return false;
-                d = (std::min)(d, CD(milliseconds(100)));
+                d = (std::min)(d, CD(chrono::milliseconds(100)));
             }
             return true;
         }
@@ -691,23 +684,21 @@ namespace boost
           return try_unlock_upgrade_and_lock_until(chrono::steady_clock::now() + rel_time);
         }
         template <class Duration>
-        bool try_unlock_upgrade_and_lock_until(const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+        bool try_unlock_upgrade_and_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
             return do_try_unlock_upgrade_and_lock_until(boost::detail::internal_timespec_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_unlock_upgrade_and_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-            using namespace chrono;
             typedef typename common_type<Duration, typename Clock::duration>::type CD;
             CD d = t - Clock::now();
-            if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(milliseconds(100)));
-            while ( ! try_unlock_upgrade_and_lock_until(thread_detail::internal_clock_t::now() + d) )
+            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            while ( ! try_unlock_upgrade_and_lock_until(detail::internal_chrono_clock::now() + d) )
             {
                 d = t - Clock::now();
                 if ( d <= CD::zero() ) return false;
-                d = (std::min)(d, CD(milliseconds(100)));
+                d = (std::min)(d, CD(chrono::milliseconds(100)));
             }
             return true;
         }

@@ -6,7 +6,7 @@
 // (C) Copyright 2007-10 Anthony Williams
 // (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/pthread/pthread_helpers.hpp>
 
@@ -15,7 +15,6 @@
 #endif
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
-#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
 #endif
@@ -117,12 +116,12 @@ namespace boost
             detail::interruption_checker check_for_interruption(&internal_mutex,&cond);
             pthread_mutex_t* the_mutex = &internal_mutex;
             guard.activate(m);
-            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.get());
+            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.getTs());
             check_for_interruption.check();
             guard.deactivate();
 #else
             pthread_mutex_t* the_mutex = m.mutex()->native_handle();
-            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.get());
+            cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout.getTs());
 #endif
         }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -325,9 +324,9 @@ namespace boost
         cv_status
         wait_until(
                 lock_type& lock,
-                const chrono::time_point<thread_detail::internal_clock_t, Duration>& t)
+                const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const boost::detail::internal_timespec_timepoint& ts = t;
+          const boost::detail::internal_timespec_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
@@ -338,16 +337,14 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          using namespace chrono;
           typedef typename common_type<Duration, typename Clock::duration>::type CD;
           CD d = t - Clock::now();
-          if ( d <= CD::zero() ) return cv_status::timeout;
-          d = (std::min)(d, CD(milliseconds(100)));
-          while (cv_status::timeout == wait_until(lock, thread_detail::internal_clock_t::now() + d))
+          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          while (cv_status::timeout == wait_until(lock, detail::internal_chrono_clock::now() + d))
           {
               d = t - Clock::now();
               if ( d <= CD::zero() ) return cv_status::timeout;
-              d = (std::min)(d, CD(milliseconds(100)));
+              d = (std::min)(d, CD(chrono::milliseconds(100)));
           }
           return cv_status::no_timeout;
         }
@@ -414,7 +411,7 @@ namespace boost
               boost::pthread::pthread_mutex_scoped_lock check_for_interruption(&internal_mutex);
 #endif
               guard.activate(m);
-              res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout.get());
+              res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout.getTs());
               check_for_interruption.check();
               guard.deactivate();
           }

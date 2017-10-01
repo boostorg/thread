@@ -19,7 +19,6 @@
 
 #include <boost/thread/condition_variable.hpp>
 #include <boost/thread/detail/move.hpp>
-#include <boost/thread/detail/internal_clock.hpp>
 #include <boost/thread/detail/invoker.hpp>
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
@@ -39,7 +38,7 @@
 #include <boost/thread/executor.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>

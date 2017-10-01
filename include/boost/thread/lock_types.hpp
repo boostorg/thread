@@ -200,7 +200,6 @@ namespace boost
 #endif // BOOST_WORKAROUND
 #endif
 
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
     // Conversion from upgrade locking
     unique_lock(BOOST_THREAD_RV_REF_BEG upgrade_lock<mutex_type> BOOST_THREAD_RV_REF_END ul, try_to_lock_t)
     : m(0),is_locked(false)
@@ -218,11 +217,8 @@ namespace boost
         m = BOOST_THREAD_RV(ul).release();
       }
     }
-#endif
 
 #ifdef BOOST_THREAD_USES_CHRONO
-#if defined(BOOST_THREAD_PLATFORM_PTHREAD)
-
     template <class Clock, class Duration>
     unique_lock(BOOST_THREAD_RV_REF_BEG upgrade_lock<mutex_type> BOOST_THREAD_RV_REF_END ul,
         const chrono::time_point<Clock, Duration>& abs_time)
@@ -260,7 +256,6 @@ namespace boost
         m = BOOST_THREAD_RV(ul).release();
       }
     }
-#endif
 #endif
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS

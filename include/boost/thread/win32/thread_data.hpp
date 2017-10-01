@@ -10,7 +10,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
-#include <boost/thread/pthread/timespec.hpp>
+#include <boost/thread/detail/timespec.hpp>
 
 #include <boost/predef/platform.h>
 
@@ -182,6 +182,8 @@ namespace boost
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
         bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
+
+#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
@@ -198,10 +200,13 @@ namespace boost
             d = ts - detail::real_timespec_clock::now();
           }
         }
+#endif
 
         namespace no_interruption_point
         {
           bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
+
+#if defined BOOST_THREAD_USES_DATETIME
           template<typename TimeDuration>
           inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
           {
@@ -218,6 +223,7 @@ namespace boost
               d = ts - detail::real_timespec_clock::now();
             }
           }
+#endif
         }
     }
 
