@@ -17,7 +17,7 @@
 # PTW32_INCLUDE and PTW32_LIB respectively. You can specify these
 # paths in site-config.jam, user-config.jam or in the environment.
 # A new feature is provided to request a specific API:
-# <threadapi>win32 and <threadapi)pthread.
+# <threadapi>win32 and <threadapi>pthread.
 #
 # The naming of the resulting libraries is mostly the same for the
 # variant native to the build platform, i.e.
@@ -33,10 +33,10 @@
 #########################################################################
 
 import os ;
-import feature ;
 import indirect ;
 import path ;
 import configure ; 
+import threadapi ;
 
 project boost/thread
     : source-location ../src
@@ -128,6 +128,8 @@ project boost/thread
 
         <target-os>windows:<define>WIN32_LEAN_AND_MEAN
         <target-os>windows:<define>BOOST_USE_WINDOWS_H
+        
+        <conditional>@threadapi.detect
 
     # : default-build <threading>multi
     : usage-requirements  # pass these requirement to dependents (i.e. users)
@@ -141,16 +143,6 @@ project boost/thread
       <library>/boost/system//boost_system
     ;
 
-local rule default_threadapi ( )
-{
-    local api = pthread ;
-    if [ os.name ] = "NT" { api = win32 ; }
-    return $(api) ;
-}
-
-feature.feature threadapi : pthread win32 : propagated ;
-feature.set-default threadapi : [ default_threadapi ] ;
-
 exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ; 
 
 rule tag ( name : type ? : property-set )
@@ -162,7 +154,7 @@ rule tag ( name : type ? : property-set )
         local api = [ $(property-set).get <threadapi> ] ;
 
         # non native api gets additional tag
-        if $(api) != [ default_threadapi ] {
+        if $(api) != [ threadapi.get-default $(property-set) ] {
             result = $(result)_$(api) ;
         }
     }
