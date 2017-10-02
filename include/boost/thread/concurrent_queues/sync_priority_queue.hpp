@@ -292,7 +292,7 @@ namespace concurrent
   queue_op_status
   sync_priority_queue<T,Cont,Cmp>::pull_for(const chrono::duration<Rep,Period>& dura, T& elem)
   {
-    return pull_until(clock::now() + dura, elem);
+    return pull_until(chrono::steady_clock::now() + dura, elem);
   }
 
   //////////////////////
