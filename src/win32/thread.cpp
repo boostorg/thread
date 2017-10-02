@@ -439,7 +439,7 @@ namespace boost
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
         if(local_thread_info)
         {
-            this_thread::interruptible_wait(this->native_handle(), detail::internal_timespec_timepoint::getMax());
+            this_thread::interruptible_wait(this->native_handle(), detail::internal_platform_timepoint::getMax());
             release_handle();
             return true;
         }
@@ -449,7 +449,7 @@ namespace boost
         }
     }
 
-    bool thread::do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res)
+    bool thread::do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res)
     {
       detail::thread_data_ptr local_thread_info=(get_thread_info)();
       if(local_thread_info)
@@ -605,7 +605,7 @@ namespace boost
         }
 #endif
 #endif
-        bool interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout)
+        bool interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_platform_timepoint const &timeout)
         {
             detail::win32::handle handles[4]={0};
             unsigned handle_count=0;
@@ -631,9 +631,9 @@ namespace boost
 #ifndef UNDER_CE
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             // Preferentially use coalescing timers for better power consumption and timer accuracy
-            if(timeout != detail::internal_timespec_timepoint::getMax())
+            if(timeout != detail::internal_platform_timepoint::getMax())
             {
-                boost::intmax_t const time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                boost::intmax_t const time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
@@ -658,9 +658,9 @@ namespace boost
 
             bool const using_timer=timeout_index!=~0u;
             boost::intmax_t time_left_msec(INFINITE);
-            if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+            if(!using_timer && timeout != detail::internal_platform_timepoint::getMax())
             {
-                time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 if(time_left_msec < 0)
                 {
                     time_left_msec = 0;
@@ -696,9 +696,9 @@ namespace boost
                     detail::win32::sleep(static_cast<unsigned long>(time_left_msec));
                 }
 
-                if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+                if(!using_timer && timeout != detail::internal_platform_timepoint::getMax())
                 {
-                    time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                    time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 }
             }
             while(time_left_msec == INFINITE || time_left_msec > 0);
@@ -707,7 +707,7 @@ namespace boost
 
         namespace no_interruption_point
         {
-        bool non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout)
+        bool non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_platform_timepoint const &timeout)
         {
             detail::win32::handle handles[3]={0};
             unsigned handle_count=0;
@@ -723,9 +723,9 @@ namespace boost
 #ifndef UNDER_CE
 #if !BOOST_PLAT_WINDOWS_RUNTIME
             // Preferentially use coalescing timers for better power consumption and timer accuracy
-            if(timeout != detail::internal_timespec_timepoint::getMax())
+            if(timeout != detail::internal_platform_timepoint::getMax())
             {
-                boost::intmax_t const time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                boost::intmax_t const time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 timer_handle=CreateWaitableTimer(NULL,false,NULL);
                 if(timer_handle!=0)
                 {
@@ -750,9 +750,9 @@ namespace boost
 
             bool const using_timer=timeout_index!=~0u;
             boost::intmax_t time_left_msec(INFINITE);
-            if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+            if(!using_timer && timeout != detail::internal_platform_timepoint::getMax())
             {
-                time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 if(time_left_msec < 0)
                 {
                     time_left_msec = 0;
@@ -781,9 +781,9 @@ namespace boost
                     detail::win32::sleep(static_cast<unsigned long>(time_left_msec));
                 }
 
-                if(!using_timer && timeout != detail::internal_timespec_timepoint::getMax())
+                if(!using_timer && timeout != detail::internal_platform_timepoint::getMax())
                 {
-                    time_left_msec = (timeout - detail::internal_timespec_clock::now()).getMs();
+                    time_left_msec = (timeout - detail::internal_platform_clock::now()).getMs();
                 }
             }
             while(time_left_msec == INFINITE || time_left_msec > 0);

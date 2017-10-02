@@ -38,7 +38,7 @@
 #include <boost/thread/executor.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>
@@ -371,7 +371,7 @@ namespace boost
                 wait(lock, rethrow);
             }
 
-            bool do_wait_until(detail::internal_timespec_timepoint const &abs_time)
+            bool do_wait_until(detail::internal_platform_timepoint const &abs_time)
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
                 if (is_deferred_)
@@ -1468,7 +1468,7 @@ namespace boost
           return future_->unnotify_when_ready(h);
         }
 
-        bool do_wait_until(detail::internal_timespec_timepoint const &abs_time) const
+        bool do_wait_until(detail::internal_platform_timepoint const &abs_time) const
         {
             if(!future_)
             {
@@ -1481,19 +1481,19 @@ namespace boost
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
-            detail::timespec_duration d(rel_time);
+            detail::platform_duration d(rel_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_wait_until(detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_wait_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_wait_until(detail::internal_timespec_clock::now() + d);
+            return do_wait_until(detail::internal_platform_clock::now() + d);
 #endif
         }
 

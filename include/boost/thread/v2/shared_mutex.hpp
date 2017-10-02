@@ -226,14 +226,14 @@ namespace boost {
       template<typename TimeDuration>
       bool timed_lock(TimeDuration const & relative_time)
       {
-        // fixme: make use of internal_timespec_clock here
+        // fixme: make use of internal_platform_clock here
           return timed_lock(get_system_time()+relative_time);
       }
       bool timed_lock_shared(system_time const& timeout);
       template<typename TimeDuration>
       bool timed_lock_shared(TimeDuration const & relative_time)
       {
-        // fixme: make use of internal_timespec_clock here
+        // fixme: make use of internal_platform_clock here
         return timed_lock_shared(get_system_time()+relative_time);
       }
 #endif
@@ -494,21 +494,21 @@ namespace boost {
       template<typename TimeDuration>
       bool timed_lock(TimeDuration const & relative_time)
       {
-        // fixme: make use of internal_timespec_clock here
+        // fixme: make use of internal_platform_clock here
           return timed_lock(get_system_time()+relative_time);
       }
       inline bool timed_lock_shared(system_time const& abs_time);
       template<typename TimeDuration>
       bool timed_lock_shared(TimeDuration const & relative_time)
       {
-        // fixme: make use of internal_timespec_clock here
+        // fixme: make use of internal_platform_clock here
         return timed_lock_shared(get_system_time()+relative_time);
       }
       inline bool timed_lock_upgrade(system_time const& abs_time);
       template<typename TimeDuration>
       bool timed_lock_upgrade(TimeDuration const & relative_time)
       {
-        // fixme: make use of internal_timespec_clock here
+        // fixme: make use of internal_platform_clock here
           return timed_lock_upgrade(get_system_time()+relative_time);
       }
 #endif

@@ -19,7 +19,7 @@
 #endif
 #include <boost/date_time/posix_time/conversion.hpp>
 #include <errno.h>
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/pthread/pthread_helpers.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -250,19 +250,19 @@ namespace boost
             {
                 return true;
             }
-            detail::timespec_duration d(relative_time);
+            detail::platform_duration d(relative_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_try_lock_until(detail::internal_timespec_clock::now() + d);
+            return do_try_lock_until(detail::internal_platform_clock::now() + d);
 #endif
         }
 #endif
@@ -286,7 +286,7 @@ namespace boost
         }
     private:
         // fixme: Shouldn't this functions be located on a .cpp file?
-        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
+        bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
         {
             int const res=pthread_mutex_timedlock(&m,&timeout.getTs());
             BOOST_ASSERT(!res || res==ETIMEDOUT);
@@ -339,7 +339,7 @@ namespace boost
 
     private:
         // fixme: Shouldn't this functions be located on a .cpp file?
-        bool do_try_lock_until(detail::internal_timespec_timepoint const &timeout)
+        bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && pthread_equal(owner,pthread_self()))
@@ -368,15 +368,15 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const & abs_time)
         {
-            const detail::real_timespec_timepoint ts(abs_time);
+            const detail::real_platform_timepoint ts(abs_time);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
@@ -408,7 +408,7 @@ namespace boost
         template <class Duration>
         bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          detail::internal_timespec_timepoint ts(t);
+          detail::internal_platform_timepoint ts(t);
           return do_try_lock_until(ts);
         }
 #endif

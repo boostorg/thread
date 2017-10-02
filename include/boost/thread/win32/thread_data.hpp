@@ -10,7 +10,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
 #include <boost/thread/win32/thread_heap_alloc.hpp>
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 
 #include <boost/predef/platform.h>
 
@@ -181,46 +181,46 @@ namespace boost
     {
         void BOOST_THREAD_DECL yield() BOOST_NOEXCEPT;
 
-        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
+        bool BOOST_THREAD_DECL interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_platform_timepoint const &timeout);
 
 #if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
-          interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
+          interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(rel_time));
         }
         inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
         {
-          const detail::real_timespec_timepoint ts(abs_time);
-          detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-          while (d > detail::timespec_duration::zero())
+          const detail::real_platform_timepoint ts(abs_time);
+          detail::platform_duration d = ts - detail::real_platform_clock::now();
+          while (d > detail::platform_duration::zero())
           {
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + d);
-            d = ts - detail::real_timespec_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + d);
+            d = ts - detail::real_platform_clock::now();
           }
         }
 #endif
 
         namespace no_interruption_point
         {
-          bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_timespec_timepoint const &timeout);
+          bool BOOST_THREAD_DECL non_interruptible_wait(detail::win32::handle handle_to_wait_for, detail::internal_platform_timepoint const &timeout);
 
 #if defined BOOST_THREAD_USES_DATETIME
           template<typename TimeDuration>
           inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
           {
-            non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + detail::timespec_duration(rel_time));
+            non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(rel_time));
           }
           inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
           {
-            const detail::real_timespec_timepoint ts(abs_time);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            while (d > detail::timespec_duration::zero())
+            const detail::real_platform_timepoint ts(abs_time);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            while (d > detail::platform_duration::zero())
             {
-              d = (std::min)(d, detail::timespec_milliseconds(100));
-              non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_timespec_clock::now() + d);
-              d = ts - detail::real_timespec_clock::now();
+              d = (std::min)(d, detail::platform_milliseconds(100));
+              non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + d);
+              d = ts - detail::real_platform_clock::now();
             }
           }
 #endif

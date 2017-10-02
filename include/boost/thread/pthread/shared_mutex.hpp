@@ -20,7 +20,7 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 #include <boost/thread/detail/delete.hpp>
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 
 #include <boost/config/abi_prefix.hpp>
 
@@ -208,15 +208,15 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_shared(system_time const& timeout)
         {
-            const detail::real_timespec_timepoint ts(timeout);
+            const detail::real_platform_timepoint ts(timeout);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_shared_until(detail::internal_timespec_clock::now() + d) )
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_shared_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
@@ -236,19 +236,19 @@ namespace boost
             {
                 return true;
             }
-            detail::timespec_duration d(relative_time);
+            detail::platform_duration d(relative_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_shared_until(detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_shared_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_try_lock_shared_until(detail::internal_timespec_clock::now() + d);
+            return do_try_lock_shared_until(detail::internal_platform_clock::now() + d);
 #endif
         }
 #endif
@@ -261,7 +261,7 @@ namespace boost
         template <class Duration>
         bool try_lock_shared_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-            return do_try_lock_shared_until(boost::detail::internal_timespec_timepoint(t));
+            return do_try_lock_shared_until(boost::detail::internal_platform_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& t)
@@ -320,7 +320,7 @@ namespace boost
 
     private:
         // fixme: Shouldn't these functions be located on a .cpp file?
-        bool do_try_lock_until(const detail::internal_timespec_timepoint& abs_time)
+        bool do_try_lock_until(const detail::internal_platform_timepoint& abs_time)
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           boost::this_thread::disable_interruption do_not_disturb;
@@ -344,7 +344,7 @@ namespace boost
           state.exclusive=true;
           return true;
         }
-        bool do_try_lock_shared_until(const detail::internal_timespec_timepoint& abs_time)
+        bool do_try_lock_shared_until(const detail::internal_platform_timepoint& abs_time)
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           boost::this_thread::disable_interruption do_not_disturb;
@@ -362,7 +362,7 @@ namespace boost
           state.lock_shared();
           return true;
         }
-        bool do_try_lock_upgrade_until(const detail::internal_timespec_timepoint& abs_time)
+        bool do_try_lock_upgrade_until(const detail::internal_platform_timepoint& abs_time)
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           boost::this_thread::disable_interruption do_not_disturb;
@@ -384,7 +384,7 @@ namespace boost
           return true;
         }
         bool do_try_unlock_upgrade_and_lock_until(
-                          const detail::internal_timespec_timepoint& abs_time)
+                          const detail::internal_platform_timepoint& abs_time)
         {
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
           boost::this_thread::disable_interruption do_not_disturb;
@@ -414,15 +414,15 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock(system_time const& timeout)
         {
-            const detail::real_timespec_timepoint ts(timeout);
+            const detail::real_platform_timepoint ts(timeout);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
@@ -442,19 +442,19 @@ namespace boost
             {
                 return true;
             }
-            detail::timespec_duration d(relative_time);
+            detail::platform_duration d(relative_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_until(detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_try_lock_until(detail::internal_timespec_clock::now() + d);
+            return do_try_lock_until(detail::internal_platform_clock::now() + d);
 #endif
         }
 #endif
@@ -467,7 +467,7 @@ namespace boost
         template <class Duration>
         bool try_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-            return do_try_lock_until(boost::detail::internal_timespec_timepoint(t));
+            return do_try_lock_until(boost::detail::internal_platform_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
@@ -528,15 +528,15 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_lock_upgrade(system_time const& timeout)
         {
-            const detail::real_timespec_timepoint ts(timeout);
+            const detail::real_platform_timepoint ts(timeout);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d) )
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_upgrade_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
@@ -556,19 +556,19 @@ namespace boost
             {
                 return true;
             }
-            detail::timespec_duration d(relative_time);
+            detail::platform_duration d(relative_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_try_lock_upgrade_until(detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_try_lock_upgrade_until(detail::internal_timespec_clock::now() + d);
+            return do_try_lock_upgrade_until(detail::internal_platform_clock::now() + d);
 #endif
         }
 #endif
@@ -581,7 +581,7 @@ namespace boost
         template <class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-            return do_try_lock_upgrade_until(boost::detail::internal_timespec_timepoint(t));
+            return do_try_lock_upgrade_until(boost::detail::internal_platform_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_lock_upgrade_until(const chrono::time_point<Clock, Duration>& t)
@@ -686,7 +686,7 @@ namespace boost
         template <class Duration>
         bool try_unlock_upgrade_and_lock_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-            return do_try_unlock_upgrade_and_lock_until(boost::detail::internal_timespec_timepoint(t));
+            return do_try_unlock_upgrade_and_lock_until(boost::detail::internal_platform_timepoint(t));
         }
         template <class Clock, class Duration>
         bool try_unlock_upgrade_and_lock_until(const chrono::time_point<Clock, Duration>& t)

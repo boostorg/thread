@@ -18,7 +18,7 @@
 #include <boost/thread/thread_time.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/lock_types.hpp>
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 
 #include <boost/assert.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -90,7 +90,7 @@ namespace boost
                 return notified;
             }
 
-            bool do_wait_until(detail::internal_timespec_timepoint const &timeout)
+            bool do_wait_until(detail::internal_platform_timepoint const &timeout)
             {
                 return this_thread::interruptible_wait(semaphore, timeout);
             }
@@ -244,7 +244,7 @@ namespace boost
             {}
 
             template<typename lock_type>
-            bool do_wait_until(lock_type& lock, detail::internal_timespec_timepoint const &timeout)
+            bool do_wait_until(lock_type& lock, detail::internal_platform_timepoint const &timeout)
             {
               relocker<lock_type> locker(lock);
               entry_manager entry(get_wait_entry(), internal_mutex);
@@ -325,7 +325,7 @@ namespace boost
 
         void wait(unique_lock<mutex>& m)
         {
-            do_wait_until(m, detail::internal_timespec_timepoint::getMax());
+            do_wait_until(m, detail::internal_platform_timepoint::getMax());
         }
 
         template<typename predicate_type>
@@ -339,18 +339,18 @@ namespace boost
         bool timed_wait(unique_lock<mutex>& m,boost::system_time const& abs_time)
         {
 #if 1
-            const detail::real_timespec_timepoint ts(abs_time);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+            const detail::real_platform_timepoint ts(abs_time);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            return do_wait_until(m, detail::internal_platform_clock::now() + d);
 #else // fixme: this code allows notifications to be missed
-            const detail::real_timespec_timepoint ts(abs_time);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            const detail::real_platform_timepoint ts(abs_time);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #endif
@@ -372,8 +372,8 @@ namespace boost
             {
               return true;
             }
-            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
-                                                         + detail::timespec_duration(wait_duration);
+            const detail::internal_platform_timepoint ts = detail::internal_platform_clock::now()
+                                                         + detail::platform_duration(wait_duration);
             return do_wait_until(m, ts);
         }
 
@@ -407,8 +407,8 @@ namespace boost
             {
               return pred();
             }
-            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
-                                                         + detail::timespec_duration(wait_duration);
+            const detail::internal_platform_timepoint ts = detail::internal_platform_clock::now()
+                                                         + detail::platform_duration(wait_duration);
             while (!pred())
             {
               if(!do_wait_until(m, ts))
@@ -424,7 +424,7 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_timespec_timepoint ts(t);
+          const detail::internal_platform_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
@@ -503,7 +503,7 @@ namespace boost
         template<typename lock_type>
         void wait(lock_type& m)
         {
-            do_wait_until(m, detail::internal_timespec_timepoint::getMax());
+            do_wait_until(m, detail::internal_platform_timepoint::getMax());
         }
 
         template<typename lock_type,typename predicate_type>
@@ -517,18 +517,18 @@ namespace boost
         bool timed_wait(lock_type& m,boost::system_time const& abs_time)
         {
 #if 1
-            const detail::real_timespec_timepoint ts(abs_time);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+            const detail::real_platform_timepoint ts(abs_time);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            return do_wait_until(m, detail::internal_platform_clock::now() + d);
 #else // fixme: this code allows notifications to be missed
-            const detail::real_timespec_timepoint ts(abs_time);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            const detail::real_platform_timepoint ts(abs_time);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #endif
@@ -552,8 +552,8 @@ namespace boost
             {
               return true;
             }
-            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
-                                                         + detail::timespec_duration(wait_duration);
+            const detail::internal_platform_timepoint ts = detail::internal_platform_clock::now()
+                                                         + detail::platform_duration(wait_duration);
             return do_wait_until(m, ts);
         }
 
@@ -589,8 +589,8 @@ namespace boost
             {
               return pred();
             }
-            const detail::internal_timespec_timepoint ts = detail::internal_timespec_clock::now()
-                                                         + detail::timespec_duration(wait_duration);
+            const detail::internal_platform_timepoint ts = detail::internal_platform_clock::now()
+                                                         + detail::platform_duration(wait_duration);
             while (!pred())
             {
               if(!do_wait_until(m, ts))
@@ -606,7 +606,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_timespec_timepoint ts(t);
+          const detail::internal_platform_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
