@@ -241,14 +241,14 @@ namespace boost
     {
         namespace hidden
         {
-          void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
+          void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts);
         }
 
         namespace no_interruption_point
         {
           namespace hidden
           {
-            void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts);
+            void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts);
           }
 
     #ifdef BOOST_THREAD_USES_CHRONO
@@ -256,7 +256,7 @@ namespace boost
           template <class Rep, class Period>
           void sleep_for(const chrono::duration<Rep, Period>& d)
           {
-              return boost::this_thread::no_interruption_point::hidden::sleep_for(detail::timespec_duration(d));
+              return boost::this_thread::no_interruption_point::hidden::sleep_for(detail::platform_duration(d));
           }
     #endif
     #endif // BOOST_THREAD_USES_CHRONO
@@ -272,18 +272,18 @@ namespace boost
 #endif
         inline void sleep(system_time const& abs_time)
         {
-            const detail::real_timespec_timepoint ts(abs_time);
+            const detail::real_platform_timepoint ts(abs_time);
             mutex mx;
             unique_lock<mutex> lock(mx);
             condition_variable cond;
 
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            while (d > detail::timespec_duration::zero())
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            while (d > detail::platform_duration::zero())
             {
-                d = (std::min)(d, detail::timespec_milliseconds(100));
-                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d);
-                d = ts - detail::real_timespec_clock::now();
+                d = (std::min)(d, detail::platform_milliseconds(100));
+                cond.do_wait_until(lock, detail::internal_platform_clock::now() + d);
+                d = ts - detail::real_platform_clock::now();
             }
 #else
             while (cond.do_wait_until(lock, ts)) {}
@@ -293,7 +293,7 @@ namespace boost
         template<typename TimeDuration>
         void sleep(TimeDuration const& rel_time)
         {
-            boost::this_thread::hidden::sleep_for(detail::timespec_duration(rel_time));
+            boost::this_thread::hidden::sleep_for(detail::platform_duration(rel_time));
         }
 #endif // BOOST_THREAD_USES_DATETIME
     } // this_thread

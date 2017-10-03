@@ -1,5 +1,5 @@
-#ifndef BOOST_THREAD_DETAIL_TIMESPEC_HPP
-#define BOOST_THREAD_DETAIL_TIMESPEC_HPP
+#ifndef BOOST_THREAD_DETAIL_PLATFORM_TIME_HPP
+#define BOOST_THREAD_DETAIL_PLATFORM_TIME_HPP
 //  (C) Copyright 2007-8 Anthony Williams
 //  (C) Copyright 2012 Vicente J. Botet Escriba
 //
@@ -54,22 +54,22 @@ namespace boost
     }
 #endif
 
-    class timespec_duration
+    class platform_duration
     {
     public:
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
-      explicit timespec_duration(timespec const& v) : ts_val(v) {}
+      explicit platform_duration(timespec const& v) : ts_val(v) {}
       inline timespec const& getTs() const { return ts_val; }
 
-      explicit timespec_duration(boost::intmax_t const& ns = 0) : ts_val(ns_to_timespec(ns)) {}
+      explicit platform_duration(boost::intmax_t const& ns = 0) : ts_val(ns_to_timespec(ns)) {}
       inline boost::intmax_t getNs() const { return timespec_to_ns(ts_val); }
 #else
-      explicit timespec_duration(boost::intmax_t const& ns = 0) : ns_val(ns) {}
+      explicit platform_duration(boost::intmax_t const& ns = 0) : ns_val(ns) {}
       inline boost::intmax_t getNs() const { return ns_val; }
 #endif
 
 #if defined BOOST_THREAD_USES_DATETIME
-      timespec_duration(boost::posix_time::time_duration const& rel_time)
+      platform_duration(boost::posix_time::time_duration const& rel_time)
       {
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
         ts_val.tv_sec = rel_time.total_seconds();
@@ -83,7 +83,7 @@ namespace boost
 
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
-      timespec_duration(chrono::duration<Rep, Period> const& d)
+      platform_duration(chrono::duration<Rep, Period> const& d)
       {
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
         ts_val = ns_to_timespec(chrono::ceil<chrono::nanoseconds>(d).count());
@@ -109,9 +109,9 @@ namespace boost
         }
       }
 
-      static inline timespec_duration zero()
+      static inline platform_duration zero()
       {
-        return timespec_duration(0);
+        return platform_duration(0);
       }
 
     private:
@@ -122,207 +122,207 @@ namespace boost
 #endif
     };
 
-    inline bool operator==(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator==(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() == rhs.getNs();
     }
-    inline bool operator!=(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator!=(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() != rhs.getNs();
     }
-    inline bool operator<(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator<(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() < rhs.getNs();
     }
-    inline bool operator<=(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator<=(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() <= rhs.getNs();
     }
-    inline bool operator>(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator>(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() > rhs.getNs();
     }
-    inline bool operator>=(timespec_duration const& lhs, timespec_duration const& rhs)
+    inline bool operator>=(platform_duration const& lhs, platform_duration const& rhs)
     {
       return lhs.getNs() >= rhs.getNs();
     }
 
-    static inline timespec_duration timespec_milliseconds(long const& ms)
+    static inline platform_duration platform_milliseconds(long const& ms)
     {
-      return timespec_duration(ms * 1000000l);
+      return platform_duration(ms * 1000000l);
     }
 
-    class real_timespec_timepoint
+    class real_platform_timepoint
     {
     public:
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
-      explicit real_timespec_timepoint(timespec const& v) : dur(v) {}
+      explicit real_platform_timepoint(timespec const& v) : dur(v) {}
       inline timespec const& getTs() const { return dur.getTs(); }
 #endif
 
-      explicit real_timespec_timepoint(boost::intmax_t const& ns) : dur(ns) {}
+      explicit real_platform_timepoint(boost::intmax_t const& ns) : dur(ns) {}
       inline boost::intmax_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_DATETIME
-      real_timespec_timepoint(boost::system_time const& abs_time)
+      real_platform_timepoint(boost::system_time const& abs_time)
         : dur(abs_time - boost::posix_time::from_time_t(0)) {}
 #endif
 
 #if defined BOOST_THREAD_USES_CHRONO
       template <class Duration>
-      real_timespec_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
+      real_platform_timepoint(chrono::time_point<chrono::system_clock, Duration> const& abs_time)
         : dur(abs_time.time_since_epoch()) {}
 #endif
 
     private:
-      timespec_duration dur;
+      platform_duration dur;
     };
 
-    inline bool operator==(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator==(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() == rhs.getNs();
     }
-    inline bool operator!=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator!=(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() != rhs.getNs();
     }
-    inline bool operator<(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator<(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() < rhs.getNs();
     }
-    inline bool operator<=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator<=(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() <= rhs.getNs();
     }
-    inline bool operator>(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator>(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() > rhs.getNs();
     }
-    inline bool operator>=(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline bool operator>=(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
       return lhs.getNs() >= rhs.getNs();
     }
 
-    inline real_timespec_timepoint operator+(real_timespec_timepoint const& lhs, timespec_duration const& rhs)
+    inline real_platform_timepoint operator+(real_platform_timepoint const& lhs, platform_duration const& rhs)
     {
-      return real_timespec_timepoint(lhs.getNs() + rhs.getNs());
+      return real_platform_timepoint(lhs.getNs() + rhs.getNs());
     }
-    inline real_timespec_timepoint operator+(timespec_duration const& lhs, real_timespec_timepoint const& rhs)
+    inline real_platform_timepoint operator+(platform_duration const& lhs, real_platform_timepoint const& rhs)
     {
-      return real_timespec_timepoint(lhs.getNs() + rhs.getNs());
+      return real_platform_timepoint(lhs.getNs() + rhs.getNs());
     }
-    inline timespec_duration operator-(real_timespec_timepoint const& lhs, real_timespec_timepoint const& rhs)
+    inline platform_duration operator-(real_platform_timepoint const& lhs, real_platform_timepoint const& rhs)
     {
-      return timespec_duration(lhs.getNs() - rhs.getNs());
+      return platform_duration(lhs.getNs() - rhs.getNs());
     }
 
-    struct real_timespec_clock
+    struct real_platform_clock
     {
-      static inline real_timespec_timepoint now()
+      static inline real_platform_timepoint now()
       {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
         boost::detail::winapi::FILETIME_ ft;
         boost::detail::winapi::GetSystemTimeAsFileTime(&ft);  // never fails
         boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
-        return real_timespec_timepoint(ns);
+        return real_platform_timepoint(ns);
 #elif defined(BOOST_THREAD_MACOS)
         timeval tv;
         ::gettimeofday(&tv, 0);
         timespec ts;
         ts.tv_sec = tv.tv_sec;
         ts.tv_nsec = tv.tv_usec * 1000;
-        return real_timespec_timepoint(ts);
+        return real_platform_timepoint(ts);
 #else
         timespec ts;
         if ( ::clock_gettime( CLOCK_REALTIME, &ts ) )
         {
           BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_REALTIME) Internal Error");
-          return real_timespec_timepoint(0);
+          return real_platform_timepoint(0);
         }
-        return real_timespec_timepoint(ts);
+        return real_platform_timepoint(ts);
 #endif
       }
     };
 
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK)
 
-  class mono_timespec_timepoint
+  class mono_platform_timepoint
   {
   public:
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
-    explicit mono_timespec_timepoint(timespec const& v) : dur(v) {}
+    explicit mono_platform_timepoint(timespec const& v) : dur(v) {}
     inline timespec const& getTs() const { return dur.getTs(); }
 #endif
 
-    explicit mono_timespec_timepoint(boost::intmax_t const& ns) : dur(ns) {}
+    explicit mono_platform_timepoint(boost::intmax_t const& ns) : dur(ns) {}
     inline boost::intmax_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_CHRONO
-    // This conversion assumes that chrono::steady_clock::time_point and mono_timespec_timepoint share the same epoch.
+    // This conversion assumes that chrono::steady_clock::time_point and mono_platform_timepoint share the same epoch.
     template <class Duration>
-    mono_timespec_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
+    mono_platform_timepoint(chrono::time_point<chrono::steady_clock, Duration> const& abs_time)
       : dur(abs_time.time_since_epoch()) {}
 #endif
 
     // can't name this max() since that is a macro on some Windows systems
-    static inline mono_timespec_timepoint getMax()
+    static inline mono_platform_timepoint getMax()
     {
 #if defined BOOST_THREAD_PLATFORM_PTHREAD
       timespec ts;
       ts.tv_sec = (std::numeric_limits<time_t>::max)();
       ts.tv_nsec = 999999999;
-      return mono_timespec_timepoint(ts);
+      return mono_platform_timepoint(ts);
 #else
       boost::intmax_t ns = (std::numeric_limits<boost::intmax_t>::max)();
-      return mono_timespec_timepoint(ns);
+      return mono_platform_timepoint(ns);
 #endif
     }
 
   private:
-    timespec_duration dur;
+    platform_duration dur;
   };
 
-  inline bool operator==(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator==(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() == rhs.getNs();
   }
-  inline bool operator!=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator!=(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() != rhs.getNs();
   }
-  inline bool operator<(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator<(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() < rhs.getNs();
   }
-  inline bool operator<=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator<=(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() <= rhs.getNs();
   }
-  inline bool operator>(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator>(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() > rhs.getNs();
   }
-  inline bool operator>=(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline bool operator>=(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
     return lhs.getNs() >= rhs.getNs();
   }
 
-  inline mono_timespec_timepoint operator+(mono_timespec_timepoint const& lhs, timespec_duration const& rhs)
+  inline mono_platform_timepoint operator+(mono_platform_timepoint const& lhs, platform_duration const& rhs)
   {
-    return mono_timespec_timepoint(lhs.getNs() + rhs.getNs());
+    return mono_platform_timepoint(lhs.getNs() + rhs.getNs());
   }
-  inline mono_timespec_timepoint operator+(timespec_duration const& lhs, mono_timespec_timepoint const& rhs)
+  inline mono_platform_timepoint operator+(platform_duration const& lhs, mono_platform_timepoint const& rhs)
   {
-    return mono_timespec_timepoint(lhs.getNs() + rhs.getNs());
+    return mono_platform_timepoint(lhs.getNs() + rhs.getNs());
   }
-  inline timespec_duration operator-(mono_timespec_timepoint const& lhs, mono_timespec_timepoint const& rhs)
+  inline platform_duration operator-(mono_platform_timepoint const& lhs, mono_platform_timepoint const& rhs)
   {
-    return timespec_duration(lhs.getNs() - rhs.getNs());
+    return platform_duration(lhs.getNs() - rhs.getNs());
   }
 
-  struct mono_timespec_clock
+  struct mono_platform_clock
   {
-    static inline mono_timespec_timepoint now()
+    static inline mono_platform_timepoint now()
     {
 #if defined(BOOST_THREAD_PLATFORM_WIN32)
 #if defined(BOOST_THREAD_USES_CHRONO)
@@ -333,12 +333,12 @@ namespace boost
       if ( !boost::detail::winapi::QueryPerformanceFrequency( &freq ) )
       {
         BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
-        return mono_timespec_timepoint(0);
+        return mono_platform_timepoint(0);
       }
       if ( freq.QuadPart <= 0 )
       {
         BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceFrequency Internal Error");
-        return mono_timespec_timepoint(0);
+        return mono_platform_timepoint(0);
       }
 
       boost::detail::winapi::LARGE_INTEGER_ pcount;
@@ -348,31 +348,31 @@ namespace boost
         if ( ++times > 3 )
         {
           BOOST_ASSERT(0 && "Boost::Thread - QueryPerformanceCounter Internal Error");
-          return mono_timespec_timepoint(0);
+          return mono_platform_timepoint(0);
         }
       }
 
       long double ns = 1000000000.0L * pcount.QuadPart / freq.QuadPart;
-      return mono_timespec_timepoint(static_cast<boost::intmax_t>(ns));
+      return mono_platform_timepoint(static_cast<boost::intmax_t>(ns));
 #else
       // Use GetTickCount64() because it's more reliable on older
       // systems like Windows XP and Windows Server 2003.
       win32::ticks_type msec = win32::GetTickCount64_()();
-      return mono_timespec_timepoint(msec * 1000000);
+      return mono_platform_timepoint(msec * 1000000);
 #endif
 #elif defined(BOOST_THREAD_MACOS)
-      // fixme: add support for mono_timespec_clock::now() on MAC OS X using code from
+      // fixme: add support for mono_platform_clock::now() on MAC OS X using code from
       // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
       // Also update BOOST_THREAD_HAS_MONO_CLOCK in config.hpp
-      return mono_timespec_timepoint(0);
+      return mono_platform_timepoint(0);
 #else
       timespec ts;
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
       {
         BOOST_ASSERT(0 && "Boost::Thread - clock_gettime(CLOCK_MONOTONIC) Internal Error");
-        return mono_timespec_timepoint(0);
+        return mono_platform_timepoint(0);
       }
-      return mono_timespec_timepoint(ts);
+      return mono_platform_timepoint(ts);
 #endif
     }
   };
@@ -380,11 +380,11 @@ namespace boost
 #endif
 
 #if defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-  typedef mono_timespec_clock internal_timespec_clock;
-  typedef mono_timespec_timepoint internal_timespec_timepoint;
+  typedef mono_platform_clock     internal_platform_clock;
+  typedef mono_platform_timepoint internal_platform_timepoint;
 #else
-  typedef real_timespec_clock internal_timespec_clock;
-  typedef real_timespec_timepoint internal_timespec_timepoint;
+  typedef real_platform_clock     internal_platform_clock;
+  typedef real_platform_timepoint internal_platform_timepoint;
 #endif
 
 #ifdef BOOST_THREAD_USES_CHRONO

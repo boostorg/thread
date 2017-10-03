@@ -6,7 +6,7 @@
 // (C) Copyright 2007-10 Anthony Williams
 // (C) Copyright 2011-2012 Vicente J. Botet Escriba
 
-#include <boost/thread/detail/timespec.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/pthread/pthread_helpers.hpp>
 
@@ -101,7 +101,7 @@ namespace boost
 
     inline bool condition_variable::do_wait_until(
                 unique_lock<mutex>& m,
-                detail::internal_timespec_timepoint const &timeout)
+                detail::internal_platform_timepoint const &timeout)
     {
 #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
         if (!m.owns_lock())
@@ -222,18 +222,18 @@ namespace boost
             boost::system_time const& abs_time_fixed = abs_time;
 #endif
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            const detail::real_timespec_timepoint ts(abs_time_fixed);
-            detail::timespec_duration d = ts - detail::real_timespec_clock::now();
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            const detail::real_platform_timepoint ts(abs_time_fixed);
+            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::real_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::real_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_wait_until(m, detail::internal_timespec_timepoint(abs_time_fixed));
+            return do_wait_until(m, detail::internal_platform_timepoint(abs_time_fixed));
 #endif
         }
         template<typename lock_type>
@@ -254,19 +254,19 @@ namespace boost
             {
                 return true;
             }
-            detail::timespec_duration d(wait_duration);
+            detail::platform_duration d(wait_duration);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return false;
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return false;
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
 #else
-            return do_wait_until(m, detail::internal_timespec_clock::now() + d);
+            return do_wait_until(m, detail::internal_platform_clock::now() + d);
 #endif
         }
 
@@ -302,19 +302,19 @@ namespace boost
             {
                 return pred();
             }
-            detail::timespec_duration d(wait_duration);
+            detail::platform_duration d(wait_duration);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts = detail::mono_timespec_clock::now() + d;
-            d = (std::min)(d, detail::timespec_milliseconds(100));
-            while ( ! pred() && ! do_wait_until(m, detail::internal_timespec_clock::now() + d) )
+            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            d = (std::min)(d, detail::platform_milliseconds(100));
+            while ( ! pred() && ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
             {
-              d = ts - detail::mono_timespec_clock::now();
-              if ( d <= detail::timespec_duration::zero() ) return pred();
-              d = (std::min)(d, detail::timespec_milliseconds(100));
+              d = ts - detail::mono_platform_clock::now();
+              if ( d <= detail::platform_duration::zero() ) return pred();
+              d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return pred();
 #else
-            return do_wait_until(m, detail::internal_timespec_clock::now() + d, move(pred));
+            return do_wait_until(m, detail::internal_platform_clock::now() + d, move(pred));
 #endif
         }
 #endif
@@ -326,7 +326,7 @@ namespace boost
                 lock_type& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const boost::detail::internal_timespec_timepoint ts(t);
+          const boost::detail::internal_platform_timepoint ts(t);
           if (do_wait_until(lock, ts)) return cv_status::no_timeout;
           else return cv_status::timeout;
         }
@@ -400,7 +400,7 @@ namespace boost
         template <class lock_type>
         bool do_wait_until(
           lock_type& m,
-          detail::internal_timespec_timepoint const &timeout)
+          detail::internal_platform_timepoint const &timeout)
         {
           int res=0;
           {
@@ -431,7 +431,7 @@ namespace boost
         template <class lock_type, class Predicate>
         bool do_wait_until(
                 lock_type& lock,
-                detail::internal_timespec_timepoint const& t,
+                detail::internal_platform_timepoint const& t,
                 Predicate pred)
         {
             while (!pred())

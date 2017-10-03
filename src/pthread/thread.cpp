@@ -350,7 +350,7 @@ namespace boost
         }
     }
 
-    bool thread::do_try_join_until_noexcept(detail::internal_timespec_timepoint const &timeout, bool& res)
+    bool thread::do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res)
     {
         detail::thread_data_ptr const local_thread_info=(get_thread_info)();
         if(local_thread_info)
@@ -432,10 +432,10 @@ namespace boost
       {
         namespace hidden
         {
-          void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
+          void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts)
           {
 
-                if (ts >  detail::timespec_duration::zero())
+                if (ts >  detail::platform_duration::zero())
                 {
                   // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
                   // namespace because they do not provide an interruption point.
@@ -449,7 +449,7 @@ namespace boost
                   nanosleep(&ts.getTs(), 0);
     #   else
                   // Fall back to using a condition variable even though it does provide an interruption point.
-                  const detail::internal_timespec_timepoint ts2 = detail::internal_timespec_clock::now() + ts;
+                  const detail::internal_platform_timepoint ts2 = detail::internal_platform_clock::now() + ts;
                   mutex mx;
                   unique_lock<mutex> lock(mx);
                   condition_variable cond;
@@ -461,23 +461,23 @@ namespace boost
       }
       namespace hidden
       {
-        void BOOST_THREAD_DECL sleep_for(const detail::timespec_duration& ts)
+        void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts)
         {
             mutex mx;
             unique_lock<mutex> lock(mx);
             condition_variable cond;
 
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_timespec_timepoint& ts2 = detail::mono_timespec_clock::now() + ts;
-            detail::timespec_duration d = ts;
-            while (d > detail::timespec_duration::zero())
+            const detail::mono_platform_timepoint& ts2 = detail::mono_platform_clock::now() + ts;
+            detail::platform_duration d = ts;
+            while (d > detail::platform_duration::zero())
             {
-                d = (std::min)(d, detail::timespec_milliseconds(100));
-                cond.do_wait_until(lock, detail::internal_timespec_clock::now() + d);
-                d = ts2 - detail::mono_timespec_clock::now();
+                d = (std::min)(d, detail::platform_milliseconds(100));
+                cond.do_wait_until(lock, detail::internal_platform_clock::now() + d);
+                d = ts2 - detail::mono_platform_clock::now();
             }
 #else
-            const detail::internal_timespec_timepoint ts2 = detail::internal_timespec_clock::now() + ts;
+            const detail::internal_platform_timepoint ts2 = detail::internal_platform_clock::now() + ts;
             while (cond.do_wait_until(lock, ts2)) {}
 #endif
         }
@@ -498,7 +498,7 @@ namespace boost
 //            sleep(xt);
 //            sleep_for(chrono::milliseconds(0));
 #   else
-            hidden::sleep_for(detail::timespec_duration::zero());
+            hidden::sleep_for(detail::platform_duration::zero());
 #   endif
         }
     }
