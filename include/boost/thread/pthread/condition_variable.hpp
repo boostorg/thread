@@ -79,7 +79,7 @@ namespace boost
             pthread_mutex_t* the_mutex = &internal_mutex;
             guard.activate(m);
             res = pthread_cond_wait(&cond,the_mutex);
-            check_for_interruption.check();
+            check_for_interruption.unlock_if_locked();
             guard.deactivate();
 #else
             pthread_mutex_t* the_mutex = m.mutex()->native_handle();
@@ -113,7 +113,7 @@ namespace boost
             pthread_mutex_t* the_mutex = &internal_mutex;
             guard.activate(m);
             cond_res=pthread_cond_timedwait(&cond,the_mutex,&timeout);
-            check_for_interruption.check();
+            check_for_interruption.unlock_if_locked();
             guard.deactivate();
 #else
             pthread_mutex_t* the_mutex = m.mutex()->native_handle();
@@ -190,7 +190,7 @@ namespace boost
 #endif
                 guard.activate(m);
                 res=pthread_cond_wait(&cond,&internal_mutex);
-                check_for_interruption.check();
+                check_for_interruption.unlock_if_locked();
                 guard.deactivate();
             }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
@@ -420,7 +420,7 @@ namespace boost
 #endif
               guard.activate(m);
               res=pthread_cond_timedwait(&cond,&internal_mutex,&timeout);
-              check_for_interruption.check();
+              check_for_interruption.unlock_if_locked();
               guard.deactivate();
           }
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
