@@ -36,7 +36,7 @@ import os ;
 import indirect ;
 import path ;
 import configure ; 
-import threadapi ;
+import threadapi-feature ;
 
 project boost/thread
     : source-location ../src
@@ -152,7 +152,7 @@ rule tag ( name : type ? : property-set )
         local api = [ $(property-set).get <threadapi> ] ;
 
         # non native api gets additional tag
-        if $(api) != [ threadapi.get-default $(property-set) ] {
+        if $(api) != [ threadapi-feature.get-default $(property-set) ] {
             result = $(result)_$(api) ;
         }
     }
