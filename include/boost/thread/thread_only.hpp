@@ -23,7 +23,5 @@
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
 #include <boost/thread/detail/thread_interruption.hpp>
 #endif
-#include <boost/thread/v2/thread.hpp>
-
 
 #endif

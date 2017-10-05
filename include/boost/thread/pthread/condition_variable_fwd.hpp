@@ -47,19 +47,6 @@ namespace boost
         inline bool do_wait_until(
             unique_lock<mutex>& lock,
             detail::internal_platform_timepoint const &timeout);
-        template <class Predicate>
-        bool do_wait_until(
-            unique_lock<mutex>& lock,
-            detail::internal_platform_timepoint const &timeout,
-            Predicate pred)
-        {
-          while (!pred())
-          {
-              if ( ! do_wait_until(lock, timeout) )
-                  return pred();
-          }
-          return true;
-        }
 
     public:
       BOOST_THREAD_NO_COPYABLE(condition_variable)
@@ -108,7 +95,10 @@ namespace boost
         template<typename predicate_type>
         void wait(unique_lock<mutex>& m,predicate_type pred)
         {
-            while(!pred()) wait(m);
+            while (!pred())
+            {
+                wait(m);
+            }
         }
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -117,23 +107,23 @@ namespace boost
             boost::system_time const& abs_time)
         {
 #if defined BOOST_THREAD_WAIT_BUG
-            boost::system_time const& abs_time_fixed = abs_time + BOOST_THREAD_WAIT_BUG;
+            const detail::real_platform_timepoint ts(abs_time + BOOST_THREAD_WAIT_BUG);
 #else
-            boost::system_time const& abs_time_fixed = abs_time;
+            const detail::real_platform_timepoint ts(abs_time);
 #endif
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            const detail::real_platform_timepoint ts(abs_time_fixed);
-            detail::platform_duration d = ts - detail::real_platform_clock::now();
-            d = (std::min)(d, detail::platform_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
-            {
-              d = ts - detail::real_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return false;
-              d = (std::min)(d, detail::platform_milliseconds(100));
-            }
-            return true;
+            // The system time may jump while this function is waiting. To compensate for this and time
+            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+            // and recheck the time remaining each time through the loop. However, because we can't
+            // check the predicate each time do_wait_until() completes, this introduces the possibility
+            // of not exiting the function when a notification occurs, since do_wait_until() may report
+            // that it timed out even though a notification was received. The best this function can do
+            // is report correctly whether or not it reached the timeout time.
+            const detail::platform_duration d = ts - detail::real_platform_clock::now();
+            do_wait_until(m, detail::internal_platform_clock::now() + d);
+            return ts > detail::real_platform_clock::now();
 #else
-            return do_wait_until(m, detail::internal_platform_timepoint(abs_time_fixed));
+            return do_wait_until(m, ts);
 #endif
         }
         bool timed_wait(
@@ -159,15 +149,16 @@ namespace boost
             }
             detail::platform_duration d(wait_duration);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
-            d = (std::min)(d, detail::platform_milliseconds(100));
-            while ( ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
-            {
-              d = ts - detail::mono_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return false;
-              d = (std::min)(d, detail::platform_milliseconds(100));
-            }
-            return true;
+            // The system time may jump while this function is waiting. To compensate for this and time
+            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+            // and recheck the time remaining each time through the loop. However, because we can't
+            // check the predicate each time do_wait_until() completes, this introduces the possibility
+            // of not exiting the function when a notification occurs, since do_wait_until() may report
+            // that it timed out even though a notification was received. The best this function can do
+            // is report correctly whether or not it reached the timeout time.
+            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+            do_wait_until(m, detail::internal_platform_clock::now() + d);
+            return ts > detail::mono_platform_clock::now();
 #else
             return do_wait_until(m, detail::internal_platform_clock::now() + d);
 #endif
@@ -178,12 +169,26 @@ namespace boost
             unique_lock<mutex>& m,
             boost::system_time const& abs_time,predicate_type pred)
         {
+#if defined BOOST_THREAD_WAIT_BUG
+            const detail::real_platform_timepoint ts(abs_time + BOOST_THREAD_WAIT_BUG);
+#else
+            const detail::real_platform_timepoint ts(abs_time);
+#endif
             while (!pred())
             {
-                if(!timed_wait(m, abs_time))
-                    return pred();
+#if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+                // The system time may jump while this function is waiting. To compensate for this
+                // and time out near the correct time, we call do_wait_until() in a loop with a
+                // short timeout and recheck the time remaining each time through the loop.
+                detail::platform_duration d = ts - detail::real_platform_clock::now();
+                if (d <= detail::platform_duration::zero()) break; // timeout occurred
+                d = (std::min)(d, detail::platform_milliseconds(100));
+                do_wait_until(m, detail::internal_platform_clock::now() + d);
+#else
+                if (!do_wait_until(m, ts)) break; // timeout occurred
+#endif
             }
-            return true;
+            return pred();
         }
 
         template<typename predicate_type>
@@ -197,13 +202,13 @@ namespace boost
         template<typename duration_type,typename predicate_type>
         bool timed_wait(
             unique_lock<mutex>& m,
-            duration_type const& wait_duration, predicate_type pred)
+            duration_type const& wait_duration,predicate_type pred)
         {
             if (wait_duration.is_pos_infinity())
             {
                 while (!pred())
                 {
-                  wait(m);
+                    wait(m);
                 }
                 return true;
             }
@@ -213,18 +218,25 @@ namespace boost
             }
             detail::platform_duration d(wait_duration);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
-            d = (std::min)(d, detail::platform_milliseconds(100));
-            while ( ! pred() && ! do_wait_until(m, detail::internal_platform_clock::now() + d) )
+            // The system time may jump while this function is waiting. To compensate for this
+            // and time out near the correct time, we call do_wait_until() in a loop with a
+            // short timeout and recheck the time remaining each time through the loop.
+            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
+            while (!pred())
             {
-              d = ts - detail::mono_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return pred();
-              d = (std::min)(d, detail::platform_milliseconds(100));
+                if (d <= detail::platform_duration::zero()) break; // timeout occurred
+                d = (std::min)(d, detail::platform_milliseconds(100));
+                do_wait_until(m, detail::internal_platform_clock::now() + d);
+                d = ts - detail::mono_platform_clock::now();
             }
-            return pred();
 #else
-            return do_wait_until(m, detail::internal_platform_clock::now() + d, move(pred));
+            const detail::internal_platform_timepoint ts(detail::internal_platform_clock::now() + d);
+            while (!pred())
+            {
+                if (!do_wait_until(m, ts)) break; // timeout occurred
+            }
 #endif
+            return pred();
         }
 #endif
 
@@ -236,9 +248,9 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          const detail::internal_platform_timepoint ts(t);
-          if (do_wait_until(lock, ts)) return cv_status::no_timeout;
-          else return cv_status::timeout;
+            const detail::internal_platform_timepoint ts(t);
+            if (do_wait_until(lock, ts)) return cv_status::no_timeout;
+            else return cv_status::timeout;
         }
 
         template <class Clock, class Duration>
@@ -247,16 +259,18 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::time_point<Clock, Duration>& t)
         {
-          typedef typename common_type<Duration, typename Clock::duration>::type CD;
-          CD d = t - Clock::now();
-          d = (std::min)(d, CD(chrono::milliseconds(100)));
-          while (cv_status::timeout == wait_until(lock, detail::internal_chrono_clock::now() + d))
-          {
-              d = t - Clock::now();
-              if ( d <= CD::zero() ) return cv_status::timeout;
-              d = (std::min)(d, CD(chrono::milliseconds(100)));
-          }
-          return cv_status::no_timeout;
+            // The system time may jump while this function is waiting. To compensate for this and time
+            // out near the correct time, we could call do_wait_until() in a loop with a short timeout
+            // and recheck the time remaining each time through the loop. However, because we can't
+            // check the predicate each time do_wait_until() completes, this introduces the possibility
+            // of not exiting the function when a notification occurs, since do_wait_until() may report
+            // that it timed out even though a notification was received. The best this function can do
+            // is report correctly whether or not it reached the timeout time.
+            typedef typename common_type<Duration, typename Clock::duration>::type CD;
+            CD d = t - Clock::now();
+            do_wait_until(lock, detail::internal_chrono_clock::now() + d);
+            if (t > Clock::now()) return cv_status::no_timeout;
+            else return cv_status::timeout;
         }
 
         template <class Rep, class Period>
@@ -265,7 +279,22 @@ namespace boost
                 unique_lock<mutex>& lock,
                 const chrono::duration<Rep, Period>& d)
         {
-          return wait_until(lock, chrono::steady_clock::now() + d);
+            return wait_until(lock, chrono::steady_clock::now() + d);
+        }
+
+        template <class Duration, class Predicate>
+        bool
+        wait_until(
+                unique_lock<mutex>& lock,
+                const chrono::time_point<detail::internal_chrono_clock, Duration>& t,
+                Predicate pred)
+        {
+            const detail::internal_platform_timepoint ts(t);
+            while (!pred())
+            {
+                if (!do_wait_until(lock, ts)) break; // timeout occurred
+            }
+            return pred();
         }
 
         template <class Clock, class Duration, class Predicate>
@@ -275,12 +304,18 @@ namespace boost
                 const chrono::time_point<Clock, Duration>& t,
                 Predicate pred)
         {
+            // The system time may jump while this function is waiting. To compensate for this
+            // and time out near the correct time, we call do_wait_until() in a loop with a
+            // short timeout and recheck the time remaining each time through the loop.
+            typedef typename common_type<Duration, typename Clock::duration>::type CD;
             while (!pred())
             {
-                if (wait_until(lock, t) == cv_status::timeout)
-                    return pred();
+                CD d = t - Clock::now();
+                if (d <= CD::zero()) break; // timeout occurred
+                d = (std::min)(d, CD(chrono::milliseconds(100)));
+                do_wait_until(lock, detail::internal_platform_clock::now() + detail::platform_duration(d));
             }
-            return true;
+            return pred();
         }
 
         template <class Rep, class Period, class Predicate>
@@ -290,9 +325,15 @@ namespace boost
                 const chrono::duration<Rep, Period>& d,
                 Predicate pred)
         {
-          return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
+            return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
+
+        // Used as a predicate for sleep functions
+        static inline bool always_false()
+        {
+            return false;
+        }
 
 #define BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
         typedef pthread_cond_t* native_handle_type;

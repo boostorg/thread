@@ -361,11 +361,12 @@ namespace boost
                 unique_lock<mutex> lock(local_thread_info->data_mutex);
                 while(!local_thread_info->done)
                 {
-                    if(!local_thread_info->done_condition.do_wait_until(lock,timeout))
-                    {
-                      res=false;
-                      return true;
-                    }
+                    if(!local_thread_info->done_condition.do_wait_until(lock,timeout)) break; // timeout occurred
+                }
+                if(!local_thread_info->done)
+                {
+                  res=false;
+                  return true;
                 }
                 do_join=!local_thread_info->join_started;
 
@@ -434,8 +435,7 @@ namespace boost
         {
           void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts)
           {
-
-                if (ts >  detail::platform_duration::zero())
+                if (ts > detail::platform_duration::zero())
                 {
                   // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
                   // namespace because they do not provide an interruption point.
@@ -448,40 +448,12 @@ namespace boost
     #   elif defined(BOOST_HAS_NANOSLEEP)
                   nanosleep(&ts.getTs(), 0);
     #   else
-                  // Fall back to using a condition variable even though it does provide an interruption point.
-                  const detail::internal_platform_timepoint ts2 = detail::internal_platform_clock::now() + ts;
-                  mutex mx;
-                  unique_lock<mutex> lock(mx);
-                  condition_variable cond;
-                  while (cond.do_wait_until(lock, ts2)) {}
+                  // This should never be reached due to BOOST_THREAD_SLEEP_FOR_IS_STEADY
     #   endif
                 }
           }
         }
       }
-      namespace hidden
-      {
-        void BOOST_THREAD_DECL sleep_for(const detail::platform_duration& ts)
-        {
-            mutex mx;
-            unique_lock<mutex> lock(mx);
-            condition_variable cond;
-
-#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_platform_timepoint& ts2 = detail::mono_platform_clock::now() + ts;
-            detail::platform_duration d = ts;
-            while (d > detail::platform_duration::zero())
-            {
-                d = (std::min)(d, detail::platform_milliseconds(100));
-                cond.do_wait_until(lock, detail::internal_platform_clock::now() + d);
-                d = ts2 - detail::mono_platform_clock::now();
-            }
-#else
-            const detail::internal_platform_timepoint ts2 = detail::internal_platform_clock::now() + ts;
-            while (cond.do_wait_until(lock, ts2)) {}
-#endif
-        }
-      } // hidden
     } // this_thread
 
     namespace this_thread
@@ -498,7 +470,10 @@ namespace boost
 //            sleep(xt);
 //            sleep_for(chrono::milliseconds(0));
 #   else
-            hidden::sleep_for(detail::platform_duration::zero());
+            mutex mx;
+            unique_lock<mutex> lock(mx);
+            condition_variable cond;
+            cond.do_wait_until(lock, detail::internal_platform_clock::now())
 #   endif
         }
     }
