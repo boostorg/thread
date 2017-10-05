@@ -14,11 +14,11 @@ branches:
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2008
       TOOLSET: msvc-9.0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2010
       TOOLSET: msvc-10.0
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2012
       TOOLSET: msvc-11.0
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       TOOLSET: msvc-12.0
