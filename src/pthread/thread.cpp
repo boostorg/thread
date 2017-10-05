@@ -361,11 +361,12 @@ namespace boost
                 unique_lock<mutex> lock(local_thread_info->data_mutex);
                 while(!local_thread_info->done)
                 {
-                    if(!local_thread_info->done_condition.do_wait_until(lock,timeout))
-                    {
-                      res=false;
-                      return true;
-                    }
+                    if(!local_thread_info->done_condition.do_wait_until(lock,timeout)) break; // timeout occurred
+                }
+                if(!local_thread_info->done)
+                {
+                  res=false;
+                  return true;
                 }
                 do_join=!local_thread_info->join_started;
 
