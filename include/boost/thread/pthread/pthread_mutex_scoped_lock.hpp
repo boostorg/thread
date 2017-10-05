@@ -30,6 +30,11 @@ namespace boost
                 BOOST_VERIFY(!pthread_mutex_unlock(m));
                 locked=false;
             }
+            // This silences Xcode 8.2.1:
+            // error: expected member name or ';' after declaration specifiers
+            // The macro check is defined in Xcode SDK's usr/include/AssertMacros.h.
+            // Who defines macros with such simple names all in lower case?!
+#undef check
             void check() BOOST_NOEXCEPT
             {
               if(locked)
