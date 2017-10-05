@@ -18,7 +18,6 @@
 
 # bring in rules for testing
 import testing ;
-import threadapi ;
 
 project
     : requirements
@@ -106,8 +105,6 @@ project
         <toolset>msvc:<cxxflags>/wd4100
         <toolset>msvc:<cxxflags>/wd4512
         <toolset>msvc:<cxxflags>/wd6246
-
-        <conditional>@threadapi.detect
     ;
 
 rule thread-run ( sources )
