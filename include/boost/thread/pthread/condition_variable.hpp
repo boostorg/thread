@@ -441,12 +441,6 @@ namespace boost
         }
 #endif
 
-        // Used as a predicate for sleep functions
-        static inline bool always_false()
-        {
-            return false;
-        }
-
         void notify_one() BOOST_NOEXCEPT
         {
             boost::pthread::pthread_mutex_scoped_lock internal_lock(&internal_mutex);

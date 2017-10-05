@@ -329,12 +329,6 @@ namespace boost
         }
 #endif
 
-        // Used as a predicate for sleep functions
-        static inline bool always_false()
-        {
-            return false;
-        }
-
 #define BOOST_THREAD_DEFINES_CONDITION_VARIABLE_NATIVE_HANDLE
         typedef pthread_cond_t* native_handle_type;
         native_handle_type native_handle()

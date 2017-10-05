@@ -513,12 +513,6 @@ namespace boost
             return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
-
-        // Used as a predicate for sleep functions
-        static inline bool always_false()
-        {
-            return false;
-        }
     };
 
     class condition_variable_any:
@@ -721,12 +715,6 @@ namespace boost
             return wait_until(lock, chrono::steady_clock::now() + d, boost::move(pred));
         }
 #endif
-
-        // Used as a predicate for sleep functions
-        static inline bool always_false()
-        {
-            return false;
-        }
     };
 
         BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk);
