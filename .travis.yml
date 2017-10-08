@@ -28,6 +28,10 @@ matrix:
     - env: BOGUS_JOB=true
 
   include:
+    - os: linux
+      compiler: g++
+      env: TOOLSET=gcc COMPILER=g++ CXXSTD=c++11
+
 #    - os: linux
 #      compiler: g++-4.7
 #      env: TOOLSET=gcc COMPILER=g++-4.7 CXXSTD=c++11
