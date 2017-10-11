@@ -325,7 +325,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_for_pred_pass.cpp : condition_variable__wait_for_pred_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_until_pass.cpp : condition_variable__wait_until_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable/wait_until_pred_pass.cpp : condition_variable__wait_until_pred_p ]
-          #[ thread-run2-noit ./sync/conditions/condition_variable/lost_notif_pass.cpp : condition_variable__lost_notif_p ]
+          [ thread-run2-noit ./sync/conditions/condition_variable/lost_notif_pass.cpp : condition_variable__lost_notif_p ]
 
           [ thread-compile-fail ./sync/conditions/condition_variable_any/assign_fail.cpp : : condition_variable_any__assign_f ]
           [ thread-compile-fail ./sync/conditions/condition_variable_any/copy_fail.cpp : : condition_variable_any__copy_f ]
@@ -335,7 +335,7 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_for_pred_pass.cpp : condition_variable_any__wait_for_pred_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_until_pass.cpp : condition_variable_any__wait_until_p ]
           [ thread-run2-noit ./sync/conditions/condition_variable_any/wait_until_pred_pass.cpp : condition_variable_any__wait_until_pred_p ]
-          #[ thread-run2-noit ./sync/conditions/condition_variable_any/lost_notif_pass.cpp : condition_variable_any__lost_notif_p ]
+          [ thread-run2-noit ./sync/conditions/condition_variable_any/lost_notif_pass.cpp : condition_variable_any__lost_notif_p ]
           [ thread-run2-noit ./sync/conditions/cv_status/cv_status_pass.cpp : cv_status__cv_status_p ]
           [ thread-run2-noit ./sync/conditions/notify_all_at_thread_exit_pass.cpp : notify_all_at_thread_exit_p ]
     ;
