@@ -38,8 +38,6 @@
 #include <boost/thread/executor.hpp>
 #include <boost/thread/executors/generic_executor_ref.hpp>
 
-#include <boost/thread/detail/platform_time.hpp>
-
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
 #include <boost/optional.hpp>
 #else
@@ -369,24 +367,6 @@ namespace boost
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
                 wait(lock, rethrow);
-            }
-
-            bool do_wait_until(detail::internal_platform_timepoint const &abs_time)
-            {
-                boost::unique_lock<boost::mutex> lock(this->mutex);
-                if (is_deferred_)
-                    return false;
-
-                do_callback(lock);
-                while(!done)
-                {
-                    bool const success=waiters.do_wait_until(lock, abs_time);
-                    if(!success && !done)
-                    {
-                        return false;
-                    }
-                }
-                return true;
             }
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -1468,33 +1448,11 @@ namespace boost
           return future_->unnotify_when_ready(h);
         }
 
-        bool do_wait_until(detail::internal_platform_timepoint const &abs_time) const
-        {
-            if(!future_)
-            {
-                boost::throw_exception(future_uninitialized());
-            }
-            return future_->do_wait_until(abs_time);
-        }
-
 #if defined BOOST_THREAD_USES_DATETIME
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
-            detail::platform_duration d(rel_time);
-#if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
-            d = (std::min)(d, detail::platform_milliseconds(100));
-            while ( ! do_wait_until(detail::internal_platform_clock::now() + d) )
-            {
-              d = ts - detail::mono_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return false;
-              d = (std::min)(d, detail::platform_milliseconds(100));
-            }
-            return true;
-#else
-            return do_wait_until(detail::internal_platform_clock::now() + d);
-#endif
+            return timed_wait_until(boost::get_system_time()+rel_time);
         }
 
         bool timed_wait_until(boost::system_time const& abs_time) const
