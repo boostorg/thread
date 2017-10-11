@@ -211,7 +211,7 @@ namespace boost
                     BOOST_VERIFY(!pthread_mutex_lock(m));
                 }
             }
-            void check()
+            void unlock_if_locked()
             {
               if ( ! done) {
                 if (set)
@@ -231,7 +231,7 @@ namespace boost
 
             ~interruption_checker() BOOST_NOEXCEPT_IF(false)
             {
-                check();
+                unlock_if_locked();
             }
         };
 #endif
