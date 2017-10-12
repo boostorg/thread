@@ -55,8 +55,7 @@ void test_pull_for()
   boost::queue_op_status st = pq.pull_for(milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  std::cout << "elapsed = " << duration_cast<nanoseconds>(diff).count() << "ms\n";
-  BOOST_TEST(diff < milliseconds(550) && diff >= milliseconds(480));
+  BOOST_TEST(diff < milliseconds(600) && diff > milliseconds(450));
 }
 
 void test_pull_until()
@@ -67,7 +66,7 @@ void test_pull_until()
   boost::queue_op_status st = pq.pull_until(start + milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  BOOST_TEST(diff < milliseconds(600) && diff > milliseconds(500));
+  BOOST_TEST(diff < milliseconds(600) && diff > milliseconds(450));
 }
 
 void test_nonblocking_pull()

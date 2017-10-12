@@ -36,11 +36,11 @@ typedef boost::chrono::nanoseconds ns;
 void f1()
 {
   time_point t0 = Clock::now();
-  BOOST_TEST(m.try_lock_until(Clock::now() + ms(300) ) == true);
+  BOOST_TEST(m.try_lock_until(Clock::now() + ms(250)) == true);
   time_point t1 = Clock::now();
   m.unlock();
   ns d = t1 - t0 ;
-  BOOST_TEST(d < ns(5000000)); // within 5ms
+  BOOST_TEST(d < ms(200)); // within 200ms
 }
 
 
