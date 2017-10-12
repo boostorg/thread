@@ -53,9 +53,9 @@ void test_pull_for()
   steady_clock::time_point start = steady_clock::now();
   int val;
   boost::queue_op_status st = pq.pull_for(milliseconds(500), val);
-  steady_clock::duration diff = steady_clock::now() - start;
+  steady_clock::duration diff = steady_clock::now() - start - milliseconds(500);
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  BOOST_TEST(diff < milliseconds(600) && diff > milliseconds(450));
+  BOOST_TEST(diff < milliseconds(200)); // within 200ms
 }
 
 void test_pull_until()
@@ -64,9 +64,9 @@ void test_pull_until()
   steady_clock::time_point start = steady_clock::now();
   int val;
   boost::queue_op_status st = pq.pull_until(start + milliseconds(500), val);
-  steady_clock::duration diff = steady_clock::now() - start;
+  steady_clock::duration diff = steady_clock::now() - start - milliseconds(500);
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  BOOST_TEST(diff < milliseconds(600) && diff > milliseconds(450));
+  BOOST_TEST(diff < milliseconds(200)); // within 200ms
 }
 
 void test_nonblocking_pull()
@@ -77,7 +77,7 @@ void test_nonblocking_pull()
   boost::queue_op_status st = pq.nonblocking_pull(val);
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::empty == st);
-  BOOST_TEST(diff < milliseconds(5));
+  BOOST_TEST(diff < milliseconds(200)); // within 200ms
 }
 
 void test_pull_for_when_not_empty()
@@ -90,7 +90,7 @@ void test_pull_for_when_not_empty()
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::success == st);
   BOOST_TEST(1 == val);
-  BOOST_TEST(diff < milliseconds(5));
+  BOOST_TEST(diff < milliseconds(200)); // within 200ms
 }
 
 void test_pull_until_when_not_empty()
@@ -103,7 +103,7 @@ void test_pull_until_when_not_empty()
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::success == st);
   BOOST_TEST(1 == val);
-  BOOST_TEST(diff < milliseconds(5));
+  BOOST_TEST(diff < milliseconds(200)); // within 200ms
 }
 
 int main()

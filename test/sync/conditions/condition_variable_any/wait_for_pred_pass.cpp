@@ -60,17 +60,16 @@ void f()
   test1 = 1;
   cv.notify_one();
   Clock::time_point t0 = Clock::now();
-  //bool r =
-      (void)cv.wait_for(lk, milliseconds(250), Pred(test2));
+  cv.wait_for(lk, milliseconds(250), Pred(test2));
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
-    BOOST_TEST(t1 - t0 < milliseconds(250));
+    BOOST_TEST(t1 - t0 < milliseconds(200)); // within 200ms
     BOOST_TEST(test2 != 0);
   }
   else
   {
-    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(250+5));
+    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(200)); // within 200ms
     BOOST_TEST(test2 == 0);
   }
   ++runs;
