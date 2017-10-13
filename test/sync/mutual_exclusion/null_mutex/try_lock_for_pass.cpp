@@ -37,15 +37,13 @@ typedef boost::chrono::nanoseconds ns;
 void f1()
 {
   time_point t0 = Clock::now();
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(m.try_lock_for(ms(100)) == true);
+  BOOST_TEST(m.try_lock_for(ms(250)) == true);
   time_point t1 = Clock::now();
   BOOST_TEST(m.try_lock());
   m.unlock();
   m.unlock();
   ns d = t1 - t0 ;
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(d < ns(5000000)); // within 5ms
+  BOOST_TEST(d < ms(200)); // within 200ms
 }
 
 

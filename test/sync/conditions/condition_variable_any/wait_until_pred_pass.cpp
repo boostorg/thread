@@ -78,13 +78,13 @@ void f()
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
-    BOOST_TEST(t1 - t0 < Clock::duration(250));
+    BOOST_TEST(t1 - t0 < Clock::duration(200)); // within 200ms
     BOOST_TEST(test2 != 0);
     BOOST_TEST(r);
   }
   else
   {
-    BOOST_TEST(t1 - t0 - Clock::duration(250) < Clock::duration(250+2));
+    BOOST_TEST(t1 - t0 - Clock::duration(250) < Clock::duration(200)); // within 200ms
     BOOST_TEST(test2 == 0);
     BOOST_TEST(!r);
   }

@@ -45,8 +45,7 @@ void f()
   m.unlock();
   m.unlock();
   ns d = t1 - t0;
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(d < ns(50000000)); // within 50ms
+  BOOST_TEST(d < ms(200)); // within 200ms
 #else
   BOOST_TEST(m.try_lock());
   BOOST_TEST(m.try_lock());

@@ -45,7 +45,7 @@ void f()
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
-  BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
+  BOOST_TEST(d < ms(200)); // within 200ms
 #else
   //time_point t0 = Clock::now();
   //time_point t1;
@@ -55,7 +55,7 @@ void f()
     //t1 = Clock::now();
   }
   //ns d = t1 - t0 - ms(250);
-  //BOOST_TEST(d < ns(2500000)+ms(1000)); // within 2.5ms
+  //BOOST_TEST(d < ms(200)); // within 200ms
 #endif
 }
 
