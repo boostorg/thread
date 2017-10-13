@@ -36,6 +36,7 @@
 #include <boost/type_traits/is_same.hpp>
 #include <boost/type_traits/decay.hpp>
 #include <boost/functional/hash.hpp>
+#include <boost/thread/detail/platform_time.hpp>
 #ifdef BOOST_THREAD_USES_CHRONO
 #include <boost/chrono/system_clocks.hpp>
 #include <boost/chrono/ceil.hpp>
