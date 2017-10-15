@@ -17,21 +17,21 @@ platform:
 
 environment:
   matrix:
-    - ARGS: --toolset=msvc-9.0  address-model=32 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-10.0 address-model=32 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-11.0 address-model=32 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-12.0 address-model=32 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-14.0 address-model=32 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-12.0 address-model=64 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags=/wd4244
-    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags="-std:c++latest /wd4244"
+    - ARGS: --toolset=msvc-9.0  address-model=32 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-10.0 address-model=32 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-11.0 address-model=32 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-12.0 address-model=32 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-14.0 address-model=32 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-12.0 address-model=64 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags="/wd4244 /wd4459"
+    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags="-std:c++latest /wd4244 /wd4459"
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags=/wd4244
+      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags="/wd4244 /wd4459"
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=32 cxxflags=/wd4244
+      ARGS: --toolset=msvc-14.1 address-model=32 cxxflags="/wd4244 /wd4459"
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags=-std:c++latest
-    - ARGS: --toolset=gcc address-model=64 cxxflags=
+      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags="-std:c++latest /wd4244 /wd4459"
+    - ARGS: --toolset=gcc address-model=64
       PATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
     - ARGS: --toolset=gcc address-model=64 cxxflags="-std=gnu++1z
       PATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
