@@ -33,6 +33,12 @@ typedef boost::chrono::nanoseconds ns;
 #else
 #endif
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const ms max_diff(250);
+#else
+const ms max_diff(50);
+#endif
+
 void f()
 {
 #if defined BOOST_THREAD_USES_CHRONO
@@ -41,14 +47,14 @@ void f()
   time_point t1 = Clock::now();
   m.unlock();
   ns d = t1 - t0 - ms(250);
-  BOOST_TEST(d < ms(200)); // within 200ms
+  BOOST_TEST(d < max_diff);
 #else
   //time_point t0 = Clock::now();
   m.lock();
   //time_point t1 = Clock::now();
   m.unlock();
   //ns d = t1 - t0 - ms(250);
-  //BOOST_TEST(d < ms(200)); // within 200ms
+  //BOOST_TEST(d < max_diff);
 #endif
 }
 

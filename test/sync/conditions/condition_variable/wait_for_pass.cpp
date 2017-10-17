@@ -34,11 +34,18 @@ int test2 = 0;
 
 int runs = 0;
 
+typedef boost::chrono::steady_clock Clock;
+typedef boost::chrono::milliseconds milliseconds;
+
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const milliseconds max_diff(250);
+#else
+const milliseconds max_diff(50);
+#endif
+
 void f()
 {
   try {
-    typedef boost::chrono::steady_clock Clock;
-    typedef boost::chrono::milliseconds milliseconds;
     boost::unique_lock<boost::mutex> lk(mut);
     assert(test2 == 0);
     test1 = 1;
@@ -49,12 +56,12 @@ void f()
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {
-      assert(t1 - t0 < milliseconds(200)); // within 200ms
+      assert(t1 - t0 < max_diff);
       assert(test2 != 0);
     }
     else
     {
-      assert(t1 - t0 - milliseconds(250) < milliseconds(200)); // within 200ms
+      assert(t1 - t0 - milliseconds(250) < max_diff);
       assert(test2 == 0);
     }
     ++runs;

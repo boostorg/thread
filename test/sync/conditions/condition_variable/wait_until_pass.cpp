@@ -49,6 +49,12 @@ int test2 = 0;
 
 int runs = 0;
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const Clock::duration max_diff(250);
+#else
+const Clock::duration max_diff(50);
+#endif
+
 void f()
 {
   try {
@@ -62,12 +68,12 @@ void f()
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {
-      assert(t1 - t0 < Clock::duration(200)); // within 200ms
+      assert(t1 - t0 < max_diff);
       assert(test2 != 0);
     }
     else
     {
-      assert(t1 - t0 - Clock::duration(250) < Clock::duration(200)); // within 200ms
+      assert(t1 - t0 - Clock::duration(250) < max_diff);
       assert(test2 == 0);
     }
     ++runs;
