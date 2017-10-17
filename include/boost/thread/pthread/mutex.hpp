@@ -309,11 +309,15 @@ namespace boost
             while(is_locked)
             {
                 int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.getTs());
-                if(is_locked)
+                if(cond_res==ETIMEDOUT)
                 {
-                    return false;
+                    break;
                 }
-                BOOST_ASSERT(!cond_res || cond_res==ETIMEDOUT);
+                BOOST_ASSERT(!cond_res);
+            }
+            if(is_locked)
+            {
+                return false;
             }
             is_locked=true;
             return true;
