@@ -480,14 +480,14 @@ namespace boost
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
-          typedef typename common_type<Duration, typename Clock::duration>::type CD;
-          CD d = t - Clock::now();
-          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+          common_duration d(t - Clock::now());
+          d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
           {
             d = t - Clock::now();
-            if ( d <= CD::zero() ) return false; // timeout occurred
-            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            if ( d <= common_duration::zero() ) return false; // timeout occurred
+            d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           }
           return true;
         }

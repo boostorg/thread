@@ -219,11 +219,11 @@ namespace boost
         template <class Clock, class Duration>
         void sleep_until(const chrono::time_point<Clock, Duration>& t)
         {
-          typedef typename common_type<Duration, typename Clock::duration>::type CD;
-          CD d = t - Clock::now();
-          while (d > CD::zero())
+          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+          common_duration d(t - Clock::now());
+          while (d > common_duration::zero())
           {
-            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            d = (std::min)(d, common_duration(chrono::milliseconds(100)));
             sleep_for(d);
             d = t - Clock::now();
           }
@@ -270,11 +270,11 @@ namespace boost
           template <class Clock, class Duration>
           void sleep_until(const chrono::time_point<Clock, Duration>& t)
           {
-            typedef typename common_type<Duration, typename Clock::duration>::type CD;
-            CD d = t - Clock::now();
-            while (d > CD::zero())
+            typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+            common_duration d(t - Clock::now());
+            while (d > common_duration::zero())
             {
-              d = (std::min)(d, CD(chrono::milliseconds(100)));
+              d = (std::min)(d, common_duration(chrono::milliseconds(100)));
               sleep_for(d);
               d = t - Clock::now();
             }
