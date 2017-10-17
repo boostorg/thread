@@ -465,14 +465,16 @@ namespace boost
         bool joinable() const BOOST_NOEXCEPT;
     private:
         bool join_noexcept();
+        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
+        inline bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
     public:
         inline void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class Rep, class Period>
-        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          return try_join_until(chrono::steady_clock::now() + rel_time);
+          return do_try_join_until(boost::detail::internal_platform_timepoint(t));
         }
 
         template <class Clock, class Duration>
@@ -489,11 +491,13 @@ namespace boost
           }
           return true;
         }
+
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          return try_join_until(chrono::steady_clock::now() + rel_time);
+        }
 #endif
-    private:
-        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
-        inline bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
-    public:
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
@@ -512,17 +516,7 @@ namespace boost
           return do_try_join_until(ts);
 #endif
         }
-#endif
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
-        {
-          return do_try_join_until(boost::detail::internal_platform_timepoint(t));
-        }
-#endif
-      public:
 
-#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
