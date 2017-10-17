@@ -193,7 +193,7 @@ namespace boost
         inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
         {
           const detail::real_platform_timepoint ts(abs_time);
-          detail::platform_duration d = ts - detail::real_platform_clock::now();
+          detail::platform_duration d(ts - detail::real_platform_clock::now());
           while (d > detail::platform_duration::zero())
           {
             d = (std::min)(d, detail::platform_milliseconds(100));
@@ -244,7 +244,7 @@ namespace boost
           inline BOOST_SYMBOL_VISIBLE void sleep(system_time const& abs_time)
           {
             const detail::real_platform_timepoint ts(abs_time);
-            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            detail::platform_duration d(ts - detail::real_platform_clock::now());
             while (d > detail::platform_duration::zero())
             {
               d = (std::min)(d, detail::platform_milliseconds(100));

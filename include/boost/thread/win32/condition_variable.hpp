@@ -357,7 +357,7 @@ namespace boost
             // that it timed out even though a notification was received. The best this function can do
             // is report correctly whether or not it reached the timeout time.
             const detail::real_platform_timepoint ts(abs_time);
-            const detail::platform_duration d = ts - detail::real_platform_clock::now();
+            const detail::platform_duration d(ts - detail::real_platform_clock::now());
             do_wait_until(m, detail::internal_platform_clock::now() + d);
             return ts > detail::real_platform_clock::now();
         }
@@ -390,7 +390,7 @@ namespace boost
             const detail::real_platform_timepoint ts(abs_time);
             while (!pred())
             {
-                detail::platform_duration d = ts - detail::real_platform_clock::now();
+                detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
                 d = (std::min)(d, detail::platform_milliseconds(100));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
@@ -554,7 +554,7 @@ namespace boost
             // that it timed out even though a notification was received. The best this function can do
             // is report correctly whether or not it reached the timeout time.
             const detail::real_platform_timepoint ts(abs_time);
-            const detail::platform_duration d = ts - detail::real_platform_clock::now();
+            const detail::platform_duration d(ts - detail::real_platform_clock::now());
             do_wait_until(m, detail::internal_platform_clock::now() + d);
             return ts > detail::real_platform_clock::now();
         }
@@ -590,7 +590,7 @@ namespace boost
             const detail::real_platform_timepoint ts(abs_time);
             while (!pred())
             {
-                detail::platform_duration d = ts - detail::real_platform_clock::now();
+                detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
                 d = (std::min)(d, detail::platform_milliseconds(100));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);

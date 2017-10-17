@@ -241,7 +241,7 @@ namespace boost
             // of not exiting the function when a notification occurs, since do_wait_until() may report
             // that it timed out even though a notification was received. The best this function can do
             // is report correctly whether or not it reached the timeout time.
-            const detail::platform_duration d = ts - detail::real_platform_clock::now();
+            const detail::platform_duration d(ts - detail::real_platform_clock::now());
             do_wait_until(m, detail::internal_platform_clock::now() + d);
             return ts > detail::real_platform_clock::now();
 #else
@@ -297,7 +297,7 @@ namespace boost
                 // The system time may jump while this function is waiting. To compensate for this
                 // and time out near the correct time, we call do_wait_until() in a loop with a
                 // short timeout and recheck the time remaining each time through the loop.
-                detail::platform_duration d = ts - detail::real_platform_clock::now();
+                detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
                 d = (std::min)(d, detail::platform_milliseconds(100));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
