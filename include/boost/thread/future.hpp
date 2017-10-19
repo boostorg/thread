@@ -2238,13 +2238,13 @@ namespace boost
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
-#include <boost/detail/atomic_undef_macros.hpp>
+#include <boost/thread/detail/atomic_undef_macros.hpp>
           if(!atomic_load(&future_))
             {
                 future_ptr blank;
                 atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R>));
             }
-#include <boost/detail/atomic_redef_macros.hpp>
+#include <boost/thread/detail/atomic_redef_macros.hpp>
 #endif
         }
 
@@ -2529,13 +2529,13 @@ namespace boost
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
-#include <boost/detail/atomic_undef_macros.hpp>
+#include <boost/thread/detail/atomic_undef_macros.hpp>
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
                 atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R&>));
             }
-#include <boost/detail/atomic_redef_macros.hpp>
+#include <boost/thread/detail/atomic_redef_macros.hpp>
 #endif
         }
 
