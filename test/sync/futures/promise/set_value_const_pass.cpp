@@ -24,6 +24,10 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/static_assert.hpp>
 
+#ifdef BOOST_MSVC
+# pragma warning(disable: 4702) // unreachable code
+#endif
+
 struct A
 {
   A()

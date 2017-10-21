@@ -145,14 +145,14 @@ rule thread-run2 ( sources : name )
     ;
 }
 
-rule thread-run2-noit ( sources : name )
+rule thread-run2-noit ( sources : name : reqs * )
 {
     sources = $(sources) winrt_init.cpp ;
     return
-    [ run $(sources) ../build//boost_thread : : :
+    [ run $(sources) ../build//boost_thread : : : $(reqs)
       : $(name) ]
     [ run $(sources) ../src/tss_null.cpp ../build//boost_thread/<link>static
-        : : :
+        : : : $(reqs)
       : $(name)_lib ]
     #[ run $(sources) ../build//boost_thread : : :
     #  <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
@@ -798,9 +798,9 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ../example/synchronized_value.cpp : ex_synchronized_value ]
           [ thread-run2-noit ../example/synchronized_person.cpp : ex_synchronized_person ]
           [ thread-run2-noit ../example/thread_guard.cpp : ex_thread_guard ]
-          [ thread-run2-noit ../example/std_thread_guard.cpp : ex_std_thread_guard ]
+          [ thread-run2-noit ../example/std_thread_guard.cpp : ex_std_thread_guard : <toolset>gcc-4.8:<build>no ]
           [ thread-run2-noit ../example/scoped_thread.cpp : ex_scoped_thread ]
-          [ thread-run2-noit ../example/std_scoped_thread.cpp : ex_std_scoped_thread ]
+          [ thread-run2-noit ../example/std_scoped_thread.cpp : ex_std_scoped_thread : <toolset>gcc-4.8:<build>no ]
           [ thread-run2-noit ../example/strict_lock.cpp : ex_strict_lock ]
           [ thread-run2-noit ../example/ba_externallly_locked.cpp : ex_ba_externallly_locked ]
           [ thread-run2 ../example/producer_consumer_bounded.cpp : ex_producer_consumer_bounded ]

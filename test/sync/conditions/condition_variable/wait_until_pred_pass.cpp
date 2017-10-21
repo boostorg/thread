@@ -74,6 +74,7 @@ void f()
     Clock::time_point t0 = Clock::now();
     Clock::time_point t = t0 + Clock::duration(250);
     bool r = cv.wait_until(lk, t, Pred(test2));
+    (void)r;
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {

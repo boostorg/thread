@@ -20,6 +20,10 @@
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_UNWRAP
 
+#ifdef BOOST_MSVC
+#pragma warning(disable: 4127) // conditional expression is constant
+#endif
+
 int p1()
 {
   BOOST_THREAD_LOG << "P1" << BOOST_THREAD_END_LOG;
