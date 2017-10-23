@@ -29,6 +29,31 @@
 #define BOOST_THREAD_ATTRIBUTE_MAY_ALIAS
 #endif
 
+#if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
+# warning Boost.Thread will use the Windows API for time
+#elif defined(BOOST_THREAD_CHRONO_MAC_API)
+# warning Boost.Thread will use the Mac API  for time
+#elif defined(BOOST_THREAD_CHRONO_POSIX_API)
+# warning Boost.Thread will use the POSIX API  for time
+#endif
+
+# if defined( BOOST_THREAD_CHRONO_WINDOWS_API ) && defined( BOOST_THREAD_CHRONO_POSIX_API )
+#   error both BOOST_THREAD_CHRONO_WINDOWS_API and BOOST_THREAD_CHRONO_POSIX_API are defined
+# elif defined( BOOST_THREAD_CHRONO_WINDOWS_API ) && defined( BOOST_THREAD_CHRONO_MAC_API )
+#   error both BOOST_THREAD_CHRONO_WINDOWS_API and BOOST_THREAD_CHRONO_MAC_API are defined
+# elif defined( BOOST_THREAD_CHRONO_MAC_API ) && defined( BOOST_THREAD_CHRONO_POSIX_API )
+#   error both BOOST_THREAD_CHRONO_MAC_API and BOOST_THREAD_CHRONO_POSIX_API are defined
+# elif !defined( BOOST_THREAD_CHRONO_WINDOWS_API ) && !defined( BOOST_THREAD_CHRONO_MAC_API ) && !defined( BOOST_THREAD_CHRONO_POSIX_API )
+#   if (defined(_WIN32) || defined(__WIN32__) || defined(WIN32))
+#     define BOOST_THREAD_CHRONO_WINDOWS_API
+#   elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
+#     define BOOST_THREAD_CHRONO_MAC_API
+#   else
+#     define BOOST_THREAD_CHRONO_POSIX_API
+#   endif
+# endif
+
+
 #if defined BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
 #define BOOST_THREAD_ASSERT_PRECONDITION(EXPR, EX) \
         if (EXPR) {} else boost::throw_exception(EX)
@@ -388,7 +413,7 @@
   #define BOOST_THREAD_HAS_MONO_CLOCK
   #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
 #elif defined(BOOST_THREAD_MACOS)
-  //#define BOOST_THREAD_HAS_MONO_CLOCK
+  #define BOOST_THREAD_HAS_MONO_CLOCK
 #else
   #include <time.h> // check for CLOCK_MONOTONIC
   #if defined(CLOCK_MONOTONIC)

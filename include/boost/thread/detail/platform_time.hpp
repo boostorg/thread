@@ -21,12 +21,14 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
 #include <boost/detail/winapi/time.hpp>
 #include <boost/detail/winapi/timers.hpp>
 #include <boost/thread/win32/thread_primitives.hpp>
-#elif defined(BOOST_THREAD_MACOS)
+#elif defined(BOOST_THREAD_CHRONO_MAC_API)
 #include <sys/time.h> //for gettimeofday and timeval
+#include <mach/mach_time.h>  // mach_absolute_time, mach_timebase_info_data_t
+
 #else
 #include <time.h>  // for clock_gettime
 #endif
@@ -37,45 +39,117 @@
 
 namespace boost
 {
+//typedef boost::int_least64_t time_max_t;
+typedef boost::intmax_t time_max_t;
+
+#if defined BOOST_THREAD_CHRONO_MAC_API
+namespace threads
+{
+
+namespace chrono_details
+{
+
+// steady_clock
+
+// Note, in this implementation steady_clock and high_resolution_clock
+//   are the same clock.  They are both based on mach_absolute_time().
+//   mach_absolute_time() * MachInfo.numer / MachInfo.denom is the number of
+//   nanoseconds since the computer booted up.  MachInfo.numer and MachInfo.denom
+//   are run time constants supplied by the OS.  This clock has no relationship
+//   to the Gregorian calendar.  It's main use is as a high resolution timer.
+
+// MachInfo.numer / MachInfo.denom is often 1 on the latest equipment.  Specialize
+//   for that case as an optimization.
+
+inline time_max_t
+steady_simplified()
+{
+    return mach_absolute_time();
+}
+
+inline double compute_steady_factor(kern_return_t& err)
+{
+    mach_timebase_info_data_t MachInfo;
+    err = mach_timebase_info(&MachInfo);
+    if ( err != 0  ) {
+        return 0;
+    }
+    return static_cast<double>(MachInfo.numer) / MachInfo.denom;
+}
+
+inline time_max_t steady_full()
+{
+    kern_return_t err;
+    const double factor = chrono_details::compute_steady_factor(err);
+    if (err != 0)
+    {
+      BOOST_ASSERT(0 && "Boost::Chrono - Internal Error");
+    }
+    return static_cast<time_max_t>(mach_absolute_time() * factor);
+}
+
+
+typedef time_max_t (*FP)();
+
+inline FP init_steady_clock(kern_return_t & err)
+{
+    mach_timebase_info_data_t MachInfo;
+    err = mach_timebase_info(&MachInfo);
+    if ( err != 0  )
+    {
+        return 0;
+    }
+
+    if (MachInfo.numer == MachInfo.denom)
+    {
+        return &chrono_details::steady_simplified;
+    }
+    return &chrono_details::steady_full;
+}
+
+}
+}
+#endif
+
   namespace detail
   {
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
-    inline timespec ns_to_timespec(boost::intmax_t const& ns)
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
+    inline timespec ns_to_timespec(boost::time_max_t const& ns)
     {
-      boost::intmax_t s = ns / 1000000000l;
+      boost::time_max_t s = ns / 1000000000l;
       timespec ts;
       ts.tv_sec = static_cast<long> (s);
       ts.tv_nsec = static_cast<long> (ns - s * 1000000000l);
       return ts;
     }
-    inline boost::intmax_t timespec_to_ns(timespec const& ts)
+    inline boost::time_max_t timespec_to_ns(timespec const& ts)
     {
-      return static_cast<boost::intmax_t>(ts.tv_sec) * 1000000000l + ts.tv_nsec;
+      return static_cast<boost::time_max_t>(ts.tv_sec) * 1000000000l + ts.tv_nsec;
     }
 #endif
 
     class platform_duration
     {
     public:
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       explicit platform_duration(timespec const& v) : ts_val(v) {}
       inline timespec const& getTs() const { return ts_val; }
 
-      explicit platform_duration(boost::intmax_t const& ns = 0) : ts_val(ns_to_timespec(ns)) {}
-      inline boost::intmax_t getNs() const { return timespec_to_ns(ts_val); }
+      explicit platform_duration(boost::time_max_t const& ns = 0) : ts_val(ns_to_timespec(ns)) {}
+      inline boost::time_max_t getNs() const { return timespec_to_ns(ts_val); }
 #else
-      explicit platform_duration(boost::intmax_t const& ns = 0) : ns_val(ns) {}
-      inline boost::intmax_t getNs() const { return ns_val; }
+      explicit platform_duration(boost::time_max_t const& ns = 0) : ns_val(ns) {}
+      inline boost::time_max_t getNs() const { return ns_val; }
 #endif
 
 #if defined BOOST_THREAD_USES_DATETIME
       platform_duration(boost::posix_time::time_duration const& rel_time)
       {
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
         ts_val.tv_sec = rel_time.total_seconds();
         ts_val.tv_nsec = static_cast<long>(rel_time.fractional_seconds() * (1000000000l / rel_time.ticks_per_second()));
 #else
-        ns_val = static_cast<boost::intmax_t>(rel_time.total_seconds()) * 1000000000l;
+        ns_val = static_cast<boost::time_max_t>(rel_time.total_seconds()) * 1000000000l;
         ns_val += rel_time.fractional_seconds() * (1000000000l / rel_time.ticks_per_second());
 #endif
       }
@@ -85,7 +159,7 @@ namespace boost
       template <class Rep, class Period>
       platform_duration(chrono::duration<Rep, Period> const& d)
       {
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
         ts_val = ns_to_timespec(chrono::ceil<chrono::nanoseconds>(d).count());
 #else
         ns_val = chrono::ceil<chrono::nanoseconds>(d).count();
@@ -93,9 +167,9 @@ namespace boost
       }
 #endif
 
-      inline boost::intmax_t getMs() const
+      inline boost::time_max_t getMs() const
       {
-        const boost::intmax_t ns = getNs();
+        const boost::time_max_t ns = getNs();
         // ceil/floor away from zero
         if (ns >= 0)
         {
@@ -115,10 +189,10 @@ namespace boost
       }
 
     private:
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       timespec ts_val;
 #else
-      boost::intmax_t ns_val;
+      boost::time_max_t ns_val;
 #endif
     };
 
@@ -155,13 +229,13 @@ namespace boost
     class real_platform_timepoint
     {
     public:
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       explicit real_platform_timepoint(timespec const& v) : dur(v) {}
       inline timespec const& getTs() const { return dur.getTs(); }
 #endif
 
-      explicit real_platform_timepoint(boost::intmax_t const& ns) : dur(ns) {}
-      inline boost::intmax_t getNs() const { return dur.getNs(); }
+      explicit real_platform_timepoint(boost::time_max_t const& ns) : dur(ns) {}
+      inline boost::time_max_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_DATETIME
       real_platform_timepoint(boost::system_time const& abs_time)
@@ -220,12 +294,12 @@ namespace boost
     {
       static inline real_platform_timepoint now()
       {
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
         boost::detail::winapi::FILETIME_ ft;
         boost::detail::winapi::GetSystemTimeAsFileTime(&ft);  // never fails
-        boost::intmax_t ns = ((((static_cast<boost::intmax_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
+        boost::time_max_t ns = ((((static_cast<boost::time_max_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
         return real_platform_timepoint(ns);
-#elif defined(BOOST_THREAD_MACOS)
+#elif defined(BOOST_THREAD_CHRONO_MAC_API)
         timeval tv;
         ::gettimeofday(&tv, 0);
         timespec ts;
@@ -249,13 +323,14 @@ namespace boost
   class mono_platform_timepoint
   {
   public:
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
+
     explicit mono_platform_timepoint(timespec const& v) : dur(v) {}
     inline timespec const& getTs() const { return dur.getTs(); }
 #endif
 
-    explicit mono_platform_timepoint(boost::intmax_t const& ns) : dur(ns) {}
-    inline boost::intmax_t getNs() const { return dur.getNs(); }
+    explicit mono_platform_timepoint(boost::time_max_t const& ns) : dur(ns) {}
+    inline boost::time_max_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_CHRONO
     // This conversion assumes that chrono::steady_clock::time_point and mono_platform_timepoint share the same epoch.
@@ -267,13 +342,13 @@ namespace boost
     // can't name this max() since that is a macro on some Windows systems
     static inline mono_platform_timepoint getMax()
     {
-#if defined BOOST_THREAD_PLATFORM_PTHREAD
+#if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       timespec ts;
       ts.tv_sec = (std::numeric_limits<time_t>::max)();
       ts.tv_nsec = 999999999;
       return mono_platform_timepoint(ts);
 #else
-      boost::intmax_t ns = (std::numeric_limits<boost::intmax_t>::max)();
+      boost::time_max_t ns = (std::numeric_limits<boost::time_max_t>::max)();
       return mono_platform_timepoint(ns);
 #endif
     }
@@ -324,7 +399,7 @@ namespace boost
   {
     static inline mono_platform_timepoint now()
     {
-#if defined(BOOST_THREAD_PLATFORM_WIN32)
+#if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
 #if defined(BOOST_THREAD_USES_CHRONO)
       // Use QueryPerformanceCounter() to match the implementation in Boost
       // Chrono so that chrono::steady_clock::now() and this function share the
@@ -353,18 +428,25 @@ namespace boost
       }
 
       long double ns = 1000000000.0L * pcount.QuadPart / freq.QuadPart;
-      return mono_platform_timepoint(static_cast<boost::intmax_t>(ns));
+      return mono_platform_timepoint(static_cast<boost::time_max_t>(ns));
 #else
       // Use GetTickCount64() because it's more reliable on older
       // systems like Windows XP and Windows Server 2003.
       win32::ticks_type msec = win32::GetTickCount64_()();
       return mono_platform_timepoint(msec * 1000000);
 #endif
-#elif defined(BOOST_THREAD_MACOS)
+#elif defined(BOOST_THREAD_CHRONO_MAC_API)
       // fixme: add support for mono_platform_clock::now() on MAC OS X using code from
       // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
       // Also update BOOST_THREAD_HAS_MONO_CLOCK in config.hpp
-      return mono_platform_timepoint(0);
+      //return mono_platform_timepoint(0);
+      kern_return_t err;
+      threads::chrono_details::FP fp = threads::chrono_details::init_steady_clock(err);
+      if ( err != 0  )
+      {
+        BOOST_ASSERT(0 && "Boost::Chrono - Internal Error");
+      }
+      return mono_platform_timepoint(fp());
 #else
       timespec ts;
       if ( ::clock_gettime( CLOCK_MONOTONIC, &ts ) )
