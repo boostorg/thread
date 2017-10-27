@@ -465,46 +465,50 @@ namespace boost
         bool joinable() const BOOST_NOEXCEPT;
     private:
         bool join_noexcept();
+        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
+        inline bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
     public:
         inline void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
-        template <class Rep, class Period>
-        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        template <class Duration>
+        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
         {
-          return try_join_until(chrono::steady_clock::now() + rel_time);
+          return do_try_join_until(boost::detail::internal_platform_timepoint(t));
         }
 
         template <class Clock, class Duration>
         bool try_join_until(const chrono::time_point<Clock, Duration>& t)
         {
-          typedef typename common_type<Duration, typename Clock::duration>::type CD;
-          CD d = t - Clock::now();
-          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+          common_duration d(t - Clock::now());
+          d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
           {
             d = t - Clock::now();
-            if ( d <= CD::zero() ) return false;
-            d = (std::min)(d, CD(chrono::milliseconds(100)));
+            if ( d <= common_duration::zero() ) return false; // timeout occurred
+            d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           }
           return true;
         }
+
+        template <class Rep, class Period>
+        bool try_join_for(const chrono::duration<Rep, Period>& rel_time)
+        {
+          return try_join_until(chrono::steady_clock::now() + rel_time);
+        }
 #endif
-    private:
-        bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
-        inline bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
-    public:
 #if defined BOOST_THREAD_USES_DATETIME
         bool timed_join(const system_time& abs_time)
         {
           const detail::real_platform_timepoint ts(abs_time);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-          detail::platform_duration d = ts - detail::real_platform_clock::now();
+          detail::platform_duration d(ts - detail::real_platform_clock::now());
           d = (std::min)(d, detail::platform_milliseconds(100));
           while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
           {
             d = ts - detail::real_platform_clock::now();
-            if ( d <= detail::platform_duration::zero() ) return false;
+            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
             d = (std::min)(d, detail::platform_milliseconds(100));
           }
           return true;
@@ -512,28 +516,18 @@ namespace boost
           return do_try_join_until(ts);
 #endif
         }
-#endif
-#ifdef BOOST_THREAD_USES_CHRONO
-        template <class Duration>
-        bool try_join_until(const chrono::time_point<detail::internal_chrono_clock, Duration>& t)
-        {
-          return do_try_join_until(boost::detail::internal_platform_timepoint(t));
-        }
-#endif
-      public:
 
-#if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
         inline bool timed_join(TimeDuration const& rel_time)
         {
           detail::platform_duration d(rel_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-          const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+          const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
           d = (std::min)(d, detail::platform_milliseconds(100));
           while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
           {
             d = ts - detail::mono_platform_clock::now();
-            if ( d <= detail::platform_duration::zero() ) return false;
+            if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
             d = (std::min)(d, detail::platform_milliseconds(100));
           }
           return true;

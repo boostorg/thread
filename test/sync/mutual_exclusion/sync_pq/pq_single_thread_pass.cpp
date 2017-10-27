@@ -46,6 +46,11 @@ public:
   }
 };
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const milliseconds max_diff(250);
+#else
+const milliseconds max_diff(50);
+#endif
 
 void test_pull_for()
 {
@@ -55,7 +60,7 @@ void test_pull_for()
   boost::queue_op_status st = pq.pull_for(milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start - milliseconds(500);
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  BOOST_TEST(diff < milliseconds(200)); // within 200ms
+  BOOST_TEST(diff < max_diff);
 }
 
 void test_pull_until()
@@ -66,7 +71,7 @@ void test_pull_until()
   boost::queue_op_status st = pq.pull_until(start + milliseconds(500), val);
   steady_clock::duration diff = steady_clock::now() - start - milliseconds(500);
   BOOST_TEST(boost::queue_op_status::timeout == st);
-  BOOST_TEST(diff < milliseconds(200)); // within 200ms
+  BOOST_TEST(diff < max_diff);
 }
 
 void test_nonblocking_pull()
@@ -77,7 +82,7 @@ void test_nonblocking_pull()
   boost::queue_op_status st = pq.nonblocking_pull(val);
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::empty == st);
-  BOOST_TEST(diff < milliseconds(200)); // within 200ms
+  BOOST_TEST(diff < max_diff);
 }
 
 void test_pull_for_when_not_empty()
@@ -90,7 +95,7 @@ void test_pull_for_when_not_empty()
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::success == st);
   BOOST_TEST(1 == val);
-  BOOST_TEST(diff < milliseconds(200)); // within 200ms
+  BOOST_TEST(diff < max_diff);
 }
 
 void test_pull_until_when_not_empty()
@@ -103,7 +108,7 @@ void test_pull_until_when_not_empty()
   steady_clock::duration diff = steady_clock::now() - start;
   BOOST_TEST(boost::queue_op_status::success == st);
   BOOST_TEST(1 == val);
-  BOOST_TEST(diff < milliseconds(200)); // within 200ms
+  BOOST_TEST(diff < max_diff);
 }
 
 int main()

@@ -312,7 +312,7 @@ namespace boost
           inline void sleep(system_time const& abs_time)
           {
             const detail::real_platform_timepoint ts(abs_time);
-            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            detail::platform_duration d(ts - detail::real_platform_clock::now());
             while (d > detail::platform_duration::zero())
             {
               d = (std::min)(d, detail::platform_milliseconds(100));
@@ -344,11 +344,11 @@ namespace boost
           template <class Clock, class Duration>
           void sleep_until(const chrono::time_point<Clock, Duration>& t)
           {
-            typedef typename common_type<Duration, typename Clock::duration>::type CD;
-            CD d = t - Clock::now();
-            while (d > CD::zero())
+            typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+            common_duration d(t - Clock::now());
+            while (d > common_duration::zero())
             {
-              d = (std::min)(d, CD(chrono::milliseconds(100)));
+              d = (std::min)(d, common_duration(chrono::milliseconds(100)));
               hidden::sleep_for_internal(detail::platform_duration(d));
               d = t - Clock::now();
             }

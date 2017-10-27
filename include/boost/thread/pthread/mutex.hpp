@@ -207,12 +207,12 @@ namespace boost
             }
             detail::platform_duration d(relative_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
-            const detail::mono_platform_timepoint& ts = detail::mono_platform_clock::now() + d;
+            const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
             d = (std::min)(d, detail::platform_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
               d = ts - detail::mono_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return false;
+              if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
               d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
@@ -309,11 +309,15 @@ namespace boost
             while(is_locked)
             {
                 int const cond_res=pthread_cond_timedwait(&cond,&m,&timeout.getTs());
-                if(is_locked)
+                if(cond_res==ETIMEDOUT)
                 {
-                    return false;
+                    break;
                 }
-                BOOST_ASSERT(!cond_res || cond_res==ETIMEDOUT);
+                BOOST_ASSERT(!cond_res);
+            }
+            if(is_locked)
+            {
+                return false;
             }
             is_locked=true;
             return true;
@@ -326,12 +330,12 @@ namespace boost
         {
             const detail::real_platform_timepoint ts(abs_time);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-            detail::platform_duration d = ts - detail::real_platform_clock::now();
+            detail::platform_duration d(ts - detail::real_platform_clock::now());
             d = (std::min)(d, detail::platform_milliseconds(100));
             while ( ! do_try_lock_until(detail::internal_platform_clock::now() + d) )
             {
               d = ts - detail::real_platform_clock::now();
-              if ( d <= detail::platform_duration::zero() ) return false;
+              if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
               d = (std::min)(d, detail::platform_milliseconds(100));
             }
             return true;
@@ -349,14 +353,14 @@ namespace boost
         template <class Clock, class Duration>
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
-          typedef typename common_type<Duration, typename Clock::duration>::type CD;
-          CD d = t - Clock::now();
-          d = (std::min)(d, CD(chrono::milliseconds(100)));
+          typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
+          common_duration d(t - Clock::now());
+          d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           while ( ! try_lock_until(detail::internal_chrono_clock::now() + d))
           {
               d = t - Clock::now();
-              if ( d <= CD::zero() ) return false;
-              d = (std::min)(d, CD(chrono::milliseconds(100)));
+              if ( d <= common_duration::zero() ) return false; // timeout occurred
+              d = (std::min)(d, common_duration(chrono::milliseconds(100)));
           }
           return true;
         }

@@ -18,7 +18,7 @@ namespace boost
     {
       inline int cond_init(pthread_cond_t& cond) {
 
-  #ifdef BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
+  #ifdef BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
               pthread_condattr_t attr;
               int res = pthread_condattr_init(&attr);
               if (res)
