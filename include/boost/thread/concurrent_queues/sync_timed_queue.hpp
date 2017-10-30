@@ -124,13 +124,10 @@ namespace detail
 
   private:
     T pull(unique_lock<mutex>&);
-    T pull(lock_guard<mutex>&);
 
     void pull(unique_lock<mutex>&, T& elem);
-    void pull(lock_guard<mutex>&, T& elem);
 
     queue_op_status try_pull(unique_lock<mutex>&, T& elem);
-    queue_op_status try_pull(lock_guard<mutex>&, T& elem);
 
     queue_op_status wait_pull(unique_lock<mutex>& lk, T& elem);
 
@@ -139,9 +136,7 @@ namespace detail
     template <class WClock, class Duration>
     queue_op_status pull_when_time_reached_until(unique_lock<mutex>&, chrono::time_point<WClock,Duration> const& tp, T& elem);
     bool time_not_reached(unique_lock<mutex>&);
-    bool time_not_reached(lock_guard<mutex>&);
     bool empty_or_time_not_reached(unique_lock<mutex>&);
-    bool empty_or_time_not_reached(lock_guard<mutex>&);
 
     sync_timed_queue(const sync_timed_queue&);
     sync_timed_queue& operator=(const sync_timed_queue&);
@@ -215,12 +210,6 @@ namespace detail
     return super::data_.top().time_not_reached();
   }
 
-  template <class T, class Clock, class TimePoint>
-  bool sync_timed_queue<T, Clock, TimePoint>::time_not_reached(lock_guard<mutex>&)
-  {
-    return super::data_.top().time_not_reached();
-  }
-
   ///////////////////////////
   template <class T, class Clock, class TimePoint>
   bool sync_timed_queue<T, Clock, TimePoint>::wait_until_not_empty_time_reached_or_closed(unique_lock<mutex>& lk)
@@ -280,13 +269,6 @@ namespace detail
     if ( time_not_reached(lk) ) return true;
     return false;
   }
-  template <class T, class Clock, class TimePoint>
-  bool sync_timed_queue<T, Clock, TimePoint>::empty_or_time_not_reached(lock_guard<mutex>& lk)
-  {
-    if ( super::empty(lk) ) return true;
-    if ( time_not_reached(lk) ) return true;
-    return false;
-  }
 
   ///////////////////////////
   template <class T, class Clock, class TimePoint>
@@ -300,15 +282,6 @@ namespace detail
   }
 
   template <class T, class Clock, class TimePoint>
-  T sync_timed_queue<T, Clock, TimePoint>::pull(lock_guard<mutex>&)
-  {
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-    return boost::move(super::data_.pull().data);
-#else
-    return super::data_.pull().data;
-#endif
-  }
-  template <class T, class Clock, class TimePoint>
   T sync_timed_queue<T, Clock, TimePoint>::pull()
   {
     unique_lock<mutex> lk(super::mtx_);
@@ -319,16 +292,6 @@ namespace detail
   ///////////////////////////
   template <class T, class Clock, class TimePoint>
   void sync_timed_queue<T, Clock, TimePoint>::pull(unique_lock<mutex>&, T& elem)
-  {
-#if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
-    elem = boost::move(super::data_.pull().data);
-#else
-    elem = super::data_.pull().data;
-#endif
-  }
-
-  template <class T, class Clock, class TimePoint>
-  void sync_timed_queue<T, Clock, TimePoint>::pull(lock_guard<mutex>&, T& elem)
   {
 #if ! defined  BOOST_NO_CXX11_RVALUE_REFERENCES
     elem = boost::move(super::data_.pull().data);
@@ -385,27 +348,11 @@ namespace detail
     pull(lk, elem);
     return queue_op_status::success;
   }
-  template <class T, class Clock, class TimePoint>
-  queue_op_status sync_timed_queue<T, Clock, TimePoint>::try_pull(lock_guard<mutex>& lk, T& elem)
-  {
-    if ( super::empty(lk) )
-    {
-      if (super::closed(lk)) return queue_op_status::closed;
-      return queue_op_status::empty;
-    }
-    if ( time_not_reached(lk) )
-    {
-      if (super::closed(lk)) return queue_op_status::closed;
-      return queue_op_status::not_ready;
-    }
-    pull(lk, elem);
-    return queue_op_status::success;
-  }
 
   template <class T, class Clock, class TimePoint>
   queue_op_status sync_timed_queue<T, Clock, TimePoint>::try_pull(T& elem)
   {
-    lock_guard<mutex> lk(super::mtx_);
+    unique_lock<mutex> lk(super::mtx_);
     return try_pull(lk, elem);
   }
 
