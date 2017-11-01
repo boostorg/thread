@@ -108,23 +108,15 @@ namespace concurrent
     {
       return in_ == out_;
     }
-    inline bool empty(lock_guard<mutex>& ) const BOOST_NOEXCEPT
-    {
-      return in_ == out_;
-    }
     inline bool full(unique_lock<mutex>& ) const BOOST_NOEXCEPT
     {
       return (inc(in_) == out_);
     }
-    inline bool full(lock_guard<mutex>& ) const BOOST_NOEXCEPT
-    {
-      return (inc(in_) == out_);
-    }
-    inline size_type capacity(lock_guard<mutex>& ) const BOOST_NOEXCEPT
+    inline size_type capacity(unique_lock<mutex>& ) const BOOST_NOEXCEPT
     {
       return capacity_-1;
     }
-    inline size_type size(lock_guard<mutex>& lk) const BOOST_NOEXCEPT
+    inline size_type size(unique_lock<mutex>& lk) const BOOST_NOEXCEPT
     {
       if (full(lk)) return capacity(lk);
       return ((in_+capacity(lk)-out_) % capacity(lk));
@@ -271,7 +263,7 @@ namespace concurrent
   void sync_bounded_queue<ValueType>::close()
   {
     {
-      lock_guard<mutex> lk(mtx_);
+      unique_lock<mutex> lk(mtx_);
       closed_ = true;
     }
     not_empty_.notify_all();
@@ -281,7 +273,7 @@ namespace concurrent
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::closed() const
   {
-    lock_guard<mutex> lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return closed_;
   }
   template <typename ValueType>
@@ -293,27 +285,27 @@ namespace concurrent
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::empty() const
   {
-    lock_guard<mutex> lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return empty(lk);
   }
   template <typename ValueType>
   bool sync_bounded_queue<ValueType>::full() const
   {
-    lock_guard<mutex> lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return full(lk);
   }
 
   template <typename ValueType>
   typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::capacity() const
   {
-    lock_guard<mutex> lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return capacity(lk);
   }
 
   template <typename ValueType>
   typename sync_bounded_queue<ValueType>::size_type sync_bounded_queue<ValueType>::size() const
   {
-    lock_guard<mutex> lk(mtx_);
+    unique_lock<mutex> lk(mtx_);
     return size(lk);
   }
 
