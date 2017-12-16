@@ -272,7 +272,7 @@ namespace boost
               // do it here to avoid throwing on the destructor
               entry.remove_waiter_and_reset();
               locker.lock();
-              return woken;
+              return true;
             }
 
             void notify_one() BOOST_NOEXCEPT
