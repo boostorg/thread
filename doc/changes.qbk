@@ -22,14 +22,29 @@ Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&s
 Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread master regression test] to see the last regression test snapshot.
 
 [*Fixed Bugs:]
+ 	
 
+* [@http://svn.boost.org/trac/boost/ticket/12323 #12323] windows - boost/thread/win32/mfc_thread_init.hpp has wrong signature for _pRawDllMainOrig
+* [@http://svn.boost.org/trac/boost/ticket/12730 #12730] windows - static threads library is incompatible with MSVC 2017 RC
 * [@http://svn.boost.org/trac/boost/ticket/12976 #12976] Boost Thread Executors documentation mistakes
 * [@http://svn.boost.org/trac/boost/ticket/12949 #12949] using sleep_for in a thread context without including boost/thread/thread.hpp yields incorrect behaviour when BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC is defined
 * [@http://svn.boost.org/trac/boost/ticket/13019 #13019] ABI compatibility for BOOST_THREAD_PROVIDES_INTERRUPTIONS incomplete
+* [@http://svn.boost.org/trac/boost/ticket/13069 #13069] Boost unit test "sync_pq_multi_thread_p_lib.exe" hung in thread library
 * [@http://svn.boost.org/trac/boost/ticket/13163 #13163] boost::detail::heap_new does not have a variadic variant
+* [@http://svn.boost.org/trac/boost/ticket/13226 #13226] getpagesize() is deprecated since 199506L
+
+* [@https://github.com/boostorg/thread/issues/132 #132] VS 2017.4 Preview deadlocks on Test 10964
+* [@https://github.com/boostorg/thread/issues/133 #133] windows - Spurious timing test failures on windows
+* [@https://github.com/boostorg/thread/issues/134 #134] VS 2017.4 Preview deadlock in sync_pq_multi_thread_p_lib.exe
+* [@https://github.com/boostorg/thread/issues/135 #135] VS 2017.4 Preview test_scheduled_tp_p.exe deadlock
+* [@https://github.com/boostorg/thread/issues/136 #136] VS 2017.4 Preview test_scheduler_p.exe deadlock
+* [@https://github.com/boostorg/thread/issues/137 #137] VS 2017.4 Preview executor_ex.exe deadlock
+* [@https://github.com/boostorg/thread/issues/143 #143] Failures on msvc-12.0
+* [@https://github.com/boostorg/thread/issues/145 #145] Clang build error with BOOST_THREAD_ATTRIBUTE_MAY_ALIAS
 
 [*New Experimental Features:]
 
+* [@https://github.com/boostorg/thread/issues/116 #116] [Proposal] Add APIs for deferred set_value/exception
 
 [heading Version 4.7.5 - boost 1.65.1]
 
