@@ -172,6 +172,8 @@ namespace boost {
 
       mutex_t mut_;
       cond_t  gate1_;
+      // the gate2_ condition variable is only used by functions that
+      // have taken write_entered_ but are waiting for no_readers()
       cond_t  gate2_;
       count_t state_;
 
@@ -343,7 +345,11 @@ namespace boost {
     shared_mutex::unlock()
     {
       boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_writer());
+      BOOST_ASSERT(no_readers());
       state_ = 0;
+      // notify all since multiple *lock_shared*() calls may be able
+      // to proceed in response to this notification
       gate1_.notify_all();
     }
 
@@ -413,6 +419,7 @@ namespace boost {
     shared_mutex::unlock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_or_more_readers());
       count_t num_readers = (state_ & n_readers_) - 1;
       state_ &= ~n_readers_;
       state_ |= num_readers;
@@ -442,6 +449,8 @@ namespace boost {
 
       mutex_t mut_;
       cond_t  gate1_;
+      // the gate2_ condition variable is only used by functions that
+      // have taken write_entered_ but are waiting for no_readers()
       cond_t  gate2_;
       count_t state_;
 
@@ -488,14 +497,6 @@ namespace boost {
       {
         return (state_ & (write_entered_ | upgradable_entered_)) == 0 &&
                (state_ & n_readers_) != n_readers_;
-      }
-
-      inline bool no_writer_one_upgrader_one_reader() const
-      {
-        //return (state_ & write_entered_) == 0 &&
-        //       (state_ & upgradable_entered_) != 0 &&
-        //       (state_ & n_readers_) == 1;
-        return state_ == (upgradable_entered_ | 1);
       }
 
       inline bool no_upgrader() const
@@ -598,6 +599,7 @@ namespace boost {
 
       // Shared <-> Exclusive
 
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
       //BOOST_THREAD_INLINE bool unlock_shared_and_lock(); // can cause a deadlock if used
       BOOST_THREAD_INLINE bool try_unlock_shared_and_lock();
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -613,10 +615,12 @@ namespace boost {
       try_unlock_shared_and_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
 #endif
+#endif
       BOOST_THREAD_INLINE void unlock_and_lock_shared();
 
       // Shared <-> Upgrade
 
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
       //BOOST_THREAD_INLINE bool unlock_shared_and_lock_upgrade(); // can cause a deadlock if used
       BOOST_THREAD_INLINE bool try_unlock_shared_and_lock_upgrade();
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -631,6 +635,7 @@ namespace boost {
       bool
       try_unlock_shared_and_lock_upgrade_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
+#endif
 #endif
       BOOST_THREAD_INLINE void unlock_upgrade_and_lock_shared();
 
@@ -737,7 +742,12 @@ namespace boost {
     upgrade_mutex::unlock()
     {
       boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_writer());
+      BOOST_ASSERT(no_upgrader());
+      BOOST_ASSERT(no_readers());
       state_ = 0;
+      // notify all since multiple *lock_shared*() calls and a *lock_upgrade*()
+      // call may be able to proceed in response to this notification
       gate1_.notify_all();
     }
 
@@ -807,6 +817,7 @@ namespace boost {
     upgrade_mutex::unlock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_or_more_readers());
       count_t num_readers = (state_ & n_readers_) - 1;
       state_ &= ~n_readers_;
       state_ |= num_readers;
@@ -887,21 +898,26 @@ namespace boost {
     void
     upgrade_mutex::unlock_upgrade()
     {
-      {
-        boost::lock_guard<mutex_t> _(mut_);
-        count_t num_readers = (state_ & n_readers_) - 1;
-        state_ &= ~(upgradable_entered_ | n_readers_);
-        state_ |= num_readers;
-      }
+      boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(no_writer());
+      BOOST_ASSERT(one_upgrader());
+      BOOST_ASSERT(one_or_more_readers());
+      count_t num_readers = (state_ & n_readers_) - 1;
+      state_ &= ~(upgradable_entered_ | n_readers_);
+      state_ |= num_readers;
+      // notify all since both a *lock*() and a *lock_shared*() call
+      // may be able to proceed in response to this notification
       gate1_.notify_all();
     }
 
     // Shared <-> Exclusive
 
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
     bool
     upgrade_mutex::try_unlock_shared_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
+      BOOST_ASSERT(one_or_more_readers());
       if (!no_writer_no_upgrader_one_reader())
       {
         return false;
@@ -917,32 +933,49 @@ namespace boost {
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
-      if (!gate2_.wait_until(lk, abs_time, boost::bind(
-            &upgrade_mutex::no_writer_no_upgrader_one_reader, boost::ref(*this))))
+      BOOST_ASSERT(one_or_more_readers());
+      if (!gate1_.wait_until(lk, abs_time, boost::bind(
+            &upgrade_mutex::no_writer_no_upgrader, boost::ref(*this))))
       {
         return false;
       }
-      state_ = write_entered_;
+      count_t num_readers = (state_ & n_readers_) - 1;
+      state_ &= ~n_readers_;
+      state_ |= (write_entered_ | num_readers);
+      if (!gate2_.wait_until(lk, abs_time, boost::bind(
+            &upgrade_mutex::no_readers, boost::ref(*this))))
+      {
+        ++num_readers;
+        state_ &= ~(write_entered_ | n_readers_);
+        state_ |= num_readers;
+        return false;
+      }
       return true;
     }
+#endif
 #endif
 
     void
     upgrade_mutex::unlock_and_lock_shared()
     {
-      {
-        boost::lock_guard<mutex_t> _(mut_);
-        state_ = 1;
-      }
+      boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_writer());
+      BOOST_ASSERT(no_upgrader());
+      BOOST_ASSERT(no_readers());
+      state_ = 1;
+      // notify all since multiple *lock_shared*() calls and a *lock_upgrade*()
+      // call may be able to proceed in response to this notification
       gate1_.notify_all();
     }
 
     // Shared <-> Upgrade
 
+#ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
     bool
     upgrade_mutex::try_unlock_shared_and_lock_upgrade()
     {
       boost::unique_lock<mutex_t> lk(mut_);
+      BOOST_ASSERT(one_or_more_readers());
       if (!no_writer_no_upgrader())
       {
         return false;
@@ -958,7 +991,8 @@ namespace boost {
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
-      if (!gate2_.wait_until(lk, abs_time, boost::bind(
+      BOOST_ASSERT(one_or_more_readers());
+      if (!gate1_.wait_until(lk, abs_time, boost::bind(
             &upgrade_mutex::no_writer_no_upgrader, boost::ref(*this))))
       {
         return false;
@@ -967,14 +1001,19 @@ namespace boost {
       return true;
     }
 #endif
+#endif
 
     void
     upgrade_mutex::unlock_upgrade_and_lock_shared()
     {
-      {
-        boost::lock_guard<mutex_t> _(mut_);
-        state_ &= ~upgradable_entered_;
-      }
+      boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(no_writer());
+      BOOST_ASSERT(one_upgrader());
+      BOOST_ASSERT(one_or_more_readers());
+      state_ &= ~upgradable_entered_;
+      // notify all since only one *lock*() or *lock_upgrade*() call can win and
+      // proceed in response to this notification, but a *lock_shared*() call may
+      // also be waiting and could steal the notification
       gate1_.notify_all();
     }
 
@@ -984,6 +1023,9 @@ namespace boost {
     upgrade_mutex::unlock_upgrade_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
+      BOOST_ASSERT(no_writer());
+      BOOST_ASSERT(one_upgrader());
+      BOOST_ASSERT(one_or_more_readers());
       count_t num_readers = (state_ & n_readers_) - 1;
       state_ &= ~(upgradable_entered_ | n_readers_);
       state_ |= write_entered_ | num_readers;
@@ -994,7 +1036,10 @@ namespace boost {
     upgrade_mutex::try_unlock_upgrade_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
-      if (!no_writer_one_upgrader_one_reader())
+      BOOST_ASSERT(no_writer());
+      BOOST_ASSERT(one_upgrader());
+      BOOST_ASSERT(one_or_more_readers());
+      if (!one_reader())
       {
         return false;
       }
@@ -1009,12 +1054,20 @@ namespace boost {
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
+      BOOST_ASSERT(no_writer());
+      BOOST_ASSERT(one_upgrader());
+      BOOST_ASSERT(one_or_more_readers());
+      count_t num_readers = (state_ & n_readers_) - 1;
+      state_ &= ~(upgradable_entered_ | n_readers_);
+      state_ |= (write_entered_ | num_readers);
       if (!gate2_.wait_until(lk, abs_time, boost::bind(
-            &upgrade_mutex::one_reader, boost::ref(*this))))
+            &upgrade_mutex::no_readers, boost::ref(*this))))
       {
+        ++num_readers;
+        state_ &= ~(write_entered_ | n_readers_);
+        state_ |= (upgradable_entered_ | num_readers);
         return false;
       }
-      state_ = write_entered_;
       return true;
     }
 #endif
@@ -1022,10 +1075,13 @@ namespace boost {
     void
     upgrade_mutex::unlock_and_lock_upgrade()
     {
-      {
-        boost::lock_guard<mutex_t> _(mut_);
-        state_ = upgradable_entered_ | 1;
-      }
+      boost::lock_guard<mutex_t> _(mut_);
+      BOOST_ASSERT(one_writer());
+      BOOST_ASSERT(no_upgrader());
+      BOOST_ASSERT(no_readers());
+      state_ = upgradable_entered_ | 1;
+      // notify all since multiple *lock_shared*() calls may be able
+      // to proceed in response to this notification
       gate1_.notify_all();
     }
 
