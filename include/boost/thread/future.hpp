@@ -192,7 +192,7 @@ namespace boost
             {
             }
 
-            inline bool is_done()
+            bool is_done()
             {
                 return done;
             }

@@ -140,13 +140,13 @@ namespace boost
             }
 
         private:
-            inline unsigned long getMs(detail::platform_duration const& d)
+            unsigned long getMs(detail::platform_duration const& d)
             {
                 return static_cast<unsigned long>(d.getMs());
             }
 
             template <typename Duration>
-            inline unsigned long getMs(Duration const& d)
+            unsigned long getMs(Duration const& d)
             {
                 return static_cast<unsigned long>(chrono::ceil<chrono::milliseconds>(d).count());
             }

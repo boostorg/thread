@@ -128,18 +128,17 @@ inline FP init_steady_clock(kern_return_t & err)
     }
 #endif
 
-    class platform_duration
+    struct platform_duration
     {
-    public:
 #if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       explicit platform_duration(timespec const& v) : ts_val(v) {}
-      inline timespec const& getTs() const { return ts_val; }
+      timespec const& getTs() const { return ts_val; }
 
       explicit platform_duration(boost::time_max_t const& ns = 0) : ts_val(ns_to_timespec(ns)) {}
-      inline boost::time_max_t getNs() const { return timespec_to_ns(ts_val); }
+      boost::time_max_t getNs() const { return timespec_to_ns(ts_val); }
 #else
       explicit platform_duration(boost::time_max_t const& ns = 0) : ns_val(ns) {}
-      inline boost::time_max_t getNs() const { return ns_val; }
+      boost::time_max_t getNs() const { return ns_val; }
 #endif
 
 #if defined BOOST_THREAD_USES_DATETIME
@@ -167,7 +166,7 @@ inline FP init_steady_clock(kern_return_t & err)
       }
 #endif
 
-      inline boost::time_max_t getMs() const
+      boost::time_max_t getMs() const
       {
         const boost::time_max_t ns = getNs();
         // ceil/floor away from zero
@@ -183,7 +182,7 @@ inline FP init_steady_clock(kern_return_t & err)
         }
       }
 
-      static inline platform_duration zero()
+      static platform_duration zero()
       {
         return platform_duration(0);
       }
@@ -226,16 +225,15 @@ inline FP init_steady_clock(kern_return_t & err)
       return platform_duration(ms * 1000000l);
     }
 
-    class real_platform_timepoint
+    struct real_platform_timepoint
     {
-    public:
 #if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       explicit real_platform_timepoint(timespec const& v) : dur(v) {}
-      inline timespec const& getTs() const { return dur.getTs(); }
+      timespec const& getTs() const { return dur.getTs(); }
 #endif
 
       explicit real_platform_timepoint(boost::time_max_t const& ns) : dur(ns) {}
-      inline boost::time_max_t getNs() const { return dur.getNs(); }
+      boost::time_max_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_DATETIME
       real_platform_timepoint(boost::system_time const& abs_time)
@@ -292,7 +290,7 @@ inline FP init_steady_clock(kern_return_t & err)
 
     struct real_platform_clock
     {
-      static inline real_platform_timepoint now()
+      static real_platform_timepoint now()
       {
 #if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
         boost::detail::winapi::FILETIME_ ft;
@@ -320,17 +318,16 @@ inline FP init_steady_clock(kern_return_t & err)
 
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK)
 
-  class mono_platform_timepoint
+  struct mono_platform_timepoint
   {
-  public:
 #if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
 
     explicit mono_platform_timepoint(timespec const& v) : dur(v) {}
-    inline timespec const& getTs() const { return dur.getTs(); }
+    timespec const& getTs() const { return dur.getTs(); }
 #endif
 
     explicit mono_platform_timepoint(boost::time_max_t const& ns) : dur(ns) {}
-    inline boost::time_max_t getNs() const { return dur.getNs(); }
+    boost::time_max_t getNs() const { return dur.getNs(); }
 
 #if defined BOOST_THREAD_USES_CHRONO
     // This conversion assumes that chrono::steady_clock::time_point and mono_platform_timepoint share the same epoch.
@@ -340,7 +337,7 @@ inline FP init_steady_clock(kern_return_t & err)
 #endif
 
     // can't name this max() since that is a macro on some Windows systems
-    static inline mono_platform_timepoint getMax()
+    static mono_platform_timepoint getMax()
     {
 #if defined BOOST_THREAD_CHRONO_POSIX_API || defined BOOST_THREAD_CHRONO_MAC_API
       timespec ts;
@@ -397,7 +394,7 @@ inline FP init_steady_clock(kern_return_t & err)
 
   struct mono_platform_clock
   {
-    static inline mono_platform_timepoint now()
+    static mono_platform_timepoint now()
     {
 #if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
 #if defined(BOOST_THREAD_USES_CHRONO)
@@ -436,10 +433,6 @@ inline FP init_steady_clock(kern_return_t & err)
       return mono_platform_timepoint(msec * 1000000);
 #endif
 #elif defined(BOOST_THREAD_CHRONO_MAC_API)
-      // fixme: add support for mono_platform_clock::now() on MAC OS X using code from
-      // https://github.com/boostorg/chrono/blob/develop/include/boost/chrono/detail/inlined/mac/chrono.hpp
-      // Also update BOOST_THREAD_HAS_MONO_CLOCK in config.hpp
-      //return mono_platform_timepoint(0);
       kern_return_t err;
       threads::chrono_details::FP fp = threads::chrono_details::init_steady_clock(err);
       if ( err != 0  )

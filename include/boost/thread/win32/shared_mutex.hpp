@@ -43,7 +43,7 @@ namespace boost
             }
         };
 
-        inline state_data interlocked_compare_exchange(state_data* target, state_data new_value, state_data comparand)
+        state_data interlocked_compare_exchange(state_data* target, state_data new_value, state_data comparand)
         {
             long const res=BOOST_INTERLOCKED_COMPARE_EXCHANGE(reinterpret_cast<long*>(target),
                                                               *reinterpret_cast<long*>(&new_value),
@@ -178,13 +178,13 @@ namespace boost
         }
 
     private:
-        inline unsigned long getMs(detail::platform_duration const& d)
+        unsigned long getMs(detail::platform_duration const& d)
         {
             return static_cast<unsigned long>(d.getMs());
         }
 
         template <typename Duration>
-        inline unsigned long getMs(Duration const& d)
+        unsigned long getMs(Duration const& d)
         {
             return static_cast<unsigned long>(chrono::ceil<chrono::milliseconds>(d).count());
         }

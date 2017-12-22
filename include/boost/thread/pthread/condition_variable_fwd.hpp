@@ -44,7 +44,7 @@ namespace boost
     public:
     //private: // used by boost::thread::try_join_until
 
-        inline bool do_wait_until(
+        bool do_wait_until(
             unique_lock<mutex>& lock,
             detail::internal_platform_timepoint const &timeout);
 
@@ -102,7 +102,7 @@ namespace boost
         }
 
 #if defined BOOST_THREAD_USES_DATETIME
-        inline bool timed_wait(
+        bool timed_wait(
             unique_lock<mutex>& m,
             boost::system_time const& abs_time)
         {

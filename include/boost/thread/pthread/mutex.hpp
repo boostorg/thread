@@ -263,7 +263,6 @@ namespace boost
 
 
     private:
-        // fixme: Shouldn't this functions be located on a .cpp file?
         bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
         {
           int const res=pthread_mutex_timedlock(&m,&timeout.getTs());
@@ -302,7 +301,6 @@ namespace boost
         }
 
     private:
-        // fixme: Shouldn't this functions be located on a .cpp file?
         bool do_try_lock_until(detail::internal_platform_timepoint const &timeout)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);

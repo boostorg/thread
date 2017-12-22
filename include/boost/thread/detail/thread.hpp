@@ -455,20 +455,15 @@ namespace boost
         }
 
         class id;
-#ifdef BOOST_THREAD_PLATFORM_PTHREAD
-        inline id get_id()  const BOOST_NOEXCEPT;
-#else
         id get_id() const BOOST_NOEXCEPT;
-#endif
-
 
         bool joinable() const BOOST_NOEXCEPT;
     private:
         bool join_noexcept();
         bool do_try_join_until_noexcept(detail::internal_platform_timepoint const &timeout, bool& res);
-        inline bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
+        bool do_try_join_until(detail::internal_platform_timepoint const &timeout);
     public:
-        inline void join();
+        void join();
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Duration>
@@ -587,7 +582,7 @@ namespace boost
     namespace this_thread
     {
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
-        inline thread::id get_id() BOOST_NOEXCEPT;
+        thread::id get_id() BOOST_NOEXCEPT;
 #else
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
 #endif
@@ -718,7 +713,7 @@ namespace boost
     };
 
 #ifdef BOOST_THREAD_PLATFORM_PTHREAD
-    thread::id thread::get_id() const BOOST_NOEXCEPT
+    inline thread::id thread::get_id() const BOOST_NOEXCEPT
     {
     #if defined BOOST_THREAD_PROVIDES_BASIC_THREAD_ID
         return const_cast<thread*>(this)->native_handle();
@@ -741,7 +736,7 @@ namespace boost
         }
     }
 #endif
-    void thread::join() {
+    inline void thread::join() {
         if (this_thread::get_id() == get_id())
           boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
 
@@ -750,7 +745,7 @@ namespace boost
         );
     }
 
-    bool thread::do_try_join_until(detail::internal_platform_timepoint const &timeout)
+    inline bool thread::do_try_join_until(detail::internal_platform_timepoint const &timeout)
     {
         if (this_thread::get_id() == get_id())
           boost::throw_exception(thread_resource_error(static_cast<int>(system::errc::resource_deadlock_would_occur), "boost thread: trying joining itself"));
