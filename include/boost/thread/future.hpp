@@ -159,7 +159,7 @@ namespace boost
             boost::function<void()> callback;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuations_type continuations;
-            executor_ptr_type ex;
+            executor_ptr_type ex_;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation()
@@ -173,18 +173,18 @@ namespace boost
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
-            shared_state_base(exceptional_ptr const& ex_):
-                exception(ex_.ptr_),
+            shared_state_base(exceptional_ptr const& ex):
+                exception(ex.ptr_),
                 done(true),
                 is_valid_(true),
                 is_deferred_(false),
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
 
@@ -193,23 +193,23 @@ namespace boost
             }
             executor_ptr_type get_executor()
             {
-              return ex;
+              return ex_;
             }
 
             void set_executor_policy(executor_ptr_type aex)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::lock_guard<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::unique_lock<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
 
             bool valid(boost::unique_lock<boost::mutex>&) { return is_valid_; }
