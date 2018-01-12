@@ -27,6 +27,10 @@
 #include <unistd.h>
 #endif
 
+#if defined(__VXWORKS__) 
+#include <vxCpuLib.h>
+#endif 
+
 #include <boost/algorithm/string/split.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
@@ -556,6 +560,18 @@ namespace boost
 #elif defined(BOOST_HAS_UNISTD_H) && defined(_SC_NPROCESSORS_ONLN)
         int const count=sysconf(_SC_NPROCESSORS_ONLN);
         return (count>0)?count:0;
+#elif defined(__VXWORKS__)
+        cpuset_t set =  ::vxCpuEnabledGet();
+  #ifdef __DCC__
+        int i;
+        for( i = 0; set; ++i)
+        {
+           set &= set -1;
+        }
+        return(i);
+  #else  
+        return (__builtin_popcount(set) );
+  #endif  
 #elif defined(__GLIBC__)
         return get_nprocs();
 #else
