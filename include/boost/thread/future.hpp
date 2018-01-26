@@ -3155,7 +3155,7 @@ namespace boost
             }
         };
 
-#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR)
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -3497,7 +3497,7 @@ namespace boost
         {}
 
         // construction and destruction
-#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR)
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
@@ -3587,7 +3587,7 @@ namespace boost
 #endif
 
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CTOR_ALLOCATORS
-#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
+#if defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR)
         template <class Allocator>
         packaged_task(boost::allocator_arg_t, Allocator a, R(*f)())
         {
@@ -3608,7 +3608,7 @@ namespace boost
           task = task_ptr(::new(a2.allocate(1)) task_shared_state_type(f), D(a2, 1) );
           future_obtained = false;
         }
-#endif // BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#endif // BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
 #if ! defined BOOST_NO_CXX11_RVALUE_REFERENCES
         template <class F, class Allocator>
@@ -3825,7 +3825,7 @@ namespace detail
     // future<R> async(launch policy, F&&, ArgTypes&&...);
     ////////////////////////////////
 
-#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
   template <class R, class... ArgTypes>
@@ -3884,7 +3884,7 @@ namespace detail
     }
   }
 #endif
-#endif // defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR)
+#endif // defined(BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR)
 
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 
@@ -4113,7 +4113,7 @@ namespace detail {
 //#if ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
 #if defined(BOOST_THREAD_PROVIDES_INVOKE) && ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES) && ! defined(BOOST_NO_CXX11_HDR_TUPLE)
 
-#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
   template <class Executor, class R, class... ArgTypes>
   BOOST_THREAD_FUTURE<R>
@@ -4129,7 +4129,7 @@ namespace detail {
         )
     ));
   }
-#endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
   template <class Executor, class F, class ...ArgTypes>
   BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type(
@@ -4148,7 +4148,7 @@ namespace detail {
   }
 
 #else // ! defined(BOOST_NO_CXX11_VARIADIC_TEMPLATES)
-#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
   template <class Executor, class R>
   BOOST_THREAD_FUTURE<R>
@@ -4178,7 +4178,7 @@ namespace detail {
         )
     ));
   }
-#endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#endif // defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
 
   template <class Executor, class F>
   BOOST_THREAD_FUTURE<typename boost::result_of<typename decay<F>::type()>::type>
@@ -4234,7 +4234,7 @@ namespace detail {
   // future<R> async(F&&, ArgTypes&&...);
   ////////////////////////////////
 
-#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNTION_PTR
+#if defined BOOST_THREAD_RVALUE_REFERENCES_DONT_MATCH_FUNCTION_PTR
   #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
   template <class R, class... ArgTypes>
   BOOST_THREAD_FUTURE<R>
