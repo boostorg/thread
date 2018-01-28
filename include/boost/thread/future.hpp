@@ -159,7 +159,7 @@ namespace boost
             boost::function<void()> callback;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuations_type continuations;
-            executor_ptr_type ex;
+            executor_ptr_type ex_;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation()
@@ -173,18 +173,18 @@ namespace boost
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
-            shared_state_base(exceptional_ptr const& ex_):
-                exception(ex_.ptr_),
+            shared_state_base(exceptional_ptr const& ex):
+                exception(ex.ptr_),
                 done(true),
                 is_valid_(true),
                 is_deferred_(false),
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
 
@@ -199,23 +199,23 @@ namespace boost
 
             executor_ptr_type get_executor()
             {
-              return ex;
+              return ex_;
             }
 
             void set_executor_policy(executor_ptr_type aex)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::lock_guard<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::unique_lock<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
 
             bool valid(boost::unique_lock<boost::mutex>&) { return is_valid_; }
@@ -1006,10 +1006,8 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_deferred_shared_state: shared_state<Rp>
         {
-          typedef shared_state<Rp> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1034,10 +1032,8 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_deferred_shared_state<Rp&,Fp>: shared_state<Rp&>
         {
-          typedef shared_state<Rp&> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1059,10 +1055,8 @@ namespace boost
         template<typename Fp>
         struct future_deferred_shared_state<void,Fp>: shared_state<void>
         {
-          typedef shared_state<void> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1090,7 +1084,6 @@ namespace boost
         public:
             typedef std::vector<int>::size_type count_type;
         private:
-            struct registered_waiter;
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
@@ -2241,13 +2234,13 @@ namespace boost
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
-#include <boost/detail/atomic_undef_macros.hpp>
+#include <boost/thread/detail/atomic_undef_macros.hpp>
           if(!atomic_load(&future_))
             {
                 future_ptr blank;
                 atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R>));
             }
-#include <boost/detail/atomic_redef_macros.hpp>
+#include <boost/thread/detail/atomic_redef_macros.hpp>
 #endif
         }
 
@@ -2532,13 +2525,13 @@ namespace boost
         void lazy_init()
         {
 #if defined BOOST_THREAD_PROVIDES_PROMISE_LAZY
-#include <boost/detail/atomic_undef_macros.hpp>
+#include <boost/thread/detail/atomic_undef_macros.hpp>
             if(!atomic_load(&future_))
             {
                 future_ptr blank;
                 atomic_compare_exchange(&future_,&blank,future_ptr(new detail::shared_state<R&>));
             }
-#include <boost/detail/atomic_redef_macros.hpp>
+#include <boost/thread/detail/atomic_redef_macros.hpp>
 #endif
         }
 
@@ -4959,6 +4952,10 @@ namespace detail {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
+    } else if (underlying_cast<int>(policy) & int(launch::sync)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_sync_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
     } else if (underlying_cast<int>(policy) & int(launch::executor)) {
       assert(this->future_->get_executor());
@@ -4977,6 +4974,10 @@ namespace detail {
                   )));
         } else if (underlying_cast<int>(policy_) & int(launch::deferred)) {
           return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        } else if (underlying_cast<int>(policy_) & int(launch::sync)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_sync_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                       lock, boost::move(*this), boost::forward<F>(func)
                   )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS

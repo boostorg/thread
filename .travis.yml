@@ -329,21 +329,21 @@ matrix:
             - ubuntu-toolchain-r-test
             - llvm-toolchain-trusty-4.0
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++98
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++98
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++11
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++11
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++14
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++14
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++1z
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++1z
 
 install:
   - BOOST_BRANCH=develop && [ "$TRAVIS_BRANCH" == "master" ] && BOOST_BRANCH=master || true

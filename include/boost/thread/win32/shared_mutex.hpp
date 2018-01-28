@@ -2,7 +2,7 @@
 #define BOOST_THREAD_WIN32_SHARED_MUTEX_HPP
 
 //  (C) Copyright 2006-8 Anthony Williams
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2012,2017-2018 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -65,19 +65,19 @@ namespace boost
         {
             if(old_state.exclusive_waiting)
             {
-                BOOST_VERIFY(detail::winapi::ReleaseSemaphore(semaphores[exclusive_sem],1,0)!=0);
+                BOOST_VERIFY(winapi::ReleaseSemaphore(semaphores[exclusive_sem],1,0)!=0);
             }
 
             if(old_state.shared_waiting || old_state.exclusive_waiting)
             {
-                BOOST_VERIFY(detail::winapi::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
+                BOOST_VERIFY(winapi::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
             }
         }
         void release_shared_waiters(state_data old_state)
         {
             if(old_state.shared_waiting || old_state.exclusive_waiting)
             {
-                BOOST_VERIFY(detail::winapi::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
+                BOOST_VERIFY(winapi::ReleaseSemaphore(semaphores[unlock_sem],old_state.shared_waiting + (old_state.exclusive_waiting?1:0),0)!=0);
             }
         }
 
@@ -105,9 +105,9 @@ namespace boost
 
         ~shared_mutex()
         {
-            detail::winapi::CloseHandle(upgrade_sem);
-            detail::winapi::CloseHandle(semaphores[unlock_sem]);
-            detail::winapi::CloseHandle(semaphores[exclusive_sem]);
+            winapi::CloseHandle(upgrade_sem);
+            winapi::CloseHandle(semaphores[unlock_sem]);
+            winapi::CloseHandle(semaphores[exclusive_sem]);
         }
 
         bool try_lock_shared()
@@ -173,7 +173,7 @@ namespace boost
                     return;
                 }
 
-                BOOST_VERIFY(detail::winapi::WaitForSingleObjectEx(semaphores[unlock_sem],::boost::detail::win32::infinite,0)==0);
+                BOOST_VERIFY(winapi::WaitForSingleObjectEx(semaphores[unlock_sem],::boost::detail::win32::infinite,0)==0);
             }
         }
 
@@ -245,7 +245,7 @@ namespace boost
                     {
                         d = (std::min)(d, max);
                     }
-                    res=detail::winapi::WaitForSingleObjectEx(semaphores[unlock_sem],getMs(d),0);
+                    res=winapi::WaitForSingleObjectEx(semaphores[unlock_sem],getMs(d),0);
                     if(res!=detail::win32::timeout) // semaphore released
                     {
                         break;
@@ -366,7 +366,7 @@ namespace boost
                     {
                         if(old_state.upgrade)
                         {
-                            BOOST_VERIFY(detail::winapi::ReleaseSemaphore(upgrade_sem,1,0)!=0);
+                            BOOST_VERIFY(winapi::ReleaseSemaphore(upgrade_sem,1,0)!=0);
                         }
                         else
                         {
@@ -445,7 +445,7 @@ namespace boost
                 #else
                 const bool wait_all = false;
                 #endif
-                BOOST_VERIFY(detail::winapi::WaitForMultipleObjectsEx(2,semaphores,wait_all,::boost::detail::win32::infinite,0)<2);
+                BOOST_VERIFY(winapi::WaitForMultipleObjectsEx(2,semaphores,wait_all,::boost::detail::win32::infinite,0)<2);
             }
         }
 
@@ -505,10 +505,12 @@ namespace boost
                         d = (std::min)(d, max);
                     }
                     #ifndef UNDER_CE
-                    wait_res=detail::winapi::WaitForMultipleObjectsEx(2,semaphores,true,getMs(d),0);
+                    wait_res=winapi::WaitForMultipleObjectsEx(2,semaphores,true,getMs(d),0);
                     #else
-                    wait_res=detail::winapi::WaitForMultipleObjectsEx(2,semaphores,false,getMs(d),0);
+                    wait_res=winapi::WaitForMultipleObjectsEx(2,semaphores,false,getMs(d),0);
                     #endif
+                    //wait_res=winapi::WaitForMultipleObjectsEx(2,semaphores,wait_all,getMs(d), 0);
+
                     if(wait_res!=detail::win32::timeout) // semaphore released
                     {
                         break;
@@ -540,7 +542,7 @@ namespace boost
                         state_data const current_state=interlocked_compare_exchange(&state,new_state,old_state);
                         if (must_notify)
                         {
-                          BOOST_VERIFY(detail::winapi::ReleaseSemaphore(semaphores[unlock_sem],1,0)!=0);
+                          BOOST_VERIFY(winapi::ReleaseSemaphore(semaphores[unlock_sem],1,0)!=0);
                         }
 
                         if(current_state==old_state)
@@ -663,7 +665,7 @@ namespace boost
                     return;
                 }
 
-                BOOST_VERIFY(detail::winapi::WaitForSingleObjectEx(semaphores[unlock_sem],detail::winapi::infinite,0)==0);
+                BOOST_VERIFY(winapi::WaitForSingleObjectEx(semaphores[unlock_sem],winapi::infinite,0)==0);
             }
         }
 
@@ -755,7 +757,7 @@ namespace boost
                 {
                     if(!last_reader)
                     {
-                        BOOST_VERIFY(detail::winapi::WaitForSingleObjectEx(upgrade_sem,detail::win32::infinite,0)==0);
+                        BOOST_VERIFY(winapi::WaitForSingleObjectEx(upgrade_sem,detail::win32::infinite,0)==0);
                     }
                     break;
                 }

@@ -3,11 +3,11 @@
 // http://www.boost.org/LICENSE_1_0.txt)
 // (C) Copyright 2007 Anthony Williams
 // (C) Copyright 2007 David Deakins
-// (C) Copyright 2011-2017 Vicente J. Botet Escriba
+// (C) Copyright 2011-2018 Vicente J. Botet Escriba
 
 //#define BOOST_THREAD_VERSION 3
 
-#include <boost/detail/winapi/config.hpp>
+#include <boost/winapi/config.hpp>
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/once.hpp>
 #include <boost/thread/tss.hpp>
@@ -492,7 +492,7 @@ namespace boost
     bool thread::interruption_requested() const BOOST_NOEXCEPT
     {
         detail::thread_data_ptr local_thread_info=(get_thread_info)();
-        return local_thread_info.get() && (detail::winapi::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
+        return local_thread_info.get() && (winapi::WaitForSingleObjectEx(local_thread_info->interruption_handle,0,0)==0);
     }
 
 #endif
@@ -671,7 +671,7 @@ namespace boost
             {
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
+                    unsigned long const notified_index=winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -681,7 +681,7 @@ namespace boost
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
                         else if(notified_index==interruption_index)
                         {
-                            detail::winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
+                            winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
                             throw thread_interrupted();
                         }
 #endif
@@ -763,7 +763,7 @@ namespace boost
             {
                 if(handle_count)
                 {
-                    unsigned long const notified_index=detail::winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
+                    unsigned long const notified_index=winapi::WaitForMultipleObjectsEx(handle_count,handles,false,static_cast<DWORD>(time_left_msec), 0);
                     if(notified_index<handle_count)
                     {
                         if(notified_index==wait_handle_index)
@@ -801,7 +801,7 @@ namespace boost
                 return current_thread_data->id;
             }
 #endif
-            return detail::winapi::GetCurrentThreadId();
+            return winapi::GetCurrentThreadId();
 #else
             return thread::id(get_or_make_current_thread_data());
 #endif
@@ -812,7 +812,7 @@ namespace boost
         {
             if(interruption_enabled() && interruption_requested())
             {
-                detail::winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
+                winapi::ResetEvent(detail::get_current_thread_data()->interruption_handle);
                 throw thread_interrupted();
             }
         }
@@ -824,7 +824,7 @@ namespace boost
 
         bool interruption_requested() BOOST_NOEXCEPT
         {
-            return detail::get_current_thread_data() && (detail::winapi::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
+            return detail::get_current_thread_data() && (winapi::WaitForSingleObjectEx(detail::get_current_thread_data()->interruption_handle,0,0)==0);
         }
 #endif
 

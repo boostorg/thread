@@ -4,7 +4,7 @@
 //  basic_recursive_mutex.hpp
 //
 //  (C) Copyright 2006-8 Anthony Williams
-//  (C) Copyright 2011-2012 Vicente J. Botet Escriba
+//  (C) Copyright 2011-2012,2017-2018 Vicente J. Botet Escriba
 //
 //  Distributed under the Boost Software License, Version 1.0. (See
 //  accompanying file LICENSE_1_0.txt or copy at
@@ -44,13 +44,13 @@ namespace boost
 
             bool try_lock() BOOST_NOEXCEPT
             {
-                long const current_thread_id=boost::detail::winapi::GetCurrentThreadId();
+                long const current_thread_id=boost::winapi::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_basic_lock(current_thread_id);
             }
 
             void lock()
             {
-                long const current_thread_id=boost::detail::winapi::GetCurrentThreadId();
+                long const current_thread_id=boost::winapi::GetCurrentThreadId();
                 if(!try_recursive_lock(current_thread_id))
                 {
                     mutex.lock();
@@ -61,7 +61,7 @@ namespace boost
 #if defined BOOST_THREAD_USES_DATETIME
             bool timed_lock(::boost::system_time const& target)
             {
-                long const current_thread_id=boost::detail::winapi::GetCurrentThreadId();
+                long const current_thread_id=boost::winapi::GetCurrentThreadId();
                 return try_recursive_lock(current_thread_id) || try_timed_lock(current_thread_id,target);
             }
             template<typename Duration>
