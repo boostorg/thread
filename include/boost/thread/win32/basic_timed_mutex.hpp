@@ -23,6 +23,7 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 #include <boost/config/abi_prefix.hpp>
+#include <boost/winapi/wait.hpp>
 
 namespace boost
 {
@@ -81,7 +82,7 @@ namespace boost
 
                     do
                     {
-                        unsigned const retval(winapi::WaitForSingleObjectEx(sem, ::boost::detail::win32::infinite,0));
+                        unsigned const retval(::boost::winapi::WaitForSingleObjectEx(sem, ::boost::detail::win32::infinite,0));
                         BOOST_VERIFY(0 == retval || ::boost::detail::win32::wait_abandoned == retval);
 //                        BOOST_VERIFY(winapi::WaitForSingleObject(
 //                                         sem,::boost::detail::win32::infinite)==0);
@@ -142,7 +143,7 @@ namespace boost
 
                     do
                     {
-                        if(winapi::WaitForSingleObjectEx(sem,::boost::detail::get_milliseconds_until(wait_until),0)!=0)
+                        if(::boost::winapi::WaitForSingleObjectEx(sem,::boost::detail::get_milliseconds_until(wait_until),0)!=0)
                         {
                             BOOST_INTERLOCKED_DECREMENT(&active_count);
                             return false;
@@ -210,7 +211,7 @@ namespace boost
                       }
                       chrono::milliseconds rel_time= chrono::ceil<chrono::milliseconds>(tp-now);
 
-                      if(winapi::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
+                      if(::boost::winapi::WaitForSingleObjectEx(sem,static_cast<unsigned long>(rel_time.count()),0)!=0)
                       {
                           BOOST_INTERLOCKED_DECREMENT(&active_count);
                           return false;
