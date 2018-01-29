@@ -61,6 +61,7 @@ void test_pull_for()
   steady_clock::duration diff = steady_clock::now() - start - milliseconds(500);
   BOOST_TEST(boost::queue_op_status::timeout == st);
   BOOST_TEST(diff < max_diff);
+  std::cout << "diff= " << diff.count();
 }
 
 void test_pull_until()

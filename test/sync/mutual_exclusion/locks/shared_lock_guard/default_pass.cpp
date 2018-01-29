@@ -22,6 +22,7 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include  <iostream>
 
 #if defined BOOST_THREAD_USES_CHRONO
 typedef boost::chrono::high_resolution_clock Clock;
@@ -51,6 +52,7 @@ void f()
   }
   ns d = t1 - t0 - ms(250);
   BOOST_TEST(d < max_diff);
+  std::cout << "diff= " << d.count();
 #else
   //time_point t0 = Clock::now();
   //time_point t1;
