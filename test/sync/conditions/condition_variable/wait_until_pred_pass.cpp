@@ -25,6 +25,8 @@
 #include <iostream>
 
 #if defined BOOST_THREAD_USES_CHRONO
+typedef boost::chrono::milliseconds milliseconds;
+typedef boost::chrono::nanoseconds nanoseconds;
 
 struct Clock
 {
@@ -89,7 +91,10 @@ void f()
     }
     else
     {
-      assert(t1 - t0 - Clock::duration(250) < max_diff);
+      const nanoseconds d = t1 - t0 - milliseconds(250);
+      std::cout << "diff= " << d.count() << std::endl;
+      std::cout << "max_diff= " << max_diff.count() << std::endl;
+      assert(d < max_diff);
       assert(test2 == 0);
       assert(!r);
     }

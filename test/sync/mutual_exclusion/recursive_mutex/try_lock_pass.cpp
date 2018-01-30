@@ -21,7 +21,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
-
+#include <iostream>
 
 boost::recursive_mutex m;
 
@@ -54,6 +54,8 @@ void f()
   m.unlock();
   m.unlock();
   ns d = t1 - t0 - ms(250);
+  std::cout << "diff= " << d.count() << std::endl;
+  std::cout << "max_diff= " << max_diff.count() << std::endl;
   BOOST_TEST(d < max_diff);
 #else
   //time_point t0 = Clock::now();

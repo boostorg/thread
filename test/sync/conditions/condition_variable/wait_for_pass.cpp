@@ -64,7 +64,7 @@ void f()
     {
       nanoseconds d = t1 - t0 - milliseconds(250);
       std::cout << "diff= " << d.count() << std::endl;
-      std::cout << "max_diff= " << d.count() << std::endl;
+      std::cout << "max_diff= " << max_diff.count() << std::endl;
       assert( d < max_diff);
       assert(test2 == 0);
     }
