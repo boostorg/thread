@@ -52,7 +52,7 @@ int runs = 0;
 #ifdef BOOST_THREAD_PLATFORM_WIN32
 const Clock::duration max_diff(250);
 #else
-const Clock::duration max_diff(50);
+const Clock::duration max_diff(75);
 #endif
 
 void f()

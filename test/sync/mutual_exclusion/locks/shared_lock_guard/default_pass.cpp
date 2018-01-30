@@ -38,7 +38,7 @@ boost::shared_mutex m;
 #ifdef BOOST_THREAD_PLATFORM_WIN32
 const ms max_diff(250);
 #else
-const ms max_diff(50);
+const ms max_diff(75);
 #endif
 
 void f()
