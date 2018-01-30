@@ -36,6 +36,7 @@ int runs = 0;
 
 typedef boost::chrono::steady_clock Clock;
 typedef boost::chrono::milliseconds milliseconds;
+typedef boost::chrono::nanoseconds nanoseconds;
 
 #ifdef BOOST_THREAD_PLATFORM_WIN32
 const milliseconds max_diff(250);
@@ -61,7 +62,10 @@ void f()
     }
     else
     {
-      assert(t1 - t0 - milliseconds(250) < max_diff);
+      nanoseconds d = t1 - t0 - milliseconds(250);
+      std::cout << "diff= " << d.count() << std::endl;
+      std::cout << "max_diff= " << d.count() << std::endl;
+      assert( d < max_diff);
       assert(test2 == 0);
     }
     ++runs;

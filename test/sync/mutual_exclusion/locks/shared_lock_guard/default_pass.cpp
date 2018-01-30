@@ -52,7 +52,7 @@ void f()
   }
   ns d = t1 - t0 - ms(250);
   BOOST_TEST(d < max_diff);
-  std::cout << "diff= " << d.count();
+  std::cout << "diff= " << d.count() << std::endl;
 #else
   //time_point t0 = Clock::now();
   //time_point t1;
