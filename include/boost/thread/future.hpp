@@ -546,11 +546,6 @@ namespace boost
               detail::shared_state_base(ex), result()
             {}
 
-
-            ~shared_state()
-            {
-            }
-
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
@@ -731,10 +726,6 @@ namespace boost
             shared_state(exceptional_ptr const& ex):
               detail::shared_state_base(ex), result(0)
             {}
-
-            ~shared_state()
-            {
-            }
 
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
