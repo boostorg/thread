@@ -3254,12 +3254,13 @@ namespace boost
             {
             private:
               task_shared_state(task_shared_state&);
-            public:
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
                 typedef R& (*CallableType)(BOOST_THREAD_RV_REF(ArgTypes) ... );
 #else
                 typedef R& (*CallableType)();
 #endif
+
+            public:
                 CallableType f;
                 task_shared_state(CallableType f_):
                     f(f_)
@@ -3332,8 +3333,8 @@ namespace boost
         {
         private:
           task_shared_state(task_shared_state&);
-        public:
-            typedef F CallableType;
+          typedef F CallableType;
+        private:
             F f;
             task_shared_state(F const& f_):
                 f(f_)
