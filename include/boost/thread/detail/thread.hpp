@@ -477,12 +477,12 @@ namespace boost
         {
           typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
           common_duration d(t - Clock::now());
-          d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+          d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
           while ( ! try_join_until(detail::internal_chrono_clock::now() + d) )
           {
             d = t - Clock::now();
             if ( d <= common_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+            d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
           }
           return true;
         }
@@ -499,12 +499,12 @@ namespace boost
           const detail::real_platform_timepoint ts(abs_time);
 #if defined BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
           detail::platform_duration d(ts - detail::real_platform_clock::now());
-          d = (std::min)(d, detail::platform_milliseconds(100));
+          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
           while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
           {
             d = ts - detail::real_platform_clock::now();
             if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, detail::platform_milliseconds(100));
+            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
           }
           return true;
 #else
@@ -518,12 +518,12 @@ namespace boost
           detail::platform_duration d(rel_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
           const detail::mono_platform_timepoint ts(detail::mono_platform_clock::now() + d);
-          d = (std::min)(d, detail::platform_milliseconds(100));
+          d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
           while ( ! do_try_join_until(detail::internal_platform_clock::now() + d) )
           {
             d = ts - detail::mono_platform_clock::now();
             if ( d <= detail::platform_duration::zero() ) return false; // timeout occurred
-            d = (std::min)(d, detail::platform_milliseconds(100));
+            d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
           }
           return true;
 #else

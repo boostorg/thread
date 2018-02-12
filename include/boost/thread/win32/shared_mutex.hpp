@@ -304,7 +304,7 @@ namespace boost
         bool timed_lock_shared(boost::system_time const& wait_until)
         {
             const detail::real_platform_timepoint t(wait_until);
-            return do_lock_shared_until<detail::real_platform_clock>(t, detail::platform_milliseconds(100));
+            return do_lock_shared_until<detail::real_platform_clock>(t, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
         }
 #endif
 
@@ -329,7 +329,7 @@ namespace boost
         bool try_lock_shared_until(const chrono::time_point<Clock, Duration>& t)
         {
             typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
-            return do_lock_shared_until<Clock>(t, common_duration(chrono::milliseconds(100)));
+            return do_lock_shared_until<Clock>(t, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
         }
 #endif
 
@@ -567,7 +567,7 @@ namespace boost
         bool timed_lock(boost::system_time const& wait_until)
         {
             const detail::real_platform_timepoint t(wait_until);
-            return do_lock_until<detail::real_platform_clock>(t, detail::platform_milliseconds(100));
+            return do_lock_until<detail::real_platform_clock>(t, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
         }
         template<typename TimeDuration>
         bool timed_lock(TimeDuration const & relative_time)
@@ -598,7 +598,7 @@ namespace boost
         bool try_lock_until(const chrono::time_point<Clock, Duration>& t)
         {
             typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
-            return do_lock_until<Clock>(t, common_duration(chrono::milliseconds(100)));
+            return do_lock_until<Clock>(t, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
         }
 #endif
 

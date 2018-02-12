@@ -315,7 +315,7 @@ namespace boost
             detail::platform_duration d(ts - detail::real_platform_clock::now());
             while (d > detail::platform_duration::zero())
             {
-              d = (std::min)(d, detail::platform_milliseconds(100));
+              d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
               hidden::sleep_for_internal(d);
               d = ts - detail::real_platform_clock::now();
             }
@@ -348,7 +348,7 @@ namespace boost
             common_duration d(t - Clock::now());
             while (d > common_duration::zero())
             {
-              d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+              d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
               hidden::sleep_for_internal(detail::platform_duration(d));
               d = t - Clock::now();
             }

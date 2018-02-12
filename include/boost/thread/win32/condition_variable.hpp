@@ -392,7 +392,7 @@ namespace boost
             {
                 detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, detail::platform_milliseconds(100));
+                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
             }
             return pred();
@@ -497,7 +497,7 @@ namespace boost
             {
                 common_duration d(t - Clock::now());
                 if (d <= common_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+                d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
                 do_wait_until(lock, detail::internal_platform_clock::now() + detail::platform_duration(d));
             }
             return pred();
@@ -592,7 +592,7 @@ namespace boost
             {
                 detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, detail::platform_milliseconds(100));
+                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
             }
             return pred();
@@ -699,7 +699,7 @@ namespace boost
             {
                 common_duration d(t - Clock::now());
                 if (d <= common_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+                d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
                 do_wait_until(lock, detail::internal_platform_clock::now() + detail::platform_duration(d));
             }
             return pred();
