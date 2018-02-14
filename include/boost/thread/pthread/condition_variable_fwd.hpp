@@ -44,7 +44,7 @@ namespace boost
     public:
     //private: // used by boost::thread::try_join_until
 
-        inline bool do_wait_until(
+        bool do_wait_until(
             unique_lock<mutex>& lock,
             detail::internal_platform_timepoint const &timeout);
 
@@ -102,7 +102,7 @@ namespace boost
         }
 
 #if defined BOOST_THREAD_USES_DATETIME
-        inline bool timed_wait(
+        bool timed_wait(
             unique_lock<mutex>& m,
             boost::system_time const& abs_time)
         {
@@ -182,7 +182,7 @@ namespace boost
                 // short timeout and recheck the time remaining each time through the loop.
                 detail::platform_duration d(ts - detail::real_platform_clock::now());
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, detail::platform_milliseconds(100));
+                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
 #else
                 if (!do_wait_until(m, ts)) break; // timeout occurred
@@ -225,7 +225,7 @@ namespace boost
             while (!pred())
             {
                 if (d <= detail::platform_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, detail::platform_milliseconds(100));
+                d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
                 do_wait_until(m, detail::internal_platform_clock::now() + d);
                 d = ts - detail::mono_platform_clock::now();
             }
@@ -312,7 +312,7 @@ namespace boost
             {
                 common_duration d(t - Clock::now());
                 if (d <= common_duration::zero()) break; // timeout occurred
-                d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+                d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
                 do_wait_until(lock, detail::internal_platform_clock::now() + detail::platform_duration(d));
             }
             return pred();

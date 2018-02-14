@@ -264,7 +264,7 @@ namespace boost
         }
 
         template<typename TimeDuration>
-        void sleep(TimeDuration const& rel_time)
+        inline void sleep(TimeDuration const& rel_time)
         {
           mutex mx;
           unique_lock<mutex> lock(mx);
@@ -275,7 +275,7 @@ namespace boost
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Clock, class Duration>
-        void sleep_until(const chrono::time_point<Clock, Duration>& t)
+        inline void sleep_until(const chrono::time_point<Clock, Duration>& t)
         {
           mutex mut;
           unique_lock<mutex> lk(mut);
@@ -284,7 +284,7 @@ namespace boost
         }
 
         template <class Rep, class Period>
-        void sleep_for(const chrono::duration<Rep, Period>& d)
+        inline void sleep_for(const chrono::duration<Rep, Period>& d)
         {
           mutex mut;
           unique_lock<mutex> lk(mut);
@@ -315,14 +315,14 @@ namespace boost
             detail::platform_duration d(ts - detail::real_platform_clock::now());
             while (d > detail::platform_duration::zero())
             {
-              d = (std::min)(d, detail::platform_milliseconds(100));
+              d = (std::min)(d, detail::platform_milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS));
               hidden::sleep_for_internal(d);
               d = ts - detail::real_platform_clock::now();
             }
           }
 
           template<typename TimeDuration>
-          void sleep(TimeDuration const& rel_time)
+          inline void sleep(TimeDuration const& rel_time)
           {
             hidden::sleep_for_internal(detail::platform_duration(rel_time));
           }
@@ -330,25 +330,25 @@ namespace boost
 
 #ifdef BOOST_THREAD_USES_CHRONO
           template <class Rep, class Period>
-          void sleep_for(const chrono::duration<Rep, Period>& d)
+          inline void sleep_for(const chrono::duration<Rep, Period>& d)
           {
             hidden::sleep_for_internal(detail::platform_duration(d));
           }
 
           template <class Duration>
-          void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
+          inline void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
           {
             sleep_for(t - chrono::steady_clock::now());
           }
 
           template <class Clock, class Duration>
-          void sleep_until(const chrono::time_point<Clock, Duration>& t)
+          inline void sleep_until(const chrono::time_point<Clock, Duration>& t)
           {
             typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
             common_duration d(t - Clock::now());
             while (d > common_duration::zero())
             {
-              d = (std::min)(d, common_duration(chrono::milliseconds(100)));
+              d = (std::min)(d, common_duration(chrono::milliseconds(BOOST_THREAD_POLL_INTERVAL_MILLISECONDS)));
               hidden::sleep_for_internal(detail::platform_duration(d));
               d = t - Clock::now();
             }
@@ -370,7 +370,7 @@ namespace boost
           }
 
           template<typename TimeDuration>
-          void sleep(TimeDuration const& rel_time)
+          inline void sleep(TimeDuration const& rel_time)
           {
             this_thread::sleep(rel_time);
           }
@@ -378,13 +378,13 @@ namespace boost
 
 #ifdef BOOST_THREAD_USES_CHRONO
           template <class Clock, class Duration>
-          void sleep_until(const chrono::time_point<Clock, Duration>& t)
+          inline void sleep_until(const chrono::time_point<Clock, Duration>& t)
           {
             this_thread::sleep_until(t);
           }
 
           template <class Rep, class Period>
-          void sleep_for(const chrono::duration<Rep, Period>& d)
+          inline void sleep_for(const chrono::duration<Rep, Period>& d)
           {
             this_thread::sleep_for(d);
           }

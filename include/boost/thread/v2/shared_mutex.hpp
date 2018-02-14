@@ -159,7 +159,6 @@ public:
 #include <climits>
 #include <boost/system/system_error.hpp>
 #include <boost/bind.hpp>
-#define BOOST_THREAD_INLINE inline
 
 namespace boost {
   namespace thread_v2 {
@@ -180,35 +179,35 @@ namespace boost {
       static const count_t write_entered_ = 1U << (sizeof(count_t)*CHAR_BIT - 1);
       static const count_t n_readers_ = ~write_entered_;
 
-      inline bool no_writer() const
+      bool no_writer() const
       {
         return (state_ & write_entered_) == 0;
       }
 
-      inline bool one_writer() const
+      bool one_writer() const
       {
         return (state_ & write_entered_) != 0;
       }
 
-      inline bool no_writer_no_readers() const
+      bool no_writer_no_readers() const
       {
         //return (state_ & write_entered_) == 0 &&
         //       (state_ & n_readers_) == 0;
         return state_ == 0;
       }
 
-      inline bool no_writer_no_max_readers() const
+      bool no_writer_no_max_readers() const
       {
         return (state_ & write_entered_) == 0 &&
                (state_ & n_readers_) != n_readers_;
       }
 
-      inline bool no_readers() const
+      bool no_readers() const
       {
         return (state_ & n_readers_) == 0;
       }
 
-      inline bool one_or_more_readers() const
+      bool one_or_more_readers() const
       {
         return (state_ & n_readers_) > 0;
       }
@@ -217,13 +216,13 @@ namespace boost {
       shared_mutex& operator=(shared_mutex const&);
 
     public:
-      BOOST_THREAD_INLINE shared_mutex();
-      BOOST_THREAD_INLINE ~shared_mutex();
+      shared_mutex();
+      ~shared_mutex();
 
       // Exclusive ownership
 
-      BOOST_THREAD_INLINE void lock();
-      BOOST_THREAD_INLINE bool try_lock();
+      void lock();
+      bool try_lock();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
@@ -239,12 +238,12 @@ namespace boost {
       template<typename T>
       bool timed_lock(T const & abs_or_rel_time);
 #endif
-      BOOST_THREAD_INLINE void unlock();
+      void unlock();
 
       // Shared ownership
 
-      BOOST_THREAD_INLINE void lock_shared();
-      BOOST_THREAD_INLINE bool try_lock_shared();
+      void lock_shared();
+      bool try_lock_shared();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -261,22 +260,22 @@ namespace boost {
       template<typename T>
       bool timed_lock_shared(T const & abs_or_rel_time);
 #endif
-      BOOST_THREAD_INLINE void unlock_shared();
+      void unlock_shared();
     };
 
-    shared_mutex::shared_mutex()
+    inline shared_mutex::shared_mutex()
     : state_(0)
     {
     }
 
-    shared_mutex::~shared_mutex()
+    inline shared_mutex::~shared_mutex()
     {
       boost::lock_guard<mutex_t> _(mut_);
     }
 
     // Exclusive ownership
 
-    void
+    inline void
     shared_mutex::lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -285,7 +284,7 @@ namespace boost {
       gate2_.wait(lk, boost::bind(&shared_mutex::no_readers, boost::ref(*this)));
     }
 
-    bool
+    inline bool
     shared_mutex::try_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -299,7 +298,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     shared_mutex::try_lock_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -322,7 +321,8 @@ namespace boost {
 
 #if defined BOOST_THREAD_USES_DATETIME
     template<typename T>
-    bool shared_mutex::timed_lock(T const & abs_or_rel_time)
+    inline bool
+    shared_mutex::timed_lock(T const & abs_or_rel_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (!gate1_.timed_wait(lk, abs_or_rel_time, boost::bind(
@@ -341,7 +341,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     shared_mutex::unlock()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -355,7 +355,7 @@ namespace boost {
 
     // Shared ownership
 
-    void
+    inline void
     shared_mutex::lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -365,7 +365,7 @@ namespace boost {
       state_ |= num_readers;
     }
 
-    bool
+    inline bool
     shared_mutex::try_lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -381,7 +381,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     shared_mutex::try_lock_shared_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -400,7 +400,8 @@ namespace boost {
 
 #if defined BOOST_THREAD_USES_DATETIME
     template<typename T>
-    bool shared_mutex::timed_lock_shared(T const & abs_or_rel_time)
+    inline bool
+    shared_mutex::timed_lock_shared(T const & abs_or_rel_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (!gate1_.timed_wait(lk, abs_or_rel_time, boost::bind(
@@ -415,7 +416,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     shared_mutex::unlock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -458,68 +459,68 @@ namespace boost {
       static const unsigned upgradable_entered_ = write_entered_ >> 1;
       static const unsigned n_readers_ = ~(write_entered_ | upgradable_entered_);
 
-      inline bool no_writer() const
+      bool no_writer() const
       {
         return (state_ & write_entered_) == 0;
       }
 
-      inline bool one_writer() const
+      bool one_writer() const
       {
         return (state_ & write_entered_) != 0;
       }
 
-      inline bool no_writer_no_max_readers() const
+      bool no_writer_no_max_readers() const
       {
         return (state_ & write_entered_) == 0 &&
                (state_ & n_readers_) != n_readers_;
       }
 
-      inline bool no_writer_no_upgrader() const
+      bool no_writer_no_upgrader() const
       {
         return (state_ & (write_entered_ | upgradable_entered_)) == 0;
       }
 
-      inline bool no_writer_no_upgrader_no_readers() const
+      bool no_writer_no_upgrader_no_readers() const
       {
         //return (state_ & (write_entered_ | upgradable_entered_)) == 0 &&
         //       (state_ & n_readers_) == 0;
         return state_ == 0;
       }
 
-      inline bool no_writer_no_upgrader_one_reader() const
+      bool no_writer_no_upgrader_one_reader() const
       {
         //return (state_ & (write_entered_ | upgradable_entered_)) == 0 &&
         //       (state_ & n_readers_) == 1;
         return state_ == 1;
       }
 
-      inline bool no_writer_no_upgrader_no_max_readers() const
+      bool no_writer_no_upgrader_no_max_readers() const
       {
         return (state_ & (write_entered_ | upgradable_entered_)) == 0 &&
                (state_ & n_readers_) != n_readers_;
       }
 
-      inline bool no_upgrader() const
+      bool no_upgrader() const
       {
         return (state_ & upgradable_entered_) == 0;
       }
 
-      inline bool one_upgrader() const
+      bool one_upgrader() const
       {
         return (state_ & upgradable_entered_) != 0;
       }
 
-      inline bool no_readers() const
+      bool no_readers() const
       {
         return (state_ & n_readers_) == 0;
       }
 
-      inline bool one_reader() const
+      bool one_reader() const
       {
         return (state_ & n_readers_) == 1;
       }
 
-      inline bool one_or_more_readers() const
+      bool one_or_more_readers() const
       {
         return (state_ & n_readers_) > 0;
       }
@@ -528,13 +529,13 @@ namespace boost {
       upgrade_mutex& operator=(const upgrade_mutex&);
 
     public:
-      BOOST_THREAD_INLINE upgrade_mutex();
-      BOOST_THREAD_INLINE ~upgrade_mutex();
+      upgrade_mutex();
+      ~upgrade_mutex();
 
       // Exclusive ownership
 
-      BOOST_THREAD_INLINE void lock();
-      BOOST_THREAD_INLINE bool try_lock();
+      void lock();
+      bool try_lock();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool try_lock_for(const boost::chrono::duration<Rep, Period>& rel_time)
@@ -550,12 +551,12 @@ namespace boost {
       template<typename T>
       bool timed_lock(T const & abs_or_rel_time);
 #endif
-      BOOST_THREAD_INLINE void unlock();
+      void unlock();
 
       // Shared ownership
 
-      BOOST_THREAD_INLINE void lock_shared();
-      BOOST_THREAD_INLINE bool try_lock_shared();
+      void lock_shared();
+      bool try_lock_shared();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -572,12 +573,12 @@ namespace boost {
       template<typename T>
       bool timed_lock_shared(T const & abs_or_rel_time);
 #endif
-      BOOST_THREAD_INLINE void unlock_shared();
+      void unlock_shared();
 
       // Upgrade ownership
 
-      BOOST_THREAD_INLINE void lock_upgrade();
-      BOOST_THREAD_INLINE bool try_lock_upgrade();
+      void lock_upgrade();
+      bool try_lock_upgrade();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -595,13 +596,13 @@ namespace boost {
       template<typename T>
       bool timed_lock_upgrade(T const & abs_or_rel_time);
 #endif
-      BOOST_THREAD_INLINE void unlock_upgrade();
+      void unlock_upgrade();
 
       // Shared <-> Exclusive
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
-      //BOOST_THREAD_INLINE bool unlock_shared_and_lock(); // can cause a deadlock if used
-      BOOST_THREAD_INLINE bool try_unlock_shared_and_lock();
+      //bool unlock_shared_and_lock(); // can cause a deadlock if used
+      bool try_unlock_shared_and_lock();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -616,13 +617,13 @@ namespace boost {
           const boost::chrono::time_point<Clock, Duration>& abs_time);
 #endif
 #endif
-      BOOST_THREAD_INLINE void unlock_and_lock_shared();
+      void unlock_and_lock_shared();
 
       // Shared <-> Upgrade
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
-      //BOOST_THREAD_INLINE bool unlock_shared_and_lock_upgrade(); // can cause a deadlock if used
-      BOOST_THREAD_INLINE bool try_unlock_shared_and_lock_upgrade();
+      //bool unlock_shared_and_lock_upgrade(); // can cause a deadlock if used
+      bool try_unlock_shared_and_lock_upgrade();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -637,12 +638,12 @@ namespace boost {
           const boost::chrono::time_point<Clock, Duration>& abs_time);
 #endif
 #endif
-      BOOST_THREAD_INLINE void unlock_upgrade_and_lock_shared();
+      void unlock_upgrade_and_lock_shared();
 
       // Upgrade <-> Exclusive
 
-      BOOST_THREAD_INLINE void unlock_upgrade_and_lock();
-      BOOST_THREAD_INLINE bool try_unlock_upgrade_and_lock();
+      void unlock_upgrade_and_lock();
+      bool try_unlock_upgrade_and_lock();
 #ifdef BOOST_THREAD_USES_CHRONO
       template <class Rep, class Period>
       bool
@@ -656,24 +657,24 @@ namespace boost {
       try_unlock_upgrade_and_lock_until(
           const boost::chrono::time_point<Clock, Duration>& abs_time);
 #endif
-      BOOST_THREAD_INLINE void unlock_and_lock_upgrade();
+      void unlock_and_lock_upgrade();
     };
 
-    upgrade_mutex::upgrade_mutex()
+    inline upgrade_mutex::upgrade_mutex()
     : gate1_(),
       gate2_(),
       state_(0)
     {
     }
 
-    upgrade_mutex::~upgrade_mutex()
+    inline upgrade_mutex::~upgrade_mutex()
     {
       boost::lock_guard<mutex_t> _(mut_);
     }
 
     // Exclusive ownership
 
-    void
+    inline void
     upgrade_mutex::lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -682,7 +683,7 @@ namespace boost {
       gate2_.wait(lk, boost::bind(&upgrade_mutex::no_readers, boost::ref(*this)));
     }
 
-    bool
+    inline bool
     upgrade_mutex::try_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -696,7 +697,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_lock_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -719,7 +720,8 @@ namespace boost {
 
 #if defined BOOST_THREAD_USES_DATETIME
     template<typename T>
-    bool upgrade_mutex::timed_lock(T const & abs_or_rel_time)
+    inline bool
+    upgrade_mutex::timed_lock(T const & abs_or_rel_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (!gate1_.timed_wait(lk, abs_or_rel_time, boost::bind(
@@ -738,7 +740,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -753,7 +755,7 @@ namespace boost {
 
     // Shared ownership
 
-    void
+    inline void
     upgrade_mutex::lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -763,7 +765,7 @@ namespace boost {
       state_ |= num_readers;
     }
 
-    bool
+    inline bool
     upgrade_mutex::try_lock_shared()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -779,7 +781,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_lock_shared_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -798,7 +800,8 @@ namespace boost {
 
 #if defined BOOST_THREAD_USES_DATETIME
     template<typename T>
-    bool upgrade_mutex::timed_lock_shared(T const & abs_or_rel_time)
+    inline bool
+    upgrade_mutex::timed_lock_shared(T const & abs_or_rel_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (!gate1_.timed_wait(lk, abs_or_rel_time, boost::bind(
@@ -813,7 +816,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -835,7 +838,7 @@ namespace boost {
 
     // Upgrade ownership
 
-    void
+    inline void
     upgrade_mutex::lock_upgrade()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -845,7 +848,7 @@ namespace boost {
       state_ |= upgradable_entered_ | num_readers;
     }
 
-    bool
+    inline bool
     upgrade_mutex::try_lock_upgrade()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -861,7 +864,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_lock_upgrade_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -880,7 +883,8 @@ namespace boost {
 
 #if defined BOOST_THREAD_USES_DATETIME
     template<typename T>
-    bool upgrade_mutex::timed_lock_upgrade(T const & abs_or_rel_time)
+    inline bool
+    upgrade_mutex::timed_lock_upgrade(T const & abs_or_rel_time)
     {
       boost::unique_lock<mutex_t> lk(mut_);
       if (!gate1_.timed_wait(lk, abs_or_rel_time, boost::bind(
@@ -895,7 +899,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock_upgrade()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -913,7 +917,7 @@ namespace boost {
     // Shared <-> Exclusive
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
-    bool
+    inline bool
     upgrade_mutex::try_unlock_shared_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -928,7 +932,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_unlock_shared_and_lock_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -955,7 +959,7 @@ namespace boost {
 #endif
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock_and_lock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -971,7 +975,7 @@ namespace boost {
     // Shared <-> Upgrade
 
 #ifdef BOOST_THREAD_PROVIDES_SHARED_MUTEX_UPWARDS_CONVERSIONS
-    bool
+    inline bool
     upgrade_mutex::try_unlock_shared_and_lock_upgrade()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -986,7 +990,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_unlock_shared_and_lock_upgrade_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -1003,7 +1007,7 @@ namespace boost {
 #endif
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock_upgrade_and_lock_shared()
     {
       boost::lock_guard<mutex_t> _(mut_);
@@ -1019,7 +1023,7 @@ namespace boost {
 
     // Upgrade <-> Exclusive
 
-    void
+    inline void
     upgrade_mutex::unlock_upgrade_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -1032,7 +1036,7 @@ namespace boost {
       gate2_.wait(lk, boost::bind(&upgrade_mutex::no_readers, boost::ref(*this)));
     }
 
-    bool
+    inline bool
     upgrade_mutex::try_unlock_upgrade_and_lock()
     {
       boost::unique_lock<mutex_t> lk(mut_);
@@ -1049,7 +1053,7 @@ namespace boost {
 
 #ifdef BOOST_THREAD_USES_CHRONO
     template <class Clock, class Duration>
-    bool
+    inline bool
     upgrade_mutex::try_unlock_upgrade_and_lock_until(
         const boost::chrono::time_point<Clock, Duration>& abs_time)
     {
@@ -1072,7 +1076,7 @@ namespace boost {
     }
 #endif
 
-    void
+    inline void
     upgrade_mutex::unlock_and_lock_upgrade()
     {
       boost::lock_guard<mutex_t> _(mut_);
