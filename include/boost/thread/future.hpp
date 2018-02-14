@@ -268,6 +268,10 @@ namespace boost
                 external_waiters.erase(it);
             }
 
+#if 0
+            // this inline definition results in ODR. See https://github.com/boostorg/thread/issues/193
+            // to avoid it, we define the function on the derived templates using the macro BOOST_THREAD_DO_CONTINUATION
+#define BOOST_THREAD_DO_CONTINUATION
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
@@ -285,6 +289,31 @@ namespace boost
             {
             }
 #endif
+
+#else
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+#define BOOST_THREAD_DO_CONTINUATION \
+            void do_continuation(boost::unique_lock<boost::mutex>& lock) \
+            { \
+                if (! this->continuations.empty()) { \
+                  continuations_type the_continuations = this->continuations; \
+                  this->continuations.clear(); \
+                  relocker rlk(lock); \
+                  for (continuations_type::iterator it = the_continuations.begin(); it != the_continuations.end(); ++it) { \
+                    (*it)->launch_continuation(); \
+                  } \
+                } \
+            }
+#else
+#define BOOST_THREAD_DO_CONTINUATION \
+            void do_continuation(boost::unique_lock<boost::mutex>&) \
+            { \
+            }
+#endif
+
+            virtual void do_continuation(boost::unique_lock<boost::mutex>&) = 0;
+#endif
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
             {
@@ -553,6 +582,9 @@ namespace boost
             {
             }
 
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
@@ -738,6 +770,9 @@ namespace boost
             {
             }
 
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
                 result= &result_;
@@ -812,6 +847,9 @@ namespace boost
             shared_state(exceptional_ptr const& ex):
               detail::shared_state_base(ex)
             {}
+
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
 
             void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
             {
