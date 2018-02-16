@@ -185,7 +185,7 @@ namespace boost
 
 #if defined BOOST_THREAD_USES_DATETIME
         template<typename TimeDuration>
-        inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
+        BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
         {
           interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(rel_time));
         }
@@ -205,19 +205,19 @@ namespace boost
 
 #ifdef BOOST_THREAD_USES_CHRONO
         template <class Rep, class Period>
-        inline void sleep_for(const chrono::duration<Rep, Period>& d)
+        void sleep_for(const chrono::duration<Rep, Period>& d)
         {
           interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(d));
         }
 
         template <class Duration>
-        inline void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
+        void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
         {
           sleep_for(t - chrono::steady_clock::now());
         }
 
         template <class Clock, class Duration>
-        inline void sleep_until(const chrono::time_point<Clock, Duration>& t)
+        void sleep_until(const chrono::time_point<Clock, Duration>& t)
         {
           typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
           common_duration d(t - Clock::now());
@@ -236,7 +236,7 @@ namespace boost
 
 #if defined BOOST_THREAD_USES_DATETIME
           template<typename TimeDuration>
-          inline BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
+          BOOST_SYMBOL_VISIBLE void sleep(TimeDuration const& rel_time)
           {
             non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(rel_time));
           }
@@ -256,19 +256,19 @@ namespace boost
 
 #ifdef BOOST_THREAD_USES_CHRONO
           template <class Rep, class Period>
-          inline void sleep_for(const chrono::duration<Rep, Period>& d)
+          void sleep_for(const chrono::duration<Rep, Period>& d)
           {
             non_interruptible_wait(detail::win32::invalid_handle_value, detail::internal_platform_clock::now() + detail::platform_duration(d));
           }
 
           template <class Duration>
-          inline void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
+          void sleep_until(const chrono::time_point<chrono::steady_clock, Duration>& t)
           {
             sleep_for(t - chrono::steady_clock::now());
           }
 
           template <class Clock, class Duration>
-          inline void sleep_until(const chrono::time_point<Clock, Duration>& t)
+          void sleep_until(const chrono::time_point<Clock, Duration>& t)
           {
             typedef typename common_type<Duration, typename Clock::duration>::type common_duration;
             common_duration d(t - Clock::now());

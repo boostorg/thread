@@ -513,7 +513,7 @@ namespace boost
         }
 
         template<typename TimeDuration>
-        inline bool timed_join(TimeDuration const& rel_time)
+        bool timed_join(TimeDuration const& rel_time)
         {
           detail::platform_duration d(rel_time);
 #if defined(BOOST_THREAD_HAS_MONO_CLOCK) && !defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO)
