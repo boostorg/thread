@@ -4,7 +4,6 @@
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
 #define BOOST_THREAD_VERSION 4
-//#define BOOST_THREAD_HAS_CONDATTR_SET_CLOCK_MONOTONIC
 
 //#include <boost/thread/thread.hpp>
 #include <boost/thread/condition_variable.hpp>

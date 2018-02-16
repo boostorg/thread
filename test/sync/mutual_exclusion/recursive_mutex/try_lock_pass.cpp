@@ -21,7 +21,7 @@
 #include <boost/thread/recursive_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
-
+#include <iostream>
 
 boost::recursive_mutex m;
 
@@ -32,6 +32,12 @@ typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
 #else
+#endif
+
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const ms max_diff(250);
+#else
+const ms max_diff(75);
 #endif
 
 void f()
@@ -48,8 +54,9 @@ void f()
   m.unlock();
   m.unlock();
   ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
-  BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
+  std::cout << "diff= " << d.count() << std::endl;
+  std::cout << "max_diff= " << max_diff.count() << std::endl;
+  BOOST_TEST(d < max_diff);
 #else
   //time_point t0 = Clock::now();
   //BOOST_TEST(!m.try_lock());
@@ -62,8 +69,7 @@ void f()
   m.unlock();
   m.unlock();
   //ns d = t1 - t0 - ms(250);
-  // This test is spurious as it depends on the time the thread system switches the threads
-  //BOOST_TEST(d < ns(50000000)+ms(1000)); // within 50ms
+  //BOOST_TEST(d < max_diff);
 #endif
 }
 

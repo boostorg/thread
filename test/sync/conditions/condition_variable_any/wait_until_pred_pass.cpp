@@ -66,6 +66,12 @@ int test2 = 0;
 
 int runs = 0;
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const Clock::duration max_diff(250);
+#else
+const Clock::duration max_diff(75);
+#endif
+
 void f()
 {
   L1 lk(m0);
@@ -78,13 +84,13 @@ void f()
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
-    BOOST_TEST(t1 - t0 < Clock::duration(250));
+    BOOST_TEST(t1 - t0 < max_diff);
     BOOST_TEST(test2 != 0);
     BOOST_TEST(r);
   }
   else
   {
-    BOOST_TEST(t1 - t0 - Clock::duration(250) < Clock::duration(250+2));
+    BOOST_TEST(t1 - t0 - Clock::duration(250) < max_diff);
     BOOST_TEST(test2 == 0);
     BOOST_TEST(!r);
   }

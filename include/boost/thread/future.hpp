@@ -191,6 +191,12 @@ namespace boost
             virtual ~shared_state_base()
             {
             }
+
+            bool is_done()
+            {
+                return done;
+            }
+
             executor_ptr_type get_executor()
             {
               return ex_;
@@ -377,10 +383,7 @@ namespace boost
                 is_deferred_=false;
                 execute(lk);
               }
-              while(!done)
-              {
-                  waiters.wait(lk);
-              }
+              waiters.wait(lk, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
               if(rethrow && exception)
               {
                   boost::rethrow_exception(exception);
@@ -399,6 +402,17 @@ namespace boost
             }
 
 #if defined BOOST_THREAD_USES_DATETIME
+            template<typename Duration>
+            bool timed_wait(Duration const& rel_time)
+            {
+                boost::unique_lock<boost::mutex> lock(this->mutex);
+                if (is_deferred_)
+                    return false;
+
+                do_callback(lock);
+                return waiters.timed_wait(lock, rel_time, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
+            }
+
             bool timed_wait_until(boost::system_time const& target_time)
             {
                 boost::unique_lock<boost::mutex> lock(this->mutex);
@@ -406,15 +420,7 @@ namespace boost
                     return false;
 
                 do_callback(lock);
-                while(!done)
-                {
-                    bool const success=waiters.timed_wait(lock,target_time);
-                    if(!success && !done)
-                    {
-                        return false;
-                    }
-                }
-                return true;
+                return waiters.timed_wait(lock, target_time, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
             }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -427,13 +433,9 @@ namespace boost
               if (is_deferred_)
                   return future_status::deferred;
               do_callback(lock);
-              while(!done)
+              if(!waiters.wait_until(lock, abs_time, boost::bind(&shared_state_base::is_done, boost::ref(*this))))
               {
-                  cv_status const st=waiters.wait_until(lock,abs_time);
-                  if(st==cv_status::timeout && !done)
-                  {
-                    return future_status::timeout;
-                  }
+                  return future_status::timeout;
               }
               return future_status::ready;
             }
@@ -937,10 +939,7 @@ namespace boost
             join();
 #elif defined BOOST_THREAD_ASYNC_FUTURE_WAITS
             unique_lock<boost::mutex> lk(this->mutex);
-            while(!this->done)
-            {
-              this->waiters.wait(lk);
-            }
+            this->waiters.wait(lk, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
 #endif
           }
 
@@ -1483,7 +1482,11 @@ namespace boost
         template<typename Duration>
         bool timed_wait(Duration const& rel_time) const
         {
-            return timed_wait_until(boost::get_system_time()+rel_time);
+            if(!future_)
+            {
+                boost::throw_exception(future_uninitialized());
+            }
+            return future_->timed_wait(rel_time);
         }
 
         bool timed_wait_until(boost::system_time const& abs_time) const

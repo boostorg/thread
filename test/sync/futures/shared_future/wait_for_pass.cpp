@@ -85,6 +85,12 @@ void func5(boost::promise<void> p)
   p.set_value();
 }
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const ms max_diff(250);
+#else
+const ms max_diff(75);
+#endif
+
 int main()
 {
   BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;
@@ -98,19 +104,19 @@ int main()
       boost::thread(func1, boost::move(p)).detach();
 #endif
       BOOST_TEST(f.valid());
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::timeout);
+      BOOST_TEST_EQ(f.wait_for(ms(250)) , boost::future_status::timeout);
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #else
       func1(boost::move(p));
 #endif
       BOOST_TEST(f.valid());
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::ready);
+      BOOST_TEST_EQ(f.wait_for(ms(750)) , boost::future_status::ready);
       BOOST_TEST(f.valid());
       Clock::time_point t0 = Clock::now();
       f.wait();
       Clock::time_point t1 = Clock::now();
       BOOST_TEST(f.valid());
-      BOOST_TEST(t1 - t0 < ms(50));
+      BOOST_TEST(t1 - t0 < max_diff);
     }
     {
       typedef int& T;
@@ -120,19 +126,19 @@ int main()
       boost::thread(func3, boost::move(p)).detach();
 #endif
       BOOST_TEST(f.valid());
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::timeout);
+      BOOST_TEST_EQ(f.wait_for(ms(250)) , boost::future_status::timeout);
       BOOST_TEST(f.valid());
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #else
       func3(boost::move(p));
 #endif
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::ready);
+      BOOST_TEST_EQ(f.wait_for(ms(750)) , boost::future_status::ready);
       BOOST_TEST(f.valid());
       Clock::time_point t0 = Clock::now();
       f.wait();
       Clock::time_point t1 = Clock::now();
       BOOST_TEST(f.valid());
-      BOOST_TEST(t1 - t0 < ms(50));
+      BOOST_TEST(t1 - t0 < max_diff);
     }
     {
       typedef void T;
@@ -142,19 +148,19 @@ int main()
       boost::thread(func5, boost::move(p)).detach();
 #endif
       BOOST_TEST(f.valid());
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::timeout);
+      BOOST_TEST_EQ(f.wait_for(ms(250)) , boost::future_status::timeout);
       BOOST_TEST(f.valid());
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #else
       func5(boost::move(p));
 #endif
-      BOOST_TEST_EQ(f.wait_for(ms(300)) , boost::future_status::ready);
+      BOOST_TEST_EQ(f.wait_for(ms(750)) , boost::future_status::ready);
       BOOST_TEST(f.valid());
       Clock::time_point t0 = Clock::now();
       f.wait();
       Clock::time_point t1 = Clock::now();
       BOOST_TEST(f.valid());
-      BOOST_TEST(t1 - t0 < ms(50));
+      BOOST_TEST(t1 - t0 < max_diff);
     }
   }
   BOOST_THREAD_LOG << BOOST_THREAD_END_LOG;

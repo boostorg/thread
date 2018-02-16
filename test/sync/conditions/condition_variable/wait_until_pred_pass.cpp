@@ -25,6 +25,8 @@
 #include <iostream>
 
 #if defined BOOST_THREAD_USES_CHRONO
+typedef boost::chrono::milliseconds milliseconds;
+typedef boost::chrono::nanoseconds nanoseconds;
 
 struct Clock
 {
@@ -64,6 +66,12 @@ int test2 = 0;
 
 int runs = 0;
 
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const Clock::duration max_diff(250);
+#else
+const Clock::duration max_diff(75);
+#endif
+
 void f()
 {
   try {
@@ -74,17 +82,19 @@ void f()
     Clock::time_point t0 = Clock::now();
     Clock::time_point t = t0 + Clock::duration(250);
     bool r = cv.wait_until(lk, t, Pred(test2));
-    (void)r;
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {
-      assert(t1 - t0 < Clock::duration(250));
+      assert(t1 - t0 < max_diff);
       assert(test2 != 0);
       assert(r);
     }
     else
     {
-      assert(t1 - t0 - Clock::duration(250) < Clock::duration(250+2));
+      const nanoseconds d = t1 - t0 - milliseconds(250);
+      std::cout << "diff= " << d.count() << std::endl;
+      std::cout << "max_diff= " << max_diff.count() << std::endl;
+      assert(d < max_diff);
       assert(test2 == 0);
       assert(!r);
     }

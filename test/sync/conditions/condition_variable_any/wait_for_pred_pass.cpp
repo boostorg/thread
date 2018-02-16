@@ -51,26 +51,32 @@ int test2 = 0;
 
 int runs = 0;
 
+typedef boost::chrono::system_clock Clock;
+typedef boost::chrono::milliseconds milliseconds;
+
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const milliseconds max_diff(250);
+#else
+const milliseconds max_diff(75);
+#endif
+
 void f()
 {
-  typedef boost::chrono::system_clock Clock;
-  typedef boost::chrono::milliseconds milliseconds;
   L1 lk(m0);
   BOOST_TEST(test2 == 0);
   test1 = 1;
   cv.notify_one();
   Clock::time_point t0 = Clock::now();
-  //bool r =
-      (void)cv.wait_for(lk, milliseconds(250), Pred(test2));
+  cv.wait_for(lk, milliseconds(250), Pred(test2));
   Clock::time_point t1 = Clock::now();
   if (runs == 0)
   {
-    BOOST_TEST(t1 - t0 < milliseconds(250));
+    BOOST_TEST(t1 - t0 < max_diff);
     BOOST_TEST(test2 != 0);
   }
   else
   {
-    BOOST_TEST(t1 - t0 - milliseconds(250) < milliseconds(250+5));
+    BOOST_TEST(t1 - t0 - milliseconds(250) < max_diff);
     BOOST_TEST(test2 == 0);
   }
   ++runs;
