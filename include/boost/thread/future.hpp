@@ -4177,11 +4177,11 @@ namespace detail {
     typedef detail::invoker<typename decay<F>::type> BF;
     typedef typename BF::result_type Rp;
 
-    return boost::detail::make_future_executor_shared_state<Rp>(ex,
+    return BOOST_THREAD_MAKE_RV_REF(boost::detail::make_future_executor_shared_state<Rp>(ex,
         BF(
             thread_detail::decay_copy(boost::forward<F>(f))
         )
-    );
+    ));
   }
 
   template <class Executor, class F, class A1>
