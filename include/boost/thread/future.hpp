@@ -159,7 +159,7 @@ namespace boost
             boost::function<void()> callback;
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             continuations_type continuations;
-            executor_ptr_type ex;
+            executor_ptr_type ex_;
 
             // This declaration should be only included conditionally, but is included to maintain the same layout.
             virtual void launch_continuation()
@@ -173,18 +173,18 @@ namespace boost
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
-            shared_state_base(exceptional_ptr const& ex_):
-                exception(ex_.ptr_),
+            shared_state_base(exceptional_ptr const& ex):
+                exception(ex.ptr_),
                 done(true),
                 is_valid_(true),
                 is_deferred_(false),
                 is_constructed(false),
                 policy_(launch::none),
                 continuations(),
-                ex()
+                ex_()
             {}
 
 
@@ -193,23 +193,23 @@ namespace boost
             }
             executor_ptr_type get_executor()
             {
-              return ex;
+              return ex_;
             }
 
             void set_executor_policy(executor_ptr_type aex)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::lock_guard<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
             void set_executor_policy(executor_ptr_type aex, boost::unique_lock<boost::mutex>&)
             {
               set_executor();
-              ex = aex;
+              ex_ = aex;
             }
 
             bool valid(boost::unique_lock<boost::mutex>&) { return is_valid_; }
@@ -262,6 +262,10 @@ namespace boost
                 external_waiters.erase(it);
             }
 
+#if 0
+            // this inline definition results in ODR. See https://github.com/boostorg/thread/issues/193
+            // to avoid it, we define the function on the derived templates using the macro BOOST_THREAD_DO_CONTINUATION
+#define BOOST_THREAD_DO_CONTINUATION
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             void do_continuation(boost::unique_lock<boost::mutex>& lock)
             {
@@ -279,6 +283,31 @@ namespace boost
             {
             }
 #endif
+
+#else
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
+#define BOOST_THREAD_DO_CONTINUATION \
+            void do_continuation(boost::unique_lock<boost::mutex>& lock) \
+            { \
+                if (! this->continuations.empty()) { \
+                  continuations_type the_continuations = this->continuations; \
+                  this->continuations.clear(); \
+                  relocker rlk(lock); \
+                  for (continuations_type::iterator it = the_continuations.begin(); it != the_continuations.end(); ++it) { \
+                    (*it)->launch_continuation(); \
+                  } \
+                } \
+            }
+#else
+#define BOOST_THREAD_DO_CONTINUATION \
+            void do_continuation(boost::unique_lock<boost::mutex>&) \
+            { \
+            }
+#endif
+
+            virtual void do_continuation(boost::unique_lock<boost::mutex>&) = 0;
+#endif
+
 #if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION
             virtual void set_continuation_ptr(continuation_ptr_type continuation, boost::unique_lock<boost::mutex>& lock)
             {
@@ -546,6 +575,9 @@ namespace boost
               detail::shared_state_base(ex), result()
             {}
 
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
 #if defined BOOST_THREAD_FUTURE_USES_OPTIONAL
@@ -727,6 +759,9 @@ namespace boost
               detail::shared_state_base(ex), result(0)
             {}
 
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
+
             void mark_finished_with_result_internal(source_reference_type result_, boost::unique_lock<boost::mutex>& lock)
             {
                 result= &result_;
@@ -801,6 +836,9 @@ namespace boost
             shared_state(exceptional_ptr const& ex):
               detail::shared_state_base(ex)
             {}
+
+            // locating this definition on the template avoid the ODR issue. See https://github.com/boostorg/thread/issues/193
+            BOOST_THREAD_DO_CONTINUATION
 
             void mark_finished_with_result_internal(boost::unique_lock<boost::mutex>& lock)
             {
@@ -998,10 +1036,8 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_deferred_shared_state: shared_state<Rp>
         {
-          typedef shared_state<Rp> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1026,10 +1062,8 @@ namespace boost
         template<typename Rp, typename Fp>
         struct future_deferred_shared_state<Rp&,Fp>: shared_state<Rp&>
         {
-          typedef shared_state<Rp&> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1051,10 +1085,8 @@ namespace boost
         template<typename Fp>
         struct future_deferred_shared_state<void,Fp>: shared_state<void>
         {
-          typedef shared_state<void> base_type;
           Fp func_;
 
-        public:
           explicit future_deferred_shared_state(BOOST_THREAD_FWD_REF(Fp) f)
           : func_(boost::move(f))
           {
@@ -1082,7 +1114,6 @@ namespace boost
         public:
             typedef std::vector<int>::size_type count_type;
         private:
-            struct registered_waiter;
             struct registered_waiter
             {
                 boost::shared_ptr<detail::shared_state_base> future_;
@@ -4947,6 +4978,10 @@ namespace detail {
       return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                   lock, boost::move(*this), boost::forward<F>(func)
               )));
+    } else if (underlying_cast<int>(policy) & int(launch::sync)) {
+      return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_sync_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                  lock, boost::move(*this), boost::forward<F>(func)
+              )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
     } else if (underlying_cast<int>(policy) & int(launch::executor)) {
       assert(this->future_->get_executor());
@@ -4965,6 +5000,10 @@ namespace detail {
                   )));
         } else if (underlying_cast<int>(policy_) & int(launch::deferred)) {
           return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_deferred_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
+                      lock, boost::move(*this), boost::forward<F>(func)
+                  )));
+        } else if (underlying_cast<int>(policy_) & int(launch::sync)) {
+          return BOOST_THREAD_MAKE_RV_REF((boost::detail::make_future_sync_continuation_shared_state<BOOST_THREAD_FUTURE<R>, future_type>(
                       lock, boost::move(*this), boost::forward<F>(func)
                   )));
 #ifdef BOOST_THREAD_PROVIDES_EXECUTORS
