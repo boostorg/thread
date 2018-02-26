@@ -429,7 +429,7 @@ inline FP init_steady_clock(kern_return_t & err)
 #else
       // Use GetTickCount64() because it's more reliable on older
       // systems like Windows XP and Windows Server 2003.
-      win32::ticks_type msec = win32::GetTickCount64_()();
+      win32::ticks_type msec = win32::gettickcount64();
       return mono_platform_timepoint(msec * 1000000);
 #endif
 #elif defined(BOOST_THREAD_CHRONO_MAC_API)
