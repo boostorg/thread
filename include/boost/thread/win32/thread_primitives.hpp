@@ -18,10 +18,9 @@
 #include <boost/detail/interlocked.hpp>
 
 #include <boost/winapi/config.hpp>
+#include <boost/winapi/basic_types.hpp>
 #include <boost/winapi/semaphore.hpp>
-#include <boost/winapi/dll.hpp>
 #include <boost/winapi/system.hpp>
-#include <boost/winapi/time.hpp>
 #include <boost/winapi/event.hpp>
 #include <boost/winapi/thread.hpp>
 #include <boost/winapi/get_current_thread.hpp>
@@ -48,8 +47,7 @@ namespace boost
         {
             typedef ::boost::winapi::HANDLE_ handle;
             typedef ::boost::winapi::SYSTEM_INFO_ system_info;
-            typedef unsigned __int64 ticks_type;
-            typedef ::boost::winapi::FARPROC_ farproc_t;
+            typedef ::boost::winapi::ULONGLONG_ ticks_type;
             unsigned const infinite=::boost::winapi::INFINITE_;
             unsigned const timeout=::boost::winapi::WAIT_TIMEOUT_;
             handle const invalid_handle_value=::boost::winapi::INVALID_HANDLE_VALUE_;
@@ -72,96 +70,8 @@ namespace boost
     {
         namespace win32
         {
-            namespace detail { typedef ticks_type (__stdcall *gettickcount64_t)(); }
-#if !BOOST_PLAT_WINDOWS_RUNTIME
-            extern "C"
-            {
-#ifdef _MSC_VER
-                long _InterlockedCompareExchange(long volatile *, long, long);
-#pragma intrinsic(_InterlockedCompareExchange)
-#elif defined(__MINGW64_VERSION_MAJOR)
-                long _InterlockedCompareExchange(long volatile *, long, long);
-#else
-                // Mingw doesn't provide intrinsics
-#define _InterlockedCompareExchange InterlockedCompareExchange
-#endif
-            }
-            // Borrowed from https://stackoverflow.com/questions/8211820/userland-interrupt-timer-access-such-as-via-kequeryinterrupttime-or-similar
-            inline ticks_type __stdcall GetTickCount64emulation()
-            {
-                static long count = -1l;
-                unsigned long previous_count, current_tick32, previous_count_zone, current_tick32_zone;
-                ticks_type current_tick64;
-
-                previous_count = (unsigned long) boost::detail::interlocked_read_acquire(&count);
-                current_tick32 = ::boost::winapi::GetTickCount();
-
-                if(previous_count == (unsigned long)-1l)
-                {
-                    // count has never been written
-                    unsigned long initial_count;
-                    initial_count = current_tick32 >> 28;
-                    previous_count = (unsigned long) _InterlockedCompareExchange(&count, (long)initial_count, -1l);
-
-                    current_tick64 = initial_count;
-                    current_tick64 <<= 28;
-                    current_tick64 += current_tick32 & 0x0FFFFFFF;
-                    return current_tick64;
-                }
-
-                previous_count_zone = previous_count & 15;
-                current_tick32_zone = current_tick32 >> 28;
-
-                if(current_tick32_zone == previous_count_zone)
-                {
-                    // The top four bits of the 32-bit tick count haven't changed since count was last written.
-                    current_tick64 = previous_count;
-                    current_tick64 <<= 28;
-                    current_tick64 += current_tick32 & 0x0FFFFFFF;
-                    return current_tick64;
-                }
-
-                if(current_tick32_zone == previous_count_zone + 1 || (current_tick32_zone == 0 && previous_count_zone == 15))
-                {
-                    // The top four bits of the 32-bit tick count have been incremented since count was last written.
-                    unsigned long new_count = previous_count + 1;
-                    _InterlockedCompareExchange(&count, (long)new_count, (long)previous_count);
-                    current_tick64 = new_count;
-                    current_tick64 <<= 28;
-                    current_tick64 += current_tick32 & 0x0FFFFFFF;
-                    return current_tick64;
-                }
-
-                // Oops, we weren't called often enough, we're stuck
-                return 0xFFFFFFFF;
-            }
-#else
-#endif
-            inline detail::gettickcount64_t GetTickCount64_()
-            {
-                static detail::gettickcount64_t gettickcount64impl;
-                if(gettickcount64impl)
-                    return gettickcount64impl;
-
-                // GetTickCount and GetModuleHandle are not allowed in the Windows Runtime,
-                // and kernel32 isn't used in Windows Phone.
-#if BOOST_PLAT_WINDOWS_RUNTIME
-                gettickcount64impl = &::boost::winapi::GetTickCount64;
-#else
-                farproc_t addr=GetProcAddress(
-#if !defined(BOOST_NO_ANSI_APIS)
-                    ::boost::winapi::GetModuleHandleA("KERNEL32.DLL"),
-#else
-                    ::boost::winapi::GetModuleHandleW(L"KERNEL32.DLL"),
-#endif
-                    "GetTickCount64");
-                if(addr)
-                    gettickcount64impl=(detail::gettickcount64_t) addr;
-                else
-                    gettickcount64impl=&GetTickCount64emulation;
-#endif
-                return gettickcount64impl;
-            }
+            namespace detail { typedef ticks_type (WINAPI *gettickcount64_t)(); }
+            extern BOOST_THREAD_DECL boost::detail::win32::detail::gettickcount64_t gettickcount64;
 
             enum event_type
             {
