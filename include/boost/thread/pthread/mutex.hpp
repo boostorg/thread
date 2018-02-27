@@ -85,7 +85,7 @@ namespace boost
 #endif
 
   }
-    class mutex
+    class CAPABILITY("mutex") mutex
     {
     private:
         pthread_mutex_t m;
@@ -107,7 +107,7 @@ namespace boost
           BOOST_ASSERT(!res);
         }
 
-        void lock()
+        void lock() ACQUIRE()
         {
             int res = posix::pthread_mutex_lock(&m);
             if (res)
@@ -116,7 +116,7 @@ namespace boost
             }
         }
 
-        void unlock()
+        void unlock() RELEASE()
         {
             int res = posix::pthread_mutex_unlock(&m);
             (void)res;
@@ -127,7 +127,7 @@ namespace boost
 //            }
         }
 
-        bool try_lock()
+        bool try_lock() TRY_ACQUIRE(true)
         {
             int res;
             do
