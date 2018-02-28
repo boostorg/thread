@@ -645,12 +645,12 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-compile-fail ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutex__assign_f ]
           [ thread-compile-fail ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutex__copy_f ]
-          [ thread-safety-compile ./sync/mutual_exclusion/mutex/lock_compile_pass.cpp : <toolset>clang : mutex__lock_compile_p ]
-          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/lock_compile_fail.cpp : <toolset>clang : mutex__lock_compile_f ]
+          [ thread-safety-compile ./sync/mutual_exclusion/mutex/lock_compile_pass.cpp : : mutex__lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/lock_compile_fail.cpp : : mutex__lock_compile_f ]
           # https://bugs.llvm.org/show_bug.cgi?id=32954
           # http://clang-developers.42468.n3.nabble.com/thread-safety-warnings-specifically-try-acquire-capability-td4059337.html
-          #[ thread-safety-compile ./sync/mutual_exclusion/mutex/try_lock_compile_pass.cpp : <toolset>clang : mutex__try_lock_compile_p ]
-          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/try_lock_compile_fail.cpp : <toolset>clang : mutex__try_lock_compile_f ]
+          #[ thread-safety-compile ./sync/mutual_exclusion/mutex/try_lock_compile_pass.cpp : : mutex__try_lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/try_lock_compile_fail.cpp : : mutex__try_lock_compile_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/default_pass.cpp : mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/lock_pass.cpp : mutex__lock_p ]
           [ thread-run2-noit-pthread ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutex__native_handle_p ]
