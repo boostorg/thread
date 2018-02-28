@@ -208,28 +208,34 @@ rule thread-compile-fail ( sources : reqs * : name )
     ;
 }
 
+rule clang-thread-safety ( properties * )
+{
+    if <toolset>clang in $(properties)
+    {
+        return <cxxflags>-Werror=thread-safety ;
+    }
+    else
+    {
+        return <build>no ;
+    }
+}
+
 rule thread-safety-compile ( sources : reqs * : name )
 {
-    if <toolset>clang in $(reqs)
-    {
-        return
-        [ compile $(sources)
-            : $(reqs) <cxxflags>-Werror=thread-safety
-            : $(name) ]
-        ;
-    }
+    return
+    [ compile $(sources)
+        : $(reqs) <conditional>@clang-thread-safety
+        : $(name) ]
+    ;
 }
 
 rule thread-safety-compile-fail ( sources : reqs * : name )
 {
-    if <toolset>clang in $(reqs)
-    {
-        return
-        [ compile-fail $(sources)
-            : $(reqs) <cxxflags>-Werror=thread-safety
-            : $(name) ]
-        ;
-    }
+    return
+    [ compile-fail $(sources)
+        : $(reqs) <conditional>@clang-thread-safety
+        : $(name) ]
+    ;
 }
 
 rule thread-compile ( sources : reqs * : name )
