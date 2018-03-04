@@ -238,6 +238,10 @@ rule usage-requirements ( properties * )
             # in that case?
         }
     }
+    if <threadapi>win32 in $(properties)
+    {
+        result += <define>BOOST_THREAD_WIN32 ;
+    }
 
     #if ! <toolset>vacpp in $(properties) || <toolset-vacpp:version>11.1 in $(properties) || <toolset-vacpp:version>12.1.0.1 in $(properties)  || <toolset-vacpp:version>12.1 in $(properties)
     #{
@@ -272,6 +276,10 @@ rule requirements ( properties * )
            result += <library>/boost/atomic//boost_atomic ; 
         } 
     } else {
+        if <threadapi>win32 in $(properties)
+        {
+            result += <define>BOOST_THREAD_WIN32 ;
+        }
         result += <define>BOOST_THREAD_USES_CHRONO ;
         result += <library>/boost/chrono//boost_chrono ;
     }
@@ -284,6 +292,7 @@ alias thread_sources
       win32/thread.cpp
       win32/tss_dll.cpp
       win32/tss_pe.cpp
+      win32/thread_primitives.cpp
       future.cpp
     : ## requirements ##
       <threadapi>win32

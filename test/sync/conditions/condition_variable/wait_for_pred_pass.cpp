@@ -49,30 +49,33 @@ int test2 = 0;
 
 int runs = 0;
 
+typedef boost::chrono::system_clock Clock;
+typedef boost::chrono::milliseconds milliseconds;
+
+#ifdef BOOST_THREAD_PLATFORM_WIN32
+const milliseconds max_diff(250);
+#else
+const milliseconds max_diff(75);
+#endif
+
 void f()
 {
   try {
-    typedef boost::chrono::system_clock Clock;
-    typedef boost::chrono::milliseconds milliseconds;
     boost::unique_lock < boost::mutex > lk(mut);
     assert(test2 == 0);
     test1 = 1;
     cv.notify_one();
     Clock::time_point t0 = Clock::now();
-    int count=0;
-    //bool r =
-        (void)cv.wait_for(lk, milliseconds(250), Pred(test2));
-    count++;
+    cv.wait_for(lk, milliseconds(250), Pred(test2));
     Clock::time_point t1 = Clock::now();
     if (runs == 0)
     {
-      // This test is spurious as it depends on the time the thread system switches the threads
-      assert(t1 - t0 < milliseconds(250+1000));
+      assert(t1 - t0 < max_diff);
       assert(test2 != 0);
     }
     else
     {
-      assert(t1 - t0 - milliseconds(250) < milliseconds(count*250+2));
+      assert(t1 - t0 - milliseconds(250) < max_diff);
       assert(test2 == 0);
     }
     ++runs;

@@ -333,13 +333,13 @@ matrix:
       compiler: clang++
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++98
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++11
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++11
 
-    - os: osx
-      compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++14
+#    - os: osx
+#      compiler: clang++
+#      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++14
 
     - os: osx
       compiler: clang++
