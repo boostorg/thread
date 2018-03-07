@@ -43,7 +43,8 @@ build_steps: &build_steps
     - run:
         name: Build
         command: |
-          echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD <cxxflags>=$DEFINES ;" > ~/user-config.jam
+          echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD <cxxflags>$DEFINES ;"
+          echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD <cxxflags>$DEFINES ;" > ~/user-config.jam
           cd ../boost-root
           ./b2 -j10 libs/thread/test toolset=$TOOLSET
 
