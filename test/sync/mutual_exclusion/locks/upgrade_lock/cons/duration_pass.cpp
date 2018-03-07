@@ -48,6 +48,8 @@ void f1()
   BOOST_TEST(lk.owns_lock() == true);
   time_point t1 = Clock::now();
   ns d = t1 - t0 - ms(250);
+  std::cout << "delta= " << d.count() << std::endl;
+  std::cout << "max= " << max_diff.count() << std::endl;
   BOOST_TEST(d < max_diff);
 }
 

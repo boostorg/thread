@@ -47,6 +47,8 @@ void f()
   time_point t1 = Clock::now();
   m.unlock();
   ns d = t1 - t0 - ms(250);
+  std::cout << "delta= " << d.count() << std::endl;
+  std::cout << "max= " << max_diff.count() << std::endl;
   BOOST_TEST(d < max_diff);
 #else
   //time_point t0 = Clock::now();
