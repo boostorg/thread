@@ -23,6 +23,7 @@
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
+#include "../../../../../timming.hpp"
 
 boost::shared_mutex m;
 
@@ -35,11 +36,8 @@ typedef boost::chrono::nanoseconds ns;
 #else
 #endif
 
-#ifdef BOOST_THREAD_PLATFORM_WIN32
-const ms max_diff(250);
-#else
-const ms max_diff(75);
-#endif
+const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
+
 
 void f()
 {
@@ -64,9 +62,7 @@ void f()
   }
   time_point t1 = Clock::now();
   ns d = t1 - t0 - ms(250);
-  std::cout << "delta= " << d.count() << std::endl;
-  std::cout << "max= " << max_diff.count() << std::endl;
-  BOOST_TEST(d < max_diff);
+  BOOST_THREAD_TEST_IT(d, ns(max_diff));
 #else
 //  time_point t0 = Clock::now();
 //  {

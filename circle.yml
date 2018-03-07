@@ -43,7 +43,7 @@ build_steps: &build_steps
     - run:
         name: Build
         command: |
-          echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD ;" > ~/user-config.jam
+          echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD <cxxflags>=$DEFINES ;" > ~/user-config.jam
           cd ../boost-root
           ./b2 -j10 libs/thread/test toolset=$TOOLSET
 
@@ -66,6 +66,7 @@ jobs:
       - TOOLSET: "gcc"
       - COMPILER: "g++"
       - CXXSTD: "c++11"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-g++-7-c++98:
     <<: *linux_build
@@ -73,6 +74,7 @@ jobs:
       - TOOLSET: "gcc"
       - COMPILER: "g++-7"
       - CXXSTD: "c++98"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-g++-7-c++11:
     <<: *linux_build
@@ -80,6 +82,7 @@ jobs:
       - TOOLSET: "gcc"
       - COMPILER: "g++-7"
       - CXXSTD: "c++11"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-g++-7-c++14:
     <<: *linux_build
@@ -87,6 +90,7 @@ jobs:
       - TOOLSET: "gcc"
       - COMPILER: "g++-7"
       - CXXSTD: "c++14"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-g++-7-c++1z:
     <<: *linux_build
@@ -94,6 +98,7 @@ jobs:
       - TOOLSET: "gcc"
       - COMPILER: "g++-7"
       - CXXSTD: "c++1z"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-clang++-4.0-c++98:
     <<: *linux_build
@@ -101,6 +106,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++-4.0"
       - CXXSTD: "c++98"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-clang++-4.0-c++11:
     <<: *linux_build
@@ -108,6 +114,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++-4.0"
       - CXXSTD: "c++11"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-clang++-4.0-c++14:
     <<: *linux_build
@@ -115,6 +122,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++-4.0"
       - CXXSTD: "c++14"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   linux-clang++-4.0-c++1z:
     <<: *linux_build
@@ -122,6 +130,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++-4.0"
       - CXXSTD: "c++1z"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
   mac-clang++-c++98:
     <<: *mac_build
@@ -129,6 +138,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++98"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
 
   mac-clang++-c++11:
     <<: *mac_build
@@ -136,6 +146,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++11"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
 
   mac-clang++-c++14:
     <<: *mac_build
@@ -143,6 +154,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++14"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
 
   mac-clang++-c++1z:
     <<: *mac_build
@@ -150,6 +162,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++1z"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
 
 workflows:
   version: 2
