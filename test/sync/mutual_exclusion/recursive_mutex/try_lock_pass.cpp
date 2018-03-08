@@ -22,6 +22,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <iostream>
+#include "../../../timming.hpp"
 
 boost::recursive_mutex m;
 
@@ -34,11 +35,7 @@ typedef boost::chrono::nanoseconds ns;
 #else
 #endif
 
-#ifdef BOOST_THREAD_PLATFORM_WIN32
-const ms max_diff(250);
-#else
-const ms max_diff(75);
-#endif
+const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
 
 void f()
 {
@@ -54,9 +51,7 @@ void f()
   m.unlock();
   m.unlock();
   ns d = t1 - t0 - ms(250);
-  std::cout << "diff= " << d.count() << std::endl;
-  std::cout << "max_diff= " << max_diff.count() << std::endl;
-  BOOST_TEST(d < max_diff);
+  BOOST_THREAD_TEST_IT(d, ns(max_diff));
 #else
   //time_point t0 = Clock::now();
   //BOOST_TEST(!m.try_lock());

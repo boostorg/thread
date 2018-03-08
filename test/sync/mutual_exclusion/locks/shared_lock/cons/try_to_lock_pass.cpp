@@ -18,7 +18,6 @@
 
 // shared_lock(mutex_type& m, try_to_lock_t);
 
-
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/shared_mutex.hpp>
 #include <boost/thread/thread.hpp>
@@ -37,7 +36,6 @@ typedef boost::chrono::nanoseconds ns;
 #endif
 
 const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
-
 
 void f()
 {

@@ -24,6 +24,7 @@
 #include <boost/thread/thread.hpp>
 
 #include <boost/detail/lightweight_test.hpp>
+#include "../../../../timming.hpp"
 
 #ifdef BOOST_THREAD_USES_CHRONO
 typedef boost::chrono::high_resolution_clock Clock;
@@ -37,11 +38,7 @@ boost::mutex m;
 
 #if ! defined(BOOST_NO_CXX11_AUTO_DECLARATIONS) && ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES) && ! defined BOOST_THREAD_NO_MAKE_LOCK_GUARD && defined BOOST_THREAD_USES_CHRONO
 
-#ifdef BOOST_THREAD_PLATFORM_WIN32
-const ms max_diff(250);
-#else
-const ms max_diff(75);
-#endif
+const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
 
 void f()
 {
@@ -52,7 +49,7 @@ void f()
     t1 = Clock::now();
   }
   ns d = t1 - t0 - ms(250);
-  BOOST_TEST(d < max_diff);
+  BOOST_THREAD_TEST_IT(d, ns(max_diff));
 }
 #endif
 

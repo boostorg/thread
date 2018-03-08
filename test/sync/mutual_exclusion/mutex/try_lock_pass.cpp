@@ -36,7 +36,6 @@ typedef boost::chrono::nanoseconds ns;
 
 const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
 
-
 void f()
 {
 #if defined BOOST_THREAD_USES_CHRONO

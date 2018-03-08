@@ -23,8 +23,6 @@
 #include <boost/detail/lightweight_test.hpp>
 #include "../../../timming.hpp"
 
-
-
 boost::recursive_timed_mutex m;
 
 #if defined BOOST_THREAD_USES_CHRONO
@@ -37,7 +35,6 @@ typedef boost::chrono::nanoseconds ns;
 #endif
 
 const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
-
 
 void f()
 {

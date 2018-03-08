@@ -26,7 +26,6 @@
 
 #if defined BOOST_THREAD_USES_CHRONO
 
-
 boost::recursive_timed_mutex m;
 
 typedef boost::chrono::steady_clock Clock;
@@ -36,7 +35,6 @@ typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
 
 const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
-
 
 void f1()
 {
