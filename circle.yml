@@ -138,7 +138,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++98"
-      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=170"
 
   mac-clang++-c++11:
     <<: *mac_build
@@ -146,7 +146,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++11"
-      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=170"
 
   mac-clang++-c++14:
     <<: *mac_build
@@ -154,7 +154,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++14"
-      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=170"
 
   mac-clang++-c++1z:
     <<: *mac_build
@@ -162,7 +162,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++1z"
-      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=75"
+      - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=170"
 
 workflows:
   version: 2
