@@ -26,7 +26,7 @@
 boost::null_mutex m;
 
 #if defined BOOST_THREAD_USES_CHRONO
-typedef boost::chrono::system_clock Clock;
+typedef boost::chrono::high_resolution_clock Clock;
 typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
