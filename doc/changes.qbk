@@ -1,12 +1,33 @@
 [/
   (C) Copyright 2007-11 Anthony Williams.
-  (C) Copyright 2011-17 Vicente J. Botet Escriba.
+  (C) Copyright 2011-18 Vicente J. Botet Escriba.
   Distributed under the Boost Software License, Version 1.0.
   (See accompanying file LICENSE_1_0.txt or copy at
   http://www.boost.org/LICENSE_1_0.txt).
 ]
 
 [section:changes History]
+
+[heading Version 4.8.1 - boost 1.67]
+
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+
+* [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
+
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
+
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread master regression test] to see the last regression test snapshot.
+
+[*Fixed Bugs:]
+
+
+* [@https://github.com/boostorg/thread/issues/162 #162] fix as much time-related issues as possible and improve the QOI
+* [@https://github.com/boostorg/thread/issues/193 #193] future_then unit test contains two different implementations of do_continuation function
+* [@https://github.com/boostorg/thread/issues/209 #209] Legal problem with `win32/thread_primitives.hpp`
+
 
 [heading Version 4.8.0 - boost 1.66]
 
