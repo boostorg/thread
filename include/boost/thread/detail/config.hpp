@@ -417,6 +417,11 @@
   #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
 #elif defined(BOOST_THREAD_CHRONO_MAC_API)
   #define BOOST_THREAD_HAS_MONO_CLOCK
+#elif defined(__ANDROID__)
+  #define BOOST_THREAD_HAS_MONO_CLOCK
+  #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
+    #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+  #endif
 #else
   #include <time.h> // check for CLOCK_MONOTONIC
   #if defined(CLOCK_MONOTONIC)
