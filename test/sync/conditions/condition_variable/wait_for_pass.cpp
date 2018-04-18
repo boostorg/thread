@@ -23,6 +23,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <cassert>
+#include "../../../timming.hpp"
 
 #if defined BOOST_THREAD_USES_CHRONO
 
@@ -37,12 +38,10 @@ int runs = 0;
 typedef boost::chrono::steady_clock Clock;
 typedef boost::chrono::milliseconds milliseconds;
 typedef boost::chrono::nanoseconds nanoseconds;
+typedef boost::chrono::milliseconds ms;
+typedef boost::chrono::nanoseconds ns;
 
-#ifdef BOOST_THREAD_PLATFORM_WIN32
-const milliseconds max_diff(250);
-#else
-const milliseconds max_diff(75);
-#endif
+const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
 
 void f()
 {
