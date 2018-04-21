@@ -169,7 +169,6 @@ int main()
     BOOST_TEST(all.valid());
     BOOST_TEST(! all.is_ready());
     pt1();
-    BOOST_TEST(! all.is_ready());
     pt2();
     boost::this_thread::sleep_for(boost::chrono::milliseconds(300));
     BOOST_TEST(all.is_ready());
