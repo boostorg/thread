@@ -45,7 +45,7 @@ build_steps: &build_steps
         command: |
           echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD <cxxflags>$DEFINES ;" > ~/user-config.jam
           cd ../boost-root
-          ./b2 -j10 libs/thread/test toolset=$TOOLSET
+          ./b2 -j8 libs/thread/test toolset=$TOOLSET
 
 mac_build: &mac_build
   macos:
