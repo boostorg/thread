@@ -425,8 +425,15 @@
 #else
   #include <time.h> // check for CLOCK_MONOTONIC
   #if defined(CLOCK_MONOTONIC)
-    #define BOOST_THREAD_HAS_MONO_CLOCK
-    #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+    #if defined(__ANDROID__) && defined(__ANDROID_API__) && (__ANDROID_API__ < 21)
+      // If BOOST_THREAD_INTERNAL_CLOCK_IS_MONO will be defined then
+      // 'pthread_condattr_setclock' will be used in pthread_helpers.hpp (pthread::cond_init).
+      // 'pthread_condattr_setclock' is availabe since API 21:
+      // * https://android.googlesource.com/platform/bionic/+/6880f936173081297be0dc12f687d341b86a4cfa/libc/libc.map.txt#782
+    #else
+      #define BOOST_THREAD_HAS_MONO_CLOCK
+      #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+    #endif
   #endif
 #endif
 
