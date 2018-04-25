@@ -208,6 +208,36 @@ rule thread-compile-fail ( sources : reqs * : name )
     ;
 }
 
+rule clang-thread-safety ( properties * )
+{
+    if <toolset>clang in $(properties)
+    {
+        return <cxxflags>-Werror=thread-safety ;
+    }
+    else
+    {
+        return <build>no ;
+    }
+}
+
+rule thread-safety-compile ( sources : reqs * : name )
+{
+    return
+    [ compile $(sources)
+        : $(reqs) <conditional>@clang-thread-safety
+        : $(name) ]
+    ;
+}
+
+rule thread-safety-compile-fail ( sources : reqs * : name )
+{
+    return
+    [ compile-fail $(sources)
+        : $(reqs) <conditional>@clang-thread-safety
+        : $(name) ]
+    ;
+}
+
 rule thread-compile ( sources : reqs * : name )
 {
     return
@@ -461,6 +491,10 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-compile-fail ./sync/mutual_exclusion/locks/lock_guard/copy_assign_fail.cpp : : lock_guard__cons__copy_assign_f ]
           [ thread-compile-fail ./sync/mutual_exclusion/locks/lock_guard/copy_ctor_fail.cpp : : lock_guard__cons__copy_ctor_f ]
+          [ thread-safety-compile ./sync/mutual_exclusion/locks/lock_guard/lock_guard_compile_pass.cpp : : lock_guard__lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/locks/lock_guard/lock_guard_compile_fail.cpp : : lock_guard__lock_compile_f ]
+          [ thread-safety-compile ./sync/mutual_exclusion/locks/lock_guard/lock_guard_adopt_lock_compile_pass.cpp : : lock_guard__adopt_lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/locks/lock_guard/lock_guard_adopt_lock_compile_fail.cpp : : lock_guard__adopt_lock_compile_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/lock_guard/adopt_lock_pass.cpp : lock_guard__cons__adopt_lock_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/lock_guard/default_pass.cpp : lock_guard__cons__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/locks/lock_guard/types_pass.cpp : lock_guard__types_p ]
@@ -615,6 +649,12 @@ rule thread-compile ( sources : reqs * : name )
     :
           [ thread-compile-fail ./sync/mutual_exclusion/mutex/assign_fail.cpp : : mutex__assign_f ]
           [ thread-compile-fail ./sync/mutual_exclusion/mutex/copy_fail.cpp : : mutex__copy_f ]
+          [ thread-safety-compile ./sync/mutual_exclusion/mutex/lock_compile_pass.cpp : : mutex__lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/lock_compile_fail.cpp : : mutex__lock_compile_f ]
+          # https://bugs.llvm.org/show_bug.cgi?id=32954
+          # http://clang-developers.42468.n3.nabble.com/thread-safety-warnings-specifically-try-acquire-capability-td4059337.html
+          #[ thread-safety-compile ./sync/mutual_exclusion/mutex/try_lock_compile_pass.cpp : : mutex__try_lock_compile_p ]
+          [ thread-safety-compile-fail ./sync/mutual_exclusion/mutex/try_lock_compile_fail.cpp : : mutex__try_lock_compile_f ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/default_pass.cpp : mutex__default_p ]
           [ thread-run2-noit ./sync/mutual_exclusion/mutex/lock_pass.cpp : mutex__lock_p ]
           [ thread-run2-noit-pthread ./sync/mutual_exclusion/mutex/native_handle_pass.cpp : mutex__native_handle_p ]
