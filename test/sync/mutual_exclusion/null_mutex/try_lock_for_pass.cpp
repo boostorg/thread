@@ -29,7 +29,7 @@
 
 boost::null_mutex m;
 
-typedef boost::chrono::steady_clock Clock;
+typedef boost::chrono::high_resolution_clock Clock;
 typedef Clock::time_point time_point;
 typedef Clock::duration duration;
 typedef boost::chrono::milliseconds ms;
