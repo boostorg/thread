@@ -1011,7 +1011,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-run test_11796.cpp ]
           #[ thread-run test_12293.cpp ]
           #[ thread-run test_12949.cpp ]
-          [ thread-run test_13480b.cpp ]
+          #[ thread-run test_13480b.cpp ]
+          [ thread-run test_13561.cpp ]
           
     ;
 
