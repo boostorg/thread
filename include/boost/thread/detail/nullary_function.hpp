@@ -72,13 +72,17 @@ namespace boost
       {}
 
 #ifdef BOOST_NO_CXX11_RVALUE_REFERENCES
-      template<typename F, typename = typename boost::enable_if_c<!boost::is_same<typename decay<F>::type, nullary_function>::value>::type>
-      explicit nullary_function(F& f):
+      template<typename F>
+      explicit nullary_function(F& f
+                                , typename disable_if<is_same<typename decay<F>::type, nullary_function>, int* >::type=0
+                                ):
       impl(new impl_type<F>(f))
       {}
 #endif
-      template<typename F, typename = typename boost::enable_if_c<!boost::is_same<typename decay<F>::type, nullary_function>::value>::type>
-      nullary_function(BOOST_THREAD_RV_REF(F) f):
+      template<typename F>
+      nullary_function(BOOST_THREAD_RV_REF(F) f
+                       , typename disable_if<is_same<typename decay<F>::type, nullary_function>, int* >::type=0
+                       ):
       impl(new impl_type<typename decay<F>::type>(thread_detail::decay_copy(boost::forward<F>(f))))
       {}
 
