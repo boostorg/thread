@@ -18,11 +18,11 @@
 #ifdef BOOST_NO_EXCEPTIONS
 namespace boost
 {
-
+namespace detail {
 struct shared_state_base {
-    void notify_deferred();
+    void notify_deferred() {}
 };
-
+}
 }
 #else
 

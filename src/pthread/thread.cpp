@@ -478,7 +478,7 @@ namespace boost
             mutex mx;
             unique_lock<mutex> lock(mx);
             condition_variable cond;
-            cond.do_wait_until(lock, detail::internal_platform_clock::now())
+            cond.do_wait_until(lock, detail::internal_platform_clock::now());
 #   endif
         }
     }
