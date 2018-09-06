@@ -237,5 +237,5 @@ int main()
     test_chrono_wait_function(wait_for_with_pred);
 #endif
 
-    return 0;
+    return boost::report_errors();
 }
