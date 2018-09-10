@@ -3,9 +3,12 @@
 
 // See https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
+// Un-comment to enable Thread Safety Analysis
+//#define BOOST_THREAD_ENABLE_THREAD_SAFETY_ANALYSIS
+
 // Enable thread safety attributes only with clang.
 // The attributes can be safely erased when compiling with other compilers.
-#if defined(__clang__) && (!defined(SWIG))
+#if defined (BOOST_THREAD_ENABLE_THREAD_SAFETY_ANALYSIS) && defined(__clang__) && (!defined(SWIG))
 #define BOOST_THREAD_ANNOTATION_ATTRIBUTE__(x)   __attribute__((x))
 #else
 #define BOOST_THREAD_ANNOTATION_ATTRIBUTE__(x)   // no-op
@@ -67,6 +70,12 @@
 
 #define BOOST_THREAD_NO_THREAD_SAFETY_ANALYSIS \
   BOOST_THREAD_ANNOTATION_ATTRIBUTE__(no_thread_safety_analysis)
+
+#if defined(__clang__) && (!defined(SWIG)) && __has_attribute(no_thread_safety_analysis) && defined(__FreeBSD__)
+#define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS __attribute__(no_thread_safety_analysis)
+#else
+#define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
+#endif
 
 #ifdef USE_LOCK_STYLE_THREAD_SAFETY_ATTRIBUTES
 // The original version of thread safety analysis the following attribute

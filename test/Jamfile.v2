@@ -212,7 +212,7 @@ rule clang-thread-safety ( properties * )
 {
     if <toolset>clang in $(properties)
     {
-        return <cxxflags>-Werror=thread-safety ;
+        return <cxxflags>-Werror=thread-safety  <define>BOOST_THREAD_ENABLE_THREAD_SAFETY_ANALYSIS ;
     }
     else
     {
