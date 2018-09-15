@@ -470,7 +470,7 @@ namespace boost
 #   elif defined(BOOST_HAS_PTHREAD_YIELD)
             BOOST_VERIFY(!pthread_yield());
 //#   elif defined BOOST_THREAD_USES_DATETIME
-//            xtime xt;
+//            ::boost::xtime xt;
 //            xtime_get(&xt, TIME_UTC_);
 //            sleep(xt);
 //            sleep_for(chrono::milliseconds(0));
