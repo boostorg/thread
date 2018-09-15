@@ -11,6 +11,7 @@
 #include <boost/config.hpp>
 #include <boost/detail/workaround.hpp>
 #include <boost/thread/detail/platform.hpp>
+#include <boost/thread/detail/thread_safety.hpp>
 
 //#define BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
 // ATTRIBUTE_MAY_ALIAS

@@ -1526,7 +1526,7 @@ A thread pool with up to a fixed number of threads.
 
 [variablelist
 
-[[Effects:] [Destroys the thread pool.]]
+[[Effects:] [Interrupts and joins all the threads and then destroys the threads.]]
 
 [[Synchronization:] [The completion of all the closures happen before the completion of the executor destructor.]]
 

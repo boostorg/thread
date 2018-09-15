@@ -522,12 +522,12 @@ namespace boost
         GetLogicalProcessorInformation(NULL, &size);
         if (ERROR_INSUFFICIENT_BUFFER != GetLastError())
             return 0;
+        const size_t Elements = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
 
-        std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(size);
+        std::vector<SYSTEM_LOGICAL_PROCESSOR_INFORMATION> buffer(Elements);
         if (GetLogicalProcessorInformation(&buffer.front(), &size) == FALSE)
             return 0;
 
-        const size_t Elements = size / sizeof(SYSTEM_LOGICAL_PROCESSOR_INFORMATION);
 
         for (size_t i = 0; i < Elements; ++i) {
             if (buffer[i].Relationship == RelationProcessorCore)

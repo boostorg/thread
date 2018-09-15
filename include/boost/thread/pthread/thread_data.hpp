@@ -12,6 +12,7 @@
 #include <boost/thread/lock_types.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
+#include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 
 #include <boost/shared_ptr.hpp>
 #include <boost/enable_shared_from_this.hpp>
@@ -56,7 +57,7 @@ namespace boost
 #else
           std::size_t page_size = ::sysconf( _SC_PAGESIZE);
 #endif
-#ifdef PTHREAD_STACK_MIN
+#if PTHREAD_STACK_MIN > 0
           if (size<PTHREAD_STACK_MIN) size=PTHREAD_STACK_MIN;
 #endif
           size = ((size+page_size-1)/page_size)*page_size;
@@ -209,11 +210,11 @@ namespace boost
                     check_for_interruption();
                     thread_info->cond_mutex=cond_mutex;
                     thread_info->current_cond=cond;
-                    BOOST_VERIFY(!pthread_mutex_lock(m));
+                    BOOST_VERIFY(!posix::pthread_mutex_lock(m));
                 }
                 else
                 {
-                    BOOST_VERIFY(!pthread_mutex_lock(m));
+                    BOOST_VERIFY(!posix::pthread_mutex_lock(m));
                 }
             }
             void unlock_if_locked()
@@ -221,14 +222,14 @@ namespace boost
               if ( ! done) {
                 if (set)
                 {
-                    BOOST_VERIFY(!pthread_mutex_unlock(m));
+                    BOOST_VERIFY(!posix::pthread_mutex_unlock(m));
                     lock_guard<mutex> guard(thread_info->data_mutex);
                     thread_info->cond_mutex=NULL;
                     thread_info->current_cond=NULL;
                 }
                 else
                 {
-                    BOOST_VERIFY(!pthread_mutex_unlock(m));
+                    BOOST_VERIFY(!posix::pthread_mutex_unlock(m));
                 }
                 done = true;
               }

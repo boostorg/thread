@@ -38,6 +38,8 @@ import path ;
 import configure ; 
 import threadapi-feature ;
 
+exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ;
+
 project boost/thread
     : source-location ../src
     : requirements <threading>multi
@@ -140,8 +142,6 @@ project boost/thread
       #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <library>/boost/system//boost_system
     ;
-
-exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ; 
 
 rule tag ( name : type ? : property-set )
 {
