@@ -62,7 +62,7 @@ inline ::boost::xtime get_xtime(boost::system_time const& abs_time)
     ::boost::xtime res;
     boost::posix_time::time_duration const time_since_epoch=abs_time-boost::posix_time::from_time_t(0);
 
-    res.sec=static_cast<::boost::xtime::xtime_sec_t>(time_since_epoch.total_seconds());
+    res.sec=static_cast< ::boost::xtime::xtime_sec_t>(time_since_epoch.total_seconds());
     res.nsec=static_cast< ::boost::xtime::xtime_nsec_t>(time_since_epoch.fractional_seconds()*(1000000000/time_since_epoch.ticks_per_second()));
     return res;
 }
