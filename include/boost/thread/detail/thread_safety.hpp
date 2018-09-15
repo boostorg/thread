@@ -71,8 +71,12 @@
 #define BOOST_THREAD_NO_THREAD_SAFETY_ANALYSIS \
   BOOST_THREAD_ANNOTATION_ATTRIBUTE__(no_thread_safety_analysis)
 
-#if defined(__clang__) && (!defined(SWIG)) && __has_attribute(no_thread_safety_analysis) && defined(__FreeBSD__)
+#if defined(__clang__) && (!defined(SWIG)) && defined(__FreeBSD__)
+#if __has_attribute(no_thread_safety_analysis)
 #define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS __attribute__(no_thread_safety_analysis)
+#else
+#define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
+#endif
 #else
 #define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
 #endif
