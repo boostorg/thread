@@ -73,7 +73,7 @@
 
 #if defined(__clang__) && (!defined(SWIG)) && defined(__FreeBSD__)
 #if __has_attribute(no_thread_safety_analysis)
-#define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS __attribute__(no_thread_safety_analysis)
+#define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS __attribute__((no_thread_safety_analysis))
 #else
 #define BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
 #endif
