@@ -35,7 +35,7 @@ namespace boost
         thread_specific_ptr& operator=(thread_specific_ptr&);
 
         struct delete_data:
-            detail::tss_cleanup_function
+            virtual detail::tss_cleanup_function
         {
             void operator()(void* data)
             {
@@ -44,7 +44,7 @@ namespace boost
         };
 
         struct run_custom_cleanup_function:
-            detail::tss_cleanup_function
+            virtual detail::tss_cleanup_function
         {
             void (*cleanup_function)(T*);
 
