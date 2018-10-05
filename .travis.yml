@@ -362,7 +362,7 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD ;" > ~/user-config.jam
-  - ./b2 -j3 libs/thread/test toolset=$TOOLSET
+  - ./b2 -j3 -l30 libs/thread/test toolset=$TOOLSET
 
 notifications:
   email:
