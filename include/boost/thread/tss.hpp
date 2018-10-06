@@ -15,15 +15,9 @@ namespace boost
 {
     namespace detail
     {
-        struct tss_cleanup_function
-        {
-            virtual ~tss_cleanup_function()
-            {}
-
-            virtual void operator()(void* data)=0;
-        };
-
-        BOOST_THREAD_DECL void set_tss_data(void const* key,boost::shared_ptr<tss_cleanup_function> func,void* tss_data,bool cleanup_existing);
+        BOOST_THREAD_DECL void update_tss_data(void const* key,boost::shared_ptr<void> data);
+        BOOST_THREAD_DECL void remove_tss_data(void const* key);
+        BOOST_THREAD_DECL boost::shared_ptr<void> release_tss_data(void const* key);
         BOOST_THREAD_DECL void* get_tss_data(void const* key);
     }
 
@@ -34,49 +28,51 @@ namespace boost
         thread_specific_ptr(thread_specific_ptr&);
         thread_specific_ptr& operator=(thread_specific_ptr&);
 
-        struct delete_data:
-            detail::tss_cleanup_function
+        struct tss_cleanup_functor
         {
-            void operator()(void* data)
-            {
-                delete static_cast<T*>(data);
-            }
-        };
-
-        struct run_custom_cleanup_function:
-            detail::tss_cleanup_function
-        {
-            void (*cleanup_function)(T*);
-
-            explicit run_custom_cleanup_function(void (*cleanup_function_)(T*)):
-                cleanup_function(cleanup_function_)
+            tss_cleanup_functor():
+                func_(default_deleter)
             {}
 
-            void operator()(void* data)
+            explicit tss_cleanup_functor(void (*func)(T*)):
+                func_(func)
+            {}
+
+            void operator()(T* data) const
             {
-                cleanup_function(static_cast<T*>(data));
+                if(func_)
+                {
+                    (*func_)(data);
+                }
             }
-        };
 
+            void clear()
+            {
+                func_ = NULL;
+            }
 
-        boost::shared_ptr<detail::tss_cleanup_function> cleanup;
+        private:
+            static void default_deleter(T* data)
+            {
+                delete data;
+            }
+
+            void (*func_)(T*);
+        } cleanup;
 
     public:
         typedef T element_type;
 
         thread_specific_ptr():
-            cleanup(detail::heap_new<delete_data>(),detail::do_heap_delete<delete_data>())
+            cleanup()
         {}
-        explicit thread_specific_ptr(void (*func_)(T*))
+        explicit thread_specific_ptr(void (*func_)(T*)):
+            cleanup(func_)
         {
-            if(func_)
-            {
-                cleanup.reset(detail::heap_new<run_custom_cleanup_function>(func_),detail::do_heap_delete<run_custom_cleanup_function>());
-            }
         }
         ~thread_specific_ptr()
         {
-            detail::set_tss_data(this,boost::shared_ptr<detail::tss_cleanup_function>(),0,true);
+            detail::remove_tss_data(this);
         }
 
         T* get() const
@@ -93,16 +89,20 @@ namespace boost
         }
         T* release()
         {
-            T* const temp=get();
-            detail::set_tss_data(this,boost::shared_ptr<detail::tss_cleanup_function>(),0,false);
-            return temp;
+            boost::shared_ptr<void> tmp=detail::release_tss_data(this);
+            if(tmp)
+            {
+              boost::get_deleter<tss_cleanup_functor>(tmp)->clear();
+              return static_cast<T*>(tmp.get());
+            }
+            return NULL;
         }
-        void reset(T* new_value=0)
+        void reset(T* new_value=NULL)
         {
             T* const current_value=get();
             if(current_value!=new_value)
             {
-                detail::set_tss_data(this,cleanup,new_value,true);
+                detail::update_tss_data(this,boost::shared_ptr<void>(new_value,cleanup));
             }
         }
     };

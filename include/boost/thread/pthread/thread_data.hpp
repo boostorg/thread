@@ -92,16 +92,7 @@ namespace boost
         struct shared_state_base;
         struct tss_cleanup_function;
         struct thread_exit_callback_node;
-        struct tss_data_node
-        {
-            boost::shared_ptr<boost::detail::tss_cleanup_function> func;
-            void* value;
-
-            tss_data_node(boost::shared_ptr<boost::detail::tss_cleanup_function> func_,
-                          void* value_):
-                func(func_),value(value_)
-            {}
-        };
+        typedef boost::shared_ptr<void> tss_data_node;
 
         struct thread_data_base;
         typedef boost::shared_ptr<thread_data_base> thread_data_ptr;

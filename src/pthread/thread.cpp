@@ -105,16 +105,7 @@ namespace boost
                                 }
                                 delete current_node;
                             }
-                            while (!thread_info->tss_data.empty())
-                            {
-                                std::map<void const*,detail::tss_data_node>::iterator current
-                                    = thread_info->tss_data.begin();
-                                if(current->second.func && (current->second.value!=0))
-                                {
-                                    (*current->second.func)(current->second.value);
-                                }
-                                thread_info->tss_data.erase(current);
-                            }
+                            thread_info->tss_data.clear();
                         }
                         thread_info->self.reset();
                     }
@@ -720,17 +711,16 @@ namespace boost
         {
             if(tss_data_node* const current_node=find_tss_data(key))
             {
-                return current_node->value;
+                return current_node->get();
             }
             return 0;
         }
 
         void add_new_tss_node(void const* key,
-                              boost::shared_ptr<tss_cleanup_function> func,
-                              void* tss_data)
+                              boost::shared_ptr<void> data)
         {
             detail::thread_data_base* const current_thread_data(get_or_make_current_thread_data());
-            current_thread_data->tss_data.insert(std::make_pair(key,tss_data_node(func,tss_data)));
+            current_thread_data->tss_data.insert(std::make_pair(key,boost::move(data)));
         }
 
         void erase_tss_node(void const* key)
@@ -742,30 +732,43 @@ namespace boost
             }
         }
 
-        void set_tss_data(void const* key,
-                          boost::shared_ptr<tss_cleanup_function> func,
-                          void* tss_data,bool cleanup_existing)
+        void update_tss_data(void const* key,
+                             boost::shared_ptr<void> data)
         {
             if(tss_data_node* const current_node=find_tss_data(key))
             {
-                if(cleanup_existing && current_node->func && (current_node->value!=0))
+                if(data)
                 {
-                    (*current_node->func)(current_node->value);
-                }
-                if(func || (tss_data!=0))
-                {
-                    current_node->func=func;
-                    current_node->value=tss_data;
+                    *current_node=boost::move(data);
                 }
                 else
                 {
                     erase_tss_node(key);
                 }
             }
-            else if(func || (tss_data!=0))
+            else if(data)
             {
-                add_new_tss_node(key,func,tss_data);
+                add_new_tss_node(key,boost::move(data));
             }
+        }
+
+        void remove_tss_data(void const* key)
+        {
+            if(tss_data_node* const current_node=find_tss_data(key))
+            {
+                erase_tss_node(key);
+            }
+        }
+
+        boost::shared_ptr<void> release_tss_data(void const* key)
+        {
+            if(tss_data_node* const current_node=find_tss_data(key))
+            {
+                boost::shared_ptr<void> tmp=boost::move(*current_node);
+                erase_tss_node(key);
+                return tmp;
+            }
+            return boost::shared_ptr<void>();
         }
     }
 
