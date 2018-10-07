@@ -1,6 +1,15 @@
 #ifndef BOOST_THREAD_DETAIL_THREAD_SAFETY_HPP
 #define BOOST_THREAD_DETAIL_THREAD_SAFETY_HPP
 
+#if defined(__GNUC__) && !defined(__GXX_EXPERIMENTAL_CXX0X__)
+//
+// This is horrible, but it seems to be the only we can shut up the
+// "anonymous variadic macros were introduced in C99 [-Wvariadic-macros]"
+// warning that get spewed out otherwise in non-C++11 mode.
+//
+#pragma GCC system_header
+#endif
+
 // See https://clang.llvm.org/docs/ThreadSafetyAnalysis.html
 
 // Un-comment to enable Thread Safety Analysis
