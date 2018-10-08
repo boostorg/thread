@@ -76,4 +76,4 @@ test_script:
   - ..\..\..\b2 config_info_travis_install %ARGS%
   - config_info_travis
   - cd ..\..\thread\test
-  - ..\..\..\b2 --abbreviate-paths -j3 %ARGS%
+  - ..\..\..\b2 --abbreviate-paths -j3 -l30 %ARGS%
