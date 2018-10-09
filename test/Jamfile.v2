@@ -815,6 +815,12 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ./threads/container/thread_ptr_list_pass.cpp : container__thread_ptr_list_p ]
     ;
 
+    explicit ts_examples_too_long ;
+    test-suite ts_examples_too_long
+    :
+          [ thread-run2 ../example/shared_mutex.cpp : ex_shared_mutex ]
+    ;
+
     #explicit ts_examples ;
     test-suite ts_examples
     :
@@ -830,7 +836,6 @@ rule thread-compile ( sources : reqs * : name )
           [ thread-run2-noit ../example/tss.cpp : ex_tss ]
           [ thread-run2 ../example/xtime.cpp : ex_xtime ]
           [ thread-run2 ../example/shared_monitor.cpp : ex_shared_monitor ]
-          [ thread-run2 ../example/shared_mutex.cpp : ex_shared_mutex ]
           #[ thread-run ../example/vhh_shared_monitor.cpp ]
           #[ thread-run ../example/vhh_shared_mutex.cpp ]
           [ thread-run2 ../example/make_future.cpp : ex_make_future ]
