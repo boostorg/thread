@@ -296,8 +296,8 @@ rule thread-compile ( sources : reqs * : name )
           #[ thread-test test_vhh_shared_mutex_timed_locks.cpp ]
     ;
 
-    #explicit t_futures ;
-    test-suite t_futures
+    explicit t_futures_too_long ;
+    test-suite t_futures_too_long
     :
           [ thread-test test_futures.cpp ]
     ;
