@@ -154,6 +154,7 @@ jobs:
       - TOOLSET: "clang"
       - COMPILER: "clang++"
       - CXXSTD: "c++1z"
+      - CXXFLAGS: "-Wno-unusable-partial-specialization"
       - DEFINES: "-DBOOST_THREAD_TEST_TIME_MS=100"
 
 workflows:
