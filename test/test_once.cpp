@@ -33,7 +33,7 @@ void call_once_thread()
     int my_once_value=0;
     for(unsigned i=0;i<loop_count;++i)
     {
-        boost::call_once(flag, initialize_variable);
+        boost::call_once(flag, &initialize_variable);
         my_once_value=var_to_init;
         if(my_once_value!=1)
         {
