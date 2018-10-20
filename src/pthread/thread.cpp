@@ -149,7 +149,7 @@ namespace boost
 
         boost::detail::thread_data_base* get_current_thread_data()
         {
-            boost::call_once(current_thread_tls_init_flag,create_current_thread_tls_key);
+            boost::call_once(current_thread_tls_init_flag,&create_current_thread_tls_key);
             return (boost::detail::thread_data_base*)pthread_getspecific(current_thread_tls_key);
         }
 
