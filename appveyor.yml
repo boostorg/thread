@@ -1,4 +1,5 @@
-# Copyright 2016, 2017 Peter Dimov
+# Copyright 2016-2018 Peter Dimov
+# Copyright 2018 Vicente Botet
 # Distributed under the Boost Software License, Version 1.0.
 # (See accompanying file LICENSE_1_0.txt or copy at http://boost.org/LICENSE_1_0.txt)
 
@@ -12,48 +13,34 @@ branches:
     - develop
     - /feature\/.*/
 
-platform:
-  - x64
-
 environment:
   matrix:
-    - ARGS: --toolset=msvc-9.0  address-model=32 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-10.0 address-model=32 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-11.0 address-model=32 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-12.0 address-model=32 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-14.0 address-model=32 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-12.0 address-model=64 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags="/wd4244 /wd4459"
-    - ARGS: --toolset=msvc-14.0 address-model=64 cxxflags="-std:c++latest /wd4244 /wd4459"
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+#      TOOLSET: msvc-9.0,msvc-10.0,msvc-11.0,msvc-12.0
+      TOOLSET: msvc-12.0
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
+      TOOLSET: msvc-14.0
+      ADDRMD: 32
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags="/wd4244 /wd4459"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=32 cxxflags="/wd4244 /wd4459"
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      ARGS: --toolset=msvc-14.1 address-model=64 cxxflags="-std:c++latest /wd4244 /wd4459"
-    - ARGS: --toolset=gcc address-model=64
-      PATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
-    - ARGS: --toolset=gcc address-model=64 cxxflags="-std=gnu++1z
-      PATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;%PATH%
-    - ARGS: --toolset=gcc address-model=32
-      PATH: C:\mingw-w64\i686-5.3.0-posix-dwarf-rt_v4-rev0\mingw32\bin;%PATH%
-    - ARGS: --toolset=gcc address-model=32 linkflags=-Wl,-allow-multiple-definition
-      PATH: C:\MinGW\bin;%PATH%
-
-
-
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#      ARGS: --toolset=msvc-9.0
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#      ARGS: --toolset=msvc-10.0
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#      ARGS: --toolset=msvc-11.0
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
-#      ARGS: --toolset=msvc-12.0
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-#      ARGS: --toolset=msvc-14.0
-#    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-#      ARGS: --toolset=msvc-14.1
+      TOOLSET: msvc-14.1
+      CXXSTD: 17
+      ADDRMD: 64
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      ADDPATH: C:\cygwin\bin;
+      TOOLSET: gcc
+      CXXSTD: 14
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      ADDPATH: C:\cygwin64\bin;
+      TOOLSET: gcc
+      CXXSTD: 14
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      ADDPATH: C:\mingw\bin;
+      TOOLSET: gcc
+      CXXSTD: 14
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+      ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+      TOOLSET: gcc
+      CXXSTD: 14
 
 install:
   - set BOOST_BRANCH=develop
@@ -64,16 +51,15 @@ install:
   - git submodule update --init tools/build
   - git submodule update --init libs/config
   - git submodule update --init tools/boostdep
-  - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\thread\
+  - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\thread
   - python tools/boostdep/depinst/depinst.py thread
   - cmd /c bootstrap
-  - b2 headers
+  - b2 -d0 headers
 
 build: off
 
 test_script:
-  - cd libs\config\test
-  - ..\..\..\b2 config_info_travis_install %ARGS%
-  - config_info_travis
-  - cd ..\..\thread\test
-  - ..\..\..\b2 --abbreviate-paths -j2 -l60 %ARGS%
+  - PATH=%ADDPATH%%PATH%
+  - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
+  - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
+  - b2 -j3 libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% variant=debug,release
