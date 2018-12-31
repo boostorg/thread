@@ -18,6 +18,9 @@
 #if defined BOOST_THREAD_USES_DATETIME
 #include <boost/thread/xtime.hpp>
 #endif
+#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#include <boost/thread/interruption.hpp>
+#endif
 #include <boost/thread/detail/thread_heap_alloc.hpp>
 #include <boost/thread/detail/make_tuple_indices.hpp>
 #include <boost/thread/detail/invoke.hpp>
@@ -585,12 +588,6 @@ namespace boost
         thread::id get_id() BOOST_NOEXCEPT;
 #else
         thread::id BOOST_THREAD_DECL get_id() BOOST_NOEXCEPT;
-#endif
-
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-        void BOOST_THREAD_DECL interruption_point();
-        bool BOOST_THREAD_DECL interruption_enabled() BOOST_NOEXCEPT;
-        bool BOOST_THREAD_DECL interruption_requested() BOOST_NOEXCEPT;
 #endif
 
 #if defined BOOST_THREAD_USES_DATETIME
