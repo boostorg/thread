@@ -11,6 +11,7 @@
 #include <boost/thread/pthread/pthread_helpers.hpp>
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+#include <boost/thread/interruption.hpp>
 #include <boost/thread/pthread/thread_data.hpp>
 #endif
 #include <boost/thread/pthread/condition_variable_fwd.hpp>
@@ -26,13 +27,6 @@
 
 namespace boost
 {
-#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
-    namespace this_thread
-    {
-        void BOOST_THREAD_DECL interruption_point();
-    }
-#endif
-
     namespace thread_cv_detail
     {
         template<typename MutexType>
