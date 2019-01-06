@@ -45,7 +45,7 @@
 # elif defined( BOOST_THREAD_CHRONO_MAC_API ) && defined( BOOST_THREAD_CHRONO_POSIX_API )
 #   error both BOOST_THREAD_CHRONO_MAC_API and BOOST_THREAD_CHRONO_POSIX_API are defined
 # elif !defined( BOOST_THREAD_CHRONO_WINDOWS_API ) && !defined( BOOST_THREAD_CHRONO_MAC_API ) && !defined( BOOST_THREAD_CHRONO_POSIX_API )
-#   if (defined(_WIN32) || defined(__WIN32__) || defined(WIN32)) && !defined(__CYGWIN__)
+#   if defined(BOOST_THREAD_PLATFORM_WIN32)
 #     define BOOST_THREAD_CHRONO_WINDOWS_API
 #   elif defined(macintosh) || defined(__APPLE__) || defined(__APPLE_CC__)
 #     define BOOST_THREAD_CHRONO_MAC_API
