@@ -180,7 +180,6 @@ rule thread-run2-h ( sources : name )
     sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) : : :
-      <library>/boost/system//boost_system
       <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <define>BOOST_THREAD_VERSION=3
     : $(name)_h ]
