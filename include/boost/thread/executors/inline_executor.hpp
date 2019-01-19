@@ -9,10 +9,15 @@
 #ifndef BOOST_THREAD_INLINE_EXECUTOR_HPP
 #define BOOST_THREAD_INLINE_EXECUTOR_HPP
 
+#include <exception> // std::terminate
+#include <boost/throw_exception.hpp>
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/work.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
+#include <boost/thread/concurrent_queues/queue_op_status.hpp> // sync_queue_is_closed
 
 #include <boost/config/abi_prefix.hpp>
 

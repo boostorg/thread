@@ -9,11 +9,14 @@
 #ifndef BOOST_THREAD_THREAD_EXECUTOR_HPP
 #define BOOST_THREAD_THREAD_EXECUTOR_HPP
 
+#include <boost/throw_exception.hpp>
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/work.hpp>
 #include <boost/thread/executors/executor.hpp>
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/scoped_thread.hpp>
 #include <boost/thread/csbl/vector.hpp>
