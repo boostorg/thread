@@ -9,6 +9,7 @@
 #ifndef BOOST_THREAD_SERIAL_EXECUTOR_HPP
 #define BOOST_THREAD_SERIAL_EXECUTOR_HPP
 
+#include <exception>
 #include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>

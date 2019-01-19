@@ -18,6 +18,7 @@ environment:
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
 #      TOOLSET: msvc-9.0,msvc-10.0,msvc-11.0,msvc-12.0
       TOOLSET: msvc-12.0
+      SELF_CONTAINED_HEADER_TESTS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       TOOLSET: msvc-14.0
       ADDRMD: 32
@@ -29,30 +30,36 @@ environment:
       ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
       CXXSTD: 14
+      SELF_CONTAINED_HEADER_TESTS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       ADDPATH: C:\cygwin64\bin;
       TOOLSET: gcc
       CXXSTD: 14
+      SELF_CONTAINED_HEADER_TESTS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       ADDPATH: C:\mingw\bin;
       TOOLSET: gcc
       CXXSTD: 14
+      SELF_CONTAINED_HEADER_TESTS: 1
     - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
       ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
       TOOLSET: gcc
       CXXSTD: 14
+      SELF_CONTAINED_HEADER_TESTS: 1
 
 install:
+  - set GIT_FETCH_JOBS=8
   - set BOOST_BRANCH=develop
   - if "%APPVEYOR_REPO_BRANCH%" == "master" set BOOST_BRANCH=master
   - cd ..
   - git clone -b %BOOST_BRANCH% --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
-  - git submodule update --init tools/build
-  - git submodule update --init libs/config
-  - git submodule update --init tools/boostdep
+  - git submodule init tools/build
+  - git submodule init libs/config
+  - git submodule init tools/boostdep
+  - git submodule update --jobs %GIT_FETCH_JOBS%
   - xcopy /s /e /q %APPVEYOR_BUILD_FOLDER% libs\thread
-  - python tools/boostdep/depinst/depinst.py thread
+  - python tools/boostdep/depinst/depinst.py --git_args "--jobs %GIT_FETCH_JOBS%" thread
   - cmd /c bootstrap
   - b2 -d0 headers
 
@@ -60,6 +67,7 @@ build: off
 
 test_script:
   - PATH=%ADDPATH%%PATH%
+  - if "%SELF_CONTAINED_HEADER_TESTS%" == "" set BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
-  - b2 -j3 libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% variant=debug,release
+  - b2 -j %NUMBER_OF_PROCESSORS% libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% variant=debug,release
