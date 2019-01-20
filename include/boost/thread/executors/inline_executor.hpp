@@ -9,9 +9,11 @@
 #ifndef BOOST_THREAD_INLINE_EXECUTOR_HPP
 #define BOOST_THREAD_INLINE_EXECUTOR_HPP
 
+#include <boost/thread/detail/config.hpp>
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
+
 #include <exception> // std::terminate
 #include <boost/throw_exception.hpp>
-#include <boost/thread/detail/config.hpp>
 #include <boost/thread/detail/delete.hpp>
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/executors/work.hpp>
@@ -173,4 +175,5 @@ using executors::inline_executor;
 
 #include <boost/config/abi_suffix.hpp>
 
+#endif
 #endif

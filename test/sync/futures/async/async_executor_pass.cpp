@@ -18,8 +18,7 @@
 //     future<typename result_of<F(Args...)>::type>
 //     async(Executor& ex, F&& f, Args&&... args);
 
-#define BOOST_THREAD_VERSION 4
-#define BOOST_THREAD_PROVIDES_EXECUTORS
+#define BOOST_THREAD_VERSION 5
 #include <boost/config.hpp>
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
 #define BOOST_RESULT_OF_USE_DECLTYPE

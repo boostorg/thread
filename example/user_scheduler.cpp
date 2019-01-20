@@ -5,7 +5,7 @@
 
 #include <boost/config.hpp>
 
-#define BOOST_THREAD_VERSION 4
+#define BOOST_THREAD_VERSION 5
 //#define BOOST_THREAD_USES_LOG
 #define BOOST_THREAD_USES_LOG_THREAD_ID
 #if ! defined  BOOST_NO_CXX11_DECLTYPE

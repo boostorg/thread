@@ -8,6 +8,36 @@
 
 [section:changes History]
 
+[heading Version 4.9.0 - boost 1.70]
+
+[*Know Bugs:]
+
+* [@http://svn.boost.org/trac/boost/ticket/3926 #3926] thread_specific_ptr + dlopen library causes a SIGSEGV.
+
+* [@http://svn.boost.org/trac/boost/ticket/10964 #10964] future<future<T>>::unwrap().then() Deadlocks
+
+
+Please take a look at [@https://svn.boost.org/trac/boost/query?status=assigned&status=new&status=reopened&component=thread&type=!Feature+Requests&col=id&col=summary&order=id thread Know Bugs] to see the current state.
+
+Please take a look at [@http://www.boost.org/development/tests/master/developer/thread.html thread master regression test] to see the last regression test snapshot.
+
+[*Fixed Bugs:]
+
+* [@https://github.com/boostorg/thread/pull/268] Add self contained header tests and fix discovered bugs
+
+* Improvements support for cygwin platform using the pthread interface.
+	* [@https://github.com/boostorg/thread/pull/263] Fix compilation of timed functions on Cygwin
+	$ [@https://github.com/boostorg/thread/pull/262] Fix MinGW warnings about violation of the strict aliasing rules
+
+* [@https://github.com/boostorg/thread/pull/260] Fix "interruption_point" defined twice.
+
+* [@https://github.com/boostorg/thread/pull/249] Simplify TSS cleanup routines. Fixes #236
+
+[*New Experimental Features:]
+
+* Since BOOST_THREAD_VERSION 5, BOOST_THREAD_USES_EXECUTOR is defined by default. 
+* [@https://github.com/boostorg/thread/pull/266] Remove linking with Boost.System
+
 [heading Version 4.8.1 - boost 1.67]
 
 [*Know Bugs:]

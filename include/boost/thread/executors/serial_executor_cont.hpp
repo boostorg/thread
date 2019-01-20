@@ -10,8 +10,7 @@
 #define BOOST_THREAD_SERIAL_EXECUTOR_CONT_HPP
 
 #include <boost/thread/detail/config.hpp>
-
-#if defined(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION) && defined(BOOST_THREAD_PROVIDES_EXECUTORS)
+#if defined BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION && defined BOOST_THREAD_PROVIDES_EXECUTORS && defined BOOST_THREAD_USES_MOVE
 
 #include <exception> // std::terminate
 #include <boost/throw_exception.hpp>
@@ -174,6 +173,5 @@ using executors::serial_executor_cont;
 
 #include <boost/config/abi_suffix.hpp>
 
-#endif // defined(BOOST_THREAD_PROVIDES_FUTURE_CONTINUATION) && defined(BOOST_THREAD_PROVIDES_EXECUTORS)
-
+#endif
 #endif
