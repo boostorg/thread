@@ -118,6 +118,7 @@ namespace boost
     namespace executors {
         class executor;
     }
+    using executors::executor;
 #endif
     typedef shared_ptr<executor> executor_ptr_type;
 

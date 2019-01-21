@@ -30,7 +30,7 @@ matrix:
   include:
     - os: linux
       compiler: g++
-      env: TOOLSET=gcc COMPILER=g++ CXXSTD=c++11
+      env: TOOLSET=gcc COMPILER=g++ CXXSTD=c++11 SELF_CONTAINED_HEADER_TESTS=1
 
 #    - os: linux
 #      compiler: g++-4.7
@@ -331,7 +331,7 @@ matrix:
 
     - os: osx
       compiler: clang++
-      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++98
+      env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++98 SELF_CONTAINED_HEADER_TESTS=1
 
 #    - os: osx
 #      compiler: clang++
@@ -346,23 +346,28 @@ matrix:
       env: TOOLSET=clang COMPILER=clang++ CXXSTD=c++1z
 
 install:
-  - BOOST_BRANCH=develop && [ "$TRAVIS_BRANCH" == "master" ] && BOOST_BRANCH=master || true
+  - GIT_FETCH_JOBS=8
+  - BOOST_BRANCH=develop
+  - if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
   - cd ..
   - git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
   - cd boost-root
-  - git submodule update --init tools/build
-  - git submodule update --init libs/config
-  - git submodule update --init tools/boostdep
+  - git submodule init tools/build
+  - git submodule init libs/config
+  - git submodule init tools/boostdep
+  - git submodule update --jobs $GIT_FETCH_JOBS
   - mkdir -p libs/thread
   - cp -r $TRAVIS_BUILD_DIR/* libs/thread
-  - python tools/boostdep/depinst/depinst.py thread
+  - python tools/boostdep/depinst/depinst.py --git_args "--jobs $GIT_FETCH_JOBS" thread
   - ./bootstrap.sh
   - ./b2 headers
 
 script:
   - |-
     echo "using $TOOLSET : : $COMPILER : <cxxflags>-std=$CXXSTD ;" > ~/user-config.jam
-  - ./b2 -j3 -l60 libs/thread/test toolset=$TOOLSET
+  - BUILD_JOBS=`(nproc || sysctl -n hw.ncpu) 2> /dev/null`
+  - if [ -z "$SELF_CONTAINED_HEADER_TESTS" ]; then export BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1; fi
+  - ./b2 -j $BUILD_JOBS -l60 libs/thread/test toolset=$TOOLSET
 
 notifications:
   email:

@@ -18,6 +18,9 @@
 
 # bring in rules for testing
 import testing ;
+import regex ;
+import path ;
+import os ;
 
 project
     : requirements
@@ -180,7 +183,6 @@ rule thread-run2-h ( sources : name )
     sources = $(sources) winrt_init.cpp ;
     return
     [ run $(sources) : : :
-      <library>/boost/system//boost_system
       <define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
       <define>BOOST_THREAD_VERSION=3
     : $(name)_h ]
@@ -245,6 +247,42 @@ rule thread-compile ( sources : reqs * : name )
         : $(reqs)
         : $(name) ]
     ;
+}
+
+rule windows-cygwin-specific ( properties * )
+{
+    if <target-os>windows in $(properties) || <target-os>cygwin in $(properties)
+    {
+        return <build>yes ;
+    }
+    else
+    {
+        return <build>no ;
+    }
+}
+
+rule generate_self_contained_header_tests
+{
+    local all_rules ;
+    local file ;
+
+    if ! [ os.environ BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS ]
+    {
+        local headers_path = [ path.make $(BOOST_ROOT)/libs/thread/include/boost/thread ] ;
+        for file in [ path.glob-tree $(headers_path) : *.hpp : detail pthread win32 ]
+        {
+            local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
+            # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
+            #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
+            local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
+            #ECHO $(rel_file) ;
+            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
+            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <define>"BOOST_THREAD_TEST_POST_WINDOWS_H" <dependency>$(file) <conditional>@windows-cygwin-specific : $(test_name)-post_winh ] ;
+        }
+    }
+
+    #ECHO All rules: $(all_rules) ;
+    return $(all_rules) ;
 }
 
 {
@@ -1056,4 +1094,5 @@ rule thread-compile ( sources : reqs * : name )
           [ exe test_time_jumps_3 : test_time_jumps_3_obj ../build//boost_thread ]
     ;
 
+    test-suite test_self_contained_headers : [ generate_self_contained_header_tests ] ;
 }
