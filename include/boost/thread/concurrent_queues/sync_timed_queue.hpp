@@ -229,7 +229,7 @@ namespace detail
       if (super::closed(lk)) return true; // closed
 
       const time_point tp(super::data_.top().time);
-      super::wait_until_closed_until(lk, tp);
+      super::cond_.wait_until(lk, tp);
     }
   }
 
@@ -250,7 +250,7 @@ namespace detail
       if (clock::now() >= tp) return super::empty(lk) ? queue_op_status::timeout : queue_op_status::not_ready;
 
       const time_point tpmin(tp < super::data_.top().time ? tp : super::data_.top().time);
-      super::wait_until_closed_until(lk, tpmin);
+      super::cond_.wait_until(lk, tpmin);
     }
   }
 
