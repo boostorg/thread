@@ -88,8 +88,8 @@ namespace detail
     T pull();
     void pull(T& elem);
 
-    template <class WClock, class Duration>
-    queue_op_status pull_until(chrono::time_point<WClock,Duration> const& tp, T& elem);
+    template <class Duration>
+    queue_op_status pull_until(chrono::time_point<clock,Duration> const& tp, T& elem);
     template <class Rep, class Period>
     queue_op_status pull_for(chrono::duration<Rep,Period> const& dura, T& elem);
 
@@ -122,8 +122,7 @@ namespace detail
     inline bool not_empty_and_time_reached(lock_guard<mutex>& lk) const;
 
     bool wait_to_pull(unique_lock<mutex>&);
-    template <class WClock, class Duration>
-    queue_op_status wait_to_pull_until(unique_lock<mutex>&, chrono::time_point<WClock, Duration> const& tp);
+    queue_op_status wait_to_pull_until(unique_lock<mutex>&, TimePoint const& tp);
 
     T pull(unique_lock<mutex>&);
     T pull(lock_guard<mutex>&);
@@ -234,8 +233,7 @@ namespace detail
   }
 
   template <class T, class Clock, class TimePoint>
-  template <class WClock, class Duration>
-  queue_op_status sync_timed_queue<T, Clock, TimePoint>::wait_to_pull_until(unique_lock<mutex>& lk, chrono::time_point<WClock, Duration> const& tp)
+  queue_op_status sync_timed_queue<T, Clock, TimePoint>::wait_to_pull_until(unique_lock<mutex>& lk, TimePoint const& tp)
   {
     for (;;)
     {
@@ -315,12 +313,12 @@ namespace detail
 
   //////////////////////
   template <class T, class Clock, class TimePoint>
-  template <class WClock, class Duration>
+  template <class Duration>
   queue_op_status
-  sync_timed_queue<T, Clock, TimePoint>::pull_until(chrono::time_point<WClock, Duration> const& tp, T& elem)
+  sync_timed_queue<T, Clock, TimePoint>::pull_until(chrono::time_point<clock,Duration> const& tp, T& elem)
   {
     unique_lock<mutex> lk(super::mtx_);
-    const queue_op_status rc = wait_to_pull_until(lk, tp);
+    const queue_op_status rc = wait_to_pull_until(lk, chrono::time_point_cast<typename time_point::duration>(tp));
     if (rc == queue_op_status::success) pull(lk, elem);
     return rc;
   }
@@ -331,7 +329,7 @@ namespace detail
   queue_op_status
   sync_timed_queue<T, Clock, TimePoint>::pull_for(chrono::duration<Rep,Period> const& dura, T& elem)
   {
-    return pull_until(chrono::steady_clock::now() + dura, elem);
+    return pull_until(clock::now() + dura, elem);
   }
 
   ///////////////////////////
