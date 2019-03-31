@@ -2142,7 +2142,7 @@ void testSyncTimedQueuePullForSucceedsSystem(const long long jumpMs)
     bool succeeded = (q.pull_for(typename Helper::milliseconds(10000), i) == boost::queue_op_status::success);
     typename Helper::steady_time_point after(Helper::steadyNow());
 
-    checkWaitTime<Helper>(Helper::waitDur, after - before, succeeded ? e_succeeded_good : e_failed_bad);
+    checkWaitTime<Helper>(Helper::waitDur - typename Helper::milliseconds(jumpMs), after - before, succeeded ? e_succeeded_good : e_failed_bad);
 }
 
 template <typename Helper>
@@ -2156,7 +2156,7 @@ void testSyncTimedQueuePullForSucceedsCustom(const long long jumpMs)
     bool succeeded = (q.pull_for(typename Helper::milliseconds(10000), i) == boost::queue_op_status::success);
     typename Helper::steady_time_point after(Helper::steadyNow());
 
-    checkWaitTime<Helper>(Helper::waitDur, after - before, succeeded ? e_succeeded_good : e_failed_bad);
+    checkWaitTime<Helper>(Helper::waitDur - typename Helper::milliseconds(jumpMs), after - before, succeeded ? e_succeeded_good : e_failed_bad);
 }
 
 template <typename Helper>
