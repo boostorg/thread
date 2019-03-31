@@ -52,6 +52,38 @@ void call_pull(sync_tq* q)
     }
 }
 
+void call_pull_until(sync_tq* q)
+{
+    // pull elements off of the queue (earliest element first)
+    steady_clock::time_point start = steady_clock::now();
+    for (int i = count - 1; i >= 0; --i)
+    {
+        int j;
+        q->pull_until(steady_clock::now() + hours(1), j);
+        BOOST_TEST_EQ(i, j);
+        milliseconds elapsed = duration_cast<milliseconds>(steady_clock::now() - start);
+        milliseconds expected = milliseconds(i * 500) + seconds(count - i);
+        BOOST_TEST_GE(elapsed, expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        BOOST_TEST_LE(elapsed, expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
+    }
+}
+
+void call_pull_for(sync_tq* q)
+{
+    // pull elements off of the queue (earliest element first)
+    steady_clock::time_point start = steady_clock::now();
+    for (int i = count - 1; i >= 0; --i)
+    {
+        int j;
+        q->pull_for(hours(1), j);
+        BOOST_TEST_EQ(i, j);
+        milliseconds elapsed = duration_cast<milliseconds>(steady_clock::now() - start);
+        milliseconds expected = milliseconds(i * 500) + seconds(count - i);
+        BOOST_TEST_GE(elapsed, expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        BOOST_TEST_LE(elapsed, expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
+    }
+}
+
 void test_push_while_pull()
 {
     sync_tq tq;
@@ -63,8 +95,32 @@ void test_push_while_pull()
     BOOST_TEST(tq.empty());
 }
 
+void test_push_while_pull_until()
+{
+    sync_tq tq;
+    BOOST_TEST(tq.empty());
+    boost::thread_group tg;
+    tg.create_thread(boost::bind(call_push, &tq));
+    tg.create_thread(boost::bind(call_pull_until, &tq));
+    tg.join_all();
+    BOOST_TEST(tq.empty());
+}
+
+void test_push_while_pull_for()
+{
+    sync_tq tq;
+    BOOST_TEST(tq.empty());
+    boost::thread_group tg;
+    tg.create_thread(boost::bind(call_push, &tq));
+    tg.create_thread(boost::bind(call_pull_for, &tq));
+    tg.join_all();
+    BOOST_TEST(tq.empty());
+}
+
 int main()
 {
     test_push_while_pull();
+    test_push_while_pull_until();
+    test_push_while_pull_for();
     return boost::report_errors();
 }
