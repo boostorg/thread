@@ -24,31 +24,58 @@ using namespace boost::chrono;
 
 typedef boost::concurrent::sync_timed_queue<int> sync_tq;
 
-const int count = 5;
+const int cnt = 5;
 
-void call_push(sync_tq* q)
+void call_push(sync_tq* q, const steady_clock::time_point start)
 {
     // push elements onto the queue every 500 milliseconds but with a decreasing delay each time
-    for (int i = 0; i < count; ++i)
+    for (int i = 0; i < cnt; ++i)
     {
-        q->push(i, sync_tq::clock::now() + seconds(count - i));
-        boost::this_thread::sleep_for(milliseconds(500));
+        boost::this_thread::sleep_until(start + milliseconds(i * 500));
+        const steady_clock::time_point expected = start + milliseconds(i * 500) + seconds(cnt - i);
+        q->push(i, expected);
     }
 }
 
-void call_pull(sync_tq* q)
+void call_pull(sync_tq* q, const steady_clock::time_point start)
 {
     // pull elements off of the queue (earliest element first)
-    steady_clock::time_point start = steady_clock::now();
-    for (int i = count - 1; i >= 0; --i)
+    for (int i = cnt - 1; i >= 0; --i)
     {
         int j;
         q->pull(j);
         BOOST_TEST_EQ(i, j);
-        milliseconds elapsed = duration_cast<milliseconds>(steady_clock::now() - start);
-        milliseconds expected = milliseconds(i * 500) + seconds(count - i);
-        BOOST_TEST_GE(elapsed, expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
-        BOOST_TEST_LE(elapsed, expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        const steady_clock::time_point expected = start + milliseconds(i * 500) + seconds(cnt - i);
+        BOOST_TEST_GE(steady_clock::now(), expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        BOOST_TEST_LE(steady_clock::now(), expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
+    }
+}
+
+void call_pull_until(sync_tq* q, const steady_clock::time_point start)
+{
+    // pull elements off of the queue (earliest element first)
+    for (int i = cnt - 1; i >= 0; --i)
+    {
+        int j;
+        q->pull_until(steady_clock::now() + hours(1), j);
+        BOOST_TEST_EQ(i, j);
+        const steady_clock::time_point expected = start + milliseconds(i * 500) + seconds(cnt - i);
+        BOOST_TEST_GE(steady_clock::now(), expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        BOOST_TEST_LE(steady_clock::now(), expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
+    }
+}
+
+void call_pull_for(sync_tq* q, const steady_clock::time_point start)
+{
+    // pull elements off of the queue (earliest element first)
+    for (int i = cnt - 1; i >= 0; --i)
+    {
+        int j;
+        q->pull_for(hours(1), j);
+        BOOST_TEST_EQ(i, j);
+        const steady_clock::time_point expected = start + milliseconds(i * 500) + seconds(cnt - i);
+        BOOST_TEST_GE(steady_clock::now(), expected - milliseconds(BOOST_THREAD_TEST_TIME_MS));
+        BOOST_TEST_LE(steady_clock::now(), expected + milliseconds(BOOST_THREAD_TEST_TIME_MS));
     }
 }
 
@@ -57,8 +84,33 @@ void test_push_while_pull()
     sync_tq tq;
     BOOST_TEST(tq.empty());
     boost::thread_group tg;
-    tg.create_thread(boost::bind(call_push, &tq));
-    tg.create_thread(boost::bind(call_pull, &tq));
+    const steady_clock::time_point start = steady_clock::now();
+    tg.create_thread(boost::bind(call_push, &tq, start));
+    tg.create_thread(boost::bind(call_pull, &tq, start));
+    tg.join_all();
+    BOOST_TEST(tq.empty());
+}
+
+void test_push_while_pull_until()
+{
+    sync_tq tq;
+    BOOST_TEST(tq.empty());
+    boost::thread_group tg;
+    const steady_clock::time_point start = steady_clock::now();
+    tg.create_thread(boost::bind(call_push, &tq, start));
+    tg.create_thread(boost::bind(call_pull_until, &tq, start));
+    tg.join_all();
+    BOOST_TEST(tq.empty());
+}
+
+void test_push_while_pull_for()
+{
+    sync_tq tq;
+    BOOST_TEST(tq.empty());
+    boost::thread_group tg;
+    const steady_clock::time_point start = steady_clock::now();
+    tg.create_thread(boost::bind(call_push, &tq, start));
+    tg.create_thread(boost::bind(call_pull_for, &tq, start));
     tg.join_all();
     BOOST_TEST(tq.empty());
 }
@@ -66,5 +118,7 @@ void test_push_while_pull()
 int main()
 {
     test_push_while_pull();
+    test_push_while_pull_until();
+    test_push_while_pull_for();
     return boost::report_errors();
 }
