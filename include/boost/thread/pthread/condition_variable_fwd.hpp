@@ -76,14 +76,11 @@ namespace boost
         }
         ~condition_variable()
         {
-            int ret;
 //#if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
             // ditto
-            ret = posix::pthread_mutex_destroy(&internal_mutex);
-            BOOST_ASSERT(!ret);
+            BOOST_VERIFY(!posix::pthread_mutex_destroy(&internal_mutex));
 //#endif
-            ret = posix::pthread_cond_destroy(&cond);
-            BOOST_ASSERT(!ret);
+            BOOST_VERIFY(!posix::pthread_cond_destroy(&cond));
         }
 
         void wait(unique_lock<mutex>& m);
