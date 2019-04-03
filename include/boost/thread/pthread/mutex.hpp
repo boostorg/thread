@@ -53,9 +53,7 @@ namespace boost
         }
         ~mutex()
         {
-          int const res = posix::pthread_mutex_destroy(&m);
-          boost::ignore_unused(res);
-          BOOST_ASSERT(!res);
+          BOOST_VERIFY(!posix::pthread_mutex_destroy(&m));
         }
 
         void lock() BOOST_THREAD_ACQUIRE()
@@ -69,13 +67,7 @@ namespace boost
 
         void unlock() BOOST_THREAD_RELEASE()
         {
-            int res = posix::pthread_mutex_unlock(&m);
-            (void)res;
-            BOOST_ASSERT(res == 0);
-//            if (res)
-//            {
-//                boost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
-//            }
+            BOOST_VERIFY(!posix::pthread_mutex_unlock(&m));
         }
 
         bool try_lock() BOOST_THREAD_TRY_ACQUIRE(true)
@@ -184,13 +176,7 @@ namespace boost
 
         void unlock()
         {
-            int res = posix::pthread_mutex_unlock(&m);
-            (void)res;
-            BOOST_ASSERT(res == 0);
-//            if (res)
-//            {
-//                boost::throw_exception(lock_error(res,"boost: mutex unlock failed in pthread_mutex_unlock"));
-//            }
+            BOOST_VERIFY(!posix::pthread_mutex_unlock(&m));
         }
 
         bool try_lock()
