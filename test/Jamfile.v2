@@ -789,7 +789,7 @@ rule generate_self_contained_header_tests
     test-suite ts_sync_tq
     :
           [ thread-run2-noit ./sync/mutual_exclusion/sync_pq/tq_single_thread_pass.cpp : sync_tq_single_thread_p ]
-          #[ thread-run2-noit ./sync/mutual_exclusion/sync_pq/tq_multi_thread_pass.cpp : sync_tq_multi_thread_p ]
+          [ thread-run2-noit ./sync/mutual_exclusion/sync_pq/tq_multi_thread_pass.cpp : sync_tq_multi_thread_p ]
     ;
 
     test-suite ts_scheduler
