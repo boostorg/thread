@@ -1952,9 +1952,35 @@ void testSyncPriorityQueueBoost(const std::string& name)
 // Test Sync Timed Queue
 
 template <typename Helper>
-void testSyncTimedQueuePullForEmpty(const long long jumpMs)
+void testSyncTimedQueuePullForEmptySteady(const long long jumpMs)
 {
     boost::sync_timed_queue<int, typename Helper::steady_clock> q;
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool timeout = (q.pull_for(Helper::waitDur, i) == boost::queue_op_status::timeout);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur, after - before, timeout ? e_timeout : e_no_timeout);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForEmptySystem(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::system_clock> q;
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool timeout = (q.pull_for(Helper::waitDur, i) == boost::queue_op_status::timeout);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur, after - before, timeout ? e_timeout : e_no_timeout);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForEmptyCustom(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::custom_clock> q;
     int i;
 
     typename Helper::steady_time_point before(Helper::steadyNow());
@@ -2006,9 +2032,37 @@ void testSyncTimedQueuePullUntilEmptyCustom(const long long jumpMs)
 //--------------------------------------
 
 template <typename Helper>
-void testSyncTimedQueuePullForNotReady(const long long jumpMs)
+void testSyncTimedQueuePullForNotReadySteady(const long long jumpMs)
 {
     boost::sync_timed_queue<int, typename Helper::steady_clock> q;
+    q.push(0, typename Helper::milliseconds(10000)); // a long time
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool notReady = (q.pull_for(Helper::waitDur, i) == boost::queue_op_status::not_ready);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur, after - before, notReady ? e_not_ready_good : e_ready_bad);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForNotReadySystem(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::system_clock> q;
+    q.push(0, typename Helper::milliseconds(10000)); // a long time
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool notReady = (q.pull_for(Helper::waitDur, i) == boost::queue_op_status::not_ready);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur, after - before, notReady ? e_not_ready_good : e_ready_bad);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForNotReadyCustom(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::custom_clock> q;
     q.push(0, typename Helper::milliseconds(10000)); // a long time
     int i;
 
@@ -2064,7 +2118,7 @@ void testSyncTimedQueuePullUntilNotReadyCustom(const long long jumpMs)
 //--------------------------------------
 
 template <typename Helper>
-void testSyncTimedQueuePullForSucceeds(const long long jumpMs)
+void testSyncTimedQueuePullForSucceedsSteady(const long long jumpMs)
 {
     boost::sync_timed_queue<int, typename Helper::steady_clock> q;
     q.push(0, Helper::waitDur);
@@ -2075,6 +2129,34 @@ void testSyncTimedQueuePullForSucceeds(const long long jumpMs)
     typename Helper::steady_time_point after(Helper::steadyNow());
 
     checkWaitTime<Helper>(Helper::waitDur, after - before, succeeded ? e_succeeded_good : e_failed_bad);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForSucceedsSystem(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::system_clock> q;
+    q.push(0, Helper::waitDur);
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool succeeded = (q.pull_for(typename Helper::milliseconds(10000), i) == boost::queue_op_status::success);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur - typename Helper::milliseconds(jumpMs), after - before, succeeded ? e_succeeded_good : e_failed_bad);
+}
+
+template <typename Helper>
+void testSyncTimedQueuePullForSucceedsCustom(const long long jumpMs)
+{
+    boost::sync_timed_queue<int, typename Helper::custom_clock> q;
+    q.push(0, Helper::waitDur);
+    int i;
+
+    typename Helper::steady_time_point before(Helper::steadyNow());
+    bool succeeded = (q.pull_for(typename Helper::milliseconds(10000), i) == boost::queue_op_status::success);
+    typename Helper::steady_time_point after(Helper::steadyNow());
+
+    checkWaitTime<Helper>(Helper::waitDur - typename Helper::milliseconds(jumpMs), after - before, succeeded ? e_succeeded_good : e_failed_bad);
 }
 
 template <typename Helper>
@@ -2171,19 +2253,25 @@ template <typename Helper>
 void testSyncTimedQueueBoost(const std::string& name)
 {
     std::cout << std::endl;
-    runTestWithNone<Helper>(testSyncTimedQueuePullForEmpty        <Helper>, name + "::pull_for(), empty");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForEmptySteady  <Helper>, name + "::pull_for(), empty, steady time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForEmptySystem  <Helper>, name + "::pull_for(), empty, system time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForEmptyCustom  <Helper>, name + "::pull_for(), empty, custom time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilEmptySteady<Helper>, name + "::pull_until(), empty, steady time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilEmptySystem<Helper>, name + "::pull_until(), empty, system time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilEmptyCustom<Helper>, name + "::pull_until(), empty, custom time");
 
     std::cout << std::endl;
-    runTestWithNone<Helper>(testSyncTimedQueuePullForNotReady        <Helper>, name + "::pull_for(), not ready");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForNotReadySteady  <Helper>, name + "::pull_for(), not ready, steady time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForNotReadySystem  <Helper>, name + "::pull_for(), not ready, system time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForNotReadyCustom  <Helper>, name + "::pull_for(), not ready, custom time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilNotReadySteady<Helper>, name + "::pull_until(), not ready, steady time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilNotReadySystem<Helper>, name + "::pull_until(), not ready, system time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilNotReadyCustom<Helper>, name + "::pull_until(), not ready, custom time");
 
     std::cout << std::endl;
-    runTestWithNone<Helper>(testSyncTimedQueuePullForSucceeds        <Helper>, name + "::pull_for(), succeeds");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForSucceedsSteady  <Helper>, name + "::pull_for(), succeeds, steady time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForSucceedsSystem  <Helper>, name + "::pull_for(), succeeds, system time");
+    runTestWithNone<Helper>(testSyncTimedQueuePullForSucceedsCustom  <Helper>, name + "::pull_for(), succeeds, custom time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilSucceedsSteady<Helper>, name + "::pull_until(), succeeds, steady time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilSucceedsSystem<Helper>, name + "::pull_until(), succeeds, system time");
     runTestWithNone<Helper>(testSyncTimedQueuePullUntilSucceedsCustom<Helper>, name + "::pull_until(), succeeds, custom time");
