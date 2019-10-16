@@ -32,6 +32,10 @@
 # endif
 #endif
 
+#ifdef __MINGW32__
+#include <sysinfoapi.h>
+#endif
+
 #include <pthread.h>
 #include <unistd.h>
 
@@ -52,7 +56,11 @@ namespace boost
         // stack
         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {
           if (size==0) return;
-#ifdef BOOST_THREAD_USES_GETPAGESIZE
+#ifdef __MINGW32__
+          SYSTEM_INFO si;
+          GetSystemInfo(&si);
+          std::size_t page_size = si.dwPageSize;
+#elif defined(BOOST_THREAD_USES_GETPAGESIZE)
           std::size_t page_size = getpagesize();
 #else
           std::size_t page_size = ::sysconf( _SC_PAGESIZE);
