@@ -15,7 +15,7 @@ branches:
 
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
 #      TOOLSET: msvc-9.0,msvc-10.0,msvc-11.0,msvc-12.0
       TOOLSET: msvc-12.0
       SELF_CONTAINED_HEADER_TESTS: 1
@@ -26,22 +26,22 @@ environment:
       TOOLSET: msvc-14.1
       CXXSTD: 17
       ADDRMD: 64
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
       CXXSTD: 14
       SELF_CONTAINED_HEADER_TESTS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ADDPATH: C:\cygwin64\bin;
       TOOLSET: gcc
       CXXSTD: 14
       SELF_CONTAINED_HEADER_TESTS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ADDPATH: C:\mingw\bin;
       TOOLSET: gcc
       CXXSTD: 14
       SELF_CONTAINED_HEADER_TESTS: 1
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2013
+    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
       ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
       TOOLSET: gcc
       CXXSTD: 14
@@ -70,4 +70,4 @@ test_script:
   - if "%SELF_CONTAINED_HEADER_TESTS%" == "" set BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS=1
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
-  - b2 -j %NUMBER_OF_PROCESSORS% libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% variant=debug,release
+  - b2 -j %NUMBER_OF_PROCESSORS% --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% variant=debug,release
