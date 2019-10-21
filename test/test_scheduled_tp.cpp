@@ -79,7 +79,7 @@ void test_deque_multi(const int n)
         tg.create_thread(boost::bind(func2, &se, d));
     }
     tg.join_all();
-    //dtor is called here so execution will block untill all the closures
+    //dtor is called here so execution will block until all the closures
     //have been completed.
 }
 
