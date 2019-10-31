@@ -32,7 +32,7 @@
 # endif
 #endif
 
-#ifdef __MINGW32__
+#ifdef BOOST_THREAD_MINGW
 #include <sysinfoapi.h>
 #endif
 
@@ -56,7 +56,7 @@ namespace boost
         // stack
         void set_stack_size(std::size_t size) BOOST_NOEXCEPT {
           if (size==0) return;
-#ifdef __MINGW32__
+#ifdef BOOST_THREAD_MINGW
           SYSTEM_INFO si;
           GetSystemInfo(&si);
           std::size_t page_size = si.dwPageSize;

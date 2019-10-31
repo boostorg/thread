@@ -17,7 +17,9 @@
 #include <boost/config/requires_threads.hpp>
 
 // choose platform
-#if defined(linux) || defined(__linux) || defined(__linux__)
+#ifdef __MINGW32__
+#define BOOST_THREAD_MINGW
+#elif defined(linux) || defined(__linux) || defined(__linux__)
 #  define BOOST_THREAD_LINUX
 //#  define BOOST_THREAD_WAIT_BUG boost::posix_time::microseconds(100000)
 #elif defined(__FreeBSD__) || defined(__NetBSD__) || defined(__OpenBSD__) || defined(__DragonFly__)
