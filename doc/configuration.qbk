@@ -303,7 +303,7 @@ When `BOOST_THREAD_VERSION>=4` define `BOOST_THREAD_DONT_PROVIDE_SIGNATURE_PACKA
 
 [section:thread_const-var thread constructor with variadic rvalue parameters]
 
-C++11 thread constructor accep a variable number of rvalue argumentshas. When `BOOST_THREAD_PROVIDES_VARIADIC_THREAD ` is defined Boost.Thread provides this C++ feature if the following are not defined 
+C++11 thread constructor accept a variable number of rvalue arguments has. When `BOOST_THREAD_PROVIDES_VARIADIC_THREAD ` is defined Boost.Thread provides this C++ feature if the following are not defined 
 
 * BOOST_NO_SFINAE_EXPR
 * BOOST_NO_CXX11_VARIADIC_TEMPLATES
