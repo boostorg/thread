@@ -469,7 +469,7 @@
 #elif defined(BOOST_THREAD_USE_LIB)   //Use lib
 #else //Use default
 #   if defined(BOOST_THREAD_PLATFORM_WIN32)
-#       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN) \
+#       if defined(BOOST_MSVC) || defined(BOOST_INTEL_WIN) || defined(BOOST_CLANG) \
       || defined(__MINGW32__) || defined(MINGW32) || defined(BOOST_MINGW32) \
       || (defined(_MSC_VER) && defined(__clang__))
       //For compilers supporting auto-tss cleanup
