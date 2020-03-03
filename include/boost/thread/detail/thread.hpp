@@ -637,10 +637,6 @@ namespace boost
 #endif
         {}
 
-        id(const id& other) BOOST_NOEXCEPT :
-            thread_data(other.thread_data)
-        {}
-
         bool operator==(const id& y) const BOOST_NOEXCEPT
         {
             return thread_data==y.thread_data;
