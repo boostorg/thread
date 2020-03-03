@@ -14,7 +14,7 @@
 
 #include <boost/thread/sync_bounded_queue.hpp>
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 class non_copyable
 {
