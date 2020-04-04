@@ -30,7 +30,7 @@
 #include <algorithm>
 #include <boost/core/ref.hpp>
 #include <boost/cstdint.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <stdlib.h>
 #include <memory>
 #include <boost/core/enable_if.hpp>

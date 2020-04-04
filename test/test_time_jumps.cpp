@@ -4,7 +4,7 @@
 	#include <sys/time.h>
 #endif
 
-#include "boost/bind.hpp"
+#include "boost/bind/bind.hpp"
 #include "boost/chrono.hpp"
 #include "boost/chrono/ceil.hpp"
 #include "boost/date_time.hpp"

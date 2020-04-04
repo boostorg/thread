@@ -12,7 +12,7 @@
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/with_lock_guard.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 
 class Foo {
  public:
