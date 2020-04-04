@@ -641,6 +641,25 @@ namespace boost
             thread_data(other.thread_data)
         {}
 
+#if !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+        id(id&& other) BOOST_NOEXCEPT :
+            thread_data(static_cast< data&& >(other.thread_data))
+        {
+#if defined(BOOST_THREAD_PROVIDES_BASIC_THREAD_ID)
+            other.thread_data = 0;
+#endif
+        }
+
+        id& operator=(id&& other) BOOST_NOEXCEPT
+        {
+            thread_data = static_cast< data&& >(other.thread_data);
+#if defined(BOOST_THREAD_PROVIDES_BASIC_THREAD_ID)
+            other.thread_data = 0;
+#endif
+            return *this;
+        }
+#endif // !defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
+
         bool operator==(const id& y) const BOOST_NOEXCEPT
         {
             return thread_data==y.thread_data;
