@@ -305,8 +305,7 @@ install:
 script:
   - |-
     echo "using $TOOLSET : : $TRAVIS_COMPILER ;" > ~/user-config.jam
-  - BUILD_JOBS=`(nproc || sysctl -n hw.ncpu) 2> /dev/null`
-  - ./b2 -j $BUILD_JOBS -l60 libs/thread/test${HEADERS_ONLY:+//test_self_contained_headers} toolset=$TOOLSET cxxstd=$CXXSTD
+  - ./b2 -j3 -l60 libs/thread/test${HEADERS_ONLY:+//test_self_contained_headers} toolset=$TOOLSET cxxstd=$CXXSTD
 
 notifications:
   email:
