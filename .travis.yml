@@ -145,7 +145,7 @@ matrix:
     - os: linux
       dist: trusty
       compiler: clang++-3.5
-      env: TOOLSET=clang CXXSTD=03,11,14,1z HEADERS_ONLY=1
+      env: TOOLSET=clang CXXSTD=03,11 HEADERS_ONLY=1
       addons:
         apt:
           packages:
