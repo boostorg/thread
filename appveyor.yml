@@ -18,28 +18,17 @@ image: Visual Studio 2015
 environment:
   matrix:
 
+    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
+      TOOLSET: gcc
+      VARIANT: debug,release
+
     - ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
       VARIANT: release
 
-# For the following configurations, variant=release fails with
-# ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
-
-    - ADDPATH: C:\cygwin64\bin;
-      TOOLSET: gcc
-      VARIANT: debug
-
     - ADDPATH: C:\mingw\bin;
       TOOLSET: gcc
       VARIANT: debug
-
-    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
-      TOOLSET: gcc
-      VARIANT: debug
-
-    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v5-rev1\mingw64\bin;
-      TOOLSET: gcc
-      VARIANT: debug,release
 
     - TOOLSET: msvc-12.0
       VARIANT: release
@@ -53,6 +42,16 @@ environment:
       ADDRMD: 64
       VARIANT: release
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+# The following configurations fail with
+# ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
+#
+#    - ADDPATH: C:\cygwin64\bin;
+#      TOOLSET: gcc
+#      VARIANT: debug
+#    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+#      TOOLSET: gcc
+#      VARIANT: debug
 
 install:
   - set GIT_FETCH_JOBS=8
@@ -77,5 +76,4 @@ test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
   - if not "%VARIANT%" == "" set VARIANT=variant=%VARIANT%
-# On Appveyor, the timeout is 1hr30m for -j2, 1hr for -j3
-  - b2 -j2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
+  - b2 -j3 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
