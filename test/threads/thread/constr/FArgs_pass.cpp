@@ -106,7 +106,7 @@ int main()
     BOOST_TEST(f_run == true);
     std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
   }
-#ifndef BOOST_MSVC
+#if !defined(BOOST_MSVC) && !defined(__MINGW32__)
   f_run = false;
   {
     std::cout << __FILE__ << ":" << __LINE__ <<" " << G::n_alive << std::endl;
