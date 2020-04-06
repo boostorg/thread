@@ -18,19 +18,6 @@ image: Visual Studio 2015
 environment:
   matrix:
 
-    - TOOLSET: msvc-12.0
-      VARIANT: release
-
-    - TOOLSET: msvc-14.0
-      ADDRMD: 32
-      VARIANT: debug
-
-    - TOOLSET: msvc-14.1
-      CXXSTD: 17
-      ADDRMD: 64
-      VARIANT: release
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
     - ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
       VARIANT: release
@@ -49,6 +36,23 @@ environment:
     - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
       TOOLSET: gcc
       VARIANT: debug
+
+    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v5-rev1\mingw64\bin;
+      TOOLSET: gcc
+      VARIANT: debug,release
+
+    - TOOLSET: msvc-12.0
+      VARIANT: release
+
+    - TOOLSET: msvc-14.0
+      ADDRMD: 32
+      VARIANT: debug
+
+    - TOOLSET: msvc-14.1
+      CXXSTD: 17
+      ADDRMD: 64
+      VARIANT: release
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
 
 install:
   - set GIT_FETCH_JOBS=8
