@@ -13,36 +13,42 @@ branches:
     - develop
     - /feature\/.*/
 
+image: Visual Studio 2015
+
 environment:
   matrix:
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      TOOLSET: msvc-12.0
+
+    - TOOLSET: msvc-12.0
       VARIANT: release
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      TOOLSET: msvc-14.0
+
+    - TOOLSET: msvc-14.0
       ADDRMD: 32
       VARIANT: debug
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-      TOOLSET: msvc-14.1
+
+    - TOOLSET: msvc-14.1
       CXXSTD: 17
       ADDRMD: 64
       VARIANT: release
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ADDPATH: C:\cygwin\bin;
-      TOOLSET: gcc
-      VARIANT: debug
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ADDPATH: C:\cygwin64\bin;
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+    - ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
       VARIANT: release
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ADDPATH: C:\mingw\bin;
+
+# For the following configurations, variant=release fails with
+# ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
+
+    - ADDPATH: C:\cygwin64\bin;
       TOOLSET: gcc
       VARIANT: debug
-    - APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2015
-      ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+
+    - ADDPATH: C:\mingw\bin;
       TOOLSET: gcc
-      VARIANT: release
+      VARIANT: debug
+
+    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+      TOOLSET: gcc
+      VARIANT: debug
 
 install:
   - set GIT_FETCH_JOBS=8
@@ -67,4 +73,5 @@ test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
   - if not "%VARIANT%" == "" set VARIANT=variant=%VARIANT%
-  - b2 -j3 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
+# On Appveyor, the timeout is 1hr30m for -j2, 1hr for -j3
+  - b2 -j2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
