@@ -18,9 +18,23 @@ image: Visual Studio 2015
 environment:
   matrix:
 
-    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
-      TOOLSET: gcc
-      VARIANT: debug,release
+    - TOOLSET: msvc-12.0
+      VARIANT: release
+
+    - TOOLSET: msvc-14.0
+      ADDRMD: 32
+      VARIANT: debug
+
+    - TOOLSET: msvc-14.1
+      ADDRMD: 64
+      VARIANT: release
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+
+    - TOOLSET: msvc-14.2
+      CXXSTD: 17
+      ADDRMD: 64
+      VARIANT: debug
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - ADDPATH: C:\cygwin\bin;
       TOOLSET: gcc
@@ -30,21 +44,9 @@ environment:
       TOOLSET: gcc
       VARIANT: debug
 
-    - TOOLSET: msvc-12.0
-      VARIANT: release
-
-    - TOOLSET: msvc-14.0
-      ADDRMD: 32
-      VARIANT: debug
-
-    - TOOLSET: msvc-14.1
-      CXXSTD: 17
-      ADDRMD: 64
-      VARIANT: release
-      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
-
 # The following configurations fail with
 # ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
+# https://sourceforge.net/p/mingw-w64/bugs/694/
 #
 #    - ADDPATH: C:\cygwin64\bin;
 #      TOOLSET: gcc
@@ -52,6 +54,9 @@ environment:
 #    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
 #      TOOLSET: gcc
 #      VARIANT: debug
+#    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
+#      TOOLSET: gcc
+#      VARIANT: debug,release
 
 install:
   - set GIT_FETCH_JOBS=8
