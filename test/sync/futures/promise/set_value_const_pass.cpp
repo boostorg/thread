@@ -23,6 +23,7 @@
 #include <boost/thread/future.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/static_assert.hpp>
+#include <boost/config.hpp>
 
 #ifdef BOOST_MSVC
 # pragma warning(disable: 4702) // unreachable code
@@ -37,6 +38,9 @@ struct A
   {
     throw 10;
   }
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+  A& operator= (const A&) = default;
+#endif
 };
 
 int main()

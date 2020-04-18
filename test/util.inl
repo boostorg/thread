@@ -12,6 +12,7 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
+#include <boost/config.hpp>
 
 #ifndef DEFAULT_EXECUTION_MONITOR_TYPE
 #   define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_condition
@@ -133,6 +134,10 @@ class indirect_adapter
 public:
     indirect_adapter(F func, execution_monitor& monitor)
         : func(func), monitor(monitor) { }
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+    indirect_adapter(indirect_adapter const&) = default;
+#endif
+
     void operator()() const
     {
         try
@@ -210,11 +215,15 @@ class thread_member_binder
 public:
     thread_member_binder(R (T::*func)(), T& param)
         : func(func), param(param) { }
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+    thread_member_binder(thread_member_binder const&) = default;
+#endif
+
     void operator()() const { (param.*func)(); }
 
 private:
     void operator=(thread_member_binder&);
-    
+
     R (T::*func)();
     T& param;
 };

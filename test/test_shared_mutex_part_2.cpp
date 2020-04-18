@@ -6,6 +6,7 @@
 #define BOOST_THREAD_VERSION 2
 #define BOOST_TEST_MODULE Boost.Threads: shared_mutex_part2 test suite
 
+#include <boost/config.hpp>
 #include <boost/test/unit_test.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/thread/xtime.hpp>
@@ -35,6 +36,10 @@ public:
         rwm(rwm_),finish_mutex(finish_mutex_),
         unblocked_mutex(unblocked_mutex_),unblocked_count(unblocked_count_)
     {}
+
+#if !defined(BOOST_NO_CXX11_DEFAULTED_FUNCTIONS)
+    simple_upgrade_thread(simple_upgrade_thread const&) = default;
+#endif
 
     void operator()()
     {

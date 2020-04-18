@@ -10,7 +10,7 @@
     #include <boost/function.hpp>
     #include <boost/make_shared.hpp>
     #include <boost/shared_ptr.hpp>
-    #include <boost/bind.hpp>
+    #include <boost/bind/bind.hpp>
     #include <boost/asio.hpp>
     #include <boost/thread.hpp>
     #include <boost/thread/future.hpp>

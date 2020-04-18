@@ -12,7 +12,7 @@
 
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/ref.hpp>
 #include <boost/utility.hpp>
 

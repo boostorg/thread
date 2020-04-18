@@ -13,7 +13,7 @@
 #define BOOST_THREAD_VERSION 4
 #define BOOST_THREAD_PROVIDES_EXECUTORS
 
-#include <boost/bind.hpp>
+#include <boost/bind/bind.hpp>
 #include <boost/chrono.hpp>
 #include <boost/chrono/chrono_io.hpp>
 #include <boost/function.hpp>

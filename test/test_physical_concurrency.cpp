@@ -12,7 +12,12 @@
 
 BOOST_AUTO_TEST_CASE(test_physical_concurrency_is_non_zero)
 {
+#if defined(__MINGW32__) && !defined(__MINGW64__)
+// This matches the condition in win32/thread.cpp, even though
+// that's probably wrong on MinGW-w64 in 32 bit mode
+#else
     BOOST_CHECK(boost::thread::physical_concurrency()!=0);
+#endif
 }
 
 

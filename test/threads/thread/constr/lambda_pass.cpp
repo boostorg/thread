@@ -61,7 +61,7 @@ int main()
     t.join();
     BOOST_TEST(f_run == true);
   }
-#ifndef BOOST_MSVC
+#if !defined(BOOST_MSVC) && !defined(__MINGW32__)
   {
     f_run = false;
     try
