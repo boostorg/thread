@@ -48,7 +48,7 @@ namespace boost
           : f(boost::move(f_))
         {}
 
-        void call()
+        void call() BOOST_OVERRIDE
         {
           f();
         }
@@ -59,7 +59,7 @@ namespace boost
         impl_type_ptr(void (*f_)())
           : f(f_)
         {}
-        void call()
+        void call() BOOST_OVERRIDE
         {
           f();
         }
@@ -155,7 +155,7 @@ namespace boost
           : f(boost::move(f_))
         {}
 
-        R call()
+        R call() BOOST_OVERRIDE
         {
           return f();
         }

@@ -15,10 +15,10 @@
 //       with recursive headers if I don't separate it
 //  wek: Not sure why recursive headers would cause compilation problems
 //       given the include guards, but regardless it makes sense to
-//       seperate this out any way.
+//       separate this out any way.
 
-#include <string>
 #include <stdexcept>
+#include <string>
 #include <boost/system/system_error.hpp>
 #include <boost/system/error_code.hpp>
 
@@ -56,7 +56,7 @@ namespace boost
         {
         }
 
-        ~thread_exception() BOOST_NOEXCEPT_OR_NOTHROW
+        ~thread_exception() BOOST_NOEXCEPT_OR_NOTHROW BOOST_OVERRIDE
         {}
 
 
@@ -113,7 +113,7 @@ namespace boost
         {
         }
 
-        ~lock_error() BOOST_NOEXCEPT_OR_NOTHROW
+        ~lock_error() BOOST_NOEXCEPT_OR_NOTHROW BOOST_OVERRIDE
         {}
 
     };
@@ -141,7 +141,7 @@ namespace boost
           }
 
 
-        ~thread_resource_error() BOOST_NOEXCEPT_OR_NOTHROW
+        ~thread_resource_error() BOOST_NOEXCEPT_OR_NOTHROW BOOST_OVERRIDE
         {}
 
     };

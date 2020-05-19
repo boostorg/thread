@@ -20,8 +20,8 @@ namespace boost
       public boost::system::error_category
     {
     public:
-        virtual const char* name() const BOOST_NOEXCEPT;
-        virtual std::string message(int ev) const;
+        const char* name() const BOOST_NOEXCEPT BOOST_OVERRIDE;
+        std::string message(int ev) const BOOST_OVERRIDE;
     };
 
     const char*
@@ -61,4 +61,3 @@ namespace boost
 
 }
 #endif
-
