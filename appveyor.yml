@@ -32,8 +32,13 @@ environment:
 
     - TOOLSET: msvc-14.2
       CXXSTD: 17
-      ADDRMD: 64
+      ADDRMD: 32
       VARIANT: debug
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
+
+    - TOOLSET: msvc-14.2
+      ADDRMD: 64
+      VARIANT: release
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
     - ADDPATH: C:\cygwin\bin;
