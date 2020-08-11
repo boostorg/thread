@@ -48,22 +48,6 @@ namespace boost
     os << underlying_cast<int>(st) << " ";
     return os;
   }
-  template <typename T>
-  struct wrap
-  {
-    wrap(T const& v) :
-      value(v)
-    {
-    }
-    T value;
-
-  };
-
-  template <typename T>
-  exception_ptr make_exception_ptr(T v)
-  {
-    return copy_exception(wrap<T> (v));
-  }
 }
 
 void func1(boost::promise<int> p)

@@ -24,8 +24,6 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/static_assert.hpp>
 
-namespace boost
-{
   template <typename T>
   struct wrap
   {
@@ -38,11 +36,10 @@ namespace boost
   };
 
   template <typename T>
-  exception_ptr make_exception_ptr(T v)
+  boost::exception_ptr make_exception_ptr(T v)
   {
-    return copy_exception(wrap<T> (v));
+    return boost::copy_exception(wrap<T> (v));
   }
-}
 
 #if defined BOOST_THREAD_PROVIDES_SIGNATURE_PACKAGED_TASK && defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 void func(boost::promise<int> p)
@@ -51,8 +48,8 @@ boost::promise<int> p;
 void func()
 #endif
 {
-  //p.set_exception(boost::make_exception_ptr(3));
-  p.set_exception_at_thread_exit(boost::make_exception_ptr(3));
+  //p.set_exception(::make_exception_ptr(3));
+  p.set_exception_at_thread_exit(::make_exception_ptr(3));
 }
 
 int main()
@@ -72,7 +69,7 @@ int main()
       f.get();
       BOOST_TEST(false);
     }
-    catch (boost::wrap<int> i)
+    catch (::wrap<int> i)
     {
       BOOST_TEST(i.value == 3);
     }
@@ -96,7 +93,7 @@ int main()
       f.get();
       BOOST_TEST(false);
     }
-    catch (boost::wrap<int> i)
+    catch (::wrap<int> i)
     {
       BOOST_TEST(i.value == 3);
     }
