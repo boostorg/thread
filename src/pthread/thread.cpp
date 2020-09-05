@@ -37,11 +37,13 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include <cstring> // memcmp.
 #include <fstream>
-#include <string>
+#include <map>
 #include <set>
+#include <string>
+#include <utility>
 #include <vector>
-#include <string.h> // memcmp.
 
 namespace boost
 {
@@ -214,7 +216,7 @@ namespace boost
                 interrupt_enabled=false;
 #endif
             }
-            ~externally_launched_thread() {
+            ~externally_launched_thread() BOOST_OVERRIDE {
               BOOST_ASSERT(notify.empty());
               notify.clear();
 //#ifndef BOOST_NO_EXCEPTIONS
@@ -222,9 +224,9 @@ namespace boost
               async_states_.clear();
 //#endif
             }
-            void run()
+            void run() BOOST_OVERRIDE
             {}
-            void notify_all_at_thread_exit(condition_variable*, mutex*)
+            void notify_all_at_thread_exit(condition_variable*, mutex*) BOOST_OVERRIDE
             {}
 
         private:
@@ -559,7 +561,7 @@ namespace boost
             }
             // Fall back to hardware_concurrency() in case
             // /proc/cpuinfo is formatted differently than we expect.
-            return cores.size() != 0 ? cores.size() : hardware_concurrency();
+            return cores.empty() ? hardware_concurrency() : cores.size();
         } catch(...) {
           return hardware_concurrency();
         }

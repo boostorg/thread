@@ -934,7 +934,7 @@ namespace boost
             this->set_async();
           }
 
-          ~future_async_shared_state_base()
+          ~future_async_shared_state_base() BOOST_OVERRIDE
           {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
             join();
@@ -944,7 +944,7 @@ namespace boost
 #endif
           }
 
-          virtual void wait(boost::unique_lock<boost::mutex>& lk, bool rethrow)
+          void wait(boost::unique_lock<boost::mutex>& lk, bool rethrow) BOOST_OVERRIDE
           {
 #ifdef BOOST_THREAD_FUTURE_BLOCKING
               {
@@ -1102,7 +1102,7 @@ namespace boost
             this->set_deferred();
           }
 
-          virtual void execute(boost::unique_lock<boost::mutex>& lck) {
+          void execute(boost::unique_lock<boost::mutex>& lck) BOOST_OVERRIDE {
             try
             {
               Fp local_fuct=boost::move(func_);
@@ -2970,7 +2970,7 @@ namespace boost
 
             void reset()
             {
-              // todo The packaged_task::reset must be as if an assignemnt froma new packaged_task with the same function
+              // todo The packaged_task::reset must be as if an assignment from a new packaged_task with the same function
               // the reset function is an optimization that avoids reallocating a new task.
               started=false;
               this->validate();
@@ -3387,7 +3387,7 @@ namespace boost
               {
                 f(boost::move(args)...);
 #else
-            void do_apply()
+            void do_apply() BOOST_OVERRIDE
             {
                 try
                 {
@@ -3408,7 +3408,7 @@ namespace boost
                 {
                     f(boost::move(args)...);
 #else
-            void do_run()
+            void do_run() BOOST_OVERRIDE
             {
                 try
                 {
@@ -3462,7 +3462,7 @@ namespace boost
                 {
                     f(boost::move(args)...);
 #else
-            void do_apply()
+            void do_apply() BOOST_OVERRIDE
             {
                 try
                 {
@@ -3483,7 +3483,7 @@ namespace boost
                 {
                     f(boost::move(args)...);
 #else
-            void do_run()
+            void do_run() BOOST_OVERRIDE
             {
                 try
                 {
