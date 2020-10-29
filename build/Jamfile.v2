@@ -199,7 +199,7 @@ rule win32_pthread_paths ( properties * )
         }
         if <toolset>gcc in $(properties)
         {
-            libname = lib$(libname)GC2.a ;
+            libname = lib$(libname).a ;
         }
         lib_path = [ path.glob $(lib_path) : $(libname) ] ;
         if ! $(lib_path)
