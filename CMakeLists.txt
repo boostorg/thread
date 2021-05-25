@@ -7,6 +7,9 @@ cmake_minimum_required(VERSION 3.5...3.16)
 
 project(boost_thread VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 
+set(THREADS_PREFER_PTHREAD_FLAG ON)
+find_package(Threads REQUIRED)
+
 if(WIN32)
 
   set(THREAD_SOURCES
@@ -62,6 +65,9 @@ target_link_libraries(boost_thread
     Boost::type_traits
     Boost::utility
     Boost::winapi
+
+    Threads::Threads
+
   PRIVATE
     Boost::algorithm
     Boost::lexical_cast
