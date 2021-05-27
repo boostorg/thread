@@ -79,9 +79,9 @@ target_compile_definitions(boost_thread
 )
 
 if(BUILD_SHARED_LIBS)
-  target_compile_definitions(boost_thread PUBLIC BOOST_THREAD_DYN_LINK BOOST_THREAD_USE_DLL)
+  target_compile_definitions(boost_thread PUBLIC BOOST_THREAD_DYN_LINK INTERFACE BOOST_THREAD_USE_DLL PRIVATE BOOST_THREAD_BUILD_DLL)
 else()
-  target_compile_definitions(boost_thread PUBLIC BOOST_THREAD_STATIC_LINK BOOST_THREAD_USE_LIB)
+  target_compile_definitions(boost_thread PUBLIC BOOST_THREAD_STATIC_LINK INTERFACE BOOST_THREAD_USE_LIB PRIVATE BOOST_THREAD_BUILD_LIB)
 endif()
 
 if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
