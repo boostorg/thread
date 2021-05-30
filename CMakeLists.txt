@@ -10,7 +10,20 @@ project(boost_thread VERSION "${BOOST_SUPERPROJECT_VERSION}" LANGUAGES CXX)
 set(THREADS_PREFER_PTHREAD_FLAG ON)
 find_package(Threads REQUIRED)
 
-if(WIN32)
+set(_default_threadapi pthread)
+
+if(WIN32 AND NOT CMAKE_CXX_PLATFORM_ID MATCHES "Cygwin")
+  set(_default_threadapi win32)
+endif()
+
+set(BOOST_THREAD_THREADAPI ${_default_threadapi} CACHE STRING "Boost.Thread threading API (pthread or win32)")
+set_property(CACHE BOOST_THREAD_THREADAPI PROPERTY STRINGS pthread win32)
+
+unset(_default_threadapi)
+
+message(STATUS "Boost.Thread: threading API is ${BOOST_THREAD_THREADAPI}")
+
+if(BOOST_THREAD_THREADAPI STREQUAL win32)
 
   set(THREAD_SOURCES
     src/win32/thread.cpp
