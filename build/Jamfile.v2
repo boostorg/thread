@@ -16,6 +16,8 @@
 # You need to provide the include path and lib path in the variables
 # PTW32_INCLUDE and PTW32_LIB respectively. You can specify these
 # paths in site-config.jam, user-config.jam or in the environment.
+# Additionally, you can provide PTW32_LIB_NAME to overwrite the name hardcoded
+# by Boost.Thread.
 # A new feature is provided to request a specific API:
 # <threadapi>win32 and <threadapi>pthread.
 #
@@ -165,12 +167,16 @@ rule win32_pthread_paths ( properties * )
     local result ;
     local PTW32_INCLUDE ;
     local PTW32_LIB ;
-    PTW32_INCLUDE  = [ modules.peek             : PTW32_INCLUDE ] ;
-    PTW32_LIB      = [ modules.peek             : PTW32_LIB     ] ;
-    PTW32_INCLUDE ?= [ modules.peek user-config : PTW32_INCLUDE ] ;
-    PTW32_LIB     ?= [ modules.peek user-config : PTW32_LIB     ] ;
-    PTW32_INCLUDE ?= [ modules.peek site-config : PTW32_INCLUDE ] ;
-    PTW32_LIB     ?= [ modules.peek site-config : PTW32_LIB     ] ;
+    local PTW32_LIB_NAME ;
+    PTW32_INCLUDE   = [ modules.peek             : PTW32_INCLUDE  ] ;
+    PTW32_LIB       = [ modules.peek             : PTW32_LIB      ] ;
+    PTW32_LIB_NAME  = [ modules.peek             : PTW32_LIB_NAME ] ;
+    PTW32_INCLUDE  ?= [ modules.peek user-config : PTW32_INCLUDE  ] ;
+    PTW32_LIB      ?= [ modules.peek user-config : PTW32_LIB      ] ;
+    PTW32_LIB_NAME ?= [ modules.peek user-config : PTW32_LIB_NAME ] ;
+    PTW32_INCLUDE  ?= [ modules.peek site-config : PTW32_INCLUDE  ] ;
+    PTW32_LIB      ?= [ modules.peek site-config : PTW32_LIB      ] ;
+    PTW32_LIB_NAME ?= [ modules.peek site-config : PTW32_LIB_NAME ] ;
 
     if ! ( $(PTW32_INCLUDE) && $(PTW32_LIB) )
     {
@@ -192,16 +198,23 @@ rule win32_pthread_paths ( properties * )
     {
         local include_path = [ path.make $(PTW32_INCLUDE) ] ;
         local lib_path = [ path.make $(PTW32_LIB) ] ;
-        local libname = pthread ;
+        local libname = $(PTW32_LIB_NAME) ;
         if <toolset>msvc in $(properties)
         {
-            libname = $(libname)VC2.lib ;
+            if ! $(libname)
+            {
+              libname = libpthreadVC2.lib ;
+            }
+            lib_path = [ path.glob $(lib_path) : $(libname) ] ;
         }
         if <toolset>gcc in $(properties)
         {
-            libname = lib$(libname)GC2.a ;
+            if ! $(libname)
+            {
+              libname = libpthreadGC2.a ;
+            }
+            lib_path = [ path.glob $(lib_path) : $(libname) ] ;
         }
-        lib_path = [ path.glob $(lib_path) : $(libname) ] ;
         if ! $(lib_path)
         {
             if  ! $(.notified)
@@ -210,6 +223,7 @@ rule win32_pthread_paths ( properties * )
                 echo "Trying to build Boost.Thread with pthread support."           ;
                 echo "But the library" $(libname) "could not be found in path"      ;
                 echo $(PTW32_LIB)                                                   ;
+                echo "You can force the library name by setting PTW32_LIB_NAME "    ;
                 echo "************************************************************" ;
                 .notified = true ;
             }
