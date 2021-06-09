@@ -1,0 +1,525 @@
+name: GitHub Actions CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+      - develop
+      - githubactions*
+      - feature/**
+      - fix/**
+      - pr/**
+
+jobs:
+  posix:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "TOOLSET=gcc CXXSTD=98,0x HEADERS_ONLY=1 Job 0"
+            buildtype: "boost"
+            packages: "g++-4.4"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "98,0x"
+            headers_only: "1"
+            travis_compiler: "g++-4.4"
+          - name: "TOOLSET=gcc CXXSTD=98,0x HEADERS_ONLY=1 Job 1"
+            buildtype: "boost"
+            packages: "g++-4.6"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "98,0x"
+            headers_only: "1"
+            travis_compiler: "g++-4.6"
+          - name: "TOOLSET=gcc CXXSTD=03,11 HEADERS_ONLY=1 Job 2"
+            buildtype: "boost"
+            packages: "g++-4.7"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "03,11"
+            headers_only: "1"
+            travis_compiler: "g++-4.7"
+          - name: "TOOLSET=gcc CXXSTD=03,11 HEADERS_ONLY=1 Job 3"
+            buildtype: "boost"
+            packages: "g++-4.8"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "03,11"
+            headers_only: "1"
+            travis_compiler: "g++-4.8"
+          - name: "TOOLSET=gcc CXXSTD=03,11 HEADERS_ONLY=1 Job 4"
+            buildtype: "boost"
+            packages: "g++-4.9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "03,11"
+            headers_only: "1"
+            travis_compiler: "g++-4.9"
+# 
+#           - name: "TOOLSET=gcc CXXSTD=03 Job 5"
+#             buildtype: "boost"
+#             packages: "g++-5"
+#             packages_to_remove: ""
+#             os: "ubuntu-16.04"
+#             cxx: "g++"
+#             sources: ""
+#             llvm_os: ""
+#             llvm_ver: ""
+#             toolset: "gcc"
+#             cxxstd: "03"
+#             travis_compiler: "g++-5"
+          - name: "TOOLSET=gcc CXXSTD=11 Job 6"
+            buildtype: "boost"
+            packages: "g++-5"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "11"
+            travis_compiler: "g++-5"
+          - name: "TOOLSET=gcc CXXSTD=14,1z HEADERS_ONLY=1 Job 7"
+            buildtype: "boost"
+            packages: "g++-6"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "14,1z"
+            headers_only: "1"
+            travis_compiler: "g++-6"
+          - name: "TOOLSET=gcc CXXSTD=14,17 HEADERS_ONLY=1 Job 8"
+            buildtype: "boost"
+            packages: "g++-7"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "14,17"
+            headers_only: "1"
+            travis_compiler: "g++-7"
+          - name: "TOOLSET=gcc CXXSTD=14,17 HEADERS_ONLY=1 Job 9"
+            buildtype: "boost"
+            packages: "g++-8"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "14,17"
+            headers_only: "1"
+            travis_compiler: "g++-8"
+          - name: "TOOLSET=gcc CXXSTD=14 Job 10"
+            buildtype: "boost"
+            packages: "g++-9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "14"
+            travis_compiler: "g++-9"
+          - name: "TOOLSET=gcc CXXSTD=17 Job 11"
+            buildtype: "boost"
+            packages: "g++-9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "g++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "gcc"
+            cxxstd: "17"
+            travis_compiler: "g++-9"
+          - name: "TOOLSET=clang CXXSTD=03,11 HEADERS_ONLY=1 Job 12"
+            buildtype: "boost"
+            packages: "clang-3.5"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            container: "ubuntu:14.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11"
+            headers_only: "1"
+            travis_compiler: "clang++-3.5"
+          - name: "TOOLSET=clang CXXSTD=03,11,14 HEADERS_ONLY=1 Job 13"
+            buildtype: "boost"
+            packages: "clang-3.6"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14"
+            headers_only: "1"
+            travis_compiler: "clang++-3.6"
+          - name: "TOOLSET=clang CXXSTD=03,11,14 HEADERS_ONLY=1 Job 14"
+            buildtype: "boost"
+            packages: "clang-3.7"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14"
+            headers_only: "1"
+            travis_compiler: "clang++-3.7"
+          - name: "TOOLSET=clang CXXSTD=03,11,14 HEADERS_ONLY=1 Job 15"
+            buildtype: "boost"
+            packages: "clang-3.8"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14"
+            headers_only: "1"
+            travis_compiler: "clang++-3.8"
+          - name: "TOOLSET=clang CXXSTD=03,11,14,1z HEADERS_ONLY Job 16"
+            buildtype: "boost"
+            packages: "clang-3.9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14"
+            headers_only: "1"
+            travis_compiler: "clang++-3.9"
+          - name: "TOOLSET=clang CXXSTD=03,11,14,1z HEADERS_ONLY Job 17"
+            buildtype: "boost"
+            packages: "clang-4.0"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14"
+            headers_only: "1"
+            travis_compiler: "clang++-4.0"
+          - name: "TOOLSET=clang CXXSTD=03,11,14,1z HEADERS_ONLY Job 18"
+            buildtype: "boost"
+            packages: "clang-5.0"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "03,11,14,1z"
+            headers_only: "1"
+            travis_compiler: "clang++-5.0"
+          - name: "TOOLSET=clang CXXSTD=14,17 HEADERS_ONLY=1 Job 19"
+            buildtype: "boost"
+            packages: "clang-6.0"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            toolset: "clang"
+            cxxstd: "14,17"
+            headers_only: "1"
+            travis_compiler: "clang++-6.0"
+          - name: "TOOLSET=clang CXXSTD=14,17,2a HEADERS_ONLY=1 Job 20"
+            buildtype: "boost"
+            packages: "clang-7"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: "xenial"
+            llvm_ver: "7"
+            toolset: "clang"
+            cxxstd: "14,17,2a"
+            headers_only: "1"
+            travis_compiler: "clang++-7"
+          - name: "TOOLSET=clang CXXSTD=14,17,2a HEADERS_ONLY=1 Job 21"
+            buildtype: "boost"
+            packages: "clang-8"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: "xenial"
+            llvm_ver: "8"
+            toolset: "clang"
+            cxxstd: "14,17,2a"
+            headers_only: "1"
+            travis_compiler: "clang++-8"
+          - name: "TOOLSET=clang CXXSTD=14 Job 22"
+            buildtype: "boost"
+            packages: "clang-9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: "xenial"
+            llvm_ver: "9"
+            toolset: "clang"
+            cxxstd: "14"
+            travis_compiler: "clang++-9"
+          - name: "TOOLSET=clang CXXSTD=17 Job 23"
+            buildtype: "boost"
+            packages: "clang-9"
+            packages_to_remove: ""
+            os: "ubuntu-16.04"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: "xenial"
+            llvm_ver: "9"
+            toolset: "clang"
+            cxxstd: "17"
+            travis_compiler: "clang++-9"
+
+    runs-on: ${{ matrix.os }}
+    container: ${{ matrix.container }}
+
+    steps:
+      - name: Check if running in container
+        if: matrix.container != ''
+        run: echo "GHA_CONTAINER=${{ matrix.container }}" >> $GITHUB_ENV
+      - name: If running in container, upgrade packages
+        if: matrix.container != ''
+        run: |
+            sudo apt-get -o Acquire::Retries=3 update && DEBIAN_FRONTEND=noninteractive apt-get -y install tzdata && apt-get -o Acquire::Retries=3 install -y sudo software-properties-common wget curl apt-transport-https make apt-file sudo unzip libssl-dev build-essential autotools-dev autoconf automake g++ libc++-helpers python python-pip ruby cpio gcc-multilib g++-multilib pkgconf python3 python3-pip ccache libpython-dev
+            sudo apt-add-repository ppa:git-core/ppa
+            sudo apt-get -o Acquire::Retries=3 update && apt-get -o Acquire::Retries=3 -y install git
+            sudo python -m pip install --upgrade pip==20.3.4
+            sudo /usr/local/bin/pip install cmake
+
+      - uses: actions/checkout@v2
+
+      - name: linux
+        shell: bash
+        env:
+          CXX: ${{ matrix.cxx }}
+          SOURCES: ${{ matrix.sources }}
+          LLVM_OS: ${{ matrix.llvm_os }}
+          LLVM_VER: ${{ matrix.llvm_ver }}
+          PACKAGES: ${{ matrix.packages }}
+          PACKAGES_TO_REMOVE: ${{ matrix.packages_to_remove }}
+          JOB_BUILDTYPE: ${{ matrix.buildtype }}
+          TOOLSET: ${{ matrix.toolset }}
+          CXXSTD: ${{ matrix.cxxstd }}
+          HEADERS_ONLY: ${{ matrix.headers_only }}
+          TRAVIS_COMPILER: ${{ matrix.travis_compiler }}
+          TRAVIS_BRANCH: ${{ github.base_ref }}
+          TRAVIS_OS_NAME: "linux"
+        run: |
+          echo '==================================> SETUP'
+          echo '==================================> PACKAGES'
+          set -e
+          if [ -n "$PACKAGES_TO_REMOVE" ]; then sudo apt-get purge -y $PACKAGES_TO_REMOVE; fi
+          echo ">>>>> APT: REPO.."
+          for i in {1..3}; do sudo -E apt-add-repository -y "ppa:ubuntu-toolchain-r/test" && break || sleep 2; done
+          
+          if test -n "${LLVM_OS}" ; then
+              wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+              if test -n "${LLVM_VER}" ; then
+                  sudo -E apt-add-repository "deb http://apt.llvm.org/${LLVM_OS}/ llvm-toolchain-${LLVM_OS}-${LLVM_VER} main"
+              else
+                  # Snapshot (i.e. trunk) build of clang
+                  sudo -E apt-add-repository "deb http://apt.llvm.org/${LLVM_OS}/ llvm-toolchain-${LLVM_OS} main"
+              fi
+          fi
+          echo ">>>>> APT: UPDATE.."
+          sudo -E apt-get -o Acquire::Retries=3 update
+          if test -n "${SOURCES}" ; then
+              echo ">>>>> APT: INSTALL SOURCES.."
+              for SOURCE in $SOURCES; do
+                  sudo -E apt-add-repository ppa:$SOURCE
+              done
+          fi
+          echo ">>>>> APT: INSTALL ${PACKAGES}.."
+          sudo -E DEBIAN_FRONTEND=noninteractive apt-get -o Acquire::Retries=3 -y --no-install-suggests --no-install-recommends install ${PACKAGES}
+
+          echo '==================================> INSTALL AND COMPILE'
+          set -e
+          export TRAVIS_BUILD_DIR=$(pwd)
+          export TRAVIS_BRANCH=${TRAVIS_BRANCH:-$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')}
+          export VCS_COMMIT_ID=$GITHUB_SHA
+          export GIT_COMMIT=$GITHUB_SHA
+          export REPO_NAME=$(basename $GITHUB_REPOSITORY)
+          export USER=$(whoami)
+          export CC=${CC:-gcc}
+          export PATH=~/.local/bin:/usr/local/bin:$PATH
+
+          if [ "$JOB_BUILDTYPE" == "boost" ]; then
+
+          echo '==================================> INSTALL'
+
+          GIT_FETCH_JOBS=8
+          BOOST_BRANCH=develop
+          if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
+          cd ..
+          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
+          cd boost-root
+          git submodule init tools/build
+          git submodule init libs/config
+          git submodule init tools/boostdep
+          git submodule update --jobs $GIT_FETCH_JOBS
+          mkdir -p libs/thread
+          cp -r $TRAVIS_BUILD_DIR/* libs/thread
+          python tools/boostdep/depinst/depinst.py --git_args "--jobs $GIT_FETCH_JOBS" thread
+          ./bootstrap.sh
+          ./b2 headers
+
+          echo '==================================> SCRIPT'
+
+          echo "using $TOOLSET : : $TRAVIS_COMPILER ;" > ~/user-config.jam
+          ./b2 -j3 -l60 libs/thread/test${HEADERS_ONLY:+//test_self_contained_headers} toolset=$TOOLSET cxxstd=$CXXSTD
+
+          fi
+  osx:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: "TOOLSET=clang CXXSTD=98 Job 24"
+            buildtype: "boost"
+            packages: ""
+            os: "macos-10.15"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            xcode_version: 11.7
+            toolset: "clang"
+            cxxstd: "98"
+            travis_compiler: "clang++"
+          - name: "TOOLSET=clang CXXSTD=1z Job 25"
+            buildtype: "boost"
+            packages: ""
+            os: "macos-10.15"
+            cxx: "clang++"
+            sources: ""
+            llvm_os: ""
+            llvm_ver: ""
+            xcode_version: 11.7
+            toolset: "clang"
+            cxxstd: "1z"
+            travis_compiler: "clang++"
+
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set DEVELOPER_DIR
+        if: matrix.xcode_version != ''
+        run: echo "DEVELOPER_DIR=/Applications/Xcode_${{ matrix.xcode_version }}.app/Contents/Developer" >> $GITHUB_ENV
+      - name: Test DEVELOPER_DIR
+        run: echo $DEVELOPER_DIR
+
+      - name: "osx"
+        shell: bash
+        env:
+          CXX: ${{ matrix.cxx }}
+          SOURCES: ${{ matrix.sources }}
+          LLVM_OS: ${{ matrix.llvm_os }}
+          LLVM_VER: ${{ matrix.llvm_ver }}
+          PACKAGES: ${{ matrix.packages }}
+          JOB_BUILDTYPE: ${{ matrix.buildtype }}
+          TOOLSET: ${{ matrix.toolset }}
+          CXXSTD: ${{ matrix.cxxstd }}
+          HEADERS_ONLY: ${{ matrix.headers_only }}
+          TRAVIS_COMPILER: ${{ matrix.travis_compiler }}
+          TRAVIS_BRANCH: ${{ github.base_ref }}
+          TRAVIS_OS_NAME: "osx"
+        run: |
+          echo '==================================> SETUP'
+          set -e
+          sudo mv /Library/Developer/CommandLineTools /Library/Developer/CommandLineTools.bck
+          echo '==================================> PACKAGES'
+          echo '==================================> INSTALL AND COMPILE'
+          set -e
+          export TRAVIS_BUILD_DIR=$(pwd)
+          export TRAVIS_BRANCH=${TRAVIS_BRANCH:-$(echo $GITHUB_REF | awk 'BEGIN { FS = "/" } ; { print $3 }')}
+          export VCS_COMMIT_ID=$GITHUB_SHA
+          export GIT_COMMIT=$GITHUB_SHA
+          export REPO_NAME=$(basename $GITHUB_REPOSITORY)
+          export USER=$(whoami)
+          export CC=${CC:-gcc}
+          export PATH=~/.local/bin:/usr/local/bin:$PATH
+
+          if [ "$JOB_BUILDTYPE" == "boost" ]; then
+
+          echo '==================================> INSTALL'
+
+          GIT_FETCH_JOBS=8
+          BOOST_BRANCH=develop
+          if [ "$TRAVIS_BRANCH" = "master" ]; then BOOST_BRANCH=master; fi
+          cd ..
+          git clone -b $BOOST_BRANCH --depth 1 https://github.com/boostorg/boost.git boost-root
+          cd boost-root
+          git submodule init tools/build
+          git submodule init libs/config
+          git submodule init tools/boostdep
+          git submodule update --jobs $GIT_FETCH_JOBS
+          mkdir -p libs/thread
+          cp -r $TRAVIS_BUILD_DIR/* libs/thread
+          python tools/boostdep/depinst/depinst.py --git_args "--jobs $GIT_FETCH_JOBS" thread
+          ./bootstrap.sh
+          ./b2 headers
+
+          echo '==================================> SCRIPT'
+
+          echo "using $TOOLSET : : $TRAVIS_COMPILER ;" > ~/user-config.jam
+          ./b2 -j3 -l60 libs/thread/test${HEADERS_ONLY:+//test_self_contained_headers} toolset=$TOOLSET cxxstd=$CXXSTD
+
+          fi
