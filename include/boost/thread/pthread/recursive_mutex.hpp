@@ -42,7 +42,7 @@
 
 namespace boost
 {
-    class recursive_mutex
+    class BOOST_THREAD_CAPABILITY("mutex") recursive_mutex
     {
     private:
         pthread_mutex_t m;
@@ -103,17 +103,17 @@ namespace boost
         }
 
 #ifdef BOOST_THREAD_HAS_PTHREAD_MUTEXATTR_SETTYPE
-        void lock()
+        void lock() BOOST_THREAD_ACQUIRE()
         {
             BOOST_VERIFY(!posix::pthread_mutex_lock(&m));
         }
 
-        void unlock()
+        void unlock() BOOST_THREAD_RELEASE()
         {
             BOOST_VERIFY(!posix::pthread_mutex_unlock(&m));
         }
 
-        bool try_lock() BOOST_NOEXCEPT
+        bool try_lock() BOOST_NOEXCEPT BOOST_THREAD_TRY_ACQUIRE(true)
         {
             int const res=posix::pthread_mutex_trylock(&m);
             BOOST_ASSERT(!res || res==EBUSY);
@@ -127,7 +127,7 @@ namespace boost
         }
 
 #else
-        void lock()
+        void lock() BOOST_THREAD_ACQUIRE()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && pthread_equal(owner,pthread_self()))
@@ -145,7 +145,7 @@ namespace boost
             owner=pthread_self();
         }
 
-        void unlock()
+        void unlock() BOOST_THREAD_RELEASE()
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(!--count)
@@ -155,7 +155,7 @@ namespace boost
             BOOST_VERIFY(!posix::pthread_cond_signal(&cond));
         }
 
-        bool try_lock()
+        bool try_lock() BOOST_THREAD_TRY_ACQUIRE(true)
         {
             boost::pthread::pthread_mutex_scoped_lock const local_lock(&m);
             if(is_locked && !pthread_equal(owner,pthread_self()))
