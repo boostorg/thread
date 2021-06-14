@@ -16,7 +16,7 @@
 #include <boost/thread/concurrent_queues/queue_adaptor.hpp>
 #include <boost/thread/concurrent_queues/queue_views.hpp>
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 #include <boost/static_assert.hpp>
 
 class non_copyable
