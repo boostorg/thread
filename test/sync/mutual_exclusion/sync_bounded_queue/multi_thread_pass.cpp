@@ -7,7 +7,7 @@
 
 // class sync_queue<T>
 
-//    push || pull;
+//    push_back || pull_front;
 
 #include <boost/config.hpp>
 #if ! defined  BOOST_NO_CXX11_DECLTYPE
@@ -35,7 +35,7 @@ struct call_push
   void operator()()
   {
     go_.count_down_and_wait();
-    q_.push(42);
+    q_.push_back(42);
 
   }
 };
@@ -54,7 +54,7 @@ struct call_push_2
   void operator()()
   {
     go_.count_down_and_wait();
-    q_.push(42);
+    q_.push_back(42);
     end_.count_down_and_wait();
 
   }
@@ -73,7 +73,7 @@ struct call_pull
   int operator()()
   {
     go_.count_down_and_wait();
-    return q_.pull();
+    return q_.pull_front();
   }
 };
 
@@ -93,7 +93,7 @@ void test_concurrent_push_and_pull_on_empty_queue()
         [&q,&go]()
         {
           go.wait();
-          q.push(42);
+          q.push_back(42);
         }
 #else
         call_push(q,go)
@@ -104,7 +104,7 @@ void test_concurrent_push_and_pull_on_empty_queue()
         [&q,&go]() -> int
         {
           go.wait();
-          return q.pull();
+          return q.pull_front();
         }
 #else
         call_pull(q,go)
@@ -136,7 +136,7 @@ void test_concurrent_push_on_empty_queue()
         [&q,&go]()
         {
           go.wait();
-          q.push(42);
+          q.push_back(42);
         }
 #else
         call_push(q,go)
@@ -148,7 +148,7 @@ void test_concurrent_push_on_empty_queue()
 
     BOOST_TEST(!q.empty());
     for (unsigned int i =0; i< n; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
+      BOOST_TEST_EQ(q.pull_front(), 42);
     BOOST_TEST(q.empty());
 
   }
@@ -175,7 +175,7 @@ void test_concurrent_push_on_full_queue()
         [&q,&go,&end]()
         {
           go.wait();
-          q.push(42);
+          q.push_back(42);
           end.wait();
         }
 #else
@@ -187,7 +187,7 @@ void test_concurrent_push_on_full_queue()
     BOOST_TEST(!q.empty());
     BOOST_TEST(q.full());
     for (unsigned int i =0; i< size; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
+      BOOST_TEST_EQ(q.pull_front(), 42);
     end.wait();
 
     for (unsigned int i = 0; i < n; ++i)
@@ -195,7 +195,7 @@ void test_concurrent_push_on_full_queue()
 
     BOOST_TEST(!q.empty());
     for (unsigned int i =0; i< size; ++i)
-      BOOST_TEST_EQ(q.pull(), 42);
+      BOOST_TEST_EQ(q.pull_front(), 42);
     BOOST_TEST(q.empty());
 
   }
@@ -215,7 +215,7 @@ void test_concurrent_pull_on_queue()
   try
   {
     for (unsigned int i =0; i< n; ++i)
-      q.push(42);
+      q.push_back(42);
 
     for (unsigned int i =0; i< n; ++i)
       pull_done[i]=boost::async(boost::launch::async,
@@ -223,7 +223,7 @@ void test_concurrent_pull_on_queue()
         [&q,&go]() -> int
         {
           go.wait();
-          return q.pull();
+          return q.pull_front();
         }
 #else
         call_pull(q,go)
