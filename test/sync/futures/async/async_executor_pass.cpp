@@ -32,6 +32,7 @@
 #include <boost/detail/lightweight_test.hpp>
 #include <boost/thread/executors/basic_thread_pool.hpp>
 #include <boost/thread/executor.hpp>
+#include "../../../timming.hpp"
 
 typedef boost::chrono::high_resolution_clock Clock;
 typedef boost::chrono::milliseconds ms;
@@ -156,7 +157,7 @@ struct check_timer {
   }
   ~check_timer() {
     Clock::time_point now = Clock::now();
-    BOOST_TEST(now - start < delay);
+    BOOST_THREAD_TEST_IT(now - start, delay);
     std::cout << __FILE__ << "[" << __LINE__ << "] " << (now - start).count() << std::endl;
   }
 
