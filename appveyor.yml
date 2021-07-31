@@ -86,4 +86,4 @@ test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
   - if not "%VARIANT%" == "" set VARIANT=variant=%VARIANT%
-  - b2 -j2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
+  - b2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
