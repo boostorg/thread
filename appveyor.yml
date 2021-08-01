@@ -45,9 +45,10 @@ environment:
       TOOLSET: gcc
       VARIANT: release
 
-    - ADDPATH: C:\mingw\bin;
-      TOOLSET: gcc
-      VARIANT: debug
+#      FIXME:
+#    - ADDPATH: C:\mingw\bin;
+#      TOOLSET: gcc
+#      VARIANT: debug
 
 # The following configurations fail with
 # ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
