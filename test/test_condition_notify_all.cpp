@@ -9,10 +9,9 @@
 #undef BOOST_TEST
 #undef BOOST_ERROR
 #include <boost/thread/detail/config.hpp>
-
 #include <boost/thread/thread_only.hpp>
-
 #include <boost/test/unit_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 #include "./util.inl"
 #include "./condition_test_common.hpp"
