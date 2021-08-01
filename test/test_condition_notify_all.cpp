@@ -5,6 +5,9 @@
 
 #define BOOST_THREAD_VERSION 2
 #define BOOST_TEST_MODULE Boost.Threads: condition_variable notify_all test suite
+#include "timming.hpp"
+#undef BOOST_TEST
+#undef BOOST_ERROR
 #include <boost/thread/detail/config.hpp>
 
 #include <boost/thread/thread_only.hpp>
@@ -190,11 +193,11 @@ void do_test_notify_all_following_notify_one_wakes_all_threads()
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
     multiple_wake_cond.notify_one();
     multiple_wake_cond.notify_all();
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
+    boost::this_thread::sleep(boost::posix_time::milliseconds(BOOST_THREAD_TEST_TIME_MS));
 
     {
         boost::unique_lock<boost::mutex> lk(multiple_wake_mutex);
-        BOOST_CHECK(multiple_wake_count==3);
+        BOOST_CHECK_EQUAL(multiple_wake_count, (unsigned)3);
     }
 
     thread1.join();

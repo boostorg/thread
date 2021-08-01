@@ -23,6 +23,7 @@
 #include <boost/thread/thread.hpp>
 #include <boost/detail/lightweight_test.hpp>
 #include <cassert>
+#include "../../../timming.hpp"
 
 // Summary of each test:
 // 1. Start the test thread and wait for it to start up.
@@ -82,7 +83,7 @@ void test_posix_wait_function(F f)
     t.join();
     boost::posix_time::ptime t1 = boost::posix_time::microsec_clock::universal_time();
 
-    BOOST_TEST(t1 - t0 < boost::posix_time::milliseconds(250));
+    BOOST_TEST(t1 - t0 < boost::posix_time::milliseconds(BOOST_THREAD_TEST_TIME_MS));
 }
 
 //------------------------------------------------------------------------------
@@ -153,7 +154,7 @@ void test_chrono_wait_function(F f)
     t.join();
     boost::chrono::steady_clock::time_point t1 = boost::chrono::steady_clock::now();
 
-    BOOST_TEST(t1 - t0 < boost::chrono::milliseconds(250));
+    BOOST_TEST(t1 - t0 < boost::chrono::milliseconds(BOOST_THREAD_TEST_TIME_MS));
 }
 
 //------------------------------------------------------------------------------
