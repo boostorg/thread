@@ -97,9 +97,6 @@ jobs:
             cxxstd: latest
             addrmd: 64
             os: windows-2022
-          - toolset: gcc
-            addrmd: 64
-            os: windows-2019
 
     runs-on: ${{matrix.os}}
 
