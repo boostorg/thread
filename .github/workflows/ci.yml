@@ -21,6 +21,7 @@ jobs:
             os: ubuntu-18.04
             install: g++-4.8
           - toolset: gcc-5
+            cxxstd: 11
             os: ubuntu-18.04
             install: g++-5
           - toolset: gcc-7
