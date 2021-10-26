@@ -87,15 +87,15 @@ jobs:
       matrix:
         include:
           - toolset: msvc-14.1
-            addrmd: 32,64
+            addrmd: 32
             os: windows-2016
           - toolset: msvc-14.2
             cxxstd: 17
-            addrmd: 32,64
+            addrmd: 64
             os: windows-2019
           - toolset: msvc-14.3
             cxxstd: latest
-            addrmd: 32,64
+            addrmd: 64
             os: windows-2022
           - toolset: gcc
             addrmd: 64
