@@ -41,7 +41,24 @@ environment:
       VARIANT: release
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    - ADDPATH: C:\cygwin\bin;
+    - FLAVOR: cygwin (32-bit)
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ADDPATH: C:\cygwin\bin;
+      CXXSTD: 03,11,14,1z
+      TOOLSET: gcc
+      VARIANT: release
+
+    - FLAVOR: cygwin (64-bit)
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2017
+      ADDPATH: C:\cygwin64\bin;
+      CXXSTD: 03,11,14,1z
+      TOOLSET: gcc
+      VARIANT: release
+
+    - FLAVOR: cygwin (64-bit, latest)
+      APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2022
+      ADDPATH: C:\cygwin64\bin;
+      CXXSTD: 03,11,14,1z
       TOOLSET: gcc
       VARIANT: release
 

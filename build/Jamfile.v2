@@ -303,6 +303,9 @@ alias thread_sources
       future.cpp
     : ## requirements ##
       <threadapi>pthread
+    :
+    :
+      <include>../src/pthread
     ;
 
 explicit thread_sources ;
