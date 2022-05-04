@@ -34,6 +34,11 @@ namespace boost
     }
     ~thread_guard()
     {
+      // In "nesting" scenarios on_destructor may trigger interruption. Since
+      // we're in a destructor we can't afford that.
+      // See https://github.com/boostorg/thread/issues/366.
+      this_thread::disable_interruption di;
+
       CallableThread on_destructor;
 
       on_destructor(t_);

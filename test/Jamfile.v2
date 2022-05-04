@@ -378,7 +378,10 @@ rule generate_self_contained_header_tests
           [ thread-run test_5502.cpp ]
     ;
 
-
+    test-suite issues
+    :
+          [ thread-run test_366.cpp ]
+    ;
 
     #explicit ts_conditions ;
     test-suite ts_conditions
