@@ -321,7 +321,6 @@ namespace boost
 
             {
                 unique_lock<mutex> lock(local_thread_info->data_mutex);
-                this_thread::disable_interruption di;
                 while(!local_thread_info->done)
                 {
                     local_thread_info->done_condition.wait(lock);
@@ -370,7 +369,6 @@ namespace boost
 
             {
                 unique_lock<mutex> lock(local_thread_info->data_mutex);
-                this_thread::disable_interruption di;
                 while(!local_thread_info->done)
                 {
                     if(!local_thread_info->done_condition.do_wait_until(lock,timeout)) break; // timeout occurred
