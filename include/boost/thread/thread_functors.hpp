@@ -53,6 +53,19 @@ namespace boost
   };
 
 #if defined BOOST_THREAD_PROVIDES_INTERRUPTIONS
+  struct non_interruptable_join_if_joinable
+  {
+    template <class Thread>
+    void operator()(Thread& t)
+    {
+      if (t.joinable())
+      {
+        this_thread::disable_interruption di;
+        t.join();
+      }
+    }
+  };
+
   struct interrupt_and_join_if_joinable
   {
     template <class Thread>
@@ -60,6 +73,20 @@ namespace boost
     {
       if (t.joinable())
       {
+        t.interrupt();
+        t.join();
+      }
+    }
+  };
+
+  struct non_interruptable_interrupt_and_join_if_joinable
+  {
+    template <class Thread>
+    void operator()(Thread& t)
+    {
+      if (t.joinable())
+      {
+        this_thread::disable_interruption di;
         t.interrupt();
         t.join();
       }
