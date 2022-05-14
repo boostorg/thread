@@ -12,7 +12,7 @@ static void do_first_half()
     std::cout << "Doing first half of the work\n";
 
     boost::this_thread::sleep_for(
-        boost::chrono::seconds( 10 ) );
+        boost::chrono::hours( 1 ) );
 
     std::cout << "First half of the work complete\n";
 }
@@ -22,7 +22,7 @@ static void do_second_half()
     std::cout << "Doing second half of the work\n";
 
     boost::this_thread::sleep_for(
-        boost::chrono::seconds( 10 ) );
+        boost::chrono::hours( 1 ) );
 
     std::cout << "Second half of the work complete\n";
 }
