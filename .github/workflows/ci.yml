@@ -29,13 +29,12 @@ jobs:
           - toolset: gcc-9
             os: ubuntu-20.04
           - toolset: gcc-11
-            os: ubuntu-20.04
-            install: g++-11
+            os: ubuntu-22.04
           - toolset: clang
-            compiler: clang++-12
+            compiler: clang++-14
             cxxstd: 20
-            os: ubuntu-20.04
-            install: clang-12
+            os: ubuntu-22.04
+            install: clang-14
           - toolset: clang
             os: macos-10.15
 
