@@ -36,12 +36,12 @@ jobs:
             os: ubuntu-22.04
             install: clang-14
           - toolset: clang
-            os: macos-10.15
+            os: macos-11
 
     runs-on: ${{matrix.os}}
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: Install packages
         if: matrix.install
