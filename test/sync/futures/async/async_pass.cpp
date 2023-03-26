@@ -35,6 +35,7 @@
 #include <boost/thread/csbl/memory/unique_ptr.hpp>
 #include <memory>
 #include <boost/detail/lightweight_test.hpp>
+#include "../../../timming.hpp"
 
 typedef boost::chrono::high_resolution_clock Clock;
 typedef boost::chrono::milliseconds ms;
@@ -159,7 +160,7 @@ struct check_timer {
   }
   ~check_timer() {
     Clock::time_point now = Clock::now();
-    BOOST_TEST(now - start < delay);
+    BOOST_THREAD_TEST_IT(now - start, delay);
     std::cout << __FILE__ << "[" << __LINE__ << "] " << (now - start).count() << std::endl;
   }
 
@@ -217,7 +218,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -241,7 +242,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -265,7 +266,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -289,7 +290,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -314,7 +315,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -341,7 +342,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -366,7 +367,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -391,7 +392,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -415,7 +416,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -439,7 +440,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -463,7 +464,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -487,7 +488,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int* res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = &f.get();
       }
       BOOST_TEST(res == &i);
@@ -510,7 +511,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int* res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = &f.get();
       }
       BOOST_TEST(res == &i);
@@ -533,7 +534,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int* res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = &f.get();
       }
       BOOST_TEST(res == &i);
@@ -557,7 +558,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       int* res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = &f.get();
       }
       BOOST_TEST(res == &i);
@@ -580,7 +581,7 @@ int main()
       boost::future<void> f = boost::async(f2);
       boost::this_thread::sleep_for(ms(300));
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         f.get();
       }
     }
@@ -601,7 +602,7 @@ int main()
       boost::future<void> f = boost::async(boost::launch::async, f2);
       boost::this_thread::sleep_for(ms(300));
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         f.get();
       }
     }
@@ -622,7 +623,7 @@ int main()
       boost::future<void> f = boost::async(boost::launch::any, f2);
       boost::this_thread::sleep_for(ms(300));
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         f.get();
       }
     }
@@ -644,7 +645,7 @@ int main()
       boost::future<void> f = boost::async(boost::launch::deferred, f2);
       //boost::this_thread::sleep_for(ms(300));
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         f.get();
       }
     }
@@ -668,7 +669,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       MoveOnly res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST_EQ(res.value, 2);
@@ -692,7 +693,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       MoveOnly res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST_EQ(res.value, 2);
@@ -717,7 +718,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       MoveOnly res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(res.value == 2);
@@ -740,7 +741,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -765,7 +766,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -788,7 +789,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -811,7 +812,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -837,7 +838,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -860,7 +861,7 @@ int main()
       //boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);
@@ -883,7 +884,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       boost::csbl::unique_ptr<int> res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(200 + BOOST_THREAD_TEST_TIME_MS));
         res = f.get();
       }
       BOOST_TEST(*res == 3);

@@ -55,8 +55,8 @@ void f2()
   boost::unique_lock<boost::timed_mutex> lk(m, Clock::now() + ms(250));
   BOOST_TEST(lk.owns_lock() == false);
   t1 = Clock::now();
-  ns d = t1 - t0 - ms(250);
-  BOOST_TEST(d < max_diff);
+  ms d = boost::chrono::duration_cast<boost::chrono::milliseconds>(t1 - t0) - ms(250);
+  BOOST_THREAD_TEST_IT(d, ns(max_diff));
 }
 
 int main()

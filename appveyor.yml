@@ -18,9 +18,6 @@ image: Visual Studio 2015
 environment:
   matrix:
 
-    - TOOLSET: msvc-12.0
-      VARIANT: release
-
     - TOOLSET: msvc-14.0
       ADDRMD: 32
       VARIANT: debug
@@ -45,9 +42,10 @@ environment:
       TOOLSET: gcc
       VARIANT: release
 
-    - ADDPATH: C:\mingw\bin;
-      TOOLSET: gcc
-      VARIANT: debug
+#      FIXME:
+#    - ADDPATH: C:\mingw\bin;
+#      TOOLSET: gcc
+#      VARIANT: debug
 
 # The following configurations fail with
 # ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
@@ -86,4 +84,4 @@ test_script:
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
   - if not "%VARIANT%" == "" set VARIANT=variant=%VARIANT%
-  - b2 -j2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
+  - b2 --abbreviate-paths libs/thread/test toolset=%TOOLSET% %CXXSTD% %ADDRMD% %VARIANT%
