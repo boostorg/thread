@@ -12,7 +12,7 @@
 #define BOOST_THREAD_VERSION 4
 
 #include <boost/thread/synchronized_value.hpp>
-
+#include <boost/core/invoke_swap.hpp>
 #include <boost/detail/lightweight_test.hpp>
 
 int main()
@@ -21,14 +21,14 @@ int main()
   {
     boost::synchronized_value<int> v1(1);
     int v2(2);
-    boost::swap(v1,v2);
+    boost::core::invoke_swap(v1,v2);
     BOOST_TEST(v1.value() == 2);
     BOOST_TEST(v2 == 1);
   }
   {
     boost::synchronized_value<int> v1(1);
     int v2(2);
-    boost::swap(v2,v1);
+    boost::core::invoke_swap(v2,v1);
     BOOST_TEST(v1.value() == 2);
     BOOST_TEST(v2 == 1);
   }
