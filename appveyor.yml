@@ -18,9 +18,6 @@ image: Visual Studio 2015
 environment:
   matrix:
 
-    - TOOLSET: msvc-12.0
-      VARIANT: release
-
     - TOOLSET: msvc-14.0
       ADDRMD: 32
       VARIANT: debug
