@@ -44,6 +44,7 @@ environment:
 
     - ADDPATH: C:\mingw\bin;
       TOOLSET: gcc
+      CXXSTD: 11
       VARIANT: debug
 
 # The following configurations fail with
