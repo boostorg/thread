@@ -18,6 +18,7 @@
 
 # bring in rules for testing
 import testing ;
+import config : requires ;
 import regex ;
 import path ;
 import os ;
@@ -268,6 +269,10 @@ rule generate_self_contained_header_tests
 
     if ! [ os.environ BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS ]
     {
+        local cxx_requirements = [ requires
+          cxx11_static_assert # from atomic
+        ] ;
+
         local headers_path = [ path.make $(BOOST_ROOT)/libs/thread/include/boost/thread ] ;
         for file in [ path.glob-tree $(headers_path) : *.hpp : detail pthread win32 ]
         {
@@ -276,8 +281,8 @@ rule generate_self_contained_header_tests
             #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
             local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
             #ECHO $(rel_file) ;
-            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <dependency>$(file) : $(test_name) ] ;
-            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <define>"BOOST_THREAD_TEST_POST_WINDOWS_H" <dependency>$(file) <conditional>@windows-cygwin-specific : $(test_name)-post_winh ] ;
+            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <dependency>$(file) $(cxx_requirements) : $(test_name) ] ;
+            all_rules += [ compile self_contained_header.cpp : <define>"BOOST_THREAD_TEST_HEADER=$(rel_file)" <define>"BOOST_THREAD_TEST_POST_WINDOWS_H" <dependency>$(file) <conditional>@windows-cygwin-specific $(cxx_requirements) : $(test_name)-post_winh ] ;
         }
     }
 

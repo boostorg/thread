@@ -35,6 +35,7 @@
 import os ;
 import indirect ;
 import path ;
+import config : requires ;
 import configure ; 
 import threadapi-feature ;
 
@@ -307,13 +308,19 @@ alias thread_sources
 
 explicit thread_sources ;
 
+local cxx_requirements = [ requires
+    cxx11_noexcept # from lexical_cast, possibly through date_time
+] ;
+
 lib boost_thread
     : thread_sources
     : <conditional>@requirements
+      $(cxx_requirements)
     :
     : <link>shared:<define>BOOST_THREAD_USE_DLL=1
       <link>static:<define>BOOST_THREAD_USE_LIB=1
       <conditional>@usage-requirements
+      $(cxx_requirements)
     ;
 
 boost-install boost_thread ;
