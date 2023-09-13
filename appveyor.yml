@@ -42,21 +42,24 @@ environment:
       TOOLSET: gcc
       VARIANT: release
 
-    - ADDPATH: C:\mingw\bin;
-      TOOLSET: gcc
-      CXXSTD: 11
-      VARIANT: debug
-
 # The following configurations fail with
 # ./boost/thread/detail/invoke.hpp:101:43: internal compiler error: in gimplify_expr, at gimplify.c:12039
 # https://sourceforge.net/p/mingw-w64/bugs/694/
+# https://gcc.gnu.org/bugzilla/show_bug.cgi?id=83756
+#
+#    - ADDPATH: C:\mingw\bin;
+#      TOOLSET: gcc
+#      CXXSTD: 11
+#      VARIANT: debug
 #
 #    - ADDPATH: C:\cygwin64\bin;
 #      TOOLSET: gcc
 #      VARIANT: debug
+#
 #    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
 #      TOOLSET: gcc
 #      VARIANT: debug
+#
 #    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
 #      TOOLSET: gcc
 #      VARIANT: debug,release
