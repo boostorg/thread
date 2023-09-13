@@ -10,9 +10,6 @@
 #include <boost/predef/platform.h>
 
 #include <boost/thread/exceptions.hpp>
-#ifndef BOOST_NO_IOSTREAM
-#include <ostream>
-#endif
 #include <boost/thread/detail/move.hpp>
 #include <boost/thread/mutex.hpp>
 #if defined BOOST_THREAD_USES_DATETIME
@@ -26,13 +23,9 @@
 #include <boost/thread/detail/invoke.hpp>
 #include <boost/thread/detail/is_convertible.hpp>
 #include <boost/assert.hpp>
-#include <list>
-#include <algorithm>
 #include <boost/core/ref.hpp>
 #include <boost/cstdint.hpp>
 #include <boost/bind/bind.hpp>
-#include <stdlib.h>
-#include <memory>
 #include <boost/core/enable_if.hpp>
 #include <boost/type_traits/remove_reference.hpp>
 #include <boost/io/ios_state.hpp>
@@ -45,6 +38,13 @@
 #include <boost/chrono/ceil.hpp>
 #endif
 
+#include <algorithm>
+#include <cstdlib>
+#include <list>
+#include <memory>
+#ifndef BOOST_NO_IOSTREAM
+#include <ostream>
+#endif
 #if defined(BOOST_THREAD_PROVIDES_VARIADIC_THREAD)
 #include <tuple>
 #endif
@@ -115,7 +115,7 @@ namespace boost
 #endif
             //thread_data() {}
 
-            void run()
+            void run() BOOST_OVERRIDE
             {
                 f();
             }
@@ -135,7 +135,7 @@ namespace boost
             thread_data(boost::reference_wrapper<F> f_):
                 f(f_)
             {}
-            void run()
+            void run() BOOST_OVERRIDE
             {
                 f();
             }
@@ -152,7 +152,7 @@ namespace boost
             thread_data(const boost::reference_wrapper<F> f_):
                 f(f_)
             {}
-            void run()
+            void run() BOOST_OVERRIDE
             {
                 f();
             }
@@ -823,7 +823,7 @@ namespace boost
                 f(f_)
             {}
 
-            void operator()()
+            void operator()() BOOST_OVERRIDE
             {
                 f();
             }
