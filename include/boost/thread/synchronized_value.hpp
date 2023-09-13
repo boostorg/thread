@@ -18,7 +18,7 @@
 #include <boost/thread/lock_factories.hpp>
 #include <boost/thread/strict_lock.hpp>
 #include <boost/core/invoke_swap.hpp>
-#include <boost/utility/declval.hpp>
+#include <boost/type_traits/declval.hpp>
 //#include <boost/type_traits.hpp>
 //#include <boost/thread/detail/is_nothrow_default_constructible.hpp>
 //#if ! defined BOOST_NO_CXX11_HDR_TYPE_TRAITS
