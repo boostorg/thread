@@ -19,6 +19,7 @@
 #include <boost/thread/future.hpp>
 #include <boost/thread/pthread/pthread_helpers.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
+#include <boost/thread/detail/string_trim.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
@@ -33,8 +34,6 @@
 #include <vxCpuLib.h>
 #endif
 
-#include <boost/algorithm/string/split.hpp>
-#include <boost/algorithm/string/trim.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include <fstream>
@@ -535,16 +534,18 @@ namespace boost
                 if (line.empty())
                     continue;
 
-                vector<string> key_val(2);
-                boost::split(key_val, line, boost::is_any_of(":"));
+                std::size_t i = line.find( ':' );
 
-                if (key_val.size() != 2)
-                  return hardware_concurrency();
+                if( i == std::string::npos )
+                {
+                    return hardware_concurrency();
+                }
 
-                string key   = key_val[0];
-                string value = key_val[1];
-                boost::trim(key);
-                boost::trim(value);
+                std::string key = line.substr( 0, i );
+                std::string value = line.substr( i+1 );
+
+                key = thread_detail::string_trim( key );
+                value = thread_detail::string_trim( value );
 
                 if (key == physical_id) {
                     current_core_entry.first = boost::lexical_cast<unsigned>(value);
