@@ -34,8 +34,6 @@
 #include <vxCpuLib.h>
 #endif
 
-#include <boost/lexical_cast.hpp>
-
 #include <fstream>
 #include <string>
 #include <set>
@@ -548,12 +546,22 @@ namespace boost
                 value = thread_detail::string_trim( value );
 
                 if (key == physical_id) {
-                    current_core_entry.first = boost::lexical_cast<unsigned>(value);
+
+                    if( !thread_detail::string_to_unsigned( value, current_core_entry.first ) )
+                    {
+                        return hardware_concurrency();
+                    }
+
                     continue;
                 }
 
                 if (key == core_id) {
-                    current_core_entry.second = boost::lexical_cast<unsigned>(value);
+
+                    if( !thread_detail::string_to_unsigned( value, current_core_entry.second ) )
+                    {
+                        return hardware_concurrency();
+                    }
+
                     cores.insert(current_core_entry);
                     continue;
                 }
