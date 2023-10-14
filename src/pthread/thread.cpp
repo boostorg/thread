@@ -20,6 +20,7 @@
 #include <boost/thread/pthread/pthread_helpers.hpp>
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/detail/string_trim.hpp>
+#include <boost/thread/detail/string_to_unsigned.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
