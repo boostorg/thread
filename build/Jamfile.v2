@@ -35,6 +35,7 @@
 import os ;
 import indirect ;
 import path ;
+import config : requires ;
 import configure ; 
 import threadapi-feature ;
 
@@ -249,13 +250,17 @@ rule usage-requirements ( properties * )
     return $(result) ;
 }
 
+local cxx_requirements = [ requires
+    cxx11_noexcept # from lexical_cast
+] ;
+
 rule requirements ( properties * )
 {
     local result ;
 
     if <threadapi>pthread in $(properties)
     {
-        result += <define>BOOST_THREAD_POSIX ;
+        result += <define>BOOST_THREAD_POSIX $(cxx_requirements) ;
         if <target-os>windows in $(properties)
         {
             local paths = [ win32_pthread_paths $(properties) ] ;
