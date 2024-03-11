@@ -40,14 +40,14 @@ import threadapi-feature ;
 
 exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ;
 
-project boost/thread
+project
     : source-location ../src
     : requirements <threading>multi
       #<link>static:<define>BOOST_THREAD_STATIC_LINK=1
       #<link>shared:<define>BOOST_THREAD_DYN_LINK=1
       <link>static:<define>BOOST_THREAD_BUILD_LIB=1
       <link>shared:<define>BOOST_THREAD_BUILD_DLL=1
-      -<tag>@$(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
+      -<tag>@%boostcpp.tag
       <tag>@$(__name__).tag
       <toolset>gcc:<cxxflags>-Wno-long-long
       #<define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
@@ -156,8 +156,15 @@ rule tag ( name : type ? : property-set )
     }
 
     # forward to the boost tagging rule
-    return  [ indirect.call $(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
-                $(result) : $(type) : $(property-set) ] ;
+    if $(BOOST_JAMROOT_MODULE)
+    {
+        return  [ indirect.call $(BOOST_JAMROOT_MODULE)%$(BOOST_JAMROOT_MODULE).tag
+                    $(result) : $(type) : $(property-set) ] ;
+    }
+    else
+    {
+        return $(result) ;
+    }
 }
 
 rule win32_pthread_paths ( properties * )
@@ -315,5 +322,3 @@ lib boost_thread
       <link>static:<define>BOOST_THREAD_USE_LIB=1
       <conditional>@usage-requirements
     ;
-
-boost-install boost_thread ;

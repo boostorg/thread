@@ -1,0 +1,49 @@
+# Copyright René Ferdinand Rivera Morell 2023
+# Distributed under the Boost Software License, Version 1.0.
+# (See accompanying file LICENSE_1_0.txt or copy at
+# http://www.boost.org/LICENSE_1_0.txt)
+
+import project ;
+
+project /boost/thread
+    : common-requirements
+        <source>/boost/algorithm//boost_algorithm
+        <source>/boost/assert//boost_assert
+        <source>/boost/atomic//boost_atomic
+        <source>/boost/bind//boost_bind
+        <source>/boost/chrono//boost_chrono
+        <source>/boost/concept_check//boost_concept_check
+        <source>/boost/config//boost_config
+        <source>/boost/container//boost_container
+        <source>/boost/container_hash//boost_container_hash
+        <source>/boost/core//boost_core
+        <source>/boost/date_time//boost_date_time
+        <source>/boost/exception//boost_exception
+        <source>/boost/function//boost_function
+        <source>/boost/intrusive//boost_intrusive
+        <source>/boost/io//boost_io
+        <source>/boost/iterator//boost_iterator
+        <source>/boost/lexical_cast//boost_lexical_cast
+        <source>/boost/move//boost_move
+        <source>/boost/optional//boost_optional
+        <source>/boost/predef//boost_predef
+        <source>/boost/preprocessor//boost_preprocessor
+        <source>/boost/smart_ptr//boost_smart_ptr
+        <source>/boost/static_assert//boost_static_assert
+        <source>/boost/system//boost_system
+        <source>/boost/throw_exception//boost_throw_exception
+        <source>/boost/tuple//boost_tuple
+        <source>/boost/type_traits//boost_type_traits
+        <source>/boost/utility//boost_utility
+        <source>/boost/winapi//boost_winapi
+        <include>include
+    ;
+
+explicit
+    [ alias boost_thread : build//boost_thread ]
+    [ alias all : boost_thread example test ]
+    ;
+
+call-if : boost-library thread
+    : install boost_thread
+    ;

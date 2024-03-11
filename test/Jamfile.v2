@@ -268,10 +268,9 @@ rule generate_self_contained_header_tests
 
     if ! [ os.environ BOOST_THREAD_TEST_WITHOUT_SELF_CONTAINED_HEADER_TESTS ]
     {
-        local headers_path = [ path.make $(BOOST_ROOT)/libs/thread/include/boost/thread ] ;
-        for file in [ path.glob-tree $(headers_path) : *.hpp : detail pthread win32 ]
+        for file in [ glob-tree-ex ../include/boost/thread : *.hpp : detail pthread win32 ]
         {
-            local rel_file = [ path.relative-to $(headers_path) $(file) ] ;
+            local rel_file = [ path.relative-to ../include/boost/thread $(file) ] ;
             # Note: The test name starts with '~' in order to group these tests in the test report table, preferably at the end.
             #       All '/' are replaced with '-' because apparently test scripts have a problem with test names containing slashes.
             local test_name = [ regex.replace ~hdr/$(rel_file) "/" "-" ] ;
