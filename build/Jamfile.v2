@@ -35,7 +35,7 @@
 import os ;
 import indirect ;
 import path ;
-import configure ; 
+import configure ;
 import threadapi-feature ;
 
 exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ;
@@ -140,6 +140,7 @@ project
       #<define>BOOST_THREAD_THROW_IF_PRECONDITION_NOT_SATISFIED
       #<define>BOOST_SYSTEM_NO_DEPRECATED
       #<define>BOOST_THREAD_DONT_PROVIDE_INTERRUPTIONS
+      <define>BOOST_THREAD_NO_LIB=1
     ;
 
 rule tag ( name : type ? : property-set )
@@ -277,10 +278,10 @@ rule requirements ( properties * )
             }
         }
         result += <define>BOOST_THREAD_DONT_USE_CHRONO ;
-        if ! [ configure.builds has_atomic_flag_lockfree 
-            : $(properties) : "lockfree boost::atomic_flag" ]  { 
-           result += <library>/boost/atomic//boost_atomic ; 
-        } 
+        if ! [ configure.builds has_atomic_flag_lockfree
+            : $(properties) : "lockfree boost::atomic_flag" ]  {
+           result += <library>/boost/atomic//boost_atomic ;
+        }
     } else {
         if <threadapi>win32 in $(properties)
         {
