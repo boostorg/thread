@@ -9,7 +9,6 @@ import project ;
 
 project /boost/thread
     : common-requirements
-        <library>/boost/algorithm//boost_algorithm
         <library>/boost/assert//boost_assert
         <library>/boost/atomic//boost_atomic
         <library>/boost/bind//boost_bind
@@ -22,10 +21,7 @@ project /boost/thread
         <library>/boost/date_time//boost_date_time
         <library>/boost/exception//boost_exception
         <library>/boost/function//boost_function
-        <library>/boost/intrusive//boost_intrusive
         <library>/boost/io//boost_io
-        <library>/boost/iterator//boost_iterator
-        <library>/boost/lexical_cast//boost_lexical_cast
         <library>/boost/move//boost_move
         <library>/boost/optional//boost_optional
         <library>/boost/predef//boost_predef
