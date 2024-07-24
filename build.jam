@@ -5,33 +5,35 @@
 
 require-b2 5.2 ;
 
+constant boost_dependencies :
+    /boost/assert//boost_assert
+    /boost/atomic//boost_atomic
+    /boost/bind//boost_bind
+    /boost/chrono//boost_chrono
+    /boost/concept_check//boost_concept_check
+    /boost/config//boost_config
+    /boost/container//boost_container
+    /boost/container_hash//boost_container_hash
+    /boost/core//boost_core
+    /boost/date_time//boost_date_time
+    /boost/exception//boost_exception
+    /boost/function//boost_function
+    /boost/io//boost_io
+    /boost/move//boost_move
+    /boost/optional//boost_optional
+    /boost/predef//boost_predef
+    /boost/preprocessor//boost_preprocessor
+    /boost/smart_ptr//boost_smart_ptr
+    /boost/static_assert//boost_static_assert
+    /boost/system//boost_system
+    /boost/throw_exception//boost_throw_exception
+    /boost/tuple//boost_tuple
+    /boost/type_traits//boost_type_traits
+    /boost/utility//boost_utility
+    /boost/winapi//boost_winapi ;
+
 project /boost/thread
     : common-requirements
-        <library>/boost/assert//boost_assert
-        <library>/boost/atomic//boost_atomic
-        <library>/boost/bind//boost_bind
-        <library>/boost/chrono//boost_chrono
-        <library>/boost/concept_check//boost_concept_check
-        <library>/boost/config//boost_config
-        <library>/boost/container//boost_container
-        <library>/boost/container_hash//boost_container_hash
-        <library>/boost/core//boost_core
-        <library>/boost/date_time//boost_date_time
-        <library>/boost/exception//boost_exception
-        <library>/boost/function//boost_function
-        <library>/boost/io//boost_io
-        <library>/boost/move//boost_move
-        <library>/boost/optional//boost_optional
-        <library>/boost/predef//boost_predef
-        <library>/boost/preprocessor//boost_preprocessor
-        <library>/boost/smart_ptr//boost_smart_ptr
-        <library>/boost/static_assert//boost_static_assert
-        <library>/boost/system//boost_system
-        <library>/boost/throw_exception//boost_throw_exception
-        <library>/boost/tuple//boost_tuple
-        <library>/boost/type_traits//boost_type_traits
-        <library>/boost/utility//boost_utility
-        <library>/boost/winapi//boost_winapi
         <include>include
     ;
 
@@ -43,3 +45,4 @@ explicit
 call-if : boost-library thread
     : install boost_thread
     ;
+
