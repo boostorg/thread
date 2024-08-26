@@ -41,14 +41,14 @@ jobs:
             os: ubuntu-22.04
             install: clang-15
           - toolset: clang
-            os: macos-11
-            cxxstd: 11
-          - toolset: clang
             os: macos-12
             cxxstd: 14
           - toolset: clang
             os: macos-13
             cxxstd: 17
+          - toolset: clang
+            os: macos-14
+            cxxstd: "11,14,17,20,2b"
 
     runs-on: ${{matrix.os}}
     container: ${{matrix.container}}
