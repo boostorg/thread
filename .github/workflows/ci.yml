@@ -41,9 +41,6 @@ jobs:
             os: ubuntu-22.04
             install: clang-15
           - toolset: clang
-            os: macos-11
-            cxxstd: 11
-          - toolset: clang
             os: macos-12
             cxxstd: 14
           - toolset: clang
