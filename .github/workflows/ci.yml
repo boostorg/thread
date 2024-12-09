@@ -13,6 +13,10 @@ env:
 
 jobs:
   posix:
+    defaults:
+      run:
+        shell: bash
+
     strategy:
       fail-fast: false
       matrix:
@@ -40,30 +44,31 @@ jobs:
             os: ubuntu-22.04
             install: clang-15
           - toolset: clang
-            os: macos-11
-            cxxstd: 11
-          - toolset: clang
-            os: macos-12
+            os: macos-13
             cxxstd: 14
           - toolset: clang
-            os: macos-13
+            os: macos-14
             cxxstd: 17
 
     runs-on: ${{matrix.os}}
-    container: ${{matrix.container}}
-
-    defaults:
-      run:
-        shell: bash
+    container:
+      image: ${{matrix.container}}
+      volumes:
+        - /node20217:/node20217:rw,rshared
+        - ${{ startsWith(matrix.container, 'ubuntu:1') && '/node20217:/__e/node20:ro,rshared' || ' ' }}
 
     steps:
-      - uses: actions/checkout@v3
-
       - name: Setup container environment
         if: matrix.container
         run: |
           apt-get update
-          apt-get -y install sudo python3 git g++
+          apt-get -y install sudo python3 git g++ curl
+          if [[ "${{matrix.container}}" == "ubuntu:1"* ]]; then
+            # Node 20 doesn't work with Ubuntu 16/18  glibc: https://github.com/actions/checkout/issues/1590
+            curl -sL https://archives.boost.io/misc/node/node-v20.9.0-linux-x64-glibc-217.tar.xz | tar -xJ --strip-components 1 -C /node20217
+          fi
+
+      - uses: actions/checkout@v4
 
       - name: Install packages
         if: matrix.install
