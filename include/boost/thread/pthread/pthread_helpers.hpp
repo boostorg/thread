@@ -8,6 +8,9 @@
 //  http://www.boost.org/LICENSE_1_0.txt)
 
 #include <boost/thread/detail/config.hpp>
+#ifdef BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
+#include <boost/thread/detail/platform_time.hpp>
+#endif
 #include <boost/throw_exception.hpp>
 #include <pthread.h>
 #include <errno.h>
@@ -18,10 +21,42 @@
 #define BOOST_THREAD_HAS_EINTR_BUG
 #endif
 
+#ifdef __ANDROID__
+#if defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_MONOTONIC_NP)
+extern "C" int
+pthread_cond_timedwait_monotonic_np(pthread_cond_t *cond,
+                                    pthread_mutex_t *mutex,
+                                    const struct timespec *abstime);
+#elif defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP)
+extern "C" int
+pthread_cond_timedwait_relative_np(pthread_cond_t *cond,
+                                   pthread_mutex_t *mutex,
+                                   const struct timespec *reltime);
+#endif
+#endif
+
 namespace boost
 {
   namespace posix
   {
+    namespace posix_detail
+    {
+      BOOST_FORCEINLINE BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
+      int pthread_cond_timedwait(pthread_cond_t* c, pthread_mutex_t* m, const struct timespec* t)
+      {
+#if defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_MONOTONIC_NP)
+        return ::pthread_cond_timedwait_monotonic_np(c, m, t);
+#elif defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP)
+        using namespace boost;
+
+        const detail::internal_platform_timepoint ts(*t);
+        const detail::platform_duration d(ts - detail::internal_platform_clock::now());
+        return ::pthread_cond_timedwait_relative_np(c, m, &d.getTs());
+#else
+        return ::pthread_cond_timedwait(c, m, t);
+#endif
+      }
+    }
     BOOST_FORCEINLINE BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
     int pthread_mutex_init(pthread_mutex_t* m, const pthread_mutexattr_t* attr = NULL)
     {
@@ -31,7 +66,9 @@ namespace boost
     BOOST_FORCEINLINE BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
     int pthread_cond_init(pthread_cond_t* c)
     {
-#ifdef BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
+#if defined(BOOST_THREAD_INTERNAL_CLOCK_IS_MONO) \
+ && !(defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_MONOTONIC_NP) \
+ || defined(BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP))
       pthread_condattr_t attr;
       int res = pthread_condattr_init(&attr);
       if (res)
@@ -120,7 +157,7 @@ namespace boost
       int ret;
       do
       {
-          ret = ::pthread_cond_timedwait(c, m, t);
+          ret = posix_detail::pthread_cond_timedwait(c, m, t);
       } while (ret == EINTR);
       return ret;
     }
@@ -164,7 +201,7 @@ namespace boost
     BOOST_FORCEINLINE BOOST_THREAD_DISABLE_THREAD_SAFETY_ANALYSIS
     int pthread_cond_timedwait(pthread_cond_t* c, pthread_mutex_t* m, const struct timespec* t)
     {
-      return ::pthread_cond_timedwait(c, m, t);
+      return posix_detail::pthread_cond_timedwait(c, m, t);
     }
 #endif
 
