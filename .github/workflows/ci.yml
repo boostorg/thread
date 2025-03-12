@@ -28,16 +28,19 @@ jobs:
             os: ubuntu-latest
             install: g++-5
           - toolset: gcc-7
-            os: ubuntu-20.04
-            install: g++-7
+            container: ubuntu:18.04
+            os: ubuntu-latest
           - toolset: gcc-9
-            os: ubuntu-20.04
+            container: ubuntu:20.04
+            os: ubuntu-latest
           - toolset: gcc-11
             os: ubuntu-22.04
           - toolset: gcc-13
             os: ubuntu-24.04
           - toolset: clang
-            os: ubuntu-20.04
+            container: ubuntu:20.04
+            os: ubuntu-latest
+            install: clang
           - toolset: clang
             os: ubuntu-22.04
           - toolset: clang
