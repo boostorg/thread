@@ -421,7 +421,9 @@
   #   endif
 #endif
 
-#if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
+#if defined(BOOST_THREAD_MINGW) && defined(BOOST_THREAD_PLATFORM_PTHREAD)
+// MinGW pthread does not support monotonic clocks
+#elif defined(BOOST_THREAD_CHRONO_WINDOWS_API)
   #define BOOST_THREAD_HAS_MONO_CLOCK
   #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
 #elif defined(BOOST_THREAD_CHRONO_MAC_API)
