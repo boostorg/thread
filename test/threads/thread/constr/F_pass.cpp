@@ -21,7 +21,7 @@
 #include <cstdlib>
 #include <cassert>
 #include <boost/thread/thread_only.hpp>
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 unsigned throw_one = 0xFFFF;
 

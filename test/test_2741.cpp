@@ -8,9 +8,6 @@
 
 #include <boost/thread/thread_only.hpp>
 #include <boost/thread/xtime.hpp>
-#include <boost/bind/bind.hpp>
-#include <boost/ref.hpp>
-#include <boost/utility.hpp>
 
 #include <iostream>
 #include <boost/test/unit_test.hpp>
@@ -75,5 +72,3 @@ BOOST_AUTO_TEST_CASE(test_creation_with_attrs)
 {
   timed_test(&do_test_creation_with_attrs, 1);
 }
-
-
