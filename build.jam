@@ -33,8 +33,6 @@ constant boost_dependencies :
     /boost/winapi//boost_winapi ;
 
 project /boost/thread
-    : common-requirements
-        <include>include
     ;
 
 explicit

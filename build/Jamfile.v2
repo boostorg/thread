@@ -42,7 +42,9 @@ exe has_atomic_flag_lockfree : ../build/has_atomic_flag_lockfree_test.cpp ;
 
 project
     : source-location ../src
-    : common-requirements <library>$(boost_dependencies)
+    : common-requirements
+        <library>$(boost_dependencies)
+        <include>../include
     : requirements <threading>multi
       #<link>static:<define>BOOST_THREAD_STATIC_LINK=1
       #<link>shared:<define>BOOST_THREAD_DYN_LINK=1
