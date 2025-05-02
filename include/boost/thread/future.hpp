@@ -392,7 +392,7 @@ namespace boost
                 is_deferred_=false;
                 execute(lk);
               }
-              waiters.wait(lk, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
+              waiters.wait(lk, boost::bind(&shared_state_base::is_done, this));
               if(rethrow && exception)
               {
                   boost::rethrow_exception(exception);
@@ -419,7 +419,7 @@ namespace boost
                     return false;
 
                 do_callback(lock);
-                return waiters.timed_wait(lock, rel_time, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
+                return waiters.timed_wait(lock, rel_time, boost::bind(&shared_state_base::is_done, this));
             }
 
             bool timed_wait_until(boost::system_time const& target_time)
@@ -429,7 +429,7 @@ namespace boost
                     return false;
 
                 do_callback(lock);
-                return waiters.timed_wait(lock, target_time, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
+                return waiters.timed_wait(lock, target_time, boost::bind(&shared_state_base::is_done, this));
             }
 #endif
 #ifdef BOOST_THREAD_USES_CHRONO
@@ -442,7 +442,7 @@ namespace boost
               if (is_deferred_)
                   return future_status::deferred;
               do_callback(lock);
-              if(!waiters.wait_until(lock, abs_time, boost::bind(&shared_state_base::is_done, boost::ref(*this))))
+              if(!waiters.wait_until(lock, abs_time, boost::bind(&shared_state_base::is_done, this)))
               {
                   return future_status::timeout;
               }
@@ -939,7 +939,7 @@ namespace boost
             join();
 #elif defined BOOST_THREAD_ASYNC_FUTURE_WAITS
             unique_lock<boost::mutex> lk(this->mutex);
-            this->waiters.wait(lk, boost::bind(&shared_state_base::is_done, boost::ref(*this)));
+            this->waiters.wait(lk, boost::bind(&shared_state_base::is_done, this));
 #endif
           }
 

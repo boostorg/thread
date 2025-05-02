@@ -13,7 +13,7 @@
 
 #include <boost/thread/concurrent_queues/sync_deque.hpp>
 
-#include <boost/detail/lightweight_test.hpp>
+#include <boost/core/lightweight_test.hpp>
 
 class non_copyable
 {
