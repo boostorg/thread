@@ -56,8 +56,7 @@ namespace boost
         {
         }
 
-        ~thread_exception() BOOST_NOEXCEPT_OR_NOTHROW
-        {}
+        BOOST_DEFAULTED_FUNCTION(~thread_exception() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
 
         int native_error() const
@@ -113,8 +112,7 @@ namespace boost
         {
         }
 
-        ~lock_error() BOOST_NOEXCEPT_OR_NOTHROW
-        {}
+        BOOST_DEFAULTED_FUNCTION(~lock_error() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
     };
 
@@ -141,8 +139,7 @@ namespace boost
           }
 
 
-        ~thread_resource_error() BOOST_NOEXCEPT_OR_NOTHROW
-        {}
+        BOOST_DEFAULTED_FUNCTION(~thread_resource_error() BOOST_NOEXCEPT_OR_NOTHROW, {})
 
     };
 
