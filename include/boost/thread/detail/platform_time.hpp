@@ -294,7 +294,7 @@ inline FP init_steady_clock(kern_return_t & err)
       {
 #if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
         boost::winapi::FILETIME_ ft;
-        boost::winapi::GetSystemTimeAsFileTime(&ft);  // never fails
+        boost::winapi::GetSystemPreciseTimeAsFileTime(&ft);  // never fails
         boost::time_max_t ns = ((((static_cast<boost::time_max_t>(ft.dwHighDateTime) << 32) | ft.dwLowDateTime) - 116444736000000000LL) * 100LL);
         return real_platform_timepoint(ns);
 #elif defined(BOOST_THREAD_CHRONO_MAC_API)
