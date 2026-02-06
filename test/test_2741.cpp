@@ -42,7 +42,7 @@ BOOST_AUTO_TEST_CASE(test_native_handle)
   BOOST_CHECK(!pthread_attr_setstacksize(h, MY_PTHREAD_STACK));
   std::size_t res;
   BOOST_CHECK(!pthread_attr_getstacksize(h, &res));
-  BOOST_CHECK(res >= (MY_PTHREAD_STACK));
+  BOOST_CHECK(res >= static_cast<std::size_t>(MY_PTHREAD_STACK));
 #else
 #error "Boost thread unavailable on this platform"
 #endif
