@@ -4649,32 +4649,34 @@ namespace detail
     shared_ptr<FutureExecutorContinuationSharedState> that_;
 
 #if ! defined(BOOST_NO_CXX11_RVALUE_REFERENCES)
-      BOOST_THREAD_COPYABLE_AND_MOVABLE(run_it)
-      run_it(run_it const& x) //BOOST_NOEXCEPT
-      : that_(x.that_)
-      {}
-      run_it& operator=(BOOST_THREAD_COPY_ASSIGN_REF(run_it) x) //BOOST_NOEXCEPT
-      {
-        if (this != &x) {
-          that_=x.that_;
-        }
-        return *this;
+    BOOST_THREAD_COPYABLE_AND_MOVABLE(run_it)
+    run_it(run_it const& x) //BOOST_NOEXCEPT
+    : that_(x.that_)
+    {}
+    run_it& operator=(BOOST_THREAD_COPY_ASSIGN_REF(run_it) x) //BOOST_NOEXCEPT
+    {
+      if (this != &x) {
+        that_=x.that_;
       }
-      // move
-      run_it(BOOST_THREAD_RV_REF(run_it) x) BOOST_NOEXCEPT
-      : that_(x.that_)
-      {
-        x.that_.reset();
+      return *this;
+    }
+    // move
+    run_it(BOOST_THREAD_RV_REF(run_it) x) BOOST_NOEXCEPT
+    : that_(boost::move(x.that_))
+    {
+    }
+    run_it& operator=(BOOST_THREAD_RV_REF(run_it) x) BOOST_NOEXCEPT {
+      if (this != &x) {
+        that_ = boost::move(x.that_);
       }
-      run_it& operator=(BOOST_THREAD_RV_REF(run_it) x) BOOST_NOEXCEPT {
-        if (this != &x) {
-          that_=x.that_;
-          x.that_.reset();
-        }
-        return *this;
-      }
+      return *this;
+    }
+    run_it(shared_ptr<FutureExecutorContinuationSharedState> that) : that_(boost::move(that))
+    {}
+#else
+    run_it(shared_ptr<FutureExecutorContinuationSharedState> that) : that_(that)
+    {}
 #endif
-    run_it(shared_ptr<FutureExecutorContinuationSharedState> that) : that_ (that) {}
 
     void operator()()
     {
