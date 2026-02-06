@@ -82,7 +82,7 @@ int main()
   {
     // empty queue push lvalue succeeds
       boost::sync_queue<int> q;
-      int i;
+      int i = 42;
       q.push(i);
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
