@@ -515,7 +515,7 @@ namespace boost
     unsigned thread::physical_concurrency() BOOST_NOEXCEPT
     {
 #ifdef __linux__
-        try {
+        BOOST_TRY {
             using namespace std;
 
             ifstream proc_cpuinfo ("/proc/cpuinfo");
@@ -570,9 +570,10 @@ namespace boost
             // Fall back to hardware_concurrency() in case
             // /proc/cpuinfo is formatted differently than we expect.
             return cores.size() != 0 ? cores.size() : hardware_concurrency();
-        } catch(...) {
+        } BOOST_CATCH(...) {
           return hardware_concurrency();
         }
+        BOOST_CATCH_END
 #elif defined(__APPLE__)
         int count;
         size_t size=sizeof(count);
