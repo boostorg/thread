@@ -21,6 +21,7 @@
 #include <boost/thread/pthread/pthread_mutex_scoped_lock.hpp>
 #include <boost/thread/detail/string_trim.hpp>
 #include <boost/thread/detail/string_to_unsigned.hpp>
+#include <boost/core/no_exceptions_support.hpp>
 
 #ifdef __GLIBC__
 #include <sys/sysinfo.h>
