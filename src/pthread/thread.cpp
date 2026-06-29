@@ -186,7 +186,7 @@ namespace boost
 // Unhandled exceptions still cause the application to terminate
 //                 BOOST_CATCH(...)
 //                 {
-//                   throw;
+//                     throw;
 //
 //                     std::terminate();
 //                 }
@@ -213,12 +213,13 @@ namespace boost
                 interrupt_enabled=false;
 #endif
             }
-            ~externally_launched_thread() {
-              BOOST_ASSERT(notify.empty());
-              notify.clear();
+            ~externally_launched_thread()
+            {
+                BOOST_ASSERT(notify.empty());
+                notify.clear();
 //#ifndef BOOST_NO_EXCEPTIONS
-              BOOST_ASSERT(async_states_.empty());
-              async_states_.clear();
+                BOOST_ASSERT(async_states_.empty());
+                async_states_.clear();
 //#endif
             }
             void run()
@@ -355,7 +356,7 @@ namespace boost
         }
         else
         {
-          return false;
+            return false;
         }
     }
 
@@ -374,8 +375,8 @@ namespace boost
                 }
                 if(!local_thread_info->done)
                 {
-                  res=false;
-                  return true;
+                    res=false;
+                    return true;
                 }
                 do_join=!local_thread_info->join_started;
 
@@ -438,31 +439,31 @@ namespace boost
 
     namespace this_thread
     {
-      namespace no_interruption_point
-      {
-        namespace hidden
+        namespace no_interruption_point
         {
-          void BOOST_THREAD_DECL sleep_for_internal(const detail::platform_duration& ts)
-          {
-                if (ts > detail::platform_duration::zero())
+            namespace hidden
+            {
+                void BOOST_THREAD_DECL sleep_for_internal(const detail::platform_duration& ts)
                 {
-                  // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
-                  // namespace because they do not provide an interruption point.
-    #   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
-    #     if defined(__IBMCPP__) ||  defined(_AIX)
-                  BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.getTs())));
-    #     else
-                  BOOST_VERIFY(!pthread_delay_np(&ts.getTs()));
-    #     endif
-    #   elif defined(BOOST_HAS_NANOSLEEP)
-                  nanosleep(&ts.getTs(), 0);
-    #   else
-                  // This should never be reached due to BOOST_THREAD_SLEEP_FOR_IS_STEADY
-    #   endif
+                    if (ts > detail::platform_duration::zero())
+                    {
+                        // Use pthread_delay_np or nanosleep whenever possible here in the no_interruption_point
+                        // namespace because they do not provide an interruption point.
+#   if defined(BOOST_HAS_PTHREAD_DELAY_NP)
+#       if defined(__IBMCPP__) ||  defined(_AIX)
+                        BOOST_VERIFY(!pthread_delay_np(const_cast<timespec*>(&ts.getTs())));
+#       else
+                        BOOST_VERIFY(!pthread_delay_np(&ts.getTs()));
+#       endif
+#   elif defined(BOOST_HAS_NANOSLEEP)
+                        nanosleep(&ts.getTs(), 0);
+#   else
+                        // This should never be reached due to BOOST_THREAD_SLEEP_FOR_IS_STEADY
+#   endif
+                    }
                 }
-          }
+            }
         }
-      }
 
         void yield() BOOST_NOEXCEPT
         {
@@ -572,7 +573,7 @@ namespace boost
             // /proc/cpuinfo is formatted differently than we expect.
             return cores.size() != 0 ? cores.size() : hardware_concurrency();
         } BOOST_CATCH(...) {
-          return hardware_concurrency();
+            return hardware_concurrency();
         }
         BOOST_CATCH_END
 #elif defined(__APPLE__)
@@ -788,26 +789,25 @@ namespace boost
 
     BOOST_THREAD_DECL void notify_all_at_thread_exit(condition_variable& cond, unique_lock<mutex> lk)
     {
-      detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
-      if(current_thread_data)
-      {
-        current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
-      }
+        detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
+        if(current_thread_data)
+        {
+            current_thread_data->notify_all_at_thread_exit(&cond, lk.release());
+        }
     }
 
 //#ifndef BOOST_NO_EXCEPTIONS
-namespace detail {
-
+namespace detail
+{
     void BOOST_THREAD_DECL make_ready_at_thread_exit(shared_ptr<shared_state_base> as)
     {
-      detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
-      if(current_thread_data)
-      {
-        current_thread_data->make_ready_at_thread_exit(as);
-      }
+        detail::thread_data_base* const current_thread_data(detail::get_current_thread_data());
+        if(current_thread_data)
+        {
+            current_thread_data->make_ready_at_thread_exit(as);
+        }
     }
 }
 //#endif
-
 
 }
