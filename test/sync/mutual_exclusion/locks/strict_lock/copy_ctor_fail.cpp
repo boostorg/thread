@@ -14,12 +14,11 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/core/lightweight_test.hpp>
 
-boost::mutex m0;
-boost::mutex m1;
+boost::mutex g_mutex0;
 
 int main()
 {
-  boost::strict_lock<boost::mutex> lk0(m0);
+  boost::strict_lock<boost::mutex> lk0(g_mutex0);
   boost::strict_lock<boost::mutex> lk1 = lk0;
 }
 
