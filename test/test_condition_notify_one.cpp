@@ -125,16 +125,15 @@ void do_test_multiple_notify_one_calls_wakes_multiple_threads()
     boost::this_thread::sleep(boost::posix_time::milliseconds(200));
     multiple_wake_cond.notify_one();
     multiple_wake_cond.notify_one();
-    boost::this_thread::sleep(boost::posix_time::milliseconds(200));
-
-    {
-        boost::unique_lock<boost::mutex> lk(multiple_wake_mutex);
-        BOOST_CHECK(multiple_wake_count==3);
-    }
 
     thread1.join();
     thread2.join();
     thread3.join();
+
+    {
+        boost::unique_lock<boost::mutex> lk(multiple_wake_mutex);
+        BOOST_CHECK_EQUAL(multiple_wake_count, 3u);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_condition_notify_one)
