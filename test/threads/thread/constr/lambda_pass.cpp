@@ -31,12 +31,8 @@ unsigned throw_one = 0xFFFF;
 
 #if defined _GLIBCXX_THROW
 void* operator new(std::size_t s) _GLIBCXX_THROW (std::bad_alloc)
-#elif defined BOOST_MSVC
-void* operator new(std::size_t s)
-#elif __cplusplus > 201402L
-void* operator new(std::size_t s)
 #else
-void* operator new(std::size_t s) throw (std::bad_alloc)
+void* operator new(std::size_t s)
 #endif
 {
   if (throw_one == 0) throw std::bad_alloc();
