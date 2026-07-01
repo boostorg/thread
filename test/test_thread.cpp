@@ -62,7 +62,7 @@ void do_test_creation()
 
 BOOST_AUTO_TEST_CASE(test_creation)
 {
-    timed_test(&do_test_creation, 1);
+    timed_test(&do_test_creation, 2);
 }
 
 void do_test_id_comparison()
@@ -74,7 +74,7 @@ void do_test_id_comparison()
 
 BOOST_AUTO_TEST_CASE(test_id_comparison)
 {
-    timed_test(&do_test_id_comparison, 1);
+    timed_test(&do_test_id_comparison, 2);
 }
 
 void interruption_point_thread(boost::mutex* m,bool* failed)
@@ -98,7 +98,7 @@ void do_test_thread_interrupts_at_interruption_point()
 
 BOOST_AUTO_TEST_CASE(test_thread_interrupts_at_interruption_point)
 {
-    timed_test(&do_test_thread_interrupts_at_interruption_point, 1);
+    timed_test(&do_test_thread_interrupts_at_interruption_point, 2);
 }
 
 void disabled_interruption_point_thread(boost::mutex* m,bool* failed)
@@ -123,7 +123,7 @@ void do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point()
 
 BOOST_AUTO_TEST_CASE(test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point)
 {
-    timed_test(&do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point, 1);
+    timed_test(&do_test_thread_no_interrupt_if_interrupts_disabled_at_interruption_point, 2);
 }
 
 struct non_copyable_functor:
