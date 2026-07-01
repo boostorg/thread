@@ -41,7 +41,9 @@ void* operator new(std::size_t s) throw (std::bad_alloc)
 {
   if (throw_one == 0) throw std::bad_alloc();
   --throw_one;
-  return std::malloc(s);
+  void* p = std::malloc(s);
+  if (!p) throw std::bad_alloc();
+  return p;
 }
 
 #if defined BOOST_MSVC
