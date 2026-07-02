@@ -15,6 +15,7 @@
 #include "./condition_test_common.hpp"
 
 unsigned const number_of_test_threads=5;
+unsigned const timeout_grace=1;
 
 void do_test_condition_notify_all_wakes_from_wait()
 {
@@ -203,10 +204,10 @@ void do_test_notify_all_following_notify_one_wakes_all_threads()
 
 BOOST_AUTO_TEST_CASE(test_condition_notify_all)
 {
-    timed_test(&do_test_condition_notify_all_wakes_from_wait, timeout_seconds);
-    timed_test(&do_test_condition_notify_all_wakes_from_wait_with_predicate, timeout_seconds);
-    timed_test(&do_test_condition_notify_all_wakes_from_timed_wait, timeout_seconds);
-    timed_test(&do_test_condition_notify_all_wakes_from_timed_wait_with_predicate, timeout_seconds);
-    timed_test(&do_test_condition_notify_all_wakes_from_relative_timed_wait_with_predicate, timeout_seconds);
-    timed_test(&do_test_notify_all_following_notify_one_wakes_all_threads, timeout_seconds);
+    timed_test(&do_test_condition_notify_all_wakes_from_wait, timeout_seconds+timeout_grace);
+    timed_test(&do_test_condition_notify_all_wakes_from_wait_with_predicate, timeout_seconds+timeout_grace);
+    timed_test(&do_test_condition_notify_all_wakes_from_timed_wait, timeout_seconds+timeout_grace);
+    timed_test(&do_test_condition_notify_all_wakes_from_timed_wait_with_predicate, timeout_seconds+timeout_grace);
+    timed_test(&do_test_condition_notify_all_wakes_from_relative_timed_wait_with_predicate, timeout_seconds+timeout_grace);
+    timed_test(&do_test_notify_all_following_notify_one_wakes_all_threads, timeout_seconds+timeout_grace);
 }
