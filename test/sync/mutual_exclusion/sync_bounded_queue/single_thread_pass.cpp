@@ -411,7 +411,7 @@ int main()
   {
     // empty queue wait_push value succeeds
       boost::sync_bounded_queue<int> q(2);
-      int i;
+      int i = 42;
       BOOST_TEST(boost::queue_op_status::success == q.wait_push_back(i));
       BOOST_TEST(! q.empty());
       BOOST_TEST(! q.full());
@@ -590,7 +590,7 @@ int main()
       q.close();
       BOOST_TEST(q.empty());
       BOOST_TEST(q.closed());
-      int i;
+      int i = 42;
       BOOST_TEST(boost::queue_op_status::closed == q.wait_push_back(i));
       BOOST_TEST(q.empty());
       BOOST_TEST(q.closed());
