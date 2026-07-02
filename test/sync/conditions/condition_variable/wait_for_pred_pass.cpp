@@ -56,7 +56,7 @@ typedef boost::chrono::milliseconds milliseconds;
 typedef boost::chrono::milliseconds ms;
 typedef boost::chrono::nanoseconds ns;
 
-const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
+BOOST_ATTRIBUTE_UNUSED const ms max_diff(BOOST_THREAD_TEST_TIME_MS);
 
 void f()
 {
