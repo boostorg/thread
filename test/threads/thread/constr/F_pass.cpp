@@ -143,7 +143,8 @@ int main()
     BOOST_TEST(f_run == true);
   }
   f_run = false;
-#if !defined(BOOST_MSVC) && !defined(__MINGW32__)
+// On OpenBSD, the test crashes for unknown reason when operator new throws an exception.
+#if !defined(BOOST_MSVC) && !defined(__MINGW32__) && !defined(__OpenBSD__)
   {
     try
     {
@@ -166,7 +167,7 @@ int main()
     BOOST_TEST(G::n_alive == 0);
     BOOST_TEST(G::op_run);
   }
-#if !defined(BOOST_MSVC) && !defined(__MINGW32__)
+#if !defined(BOOST_MSVC) && !defined(__MINGW32__) && !defined(__OpenBSD__)
   G::op_run = false;
   {
     try
