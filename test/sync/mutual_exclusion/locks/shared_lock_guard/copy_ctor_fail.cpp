@@ -29,6 +29,7 @@ int main()
 {
   boost::shared_lock_guard<boost::shared_mutex> lk0(g_mutex0);
   boost::shared_lock_guard<boost::shared_mutex> lk1 = lk0;
+  (void)lk1;
 }
 
 #include "../../../../remove_error_code_unused_warning.hpp"

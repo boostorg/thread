@@ -21,6 +21,7 @@ int main()
 {
   boost::nested_strict_lock<boost::unique_lock<boost::mutex> > lk0(g_mutex0);
   boost::nested_strict_lock<boost::unique_lock<boost::mutex> > lk1 = lk0;
+  (void)lk1;
 }
 
 #include "../../../../remove_error_code_unused_warning.hpp"

@@ -68,6 +68,8 @@ void f()
     BOOST_ATTRIBUTE_UNUSED Clock::time_point t0 = Clock::now();
     cv.wait_for(lk, milliseconds(250), Pred(test2));
     BOOST_ATTRIBUTE_UNUSED Clock::time_point t1 = Clock::now();
+    (void)t0;
+    (void)t1;
     if (runs == 0)
     {
       assert(t1 - t0 < max_diff);

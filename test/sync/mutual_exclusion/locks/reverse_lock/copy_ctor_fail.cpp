@@ -22,6 +22,7 @@ int main()
   {
     boost::reverse_lock<boost::unique_lock<boost::mutex> > lg0(lk0);
     boost::reverse_lock<boost::unique_lock<boost::mutex> > lg1(lg0);
+    (void)lg1;
   }
 }
 
