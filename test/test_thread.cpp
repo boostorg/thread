@@ -197,6 +197,12 @@ void do_test_timed_join()
     BOOST_CHECK(xt>now);
     BOOST_CHECK(joined2);
     BOOST_CHECK(!thrd.joinable());
+    if (thrd.joinable())
+    {
+        // Try to finish the failed test gracefully
+        thrd.interrupt();
+        thrd.join();
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_timed_join)
