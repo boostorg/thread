@@ -512,13 +512,9 @@ jobs:
             os: ubuntu-latest
 
           - toolset: clang
-            os: macos-14
+            os: macos-15
             cxxstd: "11"
             extra_tests: 1
-            build_variant: debug
-          - toolset: clang
-            os: macos-14
-            cxxstd: "14,17,20,2b"
             build_variant: debug
           - toolset: clang
             os: macos-15
