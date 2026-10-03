@@ -1027,7 +1027,7 @@ jobs:
           msystem: ${{matrix.sys}}
           update: true
           install: git python
-          pacboy: gcc:p
+          pacboy: gcc:p libgomp:p
 
       - name: Setup Boost
         run: |
