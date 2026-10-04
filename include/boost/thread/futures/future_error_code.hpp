@@ -16,15 +16,19 @@
 namespace boost
 {
 
-  //enum class future_errc
-  BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_errc)
-  {
-      broken_promise = 1,
-      future_already_retrieved,
-      promise_already_satisfied,
-      no_state
-  }
-  BOOST_SCOPED_ENUM_DECLARE_END(future_errc)
+  namespace detail {
+    //enum class future_errc
+    BOOST_SCOPED_ENUM_DECLARE_BEGIN(future_errc)
+    {
+        broken_promise = 1,
+        future_already_retrieved,
+        promise_already_satisfied,
+        no_state
+    }
+    BOOST_SCOPED_ENUM_DECLARE_END(future_errc)
+  } // detail
+
+  using future_errc = detail::future_errc;
 
   namespace system
   {
@@ -56,6 +60,12 @@ namespace boost
         return error_condition(underlying_cast<int>(e), boost::future_category());
     }
   } // system
+
+  namespace detail
+  {
+    using system::make_error_code;
+    using system::make_error_condition;
+  } // detail
 } // boost
 
 #endif // header
