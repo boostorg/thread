@@ -59,7 +59,7 @@ namespace boost
     BOOST_THREAD_MOVABLE_ONLY( const_strict_lock_ptr )
 
     /**
-     * @param value constant reference of the value to protect.
+     * @param val constant reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
      * @effects locks the mutex @c mtx, stores a reference to it and to the value type @c value.
      */
@@ -116,7 +116,7 @@ namespace boost
     BOOST_THREAD_MOVABLE_ONLY( strict_lock_ptr )
 
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
      * @effects locks the mutex @c mtx, stores a reference to it and to the value type @c value.
      */
@@ -204,7 +204,7 @@ namespace boost
     BOOST_THREAD_MOVABLE_ONLY(const_unique_lock_ptr)
 
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
      *
      * @requires If mutex_type is not a recursive mutex the calling thread does not own the mutex.
@@ -216,9 +216,9 @@ namespace boost
     {
     }
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type adopt_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type adopt_lock_t selects this constructor.
      * @requires The calling thread own the mutex.
      * @effects stores a reference to it and to the value type @c value taking ownership.
      */
@@ -227,9 +227,9 @@ namespace boost
     {
     }
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type defer_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type defer_lock_t selects this constructor.
      * @effects stores a reference to it and to the value type @c value c.
      */
     const_unique_lock_ptr(T const& val, Lockable & mtx, defer_lock_t) BOOST_NOEXCEPT
@@ -237,9 +237,9 @@ namespace boost
     {
     }
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type try_to_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type try_to_lock_t selects this constructor.
      * @requires If mutex_type is not a recursive mutex the calling thread does not own the mutex.
      * @effects try to lock the mutex @c mtx, stores a reference to it and to the value type @c value.
      */
@@ -300,7 +300,7 @@ namespace boost
     BOOST_THREAD_MOVABLE_ONLY(unique_lock_ptr)
 
     /**
-     * @param value reference of the value to protect.
+     * @param val reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
      * @effects locks the mutex @c mtx, stores a reference to it and to the value type @c value.
      */
@@ -311,7 +311,7 @@ namespace boost
     /**
      * @param value reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type adopt_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type adopt_lock_t selects this constructor.
      * @effects stores a reference to it and to the value type @c value taking ownership.
      */
     unique_lock_ptr(T & value, Lockable & mtx, adopt_lock_t) BOOST_NOEXCEPT
@@ -321,7 +321,7 @@ namespace boost
     /**
      * @param value reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type defer_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type defer_lock_t selects this constructor.
      * @effects stores a reference to it and to the value type @c value c.
      */
     unique_lock_ptr(T & value, Lockable & mtx, defer_lock_t) BOOST_NOEXCEPT
@@ -331,7 +331,7 @@ namespace boost
     /**
      * @param value reference of the value to protect.
      * @param mtx reference to the mutex used to protect the value.
-     * @param tag of type try_to_lock_t used to differentiate the constructor.
+     * @note the unnamed third argument of type try_to_lock_t selects this constructor.
      * @effects try to lock the mutex @c mtx, stores a reference to it and to the value type @c value.
      */
     unique_lock_ptr(T & value, Lockable & mtx, try_to_lock_t) BOOST_NOEXCEPT
