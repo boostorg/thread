@@ -375,6 +375,24 @@ The user can request the version 4 by defining `BOOST_THREAD_VERSION` to 4. In t
 
 [endsect]
 
+[section:arm64x Windows ARM64X images]
+
+An ARM64X image (DLL or EXE linked with `/MACHINE:ARM64X`) contains both native ARM64 code and ARM64EC code,
+and can be loaded by both ARM64 and x64 processes. Its TLS callbacks are taken from the native ARM64 objects,
+so unless configured as described below, x64 processes that load an ARM64X image linked with the static
+Boost.Thread library call the native ARM64 TLS callback of the library, which does not work.
+
+`BOOST_THREAD_ARM64X` is a user-definable macro that is not defined by default. Users who link Boost.Thread
+into ARM64X images must define it when compiling both the ARM64 and the ARM64EC variants of the static
+library. Boost.Thread then registers its TLS callback so that the linker dispatches to the ARM64EC callback in
+x64 processes. As a consequence, the ARM64EC variant references the ARM64 one: it must be linked together with
+the ARM64 variant (for example, both variants merged into an ARM64X library with `lib /machine:arm64x`), also
+when linking ARM64EC-only images.
+
+The macro has no effect on other targets.
+
+[endsect]
+
 [endsect]
 
 [section:limitations Limitations]

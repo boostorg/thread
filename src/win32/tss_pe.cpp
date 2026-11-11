@@ -154,6 +154,29 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
         static void NTAPI on_tls_callback(HINSTANCE, DWORD, PVOID);
     }
 
+#if defined(BOOST_THREAD_ARM64X) && (defined(_M_ARM64) || defined(_M_ARM64EC))
+    // An ARM64X image has a single TLS directory, shared by its native ARM64 and its
+    // ARM64EC code; the linker builds the callback array from the native .CRT$XL*
+    // entries. A callback registered there must therefore resolve to the native
+    // function in the native view and to the ARM64EC function in the x64/ARM64EC view,
+    // otherwise x64 processes loading the image call native ARM64 code. Like the CRT
+    // does for __dyn_tls_init, /ARM64XSAMEADDRESS makes the linker emit a thunk that
+    // dispatches to the right function in each view. It needs a function with external
+    // linkage that is defined by both the ARM64 and the ARM64EC object files, so the
+    // ARM64EC library must be linked together with the ARM64 one (as an ARM64X library
+    // containing both, like the MSVC CRT libraries).
+    extern "C" void NTAPI boost_thread_arm64x_on_tls_callback(HINSTANCE h, DWORD dwReason, PVOID pv)
+    {
+        on_tls_callback(h, dwReason, pv);
+    }
+#if defined(_M_ARM64EC)
+#pragma comment(linker, "/arm64xsameaddress:boost_thread_arm64x_on_tls_callback")
+#endif
+#define BOOST_THREAD_DETAIL_TLS_CALLBACK boost_thread_arm64x_on_tls_callback
+#else
+#define BOOST_THREAD_DETAIL_TLS_CALLBACK on_tls_callback
+#endif
+
     namespace boost
     {
         //The .CRT$Xxx information is taken from Codeguru:
@@ -167,7 +190,7 @@ extern BOOL (WINAPI * const _pDefaultRawDllMainOrig)(HINSTANCE, DWORD, LPVOID) =
 #pragma section(".CRT$XCU",long,read)
 #pragma section(".CRT$XTU",long,read)
 #pragma section(".CRT$XLC",long,read)
-        extern const __declspec(allocate(".CRT$XLC")) _TLSCB p_tls_callback = on_tls_callback;
+        extern const __declspec(allocate(".CRT$XLC")) _TLSCB p_tls_callback = BOOST_THREAD_DETAIL_TLS_CALLBACK;
         extern const __declspec(allocate(".CRT$XIU")) _PIFV_ p_tls_prepare = on_tls_prepare;
         extern const __declspec(allocate(".CRT$XCU")) _PVFV_ p_process_init = on_process_init;
         extern const __declspec(allocate(".CRT$XTU")) _PVFV_ p_process_term = on_process_term;
