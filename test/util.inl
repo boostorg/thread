@@ -13,6 +13,8 @@
 #include <boost/thread/condition.hpp>
 #include <boost/thread/thread.hpp>
 #include <boost/config.hpp>
+#include <boost/memory_order.hpp>
+#include <boost/atomic/atomic.hpp>
 
 #ifndef DEFAULT_EXECUTION_MONITOR_TYPE
 #   define DEFAULT_EXECUTION_MONITOR_TYPE execution_monitor::use_condition
@@ -32,7 +34,7 @@ inline boost::xtime delay(int secs, int msecs=0, int nsecs=0)
 
     boost::xtime xt;
     if (boost::TIME_UTC_ != boost::xtime_get (&xt, boost::TIME_UTC_))
-        BOOST_ERROR ("boost::xtime_get != boost::TIME_UTC_");
+        BOOST_ERROR("boost::xtime_get != boost::TIME_UTC_");
 
     nsecs += xt.nsec;
     msecs += nsecs / NANOSECONDS_PER_MILLISECOND;
@@ -67,52 +69,60 @@ namespace
 {
 class execution_monitor
 {
+private:
+    enum execution_state { initial, started, finished };
+
 public:
     enum wait_type { use_sleep_only, use_mutex, use_condition };
 
     execution_monitor(wait_type type, int secs)
-        : done(false), type(type), secs(secs) { }
+        : state(initial), type(type), secs(secs) { }
     void start()
     {
-        if (type != use_sleep_only) {
-            boost::unique_lock<boost::mutex> lock(mutex); done = false;
-        } else {
-            done = false;
-        }
+        boost::unique_lock<boost::mutex> lock(mutex);
+        state.store(started, boost::memory_order_relaxed);
+        cond.notify_one();
     }
     void finish()
     {
         if (type != use_sleep_only) {
             boost::unique_lock<boost::mutex> lock(mutex);
-            done = true;
+            state.store(finished, boost::memory_order_release);
             if (type == use_condition)
                 cond.notify_one();
         } else {
-            done = true;
+            state.store(finished, boost::memory_order_release);
         }
     }
     bool wait()
     {
+        if (state.load(boost::memory_order_relaxed) == initial) {
+            boost::unique_lock<boost::mutex> lock(mutex);
+            while (state.load(boost::memory_order_relaxed) == initial) {
+                cond.wait(lock);
+            }
+        }
+
         boost::xtime xt = delay(secs);
         if (type == use_sleep_only) {
             boost::thread::sleep(xt);
-            return done;
+            return state.load(boost::memory_order_acquire) == finished;
         }
         if (type == use_condition) {
             boost::unique_lock<boost::mutex> lock(mutex);
-            while (!done) {
+            while (state.load(boost::memory_order_relaxed) != finished) {
                 if (!cond.timed_wait(lock, xt))
                     break;
             }
-            return done;
+            return state.load(boost::memory_order_acquire) == finished;
         }
         for (int i = 0; ; ++i) {
             {
                 boost::unique_lock<boost::mutex> lock(mutex);
-                if (done)
+                if (state.load(boost::memory_order_acquire) == finished)
                     return true;
                 else if (i > secs * 2)
-                    return done;
+                    return state.load(boost::memory_order_acquire) == finished;
             }
             boost::thread::sleep(delay(0, 500));
         }
@@ -121,7 +131,7 @@ public:
 private:
     boost::mutex mutex;
     boost::condition cond;
-    bool done;
+    boost::atomic<execution_state> state;
     wait_type type;
     int secs;
 };
@@ -140,10 +150,10 @@ public:
 
     void operator()() const
     {
+        monitor.start();
         try
         {
-            boost::thread thrd(func);
-            thrd.join();
+            func();
         }
         catch (...)
         {
@@ -170,7 +180,6 @@ void timed_test(F func, int secs,
 {
     execution_monitor monitor(type, secs);
     thread_detail_anon::indirect_adapter<F> ifunc(func, monitor);
-    monitor.start();
     boost::thread thrd(ifunc);
     BOOST_REQUIRE_MESSAGE(monitor.wait(),
         "Timed test didn't complete in time, possible deadlock.");
