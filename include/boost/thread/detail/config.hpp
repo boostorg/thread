@@ -424,17 +424,32 @@
 #if defined(BOOST_THREAD_CHRONO_WINDOWS_API)
   #define BOOST_THREAD_HAS_MONO_CLOCK
   #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-#elif defined(BOOST_THREAD_CHRONO_MAC_API)
-  #define BOOST_THREAD_HAS_MONO_CLOCK
-#elif defined(__ANDROID__)
-  #define BOOST_THREAD_HAS_MONO_CLOCK
-  #if defined(__ANDROID_API__) && __ANDROID_API__ >= 21
-    #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
-  #endif
 #else
-  #include <time.h> // check for CLOCK_MONOTONIC
-  #if defined(CLOCK_MONOTONIC)
+  #if defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ < 21
+    #ifndef BOOST_PTHREAD_HAS_COND_TIMEDWAIT_MONOTONIC_NP
+      #define BOOST_PTHREAD_HAS_COND_TIMEDWAIT_MONOTONIC_NP
+    #endif
+  #endif
+  #if defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ < 21 \
+   || (defined(__APPLE__) && defined(__MACH__) \
+   && ((defined(__MAC_OS_X_VERSION_MIN_REQUIRED) && __MAC_OS_X_VERSION_MIN_REQUIRED >= 1040) \
+   || (defined(__IPHONE_OS_VERSION_MIN_REQUIRED) && __IPHONE_OS_VERSION_MIN_REQUIRED >= 20000)))
+    #ifndef BOOST_PTHREAD_HAS_COND_TIMEDWAIT_RELATIVE_NP
+      #define BOOST_PTHREAD_HAS_COND_TIMEDWAIT_RELATIVE_NP
+    #endif
+  #endif
+  #if defined(BOOST_THREAD_CHRONO_MAC_API)
     #define BOOST_THREAD_HAS_MONO_CLOCK
+  #else
+    #include <time.h> // check for CLOCK_MONOTONIC
+    #if defined(CLOCK_MONOTONIC)
+      #define BOOST_THREAD_HAS_MONO_CLOCK
+    #endif
+  #endif
+  #if (defined(BOOST_THREAD_HAS_MONO_CLOCK) \
+   && (defined(BOOST_PTHREAD_HAS_COND_TIMEDWAIT_MONOTONIC_NP) \
+   || defined(CLOCK_MONOTONIC))) \
+   || defined(BOOST_PTHREAD_HAS_COND_TIMEDWAIT_RELATIVE_NP)
     #define BOOST_THREAD_INTERNAL_CLOCK_IS_MONO
   #endif
 #endif
@@ -446,6 +461,12 @@
 #elif (defined(_POSIX_TIMEOUTS) && (_POSIX_TIMEOUTS-0)>=200112L) \
  || (defined(__ANDROID__) && defined(__ANDROID_API__) && __ANDROID_API__ >= 21)
 #define BOOST_THREAD_USES_PTHREAD_TIMEDLOCK
+#endif
+#else
+#if defined(BOOST_PTHREAD_HAS_COND_TIMEDWAIT_MONOTONIC_NP)
+#define BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_MONOTONIC_NP
+#elif defined(BOOST_PTHREAD_HAS_COND_TIMEDWAIT_RELATIVE_NP)
+#define BOOST_THREAD_USES_PTHREAD_COND_TIMEDWAIT_RELATIVE_NP
 #endif
 #endif
 
