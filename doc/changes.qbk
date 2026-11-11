@@ -8,6 +8,10 @@
 
 [section:changes History]
 
+[heading Version 4.9.1 - boost 1.93]
+
+* [@https://github.com/boostorg/thread/pull/421 #421] Support the PE TLS callback in Windows ARM64X images
+
 [heading Version 4.9.0 - boost 1.70]
 
 [*Know Bugs:]
