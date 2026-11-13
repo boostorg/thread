@@ -38,19 +38,19 @@ environment:
       VARIANT: release
       APPVEYOR_BUILD_WORKER_IMAGE: Visual Studio 2019
 
-    - ADDPATH: C:\cygwin\bin;
+    - ADDPATH: C:\cygwin\bin
       TOOLSET: gcc
       VARIANT: release
 
-    - ADDPATH: C:\cygwin64\bin;
+    - ADDPATH: C:\cygwin64\bin
       TOOLSET: gcc
       VARIANT: debug
 
-    - ADDPATH: C:\mingw-w64\x86_64-6.3.0-posix-seh-rt_v5-rev1\mingw64\bin;
+    - ADDPATH: C:\mingw-w64\x86_64-7.3.0-posix-seh-rt_v5-rev0\mingw64\bin
       TOOLSET: gcc
       VARIANT: debug
 
-    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin;
+    - ADDPATH: C:\mingw-w64\x86_64-8.1.0-posix-seh-rt_v6-rev0\mingw64\bin
       TOOLSET: gcc
       VARIANT: release
 
@@ -73,7 +73,7 @@ install:
 build: off
 
 test_script:
-  - PATH=%ADDPATH%%PATH%
+  - PATH=%ADDPATH%;%PATH%
   - if not "%CXXSTD%" == "" set CXXSTD=cxxstd=%CXXSTD%
   - if not "%ADDRMD%" == "" set ADDRMD=address-model=%ADDRMD%
   - if not "%VARIANT%" == "" set VARIANT=variant=%VARIANT%
