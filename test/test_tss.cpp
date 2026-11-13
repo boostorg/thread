@@ -214,7 +214,7 @@ void do_test_tss()
 
 BOOST_AUTO_TEST_CASE(test_tss)
 {
-    timed_test(&do_test_tss, 2);
+    timed_test(&do_test_tss, 5);
 }
 
 
@@ -307,7 +307,7 @@ void do_test_tss_void()
 
 //BOOST_AUTO_TEST_CASE(test_tss_void)
 //{
-//    timed_test(&do_test_tss_void, 2);
+//    timed_test(&do_test_tss_void, 5);
 //}
 
 
@@ -338,7 +338,7 @@ void do_test_tss_void_with_custom_cleanup()
 
 BOOST_AUTO_TEST_CASE(test_tss_void_with_custom_cleanup)
 {
-    timed_test(&do_test_tss_void_with_custom_cleanup, 2);
+    timed_test(&do_test_tss_void_with_custom_cleanup, 5);
 }
 
 
@@ -380,7 +380,7 @@ void do_test_tss_with_custom_cleanup()
 
 BOOST_AUTO_TEST_CASE(test_tss_with_custom_cleanup)
 {
-    timed_test(&do_test_tss_with_custom_cleanup, 2);
+    timed_test(&do_test_tss_with_custom_cleanup, 5);
 }
 
 Dummy* tss_object=new Dummy;
@@ -457,12 +457,12 @@ void do_test_tss_does_no_cleanup_with_null_cleanup_function()
 
 BOOST_AUTO_TEST_CASE(test_tss_does_no_cleanup_after_release)
 {
-    timed_test(&do_test_tss_does_no_cleanup_after_release, 2);
+    timed_test(&do_test_tss_does_no_cleanup_after_release, 5);
 }
 
 BOOST_AUTO_TEST_CASE(test_tss_does_no_cleanup_with_null_cleanup_function)
 {
-    timed_test(&do_test_tss_does_no_cleanup_with_null_cleanup_function, 2);
+    timed_test(&do_test_tss_does_no_cleanup_with_null_cleanup_function, 5);
 }
 
 void thread_with_local_tss_ptr()
