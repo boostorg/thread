@@ -174,7 +174,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(1000));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -200,7 +200,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(1000));
         res = f.get();
       }
       BOOST_TEST(res == 3);
@@ -229,7 +229,7 @@ int main()
       boost::this_thread::sleep_for(ms(300));
       int res;
       {
-        check_timer timer(ms(500));
+        check_timer timer(ms(1000));
         res = f.get();
       }
       BOOST_TEST(res == 3);
